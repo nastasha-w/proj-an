@@ -1438,7 +1438,22 @@ elif jobind == 172:
                     dimlabels = ['Mass', 'NHI', 'StarFormationRate'],\
                     save=mh.pdir + outname_hn,\
                     fills=fills, includeinf=inclinf)   
-    
+
+## o8 emission origin
+emname = 'emission_o8_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_14.2857142857slice_zcen%s_z-projection_T4EOS.npz'
+Tname = 'Temperature_T4EOS_emission_o8_PtAb_T4EOS_L0100N1504_27_test3.31_C2Sm_32000pix_14.2857142857slice_zcen%s_z-projection.npz'
+rhoname = 'Density_T4EOS_emission_o8_PtAb_T4EOS_L0100N1504_27_test3.31_C2Sm_32000pix_14.2857142857slice_zcen%s_z-projection.npz'
+closefills = np.arange(7)/7. * 100. + 100./14.
+fills = getcenfills(emname, closevals=closefills, searchdir=None, tolerance=1e-4) 
+
+embins = np.array([-np.inf, -50., -40., -30., -20.] + list(np.arange(-15., -9.5, 1.)) + list(np.arange(-9.9, 5.15, 0.1)) + [np.inf]) # (-49.38524, 5.066906)
+Tbins = np.arange(2.5, 8.55, 0.1) # (2.7191238, 8.466448)
+rhobins = np.arange(-32.4, -22.35, 0.1) # (-32.248672, -22.516676)
+if jobind == 173:
+    mh.makehist_masked_toh5py(emname, rhoname, Tname, fills=fills,\
+                              includeinf=True, bins=[embins, rhobins, Tbins],\
+                              outfilename='hist_emission_o8_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_14.2857142857slice_zcen-all_z-projection_T4EOS_and_weighted_rho_T.hdf5')
+
 ################################################
 ################# CDDFS ########################
 ################################################
@@ -1646,10 +1661,10 @@ elif jobind == 20015:
 
 filename_fe17 = ol.ndir + 'coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz' 
 filename_ne8  = ol.ndir + 'coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen%s_T4SFR.npz'
-filename_o8   = ol.ndir + 'coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz' # running
-filename_o7   = ol.ndir + 'coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz' # running
+filename_o8   = ol.ndir + 'coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz'
+filename_o7   = ol.ndir + 'coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz'
 filename_o6   = ol.ndir + 'coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz'
-filename_ne9  = ol.ndir + 'coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz' #running
+filename_ne9  = ol.ndir + 'coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz' 
 filename_hn   = ol.ndir + 'coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz'
 
 szcens = [str(i) for i in np.arange(16)/16. * 100. + 100./32.]
