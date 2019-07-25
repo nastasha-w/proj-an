@@ -5,12 +5,21 @@ Created on Mon Nov  6 16:32:05 2017
 @author: wijers
 """
 import numpy as np
+import h5py
+
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import mpl_toolkits.axes_grid1 as axgrid
+import matplotlib.lines as mlines
+
 
 # test module: expect changes so reload modules
 import make_maps_v3_master as m3
 reload(m3)
 import simfileclone as sfc
 reload(sfc)
+
+
 
 def getaveragecolumndensity():
     element = 'Oxygen'
@@ -63,10 +72,6 @@ def runregiontests():
 
 
 ### copied from /home/wijers/plot_sims/copy_durham_2017_07_04/tester.py
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-import mpl_toolkits.axes_grid1 as axgrid
-import matplotlib.lines as mlines
 dd_new = '/data1/line_em_abs/v3_master_tests/results_v3p2/'
 dd_cool = '/net/luttero/data1/line_em_abs/v3_master_tests/results_coolingtests_v3p21/'
 dd_sylviassh = '/data1/line_em_abs/v3_master_tests/ssh_tables_sylvia/'
@@ -923,3 +928,19 @@ def testWSS09fig4_vardict():
     plt.savefig(dd_cool+'WSS09fig4_replica_vardict.pdf', format='pdf', bbox_inches='tight')
     
     return vardict
+
+
+###############################################################################
+#################### halo only projection tests ###############################
+###############################################################################
+    
+# test on 25 Mpc mid-res Ref box, snap 19
+mdir = '/net/luttero/data2/imgs/CGM/halo-only_projectiontest/'
+def selecthalos(halocat='/net/luttero/data2/proc/catalogue_RefL0025N0376_snap19_aperture30.hdf5', logMhs=[10., 11., 12.], Mtol=0.05):
+    with h5py.File(halocat, 'r') as hc:
+        logM200c = np.log10(np.array(hc['M200c_Msun']))
+        inds = [np.where(np.abs(logM200c - Mh) <= Mtol)[0] for Mh in logMhs]
+        sel = np.array([np.random.choice(ind, 1) for ind in inds])
+        
+        galids = np.array(hc['galaxyid'])[sel]
+        groups = np.array(hc['galaxyid'])[sel]
