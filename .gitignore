@@ -11,6 +11,8 @@ batchrun*
 
 ## local info (also some general stuff, but that will require manual updates)
 make_maps_opts_locs.py
+*cookies*
+log*
 
 ## python (github default)
 # Byte-compiled / optimized / DLL files
