@@ -24,12 +24,22 @@ import matplotlib.cm as cm
 
 import makecddfs as mc # don't use getcosmopars! This requires simfile and the whole readEagle mess
 import eagle_constants_and_units as c
-import cosmo_utils as csu
+import cosmo_utils as cu
 
 import selecthalos as sh
 import make_maps_v3_master as m3
 import projection_classes as pc
 import eagleSqlTools as sql
+
+#cosmopars_ea_28 = {'a': 0.9999999999999998, 'boxsize': 67.77, 'h': 0.6777, 'omegab': 0.0482519, 'omegalambda': 0.693, 'omegam': 0.307, 'z': 2.220446049250313e-16}
+cosmopars_ea_27 = {'a': 0.9085634947881763, 'boxsize': 67.77, 'h': 0.6777, 'omegab': 0.0482519, 'omegalambda': 0.693, 'omegam': 0.307, 'z': 0.10063854175996956}
+#logrhob_av_ea_28 = np.log10( 3. / (8. * np.pi * c.gravity) * c.hubble**2 * cosmopars_ea_28['h']**2 * cosmopars_ea_28['omegab'] ) 
+logrhob_av_ea_27 = np.log10( 3. / (8. * np.pi * c.gravity) * c.hubble**2 * cosmopars_ea_27['h']**2 * cosmopars_ea_27['omegab'] / cosmopars_ea_27['a']**3 )
+logrhoc_ea_27 = np.log10( 3. / (8. * np.pi * c.gravity) * cu.Hubble(cosmopars_ea_27['z'], cosmopars=cosmopars_ea_27)**2)
+
+rho_to_nh = 0.752 / (c.atomw_H * c.u)
+deg2 = (np.pi / 180.)**2
+arcsec2 = deg2 / 60.**4
 
 def add_colorbar(ax, img=None, vmin=None, vmax=None, cmap=None, clabel=None,\
                  newax=False, extend='neither', fontsize=12., orientation='vertical'):
@@ -1023,3 +1033,62 @@ def plotSBmaps(line, res=800, fill=0):
     ax.text(8. / size, 0.97, '10 cMpc', color='white', horizontalalignment='center', verticalalignment='top', fontsize=fontsize, transform=ax.transAxes)
     
     plt.savefig(mdir + 'SBmap_%s_slice-%-of-7.pdf'%(line, fill + 1), format='pdf')
+    
+
+def plotionwpd(line, minsb):
+    pdir = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/'
+    mdir = '/cosma5/data/dp004/dc-wije1/line_em_abs/img/'
+    if line == 'o8':
+        filename = 'hist_emission_o8_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_14.2857142857slice_zcen-all_z-projection_T4EOS_and_weighted_rho_T.hdf5'
+    
+    fontsize = 12
+    
+    linenames = {'o7trip': r'O VII He $\alpha$ triplet',\
+                 'o8':     'O VIII 653.55 eV',\
+                 'fe17':   'Fe XVII 726.97 eV'}
+    
+    logrhob = logrhob_av_ea_27
+    
+    clabel = r'$ \log_{10} \mathrm{sky \, fraction} \,/\, \Delta \log_{10} n_{\mathrm{H}} \,  \Delta \log_{10} T$'
+    xlabel = r'$\log_{10} \, n_{\mathrm{H} \; \mathrm{cm}^{-3}$ ' + linenames[line] + ' weighted'
+    ylabel = r'$\log_{10} \, T [\mathrm{K}]$ ' + linenames[line] + ' weighted'
+    
+    with h5py.File(pdir + filename, 'r') as fi:
+        hist = np.array(fi['masks_0/hist'])
+        ax0_em = np.array(fi['bins_axis_0']) + np.log10(arcsec2)
+        ax1_nh = np.array(fi['bins_axis_1']) + np.log10(rho_to_nh)
+        ax2_tk = np.array(fi['bins_axis_2'])
+        totpix = 7 * 32000**2
+        
+        if ax1_nh[0] == -np.inf:
+            ax1_nh[0] = 2. * ax1_nh[1] - ax1_nh[2]
+        if ax2_tk[0] == -np.inf:
+            ax2_tk[0] = 2. * ax2_tk[1] - ax2_tk[2]
+        if ax1_nh[-1] == np.inf:
+            ax1_nh[-1] = 2. * ax1_nh[-2] - ax1_nh[-3] 
+        if ax2_tk[-1] == np.inf:
+            ax2_tk[-1] = 2. * ax2_tk[-2] - ax2_tk[-3]
+        
+    fig, (ax, cax) = plt.subplots(ncols=2, nrows=1, figsize=(5.5, 5.0), gridspec_kw={'wspace': 0.0, 'width_ratios': [5., 0.5]})
+
+    minsb_ind = np.argmin(np.abs(ax0_em - minsb))
+    minsb_real = minsb[minsb_ind]
+    img = np.sum(hist[minsb_ind:, :, :], axis=0) / float(totpix) / np.diff(ax1_nh)[:, np.newaxis] / np.diff(ax2_tk)[np.newaxis, :]
+    
+    cmap = 'gist_yarg'
+    vmax = np.max(img)
+    vmin = np.min(img[np.isfinite(img)])
+    vmin = max(vmin, vmax - 10.)
+    
+    imgob = ax.pcolormesh(ax1_nh, ax2_tk, img.T, cmap=cmap, vmin=vmin, vmax=vmax, rasterize=True)
+    ax.axvline(logrhob, color='blue', linestyle='dotted')
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    
+    fig.colorbar(imgob, cax=cax, orientation='vertical', extend='min')
+    cax.set_ylabel(clabel, fontsize=fontsize)
+    
+    ax.text(0.5, 0.95, linenames[line] + r'$ > 10^{%.2f} \; \mathrm{photons}\, \mathrm{cm}^{-2} \mathrm{s}^{-1} \mathrm{arcsec}^{-2}$'%minsb_real, horizontalalignment='center', verticalalignment='top', fontsize=fontsize, transform=ax.transAxes)
+    
+    outname = 'phase_diagram_hist_emission_%s_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_14.2857142857slice_zcen-all_z-projection_T4EOS_and_weighted_rho_T_minSB-%s.hdf5'%(line, minsb_real)
+    plt.savefig(mdir + outname, format='pdf', dpi=400)
