@@ -337,6 +337,8 @@ def makehist_masked_toh5py(*filenames, **kwargs):
                           np.array(edges) for edges in kwargs['bins']]
         kwargs['bins'] = [np.array(list(edges) + [np.inf]) if edges[-1] != np.inf else\
                           np.array(edges) for edges in kwargs['bins']]
+    # change bins to float32 to avoid errors down the line, when comparing input and output bins
+    kwargs['bins'] = [arr.astype(np.float32) for arr in kwargs['bins']]
 
     # record the more compact mask file data and the filenames
     with h5py.File(outfilename, 'a') as fo:
