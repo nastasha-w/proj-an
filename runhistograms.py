@@ -1447,8 +1447,8 @@ closefills = np.arange(7)/7. * 100. + 100./14.
 fills = getcenfills(emname, closevals=closefills, searchdir=None, tolerance=1e-4) 
 
 embins = np.array([-np.inf, -50., -40., -30., -20.] + list(np.arange(-15., -9.5, 1.)) + list(np.arange(-9.9, 5.15, 0.1)) + [np.inf]) # (-49.38524, 5.066906)
-Tbins = np.arange(2.5, 8.55, 0.1) # (2.7191238, 8.466448)
-rhobins = np.arange(-32.4, -22.35, 0.1) # (-32.248672, -22.516676)
+Tbins = np.array([-np.inf] + list(np.arange(2.5, 8.55, 0.1)) + [np.inf]) # (2.7191238, 8.466448)
+rhobins = np.array([-np.inf] + list(np.arange(-32.4, -22.35, 0.1)) + [np.inf]) # (-32.248672, -22.516676)
 if jobind == 173:
     mh.makehist_masked_toh5py(emname, rhoname, Tname, fills=fills,\
                               includeinf=True, bins=[embins, rhobins, Tbins],\

@@ -402,7 +402,11 @@ def makehist_masked_toh5py(*filenames, **kwargs):
     if fills is None:
         hists, edges, covfracs = makehist_1slice_masked(*tuple(filenames), maskfilenames=maskfiles, **kwargs)
         if not np.all(np.array([np.all(np.array([np.all(kwargs['bins'][i] == edges[key][i]) for i in range(len(kwargs['bins'])) ])) for key in edges.keys()])):
-            raise RuntimeError("Input bins do not match returned edges")
+            errmes = "Input bins do not match returned edges"
+            errmes = errmes + '\n no fills call'
+            errmes = errmes + '\ninput edges were:\n' + str(kwargs['bins'])
+            errmes = errmes + '\noutput edges were:\n' + str(edges)
+            raise RuntimeError(errmes)
     else:
         # map mask keys for each fill to mask index
         hists = None
@@ -414,7 +418,11 @@ def makehist_masked_toh5py(*filenames, **kwargs):
             #masknametokey = {masknames[i]: maskkeys[i] for i in range(len(masknames))}
             subhists, edges, subcovfracs = makehist_1slice_masked(*(filename%fill for filename in filenames), maskfilenames=maskfiles[fill], **kwargs)
             if not np.all(np.array([np.all(np.array([np.all(kwargs['bins'][i] == edges[key][i]) for i in range(len(kwargs['bins'])) ])) for key in edges.keys()])):
-                raise RuntimeError("Input bins do not match returned edges")
+                errmes = "Input bins do not match returned edges"
+                errmes = errmes + '\n error occurred for fill %s'%(fill)
+                errmes = errmes + '\ninput edges were:\n' + str(kwargs['bins'])
+                errmes = errmes + '\noutput edges were:\n' + str(edges)
+                raise RuntimeError(errmes)
             if hists is None:
                 #print('maskkeys: %s'%maskkeys)
                 #print('maskkeytoname: %s'%maskkeytoname)
