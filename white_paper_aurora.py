@@ -40,6 +40,7 @@ logrhoc_ea_27 = np.log10( 3. / (8. * np.pi * c.gravity) * cu.Hubble(cosmopars_ea
 rho_to_nh = 0.752 / (c.atomw_H * c.u)
 deg2 = (np.pi / 180.)**2
 arcsec2 = deg2 / 60.**4
+arcmin2 = deg2 / 60.**2
 
 def add_colorbar(ax, img=None, vmin=None, vmax=None, cmap=None, clabel=None,\
                  newax=False, extend='neither', fontsize=12., orientation='vertical'):
@@ -567,7 +568,7 @@ def plotsample2(parent=2, sub='a'):
         lines = np.array(dm['line'])
         indsel = {line: np.array(filenames.index[filenames['line'] == line])[0] for line in lines}
         names = {line: filenames.loc[indsel[line], 'filename'] for line in lines}
-        files = {line: np.load(names[line] + '.npz')['arr_0'] for line in names.keys()}
+        files = {line: np.load(names[line] + '.npz')['arr_0'] + np.log10(arcmin2) for line in names.keys()}
         files['o7'] = np.log10(np.sum(10**np.array([files[line] for line in ['o7r', 'o7ix', 'o7iy', 'o7f']]), axis=0))
         files['o6'] = np.log10(np.sum(10**np.array([files[line] for line in ['o6major', 'o6minor']]), axis=0)) #  
         # assuming  z-projection
@@ -752,7 +753,7 @@ def plotsample2(parent=2, sub='a'):
         ax.text(0.0, 0.5, text, fontsize=fontsize + 1, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes, rotation=-90.) 
         ax.axis('off')
          
-    clabel = r'$\log_{10} \, \mathrm{SB} \; [\mathrm{ph.} \, \mathrm{cm}^{-2} \mathrm{s}^{-1} \mathrm{sr}^{-1}]$'
+    clabel = r'$\log_{10} \, \mathrm{SB} \; [\mathrm{ph.} \, \mathrm{cm}^{-2} \mathrm{s}^{-1} \mathrm{arcmin}^{-2}]$'
 
     add_colorbar(cax1, img=img_uv, vmin=None, vmax=None, cmap=None, clabel=None,\
                  newax=False, extend='min', fontsize=fontsize, orientation='horizontal')
