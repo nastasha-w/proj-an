@@ -24,6 +24,7 @@ def getrhoc(z, cosmopars=None):
 
 
 
+    
 
 
 
@@ -87,3 +88,11 @@ class Mockhalo:
     def getemission(self, dct_lognH_logT, line):
         self.lineind = ol.line_nos_ion[line]
         self.emdens = 10**m3.find_emdenssq(self.cosmopars['z'], ol.elements_ion[line], dct_lognH_logT, self.lineind) # luminosity = this * n_H^2 * volume * elt. abundance / solar 
+        
+    
+    def getpressure_HSE(self):
+    '''
+    get pressure 
+    no iteration, just assumes gas follows DM
+    '''
+        pass
