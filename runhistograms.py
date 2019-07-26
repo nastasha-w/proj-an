@@ -25,6 +25,7 @@ import make_maps_opts_locs as ol
 import makecddfs as mc
 import coldens_rdist as crd
 from loadnpz_and_plot import imreduce
+import selecthalos as sh
 
 if __name__ == '__main__':
     jobind = int(sys.argv[1])
@@ -1674,17 +1675,16 @@ rmin_r200c = 0.
 rmax_r200c = 2.5
 mindist_pkpc = 500.
 catname = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
-selections = [[('logM200c_Msun', 8.95, 10.0)], [('logM200c_Msun', 10.0, 11.0)], [('logM200c_Msun', 11.0, 12.0)], [('logM200c_Msun', 12.0, None)]]
-selnames = ['logMsun-8p95-10', 'logMsun-10-11', 'logMsun-11-12', 'logMsun-ge-12']
+# select 1000 halos randomly in  0.5 dex M200c bins (trying to do everything just gives memory errors)
+galids_dct = sh.L0100N1504_27_Mh0p5dex_7000.galids_all() 
+allids = [gid for key in galids_dct.keys() for gid in galids_dct[key]]
+selection = [('galaxyid', allids)]
 
 if jobind == 20016:
     numsl = 1
     filename = filename_fe17
-    for seli in range(len(selections)):
-        selection = selections[seli]
-        selname = selnames[seli]
-        outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-%s_centrals.hdf5'%(filename.split('/')[-1], numsl, selname)
-        crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
                          selection, np.inf, outname=outname,\
@@ -1693,11 +1693,8 @@ if jobind == 20016:
 elif jobind == 20017:
     numsl = 2
     filename = filename_fe17
-    for seli in range(len(selections)):
-        selection = selections[seli]
-        selname = selnames[seli]
-        outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-%s_centrals.hdf5'%(filename.split('/')[-1], numsl, selname)
-        crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
                          selection, np.inf, outname=outname,\
@@ -1707,11 +1704,8 @@ elif jobind == 20017:
 elif jobind == 20018:
     numsl = 1
     filename = filename_ne8
-    for seli in range(len(selections)):
-        selection = selections[seli]
-        selname = selnames[seli]
-        outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-%s_centrals.hdf5'%(filename.split('/')[-1], numsl, selname)
-        crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
                          selection, np.inf, outname=outname,\
@@ -1720,11 +1714,8 @@ elif jobind == 20018:
 elif jobind == 20019:
     numsl = 2
     filename = filename_ne8
-    for seli in range(len(selections)):
-        selection = selections[seli]
-        selname = selnames[seli]
-        outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-%s_centrals.hdf5'%(filename.split('/')[-1], numsl, selname)
-        crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
                          selection, np.inf, outname=outname,\
@@ -1733,11 +1724,8 @@ elif jobind == 20019:
 elif jobind == 20020:
     numsl = 1
     filename = filename_o8
-    for seli in range(len(selections)):
-        selection = selections[seli]
-        selname = selnames[seli]
-        outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-%s_centrals.hdf5'%(filename.split('/')[-1], numsl, selname)
-        crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
                          selection, np.inf, outname=outname,\
@@ -1746,11 +1734,8 @@ elif jobind == 20020:
 elif jobind == 20021:
     numsl = 2
     filename = filename_o8
-    for seli in range(len(selections)):
-        selection = selections[seli]
-        selname = selnames[seli]
-        outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-%s_centrals.hdf5'%(filename.split('/')[-1], numsl, selname)
-        crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
                          selection, np.inf, outname=outname,\
@@ -1759,11 +1744,8 @@ elif jobind == 20021:
 elif jobind == 20022:
     numsl = 1
     filename = filename_o7
-    for seli in range(len(selections)):
-        selection = selections[seli]
-        selname = selnames[seli]
-        outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-%s_centrals.hdf5'%(filename.split('/')[-1], numsl, selname)
-        crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
                          selection, np.inf, outname=outname,\
@@ -1772,11 +1754,8 @@ elif jobind == 20022:
 elif jobind == 20023:
     numsl = 2
     filename = filename_o7
-    for seli in range(len(selections)):
-        selection = selections[seli]
-        selname = selnames[seli]
-        outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-%s_centrals.hdf5'%(filename.split('/')[-1], numsl, selname)
-        crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
                          selection, np.inf, outname=outname,\
@@ -1785,11 +1764,8 @@ elif jobind == 20023:
 elif jobind == 20024:
     numsl = 1
     filename = filename_o6
-    for seli in range(len(selections)):
-        selection = selections[seli]
-        selname = selnames[seli]
-        outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-%s_centrals.hdf5'%(filename.split('/')[-1], numsl, selname)
-        crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
                          selection, np.inf, outname=outname,\
@@ -1798,11 +1774,8 @@ elif jobind == 20024:
 elif jobind == 20025:
     numsl = 2
     filename = filename_o6
-    for seli in range(len(selections)):
-        selection = selections[seli]
-        selname = selnames[seli]
-        outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-%s_centrals.hdf5'%(filename.split('/')[-1], numsl, selname)
-        crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
                          selection, np.inf, outname=outname,\
@@ -1811,11 +1784,8 @@ elif jobind == 20025:
 elif jobind == 20026:
     numsl = 1
     filename = filename_ne9
-    for seli in range(len(selections)):
-        selection = selections[seli]
-        selname = selnames[seli]
-        outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-%s_centrals.hdf5'%(filename.split('/')[-1], numsl, selname)
-        crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
                          selection, np.inf, outname=outname,\
@@ -1824,11 +1794,8 @@ elif jobind == 20026:
 elif jobind == 20027:
     numsl = 2
     filename = filename_ne9
-    for seli in range(len(selections)):
-        selection = selections[seli]
-        selname = selnames[seli]
-        outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-%s_centrals.hdf5'%(filename.split('/')[-1], numsl, selname)
-        crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
                          selection, np.inf, outname=outname,\
@@ -1837,11 +1804,8 @@ elif jobind == 20027:
 elif jobind == 20028:
     numsl = 1
     filename = filename_ne9
-    for seli in range(len(selections)):
-        selection = selections[seli]
-        selname = selnames[seli]
-        outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-%s_centrals.hdf5'%(filename.split('/')[-1], numsl, selname)
-        crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
                          selection, np.inf, outname=outname,\
@@ -1850,11 +1814,8 @@ elif jobind == 20028:
 elif jobind == 20029:
     numsl = 2
     filename = filename_ne9
-    for seli in range(len(selections)):
-        selection = selections[seli]
-        selname = selnames[seli]
-        outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-%s_centrals.hdf5'%(filename.split('/')[-1], numsl, selname)
-        crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
                          selection, np.inf, outname=outname,\

@@ -979,8 +979,8 @@ Mh_names =[ 'geq%s_le%s'%(Mh_mins[i], Mh_maxs[i]) if Mh_maxs[i] is not None else
             for i in range(len(Mh_mins))]
 
 L0100N1504_27_Mh0p5dex = Galaxyselector(halocat_L0100N1504_27, selections=Mh_sels, names=Mh_names, number=200, seed=0)
-
-
+L0100N1504_27_Mh0p5dex_1000 = Galaxyselector(halocat_L0100N1504_27, selections=Mh_sels, names=Mh_names, number=1000, seed=0)
+L0100N1504_27_Mh0p5dex_7000 = Galaxyselector(halocat_L0100N1504_27, selections=Mh_sels, names=Mh_names, number=7000, seed=0)
 
 ###############################################################################
 #                                  Tests                                      #

@@ -870,7 +870,10 @@ def rdists_sl_from_selection(base, szcens, L_x, npix_x,\
                 counter = 0 
                 while name%counter in sel.keys():
                     counter += 1
-                sel.create_dataset(name%counter, data=np.array(sl[1:]).astype(np.float))
+                if selection[0] in ['galaxyid' or 'groupid']: #int datasets
+                    sel.create_dataset(name%counter, data=np.array(sl[1:]))
+                else:
+                    sel.create_dataset(name%counter, data=np.array(sl[1:]).astype(np.float))
             if 'galaxyid' not in sel.keys():
                 sel.create_dataset('galaxyid', data=galids[0])
      
