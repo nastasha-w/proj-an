@@ -269,7 +269,7 @@ def match(arr1, arr2, arr2_sorted=False, arr2_index=None):
     return ptr
 
 # finds emission tables for element and interpolates them to zcalc if needed and possible
-def findemtables(element,zcalc):
+def findemtables(element, zcalc):
 
     #### checks and setup
 

@@ -252,7 +252,7 @@ def find_ionbal(z,ion,lognH,logT):
 # cosmological basics
 
 
-def comoving_distance_cm(z,cosmopars=None): # assumes Omega_k = 0
+def comoving_distance_cm(z, cosmopars=None): # assumes Omega_k = 0
     if z < 1e-8:
         print('Using 0 comoving distance from z. \n')
         return 0.
