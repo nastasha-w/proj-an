@@ -1685,7 +1685,7 @@ if jobind >= 20016 and jobind <= 20029:
     print('for debug: allids')
     print(allids)
     print('\n')
-    selection = [('galaxyid', allids)]
+    selection = [('galaxyid', np.array(allids))]
 else:
     selection = 'string: trigger error'
 

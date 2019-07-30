@@ -102,9 +102,30 @@ def selecthalos(fo, selection):
     cosmopars = {key: fo['Header/cosmopars'].attrs[key] for key in fo['Header/cosmopars'].attrs.keys()}
     galid = np.array(fo['galaxyid'])
     sel = np.ones(len(galid)).astype(bool)
+    #for sl in selection:
+    #    str_temp = str(sl)
+    #    if len(str_temp) > 1000:
+    #        print(str_temp[:1000] + '...\n')
+    #    else:
+    #        print(str_temp)
     selcrit = {sl[0] for sl in selection }
+    #print('For debug: selcrit\n')
+    #print(selcrit)
+    #print('\n')
+    #print('For debug: selection [0]\n')
+    #print(selection[0][0])
+    #print(selection[0][1][:100])
+    #print('\n')
     for crit in selcrit:
-        sels = {sl if sl[0] == crit else None for sl in selection}
+        #print('crit: %s'%crit)
+        #print([sl[0] for sl in selection])
+        ## doesn't work for galaxyid selection, since list/array of ids is not hashable
+        #sels = {sl if sl[0] == crit else None for sl in selection}
+        ## use indices for set instead, put actual selection arrays in a list
+        selinds = {sli if selection[sli][0] == crit else None for sli in range(len(selection))}
+        sels = [selection[sli] for sli in selinds]
+        #print(selinds)
+        #print(str(sels)[:1000])
         if None in sels:
             sels.remove(None)
         sel_temp = np.zeros(len(galid)).astype(bool)

@@ -848,7 +848,7 @@ def rdists_sl_from_selection(base, szcens, L_x, npix_x,\
     stamps: get images instead of (r, value) arrays
     '''
     print('Called rdists_sl_from_selection with inputs:')
-    print('\tselection:\t%s'%selection)
+    #print('\tselection:\t%s'%selection)
     print('\tcatname:\t%s, \tmaxnum:\t%s'%(catname, maxnum))
     print('\tbase:\t%s'%base)
     print('\tszcens:\t%s'%szcens)
