@@ -1668,17 +1668,18 @@ filename_o6   = ol.ndir + 'coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_
 filename_ne9  = ol.ndir + 'coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz' 
 filename_hn   = ol.ndir + 'coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz'
 
-szcens = [str(i) for i in np.arange(16)/16. * 100. + 100./32.]
-L_x = 100.
-npix_x = 32000
-rmin_r200c = 0.
-rmax_r200c = 2.5
-mindist_pkpc = 500.
-catname = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
-# select 1000 halos randomly in  0.5 dex M200c bins (trying to do everything just gives memory errors)
-galids_dct = sh.L0100N1504_27_Mh0p5dex_7000.galids_all() 
-allids = [gid for key in galids_dct.keys() for gid in galids_dct[key]]
-selection = [('galaxyid', allids)]
+if jobind >= 20016 and jobind <= 20029: 
+    szcens = [str(i) for i in np.arange(16)/16. * 100. + 100./32.]
+    L_x = 100.
+    npix_x = 32000
+    rmin_r200c = 0.
+    rmax_r200c = 2.5
+    mindist_pkpc = 500.
+    catname = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    # select 1000 halos randomly in  0.5 dex M200c bins (trying to do everything just gives memory errors)
+    galids_dct = sh.L0100N1504_27_Mh0p5dex_7000.galids() 
+    allids = [gid for key in galids_dct.keys() for gid in galids_dct[key]]
+    selection = [('galaxyid', allids)]
 
 if jobind == 20016:
     numsl = 1
