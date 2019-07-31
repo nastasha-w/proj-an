@@ -1692,7 +1692,7 @@ else:
 if jobind == 20016:
     numsl = 1
     filename = filename_fe17
-    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
@@ -1702,7 +1702,7 @@ if jobind == 20016:
 elif jobind == 20017:
     numsl = 2
     filename = filename_fe17
-    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
@@ -1713,7 +1713,7 @@ elif jobind == 20017:
 elif jobind == 20018:
     numsl = 1
     filename = filename_ne8
-    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
@@ -1723,7 +1723,7 @@ elif jobind == 20018:
 elif jobind == 20019:
     numsl = 2
     filename = filename_ne8
-    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
@@ -1733,7 +1733,7 @@ elif jobind == 20019:
 elif jobind == 20020:
     numsl = 1
     filename = filename_o8
-    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
@@ -1743,7 +1743,7 @@ elif jobind == 20020:
 elif jobind == 20021:
     numsl = 2
     filename = filename_o8
-    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
@@ -1753,7 +1753,7 @@ elif jobind == 20021:
 elif jobind == 20022:
     numsl = 1
     filename = filename_o7
-    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
@@ -1763,7 +1763,7 @@ elif jobind == 20022:
 elif jobind == 20023:
     numsl = 2
     filename = filename_o7
-    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
@@ -1773,7 +1773,7 @@ elif jobind == 20023:
 elif jobind == 20024:
     numsl = 1
     filename = filename_o6
-    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
@@ -1783,7 +1783,7 @@ elif jobind == 20024:
 elif jobind == 20025:
     numsl = 2
     filename = filename_o6
-    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
@@ -1793,7 +1793,7 @@ elif jobind == 20025:
 elif jobind == 20026:
     numsl = 1
     filename = filename_ne9
-    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
@@ -1803,7 +1803,7 @@ elif jobind == 20026:
 elif jobind == 20027:
     numsl = 2
     filename = filename_ne9
-    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
@@ -1813,7 +1813,7 @@ elif jobind == 20027:
 elif jobind == 20028:
     numsl = 1
     filename = filename_ne9
-    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
@@ -1823,7 +1823,7 @@ elif jobind == 20028:
 elif jobind == 20029:
     numsl = 2
     filename = filename_ne9
-    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%(filename.split('/')[-1][:-4], numsl)
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
