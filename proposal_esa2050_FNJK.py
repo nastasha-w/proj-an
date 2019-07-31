@@ -1512,3 +1512,66 @@ def save_weighted(specfile, sightline, prop='Temperature_K'):
         for i in range(len(vvals)):
             #print((data[col][i] for col in columns))
             fo.write(template%tuple([data[col][i] for col in columns]))
+            
+def coverimage(depth='all', dohalos=True):
+    halocat = '/net/luttero/data2/proc/catalogue_RefL0025N0376_snap28_aperture30.hdf5'
+    if depth == 'all':
+        name = 'SmoothedMetallicity_T4EOS_Mass_T4EOS_L0025N0376_28_test3.4_C2Sm_1600pix_25.0slice_z-projection.npz'
+        zmin = 0.
+        zmax = 25.
+    elif depth == 'half':
+        name = 'SmoothedMetallicity_T4EOS_Mass_T4EOS_L0025N0376_28_test3.4_C2Sm_1600pix_12.5slice_zcen6.25_z-projection.npz'
+        zmin = 0.
+        zmax = 12.5
+    mhmin = 2e11
+    
+    ndir = '/net/quasar/data2/wijers/temp/'
+    img = np.load(ndir + name)['arr_0']
+    cmap = 'afmhot'
+    vmin = -5.
+    ancolor = 'lightseagreen'
+    fontsize=13.
+    
+    cmap = mpl.cm.get_cmap(cmap)
+    cmap.set_under(cmap(0.))
+    
+    fig, (lax, ax) = plt.subplots(ncols=1, nrows=2, figsize=(5., 5.5), gridspec_kw={'height_ratios': [0.5, 5.], 'hspace': 0.0, 'left': 0., 'right': 1., 'top': 1., 'bottom':0.})
+    ax.set_facecolor(cmap(0.))
+    img[np.logical_not(np.isfinite(img))] = -100.
+    
+    ax.imshow(img.T, vmin=vmin, origin='lower', interpolation='nearest', extent=(0., 25., 0., 25.), cmap=cmap)
+    ax.axis('off')
+    
+    # add text
+    lax.axis('off')
+    lax.set_xlim(0., 25.)
+    lax.set_ylim(0., 1.)
+    lax.plot([0.5, 5.5], [0.1, 0.1], linewidth=4., color='black')
+    lax.text(3./25., 0.15, '5 Mpc', transform=lax.transAxes, color='black', fontsize=fontsize, horizontalalignment='center', verticalalignment='bottom')
+    lax.text(0.5, 0.2, 'Gas metallicity (Eagle)', transform=lax.transAxes, color='black', fontsize=fontsize + 1, horizontalalignment='center', verticalalignment='bottom')
+    
+    # add halo locations
+    if dohalos:
+        with h5py.File(halocat, 'r') as halos:
+            cosmopars = {key: item for (key, item) in halos['Header/cosmopars'].attrs.items()}
+            xs = np.array(halos['Xcom_cMpc'])
+            ys = np.array(halos['Ycom_cMpc'])
+            zs = np.array(halos['Zcom_cMpc'])
+            sz = np.array(halos['R200c_pkpc']) * 1e-3 / cosmopars['a'] # z=0 -> expansion factor = 1
+            msel = np.array(halos['M200c_Msun']) >= mhmin
+            zsel = np.logical_and(zs >= zmin, zs <= zmax)
+            sel = np.logical_and(msel, zsel)
+            del msel
+            del zsel
+            xs = xs[sel]
+            ys = ys[sel]
+            sz = sz[sel]
+        
+        patches = [mpl.patches.Circle((xs[ind], ys[ind]), sz[ind]) \
+                   for ind in range(len(xs))] # x, y axes only
+    
+        collection = mpl.collections.PatchCollection(patches)
+        collection.set(edgecolor=ancolor, facecolor='none', linewidth=0.7)
+        ax.add_collection(collection)
+    
+    plt.savefig(outputdir + 'coverfig_%s_halos-%s.pdf'%(depth, dohalos), format='pdf')
