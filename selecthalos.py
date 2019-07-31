@@ -27,10 +27,12 @@ def selectone(fo, select, cosmopars, length):
     '''
 
     if select[0] == 'galaxyid':
-        return np.array([gid in select[1] for gid in np.array(fo['galaxyid'])])
+        groupmatches = cu.match(np.array(fo['galaxyid']), np.array(select[1]), arr2_sorted=False, arr2_index=None)
+        return groupmatches >= 0
 
     elif select[0] == 'groupid':
-        return np.array([gid in select[1] for gid in np.array(fo['groupid'])])
+        groupmatches = cu.match(np.array(fo['groupid']), np.array(select[1]), arr2_sorted=False, arr2_index=None)
+        return groupmatches >= 0
 
     elif select[0] in ['X', 'Y', 'Z']:
         pos = np.array(fo['%scom_cMpc'%select[0]])
