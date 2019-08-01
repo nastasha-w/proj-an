@@ -9,7 +9,7 @@ import os # for searching directories for z***p*** match
 
 #import pdb
 
-file_type_options = ['snap', 'subh', 'fof', 'particles']
+file_type_options = ['snap', 'subh', 'fof', 'particles', 'sub'] # sub is an alias for subh, to allow the same standard as for read_eagle
 
 sims = ['OWLS',
         'BAHAMAS',
@@ -123,6 +123,9 @@ class Gadget(object):
         Get filename, including full path and load extra info about number of
         particles in file
         '''
+        if file_type == 'sub': # accept read_eagle standard
+            file_type = 'subh'
+            
         dirpath = model_dir.rstrip('/') + '/data/'
         if sim == 'OWLS':
             if file_type == 'snap':
@@ -180,9 +183,9 @@ class Gadget(object):
                 string = _dir.rsplit('_')
                 dirname = _dir
                 if file_type == 'group':
-                    fname = 'group_tab_%.3i_%s.'%(snapnum, string[-1])
+                    fname = '/group_tab_%.3i_%s.'%(snapnum, string[-1])
                 elif file_type == 'subh':
-                    fname = 'eagle_subfind_tab_%.3i_%s.'%(snapnum, string[-1])
+                    fname = '/eagle_subfind_tab_%.3i_%s.'%(snapnum, string[-1])
         # load actual file
         filename = dirpath + dirname + fname
         try:
@@ -470,7 +473,7 @@ class Gadget(object):
 
         #Set up array depending on what we're reading in
         string = var.rsplit('/')
-        self.data = np.empty([0])
+        self.data = np.empty([0]) # setup is overriden in append_result to deal with ND-arrays
 
         #read data from first file
         if verbose: print('Reading variable %s'%var)
@@ -541,7 +544,10 @@ class Gadget(object):
         Append var data from file j to self.data
         '''
         try:
-            self.data = np.append(self.data, f[var][:].flatten(), axis=0)
+            if len(self.data) == 0: # override initial setup, since this olnly works for 1D arrays
+                self.data = np.array(f[var])
+            else:
+                self.data = np.append(self.data, np.array(f[var]), axis=0) #original: f[var][:].flatten()
             return
         except KeyError:
             print('KeyError: Variable %s not found in file %i'%(var, j))

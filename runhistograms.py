@@ -1673,18 +1673,18 @@ if jobind >= 20016 and jobind <= 20029:
     L_x = 100.
     npix_x = 32000
     rmin_r200c = 0.
-    rmax_r200c = 2.5
-    mindist_pkpc = 500.
+    rmax_r200c = 3.
+    mindist_pkpc = 100.
     catname = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
     # select 1000 halos randomly in  0.5 dex M200c bins (trying to do everything just gives memory errors)
     galids_dct = sh.L0100N1504_27_Mh0p5dex_7000.galids() 
-    print('for debug: galids_dct:\n')
-    print(galids_dct)
-    print('\n')
+    #print('for debug: galids_dct:\n')
+    #print(galids_dct)
+    #print('\n')
     allids = [gid for key in galids_dct.keys() for gid in galids_dct[key]]
-    print('for debug: allids')
-    print(allids)
-    print('\n')
+    #print('for debug: allids')
+    #print(allids)
+    #print('\n')
     selection = [('galaxyid', np.array(allids))]
 else:
     selection = 'string: trigger error'
