@@ -22,6 +22,7 @@ import matplotlib.patches as mpatches
 import matplotlib.gridspec as gsp
 import matplotlib.cm as cm
 
+import make_maps_opts_locs as ol
 import makecddfs as mc # don't use getcosmopars! This requires simfile and the whole readEagle mess
 import eagle_constants_and_units as c
 import cosmo_utils as cu
@@ -544,7 +545,7 @@ def plotsample2(parent=2, sub='a'):
         metadataname = mdir + 'sample_%i%s_projdata.txt'%(parent, sub)
         afactor = 0.908563 # from eagle wiki
         
-    plotname = mdir + 'emission_sample%i%s_1.5R200c.pdf'%(parent, sub)
+    plotname = mdir + 'emission_sample%i%s_1.5R200c_arcmin.pdf'%(parent, sub)
     ds = pd.read_csv(samplename, sep='\t', header=0)
     dm = pd.read_csv(metadataname, sep='\t', header=0)
     
@@ -989,7 +990,9 @@ def plotSBmaps(line, res=800, fill=0):
                  'o8':     'O VIII 653.55 eV',\
                  'fe17':   'Fe XVII 726.97 eV'}
     
-    clabel = r' SB $[\log_{10} \, \mathrm{photons}\, \mathrm{cm}^{-2}\mathrm{s}^{-1}\mathrm{arcsec}^{-2}]$'
+    clabel = r' SB $[\log_{10} \, \mathrm{erg}\, \mathrm{cm}^{-2}\mathrm{s}^{-1}\mathrm{arcmin}^{-2}]$'
+    unitconv = ol.line_eng_ion[line] * arcmin2
+    
     with h5py.File(filename, 'r') as fi:
         keys = fi.keys()
         zcens = {key: float(key.split('-')[-1]) for key in keys}
@@ -998,9 +1001,9 @@ def plotSBmaps(line, res=800, fill=0):
         
         image = np.array(fi[path])
     
-    deg2 = (np.pi / 180.)**2
-    arcsec2 = deg2 / 60.**4
-    image = image + np.log10(arcsec2)
+    #deg2 = (np.pi / 180.)**2
+    #arcsec2 = deg2 / 60.**4
+    image = image + np.log10(unitconv)
     
     fig = plt.figure(figsize=(5.0, 5.0))
     ax = fig.add_axes([0., 0., 1., 1.])
@@ -1013,12 +1016,31 @@ def plotSBmaps(line, res=800, fill=0):
     cax.spines['left'].set_color('white')
     cax.spines['right'].set_color('white')
     
-    cmap = 'inferno'
+    cmap1 = 'gist_gray'
+    cmap2 = 'inferno'
     vmin = -25.
-    vmax = -10.
+    vmax = -15.
+    vpiv = -18.
+    # cobble together a color map
+    nsample = 256
+    cmap1 = mpl.cm.get_cmap(cmap1)
+    cmap2 = mpl.cm.get_cmap(cmap2)
+    # the parts of the 0., 1. range to map each color bar to
+    range1_mapto = np.linspace(0., (vpiv - vmin)/ (vmax - vmin), nsample)
+    range2_mapto = np.linspace((vpiv - vmin)/ (vmax - vmin), 1., nsample)
+    # the parts of each color bar to use
+    range1_mapfrom = np.linspace(0., 0.65, nsample) 
+    range2_mapfrom = np.linspace(0.2, 1., nsample)
+    maplist1 = [(range1_mapto[i], cmap1(range1_mapfrom[i])) for i in range(nsample)]
+    maplist2 = [(range2_mapto[i], cmap2(range2_mapfrom[i])) for i in range(nsample)]
+    
+    cmap = mpl.colors.LinearSegmentedColormap.from_list(
+         'bw_to_color', maplist1 + maplist2)
+    cmap.set_under(cmap(0.))
+    cmap.set_over(cmap(1.))
+    
     extent = (0., size, 0., size)
     
-    cmap = mpl.cm.get_cmap(cmap)
     ax.set_facecolor(cmap(0.))
     img = ax.imshow(image.T, origin='lower', interpolation='nearest', extent=extent, cmap=cmap, vmin=vmin, vmax=vmax)
     
@@ -1027,13 +1049,14 @@ def plotSBmaps(line, res=800, fill=0):
     cax.text(0., 0.5, str(vmin), color='white', horizontalalignment='left', verticalalignment='center', fontsize=fontsize, transform=cax.transAxes)
     cax.text(1., 0.5, str(vmax), color='black', horizontalalignment='right', verticalalignment='center', fontsize=fontsize, transform=cax.transAxes)
     cax.text(0.5, 0.5, clabel, color='white', horizontalalignment='center', verticalalignment='center', fontsize=fontsize, transform=cax.transAxes)
+    cax.tick_params(labelbottom=False, bottom=False)
     
     ax.text(0.5, 0.95, linenames[line], color='white', horizontalalignment='center', verticalalignment='top', fontsize=fontsize + 1, transform=ax.transAxes)
 
     ax.plot([4., 14.], [0.98 * size] * 2, color='white', linewidth=2)
     ax.text(8. / size, 0.97, '10 cMpc', color='white', horizontalalignment='center', verticalalignment='top', fontsize=fontsize, transform=ax.transAxes)
     
-    plt.savefig(mdir + 'SBmap_%s_slice-%-of-7.pdf'%(line, fill + 1), format='pdf')
+    plt.savefig(mdir + 'SBmap_%s_slice-%-of-7_detlim-%s.pdf'%(line, fill + 1, vpiv), format='pdf')
     
 
 def plotionwpd(line, minsb):
