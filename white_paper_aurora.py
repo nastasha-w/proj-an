@@ -1059,7 +1059,7 @@ def plotSBmaps(line, res=800, fill=0):
     plt.savefig(mdir + 'SBmap_%s_slice-%-of-7_detlim-%s.pdf'%(line, fill + 1, vpiv), format='pdf')
     
 
-def plotionwpd(line, minsb):
+def plotionwpd(line, minsb, fraction=False):
     pdir = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/'
     mdir = '/cosma5/data/dp004/dc-wije1/line_em_abs/img/'
     if line == 'o8':
@@ -1073,13 +1073,14 @@ def plotionwpd(line, minsb):
     
     logrhob = logrhob_av_ea_27 + np.log10(rho_to_nh)
     
-    clabel = r'$ \log_{10} \, \mathrm{sky \; fraction} \,/\, \Delta \log_{10} n_{\mathrm{H}} \,  \Delta \log_{10} T$'
     xlabel = r'$\log_{10} \, n_{\mathrm{H}} \; \mathrm{cm}^{-3}$ ' + linenames[line] + ' weighted'
     ylabel = r'$\log_{10} \, T [\mathrm{K}]$ ' + linenames[line] + ' weighted'
     
+    unitconv = ol.line_eng_ion[line] * arcmin2
+    
     with h5py.File(pdir + filename, 'r') as fi:
         hist = np.array(fi['masks_0/hist'])
-        ax0_em = np.array(fi['bins/axis_0']) + np.log10(arcsec2)
+        ax0_em = np.array(fi['bins/axis_0']) + np.log10(unitconv)
         ax1_nh = np.array(fi['bins/axis_1']) + np.log10(rho_to_nh)
         ax2_tk = np.array(fi['bins/axis_2'])
         totpix = 7 * 32000**2
@@ -1099,14 +1100,25 @@ def plotionwpd(line, minsb):
     minsb_real = ax0_em[minsb_ind]
     maximg = np.sum(hist[:, :, :], axis=0) / float(totpix) / np.diff(ax1_nh)[:, np.newaxis] / np.diff(ax2_tk)[np.newaxis, :]
     img = np.sum(hist[minsb_ind:, :, :], axis=0) / float(totpix) / np.diff(ax1_nh)[:, np.newaxis] / np.diff(ax2_tk)[np.newaxis, :]
-    img = np.log10(img)
-    maximg = np.log10(maximg)    
 
-    cmap = 'gist_yarg'
-    vmax = np.max(maximg)
-    vmin = vmax - 10.
     
-    imgob = ax.pcolormesh(ax1_nh, ax2_tk, img.T, cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True)
+    if fraction:
+        clabel = r'observable fraction'
+        cmap = 'viridis'
+        img = img.astype(np.float)
+        img /= maximg
+        vmax=1.
+        vmin=0.
+        imgob = ax.pcolormesh(ax1_nh, ax2_tk, img.T, cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True)
+    else:
+        clabel = r'$ \log_{10} \, \mathrm{sky \; fraction} \,/\, \Delta \log_{10} n_{\mathrm{H}} \,  \Delta \log_{10} T$'
+        cmap = 'gist_yarg'
+        img = np.log10(img)
+        maximg = np.log10(maximg)    
+        vmax = np.max(maximg)
+        vmin = vmax - 10.
+        imgob = ax.pcolormesh(ax1_nh, ax2_tk, img.T, cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True)
+    
     ax.axvline(logrhob, color='blue', linestyle='dotted')
     ax.set_xlabel(xlabel, fontsize=fontsize)
     ax.set_ylabel(ylabel, fontsize=fontsize)
@@ -1114,7 +1126,7 @@ def plotionwpd(line, minsb):
     fig.colorbar(imgob, cax=cax, orientation='vertical', extend='neither')
     cax.set_ylabel(clabel, fontsize=fontsize)
     
-    fig.suptitle(linenames[line] + r'$ > 10^{%.2f} \; \mathrm{photons}\, \mathrm{cm}^{-2} \mathrm{s}^{-1} \mathrm{arcsec}^{-2}$'%minsb_real, fontsize=fontsize)
+    fig.suptitle(linenames[line] + r'$ > 10^{%.2f} \; \mathrm{erg}\, \mathrm{cm}^{-2} \mathrm{s}^{-1} \mathrm{arcmin}^{-2}$'%minsb_real, fontsize=fontsize)
     
-    outname = 'phase_diagram_hist_emission_%s_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_14.2857142857slice_zcen-all_z-projection_T4EOS_and_weighted_rho_T_minSB-%s.pdf'%(line, minsb_real)
+    outname = 'phase_diagram_hist_emission_%s_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_14.2857142857slice_zcen-all_z-projection_T4EOS_and_weighted_rho_T_minSB-%s_fraction-%s.pdf'%(line, minsb_real, fraction)
     plt.savefig(mdir + outname, format='pdf', dpi=400)

@@ -2,8 +2,7 @@
 # The Hydrangea simulations: galaxy formation in and around massive clusters
 # data for redshift zero
 # 1st 24: data out to 10r200c, last 6: data out to 5r200c
-Halo	r200c	r200m	r500c	M200c	M200m	M500c	Mstar500c	x	y	z	cNFW	D5	Ngalaxies 	 
-ID		(pMpc)					[log10(M/M⊙)]						(pMpc) 	 			(pMpc)	<r200c	<10r200c 
+HaloID	r200c_pMpc	r200m_pMpc	r500c_pMpc	M200c_log10(M/Msun)	M200m_log10(M/Msun)	M500c_log10(M/Msun)	Mstar500c_log10(M/Msun)	x_pMpc	y_pMpc	z_pMpc	cNFW	D5_pMpc	Ngalaxies<r200c Ngalaxies<10r200c 	  
 CE-0 	1.03 	1.74 	0.68 	14.07 	14.24 	13.92 	12.21 	313.65 	2218.64 	2652.71 	5.3 	11.4 	36 	181 
 CE-1 	1.02 	1.63 	0.65 	14.05 	14.15 	13.87 	12.16 	2598.97 	2552.80 	2266.29 	3.7 	6.9 	34 	163 
 CE-2 	1.02 	1.63 	0.65 	14.05 	14.15 	13.87 	12.16 	2889.69 	2880.09 	355.44 	6.1 	15.8 	34 	163 
