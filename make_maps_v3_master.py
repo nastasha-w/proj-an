@@ -2745,7 +2745,7 @@ def luminosity_calc_halpha_fromSFR(vardict,excludeSFR,last=True,updatesel=True):
     return vardict.particle['StarFormationRate'], convtolum # array, cgsconversion
 
 
-def readbasic(vardict,quantity,excludeSFR,last = True,**kwargs):
+def readbasic(vardict, quantity, excludeSFR, last=True, **kwargs):
     '''
     for some derived quantities, certain keywords are required
     '''
@@ -2774,6 +2774,13 @@ def readbasic(vardict,quantity,excludeSFR,last = True,**kwargs):
     elif quantity == 'propvol':
         vardict.getpropvol(last=last)
     # default case: standard simulation quantity read-in
+    elif quantity == 'propvol':
+        vardict.readif('Mass', rawunits=True)
+        vardict.readif('Density', rawunits=True)
+        vardict.add_part('propvol', vardict.particle['Mass'] / vardict.particle['Density'])
+        vardict.CGSconv['propvol'] = vardict.CGSconv['Mass'] / vardict.CGSconv['Density']
+        vardict.delif('Mass', last=last)
+        vardict.delif('Density', last=last)
     else:
         vardict.readif(quantity,rawunits=True)
 
@@ -4231,6 +4238,19 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, sylviassh
 
     return q
 
+def get3ddist(vardict, cen, radius, units='cMpc', last=True):
+    '''
+    units: cMpc or a number (in cMpc), useful for e.g. R200c units
+    '''
+    # force read-in so units are known
+    coords = vardict.simfile.readarray('PartType%s/%s' %(vardict.parttype, 'Coordinates'), rawunits=True, region=vardict.region).astype(np.float32)[vardict.sel.val, :]
+    coords *= (1./ vardict.simfile.h)
+    translate({'cd': coords}, 'cd', cen, np.array((vardict.simfile.boxsize / vardict.simfile.h,) *3), False) # non-periodic -> centered on cen
+    radii = np.sqrt(np.sum(coords**2, axis=1))
+    vardict.add_part('r3D', radii)
+    vardict.CGSconv['r3D'] = c.cm_per_mpc * vardict.simfile.a
+    del coords
+
 def makehistograms_perparticle(ptype, simnum, snapnum, var, simulation,\
                               excludeSFR, abunds, ion, parttype, quantity,\
                               axesdct, axbins=100,\
@@ -4292,11 +4312,25 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, simulation,\
 
     outfile = h5py.File(outfilename, 'a')
     if groupname in outfile.keys():
-        print('This histogram already seems to exist; specify name_append to get a new unique name')
         outfile.close()
-        return None
+        raise RuntimeError('This histogram already seems to exist; specify name_append to get a new unique name')
     else:
         group = outfile.create_group(groupname)
+
+    if 'Header' not in outfile.keys():
+        hed = outfile.create_group('Header')
+        hed.attrs.create('simnum', simnum)
+        hed.attrs.create('snapnum', snapnum)
+        hed.attrs.create('var', var)
+        hed.attrs.create('simulation', simulation)
+        csm = hed.create_group('cosmopars')
+        csm.attrs.create('a', simfile.a)
+        csm.attrs.create('z', simfile.z)
+        csm.attrs.create('h', simfile.h)
+        csm.attrs.create('omegab', simfile.omegab)
+        csm.attrs.create('omegam', simfile.omegam)
+        csm.attrs.create('omegalambda', simfile.omegalambda)
+        csm.attrs.create('boxsize', simfile.boxsize)
 
     axdata = []
     axbins_touse = []
@@ -4381,10 +4415,190 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, simulation,\
             else:
                 hist += hist_temp
                 if not np.all(np.array([np.all(edges[i] == edges_temp[i]) for i in range(len(edges))])):
-                    print('Error: edges mismatch')
                     outfile.close()
+                    raise RuntimeError('Error: edges mismatch in histogramming loop (slind = %i)'%slind)
+                    
                     return None
     group.create_dataset('histogram', data=hist)
+    group['histogram'].attrs.create('sum of weights', np.sum(weight)) # should be equal to sum of the histogram, but it's good to check
+    bingrp = group.create_group('binedges')
+    for i in range(len(edges)):
+        bingrp.create_dataset('Axis%i'%(i), data=edges[i])
+    outfile.close()
+    return hist, axbins
+
+### currently just a copy of untested makehistograms_perparticle
+def makehistograms_radprof3D(ptype, simnum, snapnum, var, simulation,\
+                             excludeSFR, abunds, ion, parttype, quantity,\
+                             axesdct, axbins=100,\
+                             sylviasshtables=False,\
+                             L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=None,\
+                             misc=None,\
+                             name_append=None, log=True,\
+                             rbins=100, runit='cMpc'):
+    '''
+    only does a few very specific caluclations in current implementation
+
+    arguments similar to make_map
+    ptype, excludeSFR, abunds, ion, parttype, quantity: as in make_map, for the
+        thing to weight the histogram by
+    axesdct: list of dictionaries for each hist: the axes of the histogram
+        entires are (the non-None elements of) ptype, exlcudeSFR, abunds, ion, parttype, quantity
+    TODO: wishlisting implementation: avoid double read-ins
+    '''
+    res = inputcheck(ptype, simnum, snapnum, var, simulation,\
+                              L_x, L_y, L_z, centre, Ls_in_Mpc,\
+                              excludeSFR, abunds, ion, parttype, quantity,\
+                              axesdct, axbins,\
+                              misc)
+    if type(res) == int:
+        print('Input error %i'%res)
+        return None
+
+    simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
+         ptypeW,\
+         ionW, abundsW, quantityW,\
+         ionQ, abundsQ, quantityQ, ptypeQ,\
+         excludeSFRW, excludeSFRQ, parttype,\
+         theta, phi, psi, \
+         sylviasshtables,\
+         var, axis, log, velcut,\
+         periodic, kernel, saveres,\
+         simulation, LsinMpc,\
+         select, misc, ompproj = res[1:]
+
+    print('Processed input:')
+    print('L_x, L_y, L_z, centre, Ls_in_Mpc,\n%s, %s, %s, %s, %s'%(L_x, L_y, L_z, centre, Ls_in_Mpc,))
+    print('excludeSFR, abunds, ion, parttype, quantity,\n%s, %s, %s, %s, %s'%(excludeSFR, abunds, ion, parttype, quantity,))
+    print('axesdct, %s'%(axesdct))
+    print('axbins, %s'%(axbins))
+    print('misc, %s'%(misc))
+    print('\n')
+
+    if not L_x is None and L_y is None and L_z is None and centre is None:
+        print('Region selection is not yet implemented and will be ignored')
+
+    simfile = pc.Simfile(simnum, snapnum, var, file_type=ol.file_type, simulation=simulation)
+    vardict = pc.Vardict(simfile, '0', [], region = None, readsel = None)
+
+    outfilename = namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
+                              None, None, None, None, None, simfile.boxsize, simfile.h, excludeSFR,\
+                              abunds, ion, parttype, quantity,\
+                              misc)
+    axnames = [namehistogram_perparticle_axis(dct) for dct in axesdct]
+    groupname = '_'.join(axnames) + name_append
+
+    outfile = h5py.File(outfilename, 'a')
+    if groupname in outfile.keys():
+        outfile.close()
+        raise RuntimeError('This histogram already seems to exist; specify name_append to get a new unique name')
+    else:
+        group = outfile.create_group(groupname)
+    
+     if 'Header' not in outfile.keys():
+        hed = outfile.create_group('Header')
+        hed.attrs.create('simnum', simnum)
+        hed.attrs.create('snapnum', snapnum)
+        hed.attrs.create('var', var)
+        hed.attrs.create('simulation', simulation)
+        csm = hed.create_group('cosmopars')
+        csm.attrs.create('a', simfile.a)
+        csm.attrs.create('z', simfile.z)
+        csm.attrs.create('h', simfile.h)
+        csm.attrs.create('omegab', simfile.omegab)
+        csm.attrs.create('omegam', simfile.omegam)
+        csm.attrs.create('omegalambda', simfile.omegalambda)
+        csm.attrs.create('boxsize', simfile.boxsize)
+        
+    axdata = []
+    axbins_touse = []
+    for axind in range(len(axesdct)): #loop: large memory use, most likely, in each part
+        dct_t = axesdct[axind]
+        ptype_t = dct_t['ptype']
+        excludeSFR_t = dct_t['excludeSFR']
+        if 'ion' in dct_t.keys():
+            ion = dct_t['ion']
+        else:
+            ion = None
+        if 'abunds' in dct_t.keys():
+            abunds = dct_t['abunds']
+        else:
+            abunds = None
+        if 'quantity' in dct_t.keys():
+            quantity = dct_t['quantity']
+        else:
+            quantity = None
+        if 'misc' in dct_t.keys():
+            misc = dct_t['misc']
+        else:
+            misc = None
+
+        axdata_t = getparticledata(vardict, ptype_t, excludeSFR_t, abunds, ion, parttype, quantity, sylviasshtables=sylviasshtables, last=True, updatesel=False, misc=None)
+        if log:
+            axdata_t = np.log10(axdata_t)
+        min_t = np.min(axdata_t[np.isfinite(axdata_t)])
+        max_t = np.max(axdata_t[np.isfinite(axdata_t)])
+
+        grp = group.create_group(axnames[axind])
+        grp.attrs.create('number of particles', len(axdata_t))
+        grp.attrs.create('number of particle with finite values', int(np.sum(np.isfinite(axdata_t))) )
+
+        if axbins is not None:
+            if hasattr(axbins, '__len__'):
+                axbins_t = axbins[axind]
+            else:
+                axbins_t = axbins
+            if type(axbins_t) == int: # number of bins
+                axbins_t = np.linspace(min_t * ( 1. - 1.e-7), max_t * (1. + 1.e-7), axbins_t + 1)
+                grp.attrs.create('number of particles > max value', 0)
+                grp.attrs.create('number of particles < min value', 0)
+            elif isinstance(axbins_t, num.Number): # something float-like: spacing
+                # search for round values up to spacing below min and above max
+                minbin = np.floor(min_t/axbins_t) * axbins_t
+                maxbin = np.ceil(max_t/axbins_t) * axbins_t
+                axbins_t = np.arange(minbin, maxbin + axbins_t/2., axbins_t)
+                grp.attrs.create('number of particles > max value', 0)
+                grp.attrs.create('number of particles < min value', 0)
+            else: # list/array of bin edges
+                if axbins[-1] < max_t:
+                    numgtr = np.sum(axdata_t[np.isfinite(axdata_t)] > axbins[-1])
+                else:
+                    numgtr = 0
+                if axbins[0] > min_t:
+                    numltr = np.sum(axdata_t[np.isfinite(axdata_t)] < axbins[0])
+                else:
+                    numltr = 0
+                grp.attrs.create('number of particles > max value', numgtr)
+                grp.attrs.create('number of particles < min value', numltr)
+        grp.create_dataset('bins', data=axbins_t)
+        axbins_touse += [axbins_t]
+        axdata += [axdata_t]
+        del axdata_t
+    weight = getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, last=True, updatesel=False, misc=None)
+
+    # loop to prevent memory from running out
+    maxperslice = 752**3 // 8
+    if len(weight) < maxperslice:
+        hist, edges = np.histogramdd(axdata, weights=weight, bins=axbins_touse)
+    else:
+        lentot = len(weight)
+        numperslice = maxperslice
+        slices = [slice(i*numperslice, min((i+1)*numperslice), lentot) for i in range(int(np.ceil(float(lentot) / float(numperslice))))]
+        for slind in range(len(slices)):
+            axdata_temp = [data[slices[slind]] for data in axdata]
+            hist_temp, edges_temp = np.histogramdd(axdata_temp, weights=weight[slices[slind]], bins=axbins_touse)
+            if slind == 0 :
+                hist = hist_temp
+                edges = edges_temp
+            else:
+                hist += hist_temp
+                if not np.all(np.array([np.all(edges[i] == edges_temp[i]) for i in range(len(edges))])):
+                    outfile.close()
+                    raise RuntimeError('Error: edges mismatch in histogramming loop (slind = %i)'%slind)
+                    
+                    return None
+    group.create_dataset('histogram', data=hist)
+    group['histogram'].attrs.create('sum of weights', np.sum(weight)) # should be equal to sum of the histogram, but it's good to check
     bingrp = group.create_group('binedges')
     for i in range(len(edges)):
         bingrp.create_dataset('Axis%i'%(i), data=edges[i])
