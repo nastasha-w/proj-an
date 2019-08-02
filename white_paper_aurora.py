@@ -1059,6 +1059,84 @@ def plotSBmaps(line, res=800, fill=0):
     plt.savefig(mdir + 'SBmap_%s_slice-%-of-7_detlim-%s.pdf'%(line, fill + 1, vpiv), format='pdf')
     
 
+def plotSBmaps_cluster(line, ceh=28):
+    ndir = '/net/quasar/data2/wijers/temp/'
+    if ceh == 28:
+        filename = 'emission_%s_CEH-28_26_test3.4_PtAb_C2Sm_1600pix_14.0slice_zcen1592.765625_x1596.1184082-pm6.25_y1606.85961914-pm6.25_z-projection_T4EOS.npz'%line
+    size = 6.25
+    
+    filename = ndir + filename
+    fontsize = 12
+    
+    linenames = {'o7trip': r'O VII He $\alpha$ triplet',\
+                 'o8':     'O VIII 653.55 eV',\
+                 'fe17':   'Fe XVII 726.97 eV'}
+    
+    clabel = r' SB $[\log_{10} \, \mathrm{erg}\, \mathrm{cm}^{-2}\mathrm{s}^{-1}\mathrm{arcmin}^{-2}]$'
+    unitconv = ol.line_eng_ion[line] * arcmin2
+    
+    image = np.load(filename)['arr_0']
+    
+    #deg2 = (np.pi / 180.)**2
+    #arcsec2 = deg2 / 60.**4
+    image = image + np.log10(unitconv)
+    
+    fig = plt.figure(figsize=(5.0, 5.0))
+    ax = fig.add_axes([0., 0., 1., 1.])
+    cax = fig.add_axes([0.1, 0.05, 0.8, 0.07])
+    
+    cax.tick_params(left=False, right=False, bottom=False, top=False, labelbottom=False)
+    ax.tick_params(left=False, right=False, bottom=False, top=False)
+    cax.spines['bottom'].set_color('white') 
+    cax.spines['top'].set_color('white')
+    cax.spines['left'].set_color('white')
+    cax.spines['right'].set_color('white')
+    
+    cmap1 = 'gist_gray'
+    cmap2 = 'inferno'
+    vmin = -25.
+    vmax = -15.
+    vpiv = -18.
+    # cobble together a color map
+    nsample = 256
+    cmap1 = mpl.cm.get_cmap(cmap1)
+    cmap2 = mpl.cm.get_cmap(cmap2)
+    # the parts of the 0., 1. range to map each color bar to
+    range1_mapto = np.linspace(0., (vpiv - vmin)/ (vmax - vmin), nsample)
+    range2_mapto = np.linspace((vpiv - vmin)/ (vmax - vmin), 1., nsample)
+    # the parts of each color bar to use
+    range1_mapfrom = np.linspace(0., 0.65, nsample) 
+    range2_mapfrom = np.linspace(0.2, 1., nsample)
+    maplist1 = [(range1_mapto[i], cmap1(range1_mapfrom[i])) for i in range(nsample)]
+    maplist2 = [(range2_mapto[i], cmap2(range2_mapfrom[i])) for i in range(nsample)]
+    
+    cmap = mpl.colors.LinearSegmentedColormap.from_list(
+         'bw_to_color', maplist1 + maplist2)
+    cmap.set_under(cmap(0.))
+    cmap.set_over(cmap(1.))
+    
+    extent = (0., size, 0., size)
+    
+    ax.set_facecolor(cmap(0.))
+    img = ax.imshow(image.T, origin='lower', interpolation='nearest', extent=extent, cmap=cmap, vmin=vmin, vmax=vmax)
+    
+    fig.colorbar(img, cax=cax, orientation='horizontal')
+    
+    cax.text(0., 0.5, str(vmin), color='white', horizontalalignment='left', verticalalignment='center', fontsize=fontsize, transform=cax.transAxes)
+    cax.text(1., 0.5, str(vmax), color='black', horizontalalignment='right', verticalalignment='center', fontsize=fontsize, transform=cax.transAxes)
+    cax.text(0.5, 0.5, clabel, color='white', horizontalalignment='center', verticalalignment='center', fontsize=fontsize, transform=cax.transAxes)
+    cax.tick_params(labelbottom=False, bottom=False)
+    
+    ax.text(0.5, 0.95, linenames[line], color='white', horizontalalignment='center', verticalalignment='top', fontsize=fontsize + 1, transform=ax.transAxes)
+
+    ax.plot([0.25, 1.25], [0.98 * size] * 2, color='white', linewidth=2)
+    ax.text(0.75 / size, 0.97, '1 cMpc', color='white', horizontalalignment='center', verticalalignment='top', fontsize=fontsize, transform=ax.transAxes)
+    
+    plt.savefig(mdir + 'SBmap_CEH-%i_snap26_%s_detlim-%s.pdf'%(ceh, line, vpiv), format='pdf')
+    
+
+
+        
 def plotionwpd(line, minsb, fraction=False):
     pdir = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/'
     mdir = '/cosma5/data/dp004/dc-wije1/line_em_abs/img/'
