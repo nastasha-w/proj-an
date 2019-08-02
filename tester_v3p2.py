@@ -943,4 +943,4 @@ def selecthalos(halocat='/net/luttero/data2/proc/catalogue_RefL0025N0376_snap19_
         sel = np.array([np.random.choice(ind, 1) for ind in inds])
         
         galids = np.array(hc['galaxyid'])[sel]
-        groups = np.array(hc['galaxyid'])[sel]
+        groups = np.array(hc['groupid'])[sel]
