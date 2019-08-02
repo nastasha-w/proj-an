@@ -924,6 +924,7 @@ def plot_cddfsplits(ions, fontsize=fontsize, imgname=None, techvars=[0], relativ
                 plotx = plotx[:-1] + 0.5 * np.diff(plotx)
                 mask = masks[mi]
                 if relative:
+                    ax.plot(plotx, np.log10((hists[var][ion][mask]) / hists[var][ion]['nomask']), color='black', linestyle=linestyles[var], linewidth=linewidths[var] + 0.5, alpha=alphas[var], label=masslabels[mask])
                     ax.plot(plotx, np.log10((hists[var][ion][mask]) / hists[var][ion]['nomask']), color=colors[mask], linestyle=linestyles[var], linewidth=linewidths[var], alpha=alphas[var], label=masslabels[mask])
                     ax.axhline(np.log10(fcovs[var][ion][mask]), 0., fcovticklen, color=colors[mask], linestyle=linestyles[var], linewidth=max(linewidths[var] - 1., 0.5), alpha=alphas[var], zorder=-1)
                     ax.axhline(np.log10(fcovs[var][ion][mask]), 1. - fcovticklen, 1., color=colors[mask], linestyle=linestyles[var], linewidth=max(linewidths[var] - 1., 0.5), alpha=alphas[var], zorder=-1)
