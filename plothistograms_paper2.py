@@ -760,6 +760,7 @@ def plot_cddfsplits(ions, fontsize=fontsize, imgname=None, techvars=[0], relativ
     panelwidth = 2.5
     panelheight = 2.
     legheight = 0.6
+    fcovticklen = 0.035
     figwidth = numcols * panelwidth + 0.6 
     figheight = numcols * panelheight + 0.2 * numcols + legheight
     fig = plt.figure(figsize=(figwidth, figheight))
@@ -924,21 +925,23 @@ def plot_cddfsplits(ions, fontsize=fontsize, imgname=None, techvars=[0], relativ
                 mask = masks[mi]
                 if relative:
                     ax.plot(plotx, np.log10((hists[var][ion][mask]) / hists[var][ion]['nomask']), color=colors[mask], linestyle=linestyles[var], linewidth=linewidths[var], alpha=alphas[var], label=masslabels[mask])
-                    ax.axhline(np.log10(fcovs[var][ion][mask]), color=colors[mask], linestyle=linestyles[var], linewidth=max(linewidths[var] - 1., 0.5), alpha=alphas[var], zorder=-1)
+                    ax.axhline(np.log10(fcovs[var][ion][mask]), 0., fcovticklen, color=colors[mask], linestyle=linestyles[var], linewidth=max(linewidths[var] - 1., 0.5), alpha=alphas[var], zorder=-1)
+                    ax.axhline(np.log10(fcovs[var][ion][mask]), 1. - fcovticklen, 1., color=colors[mask], linestyle=linestyles[var], linewidth=max(linewidths[var] - 1., 0.5), alpha=alphas[var], zorder=-1)
                 else:
                     ax.plot(plotx, np.log10((hists[var][ion][mask]) / dXtotdlogN[var][ion]), color=colors[mask], linestyle=linestyles[var], linewidth=linewidths[var], alpha=alphas[var], label=masslabels[mask])
             halosum = np.sum(np.array([hists[var][ion][ms] for ms in masks]), axis=0)
             fcovsum = np.sum(np.array([fcovs[var][ion][ms] for ms in masks]), axis=0)
             if relative:
                 ax.plot(plotx, np.log10(halosum / hists[var][ion]['nomask']), color=sumcolor, linestyle=linestyles[var], linewidth=linewidths[var], alpha=alphas[var], label='halo sum')
-                ax.axhline(np.log10(fcovsum), color=sumcolor, linestyle=linestyles[var], linewidth=max(linewidths[var] - 1., 0.5), alpha=alphas[var], zorder=-1)
+                ax.axhline(np.log10(fcovsum), 0., fcovticklen, color=sumcolor, linestyle=linestyles[var], linewidth=max(linewidths[var] - 1., 0.5), alpha=alphas[var], zorder=-1)
+                ax.axhline(np.log10(fcovsum), 1. - fcovticklen, 1., color=sumcolor, linestyle=linestyles[var], linewidth=max(linewidths[var] - 1., 0.5), alpha=alphas[var], zorder=-1)
             else:
                 ax.plot(plotx, np.log10(halosum / dXtotdlogN[var][ion]), color=sumcolor, linestyle=linestyles[var], linewidth=linewidths[var], alpha=alphas[var], label='halo sum')
                 ax.plot(plotx, np.log10((hists[var][ion]['nomask']) / dXtotdlogN[var][ion]), color=totalcolor, linestyle=linestyles[var], linewidth=linewidths[var], alpha=alphas[var], label=masslabels[mask])
         if relative:
             ax.axhline(0., color=totalcolor, linestyle='solid', linewidth=1.5, alpha=0.7)
             ylim = ax.get_ylim()
-            ax.axvline(approx_breaks[ion], ylim[0], 0.3 , color=ioncolors[ion], linewidth=1.5)
+            ax.axvline(approx_breaks[ion], ylim[0], 0.2 , color='gray', linewidth=1.5) # ioncolors[ion]
     #lax.axis('off')
     
     lcs = []

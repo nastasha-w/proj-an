@@ -4430,12 +4430,13 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, simulation,\
 ### currently just a copy of untested makehistograms_perparticle
 def makehistograms_radprof3D(ptype, simnum, snapnum, var, simulation,\
                              excludeSFR, abunds, ion, parttype, quantity,\
-                             axesdct, axbins=100,\
+                             axesdct, groupnum,\
+                             axbins=100, subgroupnum=0,\
+                             rbins=100, runit='cMpc',\
                              sylviasshtables=False,\
                              L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=None,\
                              misc=None,\
-                             name_append=None, log=True,\
-                             rbins=100, runit='cMpc'):
+                             name_append=None, log=True):
     '''
     only does a few very specific caluclations in current implementation
 
@@ -4495,7 +4496,7 @@ def makehistograms_radprof3D(ptype, simnum, snapnum, var, simulation,\
     else:
         group = outfile.create_group(groupname)
     
-     if 'Header' not in outfile.keys():
+    if 'Header' not in outfile.keys():
         hed = outfile.create_group('Header')
         hed.attrs.create('simnum', simnum)
         hed.attrs.create('snapnum', snapnum)
