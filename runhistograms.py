@@ -1812,7 +1812,7 @@ elif jobind == 20027:
                          axis='z', velspace=False, offset_los=0., stamps=False)
 elif jobind == 20028:
     numsl = 1
-    filename = filename_ne9
+    filename = filename_hn
     outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
@@ -1822,7 +1822,7 @@ elif jobind == 20028:
                          axis='z', velspace=False, offset_los=0., stamps=False)
 elif jobind == 20029:
     numsl = 2
-    filename = filename_ne9
+    filename = filename_hn
     outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
