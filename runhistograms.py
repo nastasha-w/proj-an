@@ -2090,17 +2090,18 @@ if jobind == 30005: # cosma
     for skey in selcombs.keys():
         galids = selcombs[skey]
         for rqfile in filenames:     
-            print('Starting %s, pkpc'%rqfilename)
+            print('Starting %s, pkpc'%rqfile)
             crd.get_radprof(rqfile, halocat, rbins_pkpc, yvals,\
                         xunit='pkpc', ytype='perc',\
                         galids=galids, combinedprofile=True,\
                         separateprofiles=False,\
                         rpfilename=None, galsettag=skey)
-            print('Finished %s, pkpc\n'%rqfilename)
-            print('Starting %s, R200c'%rqfilename)
+            print('Finished %s, pkpc\n'%rqfile)
+            print('Starting %s, R200c'%rqfile)
             crd.get_radprof(rqfile, halocat, rbins_r200c, yvals,\
                         xunit='R200c', ytype='perc',\
                         galids=galids, combinedprofile=True,\
                         separateprofiles=False,\
                         rpfilename=None, galsettag=skey)
-            print('Finished %s, R200c\n'%rqfilename)
+            print('Finished %s, R200c\n'%rqfile)
+
