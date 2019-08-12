@@ -1622,7 +1622,7 @@ def saveradialprofiles_hdf5_to_hdf5(infiles, halocat, rbins, yvals,\
                     galsetind = maxtopentry + 1
                     topname_temp = topname_base%(galsetind)
                     tgrp = fo.create_group(topname_temp) 
-                    tgrp.create_dataset('galaxyid', data=np.array(galids_todo_all.sort()))
+                    tgrp.create_dataset('galaxyid', data=np.array(sorted(galids_todo_all)))
             else:
                 galsetind = 0
                 topname_temp = topname_base%galsetind
