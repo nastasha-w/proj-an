@@ -1503,7 +1503,7 @@ def saveradialprofiles_hdf5_to_hdf5(infiles, halocat, rbins, yvals,\
                 # find the galaxies in this _infile
                 galids_thisfile = crdcat.keys()
                 galids_thisfile.remove('Header')
-                if 'selection' in galids:
+                if 'selection' in galids_thisfile:
                     galids_thisfile.remove('selection')
                 galids_thisfile = {int(galid) for galid in galids_thisfile}
                 
