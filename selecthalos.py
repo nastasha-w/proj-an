@@ -28,6 +28,7 @@ def selectone(fo, select, cosmopars, length):
 
     if select[0] == 'galaxyid':
         groupmatches = cu.match(np.array(fo['galaxyid']), np.array(select[1]), arr2_sorted=False, arr2_index=None)
+        #print(groupmatches)
         return groupmatches >= 0
 
     elif select[0] == 'groupid':
@@ -98,7 +99,8 @@ def selecthalos(fo, selection):
                names and units match hdf5 groups in the halo catalogue
                multiple tuples with the same name: one OR the other
                tuples with different names: ALL criteria must be satisfied
-               margins are in units of r200c for each halo
+               margins are in units of r200c for each halo 
+                 (margin > 0 -> exclude more)
                velocities are rest-frame km/s
     '''
     cosmopars = {key: fo['Header/cosmopars'].attrs[key] for key in fo['Header/cosmopars'].attrs.keys()}
@@ -125,6 +127,7 @@ def selecthalos(fo, selection):
         #sels = {sl if sl[0] == crit else None for sl in selection}
         ## use indices for set instead, put actual selection arrays in a list
         selinds = {sli if selection[sli][0] == crit else None for sli in range(len(selection))}
+        selinds -= {None}
         sels = [selection[sli] for sli in selinds]
         #print(selinds)
         #print(str(sels)[:1000])
@@ -141,7 +144,7 @@ def selecthalos(fo, selection):
 
 def gethaloselections(halocat, selections=None, names=None):
     '''
-    get different selections form a catalogue using selecthalos
+    get different selections from a catalogue using selecthalos
     '''
     if isinstance(halocat, h5py.File):
         fi = halocat

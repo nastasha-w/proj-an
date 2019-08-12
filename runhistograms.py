@@ -2053,3 +2053,54 @@ if jobind == 30004: # Leiden
                     selection_in=sel_incl, selection_ex=sel_excl,\
                     axis='z', outfile='auto')
                     
+
+if jobind == 30005: # cosma
+    filenames = [\
+                 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5',\
+                 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_2slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5',\
+                 'rdist_coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5',\
+                 'rdist_coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_2slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5',\
+                 'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5',\
+                 'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_2slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5',\
+                 'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5',\
+                 'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_2slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5',\
+                 'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5',\
+                 'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_2slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5',\
+                 'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5',\
+                 'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_2slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5',\
+                 'rdist_coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5',\
+                 'rdist_coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_2slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals.hdf5',\
+                ]
+    halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    yvals = [1., 5., 10., 25., 50., 75., 90., 95., 99.]
+    #rbins_R200c = np.arange(0., 2.55, 0.1)
+    rbins_pkpc = np.array([0., 3., 5., 7., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 120., 140., 160., 180., 200., 225., 250., 275., 300., 325., 350., 375., 400., 425., 450., 475., 500.])
+    rbins_r200c = np.arange(0., 2.51, 0.05)
+    # negative margins -> margins take away from selection regions
+    zedges = np.arange(0., 100.1, 6.25)
+    zsels  = {'Z_off-edge-by-R200c': [('Z', zedges[i], zedges[i+1], 1.) for i in range(len(zedges) - 1)]}
+
+    # galids selection from galaxyselector (halo masses in 0.5 dex)
+    galids_mass = sh.L0100N1504_27_Mh0p5dex_7000.galids()
+    selcombs = {'logM200c_Msun_%s'%key: galids_mass[key] for key in galids_mass.keys()}
+    keys = galids_mass.keys() # set up beforehand to match orders in lists
+    sels_temp = sh.gethaloselections(halocat, selections=[zsels['Z_off-edge-by-R200c'] + [('galaxyid', galids_mass[key])] for key in keys], names=['logM200c_Msun_%s_Z_off-edge-by-R200c'%key for key in keys])
+    selcombs.update(sels_temp)
+    
+    for skey in selcombs.keys():
+        galids = selcombs[skey]
+        for rqfile in filenames:     
+            print('Starting %s, pkpc'%rqfilename)
+            crd.get_radprof(rqfile, halocat, rbins_pkpc, yvals,\
+                        xunit='pkpc', ytype='perc',\
+                        galids=galids, combinedprofile=True,\
+                        separateprofiles=False,\
+                        rpfilename=None, galsettag=skey)
+            print('Finished %s, pkpc\n'%rqfilename)
+            print('Starting %s, R200c'%rqfilename)
+            crd.get_radprof(rqfile, halocat, rbins_r200c, yvals,\
+                        xunit='R200c', ytype='perc',\
+                        galids=galids, combinedprofile=True,\
+                        separateprofiles=False,\
+                        rpfilename=None, galsettag=skey)
+            print('Finished %s, R200c\n'%rqfilename)
