@@ -766,6 +766,30 @@ def plot_o7cddfsplits_isolated(incl=True, numsl=3):
         
         dXoverdz = dXtot['9.3-9.7-11.0-11.2'] / dztot['9.3-9.7-11.0-11.2']
         
+        histc_x = bins[:-1]
+        histc_pos_9p7 = hists['9.3-9.7-11.0-11.2']['nomask'] - hists['9.3-9.7-11.0-11.2']['630pkpc_pos_logMstar-geq-9.7-Msun']
+        histc_vel_9p7 = hists['9.3-9.7-11.0-11.2']['nomask'] - hists['9.3-9.7-11.0-11.2']['630pkpc_vel_logMstar-geq-9.7-Msun']
+        histc_pos_9p3 = hists['9.3-9.7-11.0-11.2']['nomask'] - hists['9.3-9.7-11.0-11.2']['630pkpc_pos_logMstar-geq-9.3-Msun']
+        histc_vel_9p3 = hists['9.3-9.7-11.0-11.2']['nomask'] - hists['9.3-9.7-11.0-11.2']['630pkpc_vel_logMstar-geq-9.3-Msun']
+        histc_all = hists['9.3-9.7-11.0-11.2']['nomask']
+        
+        histc_pos_9p7 = np.cumsum(histc_pos_9p7[::-1])[::-1] / dXtotdlogN['9.3-9.7-11.0-11.2'] * dXoverdz
+        histc_vel_9p7 = np.cumsum(histc_vel_9p7[::-1])[::-1] / dXtotdlogN['9.3-9.7-11.0-11.2'] * dXoverdz
+        histc_pos_9p3 = np.cumsum(histc_pos_9p3[::-1])[::-1] / dXtotdlogN['9.3-9.7-11.0-11.2'] * dXoverdz
+        histc_vel_9p3 = np.cumsum(histc_vel_9p3[::-1])[::-1] / dXtotdlogN['9.3-9.7-11.0-11.2'] * dXoverdz
+        histc_all =  np.cumsum(histc_all[::-1])[::-1] / dXtotdlogN['9.3-9.7-11.0-11.2'] * dXoverdz
+
+        p_N_iso_pos_9p7 = linterpsolve(histc_x, histc_pos_9p7, Nval)
+        p_N_iso_vel_9p7 = linterpsolve(histc_x, histc_vel_9p7, Nval)
+        p_N_iso_pos_9p3 = linterpsolve(histc_x, histc_pos_9p3, Nval)
+        p_N_iso_vel_9p3 = linterpsolve(histc_x, histc_vel_9p3, Nval)
+        
+        Nvals = [15.2, 15.3, 15.4, 15.5, 15.6, 15.7, 15.8, 15.9, 16.0] + [Nval]
+        frac_cumul_pos_9p7 = {Nval: linterpsolve(histc_x, histc_pos_9p7 / histc_all, Nval) for Nval in Nvals}
+        frac_cumul_vel_9p7 = {Nval: linterpsolve(histc_x, histc_vel_9p7 / histc_all, Nval) for Nval in Nvals}
+        frac_cumul_pos_9p3 = {Nval: linterpsolve(histc_x, histc_pos_9p3 / histc_all, Nval) for Nval in Nvals}
+        frac_cumul_vel_9p3 = {Nval: linterpsolve(histc_x, histc_vel_9p3 / histc_all, Nval) for Nval in Nvals}
+        
     print('at log N(O VII) / cm^-2 = %s, contributions from regions isolated from galaxies at log M*/Msun = 9.3, 9.7 by at least 630 pkpc:'%Nval)
     print('\tlog10 CDDF (total) = %s'%cddf_tot)
     print('\tlog10 CDDF (pos, ge 9.7) = %s'%cddf_pos_9p7)
@@ -776,7 +800,20 @@ def plot_o7cddfsplits_isolated(incl=True, numsl=3):
     print('\tCDDF (pos, ge 9.3) / total = %s'%frac_pos_9p3)
     print('\tCDDF (vel, ge 9.7) / total = %s'%frac_vel_9p7)
     print('\tCDDF (vel, ge 9.3) / total = %s'%frac_vel_9p3)
+    print('\tN_expected / dz (pos, ge 9.7) = %s'%p_N_iso_pos_9p7)
+    print('\tN_expected / dz (pos, ge 9.3) = %s'%p_N_iso_pos_9p3)
+    print('\tN_expected / dz (vel, ge 9.7) = %s'%p_N_iso_vel_9p7)
+    print('\tN_expected / dz (vel, ge 9.3) = %s'%p_N_iso_vel_9p3)
     print('\t dX / dz = %s'%dXoverdz)
+    
+    print('\nratios of cumulative CDDF with isolation criteria to cumulative CDDF total above column densities of')
+    fillstr = '\t' + '\t'.join(['%.4f'] * len(Nvals))
+    print('\t\t' + fillstr%tuple(Nvals))
+    print('\tpos 9.7\t' + fillstr%(tuple([frac_cumul_pos_9p7[Nval] for Nval in Nvals])))
+    print('\tvel 9.7\t' + fillstr%(tuple([frac_cumul_vel_9p7[Nval] for Nval in Nvals])))
+    print('\tpos 9.3\t' + fillstr%(tuple([frac_cumul_pos_9p3[Nval] for Nval in Nvals])))
+    print('\tvel 9.3\t' + fillstr%(tuple([frac_cumul_vel_9p3[Nval] for Nval in Nvals])))
+    
     #lax.axis('off')
     leg1 = lax.legend(handles=legend_handles, fontsize=fontsize-1, loc='lower left', bbox_to_anchor=(0.01, 0.01), frameon=False)
     leg2 = lax.legend(handles=legend_handles_ls,fontsize=fontsize-1, loc='upper right', bbox_to_anchor=(0.99, 0.99), frameon=False)
