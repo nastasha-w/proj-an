@@ -6,6 +6,7 @@ Created on Mon Nov  6 16:32:05 2017
 """
 import numpy as np
 import h5py
+#import pandas as pd
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -936,7 +937,8 @@ def testWSS09fig4_vardict():
     
 # test on 25 Mpc mid-res Ref box, snap 19
 mdir = '/net/luttero/data2/imgs/CGM/halo-only_projectiontest/'
-def selecthalos(halocat='/net/luttero/data2/proc/catalogue_RefL0025N0376_snap19_aperture30.hdf5', logMhs=[10., 11., 12.], Mtol=0.05):
+
+def selecthalos_testhaloonly(halocat='/net/luttero/data2/proc/catalogue_RefL0025N0376_snap19_aperture30.hdf5', logMhs=[10., 11., 12.], Mtol=0.05, filename='testselection.txt'):
     with h5py.File(halocat, 'r') as hc:
         logM200c = np.log10(np.array(hc['M200c_Msun']))
         inds = [np.where(np.abs(logM200c - Mh) <= Mtol)[0] for Mh in logMhs]
@@ -944,3 +946,96 @@ def selecthalos(halocat='/net/luttero/data2/proc/catalogue_RefL0025N0376_snap19_
         
         galids = np.array(hc['galaxyid'])[sel]
         groups = np.array(hc['groupid'])[sel]
+        logM200c_selected = logM200c[sel]
+        
+    with open(mdir + filename, 'w') as fo:
+        fo.write('halocat: %s\n'%halocat)
+        fo.write('logMhs: %s\n'%logMhs)
+        fo.write('Mtol: %s\n'%Mtol)
+        fo.write('galaxyid\tgroupid\tlogM200c_Msun\n')
+        for i in range(len(sel)):
+            fo.write('%i\t%i\t%f\n'%(galids[i], groups[i], logM200c_selected[i]))
+            
+def projecthalos_testhaloonly(filename_halos='testselection.txt', radius_R200c=2.):
+    # read in the selected halos
+    with open(mdir + filename_halos, 'r') as fs:
+        ids = []
+        ps = 'dummy'
+        while True:
+            ps = fs.readline()
+            ps = ps[:-1] # strip off newline; Index Error if empty string -> end of file
+            if ps == '':
+                break
+            parts = ps.split(' ')
+            if len(parts) == 2:
+                if parts[0] == 'halocat:':
+                    halocat = parts[1]
+                elif parts[0] == 'logMhs':
+                    pass # don't need this
+                elif parts[0] == 'Mtol':
+                    pass # don't need this
+            elif len(parts) == 1:
+                parts = ps.split('\t')
+                if not (parts[0][0]).isdigit(): # line defining the columns
+                    gidind = np.where([part == 'galaxyid' for part in parts])[0][0]
+                else:
+                    ids.append(parts[gidind])
+    ids = np.array(ids)
+    # read in the halo properties to define the projections
+    with h5py.File(halocat, 'r') as hc:
+        galaxyids_all = np.array(hc['galaxyid'])
+        selinds = np.where(np.any(galaxyids_all[:, np.newaxis] == ids[np.newaxis, :], axis=1))[0]
+        
+        simprops = {key: item for key, item in hc['Header'].attrs.items()}
+        cosmopars = {key: item for key, item in hc['Header/cosmopars'].attrs.items()}
+        
+        M200c = np.log10(np.array('M200c_Msun')[selinds])
+        R200c = np.log10(np.array('R200c_pkpc')[selinds]) / cosmopars['a'] * 1e-3
+        Xcop = np.array('Xcop_cMpc')[selinds]
+        Ycop = np.array('Ycop_cMpc')[selinds]
+        Zcop = np.array('Zcop_cMpc')[selinds]
+        
+    
+    # set up the projections and record the input parameters
+    argnames = ('simnum', 'snapnum', 'centre', 'L_x', 'L_y', 'L_z', 'npix_x', 'npix_y', 'ptypeW')
+    args = [(simprops['simnum'], simprops['snapnum'],\
+             [Xcop[i], Ycop[i], Zcop[i]],\
+             radius_R200c[i] * R200c, radius_R200c[i] * R200c, radius_R200c[i] * R200c,\
+             'basic') \
+             for i in range(len(ids))]
+    
+    kwargs = {'ionW': None, 'abundsW': 'auto', 'quantityW': 'Mass',\
+              'ionQ': None, 'abundsQ': 'auto', 'quantityQ': None, 'ptypeQ': None,\
+              'excludeSFRW': False, 'excludeSFRQ': False, 'parttype': '0',\
+              'theta': 0.0, 'phi': 0.0, 'psi': 0.0, \
+              'sylviasshtables': False,\
+              'var': simprops['var'], 'axis': 'z','log': True, 'velcut': False,\
+              'periodic': False, 'kernel': 'C2', 'saveres': True,\
+              'simulation': 'eagle', 'LsinMpc': None,\
+              'select': None, 'misc': None,\
+              'ompproj': False, 'numslices': None}
+    # not specified: nameonly, halosel, halosel_kwargs
+    halosel_kwargs_opts = [{'exclsatellites': True, 'allinR200c': True},\
+                           {'exclsatellites': True, 'allinR200c': False},\
+                           {'exclsatellites': False, 'allinR200c': False},\
+                           {'exclsatellites': False, 'allinR200c': True}] 
+    
+    # all halos or just the central one, for each id
+    halosels = []
+
+    
+    # get names of the halos, store parameters
+    make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
+         ptypeW,\
+         ionW=None, abundsW='auto', quantityW=None,\
+         ionQ=None, abundsQ='auto', quantityQ=None, ptypeQ=None,\
+         excludeSFRW=False, excludeSFRQ=False, parttype='0',\
+         theta=0.0, phi=0.0, psi=0.0, \
+         sylviasshtables=False,\
+         var='auto', axis='z',log=True, velcut=False,\
+         periodic=True, kernel='C2', saveres=False,\
+         simulation='eagle', LsinMpc=None,\
+         select=None, misc=None, halosel=None, kwargs_halosel=None,\
+         ompproj=False, nameonly=False, numslices=None)
+    
+    # run the projections
