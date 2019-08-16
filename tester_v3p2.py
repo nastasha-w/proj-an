@@ -1005,7 +1005,7 @@ def projecthalos_testhaloonly(filename_halos='testselection.txt', radius_R200c=2
              400, 400,\
              'basic') \
              for i in range(len(ids))]
-
+    
     kwargs = {'ionW': None, 'abundsW': 'auto', 'quantityW': 'Mass',\
               'ionQ': None, 'abundsQ': 'auto', 'quantityQ': None, 'ptypeQ': None,\
               'excludeSFRW': False, 'excludeSFRQ': False, 'parttype': '0',\
@@ -1039,13 +1039,13 @@ def projecthalos_testhaloonly(filename_halos='testselection.txt', radius_R200c=2
         keys_kwargs = kwargs.keys()
         keys_halosel = halosel_kwargs_opts[0].keys()
         topline = '\t'.join(list(argnames) + keys_kwargs + keys_halosel + ['onlyselectedhalo', 'filename'])
-        fo.write(topline)
+        fo.write(topline + '\n')
         saveline_base = '\t'.join(['%s'] * len(topline.split('\t')))
         for hi in range(len(args)):
             for hsi in range(len(halosels[0])):
                 for kwi in range(len(halosel_kwargs_opts)):
                     name = m3.make_map(*args[hi], nameonly=True, halosel=halosels[hi][hsi], kwargs_halosel=halosel_kwargs_opts[kwi], **kwargs)
-                    saveline = saveline_base%(args + (kwargs[key] for key in keys_kwargs) + (halosel_kwargs_opts[kwi][key] for key in keys_halosel) + (halosels[hi][hsi] != [],) + (name,))
-                    fo.write(saveline)
-        
+                    saveline = saveline_base%(args[hi] + tuple([kwargs[key] for key in keys_kwargs]) + tuple([halosel_kwargs_opts[kwi][key] for key in keys_halosel]) + (halosels[hi][hsi] != [],) + (name[0],))
+                    fo.write(saveline + '\n')
+                    m3.make_map(*args[hi], nameonly=False, halosel=halosels[hi][hsi], kwargs_halosel=halosel_kwargs_opts[kwi], **kwargs) # Error: filename too long
     # run the projections
