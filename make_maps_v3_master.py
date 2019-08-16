@@ -1643,7 +1643,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     # max used number: 43
 
     # basic type and valid option checks
-    if type(var) != str:
+    if not isinstance(var, str):
         print('%s should be a string.\n'%var)
         return 1
     if kernel not in ol.kernel_list:
@@ -1658,13 +1658,13 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     if type(periodic) != bool:
         print('periodic should be True or False.\n')
         return 12
-    if type(log) != bool:
+    if not isinstance(log, bool):
         print('log should be True or False.\n')
         return 13
-    if type(numslices) != int and numslices is not None:
+    if not (isinstance(numslices, int) or numslices is None):
         print('numslices should be an integer or None.\n')
         return 37
-    if type(sylviasshtables) != bool:
+    if not isinstance(sylviasshtables, bool):
         print('sylviasshtables should be True or False.\n')
         return 35
     elif sylviasshtables:
@@ -1673,10 +1673,10 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         if ionW == 'hneutralssh' or ionQ == 'hneutralssh':
             print("Neutral hydrogen is not currenty available from Sylvia's tables")
             return 36
-    if type(saveres) != bool:
+    if not isinstance(saveres, bool):
         print('saveres should be True or False.\n')
         return 14
-    if type(velcut) != bool and not isinstance(velcut, num.Number):
+    if (not isinstance(velcut, bool)) and not isinstance(velcut, num.Number):
         numtuple = False
         if hasattr(velcut, '__len__'):
             if len(velcut) == 2:
@@ -1694,7 +1694,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         if velcut < 0:
             velcut = -1*velcut
         velcut = (0, velcut)
-    if type(snapnum) != int:
+    if not isinstance(snapnum, int):
         print('snapnum should be an integer.\n')
         return 21
     if (not isinstance(centre[0], num.Number)) or (not isinstance(centre[0], num.Number)) or (not isinstance(centre[0], num.Number)):
@@ -1702,7 +1702,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         return 29
     else:
         centre = [float(centre[0]), float(centre[1]), float(centre[2])]
-    if type(ompproj) != bool:
+    if not isinstance(ompproj, bool):
         if ompproj == 1:
             ompproj = True
         elif ompproj == 0:
@@ -1763,7 +1763,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     elif simulation == 'bahamas' and LsinMpc is None:
         LsinMpc = False
 
-    if simulation in ['eagle', 'eagle-ioneq', 'bahamas'] and type(simnum) != str:
+    if simulation in ['eagle', 'eagle-ioneq', 'bahamas'] and not isinstance(simnum, str):
         print('simnum should be a string')
         return 22
     elif simulation == 'c-eagle-hydrangea' and not isinstance(simnum, int):
@@ -1791,7 +1791,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         print('L_x, L_y, and L_z should be floats')
         return 24
     L_x, L_y, L_z = (float(L_x),float(L_y),float(L_z))
-    if type(npix_x) != int or type(npix_y) != int or npix_x < 1 or npix_y < 1:
+    if (not isinstance(npix_x, int)) or (not isinstance(npix_y, int)) or npix_x < 1 or npix_y < 1:
         print('npix_x, npix_y should be positive integers')
         return 25
 
@@ -1836,12 +1836,12 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         else:
             print('%s is an invalid ion option for ptypeW %s\n'%(ionW,ptypeW))
             return 26
-        if type(abundsW) not in [list,tuple,np.ndarray]:
+        if not isinstance(abundsW, [list, tuple, np.ndarray]):
             abundsW = [abundsW,'auto']
         else:
             abundsW = list(abundsW) # tuple element assigment is not allowed, sometimes needed
         if abundsW[0] not in ['Sm','Pt','auto']:
-            if type(abundsW[0]) not in [float, int]:
+            if not isinstance(abundsW[0], num.Number):
                 print('Abundances must be either smoothed ("Sm") or particle ("Pt") abundances, automatic ("auto"), or a solar units abundance (float)')
                 return 4
             elif iseltW:
@@ -1854,11 +1854,11 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
             else:
                 abundsW[0] = 'Pt'
         if abundsW[1] not in ['Sm','Pt','auto']:
-            if type(abundsW[1]) not in [float, int]:
+            if not isinstance(abundsW[1], num.Number):
                 print('Abundances must be either smoothed ("Sm") or particle ("Pt") abundances, automatic ("auto"), or a solar units abundance (float)')
                 return 30
         elif abundsW[1] == 'auto':
-            if type(abundsW[0]) == float:
+            if isinstance(abundsW[0], num.Number):
                 abundsW[1] = 0.752 # if element abundance is fixed, use primordial hydrogen abundance
             else:
                 abundsW[1] = abundsW[0]
@@ -1866,7 +1866,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         if quantityW is None:
             print('For pytpeW basic, quantityW must be specified.\n')
             return 5
-        elif type(quantityW) != str:
+        elif not isinstance(quantityW, str):
             print('quantityW must be a string.\n')
             return 6
 
@@ -1887,12 +1887,12 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
             print('%s is an invalid ion option for ptypeQ %s\n'%(ionQ,ptypeQ))
             return 8
 
-        if type(abundsQ) not in [list,tuple,np.ndarray]:
-            abundsQ = [abundsQ,'auto']
+        if not isinstance(abundsQ, [list, tuple, np.ndarray]):
+            abundsQ = [abundsQ, 'auto']
         else:
             abundsQ = list(abundsQ)
         if abundsQ[0] not in ['Sm','Pt','auto']:
-            if type(abundsQ[0]) not in [float, int]:
+            if not isinstance(abundsQ[0], num.Number):
                 print('Abundances must be either smoothed ("Sm") or particle ("Pt") abundances, automatic ("auto"), or a solar units abundance (float)')
                 return 9
             elif iseltQ:
@@ -1905,16 +1905,16 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
             else:
                 abundsQ[0] = 'Pt'
         if abundsQ[1] not in ['Sm','Pt','auto']:
-            if type(abundsQ[1]) not in [float, int]:
+            if not isinstance(abundsQ[1], num.Number):
                 print('Abundances must be either smoothed ("Sm") or particle ("Pt") abundances, automatic ("auto"), or a solar units abundance (float)')
                 return 28
         elif abundsQ[1] == 'auto':
-            if type(abundsQ[0]) == float:
+            if isinstance(abundsQ[0], num.Number):
                 abundsQ[1] = 0.752 # if element abundance is fixed, use primordial hydrogen abundance
             else:
                 abundsQ[1] = abundsQ[0]
 
-    elif type(quantityQ) != str and quantityQ is not None:
+    elif (not isinstance(quantityQ, str)) and quantityQ is not None:
         print('quantityQ must be a string or None.\n')
         return 27
 
@@ -2414,7 +2414,7 @@ def luminosity_calc(vardict,excludeSFR,eltab,hab,ion,last=True,updatesel=True):
     '''
     print('Calculating particle luminosities...')
 
-    if type(eltab) == str:
+    if isinstance(eltab, str):
         vardict.readif(eltab,rawunits = True)
         if updatesel and (ol.elements_ion[ion] not in ['hydrogen', 'helium']):
             vardict.update(vardict.particle[eltab] > 0.)
@@ -2431,7 +2431,7 @@ def luminosity_calc(vardict,excludeSFR,eltab,hab,ion,last=True,updatesel=True):
 
     if not vardict.isstored_part('lognH'):
         vardict.readif('Density', rawunits=True)
-        if type(hab) == str:
+        if isinstance(hab, str):
             vardict.readif(hab,rawunits = True)
             vardict.add_part('lognH', np.log10(vardict.particle[hab]) + np.log10(vardict.particle['Density']) + np.log10( vardict.CGSconv['Density'] / (c.atomw_H*c.u) ) )
             if eltab != hab:
@@ -2472,7 +2472,7 @@ def luminosity_calc(vardict,excludeSFR,eltab,hab,ion,last=True,updatesel=True):
 
     # using units of 10**-10 * CGS, to make sure overflow of float32 does not occur in C
     # (max is within 2-3 factors of 10 of float32 overflow in one simulation)
-    if type(eltab) == str:
+    if isinstance(eltab, str):
         luminosity = vardict.particle[eltab] / ol.solar_abunds[ol.elements_ion[ion]] * 10**(vardict.particle['emdenssq'] + 2. * vardict.particle['lognH'] + np.log10(vardict.particle['propvol']) - 10.)
         vardict.delif(eltab,last=last)
     else:
@@ -2531,7 +2531,7 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False, last=
             if misc['usechemabundtables'] == 'BenOpp1':
                 ionbal_from_outputs = True
 
-    if type(eltab) == str:
+    if isinstance(eltab, str):
         vardict.readif(eltab, rawunits=True)
         if updatesel and (ol.elements_ion[ion] not in ['hydrogen', 'helium']):
             vardict.update(vardict.particle[eltab] > 0.)
@@ -2539,7 +2539,7 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False, last=
     if not ionbal_from_outputs: # if not misc option for getting ionfrac from Ben Oppenheimer's modified RECAL-L0025N0752 runs with non-equilibrium ion fractions
         if not vardict.isstored_part('lognH'):
             vardict.readif('Density', rawunits=True)
-            if type(hab) == str:
+            if isinstance(hab, str):
                 vardict.readif(hab,rawunits = True)
                 vardict.add_part('lognH', np.log10(vardict.particle[hab]) + np.log10(vardict.particle['Density']) + np.log10( vardict.CGSconv['Density'] / (c.atomw_H * c.u)) )
                 if eltab != hab:
@@ -2567,7 +2567,7 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False, last=
             % (np.min(vardict.particle['logT']), np.max(vardict.particle['logT']), np.median(vardict.particle['logT'])))
         if sylviasshtables:
             if 'logZ' not in vardict.particle.keys():
-                if type(eltab) == str:
+                if isinstance(eltab, str):
                     if 'SmoothedElementAbundance' in eltab:
                         vardict.readif('SmoothedMetallicity', rawunits=True) # dimensionless
                         vardict.add_part('logZ', np.log10(vardict.particle['SmoothedMetallicity']))
@@ -2579,7 +2579,7 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False, last=
                 else:
                     vardict.add_part('logZ', np.ones(len(vardict.particle['lognH'])) * eltab / ol.solar_abunds[ol.elements_ion[ion]] * ol.Zsun_sylviastables)
             vardict.add_part('ionfrac', find_ionbal_sylviassh(vardict.simfile.z, ion, vardict.particle))
-            if type(eltab) != str:
+            if not isinstance(eltab, str):
                 vardict.delif('logZ', last=True)
             else:
                 vardict.delif('logZ', last=last)
@@ -2595,7 +2595,7 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False, last=
 
     vardict.readif('Mass',rawunits=True)
 
-    if type(eltab) == str:
+    if isinstance(eltab, str):
         Nion = vardict.particle[eltab]*vardict.particle['ionfrac']*vardict.particle['Mass']
         vardict.delif('ionfrac',last=last)
         vardict.delif('Mass',last=last)
@@ -2615,14 +2615,14 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False, last=
 
 def Nelt_calc(vardict,excludeSFR,eltab,ion,last=True,updatesel=True):
 
-    if type(eltab) == str:
+    if isinstance(eltab, str):
         vardict.readif(eltab,rawunits=True)
         if updatesel and (ion not in ['hydrogen', 'helium']):
             vardict.update(vardict.particle[eltab]>0.)
 
     vardict.readif('Mass',rawunits=True)
 
-    if type(eltab) == str:
+    if isinstance(eltab, str):
         Nelt = vardict.particle[eltab]*vardict.particle['Mass']
         vardict.delif('Mass',last=last)
         vardict.delif(eltab,last=last)
@@ -2654,13 +2654,13 @@ def Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=True, updatesel=True, misc
         else:
             UVB = 'HM01'
 
-    if type(hab) == str:
+    if isinstance(hab, str):
         vardict.readif(hab, rawunits=True)
 
     if not vardict.isstored_part('nH'):
         vardict.readif('Density', rawunits=True)
         #print('Number of particles in use: %s'%str(np.sum(vardict.readsel.val)))
-        if type(hab) == str:
+        if isinstance(hab, str):
             vardict.readif(hab,rawunits = True)
             vardict.add_part('nH', vardict.particle[hab] * vardict.particle['Density'] * vardict.CGSconv['Density'] / (c.atomw_H * c.u) )
             #print('Min, max, median of particle Density: %.5e %.5e %.5e' \
@@ -2704,7 +2704,7 @@ def Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=True, updatesel=True, misc
     vardict.delif('nH', last=last)
     vardict.readif('Mass',rawunits=True)
 
-    if type(hab) == str:
+    if isinstance(hab, str):
         vardict.readif(hab,rawunits = True) # may not be saved if nH was already there
         Nion = vardict.particle[hab]*h1hmolfrac*vardict.particle['Mass']
         del h1hmolfrac
@@ -3393,7 +3393,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          periodic, kernel, saveres,\
          simulation, LsinMpc,\
          select, misc, ompproj, numslices, halosel, kwargs_halosel)
-    if type(res) == int:
+    if isinstance(res, int):
         raise ValueError("inputcheck returned error code %i"%res)
 
     iseltW, iseltQ, simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
@@ -3885,7 +3885,7 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
             sabunds = '%smassfracAb'%str(abunds[0])
         else:
             sabunds = abunds[0] + 'Ab'
-        if type(abunds[1]) == float:
+        if isinstance(abunds[1], num.Number):
             sabunds = sabunds + '-%smassfracHAb'%str(abunds[1])
         elif abunds[1] != abunds[0]:
             sabunds = sabunds + '-%smassfracHAb'%abunds[1]
@@ -3949,7 +3949,7 @@ def namehistogram_perparticle_axis(dct):
             sabunds = '%smassfracAb'%str(abunds[0])
         else:
             sabunds = abunds[0] + 'Ab'
-        if type(abunds[1]) == float:
+        if isinstance(abunds[1], num.Number):
             sabunds = sabunds + '-%smassfracHAb'%str(abunds[1])
         elif abunds[1] != abunds[0]:
             sabunds = sabunds + '-%smassfracHAb'%abunds[1]
@@ -4002,12 +4002,12 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
         else:
             print('%s is an invalid ion option for ptype %s\n'%(ion,ptype))
             return 8
-        if type(abunds) not in [list,tuple,np.ndarray]:
+        if not isinstance(abunds, [list, tuple, np.ndarray]):
             abunds = [abunds,'auto']
         else:
             abunds = list(abunds) # tuple element assigment is not allowed, sometimes needed
         if abunds[0] not in ['Sm','Pt','auto']:
-            if type(abunds[0]) not in [float, int]:
+            if not isinstance(abunds[0], num.Number):
                 print('Abundances must be either smoothed ("Sm") or particle ("Pt") abundances, automatic ("auto"), or a solar units abundance (float)')
                 return 4
             elif iselt:
@@ -4020,11 +4020,11 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
             else:
                 abunds[0] = 'Pt'
         if abunds[1] not in ['Sm','Pt','auto']:
-            if type(abunds[1]) not in [float, int]:
+            if not isinstance(abunds[1], num.Number):
                 print('Abundances must be either smoothed ("Sm") or particle ("Pt") abundances, automatic ("auto"), or a solar units abundance (float)')
                 return 30
         elif abunds[1] == 'auto':
-            if type(abunds[0]) == float:
+            if isinstance(abunds[0], num.Number):
                 abunds[1] = 0.752 # if element abundance is fixed, use primordial hydrogen abundance
             else:
                 abunds[1] = abunds[0]
@@ -4034,7 +4034,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
             print('For ptype basic, quantity must be specified.\n')
             return 5
         quantity = dct['quantity']
-        if type(quantity) != str:
+        if not isinstance(quantity, str):
             print('quantity must be a string.\n')
             return 6
         if parttype not in ['0','1','4','5']: # parttype only matters if it is used
@@ -4045,7 +4045,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
                 return 16
 
 
-    if excludeSFR not in [True,False,'T4','only']:
+    if excludeSFR not in [True, False, 'T4', 'only']:
         if excludeSFR != 'from':
             print('Invalid option for excludeSFR: %s'%excludeSFR)
             return 17
@@ -4107,21 +4107,21 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
     # max used number: 39
 
     # basic type and valid option checks
-    if type(var) != str:
+    if not isinstance(var, str):
         print('%s should be a string.\n'%var)
         return 1
-    if type(snapnum) != int:
+    if not isinstance(snapnum, int):
         print('snapnum should be an integer.\n')
         return 21
-    if type(simnum) != str:
+    if not isinstance(simnum, str):
         print('simnum should be a string')
         return 22
     if not (L_x is None and L_y is None and L_z is None and centre is None):
-        if (type(centre[0]) != float and type(centre[0]) != int) or (type(centre[1]) != float and type(centre[1]) != int) or (type(centre[2]) != float and type(centre[2]) != int):
+        if (not isinstance(centre[0], num.Number)) or (not isinstance(centre[1], num.Number)) or (not isinstance(centre[2], num.Number)):
             print('centre should contain 3 floats')
             return 29
         centre = [float(centre[0]),float(centre[1]),float(centre[2])]
-        if (type(L_x) != float and type(L_x) != int) or (type(L_y) != float and type(L_y) != int) or (type(L_z) != float and type(L_z) != int):
+        if (not isinstance(L_x, num.Number)) or (not isinstance(L_y, num.Number)) or (not isinstance(L_z, num.Number)):
             print('L_x, L_y, and L_z should be floats')
             return 24
         L_x, L_y, L_z = (float(L_x),float(L_y),float(L_z))
@@ -4167,7 +4167,7 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
                     'misc': misc}
     dct_defaults, parttype = check_particlequantity(dct_defaults, {}, parttype, simulation)
     axesdct = [check_particlequantity(dct, dct_defaults, parttype)[0] for dct in axesdct]
-    if np.any(np.array([type(dct)==int for dct in axesdct])):
+    if np.any(np.array([isinstance(dct, int) for dct in axesdct])):
         print('Error in one of the axis particle properties')
         return 38
 
@@ -4273,9 +4273,9 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, simulation,\
                               excludeSFR, abunds, ion, parttype, quantity,\
                               axesdct, axbins,\
                               misc)
-    if type(res) == int:
+    if isinstance(res, int):
         print('Input error %i'%res)
-        return None
+        raise ValueError('inputcheck returned code %i'%res)
 
     simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          ptypeW,\
@@ -4370,7 +4370,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, simulation,\
                 axbins_t = axbins[axind]
             else:
                 axbins_t = axbins
-            if type(axbins_t) == int: # number of bins
+            if isinstance(axbins_t, int): # number of bins
                 axbins_t = np.linspace(min_t * ( 1. - 1.e-7), max_t * (1. + 1.e-7), axbins_t + 1)
                 grp.attrs.create('number of particles > max value', 0)
                 grp.attrs.create('number of particles < min value', 0)
@@ -4452,7 +4452,7 @@ def makehistograms_radprof3D(ptype, simnum, snapnum, var, simulation,\
                               excludeSFR, abunds, ion, parttype, quantity,\
                               axesdct, axbins,\
                               misc)
-    if type(res) == int:
+    if isinstance(res, int):
         print('Input error %i'%res)
         return None
 
@@ -4549,7 +4549,7 @@ def makehistograms_radprof3D(ptype, simnum, snapnum, var, simulation,\
                 axbins_t = axbins[axind]
             else:
                 axbins_t = axbins
-            if type(axbins_t) == int: # number of bins
+            if isinstance(axbins_t, int): # number of bins
                 axbins_t = np.linspace(min_t * ( 1. - 1.e-7), max_t * (1. + 1.e-7), axbins_t + 1)
                 grp.attrs.create('number of particles > max value', 0)
                 grp.attrs.create('number of particles < min value', 0)

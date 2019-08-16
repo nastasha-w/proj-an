@@ -980,30 +980,32 @@ def projecthalos_testhaloonly(filename_halos='testselection.txt', radius_R200c=2
                     gidind = np.where([part == 'galaxyid' for part in parts])[0][0]
                 else:
                     ids.append(parts[gidind])
-    ids = np.array(ids)
+    ids = np.array([int(i) for i in ids])
     # read in the halo properties to define the projections
     with h5py.File(halocat, 'r') as hc:
         galaxyids_all = np.array(hc['galaxyid'])
         selinds = np.where(np.any(galaxyids_all[:, np.newaxis] == ids[np.newaxis, :], axis=1))[0]
+        print(selinds)
         
         simprops = {key: item for key, item in hc['Header'].attrs.items()}
         cosmopars = {key: item for key, item in hc['Header/cosmopars'].attrs.items()}
         
-        M200c = np.log10(np.array('M200c_Msun')[selinds])
-        R200c = np.log10(np.array('R200c_pkpc')[selinds]) / cosmopars['a'] * 1e-3
-        Xcop = np.array('Xcop_cMpc')[selinds]
-        Ycop = np.array('Ycop_cMpc')[selinds]
-        Zcop = np.array('Zcop_cMpc')[selinds]
+        M200c = np.log10(np.array(hc['M200c_Msun'])[selinds])
+        R200c = np.log10(np.array(hc['R200c_pkpc'])[selinds]) / cosmopars['a'] * 1e-3
+        Xcop = np.array(hc['Xcop_cMpc'])[selinds]
+        Ycop = np.array(hc['Ycop_cMpc'])[selinds]
+        Zcop = np.array(hc['Zcop_cMpc'])[selinds]
         
     
     # set up the projections and record the input parameters
     argnames = ('simnum', 'snapnum', 'centre', 'L_x', 'L_y', 'L_z', 'npix_x', 'npix_y', 'ptypeW')
     args = [(simprops['simnum'], simprops['snapnum'],\
              [Xcop[i], Ycop[i], Zcop[i]],\
-             radius_R200c[i] * R200c, radius_R200c[i] * R200c, radius_R200c[i] * R200c,\
+             radius_R200c * R200c[i], radius_R200c * R200c[i], radius_R200c * R200c[i],\
+             400, 400,\
              'basic') \
              for i in range(len(ids))]
-    
+
     kwargs = {'ionW': None, 'abundsW': 'auto', 'quantityW': 'Mass',\
               'ionQ': None, 'abundsQ': 'auto', 'quantityQ': None, 'ptypeQ': None,\
               'excludeSFRW': False, 'excludeSFRQ': False, 'parttype': '0',\
@@ -1021,21 +1023,29 @@ def projecthalos_testhaloonly(filename_halos='testselection.txt', radius_R200c=2
                            {'exclsatellites': False, 'allinR200c': True}] 
     
     # all halos or just the central one, for each id
-    halosels = []
+    halosels = [[[('Mhalo_logMsun', M200c[i] - 0.01, M200c[i] + 0.01),\
+                  ('X_cMpc', Xcop[i] - 0.1 * R200c[i], Xcop[i] + 0.1 * R200c[i]),\
+                  ('Y_cMpc', Ycop[i] - 0.1 * R200c[i], Ycop[i] + 0.1 * R200c[i]),\
+                  ('Z_cMpc', Zcop[i] - 0.1 * R200c[i], Zcop[i] + 0.1 * R200c[i]),\
+                  ],
+                 []\
+                ] for i in range(len(ids))]
 
     
     # get names of the halos, store parameters
-    make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-         ptypeW,\
-         ionW=None, abundsW='auto', quantityW=None,\
-         ionQ=None, abundsQ='auto', quantityQ=None, ptypeQ=None,\
-         excludeSFRW=False, excludeSFRQ=False, parttype='0',\
-         theta=0.0, phi=0.0, psi=0.0, \
-         sylviasshtables=False,\
-         var='auto', axis='z',log=True, velcut=False,\
-         periodic=True, kernel='C2', saveres=False,\
-         simulation='eagle', LsinMpc=None,\
-         select=None, misc=None, halosel=None, kwargs_halosel=None,\
-         ompproj=False, nameonly=False, numslices=None)
-    
+    basename_metadata = filename_halos.split('.')[0]
+    name_metadata = basename_metadata + '_metadata.txt'
+    with open(mdir + name_metadata, 'w') as fo:
+        keys_kwargs = kwargs.keys()
+        keys_halosel = halosel_kwargs_opts[0].keys()
+        topline = '\t'.join(list(argnames) + keys_kwargs + keys_halosel + ['onlyselectedhalo', 'filename'])
+        fo.write(topline)
+        saveline_base = '\t'.join(['%s'] * len(topline.split('\t')))
+        for hi in range(len(args)):
+            for hsi in range(len(halosels[0])):
+                for kwi in range(len(halosel_kwargs_opts)):
+                    name = m3.make_map(*args[hi], nameonly=True, halosel=halosels[hi][hsi], kwargs_halosel=halosel_kwargs_opts[kwi], **kwargs)
+                    saveline = saveline_base%(args + (kwargs[key] for key in keys_kwargs) + (halosel_kwargs_opts[kwi][key] for key in keys_halosel) + (halosels[hi][hsi] != [],) + (name,))
+                    fo.write(saveline)
+        
     # run the projections
