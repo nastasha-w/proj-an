@@ -206,13 +206,20 @@ def makehist_1slice_masked(*filenames, **kwargs):
     kwargss = kwargs.copy()
     if 'bins' not in kwargs.keys():
         raise ValueError('Histogram bins must be specified')
-   
+    
     filenames = [ol.ndir + filen if '/' not in filen else filen for filen in filenames]
-    filenames = [filen + '.npz' if filen[-4:] != '.npz' else filen for filen in filenames]
-    files = [np.load(filen) for filen in filenames]
- 
-    inarrs = [arr['arr_0'] for arr in files] # extract arrays, load
-
+    filenames = [filen + '.npz' if filen[-4:] != '.npz' and filen[-5:] != '.hdf5' else filen for filen in filenames]
+    # files = [np.load(filen) if filen[-4:] == '.npz' else for filen in filenames]
+    # inarrs = [arr['arr_0'] for arr in files] # extract arrays, load
+    inarrs = []
+    for filename in filenames:
+        if filename[-4:] == '.npz':
+            arr = np.load(filename)['arr_0']
+        else:
+            with h5py.File(filename, 'r') as fi:
+                arr = np.array(fi['map'])
+        inarrs.append(arr)
+    
     if kwargss['includeinf']:
         allfinite = slice(None, None, None)
     else:
@@ -239,7 +246,7 @@ def makehist_1slice_masked(*filenames, **kwargs):
                 key = maskfile.split('/')[-1][:-5]
                 covfracs[key] = float(np.sum(mask)) / float(np.prod(mask.shape))
                 mask = (mask[allfinite]).flatten()
-                inarrs_sub = [arr[mask] for arr in inarrs]
+                inarrs_sub = [_arr[mask] for _arr in inarrs]
         else:
             inarrs_sub = inarrs
             key = 'nomask'
