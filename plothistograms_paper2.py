@@ -1011,9 +1011,10 @@ def plot_radprof(ions, fontsize=fontsize, imgname=None, techvars_touse=[0], unit
         numcols = 3
     
     cmapname = 'rainbow'
+    hatches = ['\\', '/', '|', 'o', '+', '*', '-', 'x', '.']
     #sumcolor = 'saddlebrown'
     totalcolor = 'black'
-    shading_alpha = 0.5 
+    shading_alpha = 0.35 
     if ytype == 'perc':
         ylabel = r'$\log_{10} \, \mathrm{N} \; [\mathrm{cm}^{-2}]$'
     elif ytype == 'fcov':
@@ -1261,7 +1262,8 @@ def plot_radprof(ions, fontsize=fontsize, imgname=None, techvars_touse=[0], unit
         
 
         ax.text(0.95, 0.95, ild.getnicename(ion, mathmode=False), horizontalalignment='right', verticalalignment='top', fontsize=fontsize, transform=ax.transAxes)
-            
+        
+        hatchind = 0
         for vi in range(len(techvars_touse)):
             tags = techvars[techvars_touse[vi]]['setnames']
             tags = sorted(tags, key=masslabels_all.__getitem__)
@@ -1300,8 +1302,12 @@ def plot_radprof(ions, fontsize=fontsize, imgname=None, techvars_touse=[0], unit
                         ploty2 = yvals[var][ion][tag][yval]
                     except KeyError:
                         print('Failed to read in %s - %s - %s -%s'%(var, ion, tag, val)) 
-                    
+                    # according to stackexchange, this is the only way to set the hatch color in matplotlib 2.0.0 (quasar); does require the same color for all hatches...
+                    plt.rcParams['hatch.color'] = (0.5, 0.5, 0.5, alphas[var] * shading_alpha,) #mpl.colors.to_rgb(colors[tag]) + (alphas[var] * shading_alpha,)
+                    ax.fill_between(plotx, ploty1, ploty2, color=(0., 0., 0., 0.), hatch=hatches[hatchind], facecolor=mpl.colors.to_rgb(colors[tag]) + (alphas[var] * shading_alpha,), edgecolor='face', linewidth=0.0)
                     ax.fill_between(plotx, ploty1, ploty2, color=colors[tag], alpha=alphas[var] * shading_alpha, label=masslabels_all[tag])
+                    
+                    hatchind += 1
                     yvals_toplot_temp = [yvals_toplot_temp[1]]
                     
                 if len(yvals_toplot_temp) == 1:
