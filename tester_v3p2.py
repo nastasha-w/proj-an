@@ -1012,10 +1012,10 @@ def projecthalos_testhaloonly(filename_halos='testselection.txt', radius_R200c=2
               'theta': 0.0, 'phi': 0.0, 'psi': 0.0, \
               'sylviasshtables': False,\
               'var': simprops['var'], 'axis': 'z','log': True, 'velcut': False,\
-              'periodic': False, 'kernel': 'C2', 'saveres': False,\
+              'periodic': False, 'kernel': 'C2', 'saveres': True,\
               'simulation': 'eagle', 'LsinMpc': None,\
               'select': None, 'misc': None,\
-              'ompproj': False, 'numslices': None}
+              'ompproj': False, 'numslices': None, 'hdf5': True}
     # not specified: nameonly, halosel, halosel_kwargs
     halosel_kwargs_opts = [[[{'exclsatellites': True, 'allinR200c': True, 'label': 'exclsats_allinR200c_galaxyid-%i-only'%gid} for gid in ids],\
                             [{'exclsatellites': True, 'allinR200c': True, 'label': 'exclsats_allinR200c_galaxyid-%i'%gid} for gid in ids]],\

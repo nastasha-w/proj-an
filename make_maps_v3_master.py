@@ -1445,7 +1445,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,\
                npix_x, L_x, L_y, L_z, centre, BoxSize, hconst,\
                excludeSFRW, excludeSFRQ, velcut, sylviasshtables,\
                axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, quantityW, quantityQ,\
-               simulation, LsinMpc, halosel, kwargs_halosel, misc):
+               simulation, LsinMpc, halosel, kwargs_halosel, misc, hdf5):
     # some messiness is hard to avoid, but it's contained
     # Ls and centre have not been converted to Mpc when this function is called
 
@@ -1616,7 +1616,8 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,\
         if 'usechemabundtables' in misc:
             if misc['usechemabundtables'] == 'BenOpp1':
                 resfile = resfile + '_BenOpp1-chemtables'
-
+    if hdf5:
+        resfile = resfile + '.hdf5'
     #resfile = resfile + misctail
     if ptypeQ == None:
         print('saving W result to: '+resfile+'\n')
@@ -3197,7 +3198,7 @@ def saveattr(grp, name, val):
     else:
         grp.attrs.create(name, val)
         
-def savemap_hdf5(npzname, projmap, minval, maxval,\
+def savemap_hdf5(hdf5name, projmap, minval, maxval,\
          simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          ptypeW,\
          ionW, abundsW, quantityW,\
@@ -3215,10 +3216,7 @@ def savemap_hdf5(npzname, projmap, minval, maxval,\
     groupnums is only stored if halosel is not None
     '''
     
-    hdf5name = npzname
-    if hdf5name[-4:] == '.npz':
-        hdf5name = hdf5name[:-4]
-    hdf5name = hdf5name + '.hdf5'
+    #print('save hdf5 function called')
     with h5py.File(hdf5name, 'w') as fh:
         hed = fh.create_group('Header/inputpars')
         # relatively simple cases
@@ -3268,7 +3266,7 @@ def savemap_hdf5(npzname, projmap, minval, maxval,\
             saveattr(hsel, 'any_selection', True)
             selection_element_counter = 0
             for selection_element in halosel:
-                sgrp = halosel.create_group('tuple_%i'%selection_element_counter)
+                sgrp = hsel.create_group('tuple_%i'%selection_element_counter)
                 for tuple_index in range(len(selection_element)):
                     val = selection_element[tuple_index]
                     if isinstance(val, dict):
@@ -3278,7 +3276,14 @@ def savemap_hdf5(npzname, projmap, minval, maxval,\
                         saveattr(sgrp, 'tuple_index_%i'%tuple_index, val)
                 selection_element_counter += 1
             hsel.create_dataset('groupnums', data=groupnums)
-            
+        
+        mgrp = hed.create_group('misc')
+        if misc is None:
+            saveattr(mgrp, 'any_values', False)
+        else:
+            saveattr(mgrp, 'any_values', True)
+        saveattr(mgrp, 'dict', misc)
+        
         # main map save
         ds_map = fh.create_dataset('map', data=projmap)
         ds_map.attrs.create('max', maxval)
@@ -3544,8 +3549,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                           %(ptypeW,   ionW,   abundsW,   quantityW,   excludeSFRW,   iseltW))
     print((':\t%s\t'.join(['ptypeQ', 'ionQ', 'abundsQ', 'quantityQ', 'excludeSFRQ', 'iseltQ', '']))\
                           %(ptypeQ,   ionQ,   abundsQ,   quantityQ,   excludeSFRQ,   iseltQ))
-    print((':\t%s\t'.join(['log', 'sylviasshtables', 'saveres', 'ompproj', '']))\
-                          %(log,   sylviasshtables,   saveres,   ompproj))
+    print((':\t%s\t'.join(['log', 'sylviasshtables', 'saveres', 'ompproj', 'hdf5', '']))\
+                          %(log,   sylviasshtables,   saveres,   ompproj,   hdf5))
     print((':\t%s\t'.join(['halosel', 'kwargs_halosel', '']))\
                           %(halosel,  kwargs_halosel))
     print('misc:\t%s'%misc)
@@ -3644,13 +3649,13 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                          npix_x, L_x, L_y, L_z, centre, simfile.boxsize, simfile.h,\
                          excludeSFRW, excludeSFRQ, velcut, sylviasshtables,
                          axis, var, abundsW, ionW, parttype, None, abundsQ, ionQ, quantityW, quantityQ,\
-                         simulation, LsinMpc, halosel, kwargs_halosel, misc)
+                         simulation, LsinMpc, halosel, kwargs_halosel, misc, hdf5)
     if ptypeQ !=None:
         resfile2 = nameoutput(vardict_temp, ptypeW, simnum, snapnum, version, kernel,\
                               npix_x, L_x, L_y, L_z, centre, simfile.boxsize, simfile.h,\
                               excludeSFRW, excludeSFRQ, velcut, sylviasshtables,
                               axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, quantityW, quantityQ,\
-                              simulation, LsinMpc, halosel, kwargs_halosel, misc)
+                              simulation, LsinMpc, halosel, kwargs_halosel, misc, hdf5)
     del vardict_temp
     # just get the file name for a set of parameters
     if nameonly:
@@ -3847,6 +3852,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
             maxW = np.max(resW)
             if halosel is None:
                 if hdf5:
+                    #print('should be saving hdf5 file now')
                     savemap_hdf5(resfile, resW, minW, maxW,\
                                  simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                  ptypeW,\
@@ -3863,6 +3869,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                     np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW)
             else:
                 if hdf5:
+                    #print('should be saving hdf5 file now')
                     savemap_hdf5(resfile, resW, minW, maxW,\
                                  simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                  ptypeW,\
