@@ -1012,23 +1012,28 @@ def projecthalos_testhaloonly(filename_halos='testselection.txt', radius_R200c=2
               'theta': 0.0, 'phi': 0.0, 'psi': 0.0, \
               'sylviasshtables': False,\
               'var': simprops['var'], 'axis': 'z','log': True, 'velcut': False,\
-              'periodic': False, 'kernel': 'C2', 'saveres': True,\
+              'periodic': False, 'kernel': 'C2', 'saveres': False,\
               'simulation': 'eagle', 'LsinMpc': None,\
               'select': None, 'misc': None,\
               'ompproj': False, 'numslices': None}
     # not specified: nameonly, halosel, halosel_kwargs
-    halosel_kwargs_opts = [{'exclsatellites': True, 'allinR200c': True},\
-                           {'exclsatellites': True, 'allinR200c': False},\
-                           {'exclsatellites': False, 'allinR200c': False},\
-                           {'exclsatellites': False, 'allinR200c': True}] 
+    halosel_kwargs_opts = [[[{'exclsatellites': True, 'allinR200c': True, 'label': 'exclsats_allinR200c_galaxyid-%i-only'%gid} for gid in ids],\
+                            [{'exclsatellites': True, 'allinR200c': True, 'label': 'exclsats_allinR200c_galaxyid-%i'%gid} for gid in ids]],\
+                           [[{'exclsatellites': True, 'allinR200c': False, 'label': 'exclsats_FOF_galaxyid-%i-only'%gid} for gid in ids],\
+                            [{'exclsatellites': True, 'allinR200c': False, 'label': 'exclsats_FOF_galaxyid-%i'%gid} for gid in ids]],\
+                           [[{'exclsatellites': False, 'allinR200c': True, 'label': 'inclsats_allinR200c_galaxyid-%i-only'%gid} for gid in ids],\
+                            [{'exclsatellites': False, 'allinR200c': True, 'label': 'inclsats_allinR200c_galaxyid-%i'%gid} for gid in ids]],\
+                           [[{'exclsatellites': False, 'allinR200c': False, 'label': 'inclsats_FOF_galaxyid-%i-only'%gid} for gid in ids],\
+                            [{'exclsatellites': False, 'allinR200c': False, 'label': 'inclsats_FOF_galaxyid-%i'%gid} for gid in ids]],\
+                          ]
     
     # all halos or just the central one, for each id
     halosels = [[[('Mhalo_logMsun', M200c[i] - 0.01, M200c[i] + 0.01),\
                   ('X_cMpc', Xcop[i] - 0.1 * R200c[i], Xcop[i] + 0.1 * R200c[i]),\
                   ('Y_cMpc', Ycop[i] - 0.1 * R200c[i], Ycop[i] + 0.1 * R200c[i]),\
                   ('Z_cMpc', Zcop[i] - 0.1 * R200c[i], Zcop[i] + 0.1 * R200c[i]),\
-                  ],
-                 []\
+                  ],\
+                 [],\
                 ] for i in range(len(ids))]
 
     
@@ -1037,15 +1042,32 @@ def projecthalos_testhaloonly(filename_halos='testselection.txt', radius_R200c=2
     name_metadata = basename_metadata + '_metadata.txt'
     with open(mdir + name_metadata, 'w') as fo:
         keys_kwargs = kwargs.keys()
-        keys_halosel = halosel_kwargs_opts[0].keys()
-        topline = '\t'.join(list(argnames) + keys_kwargs + keys_halosel + ['onlyselectedhalo', 'filename'])
+        keys_halosel = halosel_kwargs_opts[0][0][0].keys()
+        topline = '\t'.join(list(argnames) + keys_kwargs + keys_halosel + ['haloselection', 'filename'])
         fo.write(topline + '\n')
         saveline_base = '\t'.join(['%s'] * len(topline.split('\t')))
         for hi in range(len(args)):
             for hsi in range(len(halosels[0])):
                 for kwi in range(len(halosel_kwargs_opts)):
-                    name = m3.make_map(*args[hi], nameonly=True, halosel=halosels[hi][hsi], kwargs_halosel=halosel_kwargs_opts[kwi], **kwargs)
-                    saveline = saveline_base%(args[hi] + tuple([kwargs[key] for key in keys_kwargs]) + tuple([halosel_kwargs_opts[kwi][key] for key in keys_halosel]) + (halosels[hi][hsi] != [],) + (name[0],))
+                    halosel = halosels[hi][hsi]
+                    if halosel is None:
+                        kwargs_halosel = None
+                    else:
+                        kwargs_halosel = halosel_kwargs_opts[kwi][hsi][hi]
+                    name = m3.make_map(*args[hi], nameonly=True, halosel=halosel, kwargs_halosel=kwargs_halosel, **kwargs)
+                    saveline = saveline_base%(args[hi] + \
+                                              tuple([kwargs[key] for key in keys_kwargs]) +\
+                                              tuple([kwargs_halosel[key] if kwargs_halosel is not None else 'none' for key in keys_halosel]) +\
+                                              ('none' if halosel is None else 'all' if halosel == [] else 'selected-only',) + (name[0],))
                     fo.write(saveline + '\n')
-                    m3.make_map(*args[hi], nameonly=False, halosel=halosels[hi][hsi], kwargs_halosel=halosel_kwargs_opts[kwi], **kwargs) # Error: filename too long
+                    m3.make_map(*args[hi], nameonly=False, halosel=halosel, kwargs_halosel=kwargs_halosel, **kwargs) # Error: filename too long using default selection labels
+            halosel = None
+            kwargs_halosel = None
+            name = m3.make_map(*args[hi], nameonly=True, halosel=halosel, kwargs_halosel=kwargs_halosel, **kwargs)
+            saveline = saveline_base%(args[hi] + \
+                                      tuple([kwargs[key] for key in keys_kwargs]) +\
+                                      tuple([kwargs_halosel[key] if kwargs_halosel is not None else 'none' for key in keys_halosel]) +\
+                                      ('none' if halosel is None else 'all' if halosel == [] else 'selected-only',) + (name[0],))
+            fo.write(saveline + '\n')
+            m3.make_map(*args[hi], nameonly=False, halosel=halosel, kwargs_halosel=kwargs_halosel, **kwargs) # Error: filename too long using default selection labels
     # run the projections

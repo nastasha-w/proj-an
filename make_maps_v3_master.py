@@ -1577,6 +1577,9 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,\
     # halo selections
     if halosel is not None:
         halostr = '_' + selecthaloparticles(vardict, halosel, nameonly=True, last=False, **kwargs_halosel)
+        if 'label' in kwargs_halosel.keys():
+            if kwargs_halosel['label'] is not None:
+                halostr = '_halosel-%s-endhalosel'%kwargs_halosel['label']
     else:
         halostr = ''
         
@@ -1633,14 +1636,14 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc,\
-         select, misc, ompproj, numslices, halosel, kwargs_halosel):
+         select, misc, ompproj, numslices, halosel, kwargs_halosel, hdf5):
 
     '''
     Checks the input to make_map();
     This is not an exhaustive check; it does handle the default/auto options
     return numbers are not ordered; just search <return ##>
     '''
-    # max used number: 43
+    # max used number: 44
 
     # basic type and valid option checks
     if not isinstance(var, str):
@@ -1694,6 +1697,9 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         if velcut < 0:
             velcut = -1*velcut
         velcut = (0, velcut)
+    if not isinstance(hdf5, bool):
+        print('hdf5 should be a boolean.\n')
+        return 44
     if not isinstance(snapnum, int):
         print('snapnum should be an integer.\n')
         return 21
@@ -1724,7 +1730,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     if kwargs_halosel is None:
         kwargs_halosel = {}
     else:
-        allowed_kwargs = ['aperture', 'mdef', 'exclsatellites', 'allinR200c']
+        allowed_kwargs = ['aperture', 'mdef', 'exclsatellites', 'allinR200c', 'label']
         if not np.all([key in allowed_kwargs for key in kwargs_halosel.keys()]):
             print('allowed kwargs_halosel are %s'%allowed_kwargs)
             print('input kwargs_halosel were %s'%kwargs_halosel.keys())
@@ -1744,6 +1750,10 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         if 'mdef' in kwargs_halosel.keys():
             if not isinstance(kwargs_halosel['mdef'], str):
                 print('kwargs_halosel: "mdef" must be a string; was %s'%(kwargs_halosel['mdef']))
+                return 43   
+        if 'label' in kwargs_halosel.keys():
+            if not isinstance(kwargs_halosel['label'], str):
+                print('kwargs_halosel: "label" must be a string; was %s'%(kwargs_halosel['label']))
                 return 43   
             
     if simulation not in ['eagle', 'bahamas', 'Eagle', 'Bahamas', 'EAGLE', 'BAHAMAS', 'eagle-ioneq', 'c-eagle-hydrangea', 'CE', 'hydrangea', 'CEH']:
@@ -1966,7 +1976,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
-         halosel, kwargs_halosel
+         halosel, kwargs_halosel, hdf5
 
 
 
@@ -2321,7 +2331,7 @@ def selecthaloparticles(vardict, halosel, nameonly=False, last=True, **kwargs):
         allinR200c = kwargs['allinR200c']
     else:
         allinR200c = True
-    kwargs_allowed = {'mdef', 'aperture', 'exclsatellites', 'allinR200c'}
+    kwargs_allowed = {'mdef', 'aperture', 'exclsatellites', 'allinR200c', 'label'}
     if not set(kwargs.keys()).issubset(kwargs_allowed):
         print('Warning: kwargs %s in selecthalosparticles are ignored'%(set(kwargs.keys()) - kwargs_allowed))
         
@@ -3170,6 +3180,110 @@ def combwishlist(neededsubssettingsfirst,neededsubssettingssecond):
 
     return list(needed12)
 
+
+def saveattr(grp, name, val):
+    '''
+    meant for realtively simple cases; do not apply to e.g. selection tuples 
+    with mixed types
+    '''
+    if isinstance(val, dict):
+        subgrp = grp.create_group(name)
+        for key in val.keys():
+            saveattr(subgrp, key, val[key])
+    elif hasattr(val, '__len__') and not isinstance(val, str):
+        grp.attrs.create(name, np.array(val))
+    elif val is None:
+        grp.attrs.create(name, 'None')
+    else:
+        grp.attrs.create(name, val)
+        
+def savemap_hdf5(npzname, projmap, minval, maxval,\
+         simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
+         ptypeW,\
+         ionW, abundsW, quantityW,\
+         ionQ, abundsQ, quantityQ, ptypeQ,\
+         excludeSFRW, excludeSFRQ, parttype,\
+         theta, phi, psi, \
+         sylviasshtables,\
+         var, axis, log, velcut,\
+         periodic, kernel, saveres,\
+         simulation, LsinMpc, misc, ompproj, numslices,\
+         halosel, kwargs_halosel, groupnums):
+    '''
+    save projmap, minval, maxval with npzname and the processed input 
+    parameters
+    groupnums is only stored if halosel is not None
+    '''
+    
+    hdf5name = npzname
+    if hdf5name[-4:] == '.npz':
+        hdf5name = hdf5name[:-4]
+    hdf5name = hdf5name + '.hdf5'
+    with h5py.File(hdf5name, 'w') as fh:
+        hed = fh.create_group('Header/inputpars')
+        # relatively simple cases
+        saveattr(hed, 'simnum', simnum)
+        saveattr(hed, 'snapnum', snapnum)
+        saveattr(hed, 'centre', centre)
+        saveattr(hed, 'L_x', L_x)
+        saveattr(hed, 'L_y', L_y)
+        saveattr(hed, 'L_z', L_z)
+        saveattr(hed, 'npix_x', npix_x)
+        saveattr(hed, 'npix_y', npix_y)
+        saveattr(hed, 'var', var)
+        
+        saveattr(hed, 'ptypeW', ptypeW)
+        saveattr(hed, 'ionW', ionW)
+        saveattr(hed, 'abundsW', abundsW)
+        saveattr(hed, 'quantityW', quantityW)
+        saveattr(hed, 'excludeSFRW', excludeSFRW)
+        
+        saveattr(hed, 'ptypeQ', ptypeQ)
+        saveattr(hed, 'ionQ', ionQ)
+        saveattr(hed, 'abundsQ', abundsQ)
+        saveattr(hed, 'quantityQ', quantityQ)
+        saveattr(hed, 'excludeSFRQ', excludeSFRQ)
+        
+        saveattr(hed, 'parttype', parttype)
+        saveattr(hed, 'var', var)
+        saveattr(hed, 'axis', axis)
+        saveattr(hed, 'log', log)
+        saveattr(hed, 'velcut', velcut)
+        saveattr(hed, 'periodic', periodic)
+        saveattr(hed, 'kernel', kernel)
+        saveattr(hed, 'simulation', simulation)
+        saveattr(hed, 'LsinMpc', LsinMpc)
+        saveattr(hed, 'ompproj', ompproj)
+        saveattr(hed, 'numslices', numslices)
+        saveattr(hed, 'sylviasshtables', sylviasshtables)
+        saveattr(hed, 'theta', theta)
+        saveattr(hed, 'phi', phi)
+        saveattr(hed, 'psi', psi)
+        
+        hsel = hed.create_group('halosel')
+        saveattr(hsel, 'kwargs_halosel', kwargs_halosel)
+        if halosel is None:
+            saveattr(hsel, 'any_selection', False)
+        else:
+            saveattr(hsel, 'any_selection', True)
+            selection_element_counter = 0
+            for selection_element in halosel:
+                sgrp = halosel.create_group('tuple_%i'%selection_element_counter)
+                for tuple_index in range(len(selection_element)):
+                    val = selection_element[tuple_index]
+                    if isinstance(val, dict):
+                        for key in val.keys():
+                            saveattr(sgrp, key, val[key])
+                    else:
+                        saveattr(sgrp, 'tuple_index_%i'%tuple_index, val)
+                selection_element_counter += 1
+            hsel.create_dataset('groupnums', data=groupnums)
+            
+        # main map save
+        ds_map = fh.create_dataset('map', data=projmap)
+        ds_map.attrs.create('max', maxval)
+        ds_map.attrs.create('minfinite', minval)
+        
 ##########################################################################################
 
 def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
@@ -3183,7 +3297,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          periodic=True, kernel='C2', saveres=False,\
          simulation='eagle', LsinMpc=None,\
          select=None, misc=None, halosel=None, kwargs_halosel=None,\
-         ompproj=False, nameonly=False, numslices=None):
+         ompproj=False, nameonly=False, numslices=None, hdf5=False):
 
     """
     ------------------
@@ -3253,6 +3367,13 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                   or not 
                 allinR200c: include particles inside R200c but not in the FOF 
                   group
+                label: replace the automatic name for the halo selection with 
+                  this label (useful for more complicated selections which 
+                  otherwise produce 'filename too long' IOErrors)
+                  recommended to use with the hdf5 saving option, which will 
+                  save the exact selection used
+                  otherwise, the exact parameter documentation relies on 
+                  external files/notes
                 
     The chosen region is assumed to be a continuous block. 
 
@@ -3353,6 +3474,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     optional:   .npz file containing the 2D array (naming is automatic)
     nameonly:   name of the npz file you would get from the saveres output
                 with the same parameters
+    hdf5:       save output to an hdf5 file instead of .npz (also documents
+                input parameters)
     modify make_maps_opts_locs for locations of interpolation files (c),
     projection routine (c), ion balance and emission tables (hdf5) and write
     locations
@@ -3392,7 +3515,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc,\
-         select, misc, ompproj, numslices, halosel, kwargs_halosel)
+         select, misc, ompproj, numslices, halosel, kwargs_halosel, hdf5)
     if isinstance(res, int):
         raise ValueError("inputcheck returned error code %i"%res)
 
@@ -3406,7 +3529,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
-         halosel, kwargs_halosel = res[1:]
+         halosel, kwargs_halosel, hdf5 = res[1:]
 
     print('Processed input:')
     print((':\t%s\t'.join(['simnum', 'snapnum', 'simulation', 'var', 'parttype', '']))\
@@ -3723,9 +3846,37 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                 minW = np.NaN
             maxW = np.max(resW)
             if halosel is None:
-                np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW)
+                if hdf5:
+                    savemap_hdf5(resfile, resW, minW, maxW,\
+                                 simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
+                                 ptypeW,\
+                                 ionW, abundsW, quantityW,\
+                                 ionQ, abundsQ, quantityQ, ptypeQ,\
+                                 excludeSFRW, excludeSFRQ, parttype,\
+                                 theta, phi, psi, \
+                                 sylviasshtables,\
+                                 var, axis, log, velcut,\
+                                 periodic, kernel, saveres,\
+                                 simulation, LsinMpc, misc, ompproj, numslices,\
+                                 halosel, kwargs_halosel, None)
+                else:
+                    np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW)
             else:
-                np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW, groupnums=groupnums)
+                if hdf5:
+                    savemap_hdf5(resfile, resW, minW, maxW,\
+                                 simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
+                                 ptypeW,\
+                                 ionW, abundsW, quantityW,\
+                                 ionQ, abundsQ, quantityQ, ptypeQ,\
+                                 excludeSFRW, excludeSFRQ, parttype,\
+                                 theta, phi, psi, \
+                                 sylviasshtables,\
+                                 var, axis, log, velcut,\
+                                 periodic, kernel, saveres,\
+                                 simulation, LsinMpc, misc, ompproj, numslices,\
+                                 halosel, kwargs_halosel, groupnums)
+                else:
+                    np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW, groupnums=groupnums)
             del resW
             if ptypeQ is not None:
                 resQ = resultQ.astype(np.float32)
@@ -3735,9 +3886,37 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                     minQ = np.NaN
                 maxQ = np.max(resQ)
                 if halosel is None:
-                    np.savez(resfile2, arr_0=resQ, minfinite=minQ, max=maxQ)
+                    if hdf5:
+                        savemap_hdf5(resfile2, resQ, minQ, maxQ,\
+                                     simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
+                                     ptypeW,\
+                                     ionW, abundsW, quantityW,\
+                                     ionQ, abundsQ, quantityQ, ptypeQ,\
+                                     excludeSFRW, excludeSFRQ, parttype,\
+                                     theta, phi, psi, \
+                                     sylviasshtables,\
+                                     var, axis, log, velcut,\
+                                     periodic, kernel, saveres,\
+                                     simulation, LsinMpc, misc, ompproj, numslices,\
+                                     halosel, kwargs_halosel, None)
+                    else:
+                        np.savez(resfile2, arr_0=resQ, minfinite=minQ, max=maxQ)
                 else:
-                    np.savez(resfile2, arr_0=resQ, minfinite=minQ, max=maxQ, groupnums=groupnums)
+                    if hdf5:
+                        savemap_hdf5(resfile2, resQ, minQ, maxQ,\
+                                     simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
+                                     ptypeW,\
+                                     ionW, abundsW, quantityW,\
+                                     ionQ, abundsQ, quantityQ, ptypeQ,\
+                                     excludeSFRW, excludeSFRQ, parttype,\
+                                     theta, phi, psi, \
+                                     sylviasshtables,\
+                                     var, axis, log, velcut,\
+                                     periodic, kernel, saveres,\
+                                     simulation, LsinMpc, misc, ompproj, numslices,\
+                                     halosel, kwargs_halosel, groupnums)
+                    else:
+                        np.savez(resfile2, arr_0=resQ, minfinite=minQ, max=maxQ, groupnums=groupnums)
                 del resQ
             print('results saved to file')
     else: #numslices is not None
@@ -3815,26 +3994,80 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                     minW = np.NaN
                 maxW = np.max(resW)
                 if halosel is None:
-                    np.savez(subresfile, arr_0=resW, minfinite=minW, max=maxW)
+                    if hdf5:
+                        savemap_hdf5(subresfile, resW, minW, maxW,\
+                                     simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
+                                     ptypeW,\
+                                     ionW, abundsW, quantityW,\
+                                     ionQ, abundsQ, quantityQ, ptypeQ,\
+                                     excludeSFRW, excludeSFRQ, parttype,\
+                                     theta, phi, psi, \
+                                     sylviasshtables,\
+                                     var, axis, log, velcut,\
+                                     periodic, kernel, saveres,\
+                                     simulation, LsinMpc, misc, ompproj, numslices,\
+                                     halosel, kwargs_halosel, None)
+                    else:
+                        np.savez(subresfile, arr_0=resW, minfinite=minW, max=maxW)
                 else:
-                    np.savez(subresfile, arr_0=resW, minfinite=minW, max=maxW, groupnums=groupnums)
+                    if hdf5:
+                        savemap_hdf5(subresfile, resW, minW, maxW,\
+                                     simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
+                                     ptypeW,\
+                                     ionW, abundsW, quantityW,\
+                                     ionQ, abundsQ, quantityQ, ptypeQ,\
+                                     excludeSFRW, excludeSFRQ, parttype,\
+                                     theta, phi, psi, \
+                                     sylviasshtables,\
+                                     var, axis, log, velcut,\
+                                     periodic, kernel, saveres,\
+                                     simulation, LsinMpc, misc, ompproj, numslices,\
+                                     halosel, kwargs_halosel, groupnums)
+                    else:
+                        np.savez(subresfile, arr_0=resW, minfinite=minW, max=maxW, groupnums=groupnums)
                 del resW
                 if ptypeQ is not None:
                     resQ = subresultQ.astype(np.float32)
                     minQ= np.min(resQ[np.isfinite(resQ)])
                     maxQ = np.max(resQ)
                     if halosel is None:
-                        np.savez(subresfile2, arr_0=resQ, minfinite=minQ, max=maxQ)
+                        if hdf5:
+                            savemap_hdf5(subresfile2, resQ, minQ, maxQ,\
+                                         simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
+                                         ptypeW,\
+                                         ionW, abundsW, quantityW,\
+                                         ionQ, abundsQ, quantityQ, ptypeQ,\
+                                         excludeSFRW, excludeSFRQ, parttype,\
+                                         theta, phi, psi, \
+                                         sylviasshtables,\
+                                         var, axis, log, velcut,\
+                                         periodic, kernel, saveres,\
+                                         simulation, LsinMpc, misc, ompproj, numslices,\
+                                         halosel, kwargs_halosel, None)
+                        else:
+                            np.savez(subresfile2, arr_0=resQ, minfinite=minQ, max=maxQ)
                     else:
-                        np.savez(subresfile2, arr_0=resQ, minfinite=minQ, max=maxQ, groupnums=groupnums)
+                        if hdf5:
+                            savemap_hdf5(subresfile2, resQ, minQ, maxQ,\
+                                         simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
+                                         ptypeW,\
+                                         ionW, abundsW, quantityW,\
+                                         ionQ, abundsQ, quantityQ, ptypeQ,\
+                                         excludeSFRW, excludeSFRQ, parttype,\
+                                         theta, phi, psi, \
+                                         sylviasshtables,\
+                                         var, axis, log, velcut,\
+                                         periodic, kernel, saveres,\
+                                         simulation, LsinMpc, misc, ompproj, numslices,\
+                                         halosel, kwargs_halosel, groupnums)
+                        else:
+                            np.savez(subresfile2, arr_0=resQ, minfinite=minQ, max=maxQ, groupnums=groupnums)
                     del resQ
                 print('results saved to file')
             resultW = resultW + [subresultW]
             resultQ = resultQ + [subresultQ]
 
     return resultW, resultQ
-
-
 
 
 ######################################
