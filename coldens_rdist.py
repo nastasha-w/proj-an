@@ -678,24 +678,48 @@ def rdists_sl_faster(base, szcens, L_x, npix_x,\
     for fill in fills_toloop:
         if not oneslice:
             if '/' in base:
-                fullim = np.load(base%fill)['arr_0']
+                if base[:-4] == '.npz':
+                    fullim = np.load(base%fill)['arr_0']
+                else:
+                    with h5py.File(base%fill, 'r') as fi:
+                        fullim = np.array(fi['map'])
             else:
                 try: 
-                    fullim = np.load(ol.ndir + base%fill)['arr_0']
+                    if base[:-4] == '.npz':
+                        fullim = np.load(ol.ndir + base%fill)['arr_0']
+                    else:
+                        with h5py.File(ol.ndir + base%fill, 'r') as fi:
+                            fullim = np.array(fi['map'])
                 except IOError as exc:
                     print(exc)
                     print('Trying alt. directory')
-                    fullim = np.load(ol.ndir_old + base%fill)['arr_0']
+                    if base[:-4] == '.npz':
+                        fullim = np.load(ol.ndir_old + base%fill)['arr_0']
+                    else:
+                        with h5py.File(ol.ndir_old + base%fill, 'r') as fi:
+                            fullim = np.array(fi['map'])
         else:
             if '/' in base:
-                fullim = np.load(base)['arr_0']
+                if base[:-4] == '.npz':
+                    fullim = np.load(base)['arr_0']
+                else:
+                    with h5py.File(base, 'r') as fi:
+                        fullim = np.array(fi['map'])
             else:
                 try: 
-                    fullim = np.load(ol.ndir + base)['arr_0']
+                    if base[:-4] == '.npz':
+                        fullim = np.load(ol.ndir + base)['arr_0']
+                    else:
+                        with h5py.File(ol.ndir + base, 'r') as fi:
+                            fullim = np.array(fi['map'])
                 except IOError as exc:
                     print(exc)
                     print('Trying alt. directory')
-                    fullim = np.load(ol.ndir_old + base)['arr_0']
+                    if base[:-4] == '.npz':
+                        fullim = np.load(ol.ndir_old + base)['arr_0']
+                    else:
+                        with h5py.File(ol.ndir_old + base, 'r') as fi:
+                            fullim = np.array(fi['map'])
                     
         print('Loaded %s'%fill)
         # only modify the arrays for which we want to use this slice; avoid for loops by list comprehension (arrays won't work if the selection regions have different sizes)
