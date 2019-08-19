@@ -1516,8 +1516,11 @@ def saveradialprofiles_hdf5_to_hdf5(infiles, halocat, rbins, yvals,\
                 del galids_thisfile
                 
                 # get the halos from this file in the overall selection
-                if galids == 'all':
-                    galids_used_thisfile = galids_usable_thisfile 
+                if isinstance(galids, str):
+                    if galids == 'all':
+                        galids_used_thisfile = galids_usable_thisfile 
+                    else:
+                        raise RuntimeError('Unexpected galids value %s'%galids)
                 else:
                     galids_used_thisfile = galids_usable_thisfile & galids_todo
                     galids_todo -= galids_used_thisfile
