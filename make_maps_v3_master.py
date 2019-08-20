@@ -1637,14 +1637,14 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc,\
-         select, misc, ompproj, numslices, halosel, kwargs_halosel, hdf5):
+         select, misc, ompproj, numslices, halosel, kwargs_halosel, hdf5, override_simdatapath):
 
     '''
     Checks the input to make_map();
     This is not an exhaustive check; it does handle the default/auto options
     return numbers are not ordered; just search <return ##>
     '''
-    # max used number: 44
+    # max used number: 45
 
     # basic type and valid option checks
     if not isinstance(var, str):
@@ -1701,6 +1701,11 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     if not isinstance(hdf5, bool):
         print('hdf5 should be a boolean.\n')
         return 44
+    if override_simdatapath == False:
+        override_simdatapath = None
+    if not (isinstance(override_simdatapath, str) or override_simdatapath is None):
+        print('override_simdatapath should be None or a string containing specifying directory containing the snapshot.../, groups.../, etc. directories')
+        return 45
     if not isinstance(snapnum, int):
         print('snapnum should be an integer.\n')
         return 21
@@ -1977,7 +1982,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
-         halosel, kwargs_halosel, hdf5
+         halosel, kwargs_halosel, hdf5, override_simdatapath
 
 
 
@@ -3209,7 +3214,7 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,\
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
-         halosel, kwargs_halosel, cosmopars, groupnums):
+         halosel, kwargs_halosel, cosmopars, override_simdatapath, groupnums):
     '''
     save projmap, minval, maxval with npzname and the processed input 
     parameters
@@ -3257,6 +3262,7 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,\
         saveattr(hed, 'theta', theta)
         saveattr(hed, 'phi', phi)
         saveattr(hed, 'psi', psi)
+        saveattr(hed, 'override_simdatapath', override_simdatapath)
         
         saveattr(hed, 'cosmopars', cosmopars)
         
@@ -3304,7 +3310,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          periodic=True, kernel='C2', saveres=False,\
          simulation='eagle', LsinMpc=None,\
          select=None, misc=None, halosel=None, kwargs_halosel=None,\
-         ompproj=False, nameonly=False, numslices=None, hdf5=False):
+         ompproj=False, nameonly=False, numslices=None, hdf5=False,\
+         override_simdatapath=None):
 
     """
     ------------------
@@ -3316,7 +3323,14 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     snapnum:   number of the snapshot; integer
     simulation:which simulation to use; 'eagle' or 'bahamas' (or 'eagle-ioneq')
                default 'eagle'
-               
+    override_simdatapath: None or a string specifying the directory containing
+               e.g. the snapshot.../, group.../ directories
+               for non-standard file organisations where the format assumed in 
+               make_maps_opts_locs.py, projection_classes.py, and 
+               read_eagle_files.py will fail at higher levels than this
+               ! Beware: this overrides the simnum and var options, so ideally,
+               set these paths in a wrapper scripts that checks that the files 
+               and assumed simulation parameters agree
     -----------------
      what to project (particle selection)
     -----------------
@@ -3522,7 +3536,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc,\
-         select, misc, ompproj, numslices, halosel, kwargs_halosel, hdf5)
+         select, misc, ompproj, numslices, halosel, kwargs_halosel, hdf5, override_simdatapath)
     if isinstance(res, int):
         raise ValueError("inputcheck returned error code %i"%res)
 
@@ -3536,7 +3550,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
-         halosel, kwargs_halosel, hdf5 = res[1:]
+         halosel, kwargs_halosel, hdf5, override_simdatapath = res[1:]
 
     print('Processed input:')
     print((':\t%s\t'.join(['simnum', 'snapnum', 'simulation', 'var', 'parttype', '']))\
@@ -3555,6 +3569,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                           %(log,   sylviasshtables,   saveres,   ompproj,   hdf5))
     print((':\t%s\t'.join(['halosel', 'kwargs_halosel', '']))\
                           %(halosel,  kwargs_halosel))
+    print((':\t%s\t'.join(['override_simdatapath', '']))\
+                          %(override_simdatapath))
     print('misc:\t%s'%misc)
     print('\n')
 
@@ -3626,9 +3642,9 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
 
     #### set data file, setup axis handling
     if halosel is not None:
-        simfile = pc.Simfile(simnum, snapnum, var, simulation=simulation, file_type='particles')
+        simfile = pc.Simfile(simnum, snapnum, var, simulation=simulation, file_type='particles', override_filepath=override_simdatapath)
     else: # use default: snapshot data
-        simfile = pc.Simfile(simnum, snapnum, var, simulation=simulation)
+        simfile = pc.Simfile(simnum, snapnum, var, simulation=simulation, override_filepath=override_simdatapath)
 
     if axis == 'x':
         Axis1 = 1
@@ -3874,7 +3890,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                  var, axis, log, velcut,\
                                  periodic, kernel, saveres,\
                                  simulation, LsinMpc, misc, ompproj, numslices,\
-                                 halosel, kwargs_halosel, cosmopars, None)
+                                 halosel, kwargs_halosel, cosmopars, override_simdatapath, None)
                 else:
                     np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW)
             else:
@@ -3891,7 +3907,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                  var, axis, log, velcut,\
                                  periodic, kernel, saveres,\
                                  simulation, LsinMpc, misc, ompproj, numslices,\
-                                 halosel, kwargs_halosel, cosmopars, groupnums)
+                                 halosel, kwargs_halosel, cosmopars, override_simdatapath, groupnums)
                 else:
                     np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW, groupnums=groupnums)
             del resW
@@ -3915,7 +3931,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      var, axis, log, velcut,\
                                      periodic, kernel, saveres,\
                                      simulation, LsinMpc, misc, ompproj, numslices,\
-                                     halosel, kwargs_halosel, cosmopars, None)
+                                     halosel, kwargs_halosel, cosmopars, override_simdatapath, None)
                     else:
                         np.savez(resfile2, arr_0=resQ, minfinite=minQ, max=maxQ)
                 else:
@@ -3931,7 +3947,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      var, axis, log, velcut,\
                                      periodic, kernel, saveres,\
                                      simulation, LsinMpc, misc, ompproj, numslices,\
-                                     halosel, kwargs_halosel, cosmopars, groupnums)
+                                     halosel, kwargs_halosel, cosmopars, override_simdatapath, groupnums)
                     else:
                         np.savez(resfile2, arr_0=resQ, minfinite=minQ, max=maxQ, groupnums=groupnums)
                 del resQ
@@ -4023,7 +4039,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      var, axis, log, velcut,\
                                      periodic, kernel, saveres,\
                                      simulation, LsinMpc, misc, ompproj, numslices,\
-                                     halosel, kwargs_halosel, cosmopars, None)
+                                     halosel, kwargs_halosel, cosmopars, override_simdatapath, None)
                     else:
                         np.savez(subresfile, arr_0=resW, minfinite=minW, max=maxW)
                 else:
@@ -4039,7 +4055,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      var, axis, log, velcut,\
                                      periodic, kernel, saveres,\
                                      simulation, LsinMpc, misc, ompproj, numslices,\
-                                     halosel, kwargs_halosel, cosmopars, groupnums)
+                                     halosel, kwargs_halosel, cosmopars, override_simdatapath, groupnums)
                     else:
                         np.savez(subresfile, arr_0=resW, minfinite=minW, max=maxW, groupnums=groupnums)
                 del resW
@@ -4060,7 +4076,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                          var, axis, log, velcut,\
                                          periodic, kernel, saveres,\
                                          simulation, LsinMpc, misc, ompproj, numslices,\
-                                         halosel, kwargs_halosel, cosmopars, None)
+                                         halosel, kwargs_halosel, cosmopars, override_simdatapath, None)
                         else:
                             np.savez(subresfile2, arr_0=resQ, minfinite=minQ, max=maxQ)
                     else:
@@ -4076,7 +4092,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                          var, axis, log, velcut,\
                                          periodic, kernel, saveres,\
                                          simulation, LsinMpc, misc, ompproj, numslices,\
-                                         halosel, kwargs_halosel, cosmopars, groupnums)
+                                         halosel, kwargs_halosel, cosmopars, override_simdatapath, groupnums)
                         else:
                             np.savez(subresfile2, arr_0=resQ, minfinite=minQ, max=maxQ, groupnums=groupnums)
                     del resQ

@@ -68,16 +68,27 @@ class Simfile:
         self.CGSconversion = self.readfile.CGSconversion
         return arr
 
-    def __init__(self,simnum, snapnum, var, file_type=ol.file_type, simulation='eagle'):
+    def __init__(self,simnum, snapnum, var, file_type=ol.file_type, simulation='eagle', override_filepath=None):
         self.simnum = simnum
         self.snapnum = snapnum
         self.var = var
         self.simulation = simulation
         self.filetype = file_type
         
+        if (override_filepath is not None) and (simulation != 'eagle'):
+            raise NotImplementedError('The filepath override option is only implemented for Eagle.\
+                                      To implement for other simulations, check the read_..._files py used for that simulation.\
+                                      It may be neceassary to add an option to not add "/data/" to the file path, like in read_eagle_files.py.\
+                                      Then, choose this option and set the file path for the simulation depending on these options.\
+                                      ')
         if simulation == 'eagle':
-            simdir  = ol.simdir_eagle%simnum + '/' + var
-            self.readfile = eag.read_eagle_file(simdir, file_type, snapnum, gadgetunits=True, suppress=False)
+            if override_filepath is None:
+                simdir  = ol.simdir_eagle%simnum + '/' + var
+                add_data_to_model_dir = True
+            else:
+                simdir = override_filepath
+                add_data_to_model_dir = False
+            self.readfile = eag.read_eagle_file(simdir, file_type, snapnum, gadgetunits=True, suppress=False, add_data_to_model_dir=add_data_to_model_dir)
             # pass down readfile properties for reference
             self.boxsize = self.readfile.boxsize
             self.h = self.readfile.h
