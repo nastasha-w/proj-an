@@ -3209,7 +3209,7 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,\
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
-         halosel, kwargs_halosel, groupnums):
+         halosel, kwargs_halosel, cosmopars, groupnums):
     '''
     save projmap, minval, maxval with npzname and the processed input 
     parameters
@@ -3257,6 +3257,8 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,\
         saveattr(hed, 'theta', theta)
         saveattr(hed, 'phi', phi)
         saveattr(hed, 'psi', psi)
+        
+        saveattr(hed, 'cosmopars', cosmopars)
         
         hsel = hed.create_group('halosel')
         saveattr(hsel, 'kwargs_halosel', kwargs_halosel)
@@ -3816,7 +3818,15 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     elif parttype == '4' or parttype=='5':
         lsmooth = 0.5 * np.ones(NumPart) * Ls[Axis1] / float(npix_x)
         tree = False
-
+        
+    # gets saved with the hdf5 option
+    cosmopars = {'omegam': vardict_WQ.simfile.omegam,\
+                 'omegalambda': vardict_WQ.simfile.omegalambda,\
+                 'omegab': vardict_WQ.simfile.omegab,
+                 'a': vardict_WQ.simfile.a,\
+                 'z': vardict_WQ.simfile.z,\
+                 'h': vardict_WQ.simfile.h,\
+                 'boxsize': vardict_WQ.simfile.boxsize}
 
     # prevents largest particle values from overflowing float32 (extra factor 1e4 is a rough attempt to prevent overflow in the projection)
     maxlogW = np.log10(np.max(qW))
@@ -3864,7 +3874,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                  var, axis, log, velcut,\
                                  periodic, kernel, saveres,\
                                  simulation, LsinMpc, misc, ompproj, numslices,\
-                                 halosel, kwargs_halosel, None)
+                                 halosel, kwargs_halosel, cosmopars, None)
                 else:
                     np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW)
             else:
@@ -3881,7 +3891,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                  var, axis, log, velcut,\
                                  periodic, kernel, saveres,\
                                  simulation, LsinMpc, misc, ompproj, numslices,\
-                                 halosel, kwargs_halosel, groupnums)
+                                 halosel, kwargs_halosel, cosmopars, groupnums)
                 else:
                     np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW, groupnums=groupnums)
             del resW
@@ -3905,7 +3915,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      var, axis, log, velcut,\
                                      periodic, kernel, saveres,\
                                      simulation, LsinMpc, misc, ompproj, numslices,\
-                                     halosel, kwargs_halosel, None)
+                                     halosel, kwargs_halosel, cosmopars, None)
                     else:
                         np.savez(resfile2, arr_0=resQ, minfinite=minQ, max=maxQ)
                 else:
@@ -3921,7 +3931,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      var, axis, log, velcut,\
                                      periodic, kernel, saveres,\
                                      simulation, LsinMpc, misc, ompproj, numslices,\
-                                     halosel, kwargs_halosel, groupnums)
+                                     halosel, kwargs_halosel, cosmopars, groupnums)
                     else:
                         np.savez(resfile2, arr_0=resQ, minfinite=minQ, max=maxQ, groupnums=groupnums)
                 del resQ
@@ -4013,7 +4023,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      var, axis, log, velcut,\
                                      periodic, kernel, saveres,\
                                      simulation, LsinMpc, misc, ompproj, numslices,\
-                                     halosel, kwargs_halosel, None)
+                                     halosel, kwargs_halosel, cosmopars, None)
                     else:
                         np.savez(subresfile, arr_0=resW, minfinite=minW, max=maxW)
                 else:
@@ -4029,7 +4039,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      var, axis, log, velcut,\
                                      periodic, kernel, saveres,\
                                      simulation, LsinMpc, misc, ompproj, numslices,\
-                                     halosel, kwargs_halosel, groupnums)
+                                     halosel, kwargs_halosel, cosmopars, groupnums)
                     else:
                         np.savez(subresfile, arr_0=resW, minfinite=minW, max=maxW, groupnums=groupnums)
                 del resW
@@ -4050,7 +4060,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                          var, axis, log, velcut,\
                                          periodic, kernel, saveres,\
                                          simulation, LsinMpc, misc, ompproj, numslices,\
-                                         halosel, kwargs_halosel, None)
+                                         halosel, kwargs_halosel, cosmopars, None)
                         else:
                             np.savez(subresfile2, arr_0=resQ, minfinite=minQ, max=maxQ)
                     else:
@@ -4066,7 +4076,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                          var, axis, log, velcut,\
                                          periodic, kernel, saveres,\
                                          simulation, LsinMpc, misc, ompproj, numslices,\
-                                         halosel, kwargs_halosel, groupnums)
+                                         halosel, kwargs_halosel, cosmopars, groupnums)
                         else:
                             np.savez(subresfile2, arr_0=resQ, minfinite=minQ, max=maxQ, groupnums=groupnums)
                     del resQ
