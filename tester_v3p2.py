@@ -1061,6 +1061,7 @@ def projecthalos_testhaloonly(filename_halos='testselection.txt', radius_R200c=2
                                               ('none' if halosel is None else 'all' if halosel == [] else 'selected-only',) + (name[0],))
                     fo.write(saveline + '\n')
                     m3.make_map(*args[hi], nameonly=False, halosel=halosel, kwargs_halosel=kwargs_halosel, **kwargs) # Error: filename too long using default selection labels
+                    return None
             halosel = None
             kwargs_halosel = None
             name = m3.make_map(*args[hi], nameonly=True, halosel=halosel, kwargs_halosel=kwargs_halosel, **kwargs)

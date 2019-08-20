@@ -37,7 +37,7 @@ def parse_parameterfile(filename, head):
 
 
 def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
-             sfgas='T4', outputdir='', axis='z', nameonly=False):
+             sfgas='T4', outputdir='./', axis='z', nameonly=False):
     '''
     wrapper for make_maps_v3_master -> make_map with a smaller option set
     
@@ -53,6 +53,8 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
     '''
     
     #/fred/oz071/abatten/EAGLE/RefL0012N0188/RefL0012N0188/snapshot_027_z000p101
+    m3.ol.ndir = outputdir # override the default in opts_locs to get a per-case directory (won't work that easily with the data directory since that one gets mangled around by three layers of scripts)
+    
     if var in ['Ref', 'ref', 'reference', 'Reference', 'REFERENCE']:
         var = 'REFERENCE'
         varlabel = 'Ref'
@@ -63,7 +65,7 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
         raise ValueError('Invalid option %s for var'%var)
     
     simpart = (varlabel + simnum + '/') * 2
-    datapath = datadir_head + simpath
+    datapath = datadir_head + simpart
     
     if simnum[:5] == 'L0100':
         boxsize = 100.
@@ -112,10 +114,11 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
         return name
     retval = m3.make_map(*args, nameonly=False, **kwargs)
     
-    with h5py.File(name, 'w') as fo:
+    with h5py.File(name, 'r+') as fo:
         hed = fo['Header']
         hed.attrs.create('SimName', simnum)
         hed.attrs.create('Snapshot', snapnum)
+        hed.attrs.create('Redshift', hed['cosmopars'].attrs['z'])
         hed.attrs.create('EOS', sfgas)
         hed.attrs.create('ProjectionAxis', axis)
         hed.attrs.create('Boxsize', '%.1f Mpc'%boxsize)
@@ -127,6 +130,12 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
     
     return retval
 
+def run_projection(parameterfile, index, checknum=False):
+    
+    
+    
+    make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
+             sfgas='T4', outputdir='', axis='z', nameonly=False)
 
 def add_files(simnum, snapnum, var, numsl, numpix,\
               outputdir='', axis='z', ismopt='T4EOS'):
@@ -203,10 +212,13 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
 def main():
     '''
     what to run if the script is called from the command line. 
-    First arg is the parameterfile, second is the step, 
-    optional third arg for the 'project' step is 'checknum', which just returns 
-    the number of new projections needed (checks how many files already exist);
-    this last one is useful for checking 
+    First arg is the parameterfile,
+    second is the step, 
+    third arg for the 'project' step can be 'checknum', which just returns 
+      the number of new projections needed (checks how many files already 
+      exist); this is useful for checking how to ste up a batch script
+      an integer third arg inidcates which file for the total should be run in
+      this instance: typically input a slurm array number or something
     '''
     parfile = sys.argv[1]
     step = sys.argv[2]
