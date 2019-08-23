@@ -1229,21 +1229,21 @@ def plot_radprof(ions, fontsize=fontsize, imgname=None, techvars_touse=[0], unit
 
         if ytype == 'perc':
             if ion[0] == 'h':
-                ax.set_ylim(12.0, 23.0)
+                ax.set_ylim(12.0, 21.0)
             #else:
             #    ax.set_ylim(11.5, 17.0)
             elif ion == 'fe17':
-                ax.set_ylim(12., 16.)
-            elif ion == 'o7':
-                ax.set_ylim(13.25, 17.25)
-            elif ion == 'o8':
-                ax.set_ylim(13., 17.)
-            elif ion == 'o6':
-                ax.set_ylim(12., 16.)
-            elif ion == 'ne9':
-                ax.set_ylim(12.5, 16.5)
-            elif ion == 'ne8':
                 ax.set_ylim(11.5, 15.5)
+            elif ion == 'o7':
+                ax.set_ylim(12.5, 16.5)
+            elif ion == 'o8':
+                ax.set_ylim(12.25, 16.25)
+            elif ion == 'o6':
+                ax.set_ylim(11., 15.)
+            elif ion == 'ne9':
+                ax.set_ylim(12., 16.)
+            elif ion == 'ne8':
+                ax.set_ylim(10.5, 14.5)
         
         elif ytype == 'fcov':
             ax.set_ylim(0., 1.)

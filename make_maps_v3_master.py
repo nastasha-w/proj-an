@@ -1852,7 +1852,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         else:
             print('%s is an invalid ion option for ptypeW %s\n'%(ionW,ptypeW))
             return 26
-        if not isinstance(abundsW, [list, tuple, np.ndarray]):
+        if not isinstance(abundsW, (list, tuple, np.ndarray)):
             abundsW = [abundsW,'auto']
         else:
             abundsW = list(abundsW) # tuple element assigment is not allowed, sometimes needed
@@ -1889,7 +1889,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
 
 
 
-    if ptypeQ not in ['emission', 'coldens', 'basic',None]:
+    if ptypeQ not in ['emission', 'coldens', 'basic', None]:
         print('ptypeQ should be one of emission, coldens, basic (str), or None.\n')
         return 7
 
@@ -1903,7 +1903,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
             print('%s is an invalid ion option for ptypeQ %s\n'%(ionQ,ptypeQ))
             return 8
 
-        if not isinstance(abundsQ, [list, tuple, np.ndarray]):
+        if not isinstance(abundsQ, (list, tuple, np.ndarray)):
             abundsQ = [abundsQ, 'auto']
         else:
             abundsQ = list(abundsQ)
@@ -1952,7 +1952,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
             print('Unless calculation is for halpha emission, fromSFR will default to onlySFR.\n')
 
     if ptypeQ is not None:
-        if (excludeSFRW in [False,'T4']) and (excludeSFRQ not in [False,'T4']):
+        if (excludeSFRW in [False,'T4']) and (excludeSFRQ not in [False, 'T4']):
             print('ExcludeSFR options %s and %s are not compatible'%(excludeSFRW,excludeSFRQ))
             return 18
         elif excludeSFRW in ['from','only']:
@@ -4268,7 +4268,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
         else:
             print('%s is an invalid ion option for ptype %s\n'%(ion,ptype))
             return 8
-        if not isinstance(abunds, [list, tuple, np.ndarray]):
+        if not isinstance(abunds, (list, tuple, np.ndarray)):
             abunds = [abunds,'auto']
         else:
             abunds = list(abunds) # tuple element assigment is not allowed, sometimes needed
