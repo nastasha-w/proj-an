@@ -763,6 +763,7 @@ def plot_o7cddfsplits_isolated(incl=True, numsl=3):
         frac_vel_9p7 = linterpsolve(plotx, 1. - hists['9.3-9.7-11.0-11.2']['630pkpc_vel_logMstar-geq-9.7-Msun'] / hists['9.3-9.7-11.0-11.2']['nomask'], Nval)
         frac_pos_9p3 = linterpsolve(plotx, 1. - hists['9.3-9.7-11.0-11.2']['630pkpc_pos_logMstar-geq-9.3-Msun'] / hists['9.3-9.7-11.0-11.2']['nomask'], Nval)
         frac_vel_9p3 = linterpsolve(plotx, 1. - hists['9.3-9.7-11.0-11.2']['630pkpc_vel_logMstar-geq-9.3-Msun'] / hists['9.3-9.7-11.0-11.2']['nomask'], Nval)
+        print(('%s, '*4)%(frac_pos_9p7, frac_vel_9p7, frac_pos_9p3, frac_vel_9p3))
         
         dXoverdz = dXtot['9.3-9.7-11.0-11.2'] / dztot['9.3-9.7-11.0-11.2']
         

@@ -1003,7 +1003,7 @@ def projecthalos_testhaloonly(filename_halos='testselection.txt', radius_R200c=2
     argnames = ('simnum', 'snapnum', 'centre', 'L_x', 'L_y', 'L_z', 'npix_x', 'npix_y', 'ptypeW')
     args = [(simprops['simnum'], simprops['snapnum'],\
              [Xcop[i], Ycop[i], Zcop[i]],\
-             2. * radius_R200c * R200c[i], 2. * radius_R200c * R200c[i], 2. * radius_R200c * R200c[i],\
+             4. * radius_R200c * R200c[i], 4. * radius_R200c * R200c[i], 4. * radius_R200c * R200c[i],\
              400, 400,\
              'basic') \
              for i in range(len(ids))]
@@ -1113,7 +1113,7 @@ def plot_testhaloonly(filename_halos='testselection.txt'):
     with h5py.File(halocat, 'r') as hc:
         galaxyids_all = np.array(hc['galaxyid'])
         selinds = np.where(np.any(galaxyids_all[:, np.newaxis] == ids[np.newaxis, :], axis=1))[0]
-        print(selinds)
+       # print(selinds)
         
         simprops = {key: item for key, item in hc['Header'].attrs.items()}
         cosmopars = {key: item for key, item in hc['Header/cosmopars'].attrs.items()}
@@ -1147,62 +1147,68 @@ def plot_testhaloonly(filename_halos='testselection.txt'):
         idind = np.where(ids == gid)[0][0]
         Mass = M200c_ch[idind]
         radius = R200c_ch[idind]
+        
+        figname = mdir + 'test_galaxy-%i.pdf'%(gid)
+        #print(radius)
         cen = np.array([Xcop_ch[idind], Ycop_ch[idind], Zcop_ch[idind]])
         
         projdata_gid = projdata.loc[(projdata['cenx'] - cen[0])**2 + (projdata['ceny'] - cen[1])**2 + (projdata['cenz'] - cen[2])**2 < 3 * centol**2]
         
         # extract the maps for this galaxyid 
         maps = {}
-        maps.update(getmap('all gas', (projdata.loc[projdata['allinR200c']=='none', 'filename']).values[0]))
+        maps.update(getmap('all gas', (projdata_gid.loc[projdata_gid['allinR200c']=='none', 'filename']).values[0]))
 
-        maps.update(getmap('FoF', (projdata.loc[np.all([projdata['allinR200c'] == 'False',\
-                                                            projdata['exclsatellites']=='False',\
-                                                            projdata['haloselection']=='all',\
+        maps.update(getmap('FoF', (projdata_gid.loc[np.all([projdata_gid['allinR200c'] == 'False',\
+                                                            projdata_gid['exclsatellites']=='False',\
+                                                            projdata_gid['haloselection']=='all',\
                                                             ], axis=0), 'filename']).values[0] ))
         
-        maps.update(getmap('FoF selected halo', (projdata.loc[np.all([projdata['allinR200c'] == 'False',\
-                                                            projdata['exclsatellites']=='False',\
-                                                            projdata['haloselection']=='selected-only',\
+        maps.update(getmap('FoF selected halo', (projdata_gid.loc[np.all([projdata_gid['allinR200c'] == 'False',\
+                                                            projdata_gid['exclsatellites']=='False',\
+                                                            projdata_gid['haloselection']=='selected-only',\
                                                             ], axis=0), 'filename']).values[0] ))
                                
-        maps.update(getmap('FoF + 200c', (projdata.loc[np.all([projdata['allinR200c'] == 'True',\
-                                                            projdata['exclsatellites']=='False',\
-                                                            projdata['haloselection']=='all',\
+        maps.update(getmap('FoF + 200c', (projdata_gid.loc[np.all([projdata_gid['allinR200c'] == 'True',\
+                                                            projdata_gid['exclsatellites']=='False',\
+                                                            projdata_gid['haloselection']=='all',\
                                                             ], axis=0), 'filename']).values[0] ))
                                
-        maps.update(getmap('FoF + 200c selected halo', (projdata.loc[np.all([projdata['allinR200c'] == 'True',\
-                                                            projdata['exclsatellites']=='False',\
-                                                            projdata['haloselection']=='selected-only',\
+        maps.update(getmap('FoF + 200c selected halo', (projdata_gid.loc[np.all([projdata_gid['allinR200c'] == 'True',\
+                                                            projdata_gid['exclsatellites']=='False',\
+                                                            projdata_gid['haloselection']=='selected-only',\
                                                             ], axis=0), 'filename']).values[0] ))
                                
-        maps.update(getmap('FoF no sats', (projdata.loc[np.all([projdata['allinR200c'] == 'False',\
-                                                            projdata['exclsatellites']== 'True',\
-                                                            projdata['haloselection']== 'all',\
+        maps.update(getmap('FoF no sats', (projdata_gid.loc[np.all([projdata_gid['allinR200c'] == 'False',\
+                                                            projdata_gid['exclsatellites']== 'True',\
+                                                            projdata_gid['haloselection']== 'all',\
                                                             ], axis=0), 'filename']).values[0] ))
                                
-        maps.update(getmap('FoF selected halo no sats', (projdata.loc[np.all([projdata['allinR200c'] == 'False',\
-                                                            projdata['exclsatellites']=='True',\
-                                                            projdata['haloselection']=='selected-only',\
+        maps.update(getmap('FoF selected halo no sats', (projdata_gid.loc[np.all([projdata_gid['allinR200c'] == 'False',\
+                                                            projdata_gid['exclsatellites']=='True',\
+                                                            projdata_gid['haloselection']=='selected-only',\
                                                             ], axis=0), 'filename']).values[0] ))
         
-        maps.update(getmap('FoF + 200c no sats', (projdata.loc[np.all([projdata['allinR200c'] == 'True',\
-                                                            projdata['exclsatellites']=='True',\
-                                                            projdata['haloselection']=='all',\
+        maps.update(getmap('FoF + 200c no sats', (projdata_gid.loc[np.all([projdata_gid['allinR200c'] == 'True',\
+                                                            projdata_gid['exclsatellites']=='True',\
+                                                            projdata_gid['haloselection']=='all',\
                                                             ], axis=0), 'filename']).values[0] ))
         
-        maps.update(getmap('FoF + 200c selected halo no sats', (projdata.loc[np.all([projdata['allinR200c'] == 'True',\
-                                                            projdata['exclsatellites']=='True',\
-                                                            projdata['haloselection']=='selected-only',\
+        maps.update(getmap('FoF + 200c selected halo no sats', (projdata_gid.loc[np.all([projdata_gid['allinR200c'] == 'True',\
+                                                            projdata_gid['exclsatellites']=='True',\
+                                                            projdata_gid['haloselection']=='selected-only',\
                                                             ], axis=0), 'filename']).values[0] ))
                                
-        vmin = np.min([maps[key][1] for key in maps.keys()])
+        vmin = -6.5 #np.min([maps[key][1] for key in maps.keys()]) # mimum finite is set by edge effects, mainly
         vmax = np.max([maps[key][2] for key in maps.keys()])
         diffmax = vmax - vmin
         
         ## plot the maps, make comparisons
-        cmap_diff = 'coolwarm'
-        cmap_vals = 'viridis'
-        ancolor = 'lightgray'
+        cmap_diff = cm.get_cmap('coolwarm_r')
+        cmap_diff.set_over(cmap_diff(1.))
+        cmap_diff.set_under(cmap_diff(0.))
+        cmap_vals = cm.get_cmap('viridis')
+        cmap_vals.set_under(cmap_vals(0.))
+        #ancolor = 'lightgray'
         
         clabel_vals = r'$\log_{10} \, \Sigma_{\mathrm{gas}} \; [\mathrm{g}\, \mathrm{cm}^{-2}]$'
         clabel_diff = r'$\Delta \, \log_{10}  \, \Sigma_{\mathrm{gas}}$'
@@ -1211,22 +1217,22 @@ def plot_testhaloonly(filename_halos='testselection.txt'):
         ylabel = 'Y [cMpc]'
         
         # all projections have same centre, Ls
-        cenx = projdata_gid.at[0, 'cenx']
-        ceny = projdata_gid.at[0, 'ceny']
-        cenz = projdata_gid.at[0, 'cenz']
-        Lx = projdata_gid.at[0, 'L_x']
-        Ly = projdata_gid.at[0, 'L_y']
-        Lz = projdata_gid.at[0, 'L_z']
+        #print(projdata_gid.index)
+        i_temp = projdata_gid.index[0] # centres should be the same, just pick one
+        cenx = projdata_gid.at[i_temp, 'cenx']
+        ceny = projdata_gid.at[i_temp, 'ceny']
+        cenz = projdata_gid.at[i_temp, 'cenz']
+        Lx = projdata_gid.at[i_temp, 'L_x']
+        Ly = projdata_gid.at[i_temp, 'L_y']
+        Lz = projdata_gid.at[i_temp, 'L_z']
         
         boxsize = cosmopars['boxsize'] / cosmopars['h']
         
         Xtemp = (Xcop - cenx + 0.5 * boxsize) % boxsize - 0.5 * boxsize
         Ytemp = (Ycop - ceny + 0.5 * boxsize) % boxsize - 0.5 * boxsize
-        Ztemp = (Xcop - cenz + 0.5 * boxsize) % boxsize - 0.5 * boxsize
-        print(Xtemp)
+        Ztemp = (Zcop - cenz + 0.5 * boxsize) % boxsize - 0.5 * boxsize
         
-        sel_gid = np.all([np.abs(Xtemp) <= R200c_ch[gidind] + 0.5 * Lx, np.abs(Ytemp) <= R200c_ch[gidind] + 0.5 * Ly, np.abs(Ztemp) <= R200c_ch[gidind] + 0.5 * Lz], axis=0)
-        print(np.sum(sel_gid))
+        sel_gid = np.all([np.abs(Xtemp) <= R200c + 0.5 * Lx, np.abs(Ytemp) <= R200c + 0.5 * Ly, np.abs(Ztemp) <= R200c + 0.5 * Lz], axis=0)
         
         Xplot = Xtemp[sel_gid] + cenx
         Yplot = Ytemp[sel_gid] + ceny
@@ -1241,6 +1247,10 @@ def plot_testhaloonly(filename_halos='testselection.txt'):
                 _vmin = -1 * diffmax
                 _vmax = diffmax
                 _cmap = cmap_diff
+                if np.any(vals) < 0.:
+                    print('Warning: found differences < 0.: minimum finite value %s'%(np.min(vals[np.isinfinte(vals)])))
+                vals[vals == np.inf] = _vmax + 100.
+                vals[vals == -np.inf] = _vmax - 100.
             else:
                 _vmin = vmin
                 _vmax = vmax
@@ -1253,10 +1263,10 @@ def plot_testhaloonly(filename_halos='testselection.txt'):
                for ind in range(len(Xplot))] # x, y axes only
 
             collection = PatchCollection(patches)
-            collection.set(edgecolor='red', facecolor='none', linewidth=2)
+            collection.set(edgecolor='red', facecolor='none', linewidth=1, linestyle='dotted')
             ax.add_collection(collection)
             
-            circlecen = Circle(tuple(cen[:2]), radius, edgecolor='magenta', facecolor='none', linewidth=2.5)
+            circlecen = Circle(tuple(cen[:2]), radius, edgecolor='magenta', facecolor='none', linewidth=1.)
             ax.add_artist(circlecen)
             
             ax.tick_params(which='both', direction='in', right=True, top=True, labelsize=fontsize - 1)
@@ -1265,21 +1275,24 @@ def plot_testhaloonly(filename_halos='testselection.txt'):
         
         def add_cax(cax, img, diff=False, vertical=True):
             if diff:
-                _clabel = clabel_vals
-            else:
                 _clabel = clabel_diff
+                _extend = 'both'
+            else:
+                _clabel = clabel_vals
+                _extend = 'min'
             if vertical:
                 orientation='vertical'
             else:
                 orientation='horizontal'
-            plt.colorbar(img, cax=cax, orientation=orientation)
+            plt.colorbar(img, cax=cax, orientation=orientation, extend=_extend)
             cax.tick_params(which='both', labelsize=fontsize - 1)
             if vertical:
                 cax.set_ylabel(_clabel, fontsize=fontsize)
-                cax.set_aspect(10.)
+                cax.set_aspect(8.)
             else:
                 cax.set_xlabel(_clabel, fontsize=fontsize)
-                cax.set_aspect(0.1)
+                cax.set_aspect(0.125)
+                
         def annotation(ax, text, vertical=True):
             if vertical:
                 posx = 0.1
@@ -1295,7 +1308,7 @@ def plot_testhaloonly(filename_halos='testselection.txt'):
                 horzal = 'center'
                 vertal = 'bottom'
                 rotation = 0.
-            ax.text(posx, posy, text, fontsize=fontsize, horizontalalignment=horzal, verticalalignment=vertal, rotation=rotation, transform=ax.transAxes)
+            ax.text(posx, posy, text, fontsize=fontsize, horizontalalignment=horzal, verticalalignment=vertal, rotation=rotation, transform=ax.transAxes, multialignment='left')
             ax.axis('off')
         
         def addlabels(grid):
@@ -1310,15 +1323,27 @@ def plot_testhaloonly(filename_halos='testselection.txt'):
                     grid[i, j].tick_params(labelbottom=False)
             
         plt.figure(figsize=(15., 10)) # figsize: width, height
-        grid = gsp.GridSpec(3, 5, width_ratios=[1.] * 5, height_ratios=[1.] * 3, hspace=0.5, wspace=0.5, top=0.95, bottom=0.05, left=0.05, right=0.95) # total vspace, vspace zoom, pspace zoom sections: extra hspace for plot labels
+        grid = gsp.GridSpec(3, 5, width_ratios=[1.] * 5, height_ratios=[0.7, 1., 1.], hspace=0.25, wspace=0.4, top=0.95, bottom=0.05, left=0.05, right=0.95) # total vspace, vspace zoom, pspace zoom sections: extra hspace for plot labels
     
-        grid_imgall  = gsp.GridSpecFromSubplotSpec(2, 2, subplot_spec=grid[0, 0], height_ratios=[1., 5.], width_ratios=[5., 1.], hspace=0.0, wspace=0.0) 
+        ax_titletext = plt.subplot(grid[0, 2:])
+        title = 'Halo-only projection test cube for central galaxy %i in %s, snapshot %i (z=%.4f)'%(gid, simprops['simnum'], simprops['snapnum'], cosmopars['z'])
+        title = title + '\n    ' + r'galaxy halo has $\mathrm{M}_{\mathrm{200c}} = 10^{%.3f} \, \mathrm{M}_{\odot}, \mathrm{R}_{\mathrm{200c}} = %.3f \, \mathrm{pkpc}$'%(Mass, radius * 1e3 *cosmopars['a'])
+        title = title + '\n' + r'abbreviations:'
+        title = title + '\n    ' + r'wsats = with satellites, nsats = without satellites (Subgroupnumber == 0)'
+        title = title + '\n    ' + r'FoF = all Friends of Friends group members,'
+        title = title + '\n    ' + r'FoF+R = FoF particles and everythin within R200c'
+        title = title + '\n    ' + r'1h = only the central halo selected (magenta circle at R200c),'
+        title = title + '\n        ' + r'otherwise all halos are selected (red dotted cricles at R200c)'
+        annotation(ax_titletext, title, vertical=False)
+        
+        grid_imgall  = gsp.GridSpecFromSubplotSpec(2, 4, subplot_spec=grid[0, 0:2], height_ratios=[1., 5.], width_ratios=[5., 2., 2., 1.], hspace=0.0, wspace=0.0) 
         
         ax = plt.subplot(grid_imgall[1, 0])
         cax = plt.subplot(grid_imgall[1, 1])
+        cax_diff = plt.subplot(grid_imgall[1, 2])
         img = plotmap(ax, maps['all gas'][0])
         add_cax(cax, img, diff=False)
-        anax = plt.subplot(grid_imgall[0, :])
+        anax = plt.subplot(grid_imgall[0, 0])
         annotation(anax, 'all gas in the projected region', vertical=False)
         ax.set_xlabel(xlabel, fontsize=fontsize)
         ax.set_ylabel(ylabel, fontsize=fontsize)
@@ -1328,20 +1353,22 @@ def plot_testhaloonly(filename_halos='testselection.txt'):
         #mainaxes = [[plt.subplot(grid1[yi,xi]) for yi in range(numy)] for xi in range(numx)] # in mainaxes: x = column, y = row
         #cax = plt.subplot(grid[1]) 
         
-        grid_imgopts = gsp.GridSpecFromSubplotSpec(3, 5, subplot_spec=grid[1, 0:2], height_ratios=[1., 5., 5.], width_ratios=[5., 5., 5., 5., 1.], hspace=0.0, wspace=0.0)
+        grid_imgopts = gsp.GridSpecFromSubplotSpec(4, 5, subplot_spec=grid[1, 0:2], height_ratios=[1., 1., 5., 5.], width_ratios=[5., 5., 5., 5., 1.], hspace=0.0, wspace=0.0)
         # grid:          allinR220c, all halos    FoF only, all halos     allinR220c, 1 halo    FoF only, 1 halo
         # w/ subhalos
         # w/o subhalos
         
-        topaxes = [plt.subplot(grid_imgopts[0, i]) for i in range(4)]
+        toprow = plt.subplot(grid_imgopts[0, :])
+        annotation(toprow, 'projections with various halo selections', vertical=False)
+        topaxes = [plt.subplot(grid_imgopts[1, i]) for i in range(4)]
         annotation(topaxes[0], 'FoF+R', vertical=False)
         annotation(topaxes[1], 'FoF', vertical=False)
         annotation(topaxes[2], 'FoF+R, 1h', vertical=False)
         annotation(topaxes[3], 'FoF, 1h', vertical=False)
-        rightaxes = [plt.subplot(grid_imgopts[i + 1, 4]) for i in range(2)]
+        rightaxes = [plt.subplot(grid_imgopts[i + 2, 4]) for i in range(2)]
         annotation(rightaxes[0], 'wsat', vertical=True)
         annotation(rightaxes[1], 'nsat', vertical=True)
-        plotaxes = np.array([[plt.subplot(grid_imgopts[i + 1, j])  for j in range(4)] for i in range(2)])
+        plotaxes = np.array([[plt.subplot(grid_imgopts[i + 2, j])  for j in range(4)] for i in range(2)])
         
         plotmap(plotaxes[0, 0], maps['FoF + 200c'])
         plotmap(plotaxes[0, 1], maps['FoF'])
@@ -1351,8 +1378,95 @@ def plot_testhaloonly(filename_halos='testselection.txt'):
         plotmap(plotaxes[1, 1], maps['FoF no sats'])
         plotmap(plotaxes[1, 2], maps['FoF + 200c selected halo no sats'])
         plotmap(plotaxes[1, 3], maps['FoF selected halo no sats'])
+                
+        addlabels(plotaxes)
+
+        
+        grid_anyseldiffs = gsp.GridSpecFromSubplotSpec(4, 5, subplot_spec=grid[2, 0:2], height_ratios=[1., 1., 5., 5.], width_ratios=[5., 5., 5., 5., 1.], hspace=0.0, wspace=0.0)
+        # grid:          allinR220c, all halos    FoF only, all halos     allinR220c, 1 halo    FoF only, 1 halo
+        # w/ subhalos
+        # w/o subhalos
+        
+        toprow = plt.subplot(grid_anyseldiffs[0, :])
+        annotation(toprow, 'difference between all gas and halo selections', vertical=False)
+        topaxes = [plt.subplot(grid_anyseldiffs[1, i]) for i in range(4)]
+        annotation(topaxes[0], 'FoF+R', vertical=False)
+        annotation(topaxes[1], 'FoF', vertical=False)
+        annotation(topaxes[2], 'FoF+R, 1h', vertical=False)
+        annotation(topaxes[3], 'FoF, 1h', vertical=False)
+        rightaxes = [plt.subplot(grid_anyseldiffs[i + 2, 4]) for i in range(2)]
+        annotation(rightaxes[0], 'wsat', vertical=True)
+        annotation(rightaxes[1], 'nsat', vertical=True)
+        plotaxes = np.array([[plt.subplot(grid_anyseldiffs[i + 2, j])  for j in range(4)] for i in range(2)])
+            
+        plotmap(plotaxes[0, 0], maps['all gas'][0] - maps['FoF + 200c'][0], diff=True)
+        plotmap(plotaxes[0, 1], maps['all gas'][0] - maps['FoF'][0], diff=True)
+        plotmap(plotaxes[0, 2], maps['all gas'][0] - maps['FoF + 200c selected halo'][0], diff=True)
+        plotmap(plotaxes[0, 3], maps['all gas'][0] - maps['FoF selected halo'][0], diff=True)
+        plotmap(plotaxes[1, 0], maps['all gas'][0] - maps['FoF + 200c no sats'][0], diff=True)
+        plotmap(plotaxes[1, 1], maps['all gas'][0] - maps['FoF no sats'][0], diff=True)
+        plotmap(plotaxes[1, 2], maps['all gas'][0] - maps['FoF + 200c selected halo no sats'][0], diff=True)
+        img = plotmap(plotaxes[1, 3], maps['all gas'][0] - maps['FoF selected halo no sats'][0], diff=True)
+        
+        add_cax(cax_diff, img, diff=True) # near top left plot
+        addlabels(plotaxes)
+        
+        
+        grid_1halovsall = gsp.GridSpecFromSubplotSpec(5, 2, subplot_spec=grid[1:, 2], height_ratios=[1., 5., 5., 5., 5.], width_ratios=[5., 1.], hspace=0.0, wspace=0.0)
+        
+        toprow = plt.subplot(grid_1halovsall[0, 0])
+        annotation(toprow, 'all halos - 1 halo', vertical=False)
+        rightaxes = [plt.subplot(grid_1halovsall[i + 1, 1]) for i in range(4)]
+        annotation(rightaxes[0], 'FoF+R, wsat', vertical=True)
+        annotation(rightaxes[1], 'FoF, wsat', vertical=True)
+        annotation(rightaxes[2], 'FoF+R, nsat', vertical=True)
+        annotation(rightaxes[3], 'FoF, nsat', vertical=True)
+        plotaxes = np.array([[plt.subplot(grid_1halovsall[i + 1, j])  for j in range(1)] for i in range(4)])
+            
+        plotmap(plotaxes[0, 0], maps['FoF + 200c'][0] - maps['FoF + 200c selected halo'][0], diff=True)
+        plotmap(plotaxes[1, 0], maps['FoF'][0] - maps['FoF selected halo'][0], diff=True)
+        plotmap(plotaxes[2, 0], maps['FoF + 200c no sats'][0] - maps['FoF + 200c selected halo no sats'][0], diff=True)
+        plotmap(plotaxes[3, 0], maps['FoF no sats'][0] - maps['FoF selected halo no sats'][0], diff=True)
         
         addlabels(plotaxes)
-        return
-    
+        
+        
+        grid_R200vsFoF = gsp.GridSpecFromSubplotSpec(5, 2, subplot_spec=grid[1:, 3], height_ratios=[1., 5., 5., 5., 5.], width_ratios=[5., 1.], hspace=0.0, wspace=0.0)
+        
+        toprow = plt.subplot(grid_R200vsFoF[0, 0])
+        annotation(toprow, 'FoF+R - FoF', vertical=False)
+        rightaxes = [plt.subplot(grid_R200vsFoF[i + 1, 1]) for i in range(4)]
+        annotation(rightaxes[0], 'wsat', vertical=True)
+        annotation(rightaxes[1], '1h, wsat', vertical=True)
+        annotation(rightaxes[2], 'nsat', vertical=True)
+        annotation(rightaxes[3], '1h, nsat', vertical=True)
+        plotaxes = np.array([[plt.subplot(grid_R200vsFoF[i + 1, j])  for j in range(1)] for i in range(4)])
+            
+        plotmap(plotaxes[0, 0], maps['FoF + 200c'][0] -  maps['FoF'][0], diff=True)
+        plotmap(plotaxes[1, 0], maps['FoF + 200c selected halo'][0] - maps['FoF selected halo'][0], diff=True)
+        plotmap(plotaxes[2, 0], maps['FoF + 200c no sats'][0] - maps['FoF no sats'][0], diff=True)
+        plotmap(plotaxes[3, 0], maps['FoF + 200c selected halo no sats'][0] - maps['FoF selected halo no sats'][0], diff=True)
+        
+        addlabels(plotaxes)
+        
+        
+        grid_wsatsvsnsats = gsp.GridSpecFromSubplotSpec(5, 2, subplot_spec=grid[1:, 4], height_ratios=[1., 5., 5., 5., 5.], width_ratios=[5., 1.], hspace=0.0, wspace=0.0)
+        
+        toprow = plt.subplot(grid_wsatsvsnsats[0, 0])
+        annotation(toprow, 'wsats - nsats', vertical=False)
+        rightaxes = [plt.subplot(grid_wsatsvsnsats[i + 1, 1]) for i in range(4)]
+        
+        annotation(rightaxes[0], 'FoF', vertical=True)
+        annotation(rightaxes[1], 'FoF+R', vertical=True)
+        annotation(rightaxes[2], 'FoF 1h', vertical=True)
+        annotation(rightaxes[3], 'FoF+R 1h', vertical=True)
+        plotaxes = np.array([[plt.subplot(grid_wsatsvsnsats[i + 1, j])  for j in range(1)] for i in range(4)])
+            
+        plotmap(plotaxes[0, 0], maps['FoF'][0] - maps['FoF no sats'][0], diff=True)
+        plotmap(plotaxes[1, 0], maps['FoF + 200c'][0] - maps['FoF + 200c no sats'][0], diff=True)
+        plotmap(plotaxes[2, 0], maps['FoF selected halo'][0] - maps['FoF selected halo no sats'][0], diff=True)
+        plotmap(plotaxes[3, 0], maps['FoF + 200c selected halo'][0] - maps['FoF + 200c selected halo no sats'][0], diff=True)
+        addlabels(plotaxes)
+        
+        plt.savefig(figname, format='pdf')
         

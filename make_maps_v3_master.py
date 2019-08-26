@@ -3378,6 +3378,9 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                format, or sh.selecthalos_subfindfiles (sh = selecthalos.py) 
                for more details
                default: None -> no selection on halo membership
+               note that an empty selection will include all halo particles, 
+               not all particles: halosel=[()] gives different results from 
+               halosel=None
     kwargs_halosel: kwargs for selecthalos 
                 aperture: aperture in which to get e.g. stellar masses 
                   (default: 30 [pkpc])
@@ -3386,6 +3389,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                   only; exclsatellites determines whether SubGroupNumber !=0 
                   gas (belonging to subhalos) is explicitly excluded (True) 
                   or not 
+                  Note that this means unbound gas (e.g. at the edges of the 
+                  halo) is also excluded.
                 allinR200c: include particles inside R200c but not in the FOF 
                   group
                 label: replace the automatic name for the halo selection with 
