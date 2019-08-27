@@ -41,7 +41,8 @@ def getcenfills(base, closevals=None, searchdir=None, tolerance=1e-4):
     files_parts = [[part if 'cen' in part else None for part in fil] for fil in files_parts]
     scens = [part for fil in files_parts for part in fil]
     scens = list(set(scens))
-    scens.remove(None)
+    if None in scens:
+        scens.remove(None)
     scens = np.array([cen[4:] for cen in scens])
     
     if closevals is not None:
@@ -1441,20 +1442,81 @@ elif jobind == 172:
                     fills=fills, includeinf=inclinf)   
 
 ## o8 emission origin
-emname = 'emission_o8_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_14.2857142857slice_zcen%s_z-projection_T4EOS.npz'
-Tname = 'Temperature_T4EOS_emission_o8_PtAb_T4EOS_L0100N1504_27_test3.31_C2Sm_32000pix_14.2857142857slice_zcen%s_z-projection.npz'
-rhoname = 'Density_T4EOS_emission_o8_PtAb_T4EOS_L0100N1504_27_test3.31_C2Sm_32000pix_14.2857142857slice_zcen%s_z-projection.npz'
-closefills = np.arange(7)/7. * 100. + 100./14.
-fills = getcenfills(emname, closevals=closefills, searchdir=None, tolerance=1e-4) 
-
-embins = np.array([-np.inf, -50., -40., -30., -20.] + list(np.arange(-15., -9.5, 1.)) + list(np.arange(-9.9, 5.15, 0.1)) + [np.inf]) # (-49.38524, 5.066906)
-Tbins = np.array([-np.inf] + list(np.arange(2.5, 8.55, 0.1)) + [np.inf]) # (2.7191238, 8.466448)
-rhobins = np.array([-np.inf] + list(np.arange(-32.4, -22.35, 0.1)) + [np.inf]) # (-32.248672, -22.516676)
 if jobind == 173:
+    emname = 'emission_o8_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_14.2857142857slice_zcen%s_z-projection_T4EOS.npz'
+    Tname = 'Temperature_T4EOS_emission_o8_PtAb_T4EOS_L0100N1504_27_test3.31_C2Sm_32000pix_14.2857142857slice_zcen%s_z-projection.npz'
+    rhoname = 'Density_T4EOS_emission_o8_PtAb_T4EOS_L0100N1504_27_test3.31_C2Sm_32000pix_14.2857142857slice_zcen%s_z-projection.npz'
+    closefills = np.arange(7)/7. * 100. + 100./14.
+    fills = getcenfills(emname, closevals=closefills, searchdir=None, tolerance=1e-4) 
+    
+    embins = np.array([-np.inf, -50., -40., -30., -20.] + list(np.arange(-15., -9.5, 1.)) + list(np.arange(-9.9, 5.15, 0.1)) + [np.inf]) # (-49.38524, 5.066906)
+    Tbins = np.array([-np.inf] + list(np.arange(2.5, 8.55, 0.1)) + [np.inf]) # (2.7191238, 8.466448)
+    rhobins = np.array([-np.inf] + list(np.arange(-32.4, -22.35, 0.1)) + [np.inf]) # (-32.248672, -22.516676)
+
     mh.makehist_masked_toh5py(emname, rhoname, Tname, fills=fills,\
                               includeinf=True, bins=[embins, rhobins, Tbins],\
                               outfilename='hist_emission_o8_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_14.2857142857slice_zcen-all_z-projection_T4EOS_and_weighted_rho_T.hdf5')
 
+
+## masks to apply to halo-only projections (quasar)
+## update mode: should check which input and output files exist, and generate 
+## what missing outputs it can
+fills = [str(i) for i in np.arange(16) / 16. * 100. + 100. / 32.] # slice centers
+psels = {fill: 'Z-%s-%s-0.0'%(float(fill) - 100. / 32., float(fill) + 100. / 32.) for fill in fills}
+
+mass_fills = [('logM200c_Msun-9.0-9.5',   'logM200c_Msun-9.5-None'),\
+              ('logM200c_Msun-9.5-10.0',  'logM200c_Msun-None-9.5_logM200c_Msun-10.0-None'),\
+              ('logM200c_Msun-10.0-10.5', 'logM200c_Msun-10.5-None_logM200c_Msun-None-10.0'),\
+              ('logM200c_Msun-10.5-11.0', 'logM200c_Msun-None-10.5_logM200c_Msun-11.0-None'),\
+              ('logM200c_Msun-11.0-11.5', 'logM200c_Msun-11.5-None_logM200c_Msun-None-11.0'),\
+              ('logM200c_Msun-11.5-12.0', 'logM200c_Msun-None-11.5_logM200c_Msun-12.0-None'),\
+              ('logM200c_Msun-12.0-12.5', 'logM200c_Msun-12.5-None_logM200c_Msun-None-12.0'),\
+              ('logM200c_Msun-12.5-13.0', 'logM200c_Msun-None-12.5_logM200c_Msun-13.0-None'),\
+              ('logM200c_Msun-13.0-13.5', 'logM200c_Msun-13.5-None_logM200c_Msun-None-13.0'),\
+              ('logM200c_Msun-13.5-14.0', 'logM200c_Msun-None-13.5_logM200c_Msun-14.0-None'),\
+              ('logM200c_Msun-14.0-inf',  'logM200c_Msun-None-14.0'),\
+              ]
+
+mask_names = ['nomask'] + [fl[0] for fl in mass_fills]
+
+mask_base = 'mask_RefL0100N1504_27_32000pix_z-projection_totalbox_halosize-1.0-R200c_closest-normradius_%s.hdf5'
+mask_selpart = 'selection-in_%s_%s_selection-ex_%s_%s' # Z_in, M_in, Z_ex, M_ex
+
+masks_all = {fill: [None] + [mask_base%(mask_selpart%(psels[fill], mass_fills[i][0], psels[fill], mass_fills[i][1])) for i in range(len(mass_fills))] for fill in fills}
+
+filenames_fe17 = []
+filenames_ne8  = []
+filenames_o8   = []
+filenames_o7   = []
+filenames_o6   = []
+filenames_ne9  = []
+filenames_hn   = []
+
+filenames_all = {'fe17': filenames_fe17,\
+                 'ne8': filenames_ne8,\
+                 'ne9': filenames_ne9,\
+                 'o8': filenames_o8,\
+                 'o7': filenames_o7,\
+                 'o6': filenames_o6,\
+                 'hneutralssh': filenames_hn,\
+                 }
+
+if jobind == 174:
+    for key in filenames_all.keys():
+        filenames = filenames_all[key]
+        print('Checking %s'%ion)
+        outfilenames_all = ['cddf_' + ((fn.split('/')[-1])%('-all'))[:-4] + '_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5' for fn in filenames]
+        outdir = ol.pdir
+        for ind in range(len(filenames)):
+            if np.all([os.path.isfile((filenames[ind])%fill) for fill in fills]) and not os.path.isfile(outdir + outfilenames_all[ind]):
+                print('Running %s'%(outfilenames_all[ind]))
+                mh.makehist_masked_toh5py(filenames[ind], fills=fills, maskfiles=masks_all, masknames=mask_names,\
+                              includeinf=True, bins=[np.arange(-25., 28.05, 0.05)],\
+                              outfilename=outfilenames_all[ind])                
+            else:
+                print('Skipping %s'%(outfilenames_all[ind]))
+
+    
 ################################################
 ################# CDDFS ########################
 ################################################
