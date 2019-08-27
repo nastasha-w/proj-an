@@ -3379,7 +3379,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                for more details
                default: None -> no selection on halo membership
                note that an empty selection will include all halo particles, 
-               not all particles: halosel=[()] gives different results from 
+               not all particles: halosel=[] gives different results from 
                halosel=None
     kwargs_halosel: kwargs for selecthalos 
                 aperture: aperture in which to get e.g. stellar masses 
