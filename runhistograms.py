@@ -1484,27 +1484,18 @@ mask_selpart = 'selection-in_%s_%s_selection-ex_%s_%s' # Z_in, M_in, Z_ex, M_ex
 
 masks_all = {fill: [None] + [mask_base%(mask_selpart%(psels[fill], mass_fills[i][0], psels[fill], mass_fills[i][1])) for i in range(len(mass_fills))] for fill in fills}
 
-filenames_fe17 = []
-filenames_ne8  = []
-filenames_o8   = []
-filenames_o7   = []
-filenames_o6   = []
-filenames_ne9  = []
-filenames_hn   = []
-
-filenames_all = {'fe17': filenames_fe17,\
-                 'ne8': filenames_ne8,\
-                 'ne9': filenames_ne9,\
-                 'o8': filenames_o8,\
-                 'o7': filenames_o7,\
-                 'o6': filenames_o6,\
-                 'hneutralssh': filenames_hn,\
-                 }
+keys = ['o7', 'o8', 'o6', 'ne8', 'fe17', 'ne9', 'hneutralssh']
+medges = np.arange(9., 14.1, 0.5)
+halofills = [''] +\
+            ['Mhalo_%s<=log200c<%s'%(medges[i], medges[i + 1]) if i < len(medges) - 1 else \
+             'Mhalo_%s<=log200c'%medges[i] for i in range(len(medges))]
+filenames_all = {key: [ol.ndir + 'coldens_%s_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel.hdf5'%(key, '%s', halofill) for halofill in halofills]
+                 for key in keys}
 
 if jobind == 174:
     for key in filenames_all.keys():
         filenames = filenames_all[key]
-        print('Checking %s'%ion)
+        print('Checking %s'%key)
         outfilenames_all = ['cddf_' + ((fn.split('/')[-1])%('-all'))[:-4] + '_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5' for fn in filenames]
         outdir = ol.pdir
         for ind in range(len(filenames)):

@@ -115,6 +115,8 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
     retval = m3.make_map(*args, nameonly=False, **kwargs)
     
     with h5py.File(name, 'r+') as fo:
+        
+        # set attributes
         hed = fo['Header']
         hed.attrs.create('SimName', simnum)
         hed.attrs.create('Snapshot', snapnum)
@@ -123,11 +125,18 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
         hed.attrs.create('ProjectionAxis', axis)
         hed.attrs.create('Boxsize', '%.1f Mpc'%boxsize)
         hed.attrs.create('NumPixels', numpix)
-        hed.attrs.create('SliceLength', ) # TODO: figure out if the length is || or _|_ the projection axis 
+        if axis == 'z':
+            slice_length = L_z
+        elif axis == 'x':
+            slice_length = L_x
+        elif axis == 'y':
+            slice_length = L_y
+        hed.attrs.create('SliceLength', slice_length)
         hed.attrs.create('CodeVersion', m3.version)
         hed.attrs.create('MetalAbundancesType', abunds)
         hed.attrs.create('KernelShape', kernel)
-    
+        
+        fo['map'].attrs.create("Units", "cm**-2")
     return retval
 
 def run_projection(parameterfile, index, checknum=False):
@@ -171,6 +180,7 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
     
     # TODO: add Adam's Header Attributes to the sum and electron files
     total = np.zeros((numpix, ) * 2, dtype=np.float32)
+    mainheadercopied = False
     with h5py.File(filename_DM, 'w') as fo:
         hed_main = fo.create_group('Header')
         
@@ -203,10 +213,19 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
                  total += factor * sub
                  del sub
                  
-        total = np.log10(total)
+                 if not mainheadercopied:
+                     ft.copy('Header', fo, name='Header')
+                     # overwrite what needs changing
+                     ft['Header'].attrs.create('EOS', ismopt)
+                     sl_orig = ft['Header'].attrs['SliceLength']
+                     ft['Header'].attrs.create('SliceLength', sl_orig * len(files_ion[ion]))
+                     
+        total *= (1e6 / c.cm_per_mpc) # TODO: check units proper or comoving Mpc
         ft.create_dataset('map', data=total)
         ft['map'].attrs.create('max', np.max(total))
         ft['map'].attrs.create('minfinite', np.min(total[np.isfinite(total)]))
+        ft['map'].attrs.create('Units', "ppc * cm**-3")
+        ft['map'].attrs.create('log', False)
     del total
     
 def main():
