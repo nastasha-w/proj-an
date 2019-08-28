@@ -69,6 +69,11 @@ def T200c_hot(M200c, cosmopars):
     R200c = (M200c / (200. * rhoc))**(1./3.)
     return (mu * c.protonmass) / (3. * c.boltzmann) * c.gravity * M200c/R200c
 
+def R200c_pkpc(M200c, cosmopars):
+    M200c *= c.solar_mass # to cgs
+    rhoc = (3. / (8. * np.pi * c.gravity) * cu.Hubble(cosmopars['z'], cosmopars=cosmopars)**2) # Hubble(z) will assume an EAGLE cosmology
+    R200c = (M200c / (200. * rhoc))**(1./3.)
+    return R200c / c.cm_per_mpc * 1e3 
 
 def linterpsolve(xvals, yvals, xpoint):
     '''
@@ -973,7 +978,7 @@ def plot_cddfsplits(ions, fontsize=fontsize, imgname=None, techvars=[0], relativ
     plt.savefig(imgname, format='pdf', bbox_inches='tight')
     
 
-def plot_radprof(ions, fontsize=fontsize, imgname=None, techvars_touse=[0], units='R200c', ytype='perc', yvals_toplot=[10., 50., 90.], highlightcrit={'techvars': [0], 'Mmin': [10.0, 12.5, 14.0]}):
+def plot_radprof(ions, fontsize=fontsize, imgname=None, techvars_touse=[0], units='R200c', ytype='perc', yvals_toplot=[10., 50., 90.], highlightcrit={'techvars': [0], 'Mmin': [10.0, 12.0, 14.0]}, printnumgals=False):
     '''
     ions in different panels
     colors indicate different halo masses (from a rainbow color bar)
@@ -997,6 +1002,9 @@ def plot_radprof(ions, fontsize=fontsize, imgname=None, techvars_touse=[0], unit
     else:
         imgname = 'radprof_byhalomass_%s_L0100N1504_27_PtAb_C2Sm_32000pix_T4EOS_6.25slice_zcen-all_techvars-%s_units-%s_%s.pdf'%('-'.join(sorted(ions)), '-'.join(sorted([str(var) for var in techvars_touse])), units, ytype)
         imgname = mdir + imgname
+        
+        if ytype=='perc' and 50.0 not in yvals_toplot:
+            imgname = imgname[:-4] + '_yvals-%s'%('-'.join([str(val) for val in yvals_toplot])) + '.pdf'
         
     if isinstance(ions, str):
         ions = [ions]
@@ -1109,6 +1117,7 @@ def plot_radprof(ions, fontsize=fontsize, imgname=None, techvars_touse=[0], unit
     #dztot = {}
     #dXtotdlogN = {}
     bins = {}
+    numgals = {}
     
     for var in techvars_touse:
         yvals[var] = {}
@@ -1118,6 +1127,7 @@ def plot_radprof(ions, fontsize=fontsize, imgname=None, techvars_touse=[0], unit
         #dztot[var] = {}
         #dXtotdlogN[var] = {}
         bins[var] = {}
+        numgals[var] = {}
         for ion in ions:
             print('Reading in data for ion %s'%ion)
             filename = techvars[var]['filenames'][ion]
@@ -1129,6 +1139,7 @@ def plot_radprof(ions, fontsize=fontsize, imgname=None, techvars_touse=[0], unit
             with h5py.File(ol.pdir + 'radprof/' + filename, 'r') as fi:
                 bins[var][ion] = {}
                 yvals[var][ion] = {}
+                numgals[var][ion] = {}
                 galsets = fi.keys()
                 tags = {} 
                 for galset in galsets:
@@ -1162,6 +1173,7 @@ def plot_radprof(ions, fontsize=fontsize, imgname=None, techvars_touse=[0], unit
                     # extract number of pixels from the input filename, using naming system of make_maps
                     
                     yvals[var][ion][tag] = {val: np.array(fi['%s/%s'%(tags[tag], readpaths[val])]) for val in readpaths.keys()}
+                    numgals[var][ion][tag] = len(np.array(fi['%s/galaxyid'%(tags[tag])]))
                     
     ## checks: will fail with e.g. halo-only projection, though
     #filekeys = h5files.keys()
@@ -1171,7 +1183,22 @@ def plot_radprof(ions, fontsize=fontsize, imgname=None, techvars_touse=[0], unit
     #    raise RuntimeError("bins for different files don't match")
     
     #if not np.all(np.array([np.all(hists[key]['nomask'] == hists[filekeys[0]]['nomask']) for key in filekeys])):
-   #     raise RuntimeError('total histograms from different files do not match')
+    #    raise RuntimeError('total histograms from different files do not match')
+    if printnumgals:
+       print('tech vars: 0 = 1 slice, all, 1 = 1 slice, off-edge, 2 = 2 slices, all, 3 = 2 slices, off-edge')
+       print('\n')
+       
+       for ion in ions:
+           for var in techvars_touse:
+               tags = techvars[var]['setnames']
+               if var in [0, 2]:
+                   tags = sorted(tags, key=galsetnames_massonly.__getitem__)
+               else:
+                   tags = sorted(tags, key=galsetnames_offedges.__getitem__)
+               print('%s, var %s:'%(ion, var))
+               print('\n'.join(['%s\t%s'%(tag, numgals[var][ion][tag]) for tag in tags]))
+               print('\n')
+       return numgals
         
     massranges = [sel[1:] for sel in Mh_sels]
     #print(massranges)
