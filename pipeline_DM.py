@@ -20,18 +20,18 @@ def parse_parameterfile(filename, head):
     with open(filename, 'r') as pf:
         
     
-    Verbose : True
-    ProgressBar : True
-    DataDir : /fred/oz071/nwijers/maps/electrons_T4EOS
-    OutputDir : /fred/oz071/abatten/EAGLE/ADMIRE_L0100N1504/maps
-    # changed
-    SimName : L0100N1504
-    EOS : T4EOS
-    ProjectionAxis : z
-    MapzVals : [3.0, 1.0, 0.0]
-    Boxsize : 100 Mpc
- # string ‘100 Mpc'
-    NumPixels : 32000
+    #DataDir : (str) The directory containing the *.npz files from the projections code
+    #OutputDir (or outputdir) : (str) The path to the directory to place all non-plot outputs. I.e interpolation files.    
+    #SimName : (str) The name of the simulation    
+    #EOS : (str) The ISM equation of state used (I normally use T4EOS, but T4 is also fine)    
+    #ProjectionAxis : (str) The axis that we are projecting    
+    #MapzVals : (list) A list containing the redshifts of the projections. This was used because the .npz files didn’t contain any redshift data other than snapshot number. So I added this in manually.    
+    #Boxsize : (float/str) The length of the box (in every section this is a float except [Conversion] where it is a string)    
+    #NumPixels (or numpixels): (int) The number of pixels per side of the projection.
+    #MapDir : (str) The path to the directory containing the EAGLE column density maps.    
+    #masterdir : (str) The path to the directory containing the master interpolated hdf5 file. Usually the same as outputdir.    
+    #Header (or header) : (str) The name of the attribute that contains the header information.    
+    #Dataset (or dataset): (str) The name of the dataset that will contain the DM maps.
 
 
 
@@ -220,11 +220,10 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
                      sl_orig = ft['Header'].attrs['SliceLength']
                      ft['Header'].attrs.create('SliceLength', sl_orig * len(files_ion[ion]))
                      
-        total *= (1e6 / c.cm_per_mpc) # TODO: check units proper or comoving Mpc
         ft.create_dataset('map', data=total)
         ft['map'].attrs.create('max', np.max(total))
         ft['map'].attrs.create('minfinite', np.min(total[np.isfinite(total)]))
-        ft['map'].attrs.create('Units', "ppc * cm**-3")
+        ft['map'].attrs.create('Units', "cm**-2")
         ft['map'].attrs.create('log', False)
     del total
     
