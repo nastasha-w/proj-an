@@ -1496,7 +1496,7 @@ if jobind == 174:
     for key in filenames_all.keys():
         filenames = filenames_all[key]
         print('Checking %s'%key)
-        outfilenames_all = ['cddf_' + ((fn.split('/')[-1])%('-all'))[:-4] + '_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5' for fn in filenames]
+        outfilenames_all = ['cddf_' + ((fn.split('/')[-1])%('-all'))[:-5] + '_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5' for fn in filenames]
         outdir = ol.pdir
         for ind in range(len(filenames)):
             if np.all([os.path.isfile((filenames[ind])%fill) for fill in fills]) and not os.path.isfile(outdir + outfilenames_all[ind]):
