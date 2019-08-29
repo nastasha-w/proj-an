@@ -3864,12 +3864,18 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                  'boxsize': vardict_WQ.simfile.boxsize}
 
     # prevents largest particle values from overflowing float32 (extra factor 1e4 is a rough attempt to prevent overflow in the projection)
-    maxlogW = np.log10(np.max(qW))
+    try:
+        maxlogW = np.log10(np.max(qW))
+    except ValueError: # qW has length zero
+        maxlogW = 0.
     overfW = (int(np.ceil(maxlogW))+4) // 38
     qW = qW*10**(-overfW*38)
     multipafterW *= 10**(overfW*38)
     if ptypeQ is not None:
-        overfQ = int(np.ceil(np.log10(np.max(qQ)) + maxlogW)+4) // 38 - overfW
+        try:
+            overfQ = int(np.ceil(np.log10(np.max(qQ)) + maxlogW)+4) // 38 - overfW
+        except ValueError:
+            overfQ = 0
         qQ = qQ*10**(-overfQ*38)
         multipafterQ *= 10**(overfQ*38)
     else:
