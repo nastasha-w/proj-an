@@ -2441,9 +2441,12 @@ def luminosity_calc(vardict,excludeSFR,eltab,hab,ion,last=True,updatesel=True):
         vardict.readif('Mass', rawunits=True)
         vardict.add_part('propvol', (vardict.particle['Mass'] / vardict.particle['Density']) * (vardict.CGSconv['Mass'] / vardict.CGSconv['Density']))
         vardict.delif('Mass',last=last)
-
-    print('Min, max, median of particle volume [cgs]: %.5e %.5e %.5e' \
-        % (np.min(vardict.particle['propvol']), np.max(vardict.particle['propvol']), np.median(vardict.particle['propvol'])))
+    
+    if len(vardict.particle['propvol']) > 0:
+        print('Min, max, median of particle volume [cgs]: %.5e %.5e %.5e' \
+            % (np.min(vardict.particle['propvol']), np.max(vardict.particle['propvol']), np.median(vardict.particle['propvol'])))
+    else:
+        print('No particles in current selection')
 
     if not vardict.isstored_part('lognH'):
         vardict.readif('Density', rawunits=True)
@@ -2456,8 +2459,9 @@ def luminosity_calc(vardict,excludeSFR,eltab,hab,ion,last=True,updatesel=True):
             vardict.add_part('lognH', np.log10(vardict.particle['Density']) + np.log10( vardict.CGSconv['Density'] * hab / (c.atomw_H * c.u) ) )
         vardict.delif('Density',last=last)
 
-    print('Min, max, median of particle log10 nH [cgs]: %.5e %.5e %.5e' \
-        % (np.min(vardict.particle['lognH']), np.max(vardict.particle['lognH']), np.median(vardict.particle['lognH'])) )
+    if len(vardict.particle['lognH']) > 0:
+        print('Min, max, median of particle log10 nH [cgs]: %.5e %.5e %.5e' \
+            % (np.min(vardict.particle['lognH']), np.max(vardict.particle['lognH']), np.median(vardict.particle['lognH'])) )
 
     if not vardict.isstored_part('logT'):
         if excludeSFR == 'T4':
@@ -2470,15 +2474,17 @@ def luminosity_calc(vardict,excludeSFR,eltab,hab,ion,last=True,updatesel=True):
             vardict.readif('Temperature',rawunits=True)
         vardict.add_part('logT',np.log10(vardict.particle['Temperature']))
         vardict.delif('Temperature',last=last)
-
-    print('Min, max, median of particle log temperature [K]: %.5e %.5e %.5e' \
-        % (np.min(vardict.particle['logT']), np.max(vardict.particle['logT']), np.median(vardict.particle['logT'])))
+    
+    if len(vardict.particle['logT']) > 0:
+        print('Min, max, median of particle log temperature [K]: %.5e %.5e %.5e' \
+            % (np.min(vardict.particle['logT']), np.max(vardict.particle['logT']), np.median(vardict.particle['logT'])))
 
 
     lineind = ol.line_nos_ion[ion]
     vardict.add_part('emdenssq', find_emdenssq(vardict.simfile.z, ol.elements_ion[ion], vardict.particle, lineind))
-    print('Min, max, median of particle emdenssq: %.5e %.5e %.5e' \
-        % (np.min(vardict.particle['emdenssq']), np.max(vardict.particle['emdenssq']), np.median(vardict.particle['emdenssq'])))
+    if len(vardict.particle['emdenssq']) > 0:
+        print('Min, max, median of particle emdenssq: %.5e %.5e %.5e' \
+            % (np.min(vardict.particle['emdenssq']), np.max(vardict.particle['emdenssq']), np.median(vardict.particle['emdenssq'])))
     vardict.delif('logT',last = last)
 
     # for agreement with Cosmoplotter
@@ -2497,8 +2503,9 @@ def luminosity_calc(vardict,excludeSFR,eltab,hab,ion,last=True,updatesel=True):
     vardict.delif('emdenssq',last=last)
     vardict.delif('propvol',last=last)
 
-    print('Min, max, median of particle lumninosity [1e10 cgs]: %.5e %.5e %.5e' \
-        % (np.min(luminosity), np.max(luminosity), np.median(luminosity)))
+    if len(luminosity) > 0:
+        print('Min, max, median of particle lumninosity [1e10 cgs]: %.5e %.5e %.5e' \
+            % (np.min(luminosity), np.max(luminosity), np.median(luminosity)))
 
     CGSconv = 1e10
     print('  done.\n')
@@ -2563,9 +2570,12 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False, last=
             else:
                 vardict.add_part('lognH', np.log10(vardict.particle['Density']) + np.log10( vardict.CGSconv['Density'] * hab / (c.atomw_H * c.u)) )
             vardict.delif('Density', last=last)
-
-        print('Min, max, median of particle log10 nH [cgs]: %.5e %.5e %.5e' \
-            % (np.min(vardict.particle['lognH']), np.max(vardict.particle['lognH']), np.median(vardict.particle['lognH'])) )
+        
+        if len(vardict.particle['lognH']) > 0:
+            print('Min, max, median of particle log10 nH [cgs]: %.5e %.5e %.5e' \
+                % (np.min(vardict.particle['lognH']), np.max(vardict.particle['lognH']), np.median(vardict.particle['lognH'])) )
+        else:
+            print('No particles in current selection')
 
         if not vardict.isstored_part('logT'):
             if excludeSFR == 'T4':
@@ -2578,9 +2588,9 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False, last=
                 vardict.readif('Temperature',rawunits=True)
             vardict.add_part('logT',np.log10(vardict.particle['Temperature']))
             vardict.delif('Temperature',last=last)
-
-        print('Min, max, median of particle log temperature [K]: %.5e %.5e %.5e' \
-            % (np.min(vardict.particle['logT']), np.max(vardict.particle['logT']), np.median(vardict.particle['logT'])))
+        if len(vardict.particle['logT']) > 0:
+            print('Min, max, median of particle log temperature [K]: %.5e %.5e %.5e' \
+                % (np.min(vardict.particle['logT']), np.max(vardict.particle['logT']), np.median(vardict.particle['logT'])))
         if sylviasshtables:
             if 'logZ' not in vardict.particle.keys():
                 if isinstance(eltab, str):
@@ -2684,8 +2694,11 @@ def Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=True, updatesel=True, misc
         else:
             vardict.add_part('nH', vardict.particle['Density'] * vardict.CGSconv['Density'] * (hab / (c.atomw_H * c.u)) )
         vardict.delif('Density',last=last)
-    print('Min, max, median of particle nH [cgs]: %.5e %.5e %.5e' \
-        % (np.min(vardict.particle['nH']), np.max(vardict.particle['nH']), np.median(vardict.particle['nH'])) )
+    if len(vardict.particle['nH']) > 0:
+        print('Min, max, median of particle nH [cgs]: %.5e %.5e %.5e' \
+            % (np.min(vardict.particle['nH']), np.max(vardict.particle['nH']), np.median(vardict.particle['nH'])) )
+    else:
+        print('No particles in current selection')
 
     if not vardict.isstored_part('Temperature'):
         if excludeSFR == 'T4':
@@ -2696,8 +2709,9 @@ def Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=True, updatesel=True, misc
             vardict.delif('eos', last=last)
         else:
             vardict.readif('Temperature', rawunits=True)
-    print('Min, max, median of particle temperature [K]: %.5e %.5e %.5e' \
-        % (np.min(vardict.particle['Temperature']), np.max(vardict.particle['Temperature']), np.median(vardict.particle['Temperature'])))
+    if len(vardict.particle['Temperature']) > 0:
+        print('Min, max, median of particle temperature [K]: %.5e %.5e %.5e' \
+            % (np.min(vardict.particle['Temperature']), np.max(vardict.particle['Temperature']), np.median(vardict.particle['Temperature'])))
 
     h1hmolfrac = cfh.nHIHmol_over_nH(vardict.particle, vardict.simfile.z, UVB=UVB, useLSR=useLSR)
     if ion == 'h1ssh':
@@ -4066,7 +4080,10 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                 del resW
                 if ptypeQ is not None:
                     resQ = subresultQ.astype(np.float32)
-                    minQ= np.min(resQ[np.isfinite(resQ)])
+                    try:
+                        minQ = np.min(resQ[np.isfinite(resQ)])
+                    except ValueError:
+                        minQ = np.NaN
                     maxQ = np.max(resQ)
                     if halosel is None:
                         if hdf5:
