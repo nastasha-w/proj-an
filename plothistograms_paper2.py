@@ -1647,7 +1647,7 @@ def plotfofonlycddfs(ion, relative=False):
         else:
             ax.set_ylim(-6.0, 2.5)
         
-        labelx = yi == numrows - 1 or (yi == numrows - 2 and numrows * yi + xi > len(masses_proj) + 1) 
+        labelx = yi == numrows - 1 or (yi == numrows - 2 and numcols * yi + xi > len(masses_proj) + 1) 
         labely = xi == 0
         setticks(ax, fontsize=fontsize, labelbottom=labelx, labelleft=labely)
         if labelx:
