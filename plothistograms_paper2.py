@@ -1392,7 +1392,10 @@ def plotfofonlycddfs(ion, relative=False):
           any M200c
     '''
     mdir = '/net/luttero/data2/imgs/CGM/cddfsplits/'
-    outname = mdir + 'split_FoF-M200c_proj_%s.pdf'%ion
+    outname = mdir + 'split_FoF-M200c_proj_%s'%ion
+    if relative:
+        outname = outname + '_rel'
+    outname = outname + '.pdf'
     
     ions = ['o7', 'o8', 'o6', 'ne8', 'fe17', 'ne9', 'hneutralssh']
     medges = np.arange(9., 14.1, 0.5)
@@ -1434,7 +1437,7 @@ def plotfofonlycddfs(ion, relative=False):
             with h5py.File(filedct[pmass]) as fi:
                 
                 bins = np.array(fi['bins/axis_0'])
-                dct_fofcddf['bins'] = bins
+                dct_fofcddf[pmass]['bins'] = bins
                 
                 inname = np.array(fi['input_filenames'])[0]
                 inname = inname.split('/')[-1] # throw out directory path
@@ -1455,7 +1458,7 @@ def plotfofonlycddfs(ion, relative=False):
                     example_key = mask_examples.keys()[0] # 'mask_<slice center>'
                     example_mask = mask_examples[example_key] # '<dir path><mask file name>'
                     path = 'masks/%s/%s/Header/cosmopars'%(example_key[5:], example_mask.split('/')[-1])
-                    print(path)
+                    #print(path)
                     cosmopars = {key: item for (key, item) in fi[path].attrs.items()}
                     dXtot = mc.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
                     dXtotdlogN = dXtot * np.diff(bins)
@@ -1523,7 +1526,7 @@ def plotfofonlycddfs(ion, relative=False):
         # recover cosmopars:
         dXtot = mc.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
         dXtotdlogN = dXtot * np.diff(bins)
-        dct_totcddf[pmass][mmass] = {'cddf': hist / dXtotdlogN, 'covfrac': covfrac}
+        dct_totcddf[mmass] = {'cddf': hist / dXtotdlogN, 'covfrac': covfrac}
     
     cmapname = 'rainbow'
     #sumcolor = 'saddlebrown'
@@ -1533,29 +1536,45 @@ def plotfofonlycddfs(ion, relative=False):
     else:
         ylabel = r'$\log_{10} \left( \partial^2 n \, / \, \partial \log_{10} \mathrm{N} \, \partial X \right)$'
     xlabel = r'$\log_{10} \, \mathrm{N} \; [\mathrm{cm}^{-2}]$'
-    clabel = r'$\log_{10}\, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'
+    clabel = r'masks for haloes with $\log_{10}\, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'
     
+    massedges = list(medges) + [np.inf]
+    if massedges[-1] == np.inf: # used for setting the color bar -> just need some dummy value higher than the last one
+        massedges[-1] = 2. * massedges[-2] - massedges[-3]
+    masslabels = {name: name + 0.5 * np.average(np.diff(massedges)) for name in masses_proj[1:]}
     
     numcols = 4
     numrows = 4
     panelwidth = 2.5
     panelheight = 2.
-    legheight = 0.6
+    legheight = 1.
     #fcovticklen = 0.035
+    if numcols * numrows - len(massedges) - 2 >= 2: # put legend in lower right corner of panel region
+        seplegend = False
+        legindstart = numcols - (numcols * numrows - len(medges) - 2)
+        legheight = 0.
+        numrows_fig = numrows
+        ncol_legend = (numcols - legindstart) - 1
+        height_ratios=[panelheight] * numrows 
+    else:
+        seplegend = False
+        numrows_fig = numrows + 1
+        height_ratios=[panelheight] * numrows + [legheight]
+        ncol_legend = numcols - 1
+    
     figwidth = numcols * panelwidth + 0.6 
     figheight = numcols * panelheight + 0.2 * numcols + legheight
     fig = plt.figure(figsize=(figwidth, figheight))
-    grid = gsp.GridSpec(numrows + 1, numcols + 1, hspace=0.3, wspace=0.3, width_ratios=[panelwidth] * numcols + [0.6], height_ratios=[panelheight] * numrows + [legheight])
+    grid = gsp.GridSpec(numrows_fig, numcols + 1, hspace=0.0, wspace=0.0, width_ratios=[panelwidth] * numcols + [0.6], height_ratios=height_ratios)
     axes = [fig.add_subplot(grid[i // numcols, i % numcols]) for i in range(len(masses_proj) + 1)]
     cax  = fig.add_subplot(grid[:numrows, numcols])
-    lax  = fig.add_subplot(grid[numrows, :])
+    if seplegend:
+        lax  = fig.add_subplot(grid[numrows, :])
+    else:
+        lax = fig.add_subplot(grid[numrows - 1, legindstart:])
     
     
     
-    massedges = list(medges) + [np.inf]
-    if massedges[-1] == np.inf: # used for setting the color bar -> just need some dummy value higher than the last one
-        massedges[-1] = 2. * massedges[-2] - massedges[-3]
-    masslabels = {name: float(name.split('-')[1]) + 0.5 * np.average(np.diff(massedges)) for name in masses_proj[1:]}
     
     clist = cm.get_cmap(cmapname, len(massedges) - 1)(np.linspace(0., 1.,len(massedges) - 1))
     _masks = sorted(masslabels.keys(), key=masslabels.__getitem__)
@@ -1605,7 +1624,7 @@ def plotfofonlycddfs(ion, relative=False):
         elif massind == 1:
             pmass = 'all halos'
         else:
-            pmass = masses_proj[massind + 1]
+            pmass = masses_proj[massind - 1]
         ax = axes[massind]
 
         if ion[0] == 'h':
@@ -1624,13 +1643,13 @@ def plotfofonlycddfs(ion, relative=False):
             ax.set_xlim(11.5, 15.5)
             
         if relative:
-            ax.set_ylim(-4.5, 0.1)
+            ax.set_ylim(-4.5, 1.)
         else:
             ax.set_ylim(-6.0, 2.5)
         
-        labelx = yi == numrows - 1
+        labelx = yi == numrows - 1 or (yi == numrows - 2 and numrows * yi + xi > len(masses_proj) + 1) 
         labely = xi == 0
-        setticks(ax, fontsize=fontsize, labelbottom=True, labelleft=labely)
+        setticks(ax, fontsize=fontsize, labelbottom=labelx, labelleft=labely)
         if labelx:
             ax.set_xlabel(xlabel, fontsize=fontsize)
         if labely:
@@ -1642,7 +1661,7 @@ def plotfofonlycddfs(ion, relative=False):
         if pmass == 'none':
             ptext = 'masks vs halo-only'
             if relative:
-                divby = dct_totcddf['none']
+                divby = dct_totcddf['none']['cddf']
             else:
                 divby = 1. 
         
@@ -1652,62 +1671,62 @@ def plotfofonlycddfs(ion, relative=False):
                 
                 bins = dct_totcddf['bins']
                 plotx = bins[:-1] + 0.5 * np.diff(bins)
-                ax.plot(plotx, np.log10(dct_totcddf[pmass] / divby), color=colors[pmass], linestyle='dashed', alpha=alpha, path_effects=_pe, linewidth=_lw)
+                ax.plot(plotx, np.log10(dct_totcddf[pmass]['cddf'] / divby), color=colors[pmass], linestyle='dashed', alpha=alpha, path_effects=_pe, linewidth=_lw)
                 
                 bins = dct_fofcddf[pmass]['bins']
                 plotx = bins[:-1] + 0.5 * np.diff(bins)
-                ax.plot(plotx, np.log10(dct_fofcddf[pmass]['none'] / divby), color=colors[pmass], linestyle='solid', alpha=alpha, path_effects=_pe, linewidth=_lw)
+                ax.plot(plotx, np.log10(dct_fofcddf[pmass]['none']['cddf'] / divby), color=colors[pmass], linestyle='solid', alpha=alpha, path_effects=_pe, linewidth=_lw)
                 
             _lw = linewidth
             _pe = patheff
             bins = dct_totcddf['bins']
             plotx = bins[:-1] + 0.5 * np.diff(bins)
-            ax.plot(plotx, np.log10(dct_totcddf['none'] / divby), color=colors['total'], linestyle='solid', alpha=alpha, path_effects=_pe, linewidth=_lw)
+            ax.plot(plotx, np.log10(dct_totcddf['none']['cddf'] / divby), color=colors['total'], linestyle='solid', alpha=alpha, path_effects=_pe, linewidth=_lw)
 
         elif pmass == 'all halos':
-            ptext = 'only halo gas'
+            ptext = 'all halo gas'
             if relative:
-                divby = dct_fofcddf['none']['none']
+                divby = dct_fofcddf['none']['none']['cddf']
             else:
                 divby = 1. 
 
             for mmass in masses_proj[1:]:
                 bins = dct_fofcddf[mmass]['bins']
                 plotx = bins[:-1] + 0.5 * np.diff(bins)
-                ax.plot(plotx, np.log10(dct_fofcddf['none'][mmass] / divby), color=colors[mmass], linestyle='solid', alpha=alpha, path_effects=patheff)
+                ax.plot(plotx, np.log10(dct_fofcddf['none'][mmass]['cddf'] / divby), color=colors[mmass], linestyle='solid', alpha=alpha, path_effects=patheff)
             
             bins = dct_fofcddf['none']['bins']
             plotx = bins[:-1] + 0.5 * np.diff(bins)
-            ax.plot(plotx, np.log10(dct_fofcddf['none']['none'] / divby), color=colors['none'], linestyle='solid', alpha=alpha, path_effects=patheff, linewidth=linewidth)
+            ax.plot(plotx, np.log10(dct_fofcddf['none']['none']['cddf'] / divby), color=colors['none'], linestyle='solid', alpha=alpha, path_effects=patheff, linewidth=linewidth)
             
-            bins = dct_totcddf['none']['bins']
+            bins = dct_totcddf['bins']
             plotx = bins[:-1] + 0.5 * np.diff(bins)
-            ax.plot(plotx, np.log10(np.sum([dct_totcddf[mass] for mass in masses_proj[1:]], axis=0) / divby), color=colors['allhalos'], linestyle='dashed', alpha=alpha, path_effects=patheff_thick, linewidth=linewidth + 0.5)
+            ax.plot(plotx, np.log10(np.sum([dct_totcddf[mass]['cddf'] for mass in masses_proj[1:]], axis=0) / divby), color=colors['allhalos'], linestyle='dashed', alpha=alpha, path_effects=patheff_thick, linewidth=linewidth + 0.5)
             
             bins = dct_fofcddf['none']['bins']
             plotx = bins[:-1] + 0.5 * np.diff(bins)
-            ax.plot(plotx, np.log10(np.sum([dct_fofcddf['none'][mass] for mass in masses_proj[1:]], axis=0) / divby), color=colors['allhalos'], linestyle='solid', alpha=alpha, path_effects=patheff_thick, linewidth=linewidth + 0.5)
+            ax.plot(plotx, np.log10(np.sum([dct_fofcddf['none'][mass]['cddf'] for mass in masses_proj[1:]], axis=0) / divby), color=colors['allhalos'], linestyle='solid', alpha=alpha, path_effects=patheff_thick, linewidth=linewidth + 0.5)
         
             bins = dct_totcddf['bins']
             plotx = bins[:-1] + 0.5 * np.diff(bins)
-            ax.plot(plotx, np.log10(dct_totcddf['none'] / divby), color=colors['total'], linestyle='solid', alpha=alpha, path_effects=patheff, linewidth=linewidth)
+            ax.plot(plotx, np.log10(dct_totcddf['none']['cddf'] / divby), color=colors['total'], linestyle='solid', alpha=alpha, path_effects=patheff, linewidth=linewidth)
             
         else:
             if pmass == 14.0:
-                ptext = r'$\log_{10} \, \mathrm{M}_{\mathrm{200c}} \, / \, \mathrm{M}_{\odot} > %.1f$'%pmass
+                ptext = r'$ > %.1f$'%pmass # \log_{10} \, \mathrm{M}_{\mathrm{200c}} \, / \, \mathrm{M}_{\odot}
             else:
-                ptext = r'$ %.1f \leq \log_{10} \, \mathrm{M}_{\mathrm{200c}} \, / \, \mathrm{M}_{\odot} < %.1f$'%(pmass, pmass + 0.5)
+                ptext = r'$ %.1f \emdash %.1f$'%(pmass, pmass + 0.5) # \leq \log_{10} \, \mathrm{M}_{\mathrm{200c}} \, / \, \mathrm{M}_{\odot} <
             
             if relative:
-                divby = dct_fofcddf[mmass]['none']
+                divby = dct_fofcddf[pmass]['none']['cddf']
             else:
                 divby = 1.
+            
+            bins = dct_totcddf['bins']
+            plotx = bins[:-1] + 0.5 * np.diff(bins)
+            ax.plot(plotx, np.log10(dct_totcddf[pmass]['cddf'] / divby), color=colors[pmass], linestyle='dashed', alpha=alpha, path_effects=patheff)
                 
             for mmass in masses_proj[1:]:
-                bins = dct_totcddf['bins']
-                plotx = bins[:-1] + 0.5 * np.diff(bins)
-                ax.plot(plotx, np.log10(dct_totcddf[mmass] / divby), color=colors[pmass], linestyle='dashed', alpha=alpha, path_effects=patheff)
-                
                 if mmass == pmass:
                     _pe = patheff_thick
                     _lw = linewidth + 0.5
@@ -1717,16 +1736,16 @@ def plotfofonlycddfs(ion, relative=False):
                     
                 bins = dct_fofcddf[pmass]['bins']
                 plotx = bins[:-1] + 0.5 * np.diff(bins)
-                ax.plot(plotx, np.log10(dct_fofcddf[pmass][mmass] / divby), color=colors[pmass], linestyle='solid', alpha=alpha, path_effects=_pe, linewidth=_lw)
+                ax.plot(plotx, np.log10(dct_fofcddf[pmass][mmass]['cddf'] / divby), color=colors[mmass], linestyle='solid', alpha=alpha, path_effects=_pe, linewidth=_lw)
             
             bins = dct_fofcddf[pmass]['bins']
             plotx = bins[:-1] + 0.5 * np.diff(bins)
-            ax.plot(plotx, np.log10(dct_fofcddf[pmass]['none'] / divby), color=colors['none'], linestyle='solid', alpha=alpha, path_effects=patheff)
+            ax.plot(plotx, np.log10(dct_fofcddf[pmass]['none']['cddf'] / divby), color=colors['none'], linestyle='solid', alpha=alpha, path_effects=patheff)
         
             bins = dct_totcddf['bins']
             plotx = bins[:-1] + 0.5 * np.diff(bins)
-            ax.plot(plotx, np.log10(dct_totcddf[pmass] / divby), color=colors[pmass], linestyle='dashed', alpha=alpha, path_effects=patheff_thick, linewidth=linewidth + 0.5)
-            ax.plot(plotx, np.log10(dct_totcddf['none'] / divby), color=colors['total'], linestyle='solid', alpha=alpha, path_effects=patheff, linewidth=linewidth)
+            ax.plot(plotx, np.log10(dct_totcddf[pmass]['cddf'] / divby), color=colors[pmass], linestyle='dashed', alpha=alpha, path_effects=patheff_thick, linewidth=linewidth + 0.5)
+            ax.plot(plotx, np.log10(dct_totcddf['none']['cddf'] / divby), color=colors['total'], linestyle='solid', alpha=alpha, path_effects=patheff, linewidth=linewidth)
             
         if relative:
             ax.text(0.05, 0.95, ptext, horizontalalignment='left', verticalalignment='top', fontsize=fontsize, transform=ax.transAxes)
@@ -1751,8 +1770,8 @@ def plotfofonlycddfs(ion, relative=False):
                   mlines.Line2D([], [], color=colors['total'], linestyle='solid', label='total', linewidth=2.),\
                   mlines.Line2D([], [], color=colors['allhalos'], linestyle='solid', label=r'all FoF+200c gas', linewidth=2.),\
                   ]
-    sumlabels = ['no mask', 'total']
-    lax.legend(lcs + sumhandles, ['haloes with mask', 'total with mask'] + sumlabels, handler_map={type(lc): HandlerDashedLines()}, fontsize=fontsize, ncol=2 * numcols, loc='lower center', bbox_to_anchor=(0.5, 0.))
+    sumlabels = ['FoF+200c, no mask', 'all gas, no mask', r'mask: all haloes $> 9.0$']
+    lax.legend(lcs + sumhandles, ['FoF+200c, with mask', 'all gas, with mask'] + sumlabels, handler_map={type(lc): HandlerDashedLines()}, fontsize=fontsize, ncol=ncol_legend, loc='lower center', bbox_to_anchor=(0.5, 0.))
     lax.axis('off')
     #leg1 = lax.legend(handles=legend_handles, fontsize=fontsize-1, loc='lower left', bbox_to_anchor=(0.01, 0.01), frameon=False)
     #leg2 = lax.legend(handles=legend_handles_ls,fontsize=fontsize-1, loc='upper right', bbox_to_anchor=(0.99, 0.99), frameon=False)
