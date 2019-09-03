@@ -10,7 +10,7 @@ import sys
 import os
 
 import make_maps_v3_master as m3
-import make_maps_opts_locs as ol
+#import make_maps_opts_locs as ol
 
 datadir_head = '/fred/oz071/abatten/EAGLE/'
 anlsdir_head = '/fred/oz071/abatten/ADMIRE_ANALYSIS/'
@@ -225,6 +225,7 @@ def parse_parameterfile(filename, head='Projection'):
     
     if not set(paramdct.keys()) == reqparams:
         raise ValueError('Falied to read in all expected parameters from parameter file %s'%(filename))
+    print('\n\n')
     
     return paramdct
 
@@ -277,14 +278,14 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
         raise ValueError('numsl and sliceind must be integers')
         
     if axis == 'z':
-        L_z = L_z / np.float(numslices) # split into numslices slices along projection axis
-        centre[2] = centre[2] - (numslices + 1.) * L_z / 2. + sliceind * L_z  
+        L_z = L_z / np.float(numsl) # split into numslices slices along projection axis
+        centre[2] = centre[2] - (numsl + 1.) * L_z / 2. + sliceind * L_z  
     if axis == 'x':
-        L_x = L_x / np.float(numslices) # split into numslices slices along projection axis
-        centre[0] = centre[0] - (numslices + 1.) * L_x / 2. + sliceind * L_x  
+        L_x = L_x / np.float(numsl) # split into numslices slices along projection axis
+        centre[0] = centre[0] - (numsl + 1.) * L_x / 2. + sliceind * L_x  
     if axis == 'y':
-        L_y = L_y / np.float(numslices) # split into numslices slices along projection axis
-        centre[1] = centre[1] - (numslices + 1.) * L_y / 2. + sliceind * L_y
+        L_y = L_y / np.float(numsl) # split into numslices slices along projection axis
+        centre[1] = centre[1] - (numsl + 1.) * L_y / 2. + sliceind * L_y
         
     # will need to modify read_eagle_files to not add 'data/' to the input directort path...
     kernel = 'C2'
@@ -300,10 +301,10 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
               'periodic': True, 'kernel': kernel, 'saveres': True,\
               'simulation':'eagle', 'LsinMpc': True,\
               'select': None, 'misc': None, 'halosel': None, 'kwargs_halosel': None,\
-              'ompproj': True, 'numslices': None, 'hdf5': True}
+              'ompproj': True, 'numslices': None, 'hdf5': True, 'override_simdatapath': None} # override_simdatapath: datapath
     name = m3.make_map(*args, nameonly=True, **kwargs)
     if nameonly:
-        return name
+        return name[0]
     retval = m3.make_map(*args, nameonly=False, **kwargs)
     
     with h5py.File(name, 'r+') as fo:
@@ -331,15 +332,52 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
         fo['map'].attrs.create("Units", "cm**-2")
     return retval
 
-def run_projection(parameterfile, index, checknum=False):
+def run_projection(params, index, checknum=False):
+    
+    ions = ['hydrogen', 'helium', 'hneutralssh', 'he1', 'he2']
+    ismopt = params['ismopt']
+    numsl = params['numsl']
+    
+    if ismopt == 'T4EOS':
+        sfgas_dct = {'hydrogen': True,\
+                     'helium': True,\
+                     'hneutralssh': 'T4',\
+                     'he1': 'T4',\
+                     'he2': 'T4'}
+    elif ismopt == 'Neutral_ISM':
+        sfgas_dct = {'hydrogen': False,\
+                     'helium': False,\
+                     'hneutralssh': False,\
+                     'he1': False,\
+                     'he2': False}
+    elif ismopt == 'Ionised_ISM':
+        sfgas_dct = {'hydrogen': True,\
+                     'helium': True,\
+                     'hneutralssh': False,\
+                     'he1': False,\
+                     'he2': False}
+        
+    argslist = [(params['simnum'], params['snapnum'], params['var'], ion, numsl, slind, params['numpix']) for ion in ions for slind in range(1, numsl + 1)]
+    kwargslist = [{'sfgas': sfgas_dct[ion], 'outputdir': params['outputdir_ions'], 'axis': params['axis']} for ion in ions for slind in range(1, numsl + 1)]
+    outnames = [make_map(*argslist[i], nameonly=True, **kwargslist[i]) for i in range(len(kwargslist))] # returns names for main and weighted maps -> get only the first
+    #print(outnames)
+    needtogen = np.where(np.array([not os.path.isfile(outname) for outname in outnames]))[0]
+    
+    if checknum:
+        for i in range(len(needtogen)):
+            print('index %i:\t %s'%(needtogen[i], outnames[needtogen[i]]))
+        return len(needtogen)
+    
+    if index not in needtogen:
+        raise RuntimeError('The file %s at index %i already exists'%(outnames[index], index))
+    print('\nCalling make_maps_v3_master.make_map')
+    print('------------------------------------------------------------------\n\n')
+    make_map(*argslist[index], nameonly=False, **kwargslist[index])
+    print('\n\n------------------------------------------------------------------\n')
     
     
-    
-    make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
-             sfgas='T4', outputdir='', axis='z', nameonly=False)
-
 def add_files(simnum, snapnum, var, numsl, numpix,\
-              outputdir='', axis='z', ismopt='T4EOS', hedname='Header', mapname='map'):
+              outputdir_ions='', outputdir_electrons='', axis='z', ismopt='T4EOS', hedname='Header', mapname='map'):
     '''
     ismopt: 'T4EOS', 'Neutral_ISM', 'Ionised_ISM'
     assumes the 'T4' option was not used for the total element columns
@@ -362,16 +400,45 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
                      'hneutralssh': False,\
                      'he1': False,\
                      'he2': False}
+    ions = sfgas_dct.keys()
     
     # retrive file names 
     files_ion = {key: [make_map(simnum, snapnum, var, key, numsl, sliceind, numpix,\
-                       sfgas=sfgas_dct[key], outputdir=outputdir, axis=axis, nameonly=True)\
+                       sfgas=sfgas_dct[key], outputdir=outputdir_ions, axis=axis, nameonly=True)\
                        for sliceind in range(numsl)]\
                  for key in sfgas_dct.keys()}
-    filenames_sum = {key: 'dummy' for key in sfgas_dct.keys()} # TODO: add real sum names
-    filename_DM = 'dummy' # TODO: add real DM name
+    filenames_sum = {}
+    if numsl == 1: # no need to add; filename from projection = sum file 
+        filenames_sum = {key: files_ion[key][0] for key in files_ion.keys()}
+    else:
+        for ion in ions:
+            filename_base = files_ion[ion][0]
+            _dir = '/'.join(filename_base.split('/')[:-1] + [''])
+            
+            parts = (filename_base.split('/')[-1]).split('_')
+            cenind = np.where([axis + 'cen' in part for part in parts])[0][0]
+            parts[cenind] = axis + 'cen-sum'
+            sumfilen = '_'.join(parts)
+            
+            parts2 = sumfilen.split('.')
+            parts2 = parts2[:-1] + ['_totalbox'] + parts2[-1]
+            sumfilen = '.'.join(parts2)
+            
+            filenames_sum[ion] = _dir + sumfilen
     
-    # TODO: add Adam's Header Attributes to the sum and electron files
+    basename_DM = filenames_sum['hydrogen']
+    parts = (basename_DM.split('/')[-1]).split('_')
+    ionind = np.where([part == 'hydrogen' for part in parts])[0][0]
+    parts[ionind] = 'electrons'
+    ismind = np.where(['EOS' in part for part in parts])[0][0]
+    if ismopt == 'T4EOS':
+        parts[ismind] = 'T4EOS'
+    elif ismopt == 'Ionised_ISM':
+        parts[ismind] = 'fully-ionised-EOS'
+    elif ismopt == 'Neutral_ISM':
+        parts[ismind] = 'noEOS'
+    filename_DM = outputdir_electrons + '_'.join(parts) 
+    
     total = np.zeros((numpix, ) * 2, dtype=np.float32)
     mainheadercopied = False
     with h5py.File(filename_DM, 'w') as fo:
@@ -384,18 +451,44 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
                 total2 = np.zeros((numpix, ) * 2, dtype=np.float32)
                 hed2 = fo.create_group('Header')
                 with h5py.File(filenames_sum[ion], 'w') as ft:
-                    for subfileind in range(len(files_ion[key])):
-                        subfile = files_ion[key][subfileind]
-                        with h5py.File(filenames_sum[ion], 'r') as fts:
+                    for subfileind in range(len(files_ion[ion])):
+                        subfile = files_ion[ion][subfileind]
+                        with h5py.File(filenames_sum[ion], 'r') as ft3:
                             ft3.copy('Header', hed2, name='slice_%i'%subfileind)
                             ft['Header/slice_%i'%subfileind].attrs.create('original_filename', subfile)
                             sub2 = 10**np.array(ft3['map'])
                             total2 += sub2
                             del sub2
+                            hed3 = ft3['Header']
+                            sl_orig = hed3.attrs['SliceLength']
+                            simnum_o = hed3.attrs('SimName')
+                            snapnum_o = hed3.attrs['Snapshot']
+                            redshift_o = hed3.attrs['Redshift']
+                            sfgas_o = hed3.attrs['EOS']
+                            axis_o = hed3.attrs['ProjectionAxis']
+                            boxsize_o = hed3.attrs['BoxSize']
+                            numpix_o = hed3.attrs['NumPixels']
+                            codevers_o = hed3.attrs['CodeVersion']
+                            abunds_o = hed3.attrs['MetalAbundancesType']
+                            kernel_o = hed3.attrs['KernelShape']
                     total2 = np.log10(total2)
                     ft.create_dataset('map', data=total2)
                     ft['map'].attrs.create('max', np.max(total2))
                     ft['map'].attrs.create('minfinite', np.min(total2[np.isfinite(total2)]))
+                    ft['map'].attrs.create("Units", "cm**-2")
+                    
+                    hed2.attrs.create('SliceLength', sl_orig * len(files_ion[ion])) # modify from the files that went in; other parameters are unchanged
+                    hed2.attrs.create('SimName', simnum_o)
+                    hed2.attrs.create('Snapshot', snapnum_o)
+                    hed2.attrs.create('Redshift', redshift_o)
+                    hed2.attrs.create('EOS', sfgas_o)
+                    hed2.attrs.create('ProjectionAxis', axis_o)
+                    hed2.attrs.create('Boxsize', '%.1f Mpc'%boxsize_o)
+                    hed2.attrs.create('NumPixels', numpix_o)
+                    hed2.attrs.create('CodeVersion', codevers_o)
+                    hed2.attrs.create('MetalAbundancesType', abunds_o)
+                    hed2.attrs.create('KernelShape', kernel_o)
+                    
                 del total2
                 
             with h5py.File(filenames_sum[ion], 'r') as ft:
@@ -410,14 +503,13 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
                      ft.copy('Header', fo, name=hedname)
                      # overwrite what needs changing
                      ft[hedname].attrs.create('EOS', ismopt)
-                     sl_orig = ft['Header'].attrs['SliceLength']
-                     ft[hedname].attrs.create('SliceLength', sl_orig * len(files_ion[ion]))
+                     mainheadercopied = True 
                      
-        ft.create_dataset(mapname, data=total)
-        ft[mapname].attrs.create('max', np.max(total))
-        ft[mapname].attrs.create('minfinite', np.min(total[np.isfinite(total)]))
-        ft[mapname].attrs.create('Units', "cm**-2")
-        ft[mapname].attrs.create('log', False)
+        fo.create_dataset(mapname, data=total)
+        fo[mapname].attrs.create('max', np.max(total))
+        fo[mapname].attrs.create('minfinite', np.min(total[np.isfinite(total)]))
+        fo[mapname].attrs.create('Units', "cm**-2")
+        fo[mapname].attrs.create('log', False)
     del total
     
 def main():
@@ -438,13 +530,25 @@ def main():
     if step not in step_opts:
         raise ValueError('step (argument 2) should be one of %s'%step_opts)
         
-
+    params = parse_parameterfile(parfile, head='Projection')
     
-    ## project step: files needed for the different electron ISM options:
-    # hydrogen, helium: sfgas=True (ionized and 10^4 K), sfgas=False (neutral ISM)
-    #   for the total elements, a 'T4' option can be given, but this is the same as sfgas=True
-    #   since total element column don't depend on gas temperature
-    # hneutralssh, he1, he2: sfgas='T4' (10^4 K), sfgas=False (neutral and ionized ISM)
+    if step == 'checknum':
+        num = run_projection(params, 2^32, checknum=True) # use some large value for the index to get an error instead of a weird run if something goed wrong
+        print('Total files in this batch: %i'%num)
+    elif step == 'project':
+        try:
+            index = int(sys.argv[3])
+        except:
+            if len(sys.argv) < 3:
+                raise ValueError('To run projections, the index for what to project must be given')
+            else:
+                raise ValueError('The supplied projection index %s is not valid'%(sys.argv[3]))
+        run_projection(params, index, checknum=False)
+    elif step == 'add':
+        add_files(params['simnum'], params['snapnum'], params['var'],\
+                  params['numsl'], params['numpix'],\
+                  outputdir_ions=params['outputdir_ions'], outputdir_electrons=params['outputdir_electrons'],\
+                  axis=params['axis'], ismopt=params['ismopt'], hedname=params['hedname'], mapname=params['mapname'])
 
 ## if the script is called: arguments are parameterfile, step
 if __name__ == '__main__':   

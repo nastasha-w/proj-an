@@ -3,8 +3,9 @@
 ## In general, empty lines and anything after a # is ignored (comment)
 ## parameters are read from the section between [projection] and the next line containing <possible whitespace>[<text>]<possibly whitespace>
 
-[some section]
+[ some section]
 RandomParamaterName: bla
+
 [ Projection ] # section name: only parameters in this section are read 
 SimName: L0012N0188
 SimVar:  Ref
@@ -15,7 +16,9 @@ NumPixels: 400
 NumSl:   2
 Header:  Header # case-sensitive
 Dataset: map    # case-sensitive
-NonSense: bla # ignored, with printed statement
+OutPutDirIons: /net/luttero/data2/imgs/test_DMpipeline/
+OutPutDirElectrons : /net/luttero/data2/imgs/test_DMpipeline/
+NonSense: bla   # ignored, with printed statement
 
 [Some other section] 
 ProjectionAxis: Y # ignored
