@@ -359,7 +359,7 @@ def run_projection(params, index, checknum=False):
         
     argslist = [(params['simnum'], params['snapnum'], params['var'], ion, numsl, slind, params['numpix']) for ion in ions for slind in range(1, numsl + 1)]
     kwargslist = [{'sfgas': sfgas_dct[ion], 'outputdir': params['outputdir_ions'], 'axis': params['axis']} for ion in ions for slind in range(1, numsl + 1)]
-    outnames = [make_map(*argslist[i], nameonly=True, **kwargslist[i]) for i in range(len(kwargslist))] # returns names for main and weighted maps -> get only the first
+    outnames = [make_map(*argslist[i], nameonly=True, **kwargslist[i]) for i in range(len(kwargslist))] 
     #print(outnames)
     needtogen = np.where(np.array([not os.path.isfile(outname) for outname in outnames]))[0]
     
