@@ -1435,8 +1435,12 @@ def plotfofonlycddfs(ion, relative=False):
         dct_fofcddf[pmass] = {}
         try:
             with h5py.File(filedct[pmass]) as fi:
-                
-                bins = np.array(fi['bins/axis_0'])
+                try:
+                    bins = np.array(fi['bins/axis_0'])
+                except KeyError as err:
+                    print('While trying to load bins in file %s\n:'%(filedct[pmass]))
+                    raise err
+                    
                 dct_fofcddf[pmass]['bins'] = bins
                 
                 inname = np.array(fi['input_filenames'])[0]
@@ -1478,6 +1482,7 @@ def plotfofonlycddfs(ion, relative=False):
         except IOError as err:
             print('Failed to read in %s; stated error:'%filedct[pmass])
             print(err)
+         
             
     ## read in split cddfs from total ion projections
     ion_filedct_excl_1R200c_cenpos = {'fe17': ol.pdir + 'cddf_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
@@ -1491,7 +1496,12 @@ def plotfofonlycddfs(ion, relative=False):
     file_allproj = ion_filedct_excl_1R200c_cenpos[ion]
     dct_totcddf = {}
     with h5py.File(file_allproj) as fi:
-        bins = np.array(fi['bins/axis_0'])
+        try:
+            bins = np.array(fi['bins/axis_0'])
+        except KeyError as err:
+            print('While trying to load bins in file %s\n:'%(file_allproj))
+            raise err
+            
         dct_totcddf['bins'] = bins
         
         inname = np.array(fi['input_filenames'])[0]
