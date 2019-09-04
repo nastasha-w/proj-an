@@ -10,7 +10,7 @@ RandomParamaterName: bla
 [ Projection ] # section name: only parameters in this section are read 
 SimName: L0012N0188
 SimVar:  Ref
-SnapNum: 28
+SnapNum: 27
 EOS:     Neutral_ISM
 ProjectionAxis: z # not case-sensitive
 NumPixels: 400
