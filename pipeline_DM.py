@@ -193,9 +193,10 @@ def parse_parameterfile(filename, head='Projection'):
             raise NotImplementedError('Automatic output directory setting is not enabled for simulation variation %s'%(paramdct['var']))
         if paramdct['simnum'] == 'L0012N0188': # directory tree quirk
             simname = paramdct['simnum']
+            paramdct['outputdir_ions'] = '/fred/oz071/abatten/ADMIRE_ANALYSIS/ADMIRE_%s/'%(simname)
         else:
             simname = psimnum + paramdct['simnum']
-        paramdct['outputdir_ions'] = base%(simname, paramdct['ismopt'])
+            paramdct['outputdir_ions'] = base%(simname, paramdct['ismopt'])
     if 'outputdir_electrons' not in paramdct.keys():
         base = '/fred/oz071/abatten/ADMIRE_ANALYSIS/ADMIRE_%s/all_snapshot_data/maps/%s/DM/'
         if paramdct['var'] == 'REFERENCE':
@@ -206,9 +207,10 @@ def parse_parameterfile(filename, head='Projection'):
             raise NotImplementedError('Automatic output directory setting is not enabled for simulation variation %s'%(paramdct['var']))
         if paramdct['simnum'] == 'L0012N0188': # directory tree quirk
             simname = paramdct['simnum']
+            paramdct['outputdir_ions'] = '/fred/oz071/abatten/ADMIRE_ANALYSIS/ADMIRE_%s/'%(simname)
         else:
             simname = psimnum + paramdct['simnum']
-        paramdct['outputdir_electrons'] = base%(simname, paramdct['ismopt']) 
+            paramdct['outputdir_electrons'] = base%(simname, paramdct['ismopt']) 
     if 'hedname' not in paramdct.keys():
         paramdct['hedname'] = 'Header'
     if 'mapname' not in paramdct.keys():
