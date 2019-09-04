@@ -206,7 +206,7 @@ def parse_parameterfile(filename, head='Projection'):
     if 'hedname' not in paramdct.keys():
         paramdct['hedname'] = 'Header'
     if 'mapname' not in paramdct.keys():
-        paramdct['hedname'] = 'map'
+        paramdct['mapname'] = 'map'
     if 'numpixels' not in paramdct.keys():
         if paramdct['simnum'][1:5] == '0100':
             paramdct['numpix'] = 32000
@@ -223,7 +223,7 @@ def parse_parameterfile(filename, head='Projection'):
     #    raise ValueError('Output directory for ion column density maps (OutputDirIons)does not exist:\n\t%s'%(paramdct['outputdir_ions']))
     
     if not set(paramdct.keys()) == reqparams:
-        raise ValueError('Falied to read in all expected parameters from parameter file %s'%(filename))
+        raise ValueError('Failed to read in all expected parameters from parameter file %s'%(filename))
     print('\n\n')
     
     return paramdct
