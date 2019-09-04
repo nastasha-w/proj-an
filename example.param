@@ -17,8 +17,8 @@ NumPixels: 	400
 NumSl:    	2
 #Header:  	Header # case-sensitive
 #Dataset: 	map    # case-sensitive
-OutPutDirIons: 		/fred/oz071/nwijers/DM_pipeline_test/coldens
-OutPutDirElectrons:	/fred/oz071/nwijers/DM_pipeline_test/dm
+OutPutDirIons: 		/fred/oz071/nwijers/DM_pipeline_test/coldens/ # should end in /
+OutPutDirElectrons:	/fred/oz071/nwijers/DM_pipeline_test/dm/      # should end in /
 #NonSense: bla   # ignored, with printed statement
 
 [Some other section] 
