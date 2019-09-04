@@ -3211,17 +3211,19 @@ def saveattr(grp, name, val):
         isstr = isinstance(val, str)
     elif sys.version.split('.')[0] == '2':
         isstr = isinstance(val, basestring)
-    
+    else:
+        raise RuntimeError('Only python versions 2 and 3 are supported')
+        
     if isinstance(val, dict):
         subgrp = grp.create_group(name)
         for key in val.keys():
             saveattr(subgrp, key, val[key])
-    elif hasattr(val, '__len__') and not isstr:
+    elif isstr:
+        grp.attrs.create(name, np.string_(val))
+    elif hasattr(val, '__len__'):
         grp.attrs.create(name, np.array(val))
     elif val is None:
         grp.attrs.create(name, 'None')
-    elif isstr:
-        grp.attrs.create(name, np.string_(val))
     else:
         grp.attrs.create(name, val)
         

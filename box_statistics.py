@@ -15,6 +15,7 @@ import projection_classes as pc
 import make_maps_opts_locs as ol
 import eagle_constants_and_units as cu
 import ion_line_data as ild
+import selecthalos as sh
 
 def calcomegas(simnum, snap, var):
     outfile = ol.ndir + 'omega_oxygen_data_%s_snap%i_%s.txt'%(simnum, snap, var)
@@ -168,6 +169,120 @@ def calc_gas_props(simnum, snapnum, var='REFERENCE', simulation='eagle', ions=No
     Zsm = np.log10(Zsm)
     
     name = 'gashistogram_%s%s_%s_PtAb_T4EOS.hdf5'%(simnum, var, snapnum)
+    outfile = h5py.File(ol.ndir + name, 'a')
+    
+    if 'Header' not in outfile.keys():
+        hd = outfile.create_group('Header')
+        cm = hd.create_group('cosmopars')
+        cm.attrs.create('h', simfile.h)
+        cm.attrs.create('a', simfile.a)
+        cm.attrs.create('z', simfile.z)
+        cm.attrs.create('boxsize', simfile.boxsize)
+        cm.attrs.create('omegam', simfile.omegam)
+        cm.attrs.create('omegab', simfile.omegab)
+        cm.attrs.create('omegalambda', simfile.omegalambda)
+        hd.attrs.create('info', 'gas nH, T, SmoothedZ weighted by gas, element, ion masses')
+        un = hd.create_group('units')
+        un.attrs.create('Temperature', 'log10 K, SF gas at 10^4 K')
+        un.attrs.create('nH', 'hydrogen number density, PtAb, log10 cm^-3')
+        un.attrs.create('SmoothedMetallicity', 'log10 gas mass fraction')
+        un.attrs.create('histograms', 'mass-weighted, arbitrary units')
+    
+    if 'edges' not in outfile.keys():
+        ed = outfile.create_group('edges')
+        ed.create_dataset('axorder', data=np.array(['nH', 'Temperature', 'SmoothedMetallicity']))
+        
+        Tmin = np.min(temp)
+        Tmax = np.max(temp)
+        Tbins = getbins(Tmin, Tmax, 2., np.inf, pre=[0., 1.], post=None, numdec=bindec, binsize=binsize, inclinf=True)
+        
+        nHmin = np.min(dens)
+        nHmax = np.max(dens)
+        nHbins = getbins(nHmin, nHmax, -8.5, np.inf, pre=[-9.5, -9.], post=None, numdec=bindec, binsize=binsize, inclinf=True)
+        
+        Zmin = np.min(dens)
+        Zmax = np.max(dens)
+        Zbins = getbins(Zmin, Zmax, -4., np.inf, pre=[-6., -5.5, -5., -4.5], post=None, numdec=bindec, binsize=binsize, inclinf=True)
+        
+        ed.create_dataset('Temperature', data=Tbins)
+        ed.create_dataset('nH', data=nHbins)
+        ed.create_dataset('SmoothedMetallicity', data=Zbins)
+    else:
+        Tbins = np.array(outfile['edges/Temperature'])
+        nHbins = np.array(outfile['edges/nH'])
+        Zbins = np.array(outfile['edges/SmoothedMetallicity'])
+    
+    if 'histograms' not in outfile.keys():
+        hs = outfile.create_group('histograms')
+    else:
+        hs = outfile['histograms']
+        
+    gasmass = simfile.readarray('PartType0/Mass', rawunits=True)
+    if 'Mass' not in hs.keys():
+        hist, edges = np.histogramdd([dens, temp, Zsm], bins=[nHbins, Tbins, Zbins], weights=gasmass)
+        hs.create_dataset('Mass', data=hist)
+    
+    if ions is not None:
+        elements = set([ild.elements_ion[ion] for ion in ions])
+        iondct = {elt: [ion if ild.elements_ion[ion] == elt else None for ion in ions] for elt in elements}
+        iondct = {elt: list(set(iondct[elt]) - set([None])) for elt in iondct.keys()}
+        
+        for element in iondct.keys():
+            if element in hs.keys() and np.all([ion in hs.keys() for ion in iondct[element]]): # already have all these ones -> no need to recalculate
+                continue 
+            eltmass = simfile.readarray('PartType0/ElementAbundance/%s'%(string.capwords(element)), rawunits=True)
+            eltmass *=  gasmass
+            
+            if element not in hs.keys():
+                hist, edges = np.histogramdd([dens, temp, Zsm], bins=[nHbins, Tbins, Zbins], weights=eltmass)
+                hs.create_dataset(element, data=hist)
+    
+            for ion in iondct[element]:
+                if ion in hs.keys():
+                    continue
+                ionmass = m3.find_ionbal(simfile.z, ion, {'logT': temp, 'lognH': dens})
+                ionmass *= eltmass
+                hist, edges = np.histogramdd([dens, temp, Zsm], bins=[nHbins, Tbins, Zbins], weights=ionmass)
+                hs.create_dataset(ion, data=hist)
+    
+    outfile.close()
+    
+
+
+def calc_halo_props(simnum, snapnum, var='REFERENCE', simulation='eagle', ions=None, bindec=1, binsize=None):
+    
+    halomassbins = np.array([-np.inf] + list(np.arange(9., 14.1, 0.5)) + [np.inf])
+    subgroupbins = [-0.5, 0.5, 2**30]
+    halosels = [[('M200c_logMsun', halomassbins[i], halomassbins[i + 1])] for i in range(len(halomassbins) - 1)]
+    # particle data + FoF 
+    simfile = pc.Simfile(simnum, snapnum, var, file_type='particle', simulation='eagle')
+    simfile_sf = pc.Simfile(simfile.simnum, simfile.snapnum, simfile.var, file_type='sub', simulation=simfile.simulation)
+    groupnums = {binind: sh.selecthalos_subfindfiles(simfile_sf, halosels[binind], mdef='200c', aperture=30, nameonly=False) for binind in range(len(halosels))]}
+    
+    # temperature (SF gas  -> 10^4 K)
+    temp  = simfile.readarray('PartType0/Temperature', rawunits=True)
+    temp_tocgs = simfile.CGSconvtot
+    temp *= temp_tocgs
+    sfr   = simfile.readarray('PartType0/StarFormationRate', rawunits=True)
+    temp[sfr > 0.] = 10**4.
+    del sfr 
+    temp = np.log10(temp)
+    
+    # hydrogen number density
+    hfrac = simfile.readarray('PartType0/ElementAbundance/Hydrogen', rawunits=True)
+    dens  = simfile.readarray('PartType0/Density', rawunits=True)
+    dens_tocgs = simfile.CGSconvtot
+    dens *= hfrac * (dens_tocgs / (cu.atomw_H * cu.u))
+    dens = np.log10(dens)
+    
+    # Metallicity
+    Zsm  = simfile.readarray('PartType0/SmoothedMetallicity', rawunits=True)
+    Zsm_tocgs = simfile.CGSconvtot
+    if Zsm_tocgs != 1.:
+        Zsm *= Zsm_tocgs
+    Zsm = np.log10(Zsm)
+    
+    name = 'gashistogram_withhaloinfo_%s%s_%s_PtAb_T4EOS.hdf5'%(simnum, var, snapnum)
     outfile = h5py.File(ol.ndir + name, 'a')
     
     if 'Header' not in outfile.keys():
