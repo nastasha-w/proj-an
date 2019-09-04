@@ -3216,7 +3216,7 @@ def saveattr(grp, name, val):
     elif val is None:
         grp.attrs.create(name, 'None')
     elif (isinstance(val, str) and sys.version.split('.')[0] == '3') or (isinstance(val, basestring) and sys.version.split('.')[0] == '2'):
-        grp.attrs.create(name, str(val))
+        grp.attrs.create(name, np.string_(val))
     else:
         grp.attrs.create(name, val)
         
