@@ -23,7 +23,7 @@ Python3 runs are, however, UNTESTED
 
 TODO:
     - test wishlisting
-    - implement generic selections using wishlisting
+    - implement generic selections using wishlistingstex2 = np.array([stex, 'hello'], dtype='<U10')[0]
       (can be basic only, initially)
 """
 
@@ -107,6 +107,7 @@ import string
 #import time
 import h5py
 import numbers as num # for instance checking
+import sys
 
 import make_maps_opts_locs as ol
 import projection_classes as pc
@@ -3214,6 +3215,8 @@ def saveattr(grp, name, val):
         grp.attrs.create(name, np.array(val))
     elif val is None:
         grp.attrs.create(name, 'None')
+    elif (isinstance(val, str) and sys.version.split('.')[0] == '3') or (isinstance(val, basestring) and sys.version.split('.')[0] == '2'):
+        grp.attrs.create(name, str(val))
     else:
         grp.attrs.create(name, val)
         
