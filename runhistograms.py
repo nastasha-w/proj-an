@@ -1883,6 +1883,171 @@ elif jobind == 20029:
                          selection, np.inf, outname=outname,\
                          numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
                          axis='z', velspace=False, offset_los=0., stamps=False)
+
+
+if jobind >= 20030 and jobind <= 20043: 
+    szcens = [str(i) for i in np.arange(16)/16. * 100. + 100./32.]
+    L_x = 100.
+    npix_x = 32000
+    rmin_r200c = 0.
+    rmax_r200c = 3.
+    mindist_pkpc = 100.
+    catname = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    # select 1000 halos randomly in  0.5 dex M200c bins (trying to do everything just gives memory errors)
+    galids_dct = sh.L0100N1504_27_Mh0p5dex_100.galids() 
+    #print('for debug: galids_dct:\n')
+    #print(galids_dct)
+    #print('\n')
+    allids = [gid for key in galids_dct.keys() for gid in galids_dct[key]]
+    #print('for debug: allids')
+    #print(allids)
+    #print('\n')
+    selection = [('galaxyid', np.array(allids))]
+else:
+    selection = 'string: trigger error'
+
+if jobind == 20030:
+    numsl = 1
+    filename = filename_fe17
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+                         rmin_r200c, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=False)
+elif jobind == 20031:
+    numsl = 2
+    filename = filename_fe17
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+                         rmin_r200c, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=False)
+    
+elif jobind == 20032:
+    numsl = 1
+    filename = filename_ne8
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+                         rmin_r200c, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=False)
+elif jobind == 20033:
+    numsl = 2
+    filename = filename_ne8
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+                         rmin_r200c, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=False)
+elif jobind == 20034:
+    numsl = 1
+    filename = filename_o8
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+                         rmin_r200c, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=False)
+elif jobind == 20035:
+    numsl = 2
+    filename = filename_o8
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+                         rmin_r200c, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=False)
+elif jobind == 20036:
+    numsl = 1
+    filename = filename_o7
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+                         rmin_r200c, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=False)
+elif jobind == 20037:
+    numsl = 2
+    filename = filename_o7
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+                         rmin_r200c, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=False)
+elif jobind == 20038:
+    numsl = 1
+    filename = filename_o6
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+                         rmin_r200c, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=False)
+elif jobind == 20039:
+    numsl = 2
+    filename = filename_o6
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+                         rmin_r200c, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=False)
+elif jobind == 20040:
+    numsl = 1
+    filename = filename_ne9
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+                         rmin_r200c, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=False)
+elif jobind == 20041:
+    numsl = 2
+    filename = filename_ne9
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+                         rmin_r200c, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=False)
+elif jobind == 20042:
+    numsl = 1
+    filename = filename_hn
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+                         rmin_r200c, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=False)
+elif jobind == 20043:
+    numsl = 2
+    filename = filename_hn
+    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+                         rmin_r200c, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=False)
+    
     
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
@@ -2165,3 +2330,61 @@ if jobind >= 30005 and jobind <= 30008: # cosma
                         rpfilename=None, galsettag=skey)
             print('Finished %s, R200c\n'%rqfile)
 
+
+if jobind >= 30009 and jobind <= 30012: # cosma
+    if jobind == 30009:
+        filenames = [\
+                 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5',\
+                 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_2slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5',\
+                 'rdist_coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5',\
+                 'rdist_coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_2slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5',\
+                 ]
+    elif jobind == 30010:
+         filenames = ['rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5',\
+                 'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_2slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5',\
+                      ]
+    elif jobind == 30011:
+         filenames = ['rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5',\
+                 'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_2slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5',\
+                 'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5',\
+                 'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_2slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5',\
+                      ]
+    elif jobind == 30012:
+         filenames = ['rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5',\
+                 'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_2slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5',\
+                 'rdist_coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5',\
+                 'rdist_coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_2slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals.hdf5',\
+                ]
+    halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    yvals = [1., 5., 10., 25., 50., 75., 90., 95., 99.]
+    #rbins_R200c = np.arange(0., 2.55, 0.1)
+    rbins_pkpc = np.array([0., 3., 5., 7., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 120., 140., 160., 180., 200., 225., 250., 275., 300., 325., 350., 375., 400., 425., 450., 475., 500.])
+    rbins_r200c = np.arange(0., 2.51, 0.05)
+    # negative margins -> margins take away from selection regions
+    zedges = np.arange(0., 100.1, 6.25)
+    #zsels  = {'Z_off-edge-by-R200c': [('Z', zedges[i], zedges[i+1], 1.) for i in range(len(zedges) - 1)]}
+
+    # galids selection from galaxyselector (halo masses in 0.5 dex)
+    galids_mass = sh.L0100N1504_27_Mh0p5dex_100.galids()
+    selcombs = {'logM200c_Msun_%s'%key: galids_mass[key] for key in galids_mass.keys()}
+    keys = galids_mass.keys() # set up beforehand to match orders in lists
+    #sels_temp = sh.gethaloselections(halocat, selections=[zsels['Z_off-edge-by-R200c'] + [('galaxyid', galids_mass[key])] for key in keys], names=['logM200c_Msun_%s_Z_off-edge-by-R200c'%key for key in keys])
+    #selcombs.update(sels_temp)
+    
+    for skey in selcombs.keys():
+        galids = selcombs[skey]
+        for rqfile in filenames:     
+            print('Starting %s, pkpc'%rqfile)
+            crd.get_radprof(rqfile, halocat, rbins_pkpc, yvals,\
+                        xunit='pkpc', ytype='perc',\
+                        galids=galids, combinedprofile=True,\
+                        separateprofiles=False,\
+                        rpfilename=None, galsettag=skey)
+            print('Finished %s, pkpc\n'%rqfile)
+            print('Starting %s, R200c'%rqfile)
+            crd.get_radprof(rqfile, halocat, rbins_r200c, yvals,\
+                        xunit='R200c', ytype='perc',\
+                        galids=galids, combinedprofile=True,\
+                        separateprofiles=False,\
+                        rpfilename=None, galsettag=skey)
+            print('Finished %s, R200c\n'%rqfile)
