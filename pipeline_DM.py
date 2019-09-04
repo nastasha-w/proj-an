@@ -300,7 +300,7 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
               'periodic': True, 'kernel': kernel, 'saveres': True,\
               'simulation':'eagle', 'LsinMpc': True,\
               'select': None, 'misc': None, 'halosel': None, 'kwargs_halosel': None,\
-              'ompproj': True, 'numslices': None, 'hdf5': True, 'override_simdatapath': None} # override_simdatapath: datapath
+              'ompproj': True, 'numslices': None, 'hdf5': True, ' override_simdatapath': datapath} # # 'override_simdatapath': None
     name = m3.make_map(*args, nameonly=True, **kwargs)
     if nameonly:
         return name[0]
