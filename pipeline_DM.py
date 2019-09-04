@@ -207,7 +207,7 @@ def parse_parameterfile(filename, head='Projection'):
             raise NotImplementedError('Automatic output directory setting is not enabled for simulation variation %s'%(paramdct['var']))
         if paramdct['simnum'] == 'L0012N0188': # directory tree quirk
             simname = paramdct['simnum']
-            paramdct['outputdir_ions'] = '/fred/oz071/abatten/ADMIRE_ANALYSIS/ADMIRE_%s/'%(simname)
+            paramdct['outputdir_electrons'] = '/fred/oz071/abatten/ADMIRE_ANALYSIS/ADMIRE_%s/'%(simname)
         else:
             simname = psimnum + paramdct['simnum']
             paramdct['outputdir_electrons'] = base%(simname, paramdct['ismopt']) 
