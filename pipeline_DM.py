@@ -233,15 +233,18 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
     '''
     wrapper for make_maps_v3_master -> make_map with a smaller option set
     
-    pqty is the thing to project; options are: 
-        'hydrogen', 'helium', 'hneutralssh', 'he1', 'he2'
-        (these are the ones you'll need, anyway)
-    sfgas: how to handle star-forming gas; option are:
-        'T4', True, False ('only' and 'from' aren't relevant here)
-    nameonly: just get the name of the output file, including the full path
-    
+    pqty:     the thing to project; options are: 
+              'hydrogen', 'helium', 'hneutralssh', 'he1', 'he2'
+              (these are the ones you'll need, anyway)
+    sfgas:    how to handle star-forming gas; option are:
+              'T4', True, False ('only' and 'from' aren't relevant here)
+    nameonly: just get the name of the output file, including the full path  
     numsl, sliceind: slice the whole box into numsl slices, project slice 
-        sliceind now (ints)
+              sliceind now (ints, slice numbers start at 1)
+    axis:     axis of the simulation box to project along
+    outputdir:files are named automatically, but the directory can be specified
+              (automatic naming is important to know what files contain the 
+              right data when calculating electron column densities)
     '''
     
     #/fred/oz071/abatten/EAGLE/RefL0012N0188/RefL0012N0188/snapshot_027_z000p101
