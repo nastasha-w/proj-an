@@ -39,8 +39,7 @@ def parse_parameterfile(filename, head='Projection'):
     SimVar:         Ref or Recal. Can also be specified as the first part of 
                     SimName. (Note that specifiying both ways may have 
                     unpredictable results.)
-    SnapNum:        snapshot number (integer)
-    
+    SnapNum:        snapshot number (integer)    
     EOS:            what to do with star-forming gas. This is specified at the 
                     level of the electrons (meaning different options for ions
                     and elements). Options are  
@@ -307,13 +306,13 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
         return name[0]
     retval = m3.make_map(*args, nameonly=False, **kwargs)
     
-    with h5py.File(name, 'r+') as fo:
+    with h5py.File(name[0], 'r+') as fo:
         
         # set attributes
         hed = fo['Header']
         hed.attrs.create('SimName', simnum)
         hed.attrs.create('Snapshot', snapnum)
-        hed.attrs.create('Redshift', hed['cosmopars'].attrs['z'])
+        hed.attrs.create('Redshift', hed['inputpars/cosmopars'].attrs['z'])
         hed.attrs.create('EOS', sfgas)
         hed.attrs.create('ProjectionAxis', axis)
         hed.attrs.create('Boxsize', '%.1f Mpc'%boxsize)
@@ -330,6 +329,7 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
         hed.attrs.create('KernelShape', kernel)
         
         fo['map'].attrs.create("Units", "cm**-2")
+        fo['map'].attrs.create("log", True)
     return retval
 
 def run_projection(params, index, checknum=False):
@@ -405,9 +405,10 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
     # retrive file names 
     files_ion = {key: [make_map(simnum, snapnum, var, key, numsl, sliceind, numpix,\
                        sfgas=sfgas_dct[key], outputdir=outputdir_ions, axis=axis, nameonly=True)\
-                       for sliceind in range(numsl)]\
-                 for key in sfgas_dct.keys()}
+                       for sliceind in range(1, numsl + 1)]\
+                 for key in sfgas_dct.keys()} # slice indices start at 1
     filenames_sum = {}
+    #print(files_ion['hydrogen'])
     if numsl == 1: # no need to add; filename from projection = sum file 
         filenames_sum = {key: files_ion[key][0] for key in files_ion.keys()}
     else:
@@ -421,8 +422,7 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
             sumfilen = '_'.join(parts)
             
             parts2 = sumfilen.split('.')
-            parts2 = parts2[:-1] + ['_totalbox'] + parts2[-1]
-            sumfilen = '.'.join(parts2)
+            sumfilen = '.'.join(parts2[:-1]) + '_totalbox.' + parts2[-1]
             
             filenames_sum[ion] = _dir + sumfilen
     
@@ -448,12 +448,13 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
             try:
                 h5py.File(filenames_sum[ion], 'r')
             except IOError: # sum file does not exist yet -> add up subfiles
+                print('Creating sum file for %s'%(ion))
                 total2 = np.zeros((numpix, ) * 2, dtype=np.float32)
-                hed2 = fo.create_group('Header')
                 with h5py.File(filenames_sum[ion], 'w') as ft:
+                    hed2 = ft.create_group('Header')
                     for subfileind in range(len(files_ion[ion])):
                         subfile = files_ion[ion][subfileind]
-                        with h5py.File(filenames_sum[ion], 'r') as ft3:
+                        with h5py.File(subfile, 'r') as ft3:
                             ft3.copy('Header', hed2, name='slice_%i'%subfileind)
                             ft['Header/slice_%i'%subfileind].attrs.create('original_filename', subfile)
                             sub2 = 10**np.array(ft3['map'])
@@ -461,12 +462,12 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
                             del sub2
                             hed3 = ft3['Header']
                             sl_orig = hed3.attrs['SliceLength']
-                            simnum_o = hed3.attrs('SimName')
+                            simnum_o = hed3.attrs['SimName']
                             snapnum_o = hed3.attrs['Snapshot']
                             redshift_o = hed3.attrs['Redshift']
                             sfgas_o = hed3.attrs['EOS']
                             axis_o = hed3.attrs['ProjectionAxis']
-                            boxsize_o = hed3.attrs['BoxSize']
+                            boxsize_o = hed3.attrs['Boxsize']
                             numpix_o = hed3.attrs['NumPixels']
                             codevers_o = hed3.attrs['CodeVersion']
                             abunds_o = hed3.attrs['MetalAbundancesType']
@@ -476,6 +477,7 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
                     ft['map'].attrs.create('max', np.max(total2))
                     ft['map'].attrs.create('minfinite', np.min(total2[np.isfinite(total2)]))
                     ft['map'].attrs.create("Units", "cm**-2")
+                    ft['map'].attrs.create('log', True)
                     
                     hed2.attrs.create('SliceLength', sl_orig * len(files_ion[ion])) # modify from the files that went in; other parameters are unchanged
                     hed2.attrs.create('SimName', simnum_o)
@@ -483,7 +485,7 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
                     hed2.attrs.create('Redshift', redshift_o)
                     hed2.attrs.create('EOS', sfgas_o)
                     hed2.attrs.create('ProjectionAxis', axis_o)
-                    hed2.attrs.create('Boxsize', '%.1f Mpc'%boxsize_o)
+                    hed2.attrs.create('Boxsize', boxsize_o)
                     hed2.attrs.create('NumPixels', numpix_o)
                     hed2.attrs.create('CodeVersion', codevers_o)
                     hed2.attrs.create('MetalAbundancesType', abunds_o)
@@ -493,16 +495,18 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
                 
             with h5py.File(filenames_sum[ion], 'r') as ft:
                  ft.copy('Header', hed_main, name=ion)
-                 fo['Header/%s'%ion].attrs.create('original_filename', filenames_sum[ion])
-                 fo['Header/%s'%ion].attrs.create('multip_factor', factor)
+                 fo['%s/%s'%(hedname, ion)].attrs.create('original_filename', filenames_sum[ion])
+                 fo['%s/%s'%(hedname, ion)].attrs.create('multip_factor', factor)
                  sub = 10**np.array(ft['map'])
                  total += factor * sub
                  del sub
                  
                  if not mainheadercopied:
-                     ft.copy('Header', fo, name=hedname)
-                     # overwrite what needs changing
-                     ft[hedname].attrs.create('EOS', ismopt)
+                     for key, item in ft['Header'].attrs.items():
+                         if key == 'EOS':
+                             fo[hedname].attrs.create('EOS', ismopt)
+                         else:
+                             hed_main.attrs.create(key, item)                         
                      mainheadercopied = True 
                      
         fo.create_dataset(mapname, data=total)
