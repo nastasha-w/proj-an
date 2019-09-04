@@ -3207,15 +3207,20 @@ def saveattr(grp, name, val):
     meant for realtively simple cases; do not apply to e.g. selection tuples 
     with mixed types
     '''
+    if sys.version.split('.')[0] == '3':
+        isstr = isinstance(val, str)
+    elif sys.version.split('.')[0] == '2':
+        isstr = isinstance(val, basestring)
+    
     if isinstance(val, dict):
         subgrp = grp.create_group(name)
         for key in val.keys():
             saveattr(subgrp, key, val[key])
-    elif hasattr(val, '__len__') and not isinstance(val, str):
+    elif hasattr(val, '__len__') and not isstr:
         grp.attrs.create(name, np.array(val))
     elif val is None:
         grp.attrs.create(name, 'None')
-    elif (isinstance(val, str) and sys.version.split('.')[0] == '3') or (isinstance(val, basestring) and sys.version.split('.')[0] == '2'):
+    elif isstr:
         grp.attrs.create(name, np.string_(val))
     else:
         grp.attrs.create(name, val)
