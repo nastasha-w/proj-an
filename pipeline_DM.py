@@ -190,9 +190,9 @@ def parse_parameterfile(filename, head='Projection'):
         elif  paramdct['var'] == 'RECALIBRATED':
             psimnum = 'Rec'
         else:
-            raise NotImplementedError('Automatic output directory setting is not enabled for simulation variaion %s'%(paramdct['var']))
+            raise NotImplementedError('Automatic output directory setting is not enabled for simulation variation %s'%(paramdct['var']))
         simname = psimnum + paramdct['simnum']
-        paramdct['outputdir_ions'] = base%(psimnum, paramdct['ismopt'])
+        paramdct['outputdir_ions'] = base%(simname, paramdct['ismopt'])
     if 'outputdir_electrons' not in paramdct.keys():
         base = '/fred/oz071/abatten/ADMIRE_ANALYSIS/ADMIRE_%s/all_snapshot_data/maps/%s/DM/'
         if paramdct['var'] == 'REFERENCE':
@@ -200,7 +200,7 @@ def parse_parameterfile(filename, head='Projection'):
         elif  paramdct['var'] == 'RECALIBRATED':
             psimnum = 'Rec'
         else:
-            raise NotImplementedError('Automatic output directory setting is not enabled for simulation variaion %s'%(paramdct['var']))
+            raise NotImplementedError('Automatic output directory setting is not enabled for simulation variation %s'%(paramdct['var']))
         simname = psimnum + paramdct['simnum']
         paramdct['outputdir_electrons'] = base%(simname, paramdct['ismopt']) 
     if 'hedname' not in paramdct.keys():
