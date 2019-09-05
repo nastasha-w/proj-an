@@ -3208,9 +3208,11 @@ def saveattr(grp, name, val):
     with mixed types
     '''
     if sys.version.split('.')[0] == '3':
-        isstr = isinstance(val, str)
+        def isstr(x):
+            isinstance(x, str)
     elif sys.version.split('.')[0] == '2':
-        isstr = isinstance(val, basestring)
+        def isstr(x):
+            isinstance(x, basestring)
     else:
         raise RuntimeError('Only python versions 2 and 3 are supported')
         
@@ -3221,7 +3223,10 @@ def saveattr(grp, name, val):
     elif isstr:
         grp.attrs.create(name, np.string_(val))
     elif hasattr(val, '__len__'):
-        grp.attrs.create(name, np.array(val))
+        valt = np.array(val)
+        if np.any([isstr(x) for x in valt.flatten()]): # store all values as strings in any value is a string
+            valt = valt.astype(np.string_)
+        grp.attrs.create(name, valt)
     elif val is None:
         grp.attrs.create(name, 'None')
     else:
