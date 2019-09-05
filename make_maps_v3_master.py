@@ -3321,6 +3321,8 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,\
             saveattr(mgrp, 'any_values', True)
         saveattr(mgrp, 'dict', misc)
         
+        #fh['Header'].attrs.create('string encoding', np.string_(encoding)) # record how to get from bytes back to python strings
+
         # main map save
         ds_map = fh.create_dataset('map', data=projmap)
         ds_map.attrs.create('max', maxval)

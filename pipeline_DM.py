@@ -326,7 +326,7 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
         hed.attrs.create('Redshift', hed['inputpars/cosmopars'].attrs['z'])
         hed.attrs.create('EOS', np.string_(sfgas))
         hed.attrs.create('ProjectionAxis', np.string_(axis))
-        hed.attrs.create('Boxsize', '%.1f Mpc'%boxsize)
+        hed.attrs.create('Boxsize', np.string_('%.1f Mpc'%boxsize))
         hed.attrs.create('NumPixels', numpix)
         if axis == 'z':
             slice_length = L_z
@@ -335,7 +335,7 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
         elif axis == 'y':
             slice_length = L_y
         hed.attrs.create('SliceLength', slice_length)
-        hed.attrs.create('CodeVersion', m3.version)
+        hed.attrs.create('CodeVersion', np.string_(m3.version))
         hed.attrs.create('MetalAbundancesType', np.string_(abunds))
         hed.attrs.create('KernelShape', np.string_(kernel))
         
