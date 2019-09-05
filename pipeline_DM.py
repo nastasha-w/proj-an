@@ -324,7 +324,10 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
         hed.attrs.create('SimName', np.string_(simnum))
         hed.attrs.create('Snapshot', snapnum)
         hed.attrs.create('Redshift', hed['inputpars/cosmopars'].attrs['z'])
-        hed.attrs.create('EOS', np.string_(sfgas))
+        if isinstance(sfgas, bool):
+            hed.attrs.create('EOS', np.string_(sfgas))
+        else:
+            hed.attrs.create('EOS', sfgas)
         hed.attrs.create('ProjectionAxis', np.string_(axis))
         hed.attrs.create('Boxsize', np.string_('%.1f Mpc'%boxsize))
         hed.attrs.create('NumPixels', numpix)
@@ -339,7 +342,7 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
         hed.attrs.create('MetalAbundancesType', np.string_(abunds))
         hed.attrs.create('KernelShape', np.string_(kernel))
         
-        fo['map'].attrs.create("Units", "cm**-2")
+        fo['map'].attrs.create("Units", np.string_("cm**-2"))
         fo['map'].attrs.create("log", True)
     return retval
 
