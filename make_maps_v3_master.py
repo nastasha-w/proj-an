@@ -3220,7 +3220,7 @@ def saveattr(grp, name, val):
         subgrp = grp.create_group(name)
         for key in val.keys():
             saveattr(subgrp, key, val[key])
-    elif isstr:
+    elif isstr(val):
         grp.attrs.create(name, np.string_(val))
     elif hasattr(val, '__len__'):
         valt = np.array(val)

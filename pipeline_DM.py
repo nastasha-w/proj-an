@@ -321,11 +321,11 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
         
         # set attributes
         hed = fo['Header']
-        hed.attrs.create('SimName', simnum)
+        hed.attrs.create('SimName', np.string_(simnum))
         hed.attrs.create('Snapshot', snapnum)
         hed.attrs.create('Redshift', hed['inputpars/cosmopars'].attrs['z'])
-        hed.attrs.create('EOS', sfgas)
-        hed.attrs.create('ProjectionAxis', axis)
+        hed.attrs.create('EOS', np.string_(sfgas))
+        hed.attrs.create('ProjectionAxis', np.string_(axis))
         hed.attrs.create('Boxsize', '%.1f Mpc'%boxsize)
         hed.attrs.create('NumPixels', numpix)
         if axis == 'z':
@@ -336,8 +336,8 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
             slice_length = L_y
         hed.attrs.create('SliceLength', slice_length)
         hed.attrs.create('CodeVersion', m3.version)
-        hed.attrs.create('MetalAbundancesType', abunds)
-        hed.attrs.create('KernelShape', kernel)
+        hed.attrs.create('MetalAbundancesType', np.string_(abunds))
+        hed.attrs.create('KernelShape', np.string_(kernel))
         
         fo['map'].attrs.create("Units", "cm**-2")
         fo['map'].attrs.create("log", True)
