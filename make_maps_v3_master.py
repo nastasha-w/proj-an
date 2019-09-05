@@ -3209,10 +3209,10 @@ def saveattr(grp, name, val):
     '''
     if sys.version.split('.')[0] == '3':
         def isstr(x):
-            isinstance(x, str)
+            return isinstance(x, str)
     elif sys.version.split('.')[0] == '2':
         def isstr(x):
-            isinstance(x, basestring)
+            return isinstance(x, basestring)
     else:
         raise RuntimeError('Only python versions 2 and 3 are supported')
         
