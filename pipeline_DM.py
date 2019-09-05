@@ -490,7 +490,7 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
                     ft.create_dataset('map', data=total2)
                     ft['map'].attrs.create('max', np.max(total2))
                     ft['map'].attrs.create('minfinite', np.min(total2[np.isfinite(total2)]))
-                    ft['map'].attrs.create("Units", "cm**-2")
+                    ft['map'].attrs.create("Units", np.string_("cm**-2"))
                     ft['map'].attrs.create('log', True)
                     
                     hed2.attrs.create('SliceLength', sl_orig * len(files_ion[ion])) # modify from the files that went in; other parameters are unchanged
@@ -518,7 +518,7 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
                  if not mainheadercopied:
                      for key, item in ft['Header'].attrs.items():
                          if key == 'EOS':
-                             fo[hedname].attrs.create('EOS', ismopt)
+                             fo[hedname].attrs.create('EOS', np.string_(ismopt))
                          else:
                              hed_main.attrs.create(key, item)                         
                      mainheadercopied = True 
@@ -526,7 +526,7 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
         fo.create_dataset(mapname, data=total)
         fo[mapname].attrs.create('max', np.max(total))
         fo[mapname].attrs.create('minfinite', np.min(total[np.isfinite(total)]))
-        fo[mapname].attrs.create('Units', "cm**-2")
+        fo[mapname].attrs.create('Units', np.string_("cm**-2"))
         fo[mapname].attrs.create('log', False)
     del total
     
