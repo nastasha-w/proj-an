@@ -3228,7 +3228,7 @@ def saveattr(grp, name, val):
             valt = valt.astype(np.string_)
         grp.attrs.create(name, valt)
     elif val is None:
-        grp.attrs.create(name, 'None')
+        grp.attrs.create(name, np.string_('None'))
     else:
         grp.attrs.create(name, val)
         
