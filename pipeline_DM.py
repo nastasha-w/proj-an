@@ -353,23 +353,23 @@ def run_projection(params, index, checknum=False):
     numsl = params['numsl']
     
     if ismopt == 'T4EOS':
-        sfgas_dct = {'hydrogen': True,\
-                     'helium': True,\
+        sfgas_dct = {'hydrogen': False,\
+                     'helium': False,\
                      'hneutralssh': 'T4',\
                      'he1': 'T4',\
                      'he2': 'T4'}
     elif ismopt == 'Neutral_ISM':
-        sfgas_dct = {'hydrogen': False,\
-                     'helium': False,\
-                     'hneutralssh': False,\
-                     'he1': False,\
-                     'he2': False}
-    elif ismopt == 'Ionised_ISM':
         sfgas_dct = {'hydrogen': True,\
                      'helium': True,\
-                     'hneutralssh': False,\
-                     'he1': False,\
-                     'he2': False}
+                     'hneutralssh': True,\
+                     'he1': True,\
+                     'he2': True}
+    elif ismopt == 'Ionised_ISM':
+        sfgas_dct = {'hydrogen': False,\
+                     'helium': False,\
+                     'hneutralssh': True,\
+                     'he1': True,\
+                     'he2': True}
         
     argslist = [(params['simnum'], params['snapnum'], params['var'], ion, numsl, slind, params['numpix']) for ion in ions for slind in range(1, numsl + 1)]
     kwargslist = [{'sfgas': sfgas_dct[ion], 'outputdir': params['outputdir_ions'], 'axis': params['axis']} for ion in ions for slind in range(1, numsl + 1)]
@@ -397,23 +397,23 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
     assumes the 'T4' option was not used for the total element columns
     '''
     if ismopt == 'T4EOS':
-        sfgas_dct = {'hydrogen': True,\
-                     'helium': True,\
+        sfgas_dct = {'hydrogen': False,\
+                     'helium': False,\
                      'hneutralssh': 'T4',\
                      'he1': 'T4',\
                      'he2': 'T4'}
     elif ismopt == 'Neutral_ISM':
-        sfgas_dct = {'hydrogen': False,\
-                     'helium': False,\
-                     'hneutralssh': False,\
-                     'he1': False,\
-                     'he2': False}
-    elif ismopt == 'Ionised_ISM':
         sfgas_dct = {'hydrogen': True,\
                      'helium': True,\
-                     'hneutralssh': False,\
-                     'he1': False,\
-                     'he2': False}
+                     'hneutralssh': True,\
+                     'he1': True,\
+                     'he2': True}
+    elif ismopt == 'Ionised_ISM':
+        sfgas_dct = {'hydrogen': False,\
+                     'helium': False,\
+                     'hneutralssh': True,\
+                     'he1': True,\
+                     'he2': True}
     ions = sfgas_dct.keys()
     
     # retrive file names 
