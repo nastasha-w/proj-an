@@ -325,9 +325,9 @@ def make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
         hed.attrs.create('Snapshot', snapnum)
         hed.attrs.create('Redshift', hed['inputpars/cosmopars'].attrs['z'])
         if isinstance(sfgas, bool):
-            hed.attrs.create('EOS', np.string_(sfgas))
-        else:
             hed.attrs.create('EOS', sfgas)
+        else:
+            hed.attrs.create('EOS', np.string_(sfgas))
         hed.attrs.create('ProjectionAxis', np.string_(axis))
         hed.attrs.create('Boxsize', np.string_('%.1f Mpc'%boxsize))
         hed.attrs.create('NumPixels', numpix)
