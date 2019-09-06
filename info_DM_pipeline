@@ -1,0 +1,186 @@
+Documentation for pipeline_DM.py
+--------------------------------
+Nastasha Wijers, 2019-09-03
+last updated     2019-09-05
+
+Overview:
+---------
+pipeline_DM.py handles the creation of column density maps for hydrogen, 
+helium, neutral hydrogen (hneutralssh, with the Rahmati et al. 2013 hydrogen
+self-shielding model), He I, and He II (helium ions assuming optically thin 
+gas). The ion columns are calculated assuming a Haardt & Madau (2001) UV/X-ray
+background, uniform in space, but evolving in time.
+
+It adds the columns together to get element/ion (typically referred to as 
+ion(s) in the code) columns through the full simulation box, and then combines
+those full columns into electron column densities using 
+N_e = N_H + 2 * N_He - N_Hneutral - 2 * N_HeI - N_HeII
+
+How to use:
+-----------
+Called from the command line, with
+python pipeline_DM.py <parameterfile> <step> [index]
+or 
+./pipeline_DM.py <parameterfile> <step> [index] # make sure pipeline_DM.py is executable
+<parameterfile> is the name of the parameter file, including the full directory
+  path (if the file is not in your working directory)
+<step> is checknum, project, or add  
+  - checknum prints a list of which files you need to get the electron map
+  specified in the parameter file, but are not already present. (Note that this
+  ignores files in other directories than the specified OutputDirIons, or 
+  generated with a different make_maps code version.) The indices may be 
+  non-contiguous. This is so one parameterfile and index always mean the same 
+  parameters to run, which is useful if new projections are finished before a 
+  job starts in the queue.
+  If you want to re-run a projection, you will need to delete the old file 
+  first. Trying to run a projection resulting in an existing file will result 
+  in an error. ("IndexError: list index out of range" if the index is too 
+  large, and a RuntimeError if the file already exists.)
+  This step ignores the index argument.
+  - project actually runs the projections for the ion column density maps. For 
+  this step, an index (integer >=0) needs to be specified. Indices other than 
+  those printed by checknum will result in errors.
+  - add adds together the column density maps generated in the previous step to
+  get total column density maps for the Eagle snapshot, then combines those 
+  into an electron column density map.
+  The index argument is ignored for this step.
+
+Output:
+-------
+The path step just prints values to the terminal.
+
+The ion/element and electron column density maps are stored in hdf5 files, in 
+the dataset 'map'. Attributes are 
+- max and minfinite: the maximum and minimum > -infinity
+  values in the map (useful for histograms, float)
+- log (boolean): whether the stored column densities are log values
+  True for the ion/element maps, False for the electron column maps
+- Units: 'cm**-2'. Total number of ions in a long column through the box, 
+  divided by the proper/physical area of the column perpendicular to the line
+  of sight. (Since this physical size is what matter for radiation passing 
+  through a region.) 
+  To get a total DM, you should just be able to add up these column densities
+  out to some distance.
+Other parameters are stored in the Header. 
+- The main Header has attributes following what you sent; these are set in 
+  pipeline_DM.py.
+- Header/inputpars has attributes describing input parameters for 
+  make_maps_v3_master.make_map . It has some subgroups for more complicated
+  parameters. Header/inputpars/halosel and Header/inputpars/misc are not 
+  relevant here, but 
+- Header/inputpars/cosmopars stores the cosmological parameters used in the 
+  simulation and the map-making, and well as the redshift, expansion factor, 
+  and box size (Mpc/h) for the simulation and snapshot. This can be useful for 
+  calculating e.g. the redshift path Delta z covered by the snapshot in a way 
+  that is consistent with the Eagle simulations. (See also cosmo_utils.py for 
+  some functions for calculating Delta z, if you dont' already have them.)
+- Note that some attributes often have values of None. This is stored as a 
+  (byte)string "None" in hdf5. The data types for different attributes might 
+  differ depending on input parameters (e.g. EOS for the ion/element files,
+  or AbundsW/Q) 
+
+In the ion/element maps, the names of the map dataset and the Header cannot be
+changed; for the electron maps, they can be set in the parameterfile.
+
+Note that in the checknum step, there will be messages like
+trying to read data from .../snapshot_028_z000p000/snap_028_z000p000.
+saving W result to: /path/filename.hdf5
+The data-reading in this stpe is just for cosmological parameters, and to check
+the file exists; the 'saving' message is just documenting the output file name.
+No file is actually created if make_maps (pipeline_DM or make_maps_v3_master 
+versions) are run with nameonly=True. 
+
+Parameterfiles:
+---------------
+These are read in by pipeline_DM.parse_parameterfile. The docstring documents
+what options there are for the parameters.
+- SimName, SimVar (if not specified in SimName), and SnapNum, and NumSl must be
+  specified
+- ProjectionAxis, NumPixels, OutputDirIons, OutputDirElectrons, Header, and
+  Dataset, and EOS have reasonable defaults if not specified in the 
+  parameterfile
+  Note the EOS options are not True, False, 'T4', since e.g. the gas 
+  temperature doesn't impact total element columns and a neutral ISM requires 
+  element maps with EOS gas included, but ion maps without it. The electron 
+  maps reflect this in the EOS values in their headers.
+
+
+How it works:
+-------------
+# paths for ozstar (defaults for output directories, set datapath to override 
+data location defaults)
+datadir_head = '/fred/oz071/abatten/EAGLE/'
+anlsdir_head = '/fred/oz071/abatten/ADMIRE_ANALYSIS/'
+
+- parse_parameterfile(filename, head='Projection')
+  reads in the right section of the parametersfile, does a few checks, and sets
+  defaults parameters not given
+
+  filename: name of the parameter file. Include the path if it's not in your
+    working directory
+    see docstring and example.param for what the parameter file shoudl look 
+    like
+  head: the text between brackets in the parameterfile that indicates which 
+    section to take parameters from
+
+  returns:
+    dictionary of parameters with names more aligned with this script and 
+    make_maps_v3_master
+
+- make_map(simnum, snapnum, var, pqty, numsl, sliceind, numpix,\
+             sfgas='T4', outputdir='./', axis='z', nameonly=False)
+  see docstring for input parameters, and the args, kwargs, and docstring of
+  make_maps_v3_master.make_map for more options and details
+  
+  returns:
+    the column density map created; (actual map, map of wieghted quantities)
+    since no weights are given, the weighted map will just be -np.inf 
+    (= log10(0.)) everywhere.
+    creates an hdf5 file with said map, and documentation of what parameters
+    were used to create it
+    
+- run_projection(params, index, checknum=False):
+  wrapper between main and make_map: goes from an overall ISM option and file
+  list index to the ion and slice index, and the EOS option for the ion or
+  element
+
+  - params: output of parse_parameterfile
+  - index: index of the overall file list
+  - checknum: just check which file need to be generated and what indices go 
+      with them (True), or actually generate the file given by <index>  
+
+- add_files(simnum, snapnum, var, numsl, numpix,\
+            outputdir_ions='', outputdir_electrons='', axis='z',\
+            ismopt='T4EOS', hedname='Header', mapname='map')
+  input options match those of make_map and run_projection, where applicable.
+  - ismopt: what to do with star-forming gas; parameter matches the higher-level 
+      parameter of the paramaterfile
+  - outputdir_ions: where to find the column density maps, and put the maps for 
+      the whole box
+  - outputdir_electrons: where to put the electron column density map
+  - hedname: name for the header in the electron column density map
+  - mapname: name for the dataset containing the electron column density map
+  
+  New sum files are only created if they aren't already present; this can be 
+  the result of a previous addition step for a different overall ISM option, 
+  which shared a gas-handling method for the ions or elements with the current 
+  one.
+  
+  returns:
+    creates a file containing the electron column density map
+
+- main():
+  parses command line arguments and passes them on to run_projection or 
+  add_files depending on the step being run
+   
+
+Possible issues:
+----------------
+I've tested the pipeline on example.param, but it's possible that issue may 
+arise using different settings. The largest debugging issue I faced on ozstar
+was storing string values to hdf5.
+pipeline_DM.make_map, make_maps_vs_master.saveattr, savemap_hdf5 are the 
+functions responsible for this in the project step, and pipeline_DM.add_files
+in the add step, so check there if there are issues. Please let me know, too, 
+so I can fix/update my version.
+  

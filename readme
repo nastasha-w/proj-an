@@ -1,0 +1,125 @@
+----------------------------------------------------
+ instructions for the projection pipeline on ozstar
+----------------------------------------------------
+Nastasha wijers, 2019-08-21
+
+
+directories
+-------------
+
+Everything needed for the dispersion matter pipeline is contained in the 
+/home/nwijers/projection/ directory
+
+subdirectories are:
+- ion_tables: tables use in column density calculations, to calculate what
+   fraction of an element is in the ionization state of interest (copied over
+   from the Leiden system with rsync)
+- proj-an-c: (c functions for projection and analysis)
+   contains c programs used for interpolation of the ion tables, projection of
+   SPH particles onto a 2D grid, and reading data from Eagle snapshots in a 
+   more memory-efficient way (only read in particles from a specified region of
+   interest) The Eagle read-in part has a python wrapper included.
+- proj-an: projection and analysis
+   from a (private) github repo. this contains python scripts for making 
+   projections from the Eagle simulations and analyzing these, or the 
+   simulations more directly. Since I mainly use this to synchronize 
+   in-developement code between systems, these scripts will contain some stuff
+   that is either half-finished or untested, or that was written a long time 
+   ago and is obsolete considering newer code changes. A lot of it is simply 
+   irrelevant to the work on dispersion measures. Check with me before using 
+   random scripts from here.
+
+
+compile instructions
+---------------------
+
+for proj-an-c, compile instructions are contained in the folder and subfolders.
+Don't use the tar files; those are not the latest version and a few files were 
+updated with some new options for this system.
+notes for this system:
+I had the following modules loaded for this (in order):
+- git/2.16.0 (Shouldn't matter, but just in case.)
+- gcc/6.4.0
+- openmpi/3.0.0
+- python3/.6.4
+- hdf5/1.10.1
+- numpy/1.14.1-python-3.6.4
+
+read_eagle can be a bit stubborn; it needs to know where hdf5 is installed 
+(that should be in there now), and where you want to put the output (default) 
+is somewhere in the system files). You then need to make sure python can find 
+the files. There a README files at different depths of the directory tree; 
+most instructions are in the deepest and second-deepest ones.
+
+For the version currently on the system, what should work is:
+cd <c stuff path>/readEagle_install/readEagle_install/read_eagle_python3
+python setup.py install --user #using --user puts the compiled stuff in ~/.local/lib/python3.6/site-packages/ for me, which is either already in the python path or gets added to it 
+cp ../read_eagle_files.py <where the other stuff went, e.g. ~/.local/lib/python3.6/site-packages/> # when running setup.py, a message gets printing telling you where stuff goes
+If this fails, you might be using a different module set, which will mean a different hdf5 location. Check setup.py -> hdf5_location for a sense of where to look for it.
+
+for proj-an compiling is unnecessary, but some paths do have to be set in 
+- make_maps_opts_locs.py: lists information specific to ionization and emission
+   line tables, and where to find required .so files     
+   lines that need to be changed for the DM pipeline:
+   - 'choices' section: data directories and output directories. Will be 
+     overwritten/ignored here, since you put different maps into different 
+     directories and have a different data file setup than assumed here
+     I've set a default for the outputs just in case (npzdir)
+   - 'setup and functions': set paths to tables and c files. The ones not 
+     needed for the pipeline are commented out. You'll have to mimic the setup 
+     for these paths according to where you put those files. In the case of 
+     HsmlAndProject, there are assumptions in the script about what programs
+     with different compile options are called, so be very careful if you've 
+     modified the names of those files.  
+
+  
+
+
+the other relevant scripts (proj-an)
+------------------------------------
+- eagle_constants_and_units: physical constants, and cosmological parameters
+   used in eagle. The cosmological parameters are used as defaults, but it is 
+   preferable to check the ones used in the simulation directly 
+   (Header/cosmopars attributes in the hdf5 output for a projection)
+- ion_header: contains some ion data; used to get atomic weights for elements
+- calcfmassh: implements the Rahmati et al. (2013) self-shielding prescription
+   for calculating hydrogen neutral fractions, and the Blitz & Rosolowski 
+   (2006) prescription for molecular hydrogen
+- selecthalos: dependency of ma- ke_maps_v3_master, though not relevent here. 
+   used in (under developement) projection options where only gas from haloes
+   matching input criteria is included in the projection. Also has some 
+   functions designed for halo catalogues stored in a specificly organized hdf5
+   file
+- projection_classes: contains some classes used in make_maps_v3_master
+   these are used for filtering particles, managing which data is read in or 
+   needs to be used later, or as a thin wrapper for read_eagle_files (the main
+   use of the wrapper is that it wraps slightly different read-in scripts for
+   other simulations as well)
+- cosmo_utils: contains some utility functions, like calculating Hubble 
+   paramaters, different comological distance measures, angular sizes of 
+   pixels, etc.
+- make_maps_v3_master: the main file containg the projection function make_map
+   the docstring for that function has a lot of info on the arguments, 
+   including those that are set to standard values in the DM wrapper.
+   a lot of the functions involving 'wishlists' and the functions below 
+   make_map are basically just abandoned stubs at this point; avoid using them.
+- pipeline_DM: the pipeline script for dispersion measures. Can be called from
+   the command line for easy use in queue submissions or bash scripts
+
+for running the pipeline, I loaded the modules:
+-----------------------------------------------
+module load git/2.16.0 # Shouldn't matter, but just in case.
+module load gcc/6.4.0
+module load openmpi/3.0.0
+module load python/3.6.4
+module load hdf5/1.10.1
+module load numpy/1.14.1-python-3.6.4
+module load ipython/5.5.0-python-3.6.4
+module load matplotlib/2.2.2-python-3.6.4
+module load h5py/2.7.1-python-3.6.4
+module load tkinter/3.6.4-python-3.6.4
+
+and added the directory containing the compiled read_eagle files and 
+read_eagle_files.py to my python path. Since doing that on the command line
+doesn't seem to work, I did so in make_maps_opts_locs, which means that must 
+always be loaded before anything loading read_eagle_files, etc.
