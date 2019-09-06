@@ -176,7 +176,7 @@ def getrandomsubset(halocat, number, selections=None, names=None, seed=None, rep
         np.random.seed()
     
     sels = gethaloselections(halocat, selections=selections, names=names)
-    keys = sels.keys()
+    keys = list(sels.keys())
     keys.sort() # same order ensures same selections for the same random seed
     if replace:
         rnd = {name: np.random.choice(sels[name], number, replace=replace) for name in keys}
@@ -500,7 +500,7 @@ def parse_halosel_subfind(simfile, halosel, mdef='200c', aperture=30):
              }
     props = {prop: set(name if names[name] == prop else None for name in names.keys()) - {None} for (key, prop) in names.items()}
     if not np.all([sel[0] in names.keys() for sel in halosel]):
-        raise ValueError('One of the halo selection criteria is not allowed/implemented:\n\tallowed:\t%s\n\tgiven:\t%s'%(sorted(names.keys()), [sel[0] for sel in halosel]))
+        raise ValueError('One of the halo selection criteria is not allowed/implemented:\n\tallowed:\t%s\n\tgiven:\t%s'%(sorted(list(names.keys())), [sel[0] for sel in halosel]))
     
     # selections divided into sets selecting on the same properties
     names_intermediate = {name: set([sel if names[sel[0]] == names[name] else None for sel in halosel]) - {None} for name in names.keys()}
@@ -539,12 +539,12 @@ def parse_halosel_subfind(simfile, halosel, mdef='200c', aperture=30):
             dct_out[pname]['name'] = None
     ## debug
     print('parse_halosel_subfind: individually parsed inputs:')
-    for pname in sorted(dct_out.keys()):
+    for pname in sorted(list(dct_out.keys())):
         print('%s:\t%s'%(pname, dct_out[pname]['name']))
         print('\t%s'%(dct_out[pname]['sels']))
     print('')
     
-    pnames_anysel = dct_out.keys()
+    pnames_anysel = list(dct_out.keys())
     pnames_anysel = set(key if len(dct_out[pname]['sels']) > 0 else None for key in pnames_anysel) - {None}
     pnames_anysel = list(pnames_anysel)
     pnames_anysel.sort()
@@ -619,7 +619,7 @@ def selecthalos_subfindfiles(simfile, halosel, mdef='200c', aperture=30, nameonl
     if nameonly:
         return outname
     
-    pnames = selections.keys()
+    pnames = list(selections.keys())
     pnames_cat = {pname: 'FOF' if 'FOF' in selections[pname]['sels'][0][0] else \
                          'sub' if 'Subhalo' in selections[pname]['sels'][0][0] else \
                          'classerror' if not isinstance(selections[pname]['sels'][0][0], tuple) else \
@@ -636,7 +636,7 @@ def selecthalos_subfindfiles(simfile, halosel, mdef='200c', aperture=30, nameonl
     print('Overview of parsed input:')
     print('FOF criteria: %s'%selections_FOF)
     print('Suhalo criteria: %s'%selections_sub)
-    for pname in sorted(selections.keys()):
+    for pname in sorted(list(selections.keys())):
         print('%s:\t %s'%(pname, selections[pname]))
     
     if len(selections_err) > 0:

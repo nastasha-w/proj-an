@@ -120,14 +120,14 @@ def getfitparams(z):
     not optimised for speed; designed for use for a single redshift and many particles
     Uses larger-volume (table A2) parameters for z=0
     '''
-    maxz = np.max(fitparamtable_highz.keys())
+    maxz = np.max(list(fitparamtable_highz.keys()))
     
     if z < 1.:
         tab1 = fitparamtable_z0
         tab2 = fitparamtable_highz[1.]
         return linterptab(0., 1., tab1, tab2,z)
     elif z < maxz:
-        zs = np.array(fitparamtable_highz.keys())
+        zs = np.array(list(fitparamtable_highz.keys()))
         z1 = np.max(zs[zs <= z])
         z2 = np.min(zs[zs > z])
         tab1 = fitparamtable_highz[z1]
@@ -146,7 +146,7 @@ def getUVBparams(z, UVB='HM01'):
     '''
     
     phototable = phototables[UVB]
-    zs = np.array(phototable.keys())
+    zs = np.array(list(phototable.keys())) # python3: .keys() returns a keys object, np.array just puts it in an object array
     maxz = np.max(zs)
     if z >= maxz:
         if z != maxz:

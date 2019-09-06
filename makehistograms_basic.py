@@ -189,7 +189,38 @@ def getminmax_fromnpz(filename, fills=None):
             maxval = max(submax[()], maxval)
     return minval,maxval
 
+def getminmax_fromhdf5(filename, fills=None):
+    if fills is None:
+        with h5py.File(filename, 'r+') as fi:
+            try:
+                minval = fi['map'].attrs['minfinite']
+                maxval = fi['map'].attrs['max']
+            except: 
+                arr = np.array(fi['map'])
+                arr = arr[np.isfinite(arr)]
+                maxval = np.max(arr)
+                minval = np.min(arr)
+                fi['map'].attrs.create('minfinite', minval)
+                fi['map'].attrs.create('max', maxval)
+    else: 
+        minval = np.inf
+        maxval = -1*np.inf
+        for fill in fills:
+            print('Doing fill %s'%fill)
+            submin, submax = getminmax_fromnpz(filename%fill)
+            minval = min(submin[()], minval)
+            maxval = max(submax[()], maxval)
+    return minval,maxval
 
+def getminmax_fromfile(filename, **kwargs):
+    if filename[-4:] == '.npz':
+        return getminmax_fromnpz(filename, **kwargs)
+    elif filename[-5:] == '.hdf5':
+        return getminmax_fromhdf5(filename, **kwargs)
+    else:
+        ft = filename.split('.')[-1]
+        raise RuntimeError('file type %s not recognized/implemented'%(ft))
+        
 def makehist_1slice_masked(*filenames, **kwargs):
     '''
     filenames:     names of corresponding files to histogram 

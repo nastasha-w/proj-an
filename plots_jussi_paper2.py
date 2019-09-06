@@ -7,6 +7,8 @@ Created on Tue Sep  3 12:26:13 2019
 """
 
 import numpy as np
+import string
+
 import ion_line_data as ild
 
 import matplotlib.pyplot as plt
@@ -118,16 +120,16 @@ class HandlerDashedLines(mlh.HandlerLineCollection):
         return leglines
     
     
-def plot_coldenscorr_Tion(ionT='o6'):
+def plot_coldenscorr_Tion(ionT='o6', ion1='o6', ion2='o8', Tlim=5.8):
     
-    histf = '/net/luttero/data2/proc/hist_coldens_o6-o8_L0100N1504_27_test3.x_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_and_weighted_Temperature.npz'
-    Tlim = 5.8
+    if {ion1, ion2} == {'o6', 'o8'}:
+        histf = '/net/luttero/data2/proc/hist_coldens_o6-o8_L0100N1504_27_test3.x_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_and_weighted_Temperature.npz'
     
-    imgname = '/home/wijers/Documents/papers/jussi_paper2_Ton180/hist_coldens_o6-o8_L0100N1504_27_test3.x_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_splitby_T-%s.eps'%(ionT)
+    imgname = '/home/wijers/Documents/papers/jussi_paper2_Ton180/hist_coldens_%s-%s_L0100N1504_27_test3.x_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_splitby_T-%s-%.2f.eps'%(ion1, ion2, ionT, Tlim)
     
     fontsize = 12
-    xlabel = r'$\log{10} \, \mathrm{N(O\,VI)} \; [\mathrm{cm}^{-2}]$'
-    ylabel = r'$\log{10} \, \mathrm{N(O\,VIII)} \; [\mathrm{cm}^{-2}]$'
+    xlabel = r'$\log{10} \, \mathrm{N(%s)} \; [\mathrm{cm}^{-2}]$'%(ild.getnicename(ion1, mathmode=True))
+    ylabel = r'$\log{10} \, \mathrm{N(%s)} \; [\mathrm{cm}^{-2}]$'%(ild.getnicename(ion2, mathmode=True))
     clabel = r'$\log_{10}$ relative fraction of absorbers'
     cmap = truncate_colormap(mpl.cm.get_cmap('gist_yarg'), minval=0.0, maxval=0.7)
     
@@ -142,12 +144,9 @@ def plot_coldenscorr_Tion(ionT='o6'):
         #print(fi['edges'])
         
         dimension = fi['dimension']
-        ax_no6 = np.where(dimension == 'NO6')[0][0]
-        ax_no8 = np.where(dimension == 'NO8')[0][0]
-        if ionT == 'o6':
-            ax_T = np.where(dimension == 'Temperature_w_NO6')[0][0]
-        elif ionT == 'o8':
-            ax_T = np.where(dimension == 'Temperature_w_NO8')[0][0]
+        ax_no6 = np.where(dimension == 'N%s'%(string.capwords(ion1)))[0][0]
+        ax_no8 = np.where(dimension == 'N%s'%(string.capwords(ion2)))[0][0]
+        ax_T = np.where(dimension == 'Temperature_w_N%s'%(string.capwords(ionT)))[0][0]
         numax = len(dimension)
         
         edges_o6 = fi['edges'][ax_no6]

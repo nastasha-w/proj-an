@@ -1507,7 +1507,28 @@ if jobind == 174:
             else:
                 print('Skipping %s'%(outfilenames_all[ind]))
 
+
+if jobind == 175:   
+    fillsea = [str(float(i)) for i in (np.arange(16)/16.+1/32.)*100.]
+
+    T_NO6_name_16_27 = 'Temperature_T4EOS_coldens_o6_PtAb_T4EOS_L0100N1504_27_test3.3_C2Sm_32000pix_6.25slice_zcen%s_z-projection.npz'
+    NO6_name_16_27 = 'coldens_o6_L0100N1504_27_test3.3_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz'
     
+    edgesNO6 = np.array(list((np.arange(5)/4.*(0.0+40.) -40.)[:-1]) + list((np.arange(11)/10.*(10.-0.0) +0.0)[:-1]) + list(np.arange(71)/70.*(17.-10.) +10.))
+    edgesT_NO6 = np.array(list((np.arange(6)/5.*(0.0+50.) -50.)[:-1]) + list((np.arange(6)/5.*(2.5-0.0) +0.0)[:-1]) + list(np.arange(66)/65.*(9.0-2.5) +2.5))
+    
+    T_NO7_name_16_27 = 'Temperature_T4EOS_coldens_o7_PtAb_T4EOS_L0100N1504_27_test3.1_C2Sm_32000pix_6.25slice_zcen%s_z-projection.npz'
+    NO7_name_16_27 = 'coldens_o7_L0100N1504_27_test3.3_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz'
+    
+    edgesNO7 = np.array(list((np.arange(4)/3.*(0.0+30.) -30.)[:-1]) + list((np.arange(11)/10.*(10.-0.0) +0.0)[:-1]) + list(np.arange(81)/80.*(18.-10.) +10.))
+    edgesT_NO8 = np.array(list((np.arange(6)/5.*(0.0+50.) -50.)[:-1]) + list((np.arange(6)/5.*(2.5-0.0) +0.0)[:-1]) + list(np.arange(66)/65.*(9.0-2.5) +2.5))
+
+    print('Doing EA100, 16 slices, (NO6, NO7, T_NO6, T_NO7)')
+    mh.makehist_fromnpz(NO6_name_16_27, NO7_name_16_27, T_NO6_name_16_27, T_NO7_name_16_27,\
+                    bins = [edgesNO6, edgesNO7, edgesT_NO6, edgesT_NO7],\
+                    dimlabels = ['NO6','NO7','Temperature_w_NO6', 'Temperature_w_NO7'],\
+                    save=mh.pdir +'hist_coldens_o6-o7_L0100N1504_27_test3.x_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_and_weighted_Temperature',\
+                    fills = fillsea)   
 ################################################
 ################# CDDFS ########################
 ################################################

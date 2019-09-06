@@ -708,7 +708,7 @@ def findcoolingtables(z, method='per_element'):
 
         tabdct_out = {}
 
-        keys = tabdct1.keys()
+        keys = list(tabdct1.keys())
 
         # metal-free: if interpolation grid match (they should), interpolate
         # the tables in z. Electron density tables have the same grid points
@@ -829,7 +829,7 @@ def find_coolingrates(z, dct, method='per_element', **kwargs):
     '''
 
     if method == 'per_element':
-        elts_geq_he = ol.eltdct_to_ct.keys()
+        elts_geq_he = list(ol.eltdct_to_ct.keys())
         elts_geq_he.remove('hydrogen')
         elts_geq_h = list(np.copy(elts_geq_he))
         elts_geq_he.remove('helium')
@@ -1740,7 +1740,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         allowed_kwargs = ['aperture', 'mdef', 'exclsatellites', 'allinR200c', 'label']
         if not np.all([key in allowed_kwargs for key in kwargs_halosel.keys()]):
             print('allowed kwargs_halosel are %s'%allowed_kwargs)
-            print('input kwargs_halosel were %s'%kwargs_halosel.keys())
+            print('input kwargs_halosel were %s'%list(kwargs_halosel.keys()))
             return 39
         if 'aperture' in kwargs_halosel.keys():
             if not isinstance(kwargs_halosel['aperture'], num.Number):
