@@ -470,7 +470,7 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
                         subfile = files_ion[ion][subfileind]
                         with h5py.File(subfile, 'r') as ft3:
                             ft3.copy('Header', hed2, name='slice_%i'%subfileind)
-                            ft['Header/slice_%i'%subfileind].attrs.create('original_filename', subfile)
+                            ft['Header/slice_%i'%subfileind].attrs.create('original_filename', np.string_(subfile))
                             sub2 = 10**np.array(ft3['map'])
                             total2 += sub2
                             del sub2
@@ -509,7 +509,7 @@ def add_files(simnum, snapnum, var, numsl, numpix,\
                 
             with h5py.File(filenames_sum[ion], 'r') as ft:
                  ft.copy('Header', hed_main, name=ion)
-                 fo['%s/%s'%(hedname, ion)].attrs.create('original_filename', filenames_sum[ion])
+                 fo['%s/%s'%(hedname, ion)].attrs.create('original_filename', np.string_(filenames_sum[ion]))
                  fo['%s/%s'%(hedname, ion)].attrs.create('multip_factor', factor)
                  sub = 10**np.array(ft['map'])
                  total += factor * sub
