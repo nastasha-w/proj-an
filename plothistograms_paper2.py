@@ -1068,7 +1068,16 @@ def plot_radprof(ions, fontsize=fontsize, imgname=None, techvars_touse=[0], unit
                                  'o7': 'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_2slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals_stored_profiles.hdf5',\
                                  'o6': 'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_2slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals_stored_profiles.hdf5',\
                                  'hneutralssh': 'rdist_coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_2slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-100_centrals_stored_profiles.hdf5'}
-     
+    # use only 1000 galaxies (random selection) per mass bin -> compare
+    ion_filedct_subsample2_1sl = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-1000_centrals_stored_profiles.hdf5',\
+                                  'hneutralssh': 'rdist_coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-1000_centrals_stored_profiles.hdf5',\
+                                  'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-1000_centrals_stored_profiles.hdf5',\
+                                  'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-1000_centrals_stored_profiles.hdf5',\
+                                  'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-1000_centrals_stored_profiles.hdf5',\
+                                  'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-1000_centrals_stored_profiles.hdf5',\
+                                  'o8':   'rdist_coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-1000_centrals_stored_profiles.hdf5',\
+                                 }
+        
     # define used mass ranges
     Mh_edges = np.array([9., 9.5, 10., 10.5, 11., 11.5, 12., 12.5, 13., 13.5, 14.])
     Mh_mins = list(Mh_edges)
@@ -1088,14 +1097,16 @@ def plot_radprof(ions, fontsize=fontsize, imgname=None, techvars_touse=[0], unit
                 2: {'filenames': ion_filedct_2sl, 'setnames': galsetnames_massonly.keys()},\
                 3: {'filenames': ion_filedct_2sl, 'setnames': galsetnames_offedges.keys()},\
                 4: {'filenames': ion_filedct_subsample_1sl, 'setnames': galsetnames_massonly.keys()},\
-                5: {'filenames': ion_filedct_subsample_2sl, 'setnames': galsetnames_massonly.keys()}}
+                5: {'filenames': ion_filedct_subsample_2sl, 'setnames': galsetnames_massonly.keys()},\
+                6: {'filenames': ion_filedct_subsample2_1sl, 'setnames': galsetnames_massonly.keys()}}
     
     linewidths = {0: 1.5,\
                   1: 1.5,\
                   2: 2.5,\
                   3: 2.5,\
                   4: 1.5,\
-                  5: 2.5}
+                  5: 2.5,\
+                  6: 1.5}
     
     
     linestyles = {0: 'solid',\
@@ -1103,21 +1114,24 @@ def plot_radprof(ions, fontsize=fontsize, imgname=None, techvars_touse=[0], unit
                   2: 'solid',\
                   3: 'dotted',\
                   4: 'solid',\
-                  5: 'solid'}
+                  5: 'solid',\
+                  6: 'solid'}
     
     alphas = {0: 1.,\
               1: 1.,\
               2: 1.,\
               3: 1.,\
-              4: 0.5,\
-              5: 0.5}
+              4: 0.4,\
+              5: 0.4,\
+              6: 0.6}
     
     legendnames_techvars = {0: r'1 sl., all',\
                             1: r'1 sl., off-edge',\
                             2: r'2 sl., all',\
                             3: r'2 sl., off-edge',\
                             4: r'1 sl., 100',\
-                            5: r'2 sl., 100'}
+                            5: r'2 sl., 100',\
+                            6: r'1 sl., 1000'}
     
     readpaths = {val: '%s_bins/binset_0/%s_%s'%(units, ytype, val) for val in yvals_toplot}
     readpath_bins = '/'.join((readpaths[readpaths.keys()[0]]).split('/')[:-1]) + '/bin_edges'

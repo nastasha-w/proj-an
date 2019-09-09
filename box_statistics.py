@@ -249,15 +249,52 @@ def calc_gas_props(simnum, snapnum, var='REFERENCE', simulation='eagle', ions=No
     
 
 
-def calc_halo_props(simnum, snapnum, var='REFERENCE', simulation='eagle', ions=None, bindec=1, binsize=None):
+def calc_halo_stats(simnum, snapnum, var='REFERENCE', simulation='eagle', ions=None, bindec=1, binsize=None):
+    '''
+    just a stub; DO NOT USE
+    '''
+    mdef = '200c'
     
     halomassbins = np.array([-np.inf] + list(np.arange(9., 14.1, 0.5)) + [np.inf])
-    subgroupbins = [-0.5, 0.5, 2**30]
+    # subgroup catgories: subgroupnumber 0, subgroupnumber for satellite, subgroupnumber 2^32 (unbound)
     halosels = [[('M200c_logMsun', halomassbins[i], halomassbins[i + 1])] for i in range(len(halomassbins) - 1)]
     # particle data + FoF 
     simfile = pc.Simfile(simnum, snapnum, var, file_type='particle', simulation='eagle')
     simfile_sf = pc.Simfile(simfile.simnum, simfile.snapnum, simfile.var, file_type='sub', simulation=simfile.simulation)
-    groupnums = {binind: sh.selecthalos_subfindfiles(simfile_sf, halosels[binind], mdef='200c', aperture=30, nameonly=False) for binind in range(len(halosels))]}
+    # groupnum 2^32 -> no group
+    groupnums = {binind: sh.selecthalos_subfindfiles(simfile_sf, halosels[binind], mdef=mdef, aperture=30, nameonly=False) for binind in range(len(halosels))}
+    
+    if simfile.var == 'REFERENCE':
+        vind = 'Ref'
+    elif simfile.var == 'RECALIBRATED':
+        vind = 'Recal'
+    else:
+        vind = simfile.var
+        
+    filename = 'halohist_box_%s%s_%s_by_M%s.hdf5'%(vind, simnum, snapnum, mdef)
+    filename = ol.pdir + filename
+    # set up header
+    with h5py.File(filename, 'a') as fo:
+        if 'Header' not in fo:
+            hed = fo.create_group('Header')
+            hed.attrs.create('simnum', np.string_(simnum))
+            hed.attrs.create('snapnum', snapnum)
+            hed.attrs.create('var', np.string_(simfile.var))
+            csm = hed.create_group('cosmopars')
+            csm.attrs.create('boxsize', simfile.boxsize)
+            csm.attrs.create('a', simfile.a)
+            csm.attrs.create('h', simfile.h)
+            csm.attrs.create('z', simfile.z)
+            csm.attrs.create('omegam', simfile.omegam)
+            csm.attrs.create('omegab', simfile.omegab)
+            csm.attrs.create('omegalambda', simfile.omegalambda)
+        
+    # set up the things to get histograms of
+    parttype='0'
+    weights = [('basic', 'Mass'), ('basic', 'propvol')]
+    if ions is not None:
+        weights = weights + ions
+    hists = ['lognH', 'logT', 'SmoothedMetallicity']
     
     # temperature (SF gas  -> 10^4 K)
     temp  = simfile.readarray('PartType0/Temperature', rawunits=True)
