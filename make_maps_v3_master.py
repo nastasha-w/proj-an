@@ -4375,7 +4375,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
     '''
     # larget int used : 38
     ptype = dct['ptype']
-    excludeSFR = dct['exlcudeSFR']
+    excludeSFR = dct['excludeSFR']
 
     if ptype not in ['emission', 'coldens', 'basic', 'halo']:
         print('ptype should be one of emission, coldens, or basic (str).\n')
@@ -4697,7 +4697,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, simulation,\
         entires are (the non-None elements of) ptype, exlcudeSFR, abunds, ion, parttype, quantity
     TODO: wishlisting implementation: avoid double read-ins
     '''
-    res = inputcheck(ptype, simnum, snapnum, var, simulation,\
+    res = inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
                               L_x, L_y, L_z, centre, Ls_in_Mpc,\
                               excludeSFR, abunds, ion, parttype, quantity,\
                               axesdct, axbins,\
