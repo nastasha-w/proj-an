@@ -4680,7 +4680,7 @@ def get3ddist(vardict, cen, radius, units='cMpc', last=True):
 
 def makehistograms_perparticle(ptype, simnum, snapnum, var, simulation,\
                               excludeSFR, abunds, ion, parttype, quantity,\
-                              axesdct, axbins=100,\
+                              axesdct, axbins=0.2,\
                               sylviasshtables=False,\
                               L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=None,\
                               misc=None,\
