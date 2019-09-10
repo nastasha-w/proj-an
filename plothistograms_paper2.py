@@ -1995,6 +1995,8 @@ def quicklook_particlehist(h5name, group=None, plotlog=None):
     tax.text(0.05, 0.7, addtext, fontsize=fontsize, verticalalignment='top', horizontalalignment='left', transform=tax.transAxes)
     tax.axis('off')
     
-    imgname = title[:-5] + '_' + gn
-    plt.savefig(ol.mdir + imgname + '.pdf', format='pdf', bbox_inches='tight')
+    tparts = title.split('\n')
+    imgname = tparts[0][:-5] + '_' + tparts[1]
+    mdir = '/net/luttero/data2/imgs/histograms_basic/'
+    plt.savefig(mdir + imgname + '.pdf', format='pdf', bbox_inches='tight')
             

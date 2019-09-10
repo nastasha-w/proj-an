@@ -4330,7 +4330,7 @@ def namehistogram_perparticle_axis(dct):
     elif excludeSFR == 'only':
         SFRind = '_onlyEOS'
 
-    if ptype in ['coldens', 'emission']:
+    if ptype in ['Luminosity', 'Lumdens', 'Nion', 'Niondens']:
         abunds = dct['abunds']
         if abunds[0] not in ['Sm','Pt']:
             sabunds = '%smassfracAb'%str(abunds[0])
@@ -4384,10 +4384,10 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
         excludeSFR = dct_defaults['excludeSFR']
         dct['excludeSFR'] = excludeSFR
     
-    if ptype not in ['emission', 'coldens', 'basic', 'halo']:
+    if ptype not in ['Nion', 'Niondens', 'Luminosity', 'Lumdens', 'basic', 'halo']:
         print('ptype should be one of emission, coldens, or basic (str).\n')
         return 3
-    elif ptype in ['emission', 'coldens']:
+    elif ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
         if 'ion' not in dct.keys():
             print('For ptype %s, an ion must be specified')
             return 37
@@ -4420,7 +4420,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
             else:
                 abunds[0] = abunds[0] * ol.solar_abunds_ea[ol.elements_ion[ion]]
         elif abunds[0] == 'auto':
-            if ptype == 'emission':
+            if ptype in ['Luminosity', 'Lumdens']:
                 abunds[0] = 'Sm'
             else:
                 abunds[0] = 'Pt'
@@ -4459,7 +4459,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
         if excludeSFR != 'from':
             print('Invalid option for excludeSFR: %s'%excludeSFR)
             return 17
-        elif not (ptype == 'emission' and ion == 'halpha'):
+        elif not (ptype in ['Luminosity', 'Lumdens'] and ion == 'halpha'):
             excludeSFR = 'only'
             print('Unless calculation is for halpha emission, fromSFR will default to onlySFR.\n')
     if 'excludeSFR' in dct_defaults.keys():
@@ -4486,13 +4486,13 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
                     if simulation != 'eagle-ioneq':
                         print('chemical abundance tables are only avaiable for the eagle-ioneq simulation')
                         return 34
-                    if ptype == 'coldens':
+                    if ptype in ['Nion', 'Niondens']:
                         if 'Sm' in abunds:
                             print('chemical abundance tables are only for particle abundances')
                             return 34
                         elif abunds in ['auto', None]:
                             abunds = 'Pt'
-            if ptype == 'coldens' and ion in ['h1ssh', 'hmolssh' 'hneutralssh']:
+            if ptype in ['Nion', 'Niondens'] and ion in ['h1ssh', 'hmolssh' 'hneutralssh']:
                 if 'UVB' in misc:
                     if misc['UVB'] not in cfh.phototables.keys():
                         print('Invalid option for misc -> UVB')
@@ -4602,7 +4602,7 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, sylviassh
     iselt = False
     if ion in ol.elements and ptype == 'coldens':
         iselt = True
-    if ptype in ['coldens', 'emission']:
+    if ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
         eltab, hab = get_eltab_names(abunds, iselt, ion)
 
     if excludeSFR in ['from', 'only']: # only select EOS particles; difference in only in the emission calculation
@@ -4636,35 +4636,40 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, sylviassh
             q = vardict.particle['subcat']
             vardict.delif('subcat', last=last)
 
-    elif ptype == 'coldens' and not iselt:
+    elif ptype in ['Nion', 'Niondens'] and not iselt:
         if ion in ['h1ssh', 'hmolssh', 'hneutralssh'] and not sylviasshtables:
             q, multipafter = Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=last, updatesel=updatesel, misc=misc)
-            readbasic(vardict, 'propvol_i', excludeSFR, last=last)
-            q *= vardict.particle['propvol_i'] 
-            multipafter *= vardict.CGSconv['propvol_i']
+            if ptype == 'Niondens':
+                readbasic(vardict, 'propvol_i', excludeSFR, last=last)
+                q *= vardict.particle['propvol_i'] 
+                multipafter *= vardict.CGSconv['propvol_i']
         else:
             q, multipafter = Nion_calc(vardict, excludeSFR, eltab, hab, ion, last=last, sylviasshtables=sylviasshtables, updatesel=updatesel, misc=misc)
+            if ptype == 'Niondens':
+                readbasic(vardict, 'propvol_i', excludeSFR, last=last)
+                q *= vardict.particle['propvol_i'] 
+                multipafter *= vardict.CGSconv['propvol_i']
+    elif ptype in ['Nion', 'Niondens'] and iselt:
+        q, multipafter = Nelt_calc(vardict, excludeSFR, eltab, ion, last=last, updatesel=updatesel)
+        if ptype == 'Niondens':
             readbasic(vardict, 'propvol_i', excludeSFR, last=last)
             q *= vardict.particle['propvol_i'] 
             multipafter *= vardict.CGSconv['propvol_i']
-    elif ptype == 'coldens' and iselt:
-        q, multipafter = Nelt_calc(vardict, excludeSFR, eltab, ion, last=last, updatesel=updatesel)
-        readbasic(vardict, 'propvol_i', excludeSFR, last=last)
-        q *= vardict.particle['propvol_i'] 
-        multipafter *= vardict.CGSconv['propvol_i']
-    elif ptype == 'emission' and excludeSFR != 'from':
+    elif ptype in ['Luminosity', 'Lumdens'] and excludeSFR != 'from':
         q, multipafter = luminosity_calc(vardict, excludeSFR, eltab, hab, ion, last=last, updatesel=updatesel)
-        readbasic(vardict, 'propvol_i', excludeSFR, last=last)
-        q *= vardict.particle['propvol_i'] 
-        multipafter *= vardict.CGSconv['propvol_i']
-    elif ptype == 'emission' and excludeSFR == 'from':
+        if ptype == 'Lumdens':
+            readbasic(vardict, 'propvol_i', excludeSFR, last=last)
+            q *= vardict.particle['propvol_i'] 
+            multipafter *= vardict.CGSconv['propvol_i']
+    elif ptype in ['Luminosity', 'Lumdens'] and excludeSFR == 'from':
         if ion == 'halpha':
             q, multipafter = luminosity_calc_halpha_fromSFR(vardict, excludeSFR, last=last, updatesel=updatesel)
-            readbasic(vardict, 'propvol_i', excludeSFR, last=last)
-            q *= vardict.particle['propvol_i'] 
-            multipafter *= vardict.CGSconv['propvol_i']
+            if ptype == 'Lumdens':
+                readbasic(vardict, 'propvol_i', excludeSFR, last=last)
+                q *= vardict.particle['propvol_i'] 
+                multipafter *= vardict.CGSconv['propvol_i']
         else:
-            print('Invalid option')
+            raise ValueError('Invalid option excludeSFR=from for ion other than halpha')
             return None
     else:
         print('Invalid option')
@@ -4700,8 +4705,17 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
     arguments similar to make_map
     ptype, excludeSFR, abunds, ion, parttype, quantity, allinR200c, mdef: as in
         make_map, for the thing to weight the histogram by
-    except:
-        pytpe 'halo' is an option, with 'Mass' and 'subcat' quantities  
+        but:
+         - pytpe 'halo' is an option, with 'Mass' and 'subcat' quantities  
+           'Mass' group particles y parant halo mass
+           'subcat' divides galaxies into central, satellite, and unbound 
+           classes
+         - instead of 'coldens' and 'emission', the ion/emission types are 
+           'Nion' and 'Luminosity' (for total number of ions or luminosity of 
+           the particle, to be used as weights)
+           or 'Niondens' and 'Lumdens' (for the volumn density of emission or 
+           ions, to be used on axes to gauge contributions to surface 
+           brightness and column density)
     axesdct: list of dictionaries for each hist: the axes of the histogram
         entires are (the non-None elements of) ptype, exlcudeSFR, abunds, ion, parttype, quantity
     logax: boolean, or array of booleans matching axesdct
@@ -4766,10 +4780,10 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
     
         if 'Header' not in outfile.keys():
             hed = outfile.create_group('Header')
-            hed.attrs.create('simnum', simnum)
+            hed.attrs.create('simnum', np.string_(simnum))
             hed.attrs.create('snapnum', snapnum)
-            hed.attrs.create('var', var)
-            hed.attrs.create('simulation', simulation)
+            hed.attrs.create('var', np.string(var))
+            hed.attrs.create('simulation', np.string_(simulation))
             csm = hed.create_group('cosmopars')
             csm.attrs.create('a', simfile.a)
             csm.attrs.create('z', simfile.z)
@@ -4778,6 +4792,11 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
             csm.attrs.create('omegam', simfile.omegam)
             csm.attrs.create('omegalambda', simfile.omegalambda)
             csm.attrs.create('boxsize', simfile.boxsize)
+        
+        if 'Units' not in outfile.keys():
+            ung = outfile.create_group('Units')
+            ung.attrs.create('all', np.string_('cgs, proper lengths'))
+            ung.attrs.create('emission', np.string_('photons (s**-1 * cm**-3 or s**-1)'))
     
         axdata = []
         axbins_touse = []
