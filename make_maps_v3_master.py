@@ -4374,9 +4374,16 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
     dct_defaults: same entries, use to set defaults in dct
     '''
     # larget int used : 38
-    ptype = dct['ptype']
-    excludeSFR = dct['excludeSFR']
-
+    if 'ptype' in dct:
+        ptype = dct['ptype']
+    else:
+        raise ValueError('in check_particlequantity: each quantity dict must have "ptype" specified')
+    if 'excludeSFR' in dct:
+        excludeSFR = dct['excludeSFR']
+    elif 'excludeSFR' in dct_defaults:
+        excludeSFR = dct_defaults['excludeSFR']
+        dct['excludeSFR'] = excludeSFR
+    
     if ptype not in ['emission', 'coldens', 'basic', 'halo']:
         print('ptype should be one of emission, coldens, or basic (str).\n')
         return 3
@@ -4473,27 +4480,28 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
 
     if 'misc' in dct.keys(): # if if if : if we want to use chemical abundances from Ben' Oppenheimer's recal variations
         misc = dct['misc']
-        if 'usechemabundtables' in misc:
-            if misc['usechemabundtables'] == 'BenOpp1':
-                if simulation != 'eagle-ioneq':
-                    print('chemical abundance tables are only avaiable for the eagle-ioneq simulation')
-                    return 34
-                if ptype == 'coldens':
-                    if 'Sm' in abunds:
-                        print('chemical abundance tables are only for particle abundances')
+        if misc is not None:
+            if 'usechemabundtables' in misc:
+                if misc['usechemabundtables'] == 'BenOpp1':
+                    if simulation != 'eagle-ioneq':
+                        print('chemical abundance tables are only avaiable for the eagle-ioneq simulation')
                         return 34
-                    elif abunds in ['auto', None]:
-                        abunds = 'Pt'
-        if ptype == 'coldens' and ion in ['h1ssh', 'hmolssh' 'hneutralssh']:
-            if 'UVB' in misc:
-                if misc['UVB'] not in cfh.phototables.keys():
-                    print('Invalid option for misc -> UVB')
-                    return 35
-            if 'useLSR' in misc:
-                if not isinstance(misc['useLSR'], bool):
-                    print('misc -> useLSR should be a boolean')
-                    return 36
-
+                    if ptype == 'coldens':
+                        if 'Sm' in abunds:
+                            print('chemical abundance tables are only for particle abundances')
+                            return 34
+                        elif abunds in ['auto', None]:
+                            abunds = 'Pt'
+            if ptype == 'coldens' and ion in ['h1ssh', 'hmolssh' 'hneutralssh']:
+                if 'UVB' in misc:
+                    if misc['UVB'] not in cfh.phototables.keys():
+                        print('Invalid option for misc -> UVB')
+                        return 35
+                if 'useLSR' in misc:
+                    if not isinstance(misc['useLSR'], bool):
+                        print('misc -> useLSR should be a boolean')
+                        return 36
+    dct['parttype'] = parttype
     return dct, parttype
 
 def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
@@ -4569,7 +4577,7 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
                     'ion': ion, 'parttype': parttype, 'quantity': quantity,\
                     'misc': misc}
     dct_defaults, parttype = check_particlequantity(dct_defaults, {}, parttype, simulation)
-    axesdct = [check_particlequantity(dct, dct_defaults, parttype)[0] for dct in axesdct]
+    axesdct = [check_particlequantity(dct, dct_defaults, parttype, simulation)[0] for dct in axesdct]
     if np.any(np.array([isinstance(dct, int) for dct in axesdct])):
         print('Error in one of the axis particle properties')
         return 38
@@ -4616,7 +4624,7 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, sylviassh
     if ptype == 'basic':
         readbasic(vardict, quantity, excludeSFR, last=last)
         q = vardict.particle[quantity]
-        q *= vardict.CGSconv[quantity]
+        multipafter =  vardict.CGSconv[quantity]
     
     elif ptype == 'halo':
         if quantity == 'Mass':
@@ -4633,28 +4641,28 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, sylviassh
             q, multipafter = Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=last, updatesel=updatesel, misc=misc)
             readbasic(vardict, 'propvol_i', excludeSFR, last=last)
             q *= vardict.particle['propvol_i'] 
-            q *= multipafter * vardict.CGSconv['propvol_i']
+            multipafter *= vardict.CGSconv['propvol_i']
         else:
             q, multipafter = Nion_calc(vardict, excludeSFR, eltab, hab, ion, last=last, sylviasshtables=sylviasshtables, updatesel=updatesel, misc=misc)
             readbasic(vardict, 'propvol_i', excludeSFR, last=last)
             q *= vardict.particle['propvol_i'] 
-            q *= multipafter * vardict.CGSconv['propvol_i']
+            multipafter *= vardict.CGSconv['propvol_i']
     elif ptype == 'coldens' and iselt:
         q, multipafter = Nelt_calc(vardict, excludeSFR, eltab, ion, last=last, updatesel=updatesel)
         readbasic(vardict, 'propvol_i', excludeSFR, last=last)
         q *= vardict.particle['propvol_i'] 
-        q *= multipafter * vardict.CGSconv['propvol_i']
+        multipafter *= vardict.CGSconv['propvol_i']
     elif ptype == 'emission' and excludeSFR != 'from':
         q, multipafter = luminosity_calc(vardict, excludeSFR, eltab, hab, ion, last=last, updatesel=updatesel)
         readbasic(vardict, 'propvol_i', excludeSFR, last=last)
         q *= vardict.particle['propvol_i'] 
-        q *= multipafter * vardict.CGSconv['propvol_i']
+        multipafter *= vardict.CGSconv['propvol_i']
     elif ptype == 'emission' and excludeSFR == 'from':
         if ion == 'halpha':
             q, multipafter = luminosity_calc_halpha_fromSFR(vardict, excludeSFR, last=last, updatesel=updatesel)
             readbasic(vardict, 'propvol_i', excludeSFR, last=last)
             q *= vardict.particle['propvol_i'] 
-            q *= multipafter * vardict.CGSconv['propvol_i']
+            multipafter *= vardict.CGSconv['propvol_i']
         else:
             print('Invalid option')
             return None
@@ -4663,7 +4671,7 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, sylviassh
         return None
     if 'propvol_i' in vardict.particle.keys():
         vardict.delif('propvol_i', last=last)
-    return q
+    return q, multipafter
 
 def get3ddist(vardict, cen, radius, units='cMpc', last=True):
     '''
@@ -4678,13 +4686,14 @@ def get3ddist(vardict, cen, radius, units='cMpc', last=True):
     vardict.CGSconv['r3D'] = c.cm_per_mpc * vardict.simfile.a
     del coords
 
-def makehistograms_perparticle(ptype, simnum, snapnum, var, simulation,\
-                              excludeSFR, abunds, ion, parttype, quantity,\
-                              axesdct, axbins=0.2,\
-                              sylviasshtables=False,\
-                              L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=None,\
-                              misc=None,\
-                              name_append=None, log=True):
+def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
+                               simulation='eagle',\
+                               excludeSFR=False, abunds=None, ion=None, parttype='0', quantity=None,\
+                               axbins=0.2,\
+                               sylviasshtables=False,\
+                               L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=None,\
+                               misc=None,\
+                               name_append=None, logax=True, loghist=False):
     '''
     only does a few very specific caluclations in current implementation
 
@@ -4695,6 +4704,11 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, simulation,\
         pytpe 'halo' is an option, with 'Mass' and 'subcat' quantities  
     axesdct: list of dictionaries for each hist: the axes of the histogram
         entires are (the non-None elements of) ptype, exlcudeSFR, abunds, ion, parttype, quantity
+    logax: boolean, or array of booleans matching axesdct
+           take log values of a property for the histogram (bins are assumed 
+           to apply to the selected value type, and are not transformed based
+           on logax)
+    loghist: store log histogram values or not (bool)
     TODO: wishlisting implementation: avoid double read-ins
     '''
     res = inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
@@ -4705,18 +4719,21 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, simulation,\
     if isinstance(res, int):
         print('Input error %i'%res)
         raise ValueError('inputcheck returned code %i'%res)
+    if hasattr(logax, '__len__'):
+        logax = np.array(logax)
+        if not np.all([isinstance(val, bool) for val in logax]):
+            raise ValueError('All logax values must be True or False')
+    elif not isinstance(logax, bool)  :
+        raise ValueError('logax should be True or False, or a list of booleans matching axesdct')
+    else:
+        logax = np.array([logax] * len(axesdct))
+    if not isinstance(loghist, bool):
+        raise ValueError('loghist should be True or False')
 
-    simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-         ptypeW,\
-         ionW, abundsW, quantityW,\
-         ionQ, abundsQ, quantityQ, ptypeQ,\
-         excludeSFRW, excludeSFRQ, parttype,\
-         theta, phi, psi, \
-         sylviasshtables,\
-         var, axis, log, velcut,\
-         periodic, kernel, saveres,\
-         simulation, LsinMpc,\
-         select, misc, ompproj = res[1:]
+    ptype, simnum, snapnum, var, simulation,\
+    L_x, L_y, L_z, centre, LsinMpc,\
+    excludeSFR, abunds, ion, parttype, quantity,\
+    axesdct, axbins, misc = res[1:]
 
     print('Processed input:')
     print('L_x, L_y, L_z, centre, Ls_in_Mpc,\n%s, %s, %s, %s, %s'%(L_x, L_y, L_z, centre, Ls_in_Mpc,))
@@ -4729,15 +4746,17 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, simulation,\
     if not (L_x is None and L_y is None and L_z is None and centre is None):
         print('Region selection is not yet implemented and will be ignored')
 
-    simfile = pc.Simfile(simnum, snapnum, var, file_type='particle', simulation=simulation)
-    vardict = pc.Vardict(simfile, '0', [], region=None, readsel=None)
+    simfile = pc.Simfile(simnum, snapnum, var, file_type='particles', simulation=simulation)
+    vardict = pc.Vardict(simfile, parttype, [], region=None, readsel=None)
 
     outfilename = namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
                               None, None, None, None, None, simfile.boxsize, simfile.h, excludeSFR,\
                               abunds, ion, parttype, quantity,\
                               misc)
     axnames = [namehistogram_perparticle_axis(dct) for dct in axesdct]
-    groupname = '_'.join(axnames) + name_append
+    groupname = '_'.join(axnames) 
+    if name_append is not None:
+        groupname = groupname + name_append
 
     with h5py.File(outfilename, 'a') as outfile:
         if groupname in outfile.keys():
@@ -4790,23 +4809,29 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, simulation,\
                 allinR200c_t = dct_t['allinR200c']
             else:
                 allinR200c_t = True
-    
-            axdata_t = getparticledata(vardict, ptype_t, excludeSFR_t, abunds_t,\
-                                       ion_t, parttype, quantity_t,\
-                                       sylviasshtables=sylviasshtables, last=True,\
-                                       updatesel=False, misc=misc_t, mdef=mdef_t,\
-                                       allinR200c=allinR200c_t)
-            if log:
-                axdata_t = np.log10(axdata_t)
+            logax_t = logax[axind]
+            
+            axdata_t, multipafter_t = getparticledata(vardict, ptype_t, excludeSFR_t, abunds_t,\
+                                                     ion_t, quantity_t,\
+                                                     sylviasshtables=sylviasshtables, last=True,\
+                                                     updatesel=False, misc=misc_t, mdef=mdef_t,\
+                                                     allinR200c=allinR200c_t)
+            
+            if logax_t:
+                axdata_t = np.log10(axdata_t) + np.log10(multipafter_t)
+            else:
+                axdata_t *= multipafter_t 
             min_t = np.min(axdata_t[np.isfinite(axdata_t)])
             max_t = np.max(axdata_t[np.isfinite(axdata_t)])
     
             grp = group.create_group(axnames[axind])
             grp.attrs.create('number of particles', len(axdata_t))
-            grp.attrs.create('number of particle with finite values', int(np.sum(np.isfinite(axdata_t))) )
+            grp.attrs.create('number of particles with finite values', int(np.sum(np.isfinite(axdata_t))) )
+            grp.attrs.create('histogram axis', axind)
+            grp.attrs.create('log', logax_t)
             
             if ptype_t == 'halo' and quantity == 'subcat': # override input binning for standard indices
-                if log :
+                if logax_t:
                     bins = np.log10([0.1, 1., 2., 3.])
                 else:
                     bins = np.array([0., 1., 2., 3.])
@@ -4858,8 +4883,15 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, simulation,\
             axbins_touse += [axbins_t]
             axdata += [axdata_t]
             del axdata_t
-        weight = getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, last=True, updatesel=False, misc=None)
-    
+            
+        weight, multipafter_w = getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, last=True, updatesel=False, misc=None)
+        maxw = np.max(weight)
+        lenw = len(weight)
+        # rescale for fp precision and overflow avoidance
+        resce = np.ceil(np.log10(maxw) + np.log10(lenw)) - 37 # max float32 between 1e38 and 1e39
+        weight *= 10**(-1 * resce)
+        multipafter_w *= 10**resce # will restore any overflow in the end, unless log values are stored 
+        
         # loop to prevent memory from running out
         maxperslice = 752**3 // 8
         if len(weight) < maxperslice:
@@ -4881,8 +4913,14 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, simulation,\
                         raise RuntimeError('Error: edges mismatch in histogramming loop (slind = %i)'%slind)
                         
                         return None
+        wsum = np.sum(weight) * multipafter_w
+        if loghist:
+            hist = np.log10(hist) + np.log10(multipafter_w)
+        else:
+            hist *= multipafter_w
         group.create_dataset('histogram', data=hist)
-        group['histogram'].attrs.create('sum of weights', np.sum(weight)) # should be equal to sum of the histogram, but it's good to check
+        group['histogram'].attrs.create('sum of weights', wsum) # should be equal to sum of the histogram, but it's good to check
+        group['histogram'].attrs.create('log', loghist)
         bingrp = group.create_group('binedges')
         for i in range(len(edges)):
             bingrp.create_dataset('Axis%i'%(i), data=edges[i])

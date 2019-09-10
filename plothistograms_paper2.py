@@ -1833,3 +1833,168 @@ def plotfofonlycddfs(ion, relative=False):
     #ax1.text(0.02, 0.05, r'absorbers close to galaxies at $z=0.37$', horizontalalignment='left', verticalalignment='bottom', transform=ax1.transAxes, fontsize=fontsize)
     
     plt.savefig(outname, format='pdf')
+
+
+def quicklook_particlehist(h5name, group=None, plotlog=None):
+    
+    if '/' not in h5name:
+        h5name = ol.ndir + h5name
+    if h5name[-5:] != '.hdf5':
+        h5name = h5name + '.hdf5'
+    
+    with h5py.File(h5name, 'r') as fi:
+        keys = list(fi.keys())
+        keys.remove('Header')
+        if len(keys) > 1:
+            print('Which group do you want to plot?')
+            for i in range(len(keys)):
+                print('%i\t%s'%(i, keys[i]))
+            choice = raw_input('Please enter name or index')
+            choice = choice.strip()
+            try:
+                ci = int(choice)
+                gn = keys[ci]
+            except ValueError:
+                gn = choice
+            if gn not in keys():
+                raise ValueError('group "%s" is not one of the options'%(gn))
+        else:
+            gn = keys[0]
+        rgrp = fi[gn]
+        
+        # extract hsitogram data
+        hist = np.array(rgrp['histogram'])
+        histlog = rgrp['histogram'].attrs['log']
+        if plotlog is None:
+            plotlog = histlog
+        sumin = rgrp['histogram'].attrs['sum of weights']
+        if histlog:
+            hist = 10**hist
+        sumout = np.sum(hist)
+        missingfrac = 1. - sumin / sumout
+        
+        axdata = {}
+        axns = list(rgrp.keys())
+        axns.remove('histogram')
+        axns.remove('binedges')
+        for axn in axns:
+            sgrp = rgrp[axn]
+            axi = sgrp.attrs['histogram axis']
+            axlog = sgrp.attrs['log']
+            npartfin = sgrp.attrs['number of particles with finite values']
+            nparttot = sgrp.attrs['number of particles']
+            npartexclmin = sgrp.attrs['number of particles < min value']
+            npartexclmax = sgrp.attrs['number of particles > max value']
+            bins = np.array(sgrp['bins'])
+            
+            partselstr = '' 
+            if npartfin < nparttot and not (bins[0] == -np.inf and bins[-1] == np.inf): # only finite data values are checked
+                partselstr = partselstr + '%s / %s values not finite'%(nparttot - npartfin, nparttot)
+                if axlog and bins[0] == -np.inf:
+                    partselstr = partselstr + ', -inf counted in hist'
+            if npartexclmin > 0:
+                partselstr = partselstr + '\n%s / %s finte values excluded (too low)'%(npartexclmin, npartfin)
+            if npartexclmax > 0:
+                partselstr = partselstr + '\n%s / %s finte values excluded (too high)'%(npartexclmax, npartfin)
+          
+            if partselstr == '':
+                partselstr = None
+            elif  partselstr[0] == '\n':
+                partselstr = partselstr[1:]
+                
+            if partselstr is not None:
+                partselstr = '%s:\n'%axn + partselstr + '\n'
+                
+            axdata[axi] = {'bins': bins, 'log': axlog, 'sel': partselstr, 'name': axn}
+            
+    # set up plot grid based on number of dimensions
+    ndim = len(hist.shape)
+    
+    panelwidth = 2.5
+    panelheight = 2.5
+    caxwidth = 1.
+    textheight = 2.
+    fontsize = 12
+    cmap = 'gist_yarg'
+    if plotlog:
+        vmin = np.log10(np.min(hist[hist > 0]))
+        vmax = np.log10(np.max(hist[hist > 0]))
+        clabel = 'log10 weight'
+    else:
+        vmin = np.min(hist[hist > 0])
+        vmax = np.max(hist)
+        clabel = 'weight'
+        
+    fig = plt.figure(figsize=(ndim * panelwidth + caxwidth, ndim * panelheight + textheight))
+    maingrid = gsp.GridSpec(ndim + 1, ndim + 1, hspace=0.05, wspace=0.05, height_ratios=[panelheight] * ndim + [textheight], width_ratios=[panelwidth] * ndim + [caxwidth])
+    cax = fig.add_subplot(maingrid[:ndim , ndim])
+    tax = fig.add_subplot(maingrid[ndim, :])
+    
+    titleax = fig.add_subplot(maingrid[:, :])
+    title = h5name.split('/')[-1] + '\n%s'%gn
+    titleax.text(0.5, 1.01, title, fontsize=fontsize, verticalalignment='bottom', horizontalalignment='center', transform=titleax.transAxes)
+    titleax.axis('off')
+    
+    for ci in range(ndim):
+        for ri in range(ndim):
+            if ci > ri: # above the diagonal
+                continue
+            ax = fig.add_subplot(maingrid[ri, ci])
+            hax = ci
+            hay = ri
+            datax = axdata[hax]
+            datay = axdata[hay]
+            
+            labelx = ri == ndim - 1
+            labely = ci == 0 and ri > 0
+            labelright = ci == ri
+    
+            if labelx:    
+                label = datax['name']
+                if datax['log']:
+                    label = 'log10 ' + label
+                ax.set_xlabel(label, fontsize=fontsize)
+            if labely:    
+                label = datay['name']
+                if datay['log']:
+                    label = 'log10 ' + label
+                ax.set_ylabel(label, fontsize=fontsize)
+            ax.tick_params(direction='in', which='both', top=True, right=True,\
+                           labelbottom=labelx, labelleft=labely, labelright=labelright,\
+                           labelsize=fontsize - 1)
+                    
+            if ci == ri: # histogram plot
+                sumtup = range(ndim)
+                sumtup.remove(hax)
+                sumtup = tuple(sumtup)
+                hist_t = np.sum(hist, axis=sumtup)
+                if plotlog:
+                    hist_t = np.log10(hist_t)
+                ax.step(datax['bins'], np.append(hist_t, [np.NaN]), where='post')
+            
+            else:
+                sumtup = range(ndim)
+                sumtup.remove(hax)
+                sumtup.remove(hay)
+                sumtup = tuple(sumtup)
+                hist_t = np.sum(hist, axis=sumtup)
+                if plotlog:
+                    hist_t = np.log10(hist_t)
+                img = ax.pcolormesh(datax['bins'], datay['bins'], hist_t.T, vmin=vmin, vmax=vmax, cmap=cmap, rasterized=True)
+    
+    plt.colorbar(img, cax=cax, orientation='vertical')
+    cax.set_aspect(10.)
+    cax.set_ylabel(clabel, fontsize=fontsize)
+    cax.tick_params(which='both', labelsize=fontsize - 1.)
+    
+    addtext = 'missing weight fraction: %.5f\n'%missingfrac
+    for i in range(ndim):
+        if axdata[i]['sel'] is not None:
+            addtext = addtext + axdata[i]['sel']
+        
+    tax.text(0.05, 0.7, addtext, fontsize=fontsize, verticalalignment='top', horizontalalignment='left', transform=tax.transAxes)
+    tax.axis('off')
+    
+    imgname = title[:-5] + '_' + gn
+    plt.savefig(ol.mdir + imgname + '.pdf', format='pdf', bbox_inches='tight')
+            
