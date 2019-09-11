@@ -2370,9 +2370,9 @@ def selecthaloparticles(vardict, halosel, nameonly=False, last=True, **kwargs):
     if allinR200c:
         vardict.particle['GroupNumber'] = np.abs(vardict.particle['GroupNumber']) # GroupNumber < 0: within R200 of halo |GroupNumber|, but not in FOF group
     if exclsatellites:
-        groupmax = np.max(vardict.particle['GroupNumber']) + 1
+        # subgroupnumber -> True/False array: unbound gas is too close to overflowing int32 type, subtracting max * subgroupnumber may be risky
         vardict.readif('SubGroupNumber', rawunits=True)
-        vardict.particle['GroupNumber'] -= groupmax * vardict.particle['SubGroupNumber'] # SubgroupNumber > 0 -> GroupNumber becomes < 0 and particle will not be selected
+        vardict.particle['GroupNumber'][vardict.particle['SubGroupNumber'] > 0] = -1
         vardict.delif('SubGroupNumber', last=last)    
     
     groupnums.sort()
@@ -4201,12 +4201,14 @@ def gethalomass(vardict, mdef='200c', allinR200c=True):
     vardict.particle['GroupNumber'] -= 1 # go from group labels (1-start) to indices (0-start)
     
     parentmasses = np.ones(len(vardict.particle['GroupNumber'])) * np.NaN
-    outsideany = np.logical_or(vardict.particle['GroupNumber'] < 0, vardict.particle['GroupNumber'] == 2**32 - 1) # possibly excluded non-FoF particles and gas outside haloes
+    #print(vardict.particle['GroupNumber'].dtype) -> int32, so max value allowed is 2**32
+    outsideany = np.logical_or(vardict.particle['GroupNumber'] < 0, vardict.particle['GroupNumber'] == 2**30 - 1)
     parentmasses[outsideany] = 0.
-    parentmasses[np.logical_not(outsideany)] = masses_halo[vardict.particle['GroupNumber'][np.logical_not[outsideany]]]
+    parentmasses[np.logical_not(outsideany)] = masses_halo[vardict.particle['GroupNumber'][np.logical_not(outsideany)]]
     
     vardict.delif('GroupNumber', last=True) # changed values -> remove
-    vardict.add_particle('halomass', parentmasses)
+    vardict.add_part('halomass', parentmasses)
+    vardict.CGSconv['halomass'] = c.solar_mass
 
 def getsubhaloclass(vardict):
     '''
@@ -4225,7 +4227,7 @@ def getsubhaloclass(vardict):
     vardict.particle['subhalocat'] = np.ones(len(vardict.particle['SubGroupNumber'])) * np.NaN
     vardict.particle['subhalocat'][vardict.particle['SubGroupNumber'] == 0] = 0.5
     vardict.particle['subhalocat'][vardict.particle['SubGroupNumber'] >  0] = 1.5
-    vardict.particle['subhalocat'][vardict.particle['SubGroupNumber'] == 2**32] = 2.5
+    vardict.particle['subhalocat'][vardict.particle['SubGroupNumber'] == 2**30] = 2.5
     vardict.delif('SubGroupNumber', last=True) 
 
 def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
@@ -4358,7 +4360,7 @@ def namehistogram_perparticle_axis(dct):
                 inclind = '_allinR200c'
             else:
                 inclind = '_FoFonly'
-            axname = 'logM%s_Msun' + inclind
+            axname = 'logM%s_Msun'%(dct['mdef']) + inclind
         elif dct['quantity'] == 'subcat':
             axname = 'subhalo_category'
 
@@ -4373,7 +4375,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
     dct: ptype, excludeSFR, abunds, ion, parttype, quantity, misc
     dct_defaults: same entries, use to set defaults in dct
     '''
-    # larget int used : 38
+    # larget int used : 40
     if 'ptype' in dct:
         ptype = dct['ptype']
     else:
@@ -4501,13 +4503,27 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
                     if not isinstance(misc['useLSR'], bool):
                         print('misc -> useLSR should be a boolean')
                         return 36
+                    
+    if 'mdef' not in dct:
+        dct['mdef'] = dct_defaults['mdef']
+    if 'allinR200c' not in dct:
+        dct['allinR200c'] = dct_defaults['allinR200c']
+        
+    if not (dct['mdef'] == 'group' or (dct['mdef'][-1] in ['c', 'm'] and dct['mdef'][:-1] in ['200', '500', '2500'])):
+        print('mdef option %s is invalid'%(dct['mdef']))
+        return 39
+        
+    if not isinstance(dct['allinR200c'], bool):
+        print('allinR200c should be True or False')
+        return 40
+        
     dct['parttype'] = parttype
     return dct, parttype
 
 def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
                               L_x, L_y, L_z, centre, LsinMpc,\
                               excludeSFR, abunds, ion, parttype, quantity,\
-                              axesdct, axbins,\
+                              axesdct, axbins, allinR200c, mdef,\
                               misc):
 
     '''
@@ -4575,7 +4591,7 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
 
     dct_defaults = {'ptype': ptype, 'excludeSFR': excludeSFR, 'abunds': abunds,\
                     'ion': ion, 'parttype': parttype, 'quantity': quantity,\
-                    'misc': misc}
+                    'misc': misc, 'allinR200c': allinR200c, 'mdef': mdef}
     dct_defaults, parttype = check_particlequantity(dct_defaults, {}, parttype, simulation)
     axesdct = [check_particlequantity(dct, dct_defaults, parttype, simulation)[0] for dct in axesdct]
     if np.any(np.array([isinstance(dct, int) for dct in axesdct])):
@@ -4587,7 +4603,7 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
     return 0, ptype, simnum, snapnum, var, simulation,\
                               L_x, L_y, L_z, centre, LsinMpc,\
                               excludeSFR, abunds, ion, parttype, quantity,\
-                              axesdct, axbins,\
+                              axesdct, axbins, allinR200c, mdef,\
                               misc
 
 
@@ -4630,11 +4646,13 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, sylviassh
         if quantity == 'Mass':
             gethalomass(vardict, mdef=mdef, allinR200c=allinR200c)
             q = vardict.particle['halomass']
+            multipafter = vardict.CGSconv['halomass']
             vardict.delif('halomass', last=last)
         elif quantity == 'subcat':
             getsubhaloclass(vardict)
-            q = vardict.particle['subcat']
-            vardict.delif('subcat', last=last)
+            q = vardict.particle['subhalocat']
+            vardict.delif('subhalocat', last=last)
+            multipafter = 1.
 
     elif ptype in ['Nion', 'Niondens'] and not iselt:
         if ion in ['h1ssh', 'hmolssh', 'hneutralssh'] and not sylviasshtables:
@@ -4695,19 +4713,35 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                                simulation='eagle',\
                                excludeSFR=False, abunds=None, ion=None, parttype='0', quantity=None,\
                                axbins=0.2,\
-                               sylviasshtables=False,\
+                               sylviasshtables=False, allinR200c=True, mdef='200c',\
                                L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=None,\
                                misc=None,\
                                name_append=None, logax=True, loghist=False):
     '''
     only does a few very specific caluclations in current implementation
 
-    arguments similar to make_map
-    ptype, excludeSFR, abunds, ion, parttype, quantity, allinR200c, mdef: as in
-        make_map, for the thing to weight the histogram by
+    arguments same as make_map:
+    ---------------------------
+    simnum
+    snapnum
+    var
+    simulation
+    excludeSFR
+    abunds
+    ion
+    parttype
+    quantity
+    sylviasshtables (only available as a choice to apply to all weights/axes)
+    misc
+    L_x, L_Y, L_z, centre, Ls_in_Mpc: not currently implemented beyond input
+        check and autonaming
+        
+    argument similar to make_map:
+    -----------------------------
+    ptype, allinR200c, mdef
         but:
          - pytpe 'halo' is an option, with 'Mass' and 'subcat' quantities  
-           'Mass' group particles y parant halo mass
+           'Mass' group particles by parant halo mass (no halo -> halo mass 0.)
            'subcat' divides galaxies into central, satellite, and unbound 
            classes
          - instead of 'coldens' and 'emission', the ion/emission types are 
@@ -4716,19 +4750,38 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
            or 'Niondens' and 'Lumdens' (for the volumn density of emission or 
            ions, to be used on axes to gauge contributions to surface 
            brightness and column density)
+           
+    not in make_map:
+    ----------------
     axesdct: list of dictionaries for each hist: the axes of the histogram
-        entires are (the non-None elements of) ptype, exlcudeSFR, abunds, ion, parttype, quantity
+        entires are (the non-None elements of) ptype, exlcudeSFR, abunds, ion, 
+        parttype, quantity, mdef, allinR200c (defaults are same as general/
+        weight values)
+        note that bins are always (log) cgs, including for e.g.  halo mass
     logax: boolean, or array of booleans matching axesdct
            take log values of a property for the histogram (bins are assumed 
            to apply to the selected value type, and are not transformed based
            on logax)
     loghist: store log histogram values or not (bool)
+    axbins: bins to use along each axis
+            int -> number of bins, float -> bin size; applied to all (finite) 
+            values between data min and max, with bin edges placed so 0. would 
+            be an edge if included in the data range in the float case
+            list/array: use those bin edges
+            if a single value is given, that is used for the bin size/number
+            along each axis. An iterable is interpreted single values for each
+            axis, so to use the same specified in edges for each axis, use
+            [[<value 1>, ..., <value N>]] * <number of dimensions>
+    name_append: append this name to the group in the hdf5 file. Useful if 
+            redoing a histogram with e.g. different binning, since autonaming
+            only accounts for the properties of the weight and axis data.
+    
     TODO: wishlisting implementation: avoid double read-ins
     '''
     res = inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
                               L_x, L_y, L_z, centre, Ls_in_Mpc,\
                               excludeSFR, abunds, ion, parttype, quantity,\
-                              axesdct, axbins,\
+                              axesdct, axbins, allinR200c, mdef,\
                               misc)
     if isinstance(res, int):
         print('Input error %i'%res)
@@ -4747,7 +4800,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
     ptype, simnum, snapnum, var, simulation,\
     L_x, L_y, L_z, centre, LsinMpc,\
     excludeSFR, abunds, ion, parttype, quantity,\
-    axesdct, axbins, misc = res[1:]
+    axesdct, axbins, allinR200c, mdef, misc = res[1:]
 
     print('Processed input:')
     print('L_x, L_y, L_z, centre, Ls_in_Mpc,\n%s, %s, %s, %s, %s'%(L_x, L_y, L_z, centre, Ls_in_Mpc,))
@@ -4782,7 +4835,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
             hed = outfile.create_group('Header')
             hed.attrs.create('simnum', np.string_(simnum))
             hed.attrs.create('snapnum', snapnum)
-            hed.attrs.create('var', np.string(var))
+            hed.attrs.create('var', np.string_(var))
             hed.attrs.create('simulation', np.string_(simulation))
             csm = hed.create_group('cosmopars')
             csm.attrs.create('a', simfile.a)
@@ -4823,11 +4876,11 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
             if 'mdef' in dct_t.keys():
                 mdef_t = dct_t['mdef']
             else:
-                mdef_t = '200c'
+                mdef_t = None
             if 'allinR200c' in dct_t.keys():
                 allinR200c_t = dct_t['allinR200c']
             else:
-                allinR200c_t = True
+                allinR200c_t = None
             logax_t = logax[axind]
             
             axdata_t, multipafter_t = getparticledata(vardict, ptype_t, excludeSFR_t, abunds_t,\
@@ -4903,7 +4956,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
             axdata += [axdata_t]
             del axdata_t
             
-        weight, multipafter_w = getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, last=True, updatesel=False, misc=None)
+        weight, multipafter_w = getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, last=True, updatesel=False, misc=None, allinR200c=allinR200c, mdef=mdef)
         maxw = np.max(weight)
         lenw = len(weight)
         # rescale for fp precision and overflow avoidance
