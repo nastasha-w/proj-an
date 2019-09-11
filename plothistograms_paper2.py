@@ -1845,6 +1845,7 @@ def quicklook_particlehist(h5name, group=None, plotlog=None):
     with h5py.File(h5name, 'r') as fi:
         keys = list(fi.keys())
         keys.remove('Header')
+        keys.remove('Units')
         if len(keys) > 1:
             print('Which group do you want to plot?')
             for i in range(len(keys)):
@@ -1921,10 +1922,15 @@ def quicklook_particlehist(h5name, group=None, plotlog=None):
     textheight = 2.
     fontsize = 12
     cmap = 'gist_yarg'
+    
+    cext = None
     if plotlog:
         vmin = np.log10(np.min(hist[hist > 0]))
         vmax = np.log10(np.max(hist[hist > 0]))
         clabel = 'log10 weight'
+        if vmax - vmin > 10.:
+            vmin = vmax - 10.
+            cext = 'min'
     else:
         vmin = np.min(hist[hist > 0])
         vmax = np.max(hist)
@@ -1987,7 +1993,7 @@ def quicklook_particlehist(h5name, group=None, plotlog=None):
                     hist_t = np.log10(hist_t)
                 img = ax.pcolormesh(datax['bins'], datay['bins'], hist_t.T, vmin=vmin, vmax=vmax, cmap=cmap, rasterized=True)
     
-    plt.colorbar(img, cax=cax, orientation='vertical')
+    plt.colorbar(img, cax=cax, orientation='vertical', extend=cext)
     cax.set_aspect(10.)
     cax.set_ylabel(clabel, fontsize=fontsize)
     cax.tick_params(which='both', labelsize=fontsize - 1.)

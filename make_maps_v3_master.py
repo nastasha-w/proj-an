@@ -4209,7 +4209,8 @@ def gethalomass(vardict, mdef='200c', allinR200c=True):
     vardict.delif('GroupNumber', last=True) # changed values -> remove
     vardict.add_part('halomass', parentmasses)
     vardict.CGSconv['halomass'] = c.solar_mass
-
+    #print('Min/max halo masses: %s (%s) / %s'%(np.min(parentmasses), np.min(parentmasses[parentmasses > 0]), np.max(parentmasses)))
+    
 def getsubhaloclass(vardict):
     '''
     kwargs:
@@ -4269,7 +4270,7 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
         SFRind = '_onlyEOS'
 
     # abundances
-    if ptype in ['coldens', 'emission']:
+    if ptype in ['Nion', 'Niondens', 'Lumninosity', 'Lumdens']:
         if abunds[0] not in ['Sm','Pt']:
             sabunds = '%smassfracAb'%str(abunds[0])
         else:
@@ -4300,7 +4301,7 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
         squantity = squantity.replace('/','-')
 
     
-    if ptype == 'coldens' or ptype == 'emission':
+    if ptype in ['Nion', 'Niondens', 'Lumninosity', 'Lumdens']:
         resfile = ol.ndir + 'particlehist_%s_%s_%s_%s_test%s_%s' %(ptype, ion , ssimnum, snapnum, str(version), sabunds) + boxstring + SFRind
     elif ptype == 'basic':
         resfile = ol.ndir + 'particlehist_%s%s_%s_%s_test%s' %(squantity, sparttype, ssimnum, snapnum, str(version)) + boxstring + SFRind
@@ -4387,7 +4388,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
         dct['excludeSFR'] = excludeSFR
     
     if ptype not in ['Nion', 'Niondens', 'Luminosity', 'Lumdens', 'basic', 'halo']:
-        print('ptype should be one of emission, coldens, or basic (str).\n')
+        print('ptype should be one of Nion, Niondens, Luminosity, Lumdens, basic, halo (str).\n')
         return 3
     elif ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
         if 'ion' not in dct.keys():
@@ -4436,6 +4437,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
             else:
                 abunds[1] = abunds[0]
         dct['abunds'] = tuple(abunds)
+        abunds = tuple(abunds)
     else: # ptype == basic or halo
         if 'quantity' not in dct.keys():
             print('For ptypes basic, halo, quantity must be specified.\n')
@@ -4600,10 +4602,10 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
 
 
     # if nothing has gone wrong, return all input, since setting quantities in functions doesn't work on global variables
-    return 0, ptype, simnum, snapnum, var, simulation,\
+    return 0, dct_defaults['ptype'], simnum, snapnum, var, simulation,\
                               L_x, L_y, L_z, centre, LsinMpc,\
-                              excludeSFR, abunds, ion, parttype, quantity,\
-                              axesdct, axbins, allinR200c, mdef,\
+                              dct_defaults['excludeSFR'], dct_defaults['abunds'], dct_defaults['ion'], dct_defaults['parttype'], dct_defaults['quantity'],\
+                              axesdct, axbins, dct_defaults['allinR200c'], dct_defaults['mdef'],\
                               misc
 
 
@@ -4941,11 +4943,11 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                     grp.attrs.create('number of particles < min value', 0)
                 else: # list/array of bin edges
                     if axbins[-1] < max_t:
-                        numgtr = np.sum(axdata_t[np.isfinite(axdata_t)] > axbins[-1])
+                        numgtr = np.sum(axdata_t[np.isfinite(axdata_t)] > axbins_t[-1])
                     else:
                         numgtr = 0
                     if axbins[0] > min_t:
-                        numltr = np.sum(axdata_t[np.isfinite(axdata_t)] < axbins[0])
+                        numltr = np.sum(axdata_t[np.isfinite(axdata_t)] < axbins_t[0])
                     else:
                         numltr = 0
                     grp.attrs.create('number of particles > max value', numgtr)
