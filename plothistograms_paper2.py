@@ -1849,14 +1849,14 @@ def quicklook_particlehist(h5name, group=None, plotlog=None):
             print('Which group do you want to plot?')
             for i in range(len(keys)):
                 print('%i\t%s'%(i, keys[i]))
-            choice = raw_input('Please enter name or index')
+            choice = raw_input('Please enter name or index: ')
             choice = choice.strip()
             try:
                 ci = int(choice)
                 gn = keys[ci]
             except ValueError:
                 gn = choice
-            if gn not in keys():
+            if gn not in keys:
                 raise ValueError('group "%s" is not one of the options'%(gn))
         else:
             gn = keys[0]
@@ -1904,6 +1904,11 @@ def quicklook_particlehist(h5name, group=None, plotlog=None):
                 
             if partselstr is not None:
                 partselstr = '%s:\n'%axn + partselstr + '\n'
+                
+            if bins[0] == -np.inf:
+                bins[0] = 2. * bins[1] - bins[2]
+            if bins[-1] == np.inf:
+                bins[-1] = 2. * bins[-2] - bins[-3]
                 
             axdata[axi] = {'bins': bins, 'log': axlog, 'sel': partselstr, 'name': axn}
             

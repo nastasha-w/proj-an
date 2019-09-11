@@ -4902,23 +4902,23 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
             grp.attrs.create('histogram axis', axind)
             grp.attrs.create('log', logax_t)
             
-            if ptype_t == 'halo' and quantity == 'subcat': # override input binning for standard indices
+            if ptype_t == 'halo' and quantity_t == 'subcat': # override input binning for standard indices
                 if logax_t:
                     bins = np.log10([0.1, 1., 2., 3.])
                 else:
                     bins = np.array([0., 1., 2., 3.])
                 axbins_t = bins
                 if axbins[-1] < max_t:
-                    numgtr = np.sum(axdata_t[np.isfinite(axdata_t)] > axbins[-1])
+                    numgtr = np.sum(axdata_t[np.isfinite(axdata_t)] > axbins_t[-1])
                 else:
                     numgtr = 0
                 if axbins[0] > min_t:
-                    numltr = np.sum(axdata_t[np.isfinite(axdata_t)] < axbins[0])
+                    numltr = np.sum(axdata_t[np.isfinite(axdata_t)] < axbins_t[0])
                 else:
                     numltr = 0
                 grp.attrs.create('number of particles > max value', numgtr)
                 grp.attrs.create('number of particles < min value', numltr)
-                grp.attrs.create('info', np.string_('indices correspoond to subhalo categories'))
+                grp.attrs.create('info', np.string_('indices correspond to subhalo categories'))
                 grp.attrs.create('index 0', np.string_('central galaxy and bound to halo'))
                 grp.attrs.create('index 1', np.string_('bound to satellities'))
                 grp.attrs.create('index 2', np.string_('no subgroup membership'))     
@@ -4950,7 +4950,10 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                         numltr = 0
                     grp.attrs.create('number of particles > max value', numgtr)
                     grp.attrs.create('number of particles < min value', numltr)
-            
+            else:
+                raise ValueError('axbins must be specified')
+                
+            axbins_t = np.array(axbins_t)
             grp.create_dataset('bins', data=axbins_t)
             axbins_touse += [axbins_t]
             axdata += [axdata_t]
@@ -5116,6 +5119,7 @@ def makehistograms_radprof3D(ptype, simnum, snapnum, var, simulation,\
         grp.attrs.create('number of particles', len(axdata_t))
         grp.attrs.create('number of particle with finite values', int(np.sum(np.isfinite(axdata_t))) )
 
+        
         if axbins is not None:
             if hasattr(axbins, '__len__'):
                 axbins_t = axbins[axind]
@@ -5143,6 +5147,9 @@ def makehistograms_radprof3D(ptype, simnum, snapnum, var, simulation,\
                     numltr = 0
                 grp.attrs.create('number of particles > max value', numgtr)
                 grp.attrs.create('number of particles < min value', numltr)
+        else:
+            raise ValueError('axbins must be specified')
+            
         grp.create_dataset('bins', data=axbins_t)
         axbins_touse += [axbins_t]
         axdata += [axdata_t]
