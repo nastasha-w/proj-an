@@ -374,7 +374,7 @@ class Vardict:
             self.readsel = Sel(readsel)
         #self.reportmemuse()
 
-    def delif(self,name, last = False):
+    def delif(self, name, last=False):
         '''
         deletes a variable if it is not on a list of variables to save,
         and removes corresponding dictionary entry, always if it is the last use
@@ -385,10 +385,10 @@ class Vardict:
         if name not in self.wishlist or last:
             del self.particle[name] # remove dictionary element
 
-    def isstored_box(self,name):
+    def isstored_box(self, name):
         return name in self.box.keys()
 
-    def isstored_part(self,name):
+    def isstored_part(self, name):
         return name in self.particle.keys()
 
     def readif(self, name, region='auto', rawunits=False, out=False, setsel=None, setval=None):  # reads in name (of parttype) from EAGLE if it is not already read in (on lst),
@@ -405,13 +405,15 @@ class Vardict:
         '''
         #self.reportmemuse()
         if region == 'auto':
-            region = self.region
+            self.region_temp = self.region
+        else:
+            self.region_temp = region
         sel = self.readsel
         if not self.isstored_part(name):
             if 'Coordinates' in name:
-                self.particle[name] = self.simfile.readarray('PartType%s/%s' %(self.parttype, name), rawunits=True, region=region).astype(np.float32)[sel.val, :]
+                self.particle[name] = self.simfile.readarray('PartType%s/%s' %(self.parttype, name), rawunits=True, region=self.region_temp).astype(np.float32)[sel.val, :]
             else:
-                self.particle[name] = self.simfile.readarray('PartType%s/%s' %(self.parttype, name), rawunits=True,region=region)[sel.val] #coordinates are always needed, so these will not be read in this way; other arrays are 1D
+                self.particle[name] = self.simfile.readarray('PartType%s/%s' %(self.parttype, name), rawunits=True, region=self.region_temp)[sel.val] #coordinates are always needed, so these will not be read in this way; other arrays are 1D
             self.CGSconv[name] = self.simfile.a ** self.simfile.a_scaling * (self.simfile.h ** self.simfile.h_scaling) * self.simfile.CGSconversion
             if not rawunits: # do CGS conversion here since read_eagle_files does not seem to modify the array in place
                 self.particle[name] *= self.CGSconv[name]
@@ -420,7 +422,8 @@ class Vardict:
             self.particle[name][setsel] = setval
         if out:
             return self.particle[name]
-
+        del self.region_temp
+        
     def add_part(self,name,var):
         #self.reportmemuse()
         if name in self.particle.keys():
@@ -459,17 +462,17 @@ class Vardict:
         else:
             pass # selname id undefines; no update necessary
 
-    def overwrite_part(self,name,var):
+    def overwrite_part(self, name, var):
         #self.reportmemuse()
         self.particle[name] = var
 
-    def overwrite_box(self,name,var):
+    def overwrite_box(self, name, var):
         #self.reportmemuse()
         self.box[name] = var
 
     ## functions to get specific derived particle properties; wishlist generation counts on naming being get<name of property to store>
     # note: each function 'cleans up' all other quantites it uses! adjust wishlists in lumonisity etc. calculation to save quantities needed later on
-    def getlognH(self,last=True,**kwargs):
+    def getlognH(self, last=True, **kwargs):
         #self.reportmemuse()
         if not 'hab' in kwargs.keys():
             print('hab must be specified to calculate lognH')

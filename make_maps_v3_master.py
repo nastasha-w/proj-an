@@ -4326,7 +4326,9 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
         resfile = ol.ndir + 'particlehist_%s_%s_%s_%s_test%s_%s' %(ptype, ion , ssimnum, snapnum, str(version), sabunds) + boxstring + SFRind
     elif ptype == 'basic':
         resfile = ol.ndir + 'particlehist_%s%s_%s_%s_test%s' %(squantity, sparttype, ssimnum, snapnum, str(version)) + boxstring + SFRind
-
+    elif ptype in ['halo', 'coords']:
+        resfile = 'particlehist_%s-%s%s_%s_%s_test%s' %(ptype, quantity, sparttype, ssimnum, snapnum, str(version)) + boxstring + SFRind
+        
     if misc is not None:
         miscind = '_'+'_'.join(['%s-%s'%(key, misc[key]) for key in misc.keys()])
         resfile = resfile + miscind
@@ -4382,9 +4384,13 @@ def namehistogram_perparticle_axis(dct):
                 inclind = '_allinR200c'
             else:
                 inclind = '_FoFonly'
-            axname = 'logM%s_Msun'%(dct['mdef']) + inclind
+            axname = 'M%s_halo'%(dct['mdef']) + inclind
         elif dct['quantity'] == 'subcat':
             axname = 'subhalo_category'
+            
+    elif ptype == 'coords':
+        if dct['quantity'] == 'r3D':
+            axname = '3Dradius'
 
     if misc is not None:
         miscind = '_'+'_'.join(['%s-%s'%(key, misc[key]) for key in misc.keys()])
@@ -4745,7 +4751,8 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                                sylviasshtables=False, allinR200c=True, mdef='200c',\
                                L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=None,\
                                misc=None,\
-                               name_append=None, logax=True, loghist=False):
+                               name_append=None, logax=True, loghist=False,
+                               nameonly=False):
     '''
     only does a few very specific caluclations in current implementation
 
@@ -4810,8 +4817,10 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
     name_append: append this name to the group in the hdf5 file. Useful if 
             redoing a histogram with e.g. different binning, since autonaming
             only accounts for the properties of the weight and axis data.
+    nameonly: return file name, group name tuple
     
-    TODO: wishlisting implementation: avoid double read-ins
+    TODO: wishlisting implementation: avoid double read-ins (currently only
+    indirectly done for coords-r3D and region selection)
     '''
     res = inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
                               L_x, L_y, L_z, centre, Ls_in_Mpc,\
@@ -4845,31 +4854,35 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
     print('misc, %s'%(misc))
     print('\n')
 
-    if not (L_x is None and L_y is None and L_z is None and centre is None):
-        print('Region selection is not yet implemented and will be ignored')
-
     simfile = pc.Simfile(simnum, snapnum, var, file_type='particles', simulation=simulation)
-    vardict = pc.Vardict(simfile, parttype, [], region=None, readsel=None)
-
-    outfilename = namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
-                              None, None, None, None, None, simfile.boxsize, simfile.h, excludeSFR,\
-                              abunds, ion, parttype, quantity,\
-                              misc)
-    axnames = [namehistogram_perparticle_axis(dct) for dct in axesdct]
-    groupname = '_'.join(axnames) 
-    if name_append is not None:
-        groupname = groupname + name_append
-        
+    vardict = pc.Vardict(simfile, parttype, [], region=None, readsel=None) # important: vardict.region is set later, so don't read in anything before that
+    
     # apply region selection if needed; don't use the make_maps methods here, 
     # since those account for smoothing length margins that are unnecessary for
     # this 
     if not (L_x is None and L_y is None and L_z is None and centre is None):
         Ls = np.array([L_x, L_y, L_z])
         if not Ls_in_Mpc:
+            Ls_hunits = np.copy(Ls)
             Ls /= vardict.simfile.h
-        if simfile.region_supported:
-            # select region
-            pass
+        else:
+            Ls_hunits = np.copy(Ls)
+            Ls_hunits *= vardict.simfile.h
+        if vardict.simfile.region_supported:
+            # select region; units for this are cMpc/h
+            if np.all(Ls_hunits >= vardict.simfile.boxsize):
+                region = None
+            else:
+                hconst = vardict.simfile.h
+                # selectio is periodic -> don't have to worry about edge overlaps
+                region = [centre[0] * hconst - 0.5 * Ls_hunits[0],\
+                          centre[0] * hconst + 0.5 * Ls_hunits[0],\
+                          centre[1] * hconst - 0.5 * Ls_hunits[1],\
+                          centre[1] * hconst + 0.5 * Ls_hunits[1],\
+                          centre[2] * hconst - 0.5 * Ls_hunits[2],\
+                          centre[2] * hconst + 0.5 * Ls_hunits[2],\
+                          ]
+                vardict.region = region
         
         # apply precise selection to particle centres
         BoxSize = vardict.simfile.boxsize / vardict.simfile.h # cMpc
@@ -4896,7 +4909,18 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
         vardict.add_box('box3', box3)
         vardict.overwrite_box('centre',centre)
         vardict.overwrite_box('Ls',Ls)
-
+    
+    outfilename = namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
+                              None, None, None, None, None, simfile.boxsize, simfile.h, excludeSFR,\
+                              abunds, ion, parttype, quantity,\
+                              misc)
+    axnames = [namehistogram_perparticle_axis(dct) for dct in axesdct]
+    groupname = '_'.join(axnames) 
+    if name_append is not None:
+        groupname = groupname + name_append
+    
+    if nameonly:
+        return outfilename, groupname
 
     with h5py.File(outfilename, 'a') as outfile:
         if groupname in outfile.keys():
