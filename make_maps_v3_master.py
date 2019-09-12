@@ -4269,11 +4269,11 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
             hfac = hconst
         poss = []
         if L_x*hfac < BoxSize * hconst**-1:
-            poss += 'x%s-pm%s%s' %(str(centre[0]), str(L_x), Lunit)
+            poss += ['x%s-pm%s%s'%(str(centre[0]), str(L_x), Lunit)]
         if L_y*hfac < BoxSize * hconst**-1:
-            poss += 'y%s-pm%s%s' %(str(centre[1]), str(L_y), Lunit)
+            poss += ['y%s-pm%s%s'%(str(centre[1]), str(L_y), Lunit)]
         if L_z*hfac < BoxSize * hconst**-1:
-            poss += 'z%s-pm%s%s' %(str(centre[2]), str(L_z), Lunit)
+            poss += ['z%s-pm%s%s'%(str(centre[2]), str(L_z), Lunit)]
         boxstring = '_'+'_'.join(poss)
     else:
         boxstring = ''
@@ -4911,7 +4911,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
         vardict.overwrite_box('Ls',Ls)
     
     outfilename = namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
-                              None, None, None, None, None, simfile.boxsize, simfile.h, excludeSFR,\
+                              L_x, L_y, L_z, centre, LsinMpc, simfile.boxsize, simfile.h, excludeSFR,\
                               abunds, ion, parttype, quantity,\
                               misc)
     axnames = [namehistogram_perparticle_axis(dct) for dct in axesdct]

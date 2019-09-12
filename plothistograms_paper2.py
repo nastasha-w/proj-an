@@ -1923,7 +1923,7 @@ def quicklook_particlehist(h5name, group=None, plotlog=None):
     fontsize = 12
     cmap = 'gist_yarg'
     
-    cext = None
+    cext = 'neither'
     if plotlog:
         vmin = np.log10(np.min(hist[hist > 0]))
         vmax = np.log10(np.max(hist[hist > 0]))
