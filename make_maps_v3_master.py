@@ -91,6 +91,7 @@ version = 3.4 # matches corresponding make_maps version
 #             2.5 -> unbound (gets binned into bins 0, 1, 2)
 # propvol_i   1 / proper volume (can be used a a weight in 1D histograms to get 
 #             number densities) 
+# r3D         3D radius (centre point not specified)
 # note that these variables do not always mean exactly the same thing:
 # for example lognH  will e.g. depend on the hydrogen number density used.
 # Take this into account in wishlist generation and calculation order.
@@ -2110,7 +2111,7 @@ def ppv_selselect_coordsgen(centre, Ls, Axis1, Axis2, Axis3, periodic, vardict, 
         sel = pc.Sel({'arr': -0.5*Ls[Axis3] <= vardict.particle['coords_cMpc-vel'][:,Axis3]})
         sel.comb({'arr':   0.5*Ls[Axis3] >  vardict.particle['coords_cMpc-vel'][:,Axis3]})
 
-    vardict.add_box('box3',box3)
+    vardict.add_box('box3', box3)
     vardict.overwrite_box('centre',centre)
     vardict.overwrite_box('Ls',Ls)
     vardict.update(sel)
@@ -4231,6 +4232,26 @@ def getsubhaloclass(vardict):
     vardict.particle['subhalocat'][vardict.particle['SubGroupNumber'] == 2**30] = 2.5
     vardict.delif('SubGroupNumber', last=True) 
 
+def get3ddist(vardict, cen, last=True, trustcoords=False):
+    '''
+    trustcoords: trust 'Coordinates' entry in vardict to be in cMpc units and
+                 CGSconv to reflect that
+    '''
+    if not trustcoords: 
+        vardict.delif('Coordinates', last=True)
+    if 'Coordinates' not in vardict.simfile:
+        vardict.readif('Coordinates')
+        vardict.particle['Coordinates'] *= (1. / vardict.simfile.h)
+        vardict.particle['CGSconv'] *= vardict.simfile.h
+        
+    if not np.all(cen == 0.): # translation step will often have been made before in region selection -> no need to repeat
+        translate(vardict.particle, 'Coordinates', cen, np.array((vardict.simfile.boxsize / vardict.simfile.h,) *3), False) # non-periodic -> centered on cen
+    radii = np.sqrt(np.sum(vardict.particle['Coordinates']**2, axis=1))
+    vardict.add_part('r3D', radii)
+    vardict.CGSconv['r3D'] = vardict.CGSconv['Coordinates']
+    vardict.delif('Coordinates', last=last)
+
+
 def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
                               L_x, L_y, L_z, centre, LsinMpc, BoxSize, hconst, excludeSFR,\
                               abunds, ion, parttype, quantity,\
@@ -4376,7 +4397,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
     dct: ptype, excludeSFR, abunds, ion, parttype, quantity, misc
     dct_defaults: same entries, use to set defaults in dct
     '''
-    # larget int used : 40
+    # largest int used : 41
     if 'ptype' in dct:
         ptype = dct['ptype']
     else:
@@ -4387,8 +4408,8 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
         excludeSFR = dct_defaults['excludeSFR']
         dct['excludeSFR'] = excludeSFR
     
-    if ptype not in ['Nion', 'Niondens', 'Luminosity', 'Lumdens', 'basic', 'halo']:
-        print('ptype should be one of Nion, Niondens, Luminosity, Lumdens, basic, halo (str).\n')
+    if ptype not in ['Nion', 'Niondens', 'Luminosity', 'Lumdens', 'basic', 'halo', 'coords']:
+        print('ptype should be one of Nion, Niondens, Luminosity, Lumdens, basic, halo, coords (str).\n')
         return 3
     elif ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
         if 'ion' not in dct.keys():
@@ -4440,7 +4461,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
         abunds = tuple(abunds)
     else: # ptype == basic or halo
         if 'quantity' not in dct.keys():
-            print('For ptypes basic, halo, quantity must be specified.\n')
+            print('For ptypes basic, halo, coords, quantity must be specified.\n')
             return 5
         quantity = dct['quantity']
         if not isinstance(quantity, str):
@@ -4450,7 +4471,10 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
             if quantity not in ['Mass', 'subcat']:
                 print('For ptype halo, the options are Mass and subcat')
                 return 38
-            
+        elif ptype == 'coords':
+            if quantity not in ['r3D']:
+                print('For ptype coords, the option is r3D')
+                return 41
         if parttype not in ['0','1','4','5']: # parttype only matters if it is used
             if parttype in [0, 1, 4, 5]:
                 parttype = str(parttype)
@@ -4533,7 +4557,7 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
     This is not an exhaustive check; it does handle the default/auto options
     return numbers are not ordered; just search <return ##>
     '''
-    # max used number: 39
+    # max used number: 40
 
     # basic type and valid option checks
     if not isinstance(var, str):
@@ -4545,6 +4569,11 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
     if not isinstance(simnum, str):
         print('simnum should be a string')
         return 22
+    
+    if np.any([dct['ptype'] == 'coords' for dct in axesdct]) and centre is None:
+        print('For ptype coords, a centre must be specified')
+        return 40
+    
     if not (L_x is None and L_y is None and L_z is None and centre is None):
         if (not isinstance(centre[0], num.Number)) or (not isinstance(centre[1], num.Number)) or (not isinstance(centre[2], num.Number)):
             print('centre should contain 3 floats')
@@ -4607,7 +4636,6 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
                               dct_defaults['excludeSFR'], dct_defaults['abunds'], dct_defaults['ion'], dct_defaults['parttype'], dct_defaults['quantity'],\
                               axesdct, axbins, dct_defaults['allinR200c'], dct_defaults['mdef'],\
                               misc
-
 
 
 
@@ -4690,26 +4718,25 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, sylviassh
                 multipafter *= vardict.CGSconv['propvol_i']
         else:
             raise ValueError('Invalid option excludeSFR=from for ion other than halpha')
-            return None
+    
+    elif ptype == 'coords':
+        if quantity == 'r3D':
+            # coordinates should have been centred in region selection, in cMpc units
+            get3ddist(vardict, np.array([0., 0., 0.]), last=last, trustcoords=True)
+            q = vardict.particle['r3D']
+            multipafter = vardict.CGSconv['r3D']
+        else:
+            raise ValueError('Invalid quantity option %s for ptype %s'%(quantity, ptype))
     else:
-        print('Invalid option')
+        raise ValueError('Invalid ptype option %s'%(ptype))
         return None
+    
     if 'propvol_i' in vardict.particle.keys():
         vardict.delif('propvol_i', last=last)
+        
     return q, multipafter
 
-def get3ddist(vardict, cen, radius, units='cMpc', last=True):
-    '''
-    units: cMpc or a number (in cMpc), useful for e.g. R200c units
-    '''
-    # force read-in so units are known
-    coords = vardict.simfile.readarray('PartType%s/%s' %(vardict.parttype, 'Coordinates'), rawunits=True, region=vardict.region).astype(np.float32)[vardict.sel.val, :]
-    coords *= (1./ vardict.simfile.h)
-    translate({'cd': coords}, 'cd', cen, np.array((vardict.simfile.boxsize / vardict.simfile.h,) *3), False) # non-periodic -> centered on cen
-    radii = np.sqrt(np.sum(coords**2, axis=1))
-    vardict.add_part('r3D', radii)
-    vardict.CGSconv['r3D'] = c.cm_per_mpc * vardict.simfile.a
-    del coords
+
 
 def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                                simulation='eagle',\
@@ -4742,24 +4769,30 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
     -----------------------------
     ptype, allinR200c, mdef
         but:
-         - pytpe 'halo' is an option, with 'Mass' and 'subcat' quantities  
+         - pytpe 'halo' is an option, 
+           with 'Mass' and 'subcat' quantities  
            'Mass' group particles by parant halo mass (no halo -> halo mass 0.)
            'subcat' divides galaxies into central, satellite, and unbound 
            classes
-         - instead of 'coldens' and 'emission', the ion/emission types are 
-           'Nion' and 'Luminosity' (for total number of ions or luminosity of 
-           the particle, to be used as weights)
+         - instead of 'coldens' and 'emission', 
+           the ion/emission types are 'Nion' and 'Luminosity' (for total number
+           of ions or luminosity of the particle, to be used as weights)
            or 'Niondens' and 'Lumdens' (for the volumn density of emission or 
            ions, to be used on axes to gauge contributions to surface 
            brightness and column density)
+         - ptype 'coords' is an option,
+           with quantity 'r3D': the 3D radial distance to centre (must be 
+           specified)
            
     not in make_map:
     ----------------
     axesdct: list of dictionaries for each hist: the axes of the histogram
         entires are (the non-None elements of) ptype, exlcudeSFR, abunds, ion, 
-        parttype, quantity, mdef, allinR200c (defaults are same as general/
+        parttype, quantity, mdef, allinR200c, (defaults are same as general/
         weight values)
-        note that bins are always (log) cgs, including for e.g.  halo mass
+        note that bins are always (log) cgs, including for e.g. halo mass
+        to get nice bin values in other units (e.g. solar masses, virial radii)
+        specify the bins based on those values in cgs units
     logax: boolean, or array of booleans matching axesdct
            take log values of a property for the histogram (bins are assumed 
            to apply to the selected value type, and are not transformed based
@@ -4826,6 +4859,44 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
     groupname = '_'.join(axnames) 
     if name_append is not None:
         groupname = groupname + name_append
+        
+    # apply region selection if needed; don't use the make_maps methods here, 
+    # since those account for smoothing length margins that are unnecessary for
+    # this 
+    if not (L_x is None and L_y is None and L_z is None and centre is None):
+        Ls = np.array([L_x, L_y, L_z])
+        if not Ls_in_Mpc:
+            Ls /= vardict.simfile.h
+        if simfile.region_supported:
+            # select region
+            pass
+        
+        # apply precise selection to particle centres
+        BoxSize = vardict.simfile.boxsize / vardict.simfile.h # cMpc
+        box3 = list((BoxSize,)*3)
+        
+        # coords are stored in float64, but I don't need that precision here. 
+        vardict.readif('Coordinates', rawunits=True, region=vardict.region)
+        vardict.particle['Coordinates'] *= (1. / vardict.simfile.h)
+        vardict.CGSconv['Coordinates'] *= vardict.simfile.h
+        translate(vardict.particle, 'Coordinates', centre, box3, False) # periodic = False -> centre on centre
+        
+        doselection = np.array([0,1,2])[Ls < BoxSize] # no selection needed if the selection dimension is the whole box (with an fp margin for h conversions)
+        if len(doselection) > 0:
+            sel = pc.Sel()
+            for axind in doselection:
+                margin = 0.5 * Ls[axind]
+                sel.comb({'arr': -1. * margin <= vardict.particle['Coordinates'][:, axind]})
+                sel.comb({'arr':       margin >  vardict.particle['Coordinates'][:, axind]})
+        vardict.update(sel)
+        
+        keepcoords = np.any([sub['ptype'] == 'coords' for sub in axesdct]) # keep the centred coordinates if they're needed for r3D later
+        vardict.delif('Coordinates', last=keepcoords)
+        
+        vardict.add_box('box3', box3)
+        vardict.overwrite_box('centre',centre)
+        vardict.overwrite_box('Ls',Ls)
+
 
     with h5py.File(outfilename, 'a') as outfile:
         if groupname in outfile.keys():
@@ -5002,187 +5073,4 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
         for i in range(len(edges)):
             bingrp.create_dataset('Axis%i'%(i), data=edges[i])
 
-    return hist, axbins
-
-### currently just a copy of untested makehistograms_perparticle
-def makehistograms_radprof3D(ptype, simnum, snapnum, var, simulation,\
-                             excludeSFR, abunds, ion, parttype, quantity,\
-                             axesdct, groupnum,\
-                             axbins=100, subgroupnum=0,\
-                             rbins=100, runit='cMpc',\
-                             sylviasshtables=False,\
-                             L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=None,\
-                             misc=None,\
-                             name_append=None, log=True):
-    '''
-    only does a few very specific caluclations in current implementation
-
-    arguments similar to make_map
-    ptype, excludeSFR, abunds, ion, parttype, quantity: as in make_map, for the
-        thing to weight the histogram by
-    axesdct: list of dictionaries for each hist: the axes of the histogram
-        entires are (the non-None elements of) ptype, exlcudeSFR, abunds, ion, parttype, quantity
-    TODO: wishlisting implementation: avoid double read-ins
-    '''
-    res = inputcheck(ptype, simnum, snapnum, var, simulation,\
-                              L_x, L_y, L_z, centre, Ls_in_Mpc,\
-                              excludeSFR, abunds, ion, parttype, quantity,\
-                              axesdct, axbins,\
-                              misc)
-    if isinstance(res, int):
-        print('Input error %i'%res)
-        return None
-
-    simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-         ptypeW,\
-         ionW, abundsW, quantityW,\
-         ionQ, abundsQ, quantityQ, ptypeQ,\
-         excludeSFRW, excludeSFRQ, parttype,\
-         theta, phi, psi, \
-         sylviasshtables,\
-         var, axis, log, velcut,\
-         periodic, kernel, saveres,\
-         simulation, LsinMpc,\
-         select, misc, ompproj = res[1:]
-
-    print('Processed input:')
-    print('L_x, L_y, L_z, centre, Ls_in_Mpc,\n%s, %s, %s, %s, %s'%(L_x, L_y, L_z, centre, Ls_in_Mpc,))
-    print('excludeSFR, abunds, ion, parttype, quantity,\n%s, %s, %s, %s, %s'%(excludeSFR, abunds, ion, parttype, quantity,))
-    print('axesdct, %s'%(axesdct))
-    print('axbins, %s'%(axbins))
-    print('misc, %s'%(misc))
-    print('\n')
-
-    if not L_x is None and L_y is None and L_z is None and centre is None:
-        print('Region selection is not yet implemented and will be ignored')
-
-    simfile = pc.Simfile(simnum, snapnum, var, file_type=ol.file_type, simulation=simulation)
-    vardict = pc.Vardict(simfile, '0', [], region = None, readsel = None)
-
-    outfilename = namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
-                              None, None, None, None, None, simfile.boxsize, simfile.h, excludeSFR,\
-                              abunds, ion, parttype, quantity,\
-                              misc)
-    axnames = [namehistogram_perparticle_axis(dct) for dct in axesdct]
-    groupname = '_'.join(axnames) + name_append
-
-    outfile = h5py.File(outfilename, 'a')
-    if groupname in outfile.keys():
-        outfile.close()
-        raise RuntimeError('This histogram already seems to exist; specify name_append to get a new unique name')
-    else:
-        group = outfile.create_group(groupname)
-    
-    if 'Header' not in outfile.keys():
-        hed = outfile.create_group('Header')
-        hed.attrs.create('simnum', simnum)
-        hed.attrs.create('snapnum', snapnum)
-        hed.attrs.create('var', var)
-        hed.attrs.create('simulation', simulation)
-        csm = hed.create_group('cosmopars')
-        csm.attrs.create('a', simfile.a)
-        csm.attrs.create('z', simfile.z)
-        csm.attrs.create('h', simfile.h)
-        csm.attrs.create('omegab', simfile.omegab)
-        csm.attrs.create('omegam', simfile.omegam)
-        csm.attrs.create('omegalambda', simfile.omegalambda)
-        csm.attrs.create('boxsize', simfile.boxsize)
-        
-    axdata = []
-    axbins_touse = []
-    for axind in range(len(axesdct)): #loop: large memory use, most likely, in each part
-        dct_t = axesdct[axind]
-        ptype_t = dct_t['ptype']
-        excludeSFR_t = dct_t['excludeSFR']
-        if 'ion' in dct_t.keys():
-            ion = dct_t['ion']
-        else:
-            ion = None
-        if 'abunds' in dct_t.keys():
-            abunds = dct_t['abunds']
-        else:
-            abunds = None
-        if 'quantity' in dct_t.keys():
-            quantity = dct_t['quantity']
-        else:
-            quantity = None
-        if 'misc' in dct_t.keys():
-            misc = dct_t['misc']
-        else:
-            misc = None
-
-        axdata_t = getparticledata(vardict, ptype_t, excludeSFR_t, abunds, ion, parttype, quantity, sylviasshtables=sylviasshtables, last=True, updatesel=False, misc=None)
-        if log:
-            axdata_t = np.log10(axdata_t)
-        min_t = np.min(axdata_t[np.isfinite(axdata_t)])
-        max_t = np.max(axdata_t[np.isfinite(axdata_t)])
-
-        grp = group.create_group(axnames[axind])
-        grp.attrs.create('number of particles', len(axdata_t))
-        grp.attrs.create('number of particle with finite values', int(np.sum(np.isfinite(axdata_t))) )
-
-        
-        if axbins is not None:
-            if hasattr(axbins, '__len__'):
-                axbins_t = axbins[axind]
-            else:
-                axbins_t = axbins
-            if isinstance(axbins_t, int): # number of bins
-                axbins_t = np.linspace(min_t * ( 1. - 1.e-7), max_t * (1. + 1.e-7), axbins_t + 1)
-                grp.attrs.create('number of particles > max value', 0)
-                grp.attrs.create('number of particles < min value', 0)
-            elif isinstance(axbins_t, num.Number): # something float-like: spacing
-                # search for round values up to spacing below min and above max
-                minbin = np.floor(min_t/axbins_t) * axbins_t
-                maxbin = np.ceil(max_t/axbins_t) * axbins_t
-                axbins_t = np.arange(minbin, maxbin + axbins_t/2., axbins_t)
-                grp.attrs.create('number of particles > max value', 0)
-                grp.attrs.create('number of particles < min value', 0)
-            else: # list/array of bin edges
-                if axbins[-1] < max_t:
-                    numgtr = np.sum(axdata_t[np.isfinite(axdata_t)] > axbins[-1])
-                else:
-                    numgtr = 0
-                if axbins[0] > min_t:
-                    numltr = np.sum(axdata_t[np.isfinite(axdata_t)] < axbins[0])
-                else:
-                    numltr = 0
-                grp.attrs.create('number of particles > max value', numgtr)
-                grp.attrs.create('number of particles < min value', numltr)
-        else:
-            raise ValueError('axbins must be specified')
-            
-        grp.create_dataset('bins', data=axbins_t)
-        axbins_touse += [axbins_t]
-        axdata += [axdata_t]
-        del axdata_t
-    weight = getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, last=True, updatesel=False, misc=None)
-
-    # loop to prevent memory from running out
-    maxperslice = 752**3 // 8
-    if len(weight) < maxperslice:
-        hist, edges = np.histogramdd(axdata, weights=weight, bins=axbins_touse)
-    else:
-        lentot = len(weight)
-        numperslice = maxperslice
-        slices = [slice(i*numperslice, min((i+1)*numperslice), lentot) for i in range(int(np.ceil(float(lentot) / float(numperslice))))]
-        for slind in range(len(slices)):
-            axdata_temp = [data[slices[slind]] for data in axdata]
-            hist_temp, edges_temp = np.histogramdd(axdata_temp, weights=weight[slices[slind]], bins=axbins_touse)
-            if slind == 0 :
-                hist = hist_temp
-                edges = edges_temp
-            else:
-                hist += hist_temp
-                if not np.all(np.array([np.all(edges[i] == edges_temp[i]) for i in range(len(edges))])):
-                    outfile.close()
-                    raise RuntimeError('Error: edges mismatch in histogramming loop (slind = %i)'%slind)
-                    
-                    return None
-    group.create_dataset('histogram', data=hist)
-    group['histogram'].attrs.create('sum of weights', np.sum(weight)) # should be equal to sum of the histogram, but it's good to check
-    bingrp = group.create_group('binedges')
-    for i in range(len(edges)):
-        bingrp.create_dataset('Axis%i'%(i), data=edges[i])
-    outfile.close()
     return hist, axbins
