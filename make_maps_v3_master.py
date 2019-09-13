@@ -4550,6 +4550,11 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
         return 40
         
     dct['parttype'] = parttype
+    
+    # make sure there is something to check for dct keys (might be None or useless)
+    for key in dct_defaults.keys():
+        if key not in dct.keys():
+            dct[key] = dct_defaults[key]
     return dct, parttype
 
 def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
@@ -4749,7 +4754,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                                excludeSFR=False, abunds=None, ion=None, parttype='0', quantity=None,\
                                axbins=0.2,\
                                sylviasshtables=False, allinR200c=True, mdef='200c',\
-                               L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=None,\
+                               L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
                                misc=None,\
                                name_append=None, logax=True, loghist=False,
                                nameonly=False):
@@ -4842,17 +4847,25 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
         raise ValueError('loghist should be True or False')
 
     ptype, simnum, snapnum, var, simulation,\
-    L_x, L_y, L_z, centre, LsinMpc,\
+    L_x, L_y, L_z, centre, Ls_in_Mpc,\
     excludeSFR, abunds, ion, parttype, quantity,\
     axesdct, axbins, allinR200c, mdef, misc = res[1:]
 
-    print('Processed input:')
-    print('L_x, L_y, L_z, centre, Ls_in_Mpc,\n%s, %s, %s, %s, %s'%(L_x, L_y, L_z, centre, Ls_in_Mpc,))
-    print('excludeSFR, abunds, ion, parttype, quantity,\n%s, %s, %s, %s, %s'%(excludeSFR, abunds, ion, parttype, quantity,))
-    print('axesdct, %s'%(axesdct))
-    print('axbins, %s'%(axbins))
-    print('misc, %s'%(misc))
-    print('\n')
+    print('Processed input for makehstograms_perparticle:')
+    print('general:')
+    print('parttype: \t%s \tsimnum: \t%s snapnum: \t%s \tvar: \t%s \tsimulation: \t%s'%(parttype, simnum, snapnum, var, simulation))
+    print('L_x: \t%s \tL_y: \t%s \tL_z: \t%s \tcentre: \t%s \tLs_in_Mpc: \t%s'%(L_x, L_y, L_z, centre, Ls_in_Mpc))
+    print('loghist: \t%s \tnameonly: \t%s \tname_append: \t%s'%(loghist, nameonly, name_append))
+    fillstr_particleprop = 'ptype: \t%s \texcludeSFR: \t%s \tabunds: \t%s \tion: \t%s \tquantity: \t%s\n\tsylviasshtables: \t%s \tallinR200c: \t%s mdef: \t%s'
+    print('histogram weight:')
+    print(fillstr_particleprop%(ptype, excludeSFR, abunds, ion, quantity, sylviasshtables, allinR200c, mdef))
+    print('misc: %s'%(misc))
+    print('histogram axes:')
+    for axi in range(len(axesdct)):
+        dct_temp = axesdct[axi]
+        print('axis %i'%axi)
+        print(fillstr_particleprop%(dct_temp['ptype'], dct_temp['excludeSFR'], dct_temp['abunds'], dct_temp['ion'], dct_temp['quantity'], sylviasshtables, dct_temp['allinR200c'], dct_temp['mdef']))
+        print('\taxbin: \t%s \tlogax: \t%s'%(axbins[axi], logax[axi]))
 
     simfile = pc.Simfile(simnum, snapnum, var, file_type='particles', simulation=simulation)
     vardict = pc.Vardict(simfile, parttype, [], region=None, readsel=None) # important: vardict.region is set later, so don't read in anything before that
@@ -4883,13 +4896,13 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                           centre[2] * hconst + 0.5 * Ls_hunits[2],\
                           ]
                 vardict.region = region
-        
+                print(vardict.region)
         # apply precise selection to particle centres
         BoxSize = vardict.simfile.boxsize / vardict.simfile.h # cMpc
         box3 = list((BoxSize,)*3)
         
         # coords are stored in float64, but I don't need that precision here. 
-        vardict.readif('Coordinates', rawunits=True, region=vardict.region)
+        vardict.readif('Coordinates', rawunits=True)
         vardict.particle['Coordinates'] *= (1. / vardict.simfile.h)
         vardict.CGSconv['Coordinates'] *= vardict.simfile.h
         translate(vardict.particle, 'Coordinates', centre, box3, False) # periodic = False -> centre on centre
@@ -4902,6 +4915,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                 sel.comb({'arr': -1. * margin <= vardict.particle['Coordinates'][:, axind]})
                 sel.comb({'arr':       margin >  vardict.particle['Coordinates'][:, axind]})
         vardict.update(sel)
+        print('sel length, num. True: %s, %s'%(len(sel.val), np.sum(sel.val)))
         
         keepcoords = np.any([sub['ptype'] == 'coords' for sub in axesdct]) # keep the centred coordinates if they're needed for r3D later
         vardict.delif('Coordinates', last=keepcoords)
@@ -4911,7 +4925,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
         vardict.overwrite_box('Ls',Ls)
     
     outfilename = namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
-                              L_x, L_y, L_z, centre, LsinMpc, simfile.boxsize, simfile.h, excludeSFR,\
+                              L_x, L_y, L_z, centre, Ls_in_Mpc, simfile.boxsize, simfile.h, excludeSFR,\
                               abunds, ion, parttype, quantity,\
                               misc)
     axnames = [namehistogram_perparticle_axis(dct) for dct in axesdct]
@@ -5052,6 +5066,21 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                 
             axbins_t = np.array(axbins_t)
             grp.create_dataset('bins', data=axbins_t)
+            saveattr(grp, 'ptype', ptype_t)
+            saveattr(grp, 'excludeSFR', excludeSFR_t)
+            saveattr(grp, 'ion', ion_t)
+            saveattr(grp, 'quantity', quantity_t)
+            saveattr(grp, 'sylviasshtables', sylviasshtables)
+            saveattr(grp, 'misc', misc_t)
+            saveattr(grp, 'mdef', mdef_t)
+            saveattr(grp, 'allinR200c', allinR200c_t)
+            if isinstance(abunds_t, tuple):
+                saveattr(grp, 'abunds', 'tuple')
+                saveattr(grp, 'abunds0', abunds_t[0])
+                saveattr(grp, 'abunds1', abunds_t[1])
+            else:
+                saveattr(grp, 'abunds', abunds_t)
+
             axbins_touse += [axbins_t]
             axdata += [axdata_t]
             del axdata_t
@@ -5094,6 +5123,12 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
         group['histogram'].attrs.create('sum of weights', wsum) # should be equal to sum of the histogram, but it's good to check
         group['histogram'].attrs.create('log', loghist)
         bingrp = group.create_group('binedges')
+        saveattr(group, 'L_x', L_x)
+        saveattr(group, 'L_y', L_y)
+        saveattr(group, 'L_z', L_z)
+        saveattr(group, 'centre', centre)
+        saveattr(group, 'Ls_in_Mpc', Ls_in_Mpc)
+        
         for i in range(len(edges)):
             bingrp.create_dataset('Axis%i'%(i), data=edges[i])
 
