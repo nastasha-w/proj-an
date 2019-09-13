@@ -4915,7 +4915,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                 sel.comb({'arr': -1. * margin <= vardict.particle['Coordinates'][:, axind]})
                 sel.comb({'arr':       margin >  vardict.particle['Coordinates'][:, axind]})
         vardict.update(sel)
-        print('sel length, num. True: %s, %s'%(len(sel.val), np.sum(sel.val)))
+        #print('sel length, num. True: %s, %s'%(len(sel.val), np.sum(sel.val)))
         
         keepcoords = np.any([sub['ptype'] == 'coords' for sub in axesdct]) # keep the centred coordinates if they're needed for r3D later
         vardict.delif('Coordinates', last=keepcoords)
@@ -5093,14 +5093,14 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
         weight *= 10**(-1 * resce)
         multipafter_w *= 10**resce # will restore any overflow in the end, unless log values are stored 
         
-        # loop to prevent memory from running out
+        # loop to prevent memory from running out (histogramdd issue)
         maxperslice = 752**3 // 8
         if len(weight) < maxperslice:
             hist, edges = np.histogramdd(axdata, weights=weight, bins=axbins_touse)
         else:
             lentot = len(weight)
             numperslice = maxperslice
-            slices = [slice(i*numperslice, min((i+1)*numperslice), lentot) for i in range(int(np.ceil(float(lentot) / float(numperslice))))]
+            slices = [slice(i * numperslice, min((i + 1) * numperslice, lentot), None) for i in range((lentot - 1) // numperslice + 1)]
             for slind in range(len(slices)):
                 axdata_temp = [data[slices[slind]] for data in axdata]
                 hist_temp, edges_temp = np.histogramdd(axdata_temp, weights=weight[slices[slind]], bins=axbins_touse)

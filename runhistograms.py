@@ -1529,6 +1529,62 @@ if jobind == 175:
                     dimlabels = ['NO6','NO7','Temperature_w_NO6', 'Temperature_w_NO7'],\
                     save=mh.pdir +'hist_coldens_o6-o7_L0100N1504_27_test3.x_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_and_weighted_Temperature',\
                     fills = fillsea)   
+
+# Ion histograms
+
+if jobind >= 176 and jobind <= 183:   
+    import make_maps_v3_master as m3
+    simnum = 'L0100N1504'
+    snapnum = 27
+    var = 'REFERENCE'
+    axesdct = [{'ptype': 'basic', 'quantity': 'Temperature', 'excludeSFR': 'T4'},\
+               {'ptype': 'basic', 'quantity': 'Density'},\
+               {'ptype': 'halo', 'quantity': 'Mass'},\
+               {'ptype': 'halo', 'quantity': 'subcat'}]
+    axbins = [0.1, 0.1, np.array([-np.inf, 0.0, 9.0, 9.5, 10., 10.5, 11., 11.5, 12., 12.5, 13., 13.5, 14., 14.5, 15., np.inf]) + np.log10(c.solar_mass), None]
+    if jobind == 176:
+        ptype = 'basic'
+        quantity = 'Mass'
+        ion = None
+    elif jobind == 177:
+        ptype = 'Nion'
+        quantity = None
+        ion = 'o6'
+    elif jobind == 178:
+        ptype = 'Nion'
+        quantity = None
+        ion = 'o7'
+    elif jobind == 179:
+        ptype = 'Nion'
+        quantity = None
+        ion = 'o8'
+    elif jobind == 180:
+        ptype = 'Nion'
+        quantity = None
+        ion = 'ne8'
+    elif jobind == 181:
+        ptype = 'Nion'
+        quantity = None
+        ion = 'ne9'
+    elif jobind == 182:
+        ptype = 'Nion'
+        quantity = None
+        ion = 'fe17'
+    elif jobind == 183:
+        ptype = 'Nion'
+        quantity = None
+        ion = 'hneutralssh'
+        
+    m3.makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
+                               simulation='eagle',\
+                               excludeSFR='T4', abunds='Pt', ion=ion, parttype='0', quantity=quantity,\
+                               axbins=axbins,\
+                               sylviasshtables=False, allinR200c=True, mdef='200c',\
+                               L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
+                               misc=None,\
+                               name_append=None, logax=True, loghist=False,
+                               nameonly=False)
+    
 ################################################
 ################# CDDFS ########################
 ################################################
