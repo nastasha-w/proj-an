@@ -89,7 +89,7 @@ version = 3.4 # matches corresponding make_maps version
 #             (0. -> outside a halo)
 # subhalocat  category for subhalos: 0.5 -> central, 1.5 -> satellite, 
 #             2.5 -> unbound (gets binned into bins 0, 1, 2)
-# propvol_i   1 / proper volume (can be used a a weight in 1D histograms to get 
+# ipropvol   1 / proper volume (can be used a a weight in 1D histograms to get 
 #             number densities) 
 # r3D         3D radius (centre point not specified)
 # note that these variables do not always mean exactly the same thing:
@@ -2812,15 +2812,15 @@ def readbasic(vardict, quantity, excludeSFR, last=True, **kwargs):
     elif quantity == 'propvol':
         vardict.getpropvol(last=last)
     # default case: standard simulation quantity read-in
-    elif quantity in ['propvol', 'propvol_i']:
+    elif quantity in ['propvol', 'ipropvol']:
         vardict.readif('Mass', rawunits=True)
         vardict.readif('Density', rawunits=True)
         if quantity == 'propvol': 
             vardict.add_part('propvol', vardict.particle['Mass'] / vardict.particle['Density'])
             vardict.CGSconv['propvol'] = vardict.CGSconv['Mass'] / vardict.CGSconv['Density']
-        elif quantity == 'propvol_i':
-            vardict.add_part('propvol_i',  vardict.particle['Density'] / vardict.particle['Mass'])
-            vardict.CGSconv['propvol_i'] = vardict.CGSconv['Density'] / vardict.CGSconv['Mass'] 
+        elif quantity == 'ipropvol':
+            vardict.add_part('ipropvol',  vardict.particle['Density'] / vardict.particle['Mass'])
+            vardict.CGSconv['ipropvol'] = vardict.CGSconv['Density'] / vardict.CGSconv['Mass'] 
         vardict.delif('Mass', last=last)
         vardict.delif('Density', last=last)
     else:
@@ -4699,34 +4699,34 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, sylviassh
         if ion in ['h1ssh', 'hmolssh', 'hneutralssh'] and not sylviasshtables:
             q, multipafter = Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=last, updatesel=updatesel, misc=misc)
             if ptype == 'Niondens':
-                readbasic(vardict, 'propvol_i', excludeSFR, last=last)
-                q *= vardict.particle['propvol_i'] 
-                multipafter *= vardict.CGSconv['propvol_i']
+                readbasic(vardict, 'ipropvol', excludeSFR, last=last)
+                q *= vardict.particle['ipropvol'] 
+                multipafter *= vardict.CGSconv['ipropvol']
         else:
             q, multipafter = Nion_calc(vardict, excludeSFR, eltab, hab, ion, last=last, sylviasshtables=sylviasshtables, updatesel=updatesel, misc=misc)
             if ptype == 'Niondens':
-                readbasic(vardict, 'propvol_i', excludeSFR, last=last)
-                q *= vardict.particle['propvol_i'] 
-                multipafter *= vardict.CGSconv['propvol_i']
+                readbasic(vardict, 'ipropvol', excludeSFR, last=last)
+                q *= vardict.particle['ipropvol'] 
+                multipafter *= vardict.CGSconv['ipropvol']
     elif ptype in ['Nion', 'Niondens'] and iselt:
         q, multipafter = Nelt_calc(vardict, excludeSFR, eltab, ion, last=last, updatesel=updatesel)
         if ptype == 'Niondens':
-            readbasic(vardict, 'propvol_i', excludeSFR, last=last)
-            q *= vardict.particle['propvol_i'] 
-            multipafter *= vardict.CGSconv['propvol_i']
+            readbasic(vardict, 'ipropvol', excludeSFR, last=last)
+            q *= vardict.particle['ipropvol'] 
+            multipafter *= vardict.CGSconv['ipropvol']
     elif ptype in ['Luminosity', 'Lumdens'] and excludeSFR != 'from':
         q, multipafter = luminosity_calc(vardict, excludeSFR, eltab, hab, ion, last=last, updatesel=updatesel)
         if ptype == 'Lumdens':
-            readbasic(vardict, 'propvol_i', excludeSFR, last=last)
-            q *= vardict.particle['propvol_i'] 
-            multipafter *= vardict.CGSconv['propvol_i']
+            readbasic(vardict, 'ipropvol', excludeSFR, last=last)
+            q *= vardict.particle['ipropvol'] 
+            multipafter *= vardict.CGSconv['ipropvol']
     elif ptype in ['Luminosity', 'Lumdens'] and excludeSFR == 'from':
         if ion == 'halpha':
             q, multipafter = luminosity_calc_halpha_fromSFR(vardict, excludeSFR, last=last, updatesel=updatesel)
             if ptype == 'Lumdens':
-                readbasic(vardict, 'propvol_i', excludeSFR, last=last)
-                q *= vardict.particle['propvol_i'] 
-                multipafter *= vardict.CGSconv['propvol_i']
+                readbasic(vardict, 'ipropvol', excludeSFR, last=last)
+                q *= vardict.particle['ipropvol'] 
+                multipafter *= vardict.CGSconv['ipropvol']
         else:
             raise ValueError('Invalid option excludeSFR=from for ion other than halpha')
     
@@ -4742,8 +4742,8 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, sylviassh
         raise ValueError('Invalid ptype option %s'%(ptype))
         return None
     
-    if 'propvol_i' in vardict.particle.keys():
-        vardict.delif('propvol_i', last=last)
+    if 'ipropvol' in vardict.particle.keys():
+        vardict.delif('ipropvol', last=last)
         
     return q, multipafter
 
