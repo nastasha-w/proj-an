@@ -24,6 +24,7 @@ import matplotlib.lines as mlines
 import matplotlib.legend_handler as mlh
 import matplotlib.collections as mcol
 import matplotlib.patheffects as mppe
+import matplotlib.patches as mpatch
 
 import makecddfs as mc
 import eagle_constants_and_units as c #only use for physical constants and unit conversion!
@@ -213,6 +214,13 @@ class HandlerDashedLines(mlh.HandlerLineCollection):
             leglines.append(legline)
         return leglines
 
+def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=-1):
+    if n == -1:
+        n = cmap.N
+    new_cmap = mpl.colors.LinearSegmentedColormap.from_list(
+         'trunc({name},{a:.2f},{b:.2f})'.format(name=cmap.name, a=minval, b=maxval),
+         cmap(np.linspace(minval, maxval, n)))
+    return new_cmap
 
 def format_selection(dct, decf=1, lenf=4):
     '''
@@ -2010,4 +2018,316 @@ def quicklook_particlehist(h5name, group=None, plotlog=None):
     imgname = tparts[0][:-5] + '_' + tparts[1]
     mdir = '/net/luttero/data2/imgs/histograms_basic/'
     plt.savefig(mdir + imgname + '.pdf', format='pdf', bbox_inches='tight')
+    
+
+def plotpd_by_halo_subcat(ion):
+    
+    datafile_dir = '/net/quasar/data2/wijers/temp/'
+    if ion == 'Mass':
+        datafile_base = 'particlehist_%s_L0100N1504_27_test3.4_T4EOS.hdf5'
+        datafile = datafile_dir + datafile_base%(ion)
+    else:
+        datafile_base = 'particlehist_%s_L0100N1504_27_test3.4_PtAb_T4EOS.hdf5'
+        datafile = datafile_dir + datafile_base%('Nion_%s'%ion)
+    
+    outname = '/net/luttero/data2/imgs/histograms_basic/' + 'overview_phasediagram_%s_L0100N1504_27_T4EOS.pdf'%(ion)
+
+    tlabel = r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$'
+    dlabel = r'$\log_{10} \, \mathrm{n}_{\mathrm{H}} \; [\mathrm{cm}^{-3}]$'
+    
+    
+    with h5py.File(datafile, 'r') as fi:
+        groupname = 'Temperature_T4EOS_Density_T4EOS_M200c_halo_allinR200c_subhalo_category'
+        tname = 'Temperature_T4EOS'
+        dname = 'Density_T4EOS'
+        sname = 'subhalo_category'
+        hname = 'M200c_halo_allinR200c'
+        
+        mgrp = fi[groupname]       
+        tax = mgrp[tname].attrs['histogram axis']
+        tbins = np.array(mgrp['%s/bins'%(tname)])
+        dax = mgrp[dname].attrs['histogram axis']
+        dbins = np.array(mgrp['%s/bins'%(dname)]) + np.log10(rho_to_nh)      
+        sax = mgrp[sname].attrs['histogram axis']
+        sbins = np.array(mgrp['%s/bins'%(sname)])
+        hax = mgrp[hname].attrs['histogram axis']
+        hbins = np.array(mgrp['%s/bins'%(hname)])
+        
+        hist = np.array(mgrp['histogram'])
+        if mgrp['histogram'].attrs['log']:
+            hist = 10**hist
+        total_in = mgrp['histogram'].attrs['sum of weights']
+        print('Histogramming recovered %f of input weights'%(np.sum(hist) / total_in))
+        
+        cosmopars = {key: item for key, item in fi['Header/cosmopars'].attrs.items()}
+        
+    slabels = ['cen.', 'sat.', 'unb.']
+    hlabels = [r'$ %.1f \emdash %.1f$'%(hbins[i] - np.log10(c.solar_mass), hbins[i + 1] - np.log10(c.solar_mass)) if i > 1 and hbins[i + 1] < np.inf else\
+               r'$> %.1f$'%(hbins[i] - np.log10(c.solar_mass)) if hbins[i + 1] == np.inf else \
+               r'$< %.1f$'%(hbins[i + 1] - np.log10(c.solar_mass)) if i == 1  else \
+               'IGM' \
+               for i in range(len(hbins) - 1)]
+    
+    cmap = truncate_colormap(cm.get_cmap('gist_yarg'), minval=0.0, maxval=0.7, n=-1)
+    cmap.set_under(cmap(0.))
+        
+    panelwidth = 2.0
+    panelheight = 2.0
+    #caxwidth = 1.
+    textheight = 2.
+    fontsize = 12
+    cmap = 'gist_yarg'
+    plotlog=True
+    
+    
+    if ion == 'Mass':
+        clabel = 'Mass fraction'
+    else:
+        clabel = r'$\mathrm{%s}$ fraction'%(ild.getnicename(ion, mathmode=True))       
+    cext = 'neither'
+    if plotlog:
+        vmin = np.log10(np.min(hist[hist > 0]) / total_in)
+        vmax = np.log10(np.max(hist[hist > 0]) / total_in)
+        clabel = r'$\log_{10}$ ' + clabel
+        if vmax - vmin > 10.:
+            vmin = vmax - 10.
+            cext = 'min'
+    else:
+        vmin = np.min(hist[hist > 0])
+        vmax = np.max(hist)
+    
+    numhorz = (1 + len(hbins) - 1) // 2
+    numvert = 2 * (len(sbins))
+        
+    fig = plt.figure(figsize=(numhorz * panelwidth, numvert * panelheight + textheight))
+    maingrid = gsp.GridSpec(ncols=numhorz, nrows=numvert + 1, hspace=0.0, wspace=0.0, height_ratios=[textheight] + [panelheight] * numvert, width_ratios=[panelwidth] * numhorz)
+    cax = fig.add_subplot(maingrid[0, numhorz - 2:])
+    titleax = fig.add_subplot(maingrid[0, :-2])
+    
+    title = 'phase diagram for %s'%ion
+    titleax.text(0.5, 0.1, title, fontsize=fontsize + 2, verticalalignment='bottom', horizontalalignment='center', transform=titleax.transAxes)
+    titleax.axis('off')
+    
+    for ci in range(0, numhorz, 1):
+        for ri in range(1, numvert + 1, 1):
+            si = (ri - 1) // 2
+            hi = ci + ((ri - 1) % 2) * numhorz
+            if hi > len(hlabels):
+                continue
             
+            ax = fig.add_subplot(maingrid[ri, ci])
+            
+            labelx = ri == numvert
+            labely = ci == 0
+            labelright = False
+    
+            if labelx:    
+                ax.set_xlabel(dlabel, fontsize=fontsize)
+            if labely:    
+                ax.set_ylabel(tlabel, fontsize=fontsize)
+            ax.tick_params(direction='in', which='both', top=True, right=True,\
+                           labelbottom=labelx, labelleft=labely, labelright=labelright,\
+                           labelsize=fontsize - 1)
+            
+            sellabel_t = ''
+            
+            hist_t = np.copy(hist)
+            sumtup = range(4)
+            sumtup.remove(dax)
+            sumtup.remove(tax)
+            if hi == 0:
+                pass
+            else:
+                hsel = [slice(None, None, None)] * 4
+                hsel[hax] = slice(hi - 1, hi, None)
+                hist_t = hist_t[tuple(hsel)] # along hax, size of array is 1, but axis still exists
+                if len(sellabel_t) > 0: 
+                    sellabel_t = sellabel_t + '\n'
+                sellabel_t  = sellabel_t + hlabels[hi - 1]
+            if si == 0:
+                pass
+            else:
+                ssel = [slice(None, None, None)] * 4
+                ssel[sax] = slice(si - 1, si, None)
+                hist_t = hist_t[tuple(ssel)] # along hax, size of array is 1, but axis still exists
+                if len(sellabel_t) > 0: 
+                    sellabel_t = sellabel_t + '\n'
+                sellabel_t  = sellabel_t + slabels[si - 1]
+            sumtup = tuple(sumtup)
+            hist_t = np.sum(hist_t, axis=sumtup)
+            total_t = np.sum(hist_t)
+            
+            if total_t == 0.:
+                ax.axis('off')
+                continue
+            
+            hist_t /= total_in
+            if plotlog:
+                hist_t = np.log10(hist_t)
+            
+            
+            if tax > dax:
+                hist_t = hist_t.T
+            img = ax.pcolormesh(dbins, tbins, hist_t, vmin=vmin, vmax=vmax, cmap=cmap, rasterized=True)
+            
+            if hi > 0:
+                T200c_lo = T200c_hot(10**(hbins[hi - 1]) / c.solar_mass, cosmopars=cosmopars)
+                T200c_hi = T200c_hot(10**(hbins[hi]) / c.solar_mass, cosmopars=cosmopars)
+                if T200c_lo < 10**(ax.get_ylim()[1]) and T200c_lo > 10**(ax.get_ylim()[0]):
+                    ax.axhline(np.log10(T200c_lo), linestyle='dotted', linewidth=1.5, color='C0')
+                if T200c_hi < 10**(ax.get_ylim()[1]) and T200c_hi > 10**(ax.get_ylim()[0]):
+                    ax.axhline(np.log10(T200c_hi), linestyle='dotted', linewidth=1.5, color='C0')
+                
+            ax.text(0.02, 0.98, sellabel_t, verticalalignment='top', horizontalalignment='left', transform=ax.transAxes, fontsize=fontsize)
+            ax.text(0.98, 0.78, '%.2e'%(total_t / total_in), verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=fontsize)
+    
+    plt.colorbar(img, cax=cax, orientation='horizontal', extend=cext)
+    cax.set_aspect(1./10.)
+    cax.set_xlabel(clabel, fontsize=fontsize)
+    cax.tick_params(which='both', labelsize=fontsize - 1.)
+    cax.xaxis.set_label_position('top')
+    
+    plt.savefig(outname, format='pdf', bbox_inches='tight')   
+
+
+def plotfracs_by_halo_subcat(ions=['Mass', 'hneutralssh', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'], first='halo'):
+    '''
+    first: group mass bins by halo mass or subhalo catgory first
+    '''
+    
+    datafile_dct = {}
+    for ion in ions:
+        datafile_dir = '/net/quasar/data2/wijers/temp/'
+        if ion == 'Mass':
+            datafile_base = 'particlehist_%s_L0100N1504_27_test3.4_T4EOS.hdf5'
+            datafile = datafile_dir + datafile_base%(ion)
+        else:
+            datafile_base = 'particlehist_%s_L0100N1504_27_test3.4_PtAb_T4EOS.hdf5'
+            datafile = datafile_dir + datafile_base%('Nion_%s'%ion)
+        datafile_dct[ion] = datafile
+    
+    outname = '/net/luttero/data2/imgs/histograms_basic/' + 'barchart_halosubcat_L0100N1504_27_T4EOS_%s-first.pdf'%(first)
+    
+    data_dct = {}
+    for ion in ions:
+        datafile = datafile_dct[ion]
+        with h5py.File(datafile, 'r') as fi:
+            groupname = 'Temperature_T4EOS_Density_T4EOS_M200c_halo_allinR200c_subhalo_category'
+            tname = 'Temperature_T4EOS'
+            dname = 'Density_T4EOS'
+            sname = 'subhalo_category'
+            hname = 'M200c_halo_allinR200c'
+            
+            mgrp = fi[groupname]       
+            tax = mgrp[tname].attrs['histogram axis']
+            #tbins = np.array(mgrp['%s/bins'%(tname)])
+            dax = mgrp[dname].attrs['histogram axis']
+            #dbins = np.array(mgrp['%s/bins'%(dname)]) + np.log10(rho_to_nh)      
+            sax = mgrp[sname].attrs['histogram axis']
+            sbins = np.array(mgrp['%s/bins'%(sname)])
+            hax = mgrp[hname].attrs['histogram axis']
+            hbins = np.array(mgrp['%s/bins'%(hname)])
+            
+            hist = np.array(mgrp['histogram'])
+            if mgrp['histogram'].attrs['log']:
+                hist = 10**hist
+            hist = np.sum(hist, axis=(dax, tax))
+            total_in = mgrp['histogram'].attrs['sum of weights']
+            # print('Histogramming recovered %f of input weights'%(np.sum(hist) / total_in))
+            
+            #cosmopars = {key: item for key, item in fi['Header/cosmopars'].attrs.items()}
+            
+            data_dct[ion] = {'hist': hist, 'hbins': hbins, 'sbins': sbins, 'total': total_in}
+            
+    clabel = r'$\log_{10} \, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'        
+    ylabel = 'fraction'
+    xlabels = [r'$\mathrm{%s}$'%(ild.getnicename(ion, mathmode=True)) if ion != 'Mass' else ion for ion in ions] 
+    slabels = ['cen.', 'sat.', 'unb.']
+    alphas = {'cen.': 1.0, 'sat.': 0.4, 'unb.': 0.7}
+    
+    
+    cmapname = 'rainbow'
+    nigmcolor = 'saddlebrown'
+    igmcolor = 'gray'   
+    print(hbins - np.log10(c.solar_mass))
+    namededges = hbins[2:-1] - np.log10(c.solar_mass) # first two are -np.inf, and < single particle mass, last bin is empty (> 10^15 Msun)
+    print(namededges)
+    
+    clist = cm.get_cmap(cmapname, len(namededges) - 2)(np.linspace(0., 1., len(namededges) - 2))
+    clist = np.append(clist, [mpl.colors.to_rgba('firebrick')], axis=0)
+    #print(clist)
+    colors = {hi : clist[hi - 2] for hi in range(2, 2 + len(namededges) - 1)}
+    #print(colors)
+    colors[1] = mpl.colors.to_rgba(nigmcolor)
+    colors[0] = mpl.colors.to_rgba(igmcolor)
+    colors[len(hbins) - 1] = mpl.colors.to_rgba('magenta') # shouldn't actaully be used
+    #print(colors)
+
+    fig = plt.figure(figsize=(5.5, 3.))
+    maingrid = gsp.GridSpec(ncols=2, nrows=2, hspace=0.0, wspace=0.05, height_ratios=[0.7, 4.3], width_ratios=[5., 1.])
+    cax = fig.add_subplot(maingrid[1, 1])
+    lax = fig.add_subplot(maingrid[0, :])
+    ax = fig.add_subplot(maingrid[1, 0])
+    
+    print(namededges)
+    cmap = mpl.colors.ListedColormap(clist)
+    cmap.set_under(nigmcolor)
+    #cmap.set_over('magenta')
+    norm = mpl.colors.BoundaryNorm(namededges, cmap.N)
+    print(len(clist))
+    print(cmap.N)
+    print(len(namededges))
+    cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,\
+                                norm=norm,\
+                                boundaries=np.append([0.], namededges, axis=0),\
+                                ticks=namededges,\
+                                spacing='proportional', extend='min',\
+                                orientation='vertical')
+    cbar.set_label(clabel, fontsize=fontsize)
+    cax.tick_params(labelsize=fontsize - 1)
+    cax.set_aspect(8.)
+    
+    if first == 'halo':
+        range1 = range(len(hbins) - 2)
+        range2 = range(len(sbins) - 1)
+    else:
+        range1 = range(len(sbins) - 1)
+        range2 = range(len(hbins) - 2)
+    
+    
+    bottom = np.zeros(len(ions))
+    barwidth = 0.9
+    xvals = np.arange(len(ions))
+    
+    for ind1 in range1:
+        for ind2 in range2:
+            if first == 'halo':
+                hind = ind1
+                sind = ind2
+            else:
+                hind = ind2
+                sind = ind1
+                
+            alpha = alphas[slabels[sind]]
+            color = mpl.colors.to_rgba(colors[hind], alpha=alpha)
+            sel = (hind, sind) if hax < sax else (sind, hind)
+            
+            vals = np.array([data_dct[ion]['hist'][sel] / data_dct[ion]['total'] for ion in ions])
+            
+            ax.bar(xvals, vals, barwidth, bottom=bottom, color=color)
+            bottom += vals
+            
+    setticks(ax, fontsize, top=False)
+    ax.xaxis.set_tick_params(which='both', length=0.) # get labels without showing the ticks        
+    ax.set_xticks(xvals)
+    ax.set_xticklabels(xlabels)
+    for label in ax.get_xmajorticklabels():
+        label.set_rotation(45)
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    
+    legelts = [mpatch.Patch(facecolor=igmcolor, label='IGM')] + \
+              [mpatch.Patch(facecolor=mpl.colors.to_rgba('tan', alpha=alphas[slabel]), label=slabel) for slabel in slabels]
+    lax.legend(handles=legelts, ncol=4, fontsize=fontsize, bbox_to_anchor=(0.5, 0.05), loc='lower center')
+    lax.axis('off')
+    
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
