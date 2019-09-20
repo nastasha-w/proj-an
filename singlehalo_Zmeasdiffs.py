@@ -11,7 +11,17 @@ import h5py
 import pandas as pd
 
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+import matplotlib.cm as cm
+import mpl_toolkits.axes_grid1 as axgrid
+import matplotlib.gridspec as gsp
+import matplotlib.lines as mlines
+import matplotlib.legend_handler as mlh
+import matplotlib.collections as mcol
+import matplotlib.patheffects as mppe
+import matplotlib.patches as mpatch
 
+import eagle_constants_and_units as c
 import make_maps_opts_locs as ol
 import make_maps_v3_master as m3
 
@@ -195,5 +205,240 @@ def project_sample(setname, pixres=3.125, excludeSFR='T4', axis='z', projrad=(50
         with open(mdname, 'a') as to:
             for namek in output_names:
                 to.write('%i\t%s\t%s\t%s\n'%(galid, namek, output_names[namek][0], output_names[namek][1]))
+       
+def readoutmap_forimgplot(filename, unit, cosmopars):
+    with h5py.File(filename, 'r') as fp:
+        img = np.array(fp['map']) - np.log10(unit)
+        grp = fp['Header/inputpars']
+        cen = grp.attrs['centre']
+        L_x = grp.attrs['L_x']
+        L_y = grp.attrs['L_y']
+        L_z = grp.attrs['L_z']
+        Ls = np.array([L_x, L_y, L_z])
+        if not bool(grp.attrs['LsinMpc']):
+            Ls *= cosmopars['h']
+        axis = grp.attrs['axis'].decode() # bytestring to str
+        if axis == 'z':
+            Axis3 = 2
+            Axis2 = 1
+            Axis1 = 0
+        elif axis == 'y':
+            Axis3 = 1
+            Axis2 = 0
+            Axis1 = 2
+        elif axis == 'x':
+            Axis3 = 0
+            Axis2 = 2
+            Axis1 = 1
+        extent = np.array([cen[Axis1] -  0.5 * Ls[Axis1],\
+                           cen[Axis1] +  0.5 * Ls[Axis1],\
+                           cen[Axis2] -  0.5 * Ls[Axis2],\
+                           cen[Axis2] +  0.5 * Ls[Axis2],\
+                           ]) \
+                 * 1e3 * cosmopars['a'] # convert to pkpc
+        depth = Ls[Axis3] * 1e3 * cosmopars['a']
+        ret = {'map': img, 'extent': tuple(extent), 'depth': depth}
+        return ret
+        
+def plotsample_imgs(setname, galids_toplot='all'):
+    textname = mdir + setname + '.txt'
+    mdname = mdir + setname + '_projfiles.txt'
+    
+    if galids_toplot not in ['all', None]:
+        if not hasattr(galids_toplot, '__len__'):
+            galids_toplot = [galids_toplot]
+    
+    with open(textname, 'r') as fi:
+        # scan for halo catalogue (only metadata needed for this)
+        headlen = 0
+        halocat = None
+        while True:
+            line = fi.readline()
+            if line == '':
+                if halocat is None:
+                    raise RuntimeError('Reached the end of %s without finding the halo catalogue name'%setname)
+                else:
+                    break
+            elif line.startswith('halocat'):
+                halocat = line.split(':')[1]
+                halocat = halocat.strip()
+                headlen += 1
+            elif ':' in line or line == '\n':
+                headlen += 1
+    
+    with h5py.File(halocat, 'r') as hc:
+        hed = hc['Header']
+        cosmopars = {key: item for key, item in hed['cosmopars'].attrs.items()}
+        simnum = hed.attrs['simnum']
+        snapnum = hed.attrs['snapnum']
+        var = hed.attrs['var']
+        ap = hed.attrs['subhalo_aperture_size_Mstar_Mbh_SFR_pkpc']
+    
+    galdata_all = pd.read_csv(textname, header=headlen, sep='\t')
+    filenames_all = pd.read_csv(mdname, sep='\t')
+    
+    ginds = np.array(galdata_all.index)
+    labels = {'SFR': r'$\log_{10} \, \Sigma_{\mathrm{SFR}} \; [\mathrm{M}_{\odot} \, \mathrm{yr}^{-1} \mathrm{pkpc}^{-2}]$',\
+               'h1ssh': r'$\log_{10} \, \mathrm{N}_{\mathrm{H\,I}}} \; [\mathrm{cm}}^{-2}}]$',\
+               'hneutralssh': r'$\log_{10} \, \mathrm{N}_{\mathrm{H\,I} + \mathrm{H}_{2}}} \; [\mathrm{cm}}^{-2}}]$',\
+               'Gasmass': r'$\log_{10} \, \Sigma_{\mathrm{gas}} \; [\mathrm{M}_{\odot} \mathrm{pkpc}^{-2}]$',\
+               'Z': r'$\log_{10} \, \mathrm{Z} \; [\mathrm{Z}_{\odot}]$'}
+    Zlabels = {'SFR': 'SF',\
+               'h1ssh': 'H I',\
+               'hneutralssh': r'$\mathrm{H\,I} + \mathrm{H}_{2}$',\
+               'Gasmass': 'gas'}
+    
+    units = {'SFR': c.solar_mass / c.sec_per_year / (1e-3 * c.cm_per_mpc)**2, \
+              'Gasmass': c.solar_mass / (1e-3 * c.cm_per_mpc)**2, \
+              'hneutralssh': 1., \
+              'h1ssh': 1., \
+              'Z': ol.Zsun_sylviastables}
+    fontsize = 12
+    xlabel = 'pkpc'
+    ylabel = 'pkpc'
+    Zdifflabel = r'$\Delta \, \log_{10} \, \mathrm{Z}$'
+    cmaps = {'Gasmass': 'viridis',\
+             'h1ssh': 'magma',\
+             'hneutralssh': 'magma',\
+             'SFR': 'inferno',\
+             'Z': 'plasma',\
+             'diff': 'RdBu'}
+    vminmax = {'Gasmass': (3., 8.0),\
+               'h1ssh': (14., 22.),\
+               'hneutralssh': (14., 22.),\
+               'SFR': (-7., -1.),\
+               'Z':  (-2.5, 0.5),\
+               'diff': (-1., 1.)}
+    
+    
+    for gind in ginds:
+        gdata = galdata_all.loc[gind]
+        galid = gdata['galaxyid']
+        if galids_toplot not in ['all', None]:
+            if galid not in galids_toplot:
+                continue
+        groupid = gdata['groupid']
+        mstar = gdata['Mstar_logMsun']
+        subn = gdata['SubGroupNumber']
+        R200c = gdata['R200c_cMpc']
+        
+        titletext = 'galaxy id: %i\n'%galid + \
+                    'group id: %i\n'%groupid + \
+                    r'$\log_{10} \, \mathrm{M}_{\star} \, / \, M_{\odot}$' + ': %.3f (%i pkpc)\n'%(mstar, ap) + \
+                    ('central\n' if subn == 0 else 'satellite\n') + \
+                    r'parent halo $\mathrm{R}_{\mathrm{200c}} \, /\, \mathrm{pkpc}$' + ': %.3f\n'%(R200c * 1e3 * cosmopars['a']) + \
+                    'simulation: %s-%s\n'%(simnum, var) + \
+                    'snapshot: %i '%(snapnum) + r'($z=%.2f$)'%(cosmopars['z']) + '\n' 
+        
+        filenames = filenames_all.loc[filenames_all['galaxyid'] == galid]    
+        #print(galid)
+        #print(filenames)        
+        weights = np.array(filenames['weight'])
+        
+        plotdct = {}
+        for weight in weights:
+            loc = np.where(np.logical_and(filenames_all['weight'] == weight, filenames_all['galaxyid'] == galid))[0][0]
+            pfile = filenames_all.at[loc, 'pfile']
+            qfile = filenames_all.at[loc, 'qfile']
+            
+            plotdct[weight] = readoutmap_forimgplot(pfile, units[weight], cosmopars)
+            plotdct[weight + 'SmZ'] = readoutmap_forimgplot(qfile, units['Z'], cosmopars)
+            
+        # plot layout:
+        # Gas mass         h1      hneutral    SFR
+        #                weighted smZs
+        # Zh1 - Zmass  diff cbar      |text
+        # Zhn - Zmass  Zhn - Zh1      |annotations
+        # ZSF - Zmass  ZSF - Zh1  ZSF - Zhn  
+        
+        panelwidth = 2
+        panelheight = panelwidth
+        caxw = 0.5
+        padh = 0.2
+        numw = len(weights)
+        fig = plt.figure(figsize=(numw * panelwidth + caxw, (2 + numw - 1) * panelheight + caxw + 2 * padh))
+        maingrid = gsp.GridSpec(ncols=numw + 1, nrows=numw - 1 + 5, hspace=0.0, wspace=0.0,\
+                                height_ratios= [caxw] + [padh] + [panelheight] * 2 + [padh] + [panelheight] * (numw - 1),\
+                                width_ratios= [panelwidth] * numw + [caxw])
+        
+        caxes_w = [fig.add_subplot(maingrid[0, i]) for i in range(numw)]
+        axes_w = [fig.add_subplot(maingrid[2, i]) for i in range(numw)]
+        axes_q = [fig.add_subplot(maingrid[3, i]) for i in range(numw)]
+        cax_q  = fig.add_subplot(maingrid[3, numw])
+        
+        weights = ['Gasmass', 'h1ssh', 'hneutralssh', 'SFR']
+        zmin = min([ np.min(plotdct[weight + 'SmZ']['map'][ np.isfinite(plotdct[weight + 'SmZ']['map']) ]) for weight in weights])
+        zmax = max([ np.max(plotdct[weight + 'SmZ']['map'][ np.isfinite(plotdct[weight + 'SmZ']['map']) ]) for weight in weights])
+        
+        for wi in range(len(weights)):
+            weight = weights[wi] 
+            labely = wi==0
+            axw = axes_w[wi]
+            axq = axes_q[wi]
+            cax = caxes_w[wi]
+            
+            extent = plotdct[weight]['extent']
+            img = axw.imshow(plotdct[weight]['map'].T, extent=extent, origin='lower', interpolation='nearest', cmap=cmaps[weight], vmin=vminmax[weight][0], vmax=vminmax[weight][1])
+            
+            #axw.tick_params(which='both', direction='in', top=True, right=True, labelleft=labely, labelbottom=False, labelsize=fontsize - 1.)
+            axw.tick_params(which='both', direction='in', left=False, bottom=False, labelleft=False, labelbottom=False, right=False, top=False)
+            axq.tick_params(which='both', direction='in', left=False, bottom=False, labelleft=False, labelbottom=False, right=False, top=False)
+            
+            if labely:
+                #axw.set_ylabel(ylabel, fontsize=fontsize)
+                pe=[mppe.Stroke(linewidth=5, foreground="black"), mppe.Normal()]
+                pet = [mppe.Stroke(linewidth=1., foreground="black"), mppe.Normal()]
+                axw.plot([extent[0] + 8., extent[0] + 18.], [extent[2] + 0.05 * (extent[3] - extent[2])] * 2, linewidth=4.5, color='gray', path_effects=pe)
+                axw.text(13. / (extent[1] - extent[0]), 0.07, '10 pkpc', fontsize=fontsize, color='gray', horizontalalignment='center', verticalalignment='bottom', transform=axw.transAxes, path_effects=pet)
+            
+            plt.colorbar(img, cax=cax, orientation='horizontal', extend='both')
+            cax.set_xlabel(labels[weight], fontsize=fontsize)
+            cax.tick_params(labelsize=fontsize - 1., direction='in')
+            cax.set_aspect(1. / 8.)
+            cax.xaxis.set_label_position('top')
+            
+            qimg = axq.imshow(plotdct[weight + 'SmZ']['map'].T, extent=plotdct[weight + 'SmZ']['extent'],\
+                              origin='lower', interpolation='nearest', cmap=cmaps['Z'], vmin=vminmax['Z'][0], vmax=vminmax['Z'][1])
+        
+        plt.colorbar(qimg, cax=cax_q, orientation='vertical', extend='both')
+        cax_q.set_ylabel(labels['Z'], fontsize=fontsize)
+        cax_q.tick_params(labelsize=fontsize - 1.)
+        cax_q.set_aspect(8.)
+        #cbar_q = plt.colorbar(...)
+        #cbar_q.set_ticks(ticks) 
+        #cax_q.xaxis.set_label_position('top')
+        #cax_q.set_yticklabels(<list>)
+        
+        for ri in range(numw - 1):
+            for ci in range(numw - 1):
+                if ci > ri:
+                    continue
+                w1 = weights[ri + 1] + 'SmZ'
+                w2 = weights[ci] + 'SmZ'
+                ax = fig.add_subplot(maingrid[5 + ri, ci])
+                map1 = plotdct[w1]['map']
+                ext1 = plotdct[w1]['extent']
+                map2 = plotdct[w2]['map']
+                ext2 = plotdct[w2]['extent']
                 
-                
+                if np.max(np.abs(np.array(ext1) - np.array(ext2))) > 1e-6:
+                    raise RuntimeError('Extents of different weighted Zs do not match: %s, %s'%(str(ext1), str(ext2)))
+                    
+                img = ax.imshow(map2.T - map1.T, extent=ext1, origin='lower', interpolation='nearest', cmap=cmaps['diff'], vmin=vminmax['diff'][0], vmax=vminmax['diff'][1])
+                ax.text(0.02, 0.98, '%s - %s'%(Zlabels[w2[:-3]], Zlabels[w1[:-3]]), fontsize=fontsize, transform=ax.transAxes, horizontalalignment='left', verticalalignment='top')
+                ax.tick_params(which='both', direction='in', left=False, bottom=False, labelleft=False, labelbottom=False, right=False, top=False)
+        
+        ticks = np.linspace(vminmax['diff'][0], vminmax['diff'][1], 5)
+        cax_d = fig.add_subplot(maingrid[5, 1])
+        plt.colorbar(img, cax=cax_d, orientation='horizontal', extend='both', ticks=ticks)
+        cax_d.set_xlabel(Zdifflabel, fontsize=fontsize)
+        cax_d.tick_params(labelsize=fontsize - 1., direction='in')
+        cax_d.set_aspect(1. / 8.)
+        cax_d.xaxis.set_label_position('top')
+        
+        tax = fig.add_subplot(maingrid[5:7, 2:numw])
+        tax.text(0.05, 1.0, titletext, fontsize=fontsize, transform=tax.transAxes, horizontalalignment='left', verticalalignment='top')
+        tax.axis('off')
+        
+        figname = mdir + 'imgplot_%s_%i.pdf'%(setname, galid)
+        plt.savefig(figname, format='pdf', bbox_inches='tight')
