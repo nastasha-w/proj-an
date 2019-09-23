@@ -115,20 +115,20 @@ def generatequery_censatproperties(simnum, snapnum, Mhmin=0., var='REFERENCE', a
         FOF.GroupCentreOfPotential_y as Ygroupcop_cMpc,\
         FOF.GroupCentreOfPotential_z as Zgroupcop_cMpc,\
         SH.GalaxyID as galaxyid,\
-        SH.CentreOfPotential_x as Xcop_cMpc,\
-        SH.CentreOfPotential_y as Ycop_cMpc,\
-        SH.CentreOfPotential_z as Zcop_cMpc,\
         SH.CentreOfMass_x as Xcom_cMpc,\
         SH.CentreOfMass_y as Ycom_cMpc,\
         SH.CentreOfMass_z as Zcom_cMpc,\
         SH.Velocity_x as VXpec_kmps,\
         SH.Velocity_y as VYpec_kmps,\
         SH.Velocity_z as VZpec_kmps,\
-        SH.Vmax as Vmax_circ_kmps,\
-        SH.VmaxRadius as RVmax_pkpc,\
         SH.Masstype_DM as DMMass_Msun,\
         SH.Masstype_Gas as GasMass_Msun,\
         SH.SubGroupNumber as SubGroupNumber,\
+        SH.Vmax as Vmax_circ_kmps,\
+        SH.VmaxRadius as RVmax_pkpc,\
+        SH.CentreOfPotential_x as Xcop_cMpc,\
+        SH.CentreOfPotential_y as Ycop_cMpc,\
+        SH.CentreOfPotential_z as Zcop_cMpc,\
         SH.HalfMassProjRad_Gas as HMRgas_proj_pkpc,\
         SH.HalfMassProjRad_Star as HMRstar_proj_pkpc,\
         SH.HalfMassRad_Gas as HMRgas_pkpc,\

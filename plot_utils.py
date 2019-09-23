@@ -100,7 +100,19 @@ def percentiles_from_histogram(histogram, edgesaxis, axis=-1, percentiles=np.arr
     outperc = outperc.reshape((len(percentiles),) + tuple(oldshape1 + oldshape2))
     return outperc
 
+def handleinfedges(hist, setmin=-100., setmax=100.):
+    for ei in range(len(hist['edges'])):
+        if hist['edges'][ei][0] == -np.inf:
+            hist['edges'][ei][0] = setmin
+        if hist['edges'][ei][-1] == np.inf:
+            hist['edges'][ei][-1] = setmax
 
+def handleinfedges_dct(edges, setmin=-100., setmax=100.):
+    for ei in edges.keys():
+        if edges[ei][0] == -np.inf:
+            edges[ei][0] = setmin
+        if edges[ei][-1] == np.inf:
+            edges[ei][-1] = setmax
 
 ### small plot helpers
 def setticks(ax, fontsize, color='black', labelbottom=True, top=True, labelleft=True, labelright=False, right=True, labeltop=False):

@@ -626,4 +626,184 @@ def plot_Zmeas_basecomp(hn=False, add_sample=None, galids=None):
     plt.savefig(mdir + outname, format='pdf', bbox_inches='tight')  
 
 
+def plotZmeascomps_by_measq(fontsize=pu.fontsize, measured='mass', hn=False, cvar=False, add_sample=None, galid=None):
+    '''
+    One galaxy at a time: this plot is messy enough without adding different 
+    closely spaced markers 
+    '''
+    #aexp = 0.498972 
     
+    massconv = c.solar_mass / (c.cm_per_mpc / 1.e3)**2
+    masslabel = r'$\log_{10} \, \Sigma_{\mathrm{gas}}\; [\mathrm{M}_{\odot} \, \mathrm{pkpc}^{-2}]$'
+    h1conv = 1.
+    h1label = r'$\log_{10} \, N_{\mathrm{H\,I}} \; [\mathrm{cm}^{-2}]$'
+    sfrconv = c.solar_mass / (c.cm_per_mpc / 1.e3)**2 / c.sec_per_year
+    sfrlabel = r'$\log_{10} \, \mathrm{SFR} \; [\mathrm{M}_{\odot}\, \mathrm{pkpc}^{-2} \mathrm{yr}^{-1}]$'
+    
+    if hn:
+        basename  = 'Z_vs_Z_meascuts_usinghneutralssh_%s_L0025N0752Recal_19_SmZ_PtAb_C2Sm_3.125slice_10000pix_T4EOS.pdf'  
+    else:
+        basename  = 'Z_vs_Z_meascuts_%s_L0025N0752Recal_19_SmZ_PtAb_C2Sm_3.125slice_10000pix_T4EOS.pdf'  
+    
+            
+    if measured == 'mass':
+        if hn:
+            hist = pfn.ea25RecZmeas_hn_mass    
+        else:
+            hist = pfn.ea25RecZmeas_mass
+        pu.handleinfedges(hist, setmin=-100., setmax=100.)
+        measconv = massconv
+        measlabel = masslabel
+        wname = 'Gasmass'
+        contourbins = [4., 5., 6., 7., 8., 9.]
+        levels = [0.90]
+        linestyles = ['solid']
+    elif measured == 'h1':
+        if hn:
+            hist = pfn.ea25RecZmeas_hn_h1  
+            wname = 'hneutralssh'
+        else:
+            hist = pfn.ea25RecZmeas_h1 
+            wname = 'h1ssh'
+        pu.handleinfedges(hist, setmin=-100., setmax=100.)
+        measconv = h1conv
+        measlabel = h1label
+        if cvar:
+            contourbins = [17., 19., 20., 20.3, 20.4, 20.5, 20.6, 20.7, 21.]
+        else:
+            contourbins = [12., 14., 15., 17., 19., 20., 21.]
+        levels = [0.90]
+        linestyles = ['solid']
+    elif measured == 'sfr':
+        if hn:
+            hist = pfn.ea25RecZmeas_hn_sfr  
+        else:
+            hist = pfn.ea25RecZmeas_sfr
+        wname = 'SFR'
+        pu.handleinfedges(hist, setmin=-100., setmax=100.)
+        measconv = sfrconv
+        measlabel= sfrlabel
+        contourbins = [-5., -4., -3., -2., -1., 0.]
+        levels = [0.90]
+        linestyles = ['solid']
+        
+    Zconv = ol.Zsun_sylviastables
+    Zlabel = r'$\log_{10} \, Z_{\mathrm{%s} \; [Z_{\odot}]}$'
+    Zmasslabel = Zlabel%'mass'
+    Zsfrlabel  = Zlabel%'SFR'
+    Zh1label   = Zlabel%'H\,I'
+    
+    Zmax = 1
+    Zhax = 2
+    Zsax = 3
+    
+    labels = {Zmax: Zmasslabel, Zhax: Zh1label, Zsax: Zsfrlabel}
+    
+    fig = plt.figure(figsize=(10.5, 5.5))
+    grid = gsp.GridSpec(2, 4, height_ratios=[1., 1.], width_ratios=[1., 1., 1., 0.2], wspace=0.35, hspace=0.25, top=0.90, bottom=0.05, left=0.05) # grispec: nrows, ncols
+    mainaxes = np.array([[fig.add_subplot(grid[yi, xi]) for xi in range(3)] for yi in range(1)]) # in mainaxes: x = column, y = row
+    cax = fig.add_subplot(grid[0, 3])
+    lax = fig.add_subplot(grid[1, :])
+    
+    sumaxes = [(0, Zsax), (0, Zhax), (0, Zmax)]
+    vmaxs = [pu.getminmax2d(hist['bins'], hist['edges'], axis=i, log=True, pixdens=True)[1] for i in sumaxes]
+    vmax = max(vmaxs)
+    vmin = vmax - 8.
+    xlim = (-3., 1.)
+    ylim = xlim 
+    
+    cmap = 'gist_yarg'
+    colors = ['saddlebrown', 'maroon', 'red', 'orange', 'gold', 'forestgreen', 'lime', 'cyan', 'blue', 'purple', 'magenta']
+    dimlabels = (measlabel, labels[1], labels[2], labels[3])
+    dimshifts = (-1.*np.log10(measconv),) +  (-1.*np.log10(Zconv),) * 3
+    edgeinds = [np.argmin(np.abs(contourbins[i] - hist['edges'][0] + np.log10(measconv))) for i in range(len(contourbins))]
+    mins = [(edge,) + (None,) * 3 for edge in [None] + edgeinds]
+    maxs = [(edge,) + (None,) * 3 for edge in edgeinds + [None]]
+
+    for i in range(3):
+        ax = mainaxes[0, i]
+        sumaxis = sumaxes[i]
+        plotaxes = list(set(np.arange(4)) - set(sumaxis))
+        plotaxes.sort()
+        plotaxes=tuple(plotaxes)
+        imgminmax = pu.add_2dplot(ax, hist['bins'], hist['edges'], plotaxes, log=True, usepcolor=True, pixdens=True, shiftx=-1.*np.log10(Zconv), shifty=-1.*np.log10(Zconv), cmap=cmap, vmin=vmin, vmax=vmax)
+        
+        for j in range(len(mins)):
+            pu.add_2dhist_contours(ax, hist['bins'], hist['edges'], plotaxes, mins=mins[j], maxs=maxs[j],\
+                                histlegend=False, fraclevels=True, levels=levels, legend=False,\
+                                dimlabels=dimlabels, legendlabel=None, legendlabel_pre=None,\
+                                shiftx=-1.*np.log10(Zconv), shifty=-1.*np.log10(Zconv), dimshifts=dimshifts,\
+                                colors=[colors[j]] * len(levels), linestyles=linestyles)
+        
+        ax.set_xlabel(labels[plotaxes[0]], fontsize=fontsize)
+        ax.set_ylabel(labels[plotaxes[1]], fontsize=fontsize)
+        pu.setticks(ax, fontsize, color='black', labelbottom=True, top=True, labelleft=True, labelright=False, right=True, labeltop=False)
+        
+        handles_subs, labels_subs = ax.get_legend_handles_labels()
+        
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        
+        ax.plot(xlim, xlim, color='dodgerblue', linestyle='solid', linewidth=1.)
+    
+    pu.add_colorbar(cax, img=imgminmax[0], vmin=vmin, vmax=vmax, cmap=cmap, \
+                    clabel=r'$\log_{10}\, \mathrm{absorber\, fraction} / \left(\Delta \log_{10} Z\right)^2$',\
+                    newax=False, extend='min', fontsize=fontsize, orientation='vertical')
+    cax.set_aspect(10., adjustable='box-forced')
+    cax.tick_params(labelsize=fontsize)
+    handles_encl = [mlines.Line2D([], [], color='gray', linestyle=linestyles[i], label='%.0f %%'%(levels[i]*100.)) for i in range(len(levels))]
+    
+    
+    outname = basename%measured
+    if cvar:
+        outname = outname[:-4] + '_cvar' + outname[-4:]  
+        
+    if add_sample is not None and galid is not None:
+        outname = outname[:-4] + '_%s-%i'%(add_sample, galid) + outname[-4:]
+        
+        wtmap = {Zmax: 'Gasmass',\
+                 Zhax: 'hneutralssh' if hn else 'h1ssh',\
+                 Zsax: 'SFR'}
+        alphas = {Zsax: 0.1,\
+                  Zmax: 0.3,\
+                  Zhax: 0.3,\
+                  }
+
+        mdname = mdir + add_sample + '_projfiles.txt'
+        filenames_all = pd.read_csv(mdname, sep='\t')
+            
+        #filenames = filenames_all.loc[filenames_all['galaxyid'] == galid]    
+        weights = [wtmap[key] for key in wtmap]
+        plotdct = {}
+        for weight in weights:
+            loc = np.where(np.logical_and(filenames_all['weight'] == weight, filenames_all['galaxyid'] == galid))[0][0]
+            pfile = filenames_all.at[loc, 'pfile']
+            qfile = filenames_all.at[loc, 'qfile']
+            
+            plotdct[weight] = readoutmap_forimgplot(pfile, units[weight], cosmopars_default[19])
+            plotdct[weight + 'SmZ'] = readoutmap_forimgplot(qfile, units['Z'], cosmopars_default[19])
+
+        colors = np.array([mpl.colors.to_rgba(col) for col in colors])
+        colorby = (plotdct[wname]['map']).flatten()
+        cinds = np.digitize(colorby, contourbins)
+        _colors = colors[cinds]
+            
+        for axi in range(3):
+            sumaxis = sumaxes[axi]
+            plotaxes = list(set(np.arange(4)) - set(sumaxis))
+            plotaxes.sort()
+            xvals = (plotdct[wtmap[plotaxes[0]] + 'SmZ']['map']).flatten()
+            yvals = (plotdct[wtmap[plotaxes[1]] + 'SmZ']['map']).flatten()
+            depth = plotdct[wtmap[plotaxes[1]] + 'SmZ']['depth']
+            width = plotdct[wtmap[plotaxes[1]] + 'SmZ']['extent']
+            width = width[1] - width[0]
+            mainaxes[0, axi].scatter(xvals, yvals, edgecolor=list(_colors), facecolor='none', alpha=alphas[sumaxis[1]])
+                
+        label = r'%i: ${%.2f}^2 \times %.2f$ pkpc'%(galid, width, depth)
+        handles_encl.append(mlines.Line2D([], [], markeredgecolor='gray', markerfacecolor='none', marker='o', linestyle='None', alpha=0.5, label=label))
+        
+        
+    lax.legend(handles=handles_subs + handles_encl, fontsize=fontsize, ncol=2, loc='upper center', bbox_to_anchor=(0.5, 0.75))
+    lax.axis('off')
+    
+    plt.savefig(mdir + outname, format='pdf', bbox_inches='tight')
