@@ -24,7 +24,8 @@ import matplotlib.patches as mpatch
 import eagle_constants_and_units as c
 import make_maps_opts_locs as ol
 import make_maps_v3_master as m3
-
+import plothistograms_filenames as pfn
+import plot_utils as pu
 
 # where to put text files and plots (projections go in ndir)
 mdir = '/net/luttero/data2/imgs/Zmeascomps/singlegals/'
@@ -211,7 +212,28 @@ def project_sample(setname, pixres=3.125, excludeSFR='T4', axis='z', projrad=(50
         with open(mdname, 'a') as to:
             for namek in output_names:
                 to.write('%i\t%s\t%s\t%s\n'%(galid, namek, output_names[namek][0], output_names[namek][1]))
-       
+     
+        
+###############################################################################
+#                              plot utils                                     #            
+###############################################################################
+
+units = {'SFR': c.solar_mass / c.sec_per_year / (1e-3 * c.cm_per_mpc)**2, \
+         'Gasmass': c.solar_mass / (1e-3 * c.cm_per_mpc)**2, \
+         'hneutralssh': 1., \
+         'h1ssh': 1., \
+         'Z': ol.Zsun_sylviastables}    
+
+cosmopars_default = {}
+cosmopars_default[19] = {'a': 0.4989716956678924,\
+                         'z': 1.0041216940401045,\
+                         'h': 0.6777,\
+                         'boxsize': 16.9425,\
+                         'omegam': 0.307,\
+                         'omegalambda': 0.693,\
+                         'omegab': 0.0482519,\
+                         }
+
 def readoutmap_forimgplot(filename, unit, cosmopars):
     with h5py.File(filename, 'r') as fp:
         img = np.array(fp['map']) - np.log10(unit)
@@ -245,7 +267,7 @@ def readoutmap_forimgplot(filename, unit, cosmopars):
         depth = Ls[Axis3] * 1e3 * cosmopars['a']
         ret = {'map': img, 'extent': tuple(extent), 'depth': depth}
         return ret
-        
+     
 def plotsample_imgs(setname, galids_toplot='all'):
     textname = mdir + setname + '.txt'
     mdname = mdir + setname + '_projfiles.txt'
@@ -294,11 +316,6 @@ def plotsample_imgs(setname, galids_toplot='all'):
                'hneutralssh': r'$\mathrm{H\,I} + \mathrm{H}_{2}$',\
                'Gasmass': 'gas'}
     
-    units = {'SFR': c.solar_mass / c.sec_per_year / (1e-3 * c.cm_per_mpc)**2, \
-              'Gasmass': c.solar_mass / (1e-3 * c.cm_per_mpc)**2, \
-              'hneutralssh': 1., \
-              'h1ssh': 1., \
-              'Z': ol.Zsun_sylviastables}
     fontsize = 12
     xlabel = 'pkpc'
     ylabel = 'pkpc'
@@ -448,3 +465,165 @@ def plotsample_imgs(setname, galids_toplot='all'):
         
         figname = mdir + 'imgplot_%s_%i.pdf'%(setname, galid)
         plt.savefig(figname, format='pdf', bbox_inches='tight')
+
+
+def plot_Zmeas_basecomp(hn=False, add_sample=None, galids=None):
+    fontsize = 12.
+    if add_sample is not None and galids is not None:
+        s_tag = add_sample
+        if galids == 'all':
+            s_tag = '_' + s_tag + '-' + galids
+        else:
+            s_tag = '_' + s_tag + '-' + '-'.join([str(galid) for galid in galids])
+        legheight = 1.
+        mdname = mdir + add_sample + '_projfiles.txt'
+    else:
+        s_tag = ''
+        legheight = 0.
+        
+    if hn:
+        hist = pfn.ea25RecZmeas_basecomp_hn
+        outname = 'Mass_hneutralssh_SFR_L0025N0752RECALIBRATED_19_test3.31_C2Sm_10000pix_3.125slice_zcen-all_z-projection'
+    else:
+        hist = pfn.ea25RecZmeas_basecomp
+        outname = 'Mass_h1ssh_SFR_L0025N0752RECALIBRATED_19_test3.31_C2Sm_10000pix_3.125slice_zcen-all_z-projection'
+    outname = outname + s_tag + '.pdf'
+    
+    msax = 0
+    h1ax = 1
+    sfax = 2
+
+    labels = {msax: r'$\log_{10} \, \Sigma_{\mathrm{gas}}\; [\mathrm{M}_{\odot} \, \mathrm{pkpc}^{-2}]$',\
+              h1ax: r'$\log_{10} \, N_{\mathrm{H\,I}} \; [\mathrm{cm}^{-2}]$',\
+              sfax: r'$\log_{10} \, \mathrm{SFR} \; [\mathrm{M}_{\odot}\, \mathrm{pkpc}^{-2} \mathrm{yr}^{-1}]$',\
+              }
+    
+    convs = {msax: c.solar_mass / (c.cm_per_mpc / 1.e3)**2,\
+             h1ax: 1.,\
+             sfax: c.solar_mass / (c.cm_per_mpc / 1.e3)**2 / c.sec_per_year,\
+            }
+    
+    lims = {msax: (4., 9.0), h1ax: (11., 23.5), sfax:(-8., 0.5)}
+    
+    fig = plt.figure(figsize=(10.5, 3.5))
+    grid = gsp.GridSpec(nrows=2, ncols=4, width_ratios=[1., 1., 1., 0.2], height_ratios=[2., legheight], wspace=0.45, hspace=0.0, top=0.90, bottom=0.05, left=0.05) # grispec: nrows, ncols
+    mainaxes = np.array([fig.add_subplot(grid[0, xi]) for xi in range(3)]) # in mainaxes: x = column, y = row
+    cax = fig.add_subplot(grid[0, 3])
+    
+    sumaxes =  [(sfax,), (h1ax,), (msax,)]
+    plotaxes = [(msax, h1ax), (msax, sfax), (h1ax, sfax)]
+    vmaxs = [pu.getminmax2d(hist['bins'], hist['edges'], axis=i, log=True, pixdens=True)[1] for i in sumaxes]
+    vmax = max(vmaxs)
+    vmin = vmax - 8.
+    
+    cmap = 'gist_yarg'
+    #colors = ['saddlebrown', 'maroon', 'red', 'orange', 'gold', 'forestgreen', 'lime', 'cyan', 'blue', 'purple', 'magenta']
+    #dimlabels = (labels[0], labels[1], labels[2], labels[3])
+    #dimshifts = (-1.*np.log10(convs[i]) for i in range(4))
+    #edgeinds = [np.argmin(np.abs(contourbins[i] - hist['edges'][0] + np.log10(measconv))) for i in range(len(contourbins))]
+    #mins = [(edge,) + (None,) * 3 for edge in [None] + edgeinds]
+    #maxs = [(edge,) + (None,) * 3 for edge in edgeinds + [None]]
+
+    percarr = np.array([0.01, 0.1, 0.5, 0.9, 0.99])
+    linestyles_perc = ['dotted', 'dashed', 'solid', 'dashed', 'dotted']
+    colors_perc = ['magenta'] *len(percarr)
+
+    for i in range(3):
+        ax = mainaxes[i]
+        sumaxis = sumaxes[i]
+        plotaxis = plotaxes[i]
+        plotaxis = tuple(plotaxis)
+        imgminmax = pu.add_2dplot(ax, hist['bins'], hist['edges'], plotaxis,\
+                                  log=True, usepcolor=True, pixdens=True,\
+                                  shiftx=-1.*np.log10(convs[plotaxis[0]]),\
+                                  shifty=-1.*np.log10(convs[plotaxis[1]]),\
+                                  cmap=cmap, vmin=vmin, vmax=vmax)
+        
+        #for j in range(len(mins)):
+        #    add_2dhist_contours(ax, hist, plotaxes, mins=mins[j], maxs=maxs[j],\
+        #                        histlegend=False, fraclevels=True, levels=levels, legend=False,\
+        #                        dimlabels=dimlabels, legendlabel=None, legendlabel_pre=None,\
+        #                        shiftx=-1.*np.log10(convs[plotaxes[0]]), shifty=-1.*np.log10(convs[plotaxes[1]]), dimshifts=dimshifts,\
+        #                        colors=[colors[j]] * len(levels), linestyles=linestyles)
+        #
+        #
+        
+        subhist = np.sum(hist['bins'], axis=sumaxis)
+        if plotaxis[0] > plotaxis[1]:
+            subhist=subhist.T
+        percentiles = pu.percentiles_from_histogram(subhist, hist['edges'][plotaxis[1]], axis=1, percentiles=percarr)
+        cens_ax0 = hist['edges'][plotaxis[0]]
+        cens_ax0 = cens_ax0[:-1] + 0.5 * np.diff(cens_ax0)
+        plotcrit = np.sum(subhist, axis=1) * hist.npt >= 10.
+        plotsl   = slice(np.where(plotcrit)[0][0], np.where(plotcrit)[0][-1] + 1, None)
+        for pi in range(len(percentiles)):
+            ax.plot(cens_ax0[plotsl] - np.log10(convs[plotaxis[0]]), percentiles[pi, plotsl]- np.log10(convs[plotaxis[1]]), linestyle=linestyles_perc[pi], color=colors_perc[pi], label='%.0f %%'%(percarr[pi] * 100.))
+        
+        handles_subs, labels_subs = ax.get_legend_handles_labels()
+        
+        ax.set_xlabel(labels[plotaxis[0]], fontsize=fontsize)
+        ax.set_ylabel(labels[plotaxis[1]], fontsize=fontsize)
+        pu.setticks(ax, fontsize, color='black', labelbottom=True, top=True, labelleft=True, labelright=False, right=True, labeltop=False)
+        
+        
+        ax.set_xlim(*lims[plotaxis[0]])
+        ax.set_ylim(*lims[plotaxis[1]])
+        
+    pu.add_colorbar(cax, img=imgminmax[0], vmin=vmin, vmax=vmax, cmap=cmap, \
+                    clabel=r'$\log_{10}\, \mathrm{absorber\, fraction} / \mathrm{pix. size} \; [\mathrm{dex}^{-2}] $',
+                    newax=False, extend='min', fontsize=fontsize, orientation='vertical')
+    cax.set_aspect(10., adjustable='box-forced')
+    cax.tick_params(labelsize=fontsize)
+    
+    #handles_encl = [mlines.Line2D([], [], color='gray', linestyle=linestyles[i], label='%.0f %%'%(levels[i]*100.)) for i in range(len(levels))]
+    handles_encl = []
+    mainaxes[2].legend(handles=handles_subs + handles_encl, fontsize=fontsize - 1, ncol=1, loc='upper left', bbox_to_anchor=(0.01, 0.99), frameon=False)
+    
+    leghandlelist = []
+    # alpha depends on sumaxes: much fewer points when SF = 0 not included
+    alphas = {sfax: 0.05,\
+              msax: 0.15,\
+              h1ax: 0.15,\
+              }
+    if add_sample is not None and galids is not None:
+        wtmap = {msax: 'Gasmass',\
+                 h1ax: 'hneutralssh' if hn else 'h1ssh',\
+                 sfax: 'SFR'}
+        
+        filenames_all = pd.read_csv(mdname, sep='\t')
+        if galids == 'all':
+            galids = list(set(np.array(filenames_all['galaxyid'])))
+            galids.sort()
+        
+        for gind in range(len(galids)):
+            galid = galids[gind]
+            color = 'C%i'%(gind%10)
+            
+            #filenames = filenames_all.loc[filenames_all['galaxyid'] == galid]    
+            weights = [wtmap[key] for key in wtmap]
+            plotdct = {}
+            for weight in weights:
+                loc = np.where(np.logical_and(filenames_all['weight'] == weight, filenames_all['galaxyid'] == galid))[0][0]
+                pfile = filenames_all.at[loc, 'pfile']
+                #qfile = filenames_all.at[loc, 'qfile']
+                
+                plotdct[weight] = readoutmap_forimgplot(pfile, units[weight], cosmopars_default[19])
+                #plotdct[weight + 'SmZ'] = readoutmap_forimgplot(qfile, units['Z'], cosmopars_default[19])
+            
+            for axi in range(3):
+                xvals = (plotdct[wtmap[plotaxes[axi][0]]]['map']).flatten()
+                yvals = (plotdct[wtmap[plotaxes[axi][1]]]['map']).flatten()
+                depth = plotdct[wtmap[plotaxes[axi][1]]]['depth']
+                width = plotdct[wtmap[plotaxes[axi][1]]]['extent']
+                width = width[1] - width[0]
+                mainaxes[axi].scatter(xvals, yvals, color=color, alpha=alphas[sumaxes[axi][0]])
+            label = r'%i: ${%.2f}^2 \times %.2f$ pkpc'%(galid, width, depth)
+            leghandlelist.append(mlines.Line2D([], [], color=color, marker='o', linestyle='None', alpha=0.5, label=label))
+        lax = fig.add_subplot(grid[1, :])
+        lax.legend(handles=leghandlelist, fontsize=fontsize - 1, ncol=3, loc='upper center', bbox_to_anchor=(0.5, 0.5), frameon=False)
+        lax.axis('off')
+        
+    plt.savefig(mdir + outname, format='pdf', bbox_inches='tight')  
+
+
+    
