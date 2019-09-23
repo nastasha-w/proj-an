@@ -60,6 +60,8 @@ def gensample(setname, halocat, targets_Mstar=(9.0, 9.5, 10.0, 10.5), tol_Mstar=
         ypos = np.array(hc['Ycom_cMpc'])[selinds]
         zpos = np.array(hc['Zcom_cMpc'])[selinds]
         R200c_group = np.array(hc['R200c_pkpc'])[selinds] * 1e-3 / hc['Header/cosmopars'].attrs['a']
+        HMR_gal = np.max([np.array(hc['HMRgas_proj_pkpc'])], axis=0) * 1e-3 / hc['Header/cosmopars'].attrs['a']
+        # = np.array(hc['R200c_pkpc'])[selinds] * 1e-3 / hc['Header/cosmopars'].attrs['a']
     
     with open(mdir + setname + '.txt', 'w') as fo:
         # metadata
@@ -69,9 +71,9 @@ def gensample(setname, halocat, targets_Mstar=(9.0, 9.5, 10.0, 10.5), tol_Mstar=
         fo.write('numeach:\t%i\n'%(numeach))
         fo.write('onlycentrals:\t%s\n'%(onlycentrals))
         # column heads
-        fo.write('galaxyid\tgroupid\tMstar_logMsun\tSubGroupNumber\tXcom_cMpc\tYcom_cMpc\tZcom_cMpc\tR200c_cMpc\n')
+        fo.write('galaxyid\tgroupid\tMstar_logMsun\tSubGroupNumber\tXcom_cMpc\tYcom_cMpc\tZcom_cMpc\tR200c_cMpc\tprojHMR_gas_cMpc\n')
         for i in range(len(galids)):
-            fo.write('%i\t%i\t%f\t%i\t%f\t%f\t%f\t%f\n'%(galids[i], groupids[i], mstar[i], subn[i], xpos[i], ypos[i], zpos[i], R200c_group[i]))
+            fo.write('%i\t%i\t%f\t%i\t%f\t%f\t%f\t%f\t%f\n'%(galids[i], groupids[i], mstar[i], subn[i], xpos[i], ypos[i], zpos[i], R200c_group[i], HMR_gal[i]))
 
                 
 # run all the projections for one galaxy
@@ -130,7 +132,8 @@ def run_projections(centre, projbox,\
 
 def project_sample(setname, pixres=3.125, excludeSFR='T4', axis='z', projrad=(50., 'pkpc')):
     '''
-    projrad: (size, units). units are one of pkpc, ckpc, pMpc, cMpc, or R200c
+    projrad: (size, units). units are one of pkpc, ckpc, pMpc, cMpc, R200c, or
+             HMR (projected gas half-mass radius)
              note that R200c applies to the current parent halo, even if the 
              galaxy is a satellite
     pixres:  size of a pixel in ckpc
@@ -179,14 +182,17 @@ def project_sample(setname, pixres=3.125, excludeSFR='T4', axis='z', projrad=(50
         mstar = gdata['Mstar_logMsun']
         centre = [gdata['Xcom_cMpc'], gdata['Ycom_cMpc'], gdata['Zcom_cMpc']] 
         R200c = gdata['R200c_cMpc']
+        HMR = gdata['projHMR_gas_cMpc']
         
-        projbox = projrad[0]
+        projbox = 2. * projrad[0] # radius -> diameter
         if 'kpc' in projrad[1]:
             projbox *= 1e-3
         if projrad[1][0] == 'p':
             projbox /= cosmopars['a']
         if projrad[1] == 'R200c':
             projbox *= R200c
+        if projrad[1] == 'HMR':
+            projbox *= HMR
         
         output_names = run_projections(centre, projbox,\
                         pixres=pixres, simnum=simnum, snapnum=snapnum,\

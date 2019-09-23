@@ -129,6 +129,10 @@ def generatequery_censatproperties(simnum, snapnum, Mhmin=0., var='REFERENCE', a
         SH.Masstype_DM as DMMass_Msun,\
         SH.Masstype_Gas as GasMass_Msun,\
         SH.SubGroupNumber as SubGroupNumber,\
+        SH.HalfMassProjRad_Gas as HMRgas_proj_pkpc,\
+        SH.HalfMassProjRad_Star as HMRstar_proj_pkpc,\
+        SH.HalfMassRad_Gas as HMRgas_pkpc,\
+        SH.HalfMassRad_Star as HMRstar_pkpc,\
         AP.SFR as SFR_MsunPerYr,\
         AP.Mass_BH as MBH_Msun_aperture,\
         AP.Mass_Star as Mstar_Msun,\
