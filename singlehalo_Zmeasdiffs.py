@@ -61,7 +61,7 @@ def gensample(setname, halocat, targets_Mstar=(9.0, 9.5, 10.0, 10.5), tol_Mstar=
         ypos = np.array(hc['Ycom_cMpc'])[selinds]
         zpos = np.array(hc['Zcom_cMpc'])[selinds]
         R200c_group = np.array(hc['R200c_pkpc'])[selinds] * 1e-3 / hc['Header/cosmopars'].attrs['a']
-        HMR_gal = np.max([np.array(hc['HMRgas_proj_pkpc'])], axis=0) * 1e-3 / hc['Header/cosmopars'].attrs['a']
+        HMR_gal = np.array(hc['HMRgas_proj_pkpc'])[selinds] * 1e-3 / hc['Header/cosmopars'].attrs['a'] 
         # = np.array(hc['R200c_pkpc'])[selinds] * 1e-3 / hc['Header/cosmopars'].attrs['a']
     
     with open(mdir + setname + '.txt', 'w') as fo:
@@ -131,12 +131,13 @@ def run_projections(centre, projbox,\
     return outdct
 
 
-def project_sample(setname, pixres=3.125, excludeSFR='T4', axis='z', projrad=(50., 'pkpc')):
+def project_sample(setname, pixres=3.125, excludeSFR='T4', axis='z', projrad=(50., 'pkpc'), minprojrad=(10., 'pkpc')):
     '''
     projrad: (size, units). units are one of pkpc, ckpc, pMpc, cMpc, R200c, or
              HMR (projected gas half-mass radius)
              note that R200c applies to the current parent halo, even if the 
              galaxy is a satellite
+    minprojrad: set a minimum radius: backup since some gas HMR are zero
     pixres:  size of a pixel in ckpc
     setname: name of the text file containing the info for this set of galaxies
     '''
@@ -194,6 +195,18 @@ def project_sample(setname, pixres=3.125, excludeSFR='T4', axis='z', projrad=(50
             projbox *= R200c
         if projrad[1] == 'HMR':
             projbox *= HMR
+        
+        if minprojrad is not None:
+            minvals = 2 * minprojrad[0]
+            if 'kpc' in minprojrad[1]:
+                minvals *= 1e-3
+            if minprojrad[1][0] == 'p':
+                minvals /= cosmopars['a']
+            if minprojrad[1] == 'R200c':
+                minvals *= R200c
+            if minprojrad[1] == 'HMR':
+                minvals *= HMR
+            projbox = max(minvals, projbox)
         
         output_names = run_projections(centre, projbox,\
                         pixres=pixres, simnum=simnum, snapnum=snapnum,\
