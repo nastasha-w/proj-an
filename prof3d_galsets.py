@@ -35,6 +35,151 @@ def dataname(samplen):
 def files(samplen, weighttype):
     return tdir + 'filenames_%s_%s.txt'%(samplen, weighttype)
 
+def combine_hists(h1, h2, e1, e2, rtol=1e-5, atol=1e-8):
+    '''
+    add histograms h1, h2 with the same dimension, after aligning edges e1, e2
+    
+    e1, e2 are sequences of arrays, h1, h2 are arrays
+    edgetol specifies what relative/absolute (absolute if one is zero) 
+    differences between edge values are acceptable to call bin edges equal
+    
+    if edges along some dimension do not overlap at all, but the spacing is,
+    equal, interpolate to get the intermediate bins
+    (this is meant for combining histograms run with the same float or fixed 
+    array axbins options)
+    '''
+    if len(h1.shape) != len(h2.shape):
+        raise ValueError('Can only add histograms of the same shape')
+    if not (np.all(np.array(h1.shape) == np.array([len(e) - 1 for e in e1]))\
+            and \
+            np.all(np.array(h2.shape) == np.array([len(e) - 1 for e in e2]))\
+           ):
+        raise ValueError('Histogram shape does not match edges')
+       
+    # iterate of edges, determine overlaps
+    p1 = []
+    p2 = []
+    es = []
+
+    for ei in range(len(e1)):
+        e1t = np.array(e1[ei])
+        e2t = np.array(e2[ei])
+        p1t = [None, None]
+        p2t = [None, None]
+        
+        # if the arrays happen to be equal, it's easy
+        if len(e1t) == len(e2t):
+            if np.allclose(e1t, e2t, rtol=rtol, atol=atol):
+                p1t = [0, 0]
+                p2t = [0, 0]
+                es.append(0.5 * (e1t + e2t))
+                p1.append(p1t)
+                p2.append(p2t)
+                continue
+        
+        # if not, things get messy fast. Assume equal spacing (check) 
+        s1t = np.diff(e1t)
+        s2t = np.diff(e2t)
+        if not np.allclose(s1t[0][np.newaxis], s1t):
+            raise RuntimeError('Cannot deal with unequally spaced arrays that do not match (axis %i)'%(ei))
+        if not np.allclose(s2t[0][np.newaxis], s2t):
+            raise RuntimeError('Cannot deal with unequally spaced arrays that do not match (axis %i)'%(ei))
+        if not np.isclose(np.average(s1t), np.average(s2t), atol=atol, rtol=rtol):
+            raise RuntimeError('Cannot deal with differently spaced arrays (axis %i)'%(ei)) 
+        st = 0.5 * (np.average(s1t) + np.average(s2t))
+        if st <= 0.:
+            raise RuntimeError('Cannot deal with decreasing array values (axis %i)'%(ei))
+        # check if the arrays share a zero point for their scales
+        if not np.isclose(((e1t[0] - e2t[0]) / st + 0.5) % 1 - 0.5, 0., atol=atol, rtol=rtol):
+            raise RuntimeError('Cannot deal with arrays not on a common grid (axis %i)'%(ei))
+            
+        if np.isclose(e1t[0], e2t[0], rtol=rtol, atol=atol):
+            p1t[0] = 0
+            p2t[0] = 0
+            p1t[1] = max(0, len(e2t) - len(e1t))
+            p2t[1] = max(0, len(e1t) - len(e2t))
+            est = e1t
+            if len(e2t) > len(e1t):
+                est = np.append(est, e2t[-p1t[1]:])
+        elif e1t[0] < e2t[0]:
+            e11i2 = np.where(np.isclose(e1t[-1][np.newaxis], e2t, atol=atol, rtol=rtol))[0]
+            if len(e11i2) > 1:
+                raise RuntimeError('For edges %s, %s, tolerance rel: %f, abs: %f is too large to determine a match'%(str(e1t), str(e2t), atol, rtol))
+            if len(e11i2) == 0: # array 1 is fully below array 2 or extends to beyond array 2
+                if e1t[-1] < e2t[0]:
+                    numfill = int(np.round((e2t[0] - e1t[-1]) / st, 0)) + 1
+                    fillin = np.linspace(e1t[-1], e2t[0], numfill)
+                    est = np.array(list(e1t) + list(fillin[1:-1]) + list(e2t))
+                    p1t[0] = 0
+                    p2t[0] = len(e1t) - 1 + len(fillin) - 1 
+                    p1t[1] = len(e2t) - 1 + len(fillin) - 1 
+                    p2t[1] = 0
+                else: # array 1 encompasses array 2
+                    e21i1 = np.where(np.isclose(e2t[-1][np.newaxis], e1t, atol=atol, rtol=rtol))[0]
+                    assert len(e21i1) == 1
+                    e20i1 = np.where(np.isclose(e2t[0][np.newaxis], e1t, atol=atol, rtol=rtol))[0]
+                    assert len(e20i1) == 1
+                    e21i1 = e21i1[0]
+                    e20i1 = e20i1[0]
+                    p1t = [0, 0]
+                    p2t[0] = e20i1
+                    p2t[1] = len(e1t) - 1 - e21i1
+                    est = e1t
+            else: # array 1 ends at index e11i2 in array 2, index is equal to the number of overlapping bins
+                e11i2 = e11i2[0] 
+                p1t[0] = 0
+                p2t[0] = len(e1t) - 1 - e11i2
+                p1t[1] = len(e2t) - 1 - e11i2
+                p2t[1] = 0
+                est = e1t
+                if p1t[1] > 0:
+                    est = np.append(est, e2t[e11i2 + 1:])
+        else: # e1t starts later than e2t
+            e21i1 = np.where(np.isclose(e2t[-1][np.newaxis], e1t, atol=atol, rtol=rtol))[0]
+            if len(e21i1) > 1:
+                raise RuntimeError('For edges %s, %s, tolerance rel: %f, abs: %f is too large to determine a match'%(str(e1t), str(e2t), atol, rtol))
+            if len(e21i1) == 0: # array 1 is fully below array 2
+                if e2t[-1] < e1t[0]:
+                    numfill = int(np.round((e1t[0] - e2t[-1]) / st, 0)) + 1
+                    fillin = np.linspace(e2t[-1], e1t[0], numfill)
+                    est = np.array(list(e2t) + list(fillin[1:-1]) + list(e1t))
+                    p2t[0] = 0
+                    p1t[0] = len(e2t) - 1 + len(fillin) - 1 
+                    p2t[1] = len(e1t) - 1 + len(fillin) - 1 
+                    p1t[1] = 0
+                else: # array 2 encompasses array 1
+                    e11i2 = np.where(np.isclose(e1t[-1][np.newaxis], e2t, atol=atol, rtol=rtol))[0]
+                    assert len(e11i2) == 1
+                    e10i2 = np.where(np.isclose(e1t[0][np.newaxis], e2t, atol=atol, rtol=rtol))[0]
+                    assert len(e10i2) == 1
+                    e11i2 = e11i2[0]
+                    e10i2 = e10i2[0]
+                    p2t = [0, 0]
+                    p1t[0] = e10i2
+                    p1t[1] = len(e2t) - 1 - e11i2
+                    est = e2t
+            else: # array 2 ends at index e21i1 in array 1, index is equal to the number of overlapping bins
+                e21i1 = e21i1[0] 
+                p2t[0] = 0
+                p1t[0] = len(e2t) - 1 - e21i1
+                p2t[1] = len(e1t) - 1 - e21i1
+                p1t[1] = 0
+                est = e1t
+                if p1t[0] > 0:
+                    est = np.append(e2t[:-1 * (e21i1 + 1)], est)                            
+        p1.append(p1t)
+        p2.append(p2t)
+        es.append(est)
+
+    print(p1)
+    print(p2)
+    print(es)
+        
+    h1 = np.pad(h1, mode='constant', constant_values=0, pad_width=p1)
+    h2 = np.pad(h2, mode='constant', constant_values=0, pad_width=p2)
+    hs = h1 + h2
+    return hs, es
+
 def gensample(samplename=None, galaxyselector=None):
     '''
     retrieve and store metadata for a given sample
@@ -183,4 +328,138 @@ def genhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass', logM2
             m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
             
             fdoc.write('%i\t%s\t%s\n'%(gid, outname[0], outname[1]))
+
+def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
+              binby=('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),\
+              combmethod='addnormed-R200c'):
+    '''
+    generate the histograms for a given sample
+    rbinu: used fixed bins in pkpc or in R200c (relevant for stacking)
+    
+    idsel: project only a subset of galaxies according to the given list
+           useful for testing on a few galaxies
+           ! do not run in  parallel: different processes will try to write to
+           the same list of output files
+    
+    binby: column, edges tuple
+           which halos to combine into one histogram
+    combmethod: how to combine. options are: 
+           - 'add': just add all the histograms together
+           - 'addnormed-R200c': add histograms normalized by the sum of weights
+              within R200c (only if rbinu is 'R200c')
+           - 'addnormed-M200c': add histograms normalized by M200c 
+             (only equivalent to the previous if it's a Mass-weighted 
+             histogram)
+           - 'addnormed-all': add histograms normalized by the sum of the 
+             histogram to the outermost radial bin
+    '''
+    if samplename is None:
+        samplename = defaults['sample']
+    fdata = dataname(samplename)
+    fname = files(samplename, weighttype)
+    
+    with open(fin, 'r') as fi:
+        # scan for halo catalogue (only metadata needed for this)
+        headlen = 0
+        halocat = None
+        while True:
+            line = fi.readline()
+            if line == '':
+                if halocat is None:
+                    raise RuntimeError('Reached the end of %s without finding the halo catalogue name'%fin)
+                else:
+                    break
+            elif line.startswith('halocat'):
+                halocat = line.split(':')[1]
+                halocat = halocat.strip()
+                headlen += 1
+            elif ':' in line or line == '\n':
+                headlen += 1
+    
+    with h5py.File(halocat, 'r') as hc:
+        hed = hc['Header']
+        cosmopars = {key: item for key, item in hed['cosmopars'].attrs.items()}
+        simnum = hed.attrs['simnum']
+        snapnum = hed.attrs['snapnum']
+        var = hed.attrs['var']
+        #ap = hed.attrs['subhalo_aperture_size_Mstar_Mbh_SFR_pkpc']
+    
+    galdata_all = pd.read_csv(fdata, header=headlen, sep='\t', index_col='galaxyid')
+    galname_all = pd.read_csv(fname, header=0, sep='\t', index_col='galaxyid')
+
+    galids = np.array(galname_all.index) # galdata may also include non-selected haloes
+    
+    colsel = binby[0]
+    galbins = binby[1]
+    numgalbins = len(galbins) - 1
+    hists = [None] * numgalbins
+    edges = [None] * numgalbins
+    edgedata = [None] * numgalbins
+    galids_base = [None] * numgalbins
+    galids_bin = [[]] * numgalbins
+    bgrpns = ['%s-%s/%s_%f-%f'%(combmethod, rbinu, colsel, galbins[i], galbins[i + 1]) for i in range(numgalbins)]
+    
+    # construct name of summed histogram by removing position specs from a specific one
+    outname = galname_all.at[galids[0], 'filename']
+    pathparts = outname.split('/')
+    namepart = pathparts[-1]
+    ext = namepart.split('.')[-1]
+    namepart = '.'.join(namepart.split('.')[:-1])
+    nameparts = (namepart).split('_')
+    outname = []
+    for part in nameparts:
+        if not (part[0] in ['x', 'y', 'z'] and '-pm' in part):
+            outname.append(part)
+    outname = '_'.join(outname)
+    outname = '/'.join(pathparts[:-1]) + outname + '.' + ext
+    
+    # axis data attributes that are allowed to differ between summed histograms
+    neqlist = ['number of particles',\
+               'number of particles > max value',\
+               'number of particles < min value',\
+               'number of particles with finite values']
+    
+    with h5py.File(outname, 'a') as fo:
+        igrpn = galname_all.at[galids[0], 'groupname']
+        
+        for galid in galids:
+            selval = galdata_all.at[galid, colsel]
+            binind = np.searchsorted(galbins, selval, side='right')
+            if binind in [0, numgalbins]: # halo/stellar mass does not fall into any of the selected ranges
+                continue
             
+            # retrieve data from this histogram of checks
+            igrpn_temp = galname_all.at[galid, 'groupname']   
+            if igrpn_temp != igrpn:
+                raise RuntimeError('histogram names for galaxyid %i, %i did not match'%(galids[0], galid))
+            ifilen_temp = galname_all.at[galid, 'filename']   
+            with h5py.File(ifilen_temp, 'r') as fit:
+                igrp_t = fit[igrpn_temp]
+                hist_t = np.array(igrp_t['histogram'])
+                if bool(igrp_t['histogram'].attrs['log']):
+                    hist_t = 10**hist_t
+                wtsum_t = igrp_t['histogram'].attrs['sum of weights']
+                edges_t = [np.array(igrp_t['binedges/Axis%i']) for i in len(hist_t.shape)]
+                edgekeys_t = list(igrp_t.keys())
+                edgekeys_t.remove('histogram')
+                edgekeys_t.remove('binedges')
+                edgedata_t = {}
+                for ekey in edgekeys_t: 
+                    edgedata_t[ekey] =  {akey: item for akey, item in igrp_t[ekey].attrs.items()}
+                    for akey in neqlist:
+                        del edgedata_t[akey]
+                        
+            # run compatibility checks, align/expand edges
+            galids_bin[binind].append(galid)
+            if edgedata[binind] is None:
+                edgedata[binind] = edgedata_t
+                galids_base[binind] = galid
+            else:
+                if not set(edgekeys_t) == set(edgedata[binind].keys()):
+                    raise RuntimeError('Mismatch in histogram axis names for galaxyids %i, %i'%(galids_base[binind], galid))
+                if not np.all([edgedata_t[ekey][akey] == edgedata[binind][akey] for akey in edgedata_t[ekey].keys()] for ekey in edgekeys_t):
+                    raise RuntimeError('Mismatch in histogram axis properties for galaxyids %i, %i'%(galids_base[binind], galid))
+        # store the data
+        ogrp = fo.create_group('%s/%s'(igrpn, samplename))
+        bgrps = [ogrp.create_group(name) for name in bgrpns]
+                
