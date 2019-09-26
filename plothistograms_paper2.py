@@ -2331,3 +2331,8 @@ def plotfracs_by_halo_subcat(ions=['Mass', 'hneutralssh', 'o6', 'ne8', 'o7', 'ne
     lax.axis('off')
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
+    
+
+###############################################################################
+#                  nice plots for the paper: simplified                       #
+###############################################################################

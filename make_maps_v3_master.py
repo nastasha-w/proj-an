@@ -4239,10 +4239,10 @@ def get3ddist(vardict, cen, last=True, trustcoords=False):
     '''
     if not trustcoords: 
         vardict.delif('Coordinates', last=True)
-    if 'Coordinates' not in vardict.simfile:
-        vardict.readif('Coordinates')
+    if 'Coordinates' not in vardict.particle:
+        vardict.readif('Coordinates', rawunits=True)
         vardict.particle['Coordinates'] *= (1. / vardict.simfile.h)
-        vardict.particle['CGSconv'] *= vardict.simfile.h
+        vardict.CGSconv['Coordinates'] *= vardict.simfile.h
         
     if not np.all(cen == 0.): # translation step will often have been made before in region selection -> no need to repeat
         translate(vardict.particle, 'Coordinates', cen, np.array((vardict.simfile.boxsize / vardict.simfile.h,) *3), False) # non-periodic -> centered on cen
@@ -4837,7 +4837,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
         raise ValueError('inputcheck returned code %i'%res)
     if hasattr(logax, '__len__'):
         logax = np.array(logax)
-        if not np.all([isinstance(val, bool) for val in logax]):
+        if not np.all([isinstance(val, (bool, np.bool_)) for val in logax]):
             raise ValueError('All logax values must be True or False')
     elif not isinstance(logax, bool)  :
         raise ValueError('logax should be True or False, or a list of booleans matching axesdct')
@@ -4865,7 +4865,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
         dct_temp = axesdct[axi]
         print('axis %i'%axi)
         print(fillstr_particleprop%(dct_temp['ptype'], dct_temp['excludeSFR'], dct_temp['abunds'], dct_temp['ion'], dct_temp['quantity'], sylviasshtables, dct_temp['allinR200c'], dct_temp['mdef']))
-        print('\taxbin: \t%s \tlogax: \t%s'%(axbins[axi], logax[axi]))
+        print('\taxbin: \t%s \tlogax: \t%s'%(axbins[axi] if hasattr(axbins, '__getitem__') else axbins, logax[axi]))
 
     simfile = pc.Simfile(simnum, snapnum, var, file_type='particles', simulation=simulation)
     vardict = pc.Vardict(simfile, parttype, [], region=None, readsel=None) # important: vardict.region is set later, so don't read in anything before that
@@ -4905,6 +4905,8 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
         vardict.readif('Coordinates', rawunits=True)
         vardict.particle['Coordinates'] *= (1. / vardict.simfile.h)
         vardict.CGSconv['Coordinates'] *= vardict.simfile.h
+        #print(vardict.particle['Coordinates'])
+        #print(vardict.CGSconv['Coordinates'])
         translate(vardict.particle, 'Coordinates', centre, box3, False) # periodic = False -> centre on centre
         
         doselection = np.array([0,1,2])[Ls < BoxSize] # no selection needed if the selection dimension is the whole box (with an fp margin for h conversions)
@@ -4915,11 +4917,12 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                 sel.comb({'arr': -1. * margin <= vardict.particle['Coordinates'][:, axind]})
                 sel.comb({'arr':       margin >  vardict.particle['Coordinates'][:, axind]})
         vardict.update(sel)
+        #print(len(vardict.particle['Coordinates']))
         #print('sel length, num. True: %s, %s'%(len(sel.val), np.sum(sel.val)))
         
         keepcoords = np.any([sub['ptype'] == 'coords' for sub in axesdct]) # keep the centred coordinates if they're needed for r3D later
-        vardict.delif('Coordinates', last=keepcoords)
-        
+        if not keepcoords:
+            vardict.delif('Coordinates', last=keepcoords)
         vardict.add_box('box3', box3)
         vardict.overwrite_box('centre',centre)
         vardict.overwrite_box('Ls',Ls)
@@ -5004,6 +5007,8 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                 axdata_t = np.log10(axdata_t) + np.log10(multipafter_t)
             else:
                 axdata_t *= multipafter_t 
+            print('ptype_t, quantity_t, ion_t: %s, %s, %s'%(ptype_t, quantity_t, ion_t))
+            #print(axdata_t)
             min_t = np.min(axdata_t[np.isfinite(axdata_t)])
             max_t = np.max(axdata_t[np.isfinite(axdata_t)])
     
@@ -5045,17 +5050,19 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                     grp.attrs.create('number of particles < min value', 0)
                 elif isinstance(axbins_t, num.Number): # something float-like: spacing
                     # search for round values up to spacing below min and above max
-                    minbin = np.floor(min_t/axbins_t) * axbins_t
-                    maxbin = np.ceil(max_t/axbins_t) * axbins_t
+                    minbin = np.floor(min_t / axbins_t) * axbins_t
+                    maxbin = np.ceil(max_t / axbins_t) * axbins_t
                     axbins_t = np.arange(minbin, maxbin + axbins_t/2., axbins_t)
                     grp.attrs.create('number of particles > max value', 0)
                     grp.attrs.create('number of particles < min value', 0)
                 else: # list/array of bin edges
-                    if axbins[-1] < max_t:
+                    print(axbins_t)
+                    print(min_t)
+                    if axbins_t[-1] < max_t:
                         numgtr = np.sum(axdata_t[np.isfinite(axdata_t)] > axbins_t[-1])
                     else:
                         numgtr = 0
-                    if axbins[0] > min_t:
+                    if axbins_t[0] > min_t:
                         numltr = np.sum(axdata_t[np.isfinite(axdata_t)] < axbins_t[0])
                     else:
                         numltr = 0

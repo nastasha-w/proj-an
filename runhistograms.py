@@ -26,6 +26,7 @@ import makecddfs as mc
 import coldens_rdist as crd
 from loadnpz_and_plot import imreduce
 import selecthalos as sh
+import prof3d_galsets as p3g
 
 if __name__ == '__main__':
     jobind = int(sys.argv[1])
@@ -2288,6 +2289,12 @@ elif jobind == 20057:
                          selection, np.inf, outname=outname,\
                          numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
                          axis='z', velspace=False, offset_los=0., stamps=False)
+    
+
+### get 3d profiles
+elif jobind in range(20058, 20066):
+    weighttype = ['Mass', 'Volume', 'o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'][jobind - 20058]
+    p3g.genhists(samplename=None, rbinu='R200c', idsel=None, weighttype=weighttype, logM200min=11.0)    
     
     
 ###############################################################################
