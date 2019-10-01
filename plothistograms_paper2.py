@@ -2336,3 +2336,190 @@ def plotfracs_by_halo_subcat(ions=['Mass', 'hneutralssh', 'o6', 'ne8', 'o7', 'ne
 ###############################################################################
 #                  nice plots for the paper: simplified                       #
 ###############################################################################
+    
+#### CDDFs
+
+def plot_cddfs(ions, fontsize=fontsize, imgname=None, techvars=[0]):
+    '''
+    ions in different panels
+    colors indicate different halo masses (from a rainbow color bar)
+    linewidths, transparancies, and linestyles indicate different technical 
+      variations in assigning pixels to halos
+      
+    technical variations: - incl. everything in halos (no overlap exclusion)
+                          - use slices containing any part of the halo (any part of cen +/- R200c within slice)
+                          - use slices containing only the whole halo (all of cen +/- R200c within slice)
+                          - use halo range only projections
+                          - use halo mass only projections with the masking variations
+    '''
+    
+    mdir = '/net/luttero/data2/imgs/CGM/cddfsplits/'
+    
+    if imgname is None:
+        imgname = 'cddfs_%s_L0100N1504_27_PtAb_C2Sm_32000pix_T4EOS_6.25slice_zcen-all_techvars-%s.pdf'%('-'.join(sorted(ions)), '-'.join(sorted([str(var) for var in techvars])))
+    if '/' not in imgname:
+        imgname = mdir + imgname
+    if imgname[-4:] != '.pdf':
+        imgname = imgname + '.pdf'
+
+
+        
+    if isinstance(ions, str):
+        ions = [ions]
+    
+    ylabel = r'$\log_{10} \left( \partial^2 n \, / \, \partial \log_{10} \mathrm{N} \, \partial X \right)$'
+    xlabel = r'$\log_{10} \, \mathrm{N} \; [\mathrm{cm}^{-2}]$'
+    #clabel = r'$\log_{10}\, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'
+    
+    ion_filedct_excl_1R200c_cenpos = {'fe17': ol.pdir + 'cddf_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'ne9':  ol.pdir + 'cddf_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'ne8':  ol.pdir + 'cddf_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o8':   ol.pdir + 'cddf_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o7':   ol.pdir + 'cddf_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o6':   ol.pdir + 'cddf_coldens_o6_L0100N1504_27_test3.3_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      #'hneutralssh': ol.pdir + 'cddf_coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      }
+    
+    techvars = {0: ion_filedct_excl_1R200c_cenpos}
+    
+    linewidths = {0: 2}
+    
+    linestyles = {0: 'solid'}
+    
+    alphas = {0: 1.}
+    
+    masknames1 = ['nomask']
+    masknames = masknames1 #{0: {ion: masknames1 for ion in ions}}
+    
+    #legendnames_techvars = {0: r'$r_{\perp} < R_{\mathrm{200c}}$, excl., cen'}
+    
+#    panelwidth = 2.5
+#    panelheight = 2.
+#    legheight = 0.6
+#    figwidth = numcols * panelwidth + 0.6 
+#    figheight = numcols * panelheight + 0.2 * numcols + legheight
+#    fig = plt.figure(figsize=(figwidth, figheight))
+#    grid = gsp.GridSpec(numrows + 1, numcols + 1, hspace=0.2, wspace=0.0, width_ratios=[panelwidth] * numcols + [0.6], height_ratios=[panelheight] * numrows + [legheight])
+#    axes = [fig.add_subplot(grid[i // numcols, i % numcols]) for i in range(len(ions))]
+#    cax  = fig.add_subplot(grid[:numrows, numcols])
+#    lax  = fig.add_subplot(grid[numrows, :])
+    
+    fig, ax1 = plt.subplots(ncols=1, nrows=1, figsize=(5.5, 3.0), gridspec_kw={'wspace': 0.0})
+    
+    hists = {}
+    cosmopars = {}
+    dXtot = {}
+    dztot = {}
+    dXtotdlogN = {}
+    bins = {}
+    
+    for var in techvars:
+        hists[var] = {}
+        cosmopars[var] = {}
+        dXtot[var] = {}
+        dztot[var] = {}
+        dXtotdlogN[var] = {}
+        bins[var] = {}
+        for ion in ions:
+            print('Reading in data for ion %s'%ion)
+            filename = techvars[var][ion]
+            with h5py.File(filename, 'r') as fi:
+                _bins = np.array(fi['bins/axis_0'])
+                # handle +- infinity edges for plotting; should be outside the plot range anyway
+                if _bins[0] == -np.inf:
+                    _bins[0] = -100.
+                if _bins[-1] == np.inf:
+                    _bins[-1] = 100.
+                bins[var][ion] = _bins
+                
+                # extract number of pixels from the input filename, using naming system of make_maps
+                inname = np.array(fi['input_filenames'])[0]
+                inname = inname.split('/')[-1] # throw out directory path
+                parts = inname.split('_')
+        
+                numpix_1sl = set(part if 'pix' in part else None for part in parts) # find the part of the name needed: '...pix'
+                numpix_1sl.remove(None)
+                numpix_1sl = int(list(numpix_1sl)[0][:-3])
+                print('Using %i pixels per side for the sample size'%numpix_1sl) # needed for the total path length
+                
+                ionind = 1 + np.where(np.array([part == 'coldens' for part in parts]))[0][0]
+                ion = parts[ionind]
+                
+                masks = masknames
+        
+                hists[var][ion] = {mask: np.array(fi['%s/hist'%mask]) for mask in masks}
+                
+                examplemaskdir = fi['masks'].keys()[0]
+                examplemask = fi['masks/%s'%(examplemaskdir)].keys()[0]
+                cosmopars[var][ion] = {key: item for (key, item) in fi['masks/%s/%s/Header/cosmopars/'%(examplemaskdir, examplemask)].attrs.items()}
+                dXtot[var][ion] = mc.getdX(cosmopars[var][ion]['z'], cosmopars[var][ion]['boxsize'] / cosmopars[var][ion]['h'], cosmopars=cosmopars[var][ion]) * float(numpix_1sl**2)
+                dztot[var][ion] = mc.getdz(cosmopars[var][ion]['z'], cosmopars[var][ion]['boxsize'] / cosmopars[var][ion]['h'], cosmopars=cosmopars[var][ion]) * float(numpix_1sl**2)
+                dXtotdlogN[var][ion] = dXtot[var][ion] * np.diff(bins[var][ion])
+
+        assert checksubdct_equal(cosmopars[var])
+                     
+    ## checks: will fail with e.g. halo-only projection, though
+    #filekeys = h5files.keys()
+    #if np.all([np.all(bins[key] == bins[filekeys[0]]) if len(bins[key]) == len(bins[filekeys[0]]) else False for key in filekeys]):
+    #    bins = bins[filekeys[0]]
+    #else:
+    #    raise RuntimeError("bins for different files don't match")
+    
+    #if not np.all(np.array([np.all(hists[key]['nomask'] == hists[filekeys[0]]['nomask']) for key in filekeys])):
+   #     raise RuntimeError('total histograms from different files do not match')
+        
+    
+    ax1.set_xlim(12.0, 17.)
+    ax1.set_ylim(-5.0, 2.5)
+    #ax2.set_xlim(12.0, 23.0)
+    #ax2.set_ylim(-5.0, 2.5)
+    
+    setticks(ax1, fontsize=fontsize, labelbottom=True, labelleft=True)
+    #setticks(ax2, fontsize=fontsize, labelbottom=True, labelleft=False)
+
+    ax1.set_xlabel(xlabel, fontsize=fontsize)
+    #ax2.set_xlabel(xlabel, fontsize=fontsize)
+    ax1.set_ylabel(ylabel, fontsize=fontsize)
+            
+    for ionind in range(len(ions)):
+        ion = ions[ionind]
+        
+        #if ion in ['hneutralssh']:
+        #    ax = ax2
+        #else:
+        ax = ax1
+            
+        #if relative:
+        #    ax.text(0.05, 0.95, ild.getnicename(ion, mathmode=False), horizontalalignment='left', verticalalignment='top', fontsize=fontsize, transform=ax.transAxes)
+        #else:
+        #    ax.text(0.95, 0.95, ild.getnicename(ion, mathmode=False), horizontalalignment='right', verticalalignment='top', fontsize=fontsize, transform=ax.transAxes)
+            
+        for vi in range(len(techvars)):
+            plotx = bins[var][ion]
+            plotx = plotx[:-1] + 0.5 * np.diff(plotx)
+            
+            ax.plot(plotx, np.log10((hists[var][ion]['nomask']) / dXtotdlogN[var][ion]), color=ioncolors[ion], linestyle=linestyles[var], linewidth=linewidths[var], alpha=alphas[var], label=ild.getnicename(ion, mathmode=False))
+            
+            ylim = ax.get_ylim()
+            if ion == 'o8':
+                ls = 'dashed'
+            else:
+                ls = 'solid'
+            ax.axvline(approx_breaks[ion], ylim[0], 0.1 , color=ioncolors[ion], linewidth=1.5, linestyle=ls)
+    #lax.axis('off')
+    
+    handles1, labels1 = ax1.get_legend_handles_labels()
+    #handles2, labels2 = ax2.get_legend_handles_labels()
+    leg1 = ax1.legend(handles=handles1, fontsize=fontsize, ncol=1, loc='lower left', bbox_to_anchor=(0., 0.), frameon=False)
+    #leg2 = ax2.legend(handles=handles1[3:] + handles2, fontsize=fontsize, ncol=1, loc='lower left', bbox_to_anchor=(0., 0.), frameon=False)
+    ax1.add_artist(leg1)
+    #ax2.add_artist(leg2)
+    #leg1 = lax.legend(handles=legend_handles, fontsize=fontsize-1, loc='lower left', bbox_to_anchor=(0.01, 0.01), frameon=False)
+    #leg2 = lax.legend(handles=legend_handles_ls,fontsize=fontsize-1, loc='upper right', bbox_to_anchor=(0.99, 0.99), frameon=False)
+    #lax.add_artist(leg1)
+    #lax.add_artist(leg2)
+    #ax1.text(0.02, 0.05, r'absorbers close to galaxies at $z=0.37$', horizontalalignment='left', verticalalignment='bottom', transform=ax1.transAxes, fontsize=fontsize)
+    
+    plt.savefig(imgname, format='pdf', bbox_inches='tight')
+    
+    
