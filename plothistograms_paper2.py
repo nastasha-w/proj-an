@@ -3422,7 +3422,7 @@ def plotfracs_by_halo(ions=['Mass', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']):
             datafile = datafile_dir + datafile_base%('Nion_%s'%ion)
         datafile_dct[ion] = datafile
     
-    outname = '/net/luttero/data2/imgs/histograms_basic/' + 'barchart_halosubcat_L0100N1504_27_T4EOS_%s-first.pdf'%(first)
+    outname = '/net/luttero/data2/imgs/histograms_basic/' + 'barchart_halomass_L0100N1504_27_T4EOS.pdf'
     
     data_dct = {}
     for ion in ions:
@@ -3461,22 +3461,24 @@ def plotfracs_by_halo(ions=['Mass', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']):
     #slabels = ['cen.', 'sat.', 'unb.']
     #alphas = {'cen.': 1.0, 'sat.': 0.4, 'unb.': 0.7}
     
-    
     cmapname = 'rainbow'
     nigmcolor = 'saddlebrown'
     igmcolor = 'gray'   
     print(hbins - np.log10(c.solar_mass))
     namededges = hbins[2:-1] - np.log10(c.solar_mass) # first two are -np.inf, and < single particle mass, last bin is empty (> 10^15 Msun)
     print(namededges)
-    
+
     mmin = 11.
-    indmin = np.argmin(np.abs(hbins - np.log10(c.solar_mass) - mmin))
+    indmin = np.argmin(np.abs(namededges - mmin))
     plotedges = namededges[indmin:]
-    clist = cm.get_cmap(cmapname, len(plotedges) - 1)(np.linspace(0., 1., len(plotedges) - 1))
+    print(indmin)
+    print(plotedges)
+
+    clist = cm.get_cmap(cmapname, len(plotedges) - 2)(np.linspace(0., 1., len(plotedges) - 2))
     clist = np.append(clist, [mpl.colors.to_rgba('firebrick')], axis=0)
     #print(clist)
-    colors = {hi : clist[hi - indmin] for hi in range(indmin, indmin + len(plotedges) - 1)}
-    #print(colors)
+    colors = {hi + 2: clist[hi - indmin] for hi in range(indmin, indmin + len(plotedges) - 1)}
+    print(colors)
     colors[1] = mpl.colors.to_rgba(nigmcolor)
     colors[0] = mpl.colors.to_rgba(igmcolor)
     colors[len(hbins) - 1] = mpl.colors.to_rgba('magenta') # shouldn't actaully be used
@@ -3488,32 +3490,35 @@ def plotfracs_by_halo(ions=['Mass', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']):
     lax = fig.add_subplot(maingrid[0, :])
     ax = fig.add_subplot(maingrid[1, 0])
     
-    print(namededges)
+    #print(namededges)
     cmap = mpl.colors.ListedColormap(clist)
     cmap.set_under(nigmcolor)
     #cmap.set_over('magenta')
-    norm = mpl.colors.BoundaryNorm(namededges, cmap.N)
+    norm = mpl.colors.BoundaryNorm(plotedges, cmap.N)
     print(len(clist))
     print(cmap.N)
-    print(len(namededges))
+    print(len(plotedges))
     cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,\
                                 norm=norm,\
-                                boundaries=np.append([0.], namededges, axis=0),\
-                                ticks=namededges,\
+                                boundaries=np.append([0.], plotedges, axis=0),\
+                                ticks=plotedges,\
                                 spacing='proportional', extend='min',\
                                 orientation='vertical')
     cbar.set_label(clabel, fontsize=fontsize)
     cax.tick_params(labelsize=fontsize - 1)
     cax.set_aspect(8.)
-        
+    
     bottom = np.zeros(len(ions))
     barwidth = 0.9
     xvals = np.arange(len(ions))
     
-    for ind1 in range(len(hbins) - 2):
-                
+    #print(data_dct['o6']['hist'].shape)
+    #print(hbins - np.log10(c.solar_mass))
+    #print(plotedges)
+    for ind1 in range(len(hbins) - 2):  # last bin: M200c > 15, is empty 
+        print(hbins[ind1] - np.log10(c.solar_mass))    
         alpha = 1.
-        if ind1 >= indmin:
+        if ind1 >= indmin + 2 or ind1 == 0:
             color = mpl.colors.to_rgba(colors[ind1], alpha=alpha)
         else:
             color = nigmcolor
