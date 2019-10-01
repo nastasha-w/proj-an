@@ -2589,7 +2589,7 @@ def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors):
     
     fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(5.5, 5.0))
     ax.set_xlim(-8., -1.5)
-    ax.set_ylim(2.5, 8.5)
+    ax.set_ylim(3.4, 8.0)
     
     ax.set_ylabel(r'$\log_{10} \, T \; [K]$', fontsize=fontsize)
     ax.set_xlabel(r'$\log_{10} \, n_{\mathrm{H}} \; [\mathrm{cm}^{-3}]$', fontsize=fontsize)
@@ -2607,7 +2607,7 @@ def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors):
     axy2.minorticks_off()
     axy2.set_ylabel(r'$\log_{10} \, \mathrm{M_{\mathrm{200c}}} (T_{\mathrm{200c}}) \; [\mathrm{M}_{\odot}]$', fontsize=fontsize)
     
-    ax.axvline(logrhob + np.log10(rho_to_nh), 0., 0.75, color='gray', linestyle='dashed', linewidth=1.5)
+    ax.axvline(logrhob + np.log10(rho_to_nh), 0., 0.8, color='gray', linestyle='dashed', linewidth=1.5)
     #ax.axvline(logrhoc + np.log10(rho_to_nh * 200. * cosmopars['omegab'] / cosmopars['omegam']), 0., 0.75, color='gray', linestyle='solid', linewidth=1.5)
     
 
