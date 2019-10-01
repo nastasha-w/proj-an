@@ -2339,7 +2339,7 @@ def plotfracs_by_halo_subcat(ions=['Mass', 'hneutralssh', 'o6', 'ne8', 'o7', 'ne
     
 #### CDDFs
 
-def plot_cddfs(ions, fontsize=fontsize, imgname=None, techvars=[0]):
+def plot_cddfs_nice(ions=None, fontsize=fontsize, imgname=None, techvars=[0]):
     '''
     ions in different panels
     colors indicate different halo masses (from a rainbow color bar)
@@ -2354,7 +2354,9 @@ def plot_cddfs(ions, fontsize=fontsize, imgname=None, techvars=[0]):
     '''
     
     mdir = '/net/luttero/data2/imgs/CGM/cddfsplits/'
-    
+    if ions is None:
+        ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
+
     if imgname is None:
         imgname = 'cddfs_%s_L0100N1504_27_PtAb_C2Sm_32000pix_T4EOS_6.25slice_zcen-all_techvars-%s.pdf'%('-'.join(sorted(ions)), '-'.join(sorted([str(var) for var in techvars])))
     if '/' not in imgname:
@@ -2404,7 +2406,7 @@ def plot_cddfs(ions, fontsize=fontsize, imgname=None, techvars=[0]):
 #    cax  = fig.add_subplot(grid[:numrows, numcols])
 #    lax  = fig.add_subplot(grid[numrows, :])
     
-    fig, ax1 = plt.subplots(ncols=1, nrows=1, figsize=(5.5, 3.0), gridspec_kw={'wspace': 0.0})
+    fig, ax1 = plt.subplots(ncols=1, nrows=1, figsize=(5.5, 5.0), gridspec_kw={'wspace': 0.0})
     
     hists = {}
     cosmopars = {}
@@ -2505,7 +2507,7 @@ def plot_cddfs(ions, fontsize=fontsize, imgname=None, techvars=[0]):
                 ls = 'dashed'
             else:
                 ls = 'solid'
-            ax.axvline(approx_breaks[ion], ylim[0], 0.1 , color=ioncolors[ion], linewidth=1.5, linestyle=ls)
+            ax.axvline(approx_breaks[ion], ylim[0], 0.05 , color=ioncolors[ion], linewidth=2., linestyle=ls)
     #lax.axis('off')
     
     handles1, labels1 = ax1.get_legend_handles_labels()
