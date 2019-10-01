@@ -3597,7 +3597,7 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
     #hatches = ['\\', '/', '|', 'o', '+', '*', '-', 'x', '.']
     #sumcolor = 'saddlebrown'
     totalcolor = 'black'
-    shading_alpha = 0.35 
+    shading_alpha = 0.45 
     if ytype == 'perc':
         ylabel = r'$\log_{10} \, \mathrm{N} \; [\mathrm{cm}^{-2}]$'
     elif ytype == 'fcov':
@@ -3879,11 +3879,11 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
             elif ion == 'o7':
                 ax.set_ylim(12.5, 16.5)
             elif ion == 'o8':
-                ax.set_ylim(12.25, 16.25)
+                ax.set_ylim(12.5, 16.5)
             elif ion == 'o6':
-                ax.set_ylim(11., 15.)
+                ax.set_ylim(10.8, 14.8)
             elif ion == 'ne9':
-                ax.set_ylim(12., 16.)
+                ax.set_ylim(11.9, 15.9)
             elif ion == 'ne8':
                 ax.set_ylim(10.5, 14.5)
         
@@ -3923,12 +3923,12 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
                     matched = True
                     _highlightcrit = highlightcrit
                     _highlightcrit['Mmin'] = \
-                        11.5 if ion == 'o6' else \
-                        12.5 if ion == 'ne8' else \
+                        12.0 if ion == 'o6' else \
+                        12.0 if ion == 'ne8' else \
                         12.5 if ion == 'o7' else \
                         13.0 if ion == 'ne9' else \
                         13.0 if ion == 'o8' else \
-                        13.5 if ion == 'fe17' else \
+                        13.0 if ion == 'fe17' else \
                         np.inf 
                     if 'techvars' in highlightcrit.keys():
                         matched &= var in _highlightcrit['techvars']
@@ -3978,8 +3978,9 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
         if ytype == 'perc':
             #ax.axhline(0., color=totalcolor, linestyle='solid', linewidth=1.5, alpha=0.7)
             #xlim = ax.get_xlim()
-            ax.axhline(approx_breaks[ion], 1. - 0.2, 1., color='gray', linewidth=1.5) # ioncolors[ion]
+            ax.axhline(approx_breaks[ion], 0., 0.1, color='gray', linewidth=1.5, zorder=-1) # ioncolors[ion]
     #lax.axis('off')
+        ax.set_xscale('log')
     
     lcs = []
     line = [[(0, 0)]]
@@ -3997,7 +3998,8 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
     #sumhandles = [mlines.Line2D([], [], color=sumcolor, linestyle='solid', label='all halos', linewidth=2.),\
     #              mlines.Line2D([], [], color=totalcolor, linestyle='solid', label='total', linewidth=2.)]
     #sumlabels = ['all halos', 'total']
-    lax.legend(lcs, [legendnames_techvars[var] for var in techvars_touse], handler_map={type(lc): HandlerDashedLines()}, fontsize=fontsize, ncol=2 * numcols, loc='lower center', bbox_to_anchor=(0.5, 0.))
+    if len(techvars_touse) > 1:
+        lax.legend(lcs, [legendnames_techvars[var] for var in techvars_touse], handler_map={type(lc): HandlerDashedLines()}, fontsize=fontsize, ncol=2 * numcols, loc='lower center', bbox_to_anchor=(0.5, 0.))
     lax.axis('off')
     #leg1 = lax.legend(handles=legend_handles, fontsize=fontsize-1, loc='lower left', bbox_to_anchor=(0.01, 0.01), frameon=False)
     #leg2 = lax.legend(handles=legend_handles_ls,fontsize=fontsize-1, loc='upper right', bbox_to_anchor=(0.99, 0.99), frameon=False)
