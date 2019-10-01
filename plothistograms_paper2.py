@@ -2524,4 +2524,112 @@ def plot_cddfs_nice(ions=None, fontsize=fontsize, imgname=None, techvars=[0]):
     
     plt.savefig(imgname, format='pdf', bbox_inches='tight')
     
+
+
+def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors):
+    '''
+    contour plots for ions balances + shading for halo masses at different Tvir
+    '''
+    fontsize = 12
+    mdir = '/net/luttero/data2/imgs/CGM/'
     
+    if snap == 27:
+        cosmopars = cosmopars_ea_27
+        logrhob = logrhob_av_ea_27
+        logrhoc = logrhoc_ea_27
+        #print(logrhob, logrhoc)
+    
+    ions = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'] #, 'he2'
+    ioncolors = _ioncolors.copy()
+    
+    #ioncolors.update({'he2': 'darkgoldenrod'})
+    Ts = {}
+    Tmaxs = {}
+    nHs = {}
+    bals = {}
+    maxfracs = {}
+    
+    fracv = 0.1
+    ciemargin = 1.50
+    
+    for ion in ions:
+        bal, T, nH = m3.findiontables(ion, cosmopars['z'])
+        bals[ion] = bal
+        nHs[ion] = nH
+        Ts[ion] = T
+        indmaxfrac = np.argmax(bal[-1, :])
+        maxfrac = bal[-1, indmaxfrac]
+        Tmax = T[indmaxfrac]
+        Tmaxs[ion] = Tmax
+        
+        xs = find_intercepts(bal[-1, :], T, fracv * maxfrac)
+        print('Ion %s has maximum CIE fraction %.3f, at log T[K] = %.1f, %s max range is %s'%(ion, maxfrac, Tmax, fracv, str(xs)))
+        maxfracs[ion] = maxfrac
+        
+    # neutral hydrogen
+    #Tvals = 10**Ts[ions[0]]
+    #nHvals = 10**nHs[ions[0]]
+    #Tgrid = np.array([[T] * len(nHvals) for T in Tvals]).flatten()
+    #nHgrid = np.array([nHvals] * len(Tvals)).flatten()
+    #bal = m3.cfh.nHIHmol_over_nH({'Temperature': Tgrid, 'nH': nHgrid}, cosmopars['z'], UVB='HM01', useLSR=False)
+    #bal = (bal.reshape((len(Tvals), len(nHvals)))).T
+    #ion = 'hneutralssh'
+    #bals[ion] = bal
+    #Ts[ion]  = np.log10(Tvals)
+    #nHs[ion] = np.log10(nHvals)
+   
+    #maxcol = bal[-1, :]
+    #maxfrac = np.max(maxcol[np.isfinite(maxcol)])
+    #maxfracs[ion] = maxfrac
+    #print('Ion %s has maximum CIE fraction %.3f'%(ion, maxfrac))
+    #xs = find_intercepts(maxcol[np.isfinite(maxcol)], np.log10(Tvals)[np.isfinite(maxcol)], fracv * maxfrac)
+    #print('Ion %s has maximum CIE fraction %.3f, %s max range is %s'%(ion, maxfrac, fracv, str(xs)))
+        
+    allions = ions #['hneutralssh'] + 
+    
+    fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(5.5, 5.0))
+    ax.set_xlim(-8., -1.5)
+    ax.set_ylim(2.5, 8.5)
+    
+    ax.set_ylabel(r'$\log_{10} \, T \; [K]$', fontsize=fontsize)
+    ax.set_xlabel(r'$\log_{10} \, n_{\mathrm{H}} \; [\mathrm{cm}^{-3}]$', fontsize=fontsize)
+    setticks(ax, fontsize=fontsize, right=False)
+    
+    axy2 = ax.twinx()
+    ylim = ax.get_ylim()
+    axy2.set_ylim(*ylim)
+    mhalos = np.arange(9.0, 15.1, 0.5)
+    Tvals = np.log10(T200c_hot(10**mhalos, cosmopars))
+    Tlabels = ['%.1f'%mh for mh in mhalos]
+    axy2.set_yticks(Tvals)
+    axy2.set_yticklabels(Tlabels)
+    setticks(axy2, fontsize=fontsize, left=False, right=True, labelleft=False, labelright=True)
+    axy2.minorticks_off()
+    axy2.set_ylabel(r'$\log_{10} \, \mathrm{M_{\mathrm{200c}}} (T_{\mathrm{200c}}) \; [\mathrm{M}_{\odot}]$', fontsize=fontsize)
+    
+    ax.axvline(logrhob + np.log10(rho_to_nh), 0., 0.75, color='gray', linestyle='dashed', linewidth=1.5)
+    #ax.axvline(logrhoc + np.log10(rho_to_nh * 200. * cosmopars['omegab'] / cosmopars['omegam']), 0., 0.75, color='gray', linestyle='solid', linewidth=1.5)
+    
+
+    for ion in allions:
+        ax.contourf(nHs[ion], Ts[ion], bals[ion].T, colors=ioncolors[ion], alpha=0.1, linewidths=[3.], levels=[0.1 * maxfracs[ion], 1.])
+        ax.contour(nHs[ion], Ts[ion], bals[ion].T, colors=ioncolors[ion], linewidths=[2.], levels=[0.1 * maxfracs[ion]], linestyles=['solid'])
+        if ion != 'hneutralssh':
+            ax.axhline(Tmaxs[ion], 0.95, 1., color=ioncolors[ion], linewidth=3.)
+            
+        #bal = bals[ion]
+        #maxcol = bal[-1, :]
+        #diffs = bal / maxcol[np.newaxis, :]
+        #diffs[np.logical_and(maxcol[np.newaxis, :] == 0, bal == 0)] = 0.
+        #diffs[np.logical_and(maxcol[np.newaxis, :] == 0, bal != 0)] = bal[np.logical_and(maxcol[np.newaxis, :] == 0, bal != 0)] / 1e-18
+        #diffs = np.abs(np.log10(diffs))
+            
+        #mask = bal < 0.6 * fracv * maxfracs[ion] # 0.6 gets the contours to ~ the edges of the ion regions
+        #diffs[mask] = np.NaN
+
+        #ax.contour(nHs[ion], Ts[ion][np.isfinite(maxcol)], (diffs[:, np.isfinite(maxcol)]).T, levels=[np.log10(ciemargin)], linestyles=['solid'], linewidths=[1.], alphas=0.5, colors=ioncolors[ion])
+        
+    handles = [mlines.Line2D([], [], label=ild.getnicename(ion, mathmode=False), color=ioncolors[ion]) for ion in allions]
+    ax.legend(handles=handles, fontsize=fontsize, ncol=3, bbox_to_anchor=(0.0, 1.0), loc='upper left', frameon=False)
+
+    plt.savefig(mdir + 'ionbals_snap27_HM01_ionizedmu.pdf', format='pdf', bbox_inches='tight')
