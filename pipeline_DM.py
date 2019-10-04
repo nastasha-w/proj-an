@@ -215,7 +215,7 @@ def parse_parameterfile(filename, head='Projection'):
         paramdct['hedname'] = 'Header'
     if 'mapname' not in paramdct.keys():
         paramdct['mapname'] = 'map'
-    if 'numpixels' not in paramdct.keys():
+    if 'numpix' not in paramdct.keys():
         if paramdct['simnum'][1:5] == '0100':
             paramdct['numpix'] = 32000
         elif paramdct['simnum'][1:5] == '0050':
