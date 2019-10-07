@@ -92,81 +92,112 @@ def combine_hists(h1, h2, e1, e2, rtol=1e-5, atol=1e-8):
         # check if the arrays share a zero point for their scales
         if not np.isclose(((e1t[0] - e2t[0]) / st + 0.5) % 1 - 0.5, 0., atol=atol, rtol=rtol):
             raise RuntimeError('Cannot deal with arrays not on a common grid (axis %i)'%(ei))
-            
-        if np.isclose(e1t[0], e2t[0], rtol=rtol, atol=atol):
-            p1t[0] = 0
+
+        g0 = 0.5 * ((e1t[0] / st + 0.5) % 1. - 0.5 + (e2t[0] / st + 0.5) % 1. - 0.5)        
+        # calulate indices of the array endpoints on the common grid (zero point is g0)
+        e1i0 = int(np.floor((e1t[0] - g0) / st + 0.5))
+        e1i1 = int(np.floor((e1t[-1] - g0) / st + 0.5))
+        e2i0 = int(np.floor((e2t[0] - g0) / st + 0.5))
+        e2i1 = int(np.floor((e2t[-1] - g0) / st + 0.5))
+        
+        # set histogram padding based on grid indices
+        p1t = [None, None]
+        p2t = [None, None]
+        if e1i0 > e2i0:
+            p1t[0] = e1i0 - e2i0
             p2t[0] = 0
-            p1t[1] = max(0, len(e2t) - len(e1t))
-            p2t[1] = max(0, len(e1t) - len(e2t))
-            est = e1t
-            if len(e2t) > len(e1t):
-                est = np.append(est, e2t[-p1t[1]:])
-        elif e1t[0] < e2t[0]:
-            e11i2 = np.where(np.isclose(e1t[-1][np.newaxis], e2t, atol=atol, rtol=rtol))[0]
-            if len(e11i2) > 1:
-                raise RuntimeError('For edges %s, %s, tolerance rel: %f, abs: %f is too large to determine a match'%(str(e1t), str(e2t), atol, rtol))
-            if len(e11i2) == 0: # array 1 is fully below array 2 or extends to beyond array 2
-                if e1t[-1] < e2t[0]:
-                    numfill = int(np.round((e2t[0] - e1t[-1]) / st, 0)) + 1
-                    fillin = np.linspace(e1t[-1], e2t[0], numfill)
-                    est = np.array(list(e1t) + list(fillin[1:-1]) + list(e2t))
-                    p1t[0] = 0
-                    p2t[0] = len(e1t) - 1 + len(fillin) - 1 
-                    p1t[1] = len(e2t) - 1 + len(fillin) - 1 
-                    p2t[1] = 0
-                else: # array 1 encompasses array 2
-                    e21i1 = np.where(np.isclose(e2t[-1][np.newaxis], e1t, atol=atol, rtol=rtol))[0]
-                    assert len(e21i1) == 1
-                    e20i1 = np.where(np.isclose(e2t[0][np.newaxis], e1t, atol=atol, rtol=rtol))[0]
-                    assert len(e20i1) == 1
-                    e21i1 = e21i1[0]
-                    e20i1 = e20i1[0]
-                    p1t = [0, 0]
-                    p2t[0] = e20i1
-                    p2t[1] = len(e1t) - 1 - e21i1
-                    est = e1t
-            else: # array 1 ends at index e11i2 in array 2, index is equal to the number of overlapping bins
-                e11i2 = e11i2[0] 
-                p1t[0] = 0
-                p2t[0] = len(e1t) - 1 - e11i2
-                p1t[1] = len(e2t) - 1 - e11i2
-                p2t[1] = 0
-                est = e1t
-                if p1t[1] > 0:
-                    est = np.append(est, e2t[e11i2 + 1:])
-        else: # e1t starts later than e2t
-            e21i1 = np.where(np.isclose(e2t[-1][np.newaxis], e1t, atol=atol, rtol=rtol))[0]
-            if len(e21i1) > 1:
-                raise RuntimeError('For edges %s, %s, tolerance rel: %f, abs: %f is too large to determine a match'%(str(e1t), str(e2t), atol, rtol))
-            if len(e21i1) == 0: # array 1 is fully below array 2
-                if e2t[-1] < e1t[0]:
-                    numfill = int(np.round((e1t[0] - e2t[-1]) / st, 0)) + 1
-                    fillin = np.linspace(e2t[-1], e1t[0], numfill)
-                    est = np.array(list(e2t) + list(fillin[1:-1]) + list(e1t))
-                    p2t[0] = 0
-                    p1t[0] = len(e2t) - 1 + len(fillin) - 1 
-                    p2t[1] = len(e1t) - 1 + len(fillin) - 1 
-                    p1t[1] = 0
-                else: # array 2 encompasses array 1
-                    e11i2 = np.where(np.isclose(e1t[-1][np.newaxis], e2t, atol=atol, rtol=rtol))[0]
-                    assert len(e11i2) == 1
-                    e10i2 = np.where(np.isclose(e1t[0][np.newaxis], e2t, atol=atol, rtol=rtol))[0]
-                    assert len(e10i2) == 1
-                    e11i2 = e11i2[0]
-                    e10i2 = e10i2[0]
-                    p2t = [0, 0]
-                    p1t[0] = e10i2
-                    p1t[1] = len(e2t) - 1 - e11i2
-                    est = e2t
-            else: # array 2 ends at index e21i1 in array 1, index is equal to the number of overlapping bins
-                e21i1 = e21i1[0] 
-                p2t[0] = 0
-                p1t[0] = len(e2t) - 1 - e21i1
-                p2t[1] = len(e1t) - 1 - e21i1
-                p1t[1] = 0
-                est = e1t
-                if p1t[0] > 0:
-                    est = np.append(e2t[:-1 * (e21i1 + 1)], est)                            
+        else:
+            p1t[0] = 0
+            p2t[0] = e2i0 - e1i0
+        if e1i1 > e2i1:
+            p1t[1] = 0
+            p2t[1] = e1i1 - e2i1
+        else:
+            p1t[1] = e2i1 - e1i1
+            p2t[1] = 0
+        # set up new edges based on the grid, initially
+        esi0 = min(e1i0, e2i0)
+        esi1 = max(e1i1, e2i1)
+        est = np.arange(g0 + esi0 * st, g0 + (esi1 + 0.5) * st, st)
+        # overwrite with old edges (2, then 1, to give preference to the histogram 1 edges)
+        # meant to avoid accumulating round-off errors through st, g0
+        est[e2i0 - esi0: e2i1 + 1 - esi0] = e2t
+        est[e1i0 - esi0: e1i1 + 1 - esi0] = e1t
+        
+#        if np.isclose(e1t[0], e2t[0], rtol=rtol, atol=atol):
+#            p1t[0] = 0
+#            p2t[0] = 0
+#            p1t[1] = max(0, len(e2t) - len(e1t))
+#            p2t[1] = max(0, len(e1t) - len(e2t))
+#            est = e1t
+#            if len(e2t) > len(e1t):
+#                est = np.append(est, e2t[-p1t[1]:])
+#        elif e1t[0] < e2t[0]:
+#            e11i2 = np.where(np.isclose(e1t[-1][np.newaxis], e2t, atol=atol, rtol=rtol))[0]
+#            if len(e11i2) > 1:
+#                raise RuntimeError('For edges %s, %s, tolerance rel: %f, abs: %f is too large to determine a match'%(str(e1t), str(e2t), atol, rtol))
+#            if len(e11i2) == 0: # array 1 is fully below array 2 or extends to beyond array 2
+#                if e1t[-1] < e2t[0]:
+#                    numfill = int(np.round((e2t[0] - e1t[-1]) / st, 0)) + 1
+#                    fillin = np.linspace(e1t[-1], e2t[0], numfill)
+#                    est = np.array(list(e1t) + list(fillin[1:-1]) + list(e2t))
+#                    p1t[0] = 0
+#                    p2t[0] = len(e1t) - 1 + len(fillin) - 1 
+#                    p1t[1] = len(e2t) - 1 + len(fillin) - 1 
+#                    p2t[1] = 0
+#                else: # array 1 encompasses array 2
+#                    e21i1 = np.where(np.isclose(e2t[-1][np.newaxis], e1t, atol=atol, rtol=rtol))[0]
+#                    assert len(e21i1) == 1
+#                    e20i1 = np.where(np.isclose(e2t[0][np.newaxis], e1t, atol=atol, rtol=rtol))[0]
+#                    assert len(e20i1) == 1
+#                    e21i1 = e21i1[0]
+#                    e20i1 = e20i1[0]
+#                    p1t = [0, 0]
+#                    p2t[0] = e20i1
+#                    p2t[1] = len(e1t) - 1 - e21i1
+#                    est = e1t
+#            else: # array 1 ends at index e11i2 in array 2, index is equal to the number of overlapping bins
+#                e11i2 = e11i2[0] 
+#                p1t[0] = 0
+#                p2t[0] = len(e1t) - 1 - e11i2
+#                p1t[1] = len(e2t) - 1 - e11i2
+#                p2t[1] = 0
+#                est = e1t
+#                if p1t[1] > 0:
+#                    est = np.append(est, e2t[e11i2 + 1:])
+#        else: # e1t starts later than e2t
+#            e21i1 = np.where(np.isclose(e2t[-1][np.newaxis], e1t, atol=atol, rtol=rtol))[0]
+#            if len(e21i1) > 1:
+#                raise RuntimeError('For edges %s, %s, tolerance rel: %f, abs: %f is too large to determine a match'%(str(e1t), str(e2t), atol, rtol))
+#            if len(e21i1) == 0: # array 1 is fully below array 2
+#                if e2t[-1] < e1t[0]:
+#                    numfill = int(np.round((e1t[0] - e2t[-1]) / st, 0)) + 1
+#                    fillin = np.linspace(e2t[-1], e1t[0], numfill)
+#                    est = np.array(list(e2t) + list(fillin[1:-1]) + list(e1t))
+#                    p2t[0] = 0
+#                    p1t[0] = len(e2t) - 1 + len(fillin) - 1 
+#                    p2t[1] = len(e1t) - 1 + len(fillin) - 1 
+#                    p1t[1] = 0
+#                else: # array 2 encompasses array 1
+#                    e11i2 = np.where(np.isclose(e1t[-1][np.newaxis], e2t, atol=atol, rtol=rtol))[0]
+#                    assert len(e11i2) == 1
+#                    e10i2 = np.where(np.isclose(e1t[0][np.newaxis], e2t, atol=atol, rtol=rtol))[0]
+#                    assert len(e10i2) == 1
+#                    e11i2 = e11i2[0]
+#                    e10i2 = e10i2[0]
+#                    p2t = [0, 0]
+#                    p1t[0] = e10i2
+#                    p1t[1] = len(e2t) - 1 - e11i2
+#                    est = e2t
+#            else: # array 2 ends at index e21i1 in array 1, index is equal to the number of overlapping bins
+#                e21i1 = e21i1[0] 
+#                p2t[0] = 0
+#                p1t[0] = len(e2t) - 1 - e21i1
+#                p2t[1] = len(e1t) - 1 - e21i1
+#                p1t[1] = 0
+#                est = e1t
+#                if p1t[0] > 0:
+#                    est = np.append(e2t[:-1 * (e21i1 + 1)], est)                            
         p1.append(p1t)
         p2.append(p2t)
         es.append(est)
