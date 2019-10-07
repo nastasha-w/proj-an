@@ -315,7 +315,7 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
     fdata = dataname(samplename)
     fname = files(samplename, weighttype)
     
-    with open(fin, 'r') as fi:
+    with open(fdata, 'r') as fi:
         # scan for halo catalogue (only metadata needed for this)
         headlen = 0
         halocat = None
@@ -323,7 +323,7 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
             line = fi.readline()
             if line == '':
                 if halocat is None:
-                    raise RuntimeError('Reached the end of %s without finding the halo catalogue name'%fin)
+                    raise RuntimeError('Reached the end of %s without finding the halo catalogue name'%(fdata))
                 else:
                     break
             elif line.startswith('halocat'):
@@ -336,9 +336,9 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
     with h5py.File(halocat, 'r') as hc:
         hed = hc['Header']
         cosmopars = {key: item for key, item in hed['cosmopars'].attrs.items()}
-        simnum = hed.attrs['simnum']
-        snapnum = hed.attrs['snapnum']
-        var = hed.attrs['var']
+        #simnum = hed.attrs['simnum']
+        #snapnum = hed.attrs['snapnum']
+        #var = hed.attrs['var']
         #ap = hed.attrs['subhalo_aperture_size_Mstar_Mbh_SFR_pkpc']
     
     galdata_all = pd.read_csv(fdata, header=headlen, sep='\t', index_col='galaxyid')
@@ -367,6 +367,7 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
     for part in nameparts:
         if not (part[0] in ['x', 'y', 'z'] and '-pm' in part):
             outname.append(part)
+    outname.append('galcomb')
     outname = '_'.join(outname)
     outname = '/'.join(pathparts[:-1]) + outname + '.' + ext
     
@@ -385,26 +386,31 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
             if binind in [0, numgalbins]: # halo/stellar mass does not fall into any of the selected ranges
                 continue
             
-            # retrieve data from this histogram of checks
+            # retrieve data from this histogram for checks
             igrpn_temp = galname_all.at[galid, 'groupname']   
             if igrpn_temp != igrpn:
                 raise RuntimeError('histogram names for galaxyid %i, %i did not match'%(galids[0], galid))
             ifilen_temp = galname_all.at[galid, 'filename']   
-            with h5py.File(ifilen_temp, 'r') as fit:
-                igrp_t = fit[igrpn_temp]
-                hist_t = np.array(igrp_t['histogram'])
-                if bool(igrp_t['histogram'].attrs['log']):
-                    hist_t = 10**hist_t
-                wtsum_t = igrp_t['histogram'].attrs['sum of weights']
-                edges_t = [np.array(igrp_t['binedges/Axis%i']) for i in len(hist_t.shape)]
-                edgekeys_t = list(igrp_t.keys())
-                edgekeys_t.remove('histogram')
-                edgekeys_t.remove('binedges')
-                edgedata_t = {}
-                for ekey in edgekeys_t: 
-                    edgedata_t[ekey] =  {akey: item for akey, item in igrp_t[ekey].attrs.items()}
-                    for akey in neqlist:
-                        del edgedata_t[akey]
+            
+            try:
+                with h5py.File(ifilen_temp, 'r') as fit:
+                    igrp_t = fit[igrpn_temp]
+                    hist_t = np.array(igrp_t['histogram'])
+                    if bool(igrp_t['histogram'].attrs['log']):
+                        hist_t = 10**hist_t
+                    #wtsum_t = igrp_t['histogram'].attrs['sum of weights'] # includes stuff outside the maximum radial bin
+                    edges_t = [np.array(igrp_t['binedges/Axis%i'%i]) for i in range(len(hist_t.shape))]
+                    edgekeys_t = list(igrp_t.keys())
+                    edgekeys_t.remove('histogram')
+                    edgekeys_t.remove('binedges')
+                    edgedata_t = {}
+                    for ekey in edgekeys_t: 
+                        edgedata_t[ekey] =  {akey: item for akey, item in igrp_t[ekey].attrs.items()}
+                        for akey in neqlist:
+                            del edgedata_t[ekey][akey]
+            except IOError:
+                print('Failed to find file for galaxy %i'%(galid))
+            continue
                         
             # run compatibility checks, align/expand edges
             galids_bin[binind].append(galid)
@@ -416,7 +422,70 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
                     raise RuntimeError('Mismatch in histogram axis names for galaxyids %i, %i'%(galids_base[binind], galid))
                 if not np.all([edgedata_t[ekey][akey] == edgedata[binind][akey] for akey in edgedata_t[ekey].keys()] for ekey in edgekeys_t):
                     raise RuntimeError('Mismatch in histogram axis properties for galaxyids %i, %i'%(galids_base[binind], galid))
-        # store the data
-        ogrp = fo.create_group('%s/%s'(igrpn, samplename))
-        bgrps = [ogrp.create_group(name) for name in bgrpns]
+            
+            # edges are compatible: shift and combine histograms
+            # radial bins: only shift if R200c units needed
+            try:
+                rax = edgedata_t['3Dradius']['histogram axis']
+            except KeyError:
+                raise KeyError('Could not retrieve histogram axis for galaxy %i, file %s'%(galid, ifilen_temp))
+                    
+            if rbinu == 'R200c':
+                R200c = galdata_all.at[galid, 'R200c_cMpc']
+                R200c *= c.cm_per_mpc * cosmopars['a']              
+                edges_t[rax] *= (1. / R200c)
+            
+            if combmethod == 'add':
+                norm_t = 1.
+            elif combmethod == 'addnormed-R200c':
+                if rbinu != 'R200c':
+                    raise ValueError('The combination method addnormed-R200c only works with rbin units R200c')
+                _i = np.where(np.isclose(edges_t[rax]))[0]
+                if len(_i) != 1:
+                    raise RuntimeError('For addnormed-R200c combination, no or multiple radial edges are close to R200c:\nedges [R200c] were: %s'%(str(edges_t[rax])))
+                _i = _i[0]
+                _a = range(len(hist_t.shape))
+                _s = [slice(None, None, None) for dummy in _a]
+                _s[rax] = slice(None, _i, None)
+                norm_t = np.sum(hist_t[_s])
+            elif combmethod == 'addnormed-M200c':
+                norm_t = galdata_all.at[galid, 'M200c_Msun']
+                norm_t *= c.solar_mass
+            elif combmethod == 'addnormed-all':
+                norm_t = np.sum(hist_t[_s])
+            
+            hist_t *= (1. / norm_t)
                 
+            if hists[binind] is None:
+                hists[binind] = hist_t
+                edges[binind] = edges_t 
+            else:
+                hists[binind], edges[binind] = combine_hists(hists[binind], hist_t, edges[binind], edges_t, rtol=1e-5, atol=1e-8)
+        return 
+        # store the data
+        # don't forget the list of galids (galids_bin, and edgedata)
+        ogrp = fo.create_group('%s/%s'%(igrpn, samplename))
+        bgrps = [ogrp.create_group(name) for name in bgrpns]
+        
+        for bind in range(numgalbins):
+            bgrp = bgrps[bind]
+            hist = hists[bind]
+            edge = edges[bind] 
+            edged = edgedata[bind]
+            galids = galids_bin[bind]
+            
+            bgrp.create_dataset('histogram', data=hist)
+            bgrp['histogram'].attrs.create('log', False)
+            
+            bgrp.create_group('binedges')
+            for i in range(len(edges)):
+                bgrp['binedges'].create_dataset('Axis%i'%(i), data=edge[i])
+            
+            for key in edged.keys():
+                bgrp.create_group(key)
+                for skey in edged[key].keys():
+                    m3.saveattr(bgrp[key], skey, edged[key][skey])
+                hax = edged[key]['histogram axis']
+                bgrp.create_dataset('bins', edge[hax])
+            
+            bgrp.create_dataset('galaxyids', data=np.array(galids))
