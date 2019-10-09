@@ -9,6 +9,7 @@ Created on Wed Sep 25 13:27:59 2019
 import numpy as np
 import h5py
 import pandas as pd
+import os
 
 import selecthalos as sh
 import cosmo_utils as cu
@@ -128,9 +129,9 @@ def combine_hists(h1, h2, e1, e2, rtol=1e-5, atol=1e-8):
         p2.append(p2t)
         es.append(est)
 
-    print(p1)
-    print(p2)
-    print(es)
+    #print(p1)
+    #print(p2)
+    #print(es)
         
     h1 = np.pad(h1, mode='constant', constant_values=0, pad_width=p1)
     h2 = np.pad(h2, mode='constant', constant_values=0, pad_width=p2)
@@ -282,7 +283,16 @@ def genhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass', logM2
             
             # ion, quantity, nameonly,
             outname = m3.makehistograms_perparticle(*args, nameonly=True, **kwargs)
-            m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
+            
+            alreadyexists = False
+            if os.path.isfile(outname[0]):
+                with h5py.File(outname[0]) as fo_t:
+                    if outname[1] in fo_t.keys():
+                        alreadyexists = True
+            if alreadyexists:
+                print('For galaxy %i, a histogram already exists; skipping'%(gid))
+            else:
+                m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
             
             fdoc.write('%i\t%s\t%s\n'%(gid, outname[0], outname[1]))
 
@@ -369,7 +379,8 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
             outname.append(part)
     outname.append('galcomb')
     outname = '_'.join(outname)
-    outname = '/'.join(pathparts[:-1]) + outname + '.' + ext
+    outname = '/'.join(pathparts[:-1]) + '/' +  outname + '.' + ext
+    #print(outname)
     
     # axis data attributes that are allowed to differ between summed histograms
     neqlist = ['number of particles',\
@@ -382,8 +393,8 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
         
         for galid in galids:
             selval = galdata_all.at[galid, colsel]
-            binind = np.searchsorted(galbins, selval, side='right')
-            if binind in [0, numgalbins]: # halo/stellar mass does not fall into any of the selected ranges
+            binind = np.searchsorted(galbins, selval, side='right') - 1
+            if binind in [-1, numgalbins]: # halo/stellar mass does not fall into any of the selected ranges
                 continue
             
             # retrieve data from this histogram for checks
@@ -392,25 +403,25 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
                 raise RuntimeError('histogram names for galaxyid %i, %i did not match'%(galids[0], galid))
             ifilen_temp = galname_all.at[galid, 'filename']   
             
-            try:
-                with h5py.File(ifilen_temp, 'r') as fit:
-                    igrp_t = fit[igrpn_temp]
-                    hist_t = np.array(igrp_t['histogram'])
-                    if bool(igrp_t['histogram'].attrs['log']):
-                        hist_t = 10**hist_t
-                    #wtsum_t = igrp_t['histogram'].attrs['sum of weights'] # includes stuff outside the maximum radial bin
-                    edges_t = [np.array(igrp_t['binedges/Axis%i'%i]) for i in range(len(hist_t.shape))]
-                    edgekeys_t = list(igrp_t.keys())
-                    edgekeys_t.remove('histogram')
-                    edgekeys_t.remove('binedges')
-                    edgedata_t = {}
-                    for ekey in edgekeys_t: 
-                        edgedata_t[ekey] =  {akey: item for akey, item in igrp_t[ekey].attrs.items()}
-                        for akey in neqlist:
-                            del edgedata_t[ekey][akey]
-            except IOError:
-                print('Failed to find file for galaxy %i'%(galid))
-            continue
+            #try:
+            with h5py.File(ifilen_temp, 'r') as fit:
+                igrp_t = fit[igrpn_temp]
+                hist_t = np.array(igrp_t['histogram'])
+                if bool(igrp_t['histogram'].attrs['log']):
+                    hist_t = 10**hist_t
+                #wtsum_t = igrp_t['histogram'].attrs['sum of weights'] # includes stuff outside the maximum radial bin
+                edges_t = [np.array(igrp_t['binedges/Axis%i'%i]) for i in range(len(hist_t.shape))]
+                edgekeys_t = list(igrp_t.keys())
+                edgekeys_t.remove('histogram')
+                edgekeys_t.remove('binedges')
+                edgedata_t = {}
+                for ekey in edgekeys_t: 
+                    edgedata_t[ekey] =  {akey: item for akey, item in igrp_t[ekey].attrs.items()}
+                    for akey in neqlist:
+                        del edgedata_t[ekey][akey]
+            #except IOError:
+            #    print('Failed to find file for galaxy %i'%(galid))
+            #continue
                         
             # run compatibility checks, align/expand edges
             galids_bin[binind].append(galid)
@@ -440,7 +451,7 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
             elif combmethod == 'addnormed-R200c':
                 if rbinu != 'R200c':
                     raise ValueError('The combination method addnormed-R200c only works with rbin units R200c')
-                _i = np.where(np.isclose(edges_t[rax]))[0]
+                _i = np.where(np.isclose(edges_t[rax], 1.))[0]
                 if len(_i) != 1:
                     raise RuntimeError('For addnormed-R200c combination, no or multiple radial edges are close to R200c:\nedges [R200c] were: %s'%(str(edges_t[rax])))
                 _i = _i[0]
@@ -459,11 +470,16 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
             if hists[binind] is None:
                 hists[binind] = hist_t
                 edges[binind] = edges_t 
+                #print('set hists[%i] to'%binind)
+                #print(hist_t)
             else:
                 hists[binind], edges[binind] = combine_hists(hists[binind], hist_t, edges[binind], edges_t, rtol=1e-5, atol=1e-8)
-        return 
+                #print('current hist (%i) is'%binind)
+                #print(hists[binind])
+                
         # store the data
         # don't forget the list of galids (galids_bin, and edgedata)
+        #print(hists)
         ogrp = fo.create_group('%s/%s'%(igrpn, samplename))
         bgrps = [ogrp.create_group(name) for name in bgrpns]
         
@@ -478,7 +494,7 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
             bgrp['histogram'].attrs.create('log', False)
             
             bgrp.create_group('binedges')
-            for i in range(len(edges)):
+            for i in range(len(edge)):
                 bgrp['binedges'].create_dataset('Axis%i'%(i), data=edge[i])
             
             for key in edged.keys():
@@ -486,6 +502,6 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
                 for skey in edged[key].keys():
                     m3.saveattr(bgrp[key], skey, edged[key][skey])
                 hax = edged[key]['histogram axis']
-                bgrp.create_dataset('bins', edge[hax])
+                bgrp[key].create_dataset('bins', data=edge[hax])
             
             bgrp.create_dataset('galaxyids', data=np.array(galids))
