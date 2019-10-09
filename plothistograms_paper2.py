@@ -10,6 +10,7 @@ import numpy as np
 import make_maps_opts_locs as ol
 import h5py
 import scipy
+import pandas as pd
 
 ndir = ol.ndir
 mdir = '/net/luttero/data2/imgs/CGM/misc_start/' # luttero location
@@ -33,6 +34,7 @@ import make_maps_v3_master as m3 # for ion balances
 import simfileclone as sfc # for cooling contours
 import cosmo_utils as cu
 import ion_line_data as ild
+import plot_utils as pu
 
 
 fontsize=12
@@ -2331,8 +2333,404 @@ def plotfracs_by_halo_subcat(ions=['Mass', 'hneutralssh', 'o6', 'ne8', 'o7', 'ne
     lax.axis('off')
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
-    
 
+
+def plot3Dprof_overview(weighttype='Mass'):
+    '''
+    plot: cumulative profile of weight, [ion number density profile], 
+          rho profile, T profile
+    rows show different halo mass ranges
+    '''
+    outdir = '/net/luttero/data2/imgs/CGM/3dprof/'
+    outname = outdir + 'overview_radprof_L0100N1504_27_Mh0p5dex_1000_%s.pdf'%(weighttype)
+    
+    fontsize = 12
+    cmap = truncate_colormap(cm.get_cmap('gist_yarg'), minval=0.0, maxval=0.7, n=-1)
+    cmap.set_under(cmap(0.))
+    percentiles = [0.05, 0.50, 0.95]
+    linestyles = ['dashed', 'solid', 'dashed']
+    
+    rbinu = 'R200c'
+    combmethod = 'addnormed-R200c'
+    #binq = 'M200c_Msun'
+    binqn = r'$\mathrm{M}_{\mathrm{200c}} \, [\mathrm{M}_{\odot}]$' 
+    cosmopars = {'a': 0.9085634947881763,\
+                 'boxsize': 67.77,\
+                 'h': 0.6777,\
+                 'omegab': 0.0482519,\
+                 'omegalambda': 0.693,\
+                 'omegam':  0.307,\
+                 'z': 0.10063854175996956,\
+                 } # avoid having to read in the halo catalogue just for this; copied from there
+    
+    wname = ild.getnicename(weighttype, mathmode=True) if weighttype in ol.elements_ion.keys() else \
+            r'\mathrm{Mass}' if weighttype == 'Mass' else \
+            r'\mathrm{Volume}' if weighttype == 'Volume' else \
+            None
+    axlabels = {'T': r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$',\
+                'rho': r'$\log_{10} \, \mathrm{n}(\mathrm{H}) \; [\mathrm{cm}^{-3}]$',\
+                'nion': r'$\log_{10} \, \mathrm{n}(\mathrm{%s}) \; [\mathrm{cm}^{-3}]$'%(wname),\
+                'weight': r'$\log_{10} \, %s(< r) \,/\, %s(< \mathrm{R}_{\mathrm{200c}})$'%(wname, wname) 
+                }
+    clabel = r'$\log_{10} \, \left\langle %s(< r) \,/\, %s(< \mathrm{R}_{\mathrm{200c}}) \right\rangle \, / \,$'%(wname, wname) + 'bin size'
+    
+    if weighttype in ol.elements_ion.keys():
+        filename = ol.ndir + 'particlehist_Nion_%s_L0100N1504_27_test3.4_PtAb_T4EOS_galcomb.hdf5'%(weighttype)
+        nprof = 4
+        title = r'$\mathrm{%s}$ and $\mathrm{%s}$-weighted profiles'%(wname, wname)
+        tgrpn = '3Dradius_Temperature_T4EOS_Density_T4EOS_Niondens_%s_PtAb_T4EOS_R200c'%(weighttype)
+        axns  = {'r3d':  '3Dradius',\
+                'T':    'Temperature_T4EOS',\
+                'rho':  'Density_T4EOS',\
+                'nion': 'Niondens_%s_PtAb_T4EOS'%(weighttype),\
+                }
+        axnl = ['nion', 'T', 'rho']
+    else:
+        if weighttype == 'Volume':
+            filename = ol.ndir + 'particlehist_%s_L0100N1504_27_test3.4_T4EOS_galcomb.hdf5'%('propvol')
+        else:
+            filename = ol.ndir + 'particlehist_%s_L0100N1504_27_test3.4_T4EOS_galcomb.hdf5'%(weighttype)
+        nprof = 3
+        title = r'%s and %s-weighted profiles'%(weighttype, weighttype)
+        tgrpn = '3Dradius_Temperature_T4EOS_Density_T4EOS_R200c'
+        axns = {'r3d':  '3Dradius',\
+                'T':    'Temperature_T4EOS',\
+                'rho':  'Density_T4EOS',\
+                }
+        axnl = ['T', 'rho']
+        
+    file_galsin = '/net/luttero/data2/imgs/CGM/3dprof/filenames_L0100N1504_27_Mh0p5dex_1000_%s.txt'%(weighttype)
+    file_galdata = '/net/luttero/data2/imgs/CGM/3dprof/halodata_L0100N1504_27_Mh0p5dex_1000.txt'
+    
+    # generated randomly once
+    #galids_per_bin = {11.0: [13074219,  3802158,  3978003,  3801075, 13588395, 11396298, 8769997,  12024375, 12044831, 12027193],\
+    #                  11.5: [11599169, 11148475, 10435177,  9938601, 10198004,  9626515, 10925515, 10472334, 13823711, 11382071],\
+    #                  12.0: [17795988,  8880354, 18016380,  8824646,  8976542,  8948515, 8593530,   9225418, 18167602,  8991644],\
+    #                  12.5: [16907882, 16565965, 15934507, 15890726, 16643442, 16530723, 8364907,  14042157, 14837489, 14195766],\
+    #                  13.0: [20009129, 20309020, 19987958, 19462909, 20474648, 19615775, 19488333, 19975482, 20519792, 19784480],\
+    #                  13.5: [18816265, 18781590, 19634930, 18961507, 18927203, 19299051, 6004915,  20943533, 18849993, 21059563],\
+    #                  14.0: [19701410, 10705995, 14978116, 21986362, 21109761, 21242351, 21573587, 21730536, 21379522],\
+    #                 }
+    galids_per_bin = {11.0: [13074219,  3802158,  3978003],\
+                      11.5: [11599169, 11148475, 10435177],\
+                      12.0: [17795988,  8880354, 18016380],\
+                      12.5: [16907882, 16565965, 15934507],\
+                      13.0: [20009129, 20309020, 19987958],\
+                      13.5: [18816265, 18781590, 19634930],\
+                      14.0: [21242351, 10705995, 21242351],\
+                     }
+    
+    mgrpn = 'L0100N1504_27_Mh0p5dex_1000/%s-%s'%(combmethod, rbinu)
+    
+    # read in data: stacked histograms -> process to plottables
+    hists_main = {}
+    edges_main = {}
+    galids_main = {}
+    
+    with h5py.File(filename, 'r') as fi:
+        grp = fi[tgrpn + '/' + mgrpn]
+        sgrpns = list(grp.keys())
+        massbins = [grpn.split('_')[-1] for grpn in sgrpns]    
+        massbins = [[np.log10(float(val)) for val in binn.split('-')] for binn in massbins]
+        
+        for mi in range(len(sgrpns)):
+            mkey = massbins[mi][0]
+            
+            grp_t = grp[sgrpns[mi]]
+            hist = np.array(grp_t['histogram'])
+            if bool(grp_t['histogram'].attrs['log']):
+                hist = 10**hist
+            
+            edges = {}
+            axes = {}
+            for axn in axns:
+               edges[axn] = np.array(grp_t[axns[axn] + '/bins'])
+               if not bool(grp_t[axns[axn]].attrs['log']):
+                   edges[axn] = np.log10(edges[axn])
+               axes[axn] = grp_t[axns[axn]].attrs['histogram axis']  
+            
+            edges_main[mkey] = {}
+            hists_main[mkey] = {}
+            
+            # apply normalization consisent with stacking method
+            if rbinu == 'pkpc':
+                edges['r3d'] += np.log10(c.cm_per_mpc * 1e-3)
+            
+            if combmethod == 'addnormed-R200c':
+                if rbinu != 'R200c':
+                    raise ValueError('The combination method addnormed-R200c only works with rbin units R200c')
+                _i = np.where(np.isclose(edges['r3d'], 0.))[0]
+                if len(_i) != 1:
+                    raise RuntimeError('For addnormed-R200c combination, no or multiple radial edges are close to R200c:\nedges [R200c] were: %s'%(str(edges['r3d'])))
+                _i = _i[0]
+                _a = range(len(hist.shape))
+                _s = [slice(None, None, None) for dummy in _a]
+                _s[axes['r3d']] = slice(None, _i, None)
+                norm_t = np.sum(hist[tuple(_s)])
+            hist *= (1. / norm_t)
+            
+            for pt in axnl:
+                rax = axes['r3d']
+                yax = axes[pt]
+                
+                edges_r = np.copy(edges['r3d'])
+                edges_y = np.copy(edges[pt])
+                
+                hist_t = np.copy(hist)
+                
+                # deal with edge units (r3d is already in R200c units if R200c-stacked)
+                if edges_r[0] == -np.inf: # reset centre bin position
+                    edges_r[0] = 2. * edges_r[1] - edges_r[2] 
+                if pt == 'rho':
+                    edges_y += np.log10(rho_to_nh)
+                    
+                sax = range(len(hist_t.shape))
+                sax.remove(rax)
+                sax.remove(yax)
+                hist_t = np.sum(hist_t, axis=tuple(sax))
+                if yax < rax:
+                    hist_t = hist_t.T
+                #hist_t /= (np.diff(edges_r)[:, np.newaxis] * np.diff(edges_y)[np.newaxis, :])
+                
+                hists_main[mkey][pt] = hist_t
+                edges_main[mkey][pt] = [edges_r, edges_y]
+                #print(hist_t.shape)
+            
+            # add in cumulative plot for the weight
+            hist_t = np.copy(hist)
+            sax = range(len(hist_t.shape))
+            sax.remove(rax)
+            hist_t = np.sum(hist_t, axis=tuple(sax))
+            hist_t = np.cumsum(hist_t)
+            hists_main[mkey]['weight'] = hist_t
+            edges_main[mkey]['weight'] = [edges_r[1:]]
+                
+            
+            galids_main[mkey] = np.array(grp_t['galaxyids'])
+    
+    # read in data: individual galaxies
+    galdata_all = pd.read_csv(file_galdata, header=2, sep='\t', index_col='galaxyid')
+    galname_all = pd.read_csv(file_galsin, header=0, sep='\t', index_col='galaxyid')
+    
+    hists_single = {}
+    edges_single = {}
+    
+    for mbin in galids_per_bin:
+        galids = galids_per_bin[mbin]
+        for galid in galids:
+            filen = galname_all.at[galid, 'filename']
+            grpn = galname_all.at[galid, 'groupname']
+            if rbinu == 'R200c':
+                Runit = galdata_all.at[galid, 'R200c_cMpc'] * c.cm_per_mpc * cosmopars['a']
+            else:
+                Runit = c.cm_per_mpc * 1e-3 #pkpc
+            
+            with h5py.File(filen, 'r') as fi:
+                grp_t = fi[grpn]
+                    
+                hist = np.array(grp_t['histogram'])
+                if bool(grp_t['histogram'].attrs['log']):
+                    hist = 10**hist
+                    
+                edges = {}
+                axes = {}
+                
+                for axn in axns:
+                   edges[axn] = np.array(grp_t[axns[axn] + '/bins'])
+                   if axn == 'r3d':
+                       edges[axn] *= (1./ Runit)
+                   if not bool(grp_t[axns[axn]].attrs['log']):
+                       edges[axn] = np.log10(edges[axn])
+                   axes[axn] = grp_t[axns[axn]].attrs['histogram axis']          
+        
+                if combmethod == 'addnormed-R200c':
+                    if rbinu != 'R200c':
+                        raise ValueError('The combination method addnormed-R200c only works with rbin units R200c')
+                    _i = np.where(np.isclose(edges['r3d'], 0.))[0]
+                    if len(_i) != 1:
+                        raise RuntimeError('For addnormed-R200c combination, no or multiple radial edges are close to R200c:\nedges [R200c] were: %s'%(str(edges['r3d'])))
+                    _i = _i[0]
+                    _a = range(len(hist.shape))
+                    _s = [slice(None, None, None) for dummy in _a]
+                    _s[axes['r3d']] = slice(None, _i, None)
+                    norm_t = np.sum(hist[tuple(_s)])
+                
+                hist *= (1. / norm_t)
+                
+                hists_single[galid] = {}
+                edges_single[galid] = {}
+                
+                for pt in axnl:
+                    rax = axes['r3d']
+                    yax = axes[pt]
+                    
+                    edges_r = np.copy(edges['r3d'])
+                    edges_y = np.copy(edges[pt])
+                    
+                    hist_t = np.copy(hist)
+                    
+                    # deal with edge units (r3d is already in R200c units if R200c-stacked)
+                    if edges_r[0] == -np.inf: # reset centre bin position
+                        edges_r[0] = 2. * edges_r[1] - edges_r[2] 
+                    if pt == 'rho':
+                        edges_y += np.log10(rho_to_nh)
+                        
+                    sax = range(len(hist_t.shape))
+                    sax.remove(rax)
+                    sax.remove(yax)
+                    hist_t = np.sum(hist_t, axis=tuple(sax))
+                    if yax < rax:
+                        hist_t = hist_t.T
+                    #hist_t /= (np.diff(edges_r)[:, np.newaxis] * np.diff(edges_y)[np.newaxis, :])
+                    
+                    hists_single[galid][pt] = hist_t
+                    edges_single[galid][pt] = [edges_r, edges_y]
+                
+                # add in cumulative plot for the weight
+                hist_t = np.copy(hist)
+                sax = range(len(hist_t.shape))
+                sax.remove(rax)
+                hist_t = np.sum(hist_t, axis=tuple(sax))
+                hist_t = np.cumsum(hist_t)
+                hists_single[galid]['weight'] = hist_t
+                edges_single[galid]['weight'] = [edges_r[1:]]
+            
+    # set up plot grid
+    panelwidth = 3.
+    panelheight = 3.
+    toplabelheight = 0.5
+    caxwidth = 0.5
+    nmassbins = len(hists_main)
+    
+    fig = plt.figure(figsize=(nmassbins * panelwidth + caxwidth, nprof * panelheight + toplabelheight))
+    grid = gsp.GridSpec(nrows=nprof + 1, ncols=nmassbins + 1, hspace=0.0, wspace=0.0, width_ratios=[panelwidth] * nmassbins + [caxwidth], height_ratios=[toplabelheight] + [panelheight] * nprof )
+    axes = np.array([[fig.add_subplot(grid[yi + 1, xi]) for xi in range(nmassbins)] for yi in range(nprof)])
+    cax  = fig.add_subplot(grid[1:, nmassbins])
+    laxes = [fig.add_subplot(grid[0, xi]) for xi in range(nmassbins)]
+    
+    vmax = np.log10(np.max([np.max([np.max(hists_main[mkey][axn]) for axn in axnl]) for mkey in hists_main]))
+    vmin = np.log10(np.min([np.min([np.min(hists_main[mkey][axn]) for axn in axnl]) for mkey in hists_main]))
+    vmin = max(vmin, vmax - 7.)
+    
+    massmins = sorted(list(hists_main.keys()))
+
+    linewidth = 1.
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"), mppe.Stroke(linewidth=linewidth, foreground="w"), mppe.Normal()]
+    patheff_thick = [mppe.Stroke(linewidth=linewidth + 1.5, foreground="black"), mppe.Stroke(linewidth=linewidth + 1., foreground="w"), mppe.Normal()]
+     
+    fig.suptitle(title, fontsize=fontsize + 2)
+    
+    
+    for mi in range(nmassbins):
+        ind = np.where(np.array(massbins)[:, 0] == massmins[mi])[0][0]
+        text = r'$%.1f \, \endash \, %.1f$'%(massbins[ind][0], massbins[ind][1]) #r'$\log_{10} \,$' + binqn + r': 
+        
+        ax = laxes[mi]
+        ax.text(0.5, 0.1, text, fontsize=fontsize, transform=ax.transAxes,\
+                horizontalalignment='center', verticalalignment='bottom')
+        ax.axis('off') 
+        
+    for mi in range(nmassbins):
+        for ti in range(nprof):
+            # where are we
+            ax = axes[ti, mi]
+            labelx = ti == nprof - 1
+            labely = mi == 0
+            
+            if ti == 0:
+                yq = 'weight'
+            else:
+                yq = axnl[ti - 1]
+            mkey = massmins[mi]
+            
+            # set up axis
+            setticks(ax, top=True, left=True, labelleft=labely, labelbottom=labelx, fontsize=fontsize)
+            if labelx:
+                ax.set_xlabel(r'$\log_{10} \, \mathrm{r} \, / \, \mathrm{R}_{\mathrm{200c}}$', fontsize=fontsize)
+            if labely:
+                ax.set_ylabel(axlabels[yq], fontsize=fontsize)
+            
+            # plot stacked histogram
+            edges_r = edges_main[mkey][yq][0] 
+            if yq != 'weight':
+                edges_y = edges_main[mkey][yq][1]
+                hist = hists_main[mkey][yq]
+                
+                img, _1, _2 = pu.add_2dplot(ax, hist, [edges_r, edges_y], toplotaxes=(0, 1),\
+                              log=True, usepcolor=True, pixdens=True,\
+                              cmap=cmap, vmin=vmin, vmax=vmax, zorder=-2)
+                perclines = pu.percentiles_from_histogram(hist, edges_y, axis=1, percentiles=np.array(percentiles))
+                mid_r = edges_r[:-1] + 0.5 * np.diff(edges_r)
+                
+                for pi in range(len(percentiles)):
+                    ax.plot(mid_r, perclines[pi], color='white',\
+                            linestyle=linestyles[pi], alpha=1.,\
+                            path_effects=patheff_thick, linewidth=linewidth + 1)
+                
+                mmatch = np.array(list(galids_per_bin.keys()))
+                ind = np.where(np.isclose(mkey, mmatch))[0][0]
+                galids = galids_per_bin[mmatch[ind]]
+                
+                for galidi in range(len(galids)):
+                    galid = galids[galidi]
+                    color = 'C%i'%(galidi % 10)
+                    
+                    hist = hists_single[galid][yq]
+                    edges_r = edges_single[galid][yq][0]
+                    edges_y = edges_single[galid][yq][1]
+                    
+                    perclines = pu.percentiles_from_histogram(hist, edges_y, axis=1, percentiles=np.array(percentiles))
+                    mid_r = edges_r[:-1] + 0.5 * np.diff(edges_r)
+                    
+                    for pi in range(len(percentiles)):
+                        ax.plot(mid_r, perclines[pi], color=color,\
+                                linestyle=linestyles[pi], alpha=1.,\
+                                path_effects=patheff, linewidth=linewidth,\
+                                zorder = -1)
+            else:
+                hist = hists_main[mkey][yq]
+                
+                ax.plot(edges_r, np.log10(hist), color='black',\
+                            linestyle='solid', alpha=1.,\
+                            path_effects=None, linewidth=linewidth + 1.5)
+                
+                mmatch = np.array(list(galids_per_bin.keys()))
+                ind = np.where(np.isclose(mkey, mmatch))[0][0]
+                galids = galids_per_bin[mmatch[ind]]
+                
+                for galidi in range(len(galids)):
+                    galid = galids[galidi]
+                    color = 'C%i'%(galidi % 10)
+                    
+                    hist = hists_single[galid][yq]
+                    edges_r = edges_single[galid][yq][0]
+                    
+                    ax.plot(edges_r, np.log10(hist), color=color,\
+                            linestyle='solid', alpha=1.,\
+                            path_effects=None, linewidth=linewidth + 0.5,\
+                            zorder=-1)
+    # color bar 
+    pu.add_colorbar(cax, img=img, vmin=vmin, vmax=vmax, cmap=cmap,\
+                    clabel=clabel, fontsize=fontsize, orientation='vertical',\
+                    extend='min')
+    cax.set_aspect(10.)
+    
+    # sync y limits on plots
+    for yi in range(nprof):
+        ylims = np.array([axes[yi, mi].get_ylim() for mi in range(nmassbins)])
+        miny = np.min(ylims[:, 0])
+        maxy = np.max(ylims[:, 1])
+        # intended for ion number densities
+        miny = max(miny, maxy - 17.)
+        [[axes[yi, mi].set_ylim(miny, maxy) for mi in range(nmassbins)]]
+    for xi in range(nmassbins):
+        xlims = np.array([axes[i, xi].get_xlim() for i in range(nprof)])
+        minx = np.min(xlims[:, 0])
+        maxx = np.max(xlims[:, 1])
+        [axes[i, xi].set_xlim(minx, maxx) for i in range(nprof)]
+    
+    plt.savefig(outname, format='pdf', box_inches='tight')
+        
 ###############################################################################
 #                  nice plots for the paper: simplified                       #
 ###############################################################################

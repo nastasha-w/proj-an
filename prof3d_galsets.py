@@ -504,4 +504,4 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
                 hax = edged[key]['histogram axis']
                 bgrp[key].create_dataset('bins', data=edge[hax])
             
-            bgrp.create_dataset('galaxyids', data=np.array(galids))
+            bgrp.create_dataset('galaxyids', data=np.array(galids_bin[binind]))

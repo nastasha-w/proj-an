@@ -58,7 +58,7 @@ def percentiles_from_histogram(histogram, edgesaxis, axis=-1, percentiles=np.arr
     cumulative distribution == percentiles
     '''
     cdists = np.cumsum(histogram, axis=axis, dtype=np.float) 
-    sel = list((slice(None, None, None),)*len(histogram.shape))
+    sel = list((slice(None, None, None),) * len(histogram.shape))
     sel2 = np.copy(sel)
     sel[axis] = -1
     sel2[axis] = np.newaxis
@@ -70,7 +70,7 @@ def percentiles_from_histogram(histogram, edgesaxis, axis=-1, percentiles=np.arr
     # effectively, if the cumsum is prepended by zeros, we get a hist bin matches edge bin matching
 
     oldshape1 = list(histogram.shape)[:axis] 
-    oldshape2 = list(histogram.shape)[axis+1:]
+    oldshape2 = list(histogram.shape)[axis + 1:]
     newlen1 = int(np.prod(oldshape1))
     newlen2 = int(np.prod(oldshape2))
     axlen = histogram.shape[axis]
