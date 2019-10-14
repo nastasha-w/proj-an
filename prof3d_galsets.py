@@ -237,7 +237,7 @@ def genhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass', logM2
     else:
         galaxyids = np.array(galdata_all.index)
     
-    name_append = '_%s'%rbinu
+    name_append = '_%s_snapdata'%rbinu
     axesdct = [{'ptype': 'coords', 'quantity': 'r3D'},\
                {'ptype': 'basic', 'quantity': 'Temperature'},\
                {'ptype': 'basic', 'quantity': 'Density'},\

@@ -4824,6 +4824,10 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
             only accounts for the properties of the weight and axis data.
     nameonly: return file name, group name tuple
     
+    
+    Note: if halo properties are needed, the histogramming will be done with
+    the particle data files, which excludes particles not included in any halo
+    
     TODO: wishlisting implementation: avoid double read-ins (currently only
     indirectly done for coords-r3D and region selection)
     '''
@@ -4866,8 +4870,16 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
         print('axis %i'%axi)
         print(fillstr_particleprop%(dct_temp['ptype'], dct_temp['excludeSFR'], dct_temp['abunds'], dct_temp['ion'], dct_temp['quantity'], sylviasshtables, dct_temp['allinR200c'], dct_temp['mdef']))
         print('\taxbin: \t%s \tlogax: \t%s'%(axbins[axi] if hasattr(axbins, '__getitem__') else axbins, logax[axi]))
-
-    simfile = pc.Simfile(simnum, snapnum, var, file_type='particles', simulation=simulation)
+    
+    useparticledata = ptype == 'halo'
+    useparticledata = useparticledata or np.any([dct_sub['ptype'] == 'halo' for dct_sub in axesdct])
+    
+    if useparticledata:
+        simfile = pc.Simfile(simnum, snapnum, var, file_type='particles', simulation=simulation)
+        print('Using particle data')
+    else:
+        simfile = pc.Simfile(simnum, snapnum, var, file_type='snap', simulation=simulation)
+        print('Using snapshot data')
     vardict = pc.Vardict(simfile, parttype, [], region=None, readsel=None) # important: vardict.region is set later, so don't read in anything before that
     
     # apply region selection if needed; don't use the make_maps methods here, 
