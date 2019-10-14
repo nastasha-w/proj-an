@@ -100,6 +100,89 @@ def percentiles_from_histogram(histogram, edgesaxis, axis=-1, percentiles=np.arr
     outperc = outperc.reshape((len(percentiles),) + tuple(oldshape1 + oldshape2))
     return outperc
 
+def linterpsolve(xvals, yvals, xpoint):
+    '''
+    'solves' a monotonic function described by xvals and yvals by linearly 
+    interpolating between the points above and below xpoint 
+    xvals, yvals: 1D arrays
+    xpoint: float
+    '''
+    if np.all(np.diff(xvals) > 0.):
+        incr = True
+    elif np.all(np.diff(xvals) < 0.):
+        incr = False
+    else:
+        print('linterpsolve only works for monotonic functions')
+        return None
+    ind1 = np.where(xvals <= xpoint)[0]
+    ind2 = np.where(xvals >= xpoint)[0]
+    #print(ind1)
+    #print(ind2)
+    if len(ind2) == 0 or len(ind1) == 0:
+        print('xpoint is outside the bounds of xvals')
+        return None
+    if incr:
+        ind1 = np.max(ind1)
+        ind2 = np.min(ind2)
+    else:
+        ind1 = np.min(ind1)
+        ind2 = np.max(ind2)
+    #print('Indices x: %i, %i'%(ind1, ind2))
+    #print('x values: lower %s, upper %s, searched %s'%(xvals[ind1], xvals[ind2], xpoint))
+    if ind1 == ind2:
+        ypoint = yvals[ind1]
+    else:
+        w = (xpoint - xvals[ind1]) / (xvals[ind2] - xvals[ind1]) #weight
+        ypoint = yvals[ind2] * w + yvals[ind1] * (1. - w)
+    #print('y values: lower %s, upper %s, solution: %s'%(yvals[ind1], yvals[ind2], ypoint))
+    return ypoint
+
+def find_intercepts(yvals, xvals, ypoint):
+    '''
+    'solves' a monotonic function described by xvals and yvals by linearly 
+    interpolating between the points above and below ypoint 
+    xvals, yvals: 1D arrays
+    ypoint: float
+    Does not distinguish between intersections separated by less than 2 xvals points
+    '''
+    if not (np.all(np.diff(xvals) < 0.) or np.all(np.diff(xvals) > 0.)):
+        print('linterpsolve only works for monotonic x values')
+        return None
+    zerodiffs = yvals - ypoint
+    leqzero = np.where(zerodiffs <= 0.)[0]
+    if len(leqzero) == 0:
+        return np.array([])
+    elif len(leqzero) == 1:
+        edges = [[leqzero[0], leqzero[0]]]
+    else:
+        segmentedges = np.where(np.diff(leqzero) > 1)[0] + 1
+        if len(segmentedges) == 0: # one dip below zero -> edges are intercepts
+            edges = [[leqzero[0], leqzero[-1]]]
+        else:
+            parts = [leqzero[: segmentedges[0]] if si == 0 else \
+                     leqzero[segmentedges[si - 1] : segmentedges[si]] if si < len(segmentedges) else\
+                     leqzero[segmentedges[si - 1] :] \
+                     for si in range(len(segmentedges) + 1)]
+            edges = [[part[0], part[-1]] for part in parts]
+    intercepts = [[linterpsolve(zerodiffs[ed[0]-1: ed[0] + 1], xvals[ed[0]-1: ed[0] + 1], 0.),\
+                   linterpsolve(zerodiffs[ed[1]: ed[1] + 2],   xvals[ed[1]: ed[1] + 2], 0.)]  \
+                  if ed[0] != 0 and ed[1] != len(yvals) - 1 else \
+                  [None,\
+                   linterpsolve(zerodiffs[ed[1]: ed[1] + 2],   xvals[ed[1]: ed[1] + 2], 0.)] \
+                  if ed[1] != len(yvals) - 1 else \
+                  [linterpsolve(zerodiffs[ed[0]-1: ed[0] + 1], xvals[ed[0]-1: ed[0] + 1], 0.),\
+                   None]  \
+                  if ed[0] != 0 else \
+                  [None, None]
+                 for ed in edges]
+    intercepts = [i for i2 in intercepts for i in i2]
+    if intercepts[0] is None:
+        intercepts = intercepts[1:]
+    if intercepts[-1] is None:
+        intercepts = intercepts[:-1]
+    return np.array(intercepts)
+
+
 def handleinfedges(hist, setmin=-100., setmax=100.):
     for ei in range(len(hist['edges'])):
         if hist['edges'][ei][0] == -np.inf:

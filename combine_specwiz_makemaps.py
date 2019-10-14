@@ -2077,6 +2077,116 @@ def getEWdistvals_o78_cddfsatz(plot=False): # just to store these lines, really
         print(line)
 
     #return dct_out['o7'][27]
+
+
+def getEWdistvals_o78_cddfsatz_sarahspaper(plot=False): # just to store these lines, really
+    '''
+    prints LaTeX table of these values
+    '''
+    ions = ['o7', 'o8']
+    snapshots = [27, 26, 19]
+    #snapkeys = {19: 'snap19_snap27-N-EWconv', 26: 'snap26_snap27-N-EWconv', 27: 'snap27'} # old format using snap 27 CoG for all
+    snapkeys = {19: 'snap19', 26: 'snap26', 27: 'snap27'}
+    # format: ion : snapshot : [bins, edges]
+    dct_out = {ion: {} for ion in ions}
+    dct_dXoverdz = {ion: {} for ion in ions}
+    dct_zvals = {ion: {} for ion in ions}
+    grps = {ion: {snap: 'EWdists_%s_%s'%(ion, snapkeys[snap])  for snap in snapshots} for ion in ions}
+    keyprefs = ['linear_cog_extrapolation_below_10^13cm^-2_all_sightlines_with_6.25cMpc_CDDF', 'linear_cog_extrapolation_below_10^13cm^-2_all_sightlines', 'linear_cog_extrapolation_below_10^13.0cm^-2_all_sightlines']
+    
+    with h5py.File('/net/luttero/data2/paper1/specwizard_misc.hdf5', 'r') as fi:
+        for ion in ions:
+            for snap in snapshots:
+                grpname = grps[ion][snap]
+                grp = fi[grpname]
+                key = keyprefs[0]
+                ki = 0
+                while key not in grp.keys():
+                    try:
+                        ki += 1
+                        key = keyprefs[ki]
+                    except IndexError:
+                        raise ValueError('None of the listed keys %s were datasets in group %s'%(keyprefs, grpname))
+                bins = np.array(grp['%s/bins'%key])     
+                edges = np.array(grp['%s/edges'%key])
+                cosmopars = {key: item for (key, item) in grp['cosmopars'].attrs.items()}
+                simdata = {key: item for (key, item) in grp['simdata'].attrs.items()}
+                print('For group %s:'%grpname)
+                print('\tusing key: \t%s'%key)
+                print('\tcosmopars: \t%s'%cosmopars)
+                print('\tsimdata: \t%s'%simdata)
+                print('')
+                
+                dXtot = float(simdata['numpix'])**2 * mc.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars)
+                bins_cumul = np.cumsum(bins[::-1])[::-1] / dXtot
+                cumulpoints = edges[:-1] # left edges of bins are the values at which >= edge cumulative values are defined
+                
+                
+                if plot:
+                    plt.plot(cumulpoints + 3., bins_cumul, label=grpname)
+                dct_out[ion][snap] = [bins_cumul, cumulpoints]
+                dct_dXoverdz[ion][snap] = mc.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) / mc.getdz(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars)
+                dct_zvals[ion][snap] = cosmopars['z']
+                
+    if not (np.all([np.abs(dct_zvals['o7'][snap] - dct_zvals['o8'][snap]) <= 1e-5 for snap in snapshots]) and \
+            np.all([np.abs(dct_dXoverdz['o7'][snap] - dct_dXoverdz['o8'][snap]) <= 1e-6 for snap in snapshots]) ):
+        raise RuntimeError('Extracted z, dX / dz for same snapshots did not match')
+    
+    if plot:
+        plt.xlabel(r'$\log_{10} \, \mathrm{EW} \; [\mathrm{m\AA}]$', fontsize=12)
+        plt.ylabel(r'$\partial n(> EW) \,/\, \partial X$', fontsize=12)
+        plt.yscale('log')
+        plt.legend(fontsize=12)
+        plt.xlim(-0.65, 1.3)
+        plt.ylim(10**-2.1, 10**1.85)
+        plt.savefig('/net/luttero/data2/paper1/plot_EWdist_evolution_used_for_table.pdf', format='pdf')
+    
+    # example (EW in list: rest-frame EW in log10 A)
+    #dNdz_o7_EWr_4mA_all_z0p0 = linterpsolve(bec_o7_dX_all[1], bec_o7_dX_all[0], np.log10(4.e-3/(1.+0.0)))*dXoverdz_0p0
+    
+    ## loop and print
+    #EWs = [6.8, 5.2, 4., 3., 1.] # main paper
+    # values in eV -> mA: Delta lambda / lambda = Delta E / E 
+    # Delta lambda = Delta E * lambda / E = Delta E_rest / (1 + z) * (lambda_rest * (1 + z)) / (E_rest / (1 + z))
+    # (E and lambda are both redshifted, but that doesn't affect the ratios)
+    
+    EWobs_o7 = np.array([0.12, 0.15, 0.19, 0.29, 0.34]) #eV 
+    EWobs_o8 = np.array([0.08, 0.1, 0.13, 0.19, 0.23])  
+    print(dct_dXoverdz)
+    print(dct_zvals)
+    dct_zvals['o7'][27] = 0.11
+    
+    
+    for EWi in range(len(EWobs_o7) + len(EWobs_o8)):
+        cut = len(EWobs_o7)
+        if EWi < cut:
+            EWobs_mA = {snap: EWobs_o7[EWi] * c.ev_to_erg * (sp.lambda_rest['o7major'] * 1e-8 / (dct_zvals['o7'][snap] + 1.))**2 / (c.planck * c.c) * 1e11 for snap in snapshots}
+        else:
+            EWobs_mA = {snap: EWobs_o8[EWi - cut] * c.ev_to_erg * (sp.lambda_rest['o8'] * 1e-8 / (dct_zvals['o8'][snap] + 1.))**2 / (c.planck * c.c) * 1e11 for snap in snapshots}
+        
+        printEW = True
+        if printEW:
+            EWpart = ' & '.join(['$%.2f$'%EWobs_mA[snap] for  snap in snapshots]) + '\t'
+        else:
+            EWpart = '\t\t'
+        lineheader = EWpart
+        
+        
+        o7vals = [linterpsolve(dct_out['o7'][snap][1], dct_out['o7'][snap][0], np.log10(EWobs_mA[snap] * 1e-3/(1.+ dct_zvals['o7'][snap]))) * dct_dXoverdz['o7'][snap] for snap in snapshots]
+        o8vals = [linterpsolve(dct_out['o8'][snap][1], dct_out['o8'][snap][0], np.log10(EWobs_mA[snap] * 1e-3/(1.+ dct_zvals['o8'][snap]))) * dct_dXoverdz['o8'][snap] for snap in snapshots]
+        
+        o7vals_dX = [linterpsolve(dct_out['o7'][snap][1], dct_out['o7'][snap][0], np.log10(EWobs_mA[snap] * 1e-3/(1.+ dct_zvals['o7'][snap]))) for snap in snapshots]
+        o8vals_dX = [linterpsolve(dct_out['o8'][snap][1], dct_out['o8'][snap][0], np.log10(EWobs_mA[snap] * 1e-3/(1.+ dct_zvals['o8'][snap]))) for snap in snapshots]
+        #print(o7vals_dX)
+        #print(o8vals_dX)
+        #o8vals = list(np.zeros(4))
+        strvals = [strformat_latextable(val) for val in o7vals + o8vals]
+        strvals_split = [vals.split('.')[i] for vals in strvals for i in range(2)]
+        
+        linevalues_base = '& %s&%s\t' * len(strvals)
+        linevalues = linevalues_base%tuple(strvals_split) + r'\\'
+        line = lineheader + linevalues
+        print(line)
 ##### associated plots #####
 ## some are more or less copied from specwiz_proc, but more for talks and papers than just quick looks
 
