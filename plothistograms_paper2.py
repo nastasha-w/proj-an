@@ -11,6 +11,7 @@ import make_maps_opts_locs as ol
 import h5py
 import scipy
 import pandas as pd
+import string
 
 ndir = ol.ndir
 mdir = '/net/luttero/data2/imgs/CGM/misc_start/' # luttero location
@@ -29,6 +30,7 @@ import matplotlib.patches as mpatch
 
 import makecddfs as mc
 import eagle_constants_and_units as c #only use for physical constants and unit conversion!
+import ion_header as ionh
 import loadnpz_and_plot as lnp
 import make_maps_v3_master as m3 # for ion balances
 import simfileclone as sfc # for cooling contours
@@ -2195,6 +2197,7 @@ def plotpd_by_halo_subcat(ion):
 def plotfracs_by_halo_subcat(ions=['Mass', 'hneutralssh', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'], first='halo'):
     '''
     first: group mass bins by halo mass or subhalo catgory first
+    !!! calculated from particle data -> IGM contributions will be wrong !!!
     '''
     
     datafile_dct = {}
@@ -3809,6 +3812,42 @@ def plotfracs_by_halo(ions=['Mass', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']):
     first: group mass bins by halo mass or subhalo catgory first
     '''
     
+    ### corrections checked against total ion omegas in particle data only:
+    #                                histogram for this plot    particle / snap box totals  
+    #Particle data / total for Mass: 0.26765323008070446        0.2676554816256265 
+    #Particle data / total for o6:   0.27129005157978364        0.2712953355974472
+    #Particle data / total for ne8:  0.2764794130850087         0.2764820025783056
+    #Particle data / total for o7:   0.4821431746085879         0.48214487331886124
+    #Particle data / total for ne9:  0.5315625247371946         0.5315598048201217
+    #Particle data / total for o8:   0.3538290133287435         0.3538293076657853         
+    #Particle data / total for fe17: 0.674329330727548          0.6743306068203926
+
+    
+    ## get total ion masses -> ion numbers from box_statistcis.py -> calcomegas
+    # needed since the halo fractions come from histograms using particle data,
+    # which excludes IGM contributions
+    omega_to_g_L100_27 = 2.0961773946142324e+50
+    #Particle abundances, SF gas at 10^4 K
+    Omega_gas = 0.056292501227365246
+    Omega_o6_gas   = 2.543315324105566e-07
+    Omega_o7_gas   = 6.2585354699292046e-06
+    Omega_o8_gas   = 7.598227615977929e-06
+    Omega_ne8_gas  = 1.2563290036620843e-07
+    Omega_ne9_gas  = 1.5418221011797857e-06
+    Omega_fe17_gas = 6.091088105543567e-07
+    total_nions = {'o6': Omega_o6_gas,\
+                   'o7': Omega_o7_gas,\
+                   'o8': Omega_o8_gas,\
+                   'ne8': Omega_ne8_gas,\
+                   'ne9': Omega_ne9_gas,\
+                   'fe17': Omega_fe17_gas,\
+                   'Mass': Omega_gas}
+    total_nions = {ion: total_nions[ion] * omega_to_g_L100_27 / (ionh.atomw[string.capwords(ol.elements_ion[ion])] * c.u) \
+                        if ion in ol.elements_ion else \
+                        total_nions[ion] * omega_to_g_L100_27 \
+                   for ion in total_nions     
+                   }
+    
     datafile_dct = {}
     for ion in ions:
         datafile_dir = '/net/quasar/data2/wijers/temp/'
@@ -3850,8 +3889,11 @@ def plotfracs_by_halo(ions=['Mass', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']):
             # print('Histogramming recovered %f of input weights'%(np.sum(hist) / total_in))
             
             #cosmopars = {key: item for key, item in fi['Header/cosmopars'].attrs.items()}
+            total_allpart = total_nions[ion]
+            print('Particle data / total for %s: %s'%(ion, total_in / total_allpart))
             
-            data_dct[ion] = {'hist': hist, 'hbins': hbins, 'sbins': sbins, 'total': total_in}
+            hist[0] += total_allpart - total_in # add snap/particle data difference to IGM contribution
+            data_dct[ion] = {'hist': hist, 'hbins': hbins, 'sbins': sbins, 'total': total_allpart}
             
     clabel = r'$\log_{10} \, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'        
     ylabel = 'fraction'

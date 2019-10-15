@@ -2160,9 +2160,9 @@ def getEWdistvals_o78_cddfsatz_sarahspaper(plot=False): # just to store these li
     for EWi in range(len(EWobs_o7) + len(EWobs_o8)):
         cut = len(EWobs_o7)
         if EWi < cut:
-            EWobs_mA = {snap: EWobs_o7[EWi] * c.ev_to_erg * (sp.lambda_rest['o7major'] * 1e-8 / (dct_zvals['o7'][snap] + 1.))**2 / (c.planck * c.c) * 1e11 for snap in snapshots}
+            EWobs_mA = {snap: EWobs_o7[EWi] * c.ev_to_erg * (sp.lambda_rest['o7major'] * 1e-8 * (dct_zvals['o7'][snap] + 1.))**2 / (c.planck * c.c) * 1e11 for snap in snapshots}
         else:
-            EWobs_mA = {snap: EWobs_o8[EWi - cut] * c.ev_to_erg * (sp.lambda_rest['o8'] * 1e-8 / (dct_zvals['o8'][snap] + 1.))**2 / (c.planck * c.c) * 1e11 for snap in snapshots}
+            EWobs_mA = {snap: EWobs_o8[EWi - cut] * c.ev_to_erg * (sp.lambda_rest['o8'] * 1e-8 * (dct_zvals['o8'][snap] + 1.))**2 / (c.planck * c.c) * 1e11 for snap in snapshots}
         
         printEW = True
         if printEW:

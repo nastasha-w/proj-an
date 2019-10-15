@@ -339,7 +339,7 @@ def plot_coldenscorr_Tion(ionT='o6', ion1='o6', ion2='o8', Tlim=5.8):
 #distribution of OVI from warm and OVII from hot.
 
 
-def plot_coldenscorr_Tion_v2(ionT='o6', ion1='o6', ion2='o8', Tlim=6.0, nsig_range=1.):
+def plot_coldenscorr_Tion_v2(ionT='o6', ion1='o6', ion2='o8', Tlim=6.0, nsig_range=1., table=None):
     xlines = {'FUV': (13., 'solid')}
     ylines = {'RGS': (15.5, 'solid'),\
               'X-IFU': (15.0, 'dashed')}
@@ -441,79 +441,125 @@ def plot_coldenscorr_Tion_v2(ionT='o6', ion1='o6', ion2='o8', Tlim=6.0, nsig_ran
         hist_upperT = np.sum(hist_base[uppersel_all], axis=sumaxes)
         hist = np.sum(hist_base, axis=sumaxes)
     
-    print('model\t z_model\t T range \t N_meas \t N_meas - sigma \t N_meas + sigma \t percentile(Nmeas) \t percentile(Nmeas - sigma) \t percentile(Nmeas + sigma)\n')
-    for logT in logTcuts:
-        cutind_T = np.argmin(np.abs(edges_T - logT))
-        cutval_T = edges_T[cutind_T]
-        lowersel_T = slice(None, cutind_T, None)
-        uppersel_T = slice(cutind_T, None, None)
-        
-        mino6 = o6meas_fuv_zo6[0] - nsig_range * o6meas_fuv_zo6[1] # left edge of lowest bin
-        maxo6 = o6meas_fuv_zo6[0] + nsig_range * o6meas_fuv_zo6[1] # right edge of highest bin
-        minind_o6 = np.argmin(np.abs(edges_o6 - mino6))
-        maxind_o6 = np.argmin(np.abs(edges_o6 - maxo6))
-        sel_o6 = slice(minind_o6, maxind_o6, None)
-        
-        uppersel_all = [slice(None, None, None)] * numax
-        uppersel_all[ax_T] = uppersel_T
-        uppersel_all[ax_no6] = sel_o6
-        uppersel_all = tuple(uppersel_all)
-        
-        lowersel_all = [slice(None, None, None)] * numax
-        lowersel_all[ax_T] = lowersel_T
-        lowersel_all[ax_no6] = sel_o6
-        lowersel_all = tuple(lowersel_all)
-        
-        sel_all = [slice(None, None, None)] * numax
-        sel_all[ax_no6] = sel_o6
-        sel_all = tuple(sel_all)
-        
-        sumaxes = set(np.arange(numax))
-        sumaxes -= {ax_no8}
-        sumaxes = sorted(list(sumaxes))
-        sumaxes = tuple(sumaxes)
-        
-        hist_lowerT_t = np.sum(hist_base[lowersel_all], axis=sumaxes)
-        hist_upperT_t = np.sum(hist_base[uppersel_all], axis=sumaxes)
-        hist_all_t = np.sum(hist_base[sel_all], axis=sumaxes)
-        
-        cdist_lowerT = np.cumsum(hist_lowerT_t) / np.sum(hist_lowerT_t)
-        cdist_upperT = np.cumsum(hist_upperT_t) / np.sum(hist_upperT_t)
-        cdist_all    = np.cumsum(hist_all_t) / np.sum(hist_all_t)
-        
-        pvals_lowerT = {}
-        pvals_upperT = {}
-        pvals_all   = {}
-        
-        print('\n')
-        print('T upper/lower cut: 10^%f K'%logT)
-        for model in ['slab', 'cie']:
-            pvals_lowerT[model] = {}
-            pvals_upperT[model] = {}
-            pvals_all[model]   = {}
-            for zobs in measvals[model].keys():
-                val = measvals[model][zobs][ion2]
-                Nmeas = val[0]
-                Nmin  = val[0] - np.abs(val[1])
-                Nmax  = val[0] + val[2] if len(val) == 3 else val[0] + val[1]
-                
-                pvals_lowerT[model][zobs] = [pu.linterpsolve(edges_o8[1:], cdist_lowerT, Nmeas),\
-                                             pu.linterpsolve(edges_o8[1:], cdist_lowerT, Nmin),\
-                                             pu.linterpsolve(edges_o8[1:], cdist_lowerT, Nmax),\
-                                            ]
-                pvals_upperT[model][zobs] = [pu.linterpsolve(edges_o8[1:], cdist_upperT, Nmeas),\
-                                             pu.linterpsolve(edges_o8[1:], cdist_upperT, Nmin),\
-                                             pu.linterpsolve(edges_o8[1:], cdist_upperT, Nmax),\
-                                            ]
-                pvals_all[model][zobs]    = [pu.linterpsolve(edges_o8[1:], cdist_all, Nmeas),\
-                                             pu.linterpsolve(edges_o8[1:], cdist_all, Nmin),\
-                                             pu.linterpsolve(edges_o8[1:], cdist_all, Nmax),\
-                                            ]
-                print('\n')
-                print('%s \t %s \t %s \t %s \t\t %s \t\t %s \t\t %s \t\t %s \t\t %s'%((model, zobs, 'lower', Nmeas, Nmin, Nmax) + tuple(pvals_lowerT[model][zobs])))
-                print('%s \t %s \t %s \t %s \t\t %s \t\t %s \t\t %s \t\t %s \t\t %s'%((model, zobs, 'upper', Nmeas, Nmin, Nmax) + tuple(pvals_upperT[model][zobs])))
-                print('%s \t %s \t %s \t %s \t\t %s \t\t %s \t\t %s \t\t %s \t\t %s'%((model, zobs, 'all', Nmeas, Nmin, Nmax) + tuple(pvals_all[model][zobs])))
-                
+    if table == 'atmeas':
+        print('model\t z_model\t T range \t N_meas \t N_meas - sigma \t N_meas + sigma \t percentile(Nmeas) \t percentile(Nmeas - sigma) \t percentile(Nmeas + sigma)\n')
+        for logT in logTcuts:
+            cutind_T = np.argmin(np.abs(edges_T - logT))
+            cutval_T = edges_T[cutind_T]
+            lowersel_T = slice(None, cutind_T, None)
+            uppersel_T = slice(cutind_T, None, None)
+            
+            mino6 = o6meas_fuv_zo6[0] - nsig_range * o6meas_fuv_zo6[1] # left edge of lowest bin
+            maxo6 = o6meas_fuv_zo6[0] + nsig_range * o6meas_fuv_zo6[1] # right edge of highest bin
+            minind_o6 = np.argmin(np.abs(edges_o6 - mino6))
+            maxind_o6 = np.argmin(np.abs(edges_o6 - maxo6))
+            sel_o6 = slice(minind_o6, maxind_o6, None)
+            
+            uppersel_all = [slice(None, None, None)] * numax
+            uppersel_all[ax_T] = uppersel_T
+            uppersel_all[ax_no6] = sel_o6
+            uppersel_all = tuple(uppersel_all)
+            
+            lowersel_all = [slice(None, None, None)] * numax
+            lowersel_all[ax_T] = lowersel_T
+            lowersel_all[ax_no6] = sel_o6
+            lowersel_all = tuple(lowersel_all)
+            
+            sel_all = [slice(None, None, None)] * numax
+            sel_all[ax_no6] = sel_o6
+            sel_all = tuple(sel_all)
+            
+            sumaxes = set(np.arange(numax))
+            sumaxes -= {ax_no8}
+            sumaxes = sorted(list(sumaxes))
+            sumaxes = tuple(sumaxes)
+            
+            hist_lowerT_t = np.sum(hist_base[lowersel_all], axis=sumaxes)
+            hist_upperT_t = np.sum(hist_base[uppersel_all], axis=sumaxes)
+            hist_all_t = np.sum(hist_base[sel_all], axis=sumaxes)
+            
+            cdist_lowerT = np.cumsum(hist_lowerT_t) / np.sum(hist_lowerT_t)
+            cdist_upperT = np.cumsum(hist_upperT_t) / np.sum(hist_upperT_t)
+            cdist_all    = np.cumsum(hist_all_t) / np.sum(hist_all_t)
+            
+            pvals_lowerT = {}
+            pvals_upperT = {}
+            pvals_all   = {}
+            
+            print('\n')
+            print('T upper/lower cut: 10^%f K'%logT)
+            for model in ['slab', 'cie']:
+                pvals_lowerT[model] = {}
+                pvals_upperT[model] = {}
+                pvals_all[model]   = {}
+                for zobs in measvals[model].keys():
+                    val = measvals[model][zobs][ion2]
+                    Nmeas = val[0]
+                    Nmin  = val[0] - np.abs(val[1])
+                    Nmax  = val[0] + val[2] if len(val) == 3 else val[0] + val[1]
+                    
+                    pvals_lowerT[model][zobs] = [pu.linterpsolve(edges_o8[1:], cdist_lowerT, Nmeas),\
+                                                 pu.linterpsolve(edges_o8[1:], cdist_lowerT, Nmin),\
+                                                 pu.linterpsolve(edges_o8[1:], cdist_lowerT, Nmax),\
+                                                ]
+                    pvals_upperT[model][zobs] = [pu.linterpsolve(edges_o8[1:], cdist_upperT, Nmeas),\
+                                                 pu.linterpsolve(edges_o8[1:], cdist_upperT, Nmin),\
+                                                 pu.linterpsolve(edges_o8[1:], cdist_upperT, Nmax),\
+                                                ]
+                    pvals_all[model][zobs]    = [pu.linterpsolve(edges_o8[1:], cdist_all, Nmeas),\
+                                                 pu.linterpsolve(edges_o8[1:], cdist_all, Nmin),\
+                                                 pu.linterpsolve(edges_o8[1:], cdist_all, Nmax),\
+                                                ]
+                    print('\n')
+                    print('%s \t %s \t %s \t %s \t\t %s \t\t %s \t\t %s \t\t %s \t\t %s'%((model, zobs, 'lower', Nmeas, Nmin, Nmax) + tuple(pvals_lowerT[model][zobs])))
+                    print('%s \t %s \t %s \t %s \t\t %s \t\t %s \t\t %s \t\t %s \t\t %s'%((model, zobs, 'upper', Nmeas, Nmin, Nmax) + tuple(pvals_upperT[model][zobs])))
+                    print('%s \t %s \t %s \t %s \t\t %s \t\t %s \t\t %s \t\t %s \t\t %s'%((model, zobs, 'all', Nmeas, Nmin, Nmax) + tuple(pvals_all[model][zobs])))
+    
+    elif table == 'gemeas':
+        print('model\t z_model\t T range \t N_meas \t N_meas - sigma \t N_meas + sigma \t percentile(Nmeas) \t percentile(Nmeas - sigma) \t percentile(Nmeas + sigma)\n')
+        for logT in logTcuts:
+            #cutind_T = np.argmin(np.abs(edges_T - logT))
+            #cutval_T = edges_T[cutind_T]
+            #lowersel_T = slice(None, cutind_T, None)
+            #uppersel_T = slice(cutind_T, None, None)
+            
+            mino6 = o6meas_fuv_zo6[0] - nsig_range * o6meas_fuv_zo6[1] # left edge of lowest bin
+            maxo6 = o6meas_fuv_zo6[0] + nsig_range * o6meas_fuv_zo6[1] # right edge of highest bin
+            ato6 = o6meas_fuv_zo6[0]
+            minind_o6 = np.argmin(np.abs(edges_o6 - mino6))
+            maxind_o6 = np.argmin(np.abs(edges_o6 - maxo6))
+            atind_o6 = np.argmin(np.abs(edges_o6 - ato6))
+            
+            sel_o6 = slice(atind_o6, None, None)
+            
+            sel_all = [slice(None, None, None)] * numax
+            sel_all[ax_no6] = sel_o6
+            sel_all = tuple(sel_all)
+            
+            sumaxes = set(np.arange(numax))
+            sumaxes -= {ax_no8}
+            sumaxes = sorted(list(sumaxes))
+            sumaxes = tuple(sumaxes)
+            
+            hist_all_t = np.sum(hist_base[sel_all], axis=sumaxes)          
+            cdist_all    = np.cumsum(hist_all_t) / np.sum(hist_all_t)
+            pvals_all   = {}
+            
+            for model in ['slab', 'cie']:
+                pvals_all[model]   = {}
+                for zobs in measvals[model].keys():
+                    val = measvals[model][zobs][ion2]
+                    Nmeas = val[0]
+                    Nmin  = val[0] - np.abs(val[1])
+                    Nmax  = val[0] + val[2] if len(val) == 3 else val[0] + val[1]
+                    
+                    pvals_all[model][zobs]    = [pu.linterpsolve(edges_o8[1:], cdist_all, Nmeas),\
+                                                 pu.linterpsolve(edges_o8[1:], cdist_all, Nmin),\
+                                                 pu.linterpsolve(edges_o8[1:], cdist_all, Nmax),\
+                                                ]
+                    print('%s \t %s \t %s \t %s \t\t %s \t\t %s \t\t %s \t\t %s \t\t %s'%((model, zobs, 'all', Nmeas, Nmin, Nmax) + tuple(pvals_all[model][zobs])))
+                    
+                    
     fig = plt.figure(figsize=(5.5, 5.))
     grid = gsp.GridSpec(1, 2, hspace=0.0, wspace=0.1, width_ratios=[5., 1.])
     ax = fig.add_subplot(grid[0])
@@ -607,9 +653,12 @@ def plot_coldenscorr_Tion_v2(ionT='o6', ion1='o6', ion2='o8', Tlim=6.0, nsig_ran
     #handles_ax1, labels_ax1 = axes[0].get_legend_handles_labels()
     typelines = [mlines.Line2D([], [], color=color_lowerT, linestyle='solid', label=r'$\log\, \mathrm{T} < %.1f$'%(cutval_T), linewidth=2.),\
                  mlines.Line2D([], [], color=color_upperT, linestyle='solid', label=r'$\log\, \mathrm{T} < %.1f$'%(cutval_T), linewidth=2.)]
-    labels = [r'$\log\, \mathrm{T} < %.1f$'%(cutval_T), r'$\log\, \mathrm{T} > %.1f$'%(cutval_T)]
+    labels = [r'$\log\, \mathrm{T}(\mathrm{%s}) < %.1f$'%(ild.getnicename(ion1, mathmode=True), cutval_T), r'$\log\, \mathrm{T}(\mathrm{%s}) > %.1f$'%(ild.getnicename(ion1, mathmode=True), cutval_T)]
     lax = ax
-    lax.legend(lcs + typelines, perclabels + labels, handler_map={type(lc): HandlerDashedLines()}, fontsize=fontsize, ncol=1, loc='lower right', bbox_to_anchor=(1.0, 0.0), frameon=False)
+    leg1 = lax.legend(typelines, labels, handler_map={type(lc): HandlerDashedLines()}, fontsize=fontsize, ncol=1, loc='lower right', bbox_to_anchor=(1.0, 0.0), frameon=False)
+    leg2 = lax.legend(lcs, perclabels, handler_map={type(lc): HandlerDashedLines()}, fontsize=fontsize, ncol=1, loc='lower right', bbox_to_anchor=(1.0, 0.15), frameon=False)
+    lax.add_artist(leg1)
+    lax.add_artist(leg2)
     #lax.axis('off')
    
     #lax = axes[1]

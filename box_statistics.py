@@ -17,15 +17,21 @@ import eagle_constants_and_units as cu
 import ion_line_data as ild
 import selecthalos as sh
 
-def calcomegas(simnum, snap, var):
-    outfile = ol.ndir + 'omega_oxygen_data_%s_snap%i_%s.txt'%(simnum, snap, var)
+def calcomegas(simnum, snap, var, filetype='snap'):
+    outfile = ol.ndir + 'omega_elts_data_%s_snap%i_%s'%(simnum, snap, var)
+    if filetype != 'snap':
+        outfile = outfile + '_' + filetype
+    outfile = outfile + '.txt'
     out = open(outfile, 'w')
     
-    simfile = pc.Simfile(simnum, snap, var, file_type='snap', simulation='eagle')
+    simfile = pc.Simfile(simnum, snap, var, file_type=filetype, simulation='eagle')
     
     Hz = m3.Hubble(simfile.z, simfile=simfile)
     rhocrit =  3. / (8. * np.pi * cu.gravity) * Hz**2   
     simvolume = (simfile.boxsize * simfile.a / simfile.h * cu.cm_per_mpc)**3
+    
+    out.write('Omega -> total mass [g]: \t%s\n'%(rhocrit * simvolume))
+    out.write('Particle abundances, SF gas at 10^4 K\n')
     
     # black holes
     bhmass = simfile.readarray('PartType5/Mass', rawunits=True)
@@ -46,6 +52,30 @@ def calcomegas(simnum, snap, var):
     starOxygenmass *=  starmass
     starOxygenmass_tot = np.sum(starOxygenmass) * starOxfrac_tocgs * starmass_tocgs
     out.write('Omega_oxygen_stars: \t%s\n'%(str(starOxygenmass_tot / rhocrit / simvolume)))
+    del starOxygenmass
+    
+    starNeonmass = simfile.readarray('PartType4/ElementAbundance/Neon', rawunits=True)
+    starNefrac_tocgs = simfile.CGSconvtot
+    starNeonmass *=  starmass
+    starNeonmass_tot = np.sum(starNeonmass) * starNefrac_tocgs * starmass_tocgs
+    out.write('Omega_neon_stars: \t%s\n'%(str(starNeonmass_tot / rhocrit / simvolume)))
+    del starNeonmass
+    
+    starIronmass = simfile.readarray('PartType4/ElementAbundance/Iron', rawunits=True)
+    starFefrac_tocgs = simfile.CGSconvtot
+    starIronmass *=  starmass
+    starIronmass_tot = np.sum(starIronmass) * starFefrac_tocgs * starmass_tocgs
+    out.write('Omega_iron_stars: \t%s\n'%(str(starIronmass_tot / rhocrit / simvolume)))
+    del starIronmass
+    
+    starHydrogenmass = simfile.readarray('PartType4/ElementAbundance/Hydrogen', rawunits=True)
+    starHyfrac_tocgs = simfile.CGSconvtot
+    starHydrogenmass *=  starmass
+    starHydrogenmass_tot = np.sum(starHydrogenmass) * starHyfrac_tocgs * starmass_tocgs
+    out.write('Omega_hydrogen_stars: \t%s\n'%(str(starHydrogenmass_tot / rhocrit / simvolume)))
+    del starHydrogenmass
+
+    del starmass
     
     # gas
     gasmass = simfile.readarray('PartType0/Mass', rawunits=True)
@@ -65,6 +95,7 @@ def calcomegas(simnum, snap, var):
     temp *= temp_tocgs
     sfr   = simfile.readarray('PartType0/StarFormationRate', rawunits=True)
     temp[sfr > 0.] = 10**4.
+    eos = sfr > 0.
     del sfr 
     temp = np.log10(temp)
     
@@ -92,6 +123,49 @@ def calcomegas(simnum, snap, var):
     gaso8mass_tot = np.sum(gaso8mass) * gasOxfrac_tocgs * gasmass_tocgs
     out.write('Omega_o8_gas: \t%s\n'%(str(gaso8mass_tot / rhocrit / simvolume)))
     del gaso8mass
+    
+    gasNeonmass = simfile.readarray('PartType0/ElementAbundance/Neon', rawunits=True)
+    gasNefrac_tocgs = simfile.CGSconvtot
+    gasNeonmass *=  gasmass
+    gasNeonmass_tot = np.sum(gasNeonmass) * gasNefrac_tocgs * gasmass_tocgs
+    out.write('Omega_neon_gas: \t%s\n'%(str(gasNeonmass_tot / rhocrit / simvolume)))
+
+    gasne8mass = m3.find_ionbal(simfile.z, 'ne8', {'logT': temp, 'lognH': dens})
+    gasne8mass *= gasNeonmass
+    gasne8mass_tot = np.sum(gasne8mass) * gasNefrac_tocgs * gasmass_tocgs
+    out.write('Omega_ne8_gas: \t%s\n'%(str(gasne8mass_tot / rhocrit / simvolume)))
+    del gasne8mass
+    
+    gasne9mass = m3.find_ionbal(simfile.z, 'ne9', {'logT': temp, 'lognH': dens})
+    gasne9mass *= gasNeonmass
+    gasne9mass_tot = np.sum(gasne9mass) * gasNefrac_tocgs * gasmass_tocgs
+    out.write('Omega_ne9_gas: \t%s\n'%(str(gasne9mass_tot / rhocrit / simvolume)))
+    del gasne9mass
+    
+    gasIronmass = simfile.readarray('PartType0/ElementAbundance/Iron', rawunits=True)
+    gasFefrac_tocgs = simfile.CGSconvtot
+    gasIronmass *=  gasmass
+    gasIronmass_tot = np.sum(gasIronmass) * gasFefrac_tocgs * gasmass_tocgs
+    out.write('Omega_iron_gas: \t%s\n'%(str(gasIronmass_tot / rhocrit / simvolume)))
+
+    gasfe17mass = m3.find_ionbal(simfile.z, 'fe17', {'logT': temp, 'lognH': dens})
+    gasfe17mass *= gasIronmass
+    gasfe17mass_tot = np.sum(gasfe17mass) * gasFefrac_tocgs * gasmass_tocgs
+    out.write('Omega_fe17_gas: \t%s\n'%(str(gasfe17mass_tot / rhocrit / simvolume)))
+    del gasfe17mass
+    
+    gasHydrogenmass = simfile.readarray('PartType0/ElementAbundance/Hydrogen', rawunits=True)
+    gasHyfrac_tocgs = simfile.CGSconvtot
+    gasHydrogenmass *=  gasmass
+    gasHydrogenmass_tot = np.sum(gasHydrogenmass) * gasHyfrac_tocgs * gasmass_tocgs
+    out.write('Omega_hydrogen_gas: \t%s\n'%(str(gasHydrogenmass_tot / rhocrit / simvolume)))
+
+    gashneutralsshmass = m3.cfh.nHIHmol_over_nH({'logT': temp, 'lognH': dens, 'eos': eos}, simfile.z, UVB='HM01', useLSR=False) 
+    gashneutralsshmass *= gasHydrogenmass
+    gashneutralsshmass_tot = np.sum(gashneutralsshmass) * gasHyfrac_tocgs * gasmass_tocgs
+    out.write('Omega_hneutralssh_gas: \t%s\n'%(str(gashneutralsshmass_tot / rhocrit / simvolume)))
+    del gashneutralsshmass
+    
     
     out.write('Omega_b_nominal (z=0): \t%s\n'%(simfile.omegab))
     omegab_at_z = 3. / (8. * np.pi * cu.gravity)* cu.hubble**2 * simfile.h**2 * simfile.omegab / simfile.a**3 / rhocrit
