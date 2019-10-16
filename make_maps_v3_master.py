@@ -103,18 +103,15 @@ version = 3.4 # matches corresponding make_maps version
 #       imports (not all)      #
 ################################
 
-#import os
+import os
+import fnmatch
 import numpy as np
 import ctypes as ct
-#import matplotlib
-#import matplotlib.pyplot as plt
-#import matplotlib.cm as cm
-#import mpl_toolkits.axes_grid1 as axgrid
 import string
-#import time
 import h5py
 import numbers as num # for instance checking
 import sys
+import pandas as pd
 
 import make_maps_opts_locs as ol
 import projection_classes as pc
@@ -124,6 +121,7 @@ import calcfmassh as cfh # not always needed, but only needs numpy and does not 
 #import halocatalogue as hc
 import selecthalos as sh
 import cosmo_utils as cu
+import ion_line_data as ild # for functions to manipulate element/ion names
 
 ##########################
 #      functions 1       #
@@ -598,6 +596,186 @@ def find_ionbal_sylviassh(z, ion, dct_logT_logZ_lognH):
         return None
 
     return 10**inbalance
+
+def parse_ionbalfiles_bensgadget2(filename, ioncol=None):
+    '''
+    returns a temperature-density table from the ascii files
+    separated from the main retrieval function findiontables_bensgadget2
+    since these ascii files have some messy specifics to deal with 
+
+    table data returned is (log10 balance, lognHcm3, logTK)
+    balance is lognH x logT
+    '''
+    
+    ## deal with the ascii format -> pandas dataframe
+    # first line has some issues: parse explicitly and pass as arguments to read_csv
+    with open(filename, 'r') as fi:
+        head = fi.readline()
+    if head[0] == '#':
+       head = head[1:]
+       
+    # spacing around column names is inconsistent; split -> strip produces a bunch of empty strings in the list
+    columns = head.split(' ')
+    columns = [column.strip() for column in columns]
+    while '' in columns:
+        columns.remove('')
+    # last 'column' is a redshift indicator (format 'redshift= <#.######>')
+    zcol = ['redshift' in column for column in columns]
+    if np.any(zcol):
+        zinds = np.where(zcol)[0]
+        zfilename = float(filename.split('/')[-1][2:7]) * 1e-4
+        for zi in zinds:
+            #rcol = columns[zi]
+            zcol = float(columns[zi + 1])
+            if not np.isclose(zcol, zfilename, atol=2e-4, rtol=1e-5):
+                raise RuntimeError('redshift value mismatch for file %s: %s from file name, %s in file'%(filename, zfilename, zcol))
+            columns.remove(columns[zi +1])
+            columns.remove(columns[zi])
+                
+    # get the table column name
+    if ioncol is not None:
+        elt, num = ild.get_elt_state(ioncol)
+        elt = string.capwords(elt)
+        snum = ild.arabic_to_roman[num]
+        columnname = elt[:9 - len(snum)] + snum
+        usecols = ['Hdens', 'Temp', columnname]
+    else:
+        usecols = None
+    
+    ## use pandas to read in the file
+    #print(columns)
+    #print(usecols)
+    df = pd.read_csv(filename, header=None, names=columns, usecols=usecols, sep='  ', comment='#', index_col=['Hdens', 'Temp'])
+    if ioncol is None:
+        return df
+
+    # reshape tables: since logT, lognH values are exactly the same across 
+    # rows/columns, not just fp close, pandas can deal with this easily        
+    df = pd.pivot_table(df, values=columnname, index=['Hdens'], columns=['Temp'])
+    ionbal = np.array(df)
+    logTK = np.array(df.columns)
+    lognHcm3 = np.array(df.index)
+    
+    return ionbal, lognHcm3, logTK
+
+def findiontables_bensgadget2(ion, z):
+    '''
+    gets ion balance tables at z by interpolating Ben Oppenheimer's ascii 
+    ionization tables made for gagdet-2 analysis
+    
+    note: the directory is set in opts_locs, but the file name pattern is 
+    hard-coded
+    '''
+    # from Ben's tables, using HM01 UV bkg,
+    # files are ascii, contain ionisation fraction of a species for rho, T
+    # different files -> different z
+    
+    
+    # search for the right files
+    pattern = 'lt*f100_i31'
+    zsel = slice(2, 7, None)
+    znorm = 1e-4
+    tabledir = ol.dir_iontab_ben_gadget2
+
+    files = fnmatch.filter(next(os.walk(tabledir))[2], pattern)
+    files_parts = [fil.split('/')[-1] for fil in files]
+    files_zs = [float(fil[zsel]) * znorm for fil in files_parts]
+    files = {files_zs[i]: files_parts[i] for i in range(len(files_parts))}
+
+    zs = np.sort(np.array(files_zs))
+    zind2 = np.searchsorted(zs, z)
+    if zind2 == 0:
+        if np.isclose(z, zs[0], atol=1e-3, rtol=1e-3): 
+            zind1 = zind2 # just use the lowest z if it's close enough
+        else:
+            raise RuntimeError('Requested redshift %s is outside the tabulated range %s-%s'%(z, zs[0], zs[-1]))
+    elif zind2 == len(zs):
+        if np.isclose(z, zs[-1], atol=1e-3, rtol=1e-3): 
+            zind2 -= 1 # just use the highest z if it's close enough
+            zind1 = zind2
+        else:
+            raise RuntimeError('Requested redshift %s is outside the tabulated range %s-%s'%(z, zs[0], zs[-1]))
+    else:
+        zind1 = zind2 - 1
+    
+    z1 = zs[zind1]
+    z2 = zs[zind2]
+    if z1 == z2:
+        w1 = 1.
+        w2 = 0.
+    else:
+        w1 = (z - z2) / (z1 - z2)
+        w2 = 1. - w1
+    file1 = tabledir + files[z1]
+    file2 = tabledir + files[z2]   
+    
+    if z1 == z2:
+        ionbal, lognHcm3, logTK = parse_ionbalfiles_bensgadget2(file1, ioncol=ion)
+    else:
+        ionbal1, lognHcm31, logTK1 = parse_ionbalfiles_bensgadget2(file1, ioncol=ion)
+        ionbal2, lognHcm32, logTK2 = parse_ionbalfiles_bensgadget2(file2, ioncol=ion)
+        
+        if not (np.all(logTK1 == logTK2) and np.all(lognHcm31 = lognHcm32)):
+            raise RuntimeError('Density and temperature values used for the closest two tables do not match:\
+                               \n%s\n%s\nused for redshifts %s, %s around desired %s'%(file1, file2, z1, z2, z))
+        logTK = logTK1
+        lognHcm3 = lognHcm31
+        logionbal = w1 * ionbal1 + w2 * ionbal2
+
+    return logionbal, lognHcm3, logTK
+
+def find_ionbal_bensgadget2(z, ion, dct_nH_T):
+
+    table_zeroequiv = 10**-9.99999
+    
+    # compared to the line emission files, the order of the nH, T indices in the balance tables is switched
+    lognH = dct_nH_T['lognH']
+    logT  = dct_nH_T['logT']
+    logionbal, lognH_tab, logTK_tab = findiontables_bensgadget2(ion,z) #(np.array([[0.,0.],[0.,1.],[0.,2.]]), np.array([0.,1.,2.]), np.array([0.,1.]) )
+    NumPart = len(lognH)
+    inbalance = np.zeros(NumPart, dtype=np.float32)
+
+    if len(logT) != NumPart:
+        raise ValueError('find_ionbal_bensgadget2: lognH and logT should have the same length')
+
+    print("------------------- C interpolation function output --------------------------\n")
+    cfile = ol.c_interpfile
+
+    acfile = ct.CDLL(cfile)
+    interpfunction = acfile.interpolate_2d # just a linear interpolator; works for non-emission stuff too
+    # ion balance tables are density x temperature x redshift
+
+    interpfunction.argtypes = [np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(NumPart,)),\
+                           np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(NumPart,)),\
+                           ct.c_longlong, \
+                           np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(len(logTK_tab)*len(lognH_tab),)), \
+                           np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(len(lognH_tab),)), \
+                           ct.c_int,\
+                           np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(len(logTK_tab),)), \
+                           ct.c_int,\
+                           np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(NumPart,))]
+
+
+    res = interpfunction(lognH.astype(np.float32),\
+               logT.astype(np.float32),\
+               ct.c_longlong(NumPart),\
+               np.ndarray.flatten(logionbal.astype(np.float32)),\
+               lognH_tab.astype(np.float32),\
+               ct.c_int(len(lognH_tab)),\
+               logTK_tab.astype(np.float32),\
+               ct.c_int(len(logTK_tab)), \
+               inbalance \
+              )
+
+    print("-------------- C interpolation function output finished ----------------------\n")
+
+    if res != 0:
+        raise RuntimeError('find_ionbal_bensgadget2: Something has gone wrong in the C function: output %s. \n'%str(res))
+    
+    inbalance = 10**inbalance
+    inbalance[inbalance == table_zeroequiv] = 0.
+    return inbalance
+    
 
 ### cooling tables -> cooling rates.
 

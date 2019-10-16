@@ -20,6 +20,7 @@ dependencies are limited to python standards and constants_and_units
 import numpy as np
 import pandas as pd
 import scipy.integrate as si
+import string
 
 import eagle_constants_and_units as cu
 
@@ -100,6 +101,29 @@ def getnicename(ion, mathmode=False):
         return eltpart.capitalize() + '\,' + arabic_to_roman[int(ionpart)]
     else:
         return eltpart.capitalize() + ' ' + arabic_to_roman[int(ionpart)]
+
+def get_elt_state(ion):
+    '''
+    input:
+    ------
+    ion: (str) chemical element abreviation followed by a number (1 = neutral)
+    
+    output:
+    -------
+    2-tuple (str, int): chemical name (lowercase), ionization state 
+                        (1 = neutral)
+    '''
+    if ion.endswith('ssh'): # this is a special case for tables anyway
+        raise ValueError('get_elt_state only works for <chemical abbreviation><integer>-formatted ions, not custom names for self-shielded species')
+    _elt = ion
+    _state = ''
+    while (_elt[-1]).isdigit():
+        _state = _elt[-1] + _state
+        _elt = _elt[:-1]
+
+    elt = abbr_to_element[string.capwords(_elt)]
+    state = int(_state)
+    return elt, state
 
 # using api.types. to get it to work on cosma (different pandas version)
 # and using list specifier because this dtype setup seems to only be possible by another route entirely in pandas 0.19 on luttero
