@@ -160,7 +160,7 @@ def calcomegas(simnum, snap, var, filetype='snap'):
     gasHydrogenmass_tot = np.sum(gasHydrogenmass) * gasHyfrac_tocgs * gasmass_tocgs
     out.write('Omega_hydrogen_gas: \t%s\n'%(str(gasHydrogenmass_tot / rhocrit / simvolume)))
 
-    gashneutralsshmass = m3.cfh.nHIHmol_over_nH({'logT': temp, 'lognH': dens, 'eos': eos}, simfile.z, UVB='HM01', useLSR=False) 
+    gashneutralsshmass = m3.cfh.nHIHmol_over_nH({'Temperature': 10**temp, 'nH': 10**dens, 'eos': eos}, simfile.z, UVB='HM01', useLSR=False) 
     gashneutralsshmass *= gasHydrogenmass
     gashneutralsshmass_tot = np.sum(gashneutralsshmass) * gasHyfrac_tocgs * gasmass_tocgs
     out.write('Omega_hneutralssh_gas: \t%s\n'%(str(gashneutralsshmass_tot / rhocrit / simvolume)))

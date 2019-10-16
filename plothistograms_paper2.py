@@ -2381,7 +2381,7 @@ def plot3Dprof_overview(weighttype='Mass'):
         filename = ol.ndir + 'particlehist_Nion_%s_L0100N1504_27_test3.4_PtAb_T4EOS_galcomb.hdf5'%(weighttype)
         nprof = 4
         title = r'$\mathrm{%s}$ and $\mathrm{%s}$-weighted profiles'%(wname, wname)
-        tgrpn = '3Dradius_Temperature_T4EOS_Density_T4EOS_Niondens_%s_PtAb_T4EOS_R200c'%(weighttype)
+        tgrpn = '3Dradius_Temperature_T4EOS_Density_T4EOS_Niondens_%s_PtAb_T4EOS_R200c_snapdata'%(weighttype)
         axns  = {'r3d':  '3Dradius',\
                 'T':    'Temperature_T4EOS',\
                 'rho':  'Density_T4EOS',\
@@ -2395,7 +2395,7 @@ def plot3Dprof_overview(weighttype='Mass'):
             filename = ol.ndir + 'particlehist_%s_L0100N1504_27_test3.4_T4EOS_galcomb.hdf5'%(weighttype)
         nprof = 3
         title = r'%s and %s-weighted profiles'%(weighttype, weighttype)
-        tgrpn = '3Dradius_Temperature_T4EOS_Density_T4EOS_R200c'
+        tgrpn = '3Dradius_Temperature_T4EOS_Density_T4EOS_R200c_snapdata'
         axns = {'r3d':  '3Dradius',\
                 'T':    'Temperature_T4EOS',\
                 'rho':  'Density_T4EOS',\
