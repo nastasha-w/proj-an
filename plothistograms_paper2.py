@@ -2733,7 +2733,105 @@ def plot3Dprof_overview(weighttype='Mass'):
         [axes[i, xi].set_xlim(minx, maxx) for i in range(nprof)]
     
     plt.savefig(outname, format='pdf', box_inches='tight')
+
+def plotsubsamplediffs_NEW():
+    dfilen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
+    percentiles = [10., 50., 90.]
+    logNspacing = 0.2
+    linemin = 10
+    ncols = 3
+    ylabel = r'$\log_{10} \, \mathrm{EW} \; [\mathrm{m\AA}]$'
+    xlabel = r'$\log_{10} \, \mathrm{N}(\mathrm{%s}) \; [\mathrm{cm}^{-2}]$'
+    fontsize = 12
+    
+    data = {}
+    with h5py.File(dfilen, 'r') as fi:
+        selections = list(fi.keys())
+        selections.remove('Header')
+        for selection in selections:
+            data[selection] = {}
+            for ionk in fi[selection].keys():
+                grp = fi['%s/%s'%(selection, ionk)]
+                logN = np.array(grp['logN_cmm2'])
+                EW = np.array(grp['EWrest_A'])
+                ion = ionk.split('_')[0]
+                data[selection][ion] = {'logN': logN, 'EW': EW}
+                
+    ions = {val for sub in data for val in data[sub]}
+    ions = list(ions)
+    ions.sort()
+    nions = len(ions)
+    
+    selkeys = selections
+    colors = {selkeys[i]: 'C%i'%(i % 10) for i in range(len(selkeys))}
+    _linestyles = ['solid', 'dashdot', 'dashed', 'dotted']
+    linestyles = {selkeys[i]: _linestyles[i] for i in range(len(selkeys))}
+    
+    panelwidth = 2.5
+    panelheight = 2.5
+    wspace = 0.5
+    hspace = 0.5
+    nrows = nions // ncols
+    
+    fig = plt.figure(figsize=(panelwidth * ncols + wspace * (ncols - 1), panelheight * nrows + hspace * (nrows - 1)))
+    grid = gsp.GridSpec(ncols=ncols, nrows=nrows, wspace=wspace, hspace=hspace)   
+    axes = [fig.add_subplot(grid[ioni // ncols, ioni % ncols]) for ioni in range(nions)]
+    
+    for ioni in range(nions):
+        ax = axes[ioni]
+        ion = ions[ioni]
+        ax.set_xlabel(xlabel%(ild.getnicename(ion, mathmode=True)), fontsize=fontsize)
+        ax.set_ylabel(ylabel, fontsize=fontsize)
         
+        for key in selkeys:
+            logN = data[key][ion]['logN']
+            EW   = np.log10(data[key][ion]['EW']) + 3.
+            
+            if ioni == 0:
+                label = key
+            else:
+                label = None
+            minN = np.min(logN) 
+            maxN = np.max(logN)
+            minN -= 1e-7 * np.abs(minN)
+            maxN += 1e-7 * np.abs(maxN)
+            bminN = np.floor(minN / logNspacing) * logNspacing
+            bmaxN = np.ceil(maxN / logNspacing) * logNspacing
+            Nbins = np.arange(bminN, bmaxN + 0.5 * logNspacing, logNspacing)
+            Ncens = Nbins[:-1] + 0.5 * np.diff(Nbins)
+            
+            bininds = np.array(np.digitize(logN, Nbins))
+            EWs_bin = [EW[np.where(bininds == i + 1)] for i in range(len(Ncens))]
+            Ns_bin  = [logN[np.where(bininds == i + 1)] for i in range(len(Ncens))]
+            percvals = np.array([np.percentile(EWs, percentiles) \
+                                    if len(EWs) > 0 else \
+                                    np.ones(len(percentiles)) * np.NaN
+                                    for EWs in EWs_bin])
+            
+            whereplot = np.where(np.array([len(_EW) >= linemin for _EW in EWs_bin]))[0]
+            plotmin = whereplot[0]
+            plotmax = whereplot[-1]
+            ax.fill_between(Ncens[plotmin : plotmax + 1],\
+                            percvals[plotmin : plotmax + 1, 0],\
+                            percvals[plotmin : plotmax + 1, 2],\
+                            color=colors[key], alpha=0.1)
+            ax.plot(Ncens[plotmin : plotmax + 1],\
+                            percvals[plotmin : plotmax + 1, 1],\
+                            color=colors[key], linestyle=linestyles[key],\
+                            label=label)
+            
+            Ns_sc = [val for bi in range(plotmin) + range(plotmax + 1, len(Ncens)) for val in Ns_bin[bi]]
+            EWs_sc = [val for bi in range(plotmin) + range(plotmax + 1, len(Ncens)) for val in EWs_bin[bi]]
+            ax.scatter(Ns_sc, EWs_sc, color=colors[key], alpha=0.1)
+        
+        if ioni == 0:
+            ax.legend(fontsize=fontsize, loc='lower right')
+            
+            
+        
+        
+    
+    
 ###############################################################################
 #                  nice plots for the paper: simplified                       #
 ###############################################################################
@@ -3807,13 +3905,14 @@ def plotcddfs_fofvsmask(ion, relative=False):
 
 
 
-def plotfracs_by_halo(ions=['Mass', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']):
+def plotfracs_by_halo(ions=['Mass', 'hneutralssh', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']):
     '''
     first: group mass bins by halo mass or subhalo catgory first
     '''
     
     ### corrections checked against total ion omegas in particle data only:
     #                                histogram for this plot    particle / snap box totals  
+    #Particle data / total for hneutralssh: 0.9960255976557024  0.9960400162241149
     #Particle data / total for Mass: 0.26765323008070446        0.2676554816256265 
     #Particle data / total for o6:   0.27129005157978364        0.2712953355974472
     #Particle data / total for ne8:  0.2764794130850087         0.2764820025783056
@@ -3821,11 +3920,12 @@ def plotfracs_by_halo(ions=['Mass', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']):
     #Particle data / total for ne9:  0.5315625247371946         0.5315598048201217
     #Particle data / total for o8:   0.3538290133287435         0.3538293076657853         
     #Particle data / total for fe17: 0.674329330727548          0.6743306068203926
-
+    # 
     
     ## get total ion masses -> ion numbers from box_statistcis.py -> calcomegas
     # needed since the halo fractions come from histograms using particle data,
     # which excludes IGM contributions
+    # omega data comes from snapshots
     omega_to_g_L100_27 = 2.0961773946142324e+50
     #Particle abundances, SF gas at 10^4 K
     Omega_gas = 0.056292501227365246
@@ -3835,13 +3935,17 @@ def plotfracs_by_halo(ions=['Mass', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']):
     Omega_ne8_gas  = 1.2563290036620843e-07
     Omega_ne9_gas  = 1.5418221011797857e-06
     Omega_fe17_gas = 6.091088105543567e-07
+    Omega_hneutralssh_gas = 0.00023774499538436282
+    
     total_nions = {'o6': Omega_o6_gas,\
                    'o7': Omega_o7_gas,\
                    'o8': Omega_o8_gas,\
                    'ne8': Omega_ne8_gas,\
                    'ne9': Omega_ne9_gas,\
                    'fe17': Omega_fe17_gas,\
+                   'hneutralssh': Omega_hneutralssh_gas,\
                    'Mass': Omega_gas}
+    
     total_nions = {ion: total_nions[ion] * omega_to_g_L100_27 / (ionh.atomw[string.capwords(ol.elements_ion[ion])] * c.u) \
                         if ion in ol.elements_ion else \
                         total_nions[ion] * omega_to_g_L100_27 \

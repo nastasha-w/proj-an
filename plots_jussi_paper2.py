@@ -558,6 +558,67 @@ def plot_coldenscorr_Tion_v2(ionT='o6', ion1='o6', ion2='o8', Tlim=6.0, nsig_ran
                                                  pu.linterpsolve(edges_o8[1:], cdist_all, Nmax),\
                                                 ]
                     print('%s \t %s \t %s \t %s \t\t %s \t\t %s \t\t %s \t\t %s \t\t %s'%((model, zobs, 'all', Nmeas, Nmin, Nmax) + tuple(pvals_all[model][zobs])))
+
+    elif table.startswith('gemeas_T'):
+        parts = table.split('-')
+        logTmin = float(parts[1])
+        logTmax = float(parts[2])
+        
+        cutind_Tmin = np.argmin(np.abs(edges_T - logTmin))
+        cutval_Tmin = edges_T[cutind_Tmin]
+        cutind_Tmax = np.argmin(np.abs(edges_T - logTmax))
+        cutval_Tmax = edges_T[cutind_Tmax]
+        losel_T = slice(None, cutind_Tmin, None)
+        misel_T = slice(cutind_Tmin, cutind_Tmax, None)
+        hisel_T = slice(None, cutind_Tmax, None)
+        alsel_T = slice(None, None, None)
+        
+        Tsels = [losel_T, misel_T, hisel_T, alsel_T]
+        Tranges = ['< %s'%cutval_Tmin, '%s - %s'%(cutval_Tmin, cutval_Tmax), '> %s'%cutval_Tmax, 'all']    
+
+        print('model\t z_model\t T range \t N_meas \t N_meas - sigma \t N_meas + sigma \t percentile(Nmeas) \t percentile(Nmeas - sigma) \t percentile(Nmeas + sigma)\n')
+        for Tsel, Trange in zip(Tsels, Tranges):
+            #cutind_T = np.argmin(np.abs(edges_T - logT))
+            #cutval_T = edges_T[cutind_T]
+            #lowersel_T = slice(None, cutind_T, None)
+            #uppersel_T = slice(cutind_T, None, None)
+            
+            mino6 = o6meas_fuv_zo6[0] - nsig_range * o6meas_fuv_zo6[1] # left edge of lowest bin
+            maxo6 = o6meas_fuv_zo6[0] + nsig_range * o6meas_fuv_zo6[1] # right edge of highest bin
+            ato6 = o6meas_fuv_zo6[0]
+            minind_o6 = np.argmin(np.abs(edges_o6 - mino6))
+            maxind_o6 = np.argmin(np.abs(edges_o6 - maxo6))
+            atind_o6 = np.argmin(np.abs(edges_o6 - ato6))
+            
+            sel_o6 = slice(atind_o6, None, None)
+            
+            sel_all = [slice(None, None, None)] * numax
+            sel_all[ax_no6] = sel_o6
+            sel_all[ax_T] = Tsel
+            sel_all = tuple(sel_all)
+            
+            sumaxes = set(np.arange(numax))
+            sumaxes -= {ax_no8}
+            sumaxes = sorted(list(sumaxes))
+            sumaxes = tuple(sumaxes)
+            
+            hist_all_t = np.sum(hist_base[sel_all], axis=sumaxes)          
+            cdist_all    = np.cumsum(hist_all_t) / np.sum(hist_all_t)
+            pvals_all   = {}
+            
+            for model in ['slab', 'cie']:
+                pvals_all[model]   = {}
+                for zobs in measvals[model].keys():
+                    val = measvals[model][zobs][ion2]
+                    Nmeas = val[0]
+                    Nmin  = val[0] - np.abs(val[1])
+                    Nmax  = val[0] + val[2] if len(val) == 3 else val[0] + val[1]
+                    
+                    pvals_all[model][zobs]    = [pu.linterpsolve(edges_o8[1:], cdist_all, Nmeas),\
+                                                 pu.linterpsolve(edges_o8[1:], cdist_all, Nmin),\
+                                                 pu.linterpsolve(edges_o8[1:], cdist_all, Nmax),\
+                                                ]
+                    print('%s \t %s \t %s \t %s \t\t %s \t\t %s \t\t %s \t\t %s \t\t %s'%((model, zobs, Trange, Nmeas, Nmin, Nmax) + tuple(pvals_all[model][zobs])))
                     
                     
     fig = plt.figure(figsize=(5.5, 5.))

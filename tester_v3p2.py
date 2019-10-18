@@ -933,6 +933,88 @@ def testWSS09fig4_vardict():
     return vardict
 
 
+def compare_ionbal_tables_ben_serena(ion, z):
+    outdir = '/net/luttero/data1/line_em_abs/v3_master_tests/iobal_tables_bengadget2/'
+    outname = 'tablecomp_%s_%s.pdf'%(ion , z)
+    
+    Tvals = np.arange(1.5, 9.5, 0.03)
+    nHvals = np.arange(-9., 4., 0.04)
+    
+    Tgrid = np.array([Tvals] * len(nHvals)).flatten()
+    nHgrid = np.array([[val]*len(Tvals) for val in nHvals]).flatten() 
+    gridshape = (len(nHvals), len(Tvals))
+    extent = (1.5 * nHvals[0]  - 0.5 * nHvals[1],\
+              1.5 * nHvals[-1] - 0.5 * nHvals[-2],\
+              1.5 * Tvals[0]  - 0.5 * Tvals[1],\
+              1.5 * Tvals[-1] - 0.5 * Tvals[-2])
+    aspect = (extent[1] - extent[0]) / (extent[3] - extent[2])
+    ionbal_bo = m3.find_ionbal_bensgadget2(z, ion, {'lognH': nHgrid, 'logT': Tgrid}).reshape(gridshape)
+    ionbal_sb = m3.find_ionbal(z, ion, {'lognH': nHgrid, 'logT': Tgrid}).reshape(gridshape)
+    
+    vmin = 0.
+    vmax = max(np.max(ionbal_bo), np.max(ionbal_sb))
+    
+    fig = plt.figure(figsize=(5.5, 5.))
+    nrows = 2
+    ncols = 2
+    xlabel = r'$\log_{10} \, n_{\mathrm{H}} \; [\mathrm{cm}^{-3}]$'
+    ylabel = r'$\log_{10} \, T \; [\mathrm{K}]$'
+    fontsize = 12
+    
+    fig.suptitle(r'$\mathrm{%s}, z=%.3f$'%(m3.ild.getnicename(ion, mathmode=True), z), fontsize=fontsize)
+    
+    sax = fig.add_subplot(nrows, ncols, 1)
+    img = sax.imshow(ionbal_sb.T, origin='lower', interpolation='nearest',\
+                     extent=extent, vmin=vmin, vmax=vmax, cmap='viridis')
+    sax.text(0.5, 1.0, "Serena Bertone's tables", fontsize=fontsize,\
+             horizontalalignment='center', verticalalignment='bottom',\
+             transform=sax.transAxes)
+    sax.set_aspect(aspect)
+    plt.colorbar(img, ax=sax)
+    sax.set_ylabel(ylabel, fontsize=fontsize)
+    
+    bax = fig.add_subplot(nrows, ncols, 2)
+    img = bax.imshow(ionbal_bo.T, origin='lower', interpolation='nearest',\
+                     extent=extent, vmin=vmin, vmax=vmax, cmap='viridis')
+    bax.text(0.5, 1.0, "Ben Oppenheimer's tables", fontsize=fontsize,\
+             horizontalalignment='center', verticalalignment='bottom',\
+             transform=bax.transAxes)
+    bax.set_aspect(aspect)
+    plt.colorbar(img, ax=bax)
+    
+    aax = fig.add_subplot(nrows, ncols, 3)
+    arr = ionbal_bo - ionbal_sb
+    vmax = np.max(np.abs(arr))
+    vmin = -1. * vmax
+    img = aax.imshow(arr.T, origin='lower', interpolation='nearest',\
+                     extent=extent, vmin=vmin, vmax=vmax, cmap='RdBu')
+    aax.text(0.5, 1.0, "BO - SB", fontsize=fontsize,\
+             horizontalalignment='center', verticalalignment='bottom',\
+             transform=aax.transAxes)
+    aax.set_aspect(aspect)
+    plt.colorbar(img, ax=aax)
+    aax.set_xlabel(xlabel, fontsize=fontsize)
+    aax.set_ylabel(ylabel, fontsize=fontsize)
+    
+    rax = fig.add_subplot(nrows, ncols, 4)
+    arr = np.log10(ionbal_bo) - np.log10(ionbal_sb)
+    vmax = np.max(np.abs(arr[np.isfinite(arr)]))
+    vmax = min(vmax, 3.)
+    vmin = -1. * vmax
+    img = rax.imshow(arr.T, origin='lower', interpolation='nearest',\
+                     extent=extent, vmin=vmin, vmax=vmax, cmap='RdBu')
+    rax.text(0.5, 1.0, "log10 BO / SB", fontsize=fontsize,\
+             horizontalalignment='center', verticalalignment='bottom',\
+             transform=rax.transAxes)
+    rax.set_aspect(aspect)
+    if vmax == 3.:
+        extend = 'both'
+    else:
+        extend = 'neither'
+    plt.colorbar(img, ax=rax, extend=extend)
+    rax.set_xlabel(xlabel, fontsize=fontsize)
+    
+    plt.savefig(outdir + outname, format='pdf', bbox_inches='tight')
 ###############################################################################
 #################### halo only projection tests ###############################
 ###############################################################################

@@ -672,15 +672,29 @@ def findiontables_bensgadget2(ion, z):
     
     
     # search for the right files
-    pattern = 'lt*f100_i31'
+    pattern = 'lt[0-9][0-9][0-9][0-9][0-9]f100_i31'
+    # determined with ls -l and manual inspection of exmaples that these smaller 
+    # files only contain data for low densities.   
+    # in order to be able to interpolate, use only the complete files
+    files_excl = ['lt01006f100_i31',\
+                  'lt04675f100_i31',\
+                  'lt10530f100_i31',\
+                  'lt18710f100_i31',\
+                  'lt30170f100_i31',\
+                  'lt68590f100_i31',\
+                  'lt94790f100_i31',\
+                  ]
     zsel = slice(2, 7, None)
     znorm = 1e-4
     tabledir = ol.dir_iontab_ben_gadget2
 
     files = fnmatch.filter(next(os.walk(tabledir))[2], pattern)
-    files_parts = [fil.split('/')[-1] for fil in files]
-    files_zs = [float(fil[zsel]) * znorm for fil in files_parts]
-    files = {files_zs[i]: files_parts[i] for i in range(len(files_parts))}
+    #print(files)
+    for filen in files_excl:
+        if filen in files:
+            files.remove(filen)
+    files_zs = [float(fil[zsel]) * znorm for fil in files]
+    files = {files_zs[i]: files[i] for i in range(len(files))}
 
     zs = np.sort(np.array(files_zs))
     zind2 = np.searchsorted(zs, z)
@@ -714,18 +728,17 @@ def findiontables_bensgadget2(ion, z):
     else:
         ionbal1, lognHcm31, logTK1 = parse_ionbalfiles_bensgadget2(file1, ioncol=ion)
         ionbal2, lognHcm32, logTK2 = parse_ionbalfiles_bensgadget2(file2, ioncol=ion)
-        
-        if not (np.all(logTK1 == logTK2) and np.all(lognHcm31 = lognHcm32)):
+        if not (np.all(logTK1 == logTK2) and np.all(lognHcm31 == lognHcm32)):
             raise RuntimeError('Density and temperature values used for the closest two tables do not match:\
                                \n%s\n%s\nused for redshifts %s, %s around desired %s'%(file1, file2, z1, z2, z))
-        logTK = logTK1
-        lognHcm3 = lognHcm31
+        logTK = logTK1 #np.average([logTK1, logTK2], axis=0)
+        lognHcm3 = lognHcm31 #np.average([lognHcm31, lognHcm32], axis=1)
         logionbal = w1 * ionbal1 + w2 * ionbal2
 
     return logionbal, lognHcm3, logTK
 
-def find_ionbal_bensgadget2(z, ion, dct_nH_T):
 
+def find_ionbal_bensgadget2(z, ion, dct_nH_T):
     table_zeroequiv = 10**-9.99999
     
     # compared to the line emission files, the order of the nH, T indices in the balance tables is switched

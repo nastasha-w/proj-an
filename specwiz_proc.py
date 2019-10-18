@@ -229,7 +229,7 @@ def comparetxt(name1,name2):
 # spectrum files contained in groups Spectrum<number>
 
 class Specout:
-    def __init__(self,filename,getall=True):
+    def __init__(self, filename, getall=True):
         '''
         sets the hdf5 file self.specfile, and extracts and calculates some stuff
         '''
@@ -318,7 +318,7 @@ class Specout:
             
 
              
-    def getcoldens(self,dions='all', slices = 1, offset = 0.,realspace = False, recalc_nion = False):
+    def getcoldens(self, dions='all', slices=1, offset=0., realspace=False, recalc_nion=False):
         '''
         recalc_nion can force a calcultion with the desired realspace setting
         '''
@@ -360,12 +360,16 @@ class Specout:
         for ion in dions:
             if ion not in self.spectra.keys():
                 self.getspectra([ion])
+            if ion not in lambda_rest.keys():
+                ionk = ion + 'major'
+            else:
+                ionk = ion
             if slices == 1:
                 # EW = \int dlamdba (1-flux) = (Delta lambda) - (Delta lambda)/N * sum_i=1^N F_normalised(i)  
-                self.EW[ion] = 1. - np.sum(self.spectra[ion],axis=1)/float(self.spectra[ion].shape[1])
-                self.EW[ion] *= self.deltaredshift*lambda_rest[ion] # convert absorbed flux fraction to EW
+                self.EW[ion] = 1. - np.sum(self.spectra[ion], axis=1) / float(self.spectra[ion].shape[1])
+                self.EW[ion] *= self.deltaredshift * lambda_rest[ionk] # convert absorbed flux fraction to EW
                 # convert to rest-frame EW
-                self.EW[ion] /= (self.redshift+1.)
+                self.EW[ion] *= 1. / (self.redshift + 1.)
             else: 
                 slicelist = self.getslices(slices,offset=offset,posvals=None, posvalperiod = None)
                 # EW = \int dlamdba (1-flux) = (Delta lambda) - (Delta lambda)/N * sum_i=1^N F_normalised(i)  
@@ -546,7 +550,7 @@ class Coldensmap:
         self.slicecen = np.array(slicecen)*hcosm
         self.sidelength = sidelength*hcosm
 
-    def getpixindsvals(self,specout,periodic=None):
+    def getpixindsvals(self,specout, periodic=None):
         if periodic is None:
             periodic = self.periodic
         # choose closest to pixel centre
@@ -747,7 +751,7 @@ class Coldensmapslices:
 
 
 ## get the best-fit b parameter for some (set of) specouts 
-def bparfit(specouts,ions= 'all',EWlog = True, coldenslog = True, cbounds = (None,None),spcm_cd_sp = False, spcm_cd_mp = False,**kwargs):
+def bparfit(specouts, ions='all', EWlog=True, coldenslog=True, cbounds=(None,None), spcm_cd_sp=False, spcm_cd_mp=False, **kwargs):
     '''
     b in cm/s throughout
     fit the earlier linflatcurveofgrowth to specouts for the best-fit  parameter
@@ -1743,9 +1747,58 @@ def plot_EWconv_wi_gi(cubics, gaussians, ion, reslabels = None, fontsize=14):
      plt.savefig(mdir + 'specwiz_EW_convergence_sntd-gi_test4_test10-los_o8_standard-9x-i9x-i81x-stnd-projres_separate_distributions.png',format = 'png',bbox_inches='tight')
 
 
+def getNEW_wsubsamples_multiion():
+    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'] # only o8 doublet is expected to be unresolved -> rest is fine to use single lines
+    filen = '/net/luttero/data2/specwizard_data/sample3/spec.snap_027_z000p101.0.hdf5'
+    sfilen = '/net/luttero/data2/specwizard_data/los_sample3_o6-o7-o8_L0100N1504_data.hdf5'
+    outfilen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
+    
+    so = Specout(filen, getall=False)
+    so.getEW(dions=ions)
+    so.getcoldens(dions=ions)
 
+    ionselgrpn = {'o7': 'file0',\
+                  'o8': 'file1',\
+                  'o6': 'file2',\
+                  }
+    
+    selections = {}
+    with h5py.File(sfilen, 'r') as fs:
+        numpix = fs['Header'].attrs['numpix']
+        specpos = so.positions / so.cosmopars['boxsize'] * numpix
+        for ion in ionselgrpn:
+            sgrp = fs['Selection/%s'%(ionselgrpn[ion])]
+            selpos = np.array(sgrp['selected_pixels_thision'])
+            
+            indsclosest = ( (selpos[:, np.newaxis, 0] - specpos[np.newaxis, :, 0])**2 +\
+                            (selpos[:, np.newaxis, 1] - specpos[np.newaxis, :, 1])**2 ).argmin(axis=1)
+            selections[ion] = indsclosest
+    
+    with h5py.File(outfilen, 'w') as fo:
+        hed = fo.create_group('Header')
+        hed.attrs.create('numpix_map', numpix)
+        hed.attrs.create('filename_spectra', np.string_(filen))
+        hed.attrs.create('filename_sample_selection', np.string_(sfilen))
+        cg = hed.create_group('cosmopars')
+        for key in so.cosmopars:
+            cg.attrs.create(key, so.cosmopars[key])
+        for sion in selections:
+            grp = fo.create_group('%s_selection'%sion)
+            sel = selections[sion]
+            for ion in ions:
+                sgrp = grp.create_group('%s_data'%ion)
+                sgrp.create_dataset('logN_cmm2', data=so.coldens[ion][sel])
+                sgrp.create_dataset('EWrest_A', data=so.EW[ion][sel])
+                
+        grp = fo.create_group('full_sample')
+        for ion in ions:
+            sgrp = grp.create_group('%s_data'%ion)
+            sgrp.create_dataset('logN_cmm2', data=so.coldens[ion])
+            sgrp.create_dataset('EWrest_A', data=so.EW[ion])
+                
 
-
+    
+    
 
 
 # ----------------------- MERGE OUTPUT FILES FROM 'PARALLEL' RUNS: only sightlines differ -----------------------

@@ -191,7 +191,7 @@ def get_coldens_EW_info(specfile, mapfile, ion, slicecen, sidelength, red=1, per
     fills must be in the same order as slices are put into in Specout: start at first full slice 
     slicerange not currently implemented
     '''
-    specout = sp.Specout(specfile,getall=False)
+    specout = sp.Specout(specfile, getall=False)
     specout.getcoldens(dions=[ion], slices=slices, offset=offset, realspace=False) # we want velocity space column densities to match the EW measurements
     specout.getEW(dions=[ion], slices=slices, offset=offset)
     # access via specout.EW/coldens[ion] -> array of values by spectrum number (slices==1) 
@@ -314,7 +314,7 @@ class Spcm:
         '''
         use dict output of get_coldens_EW_info or read in file, otherwise get data from this function
         '''
-        if isinstance(args[0],dict): # dictionary from get_coldens_EW_info
+        if isinstance(args[0], dict): # dictionary from get_coldens_EW_info
             self.dct = args[0]
         elif len(args) == 1: # one file name -> saved dct
             self.dctfile = args[0]
@@ -322,7 +322,7 @@ class Spcm:
                 self.dctfile = pdir + self.dctfile
             self.dct = np.load(self.dctfile)
         else: # process like get_coldens_info call
-            self.dct = get_coldens_EW_info(*args,**kwargs)
+            self.dct = get_coldens_EW_info(*args, **kwargs)
 
         self.cd_sp = self.dct['coldens_sp']
         self.cd_mp = self.dct['coldens_mp']
@@ -338,7 +338,7 @@ class Spcm:
         else:
             print('Add ion to Spcm manually (<Spcm instance>.ion = <ion name>)')
 
-    def subsample_match(self,positions, norm=None, cosmopars=None):
+    def subsample_match(self, positions, norm=None, cosmopars=None):
         '''
         select a subsample of EW, coldens_sp, coldens_mp based on a list of positions (e.g. from the sightline selection output for a single ion)
         norm = factor to normalise the positions to cMpc/h units
