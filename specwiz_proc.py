@@ -120,13 +120,14 @@ fosc ={'o7':        0.696,\
        'c6minor':   0.139,\
        'c6_2major': 0.0527,\
        'c6_2minor': 0.0263, \
-       'o6_major':  0.13250,\
-       'o6_minor':  0.06580,\
+       'o6major':  0.13250,\
+       'o6minor':  0.06580,\
        'o6_2major': 0.351,\
        'o6_2minor': 0.174,\
        'n6':        0.675,\
        'n7major':   0.277,\
        'n7minor':   0.139,\
+       'ne8major':  0.103,\
        'ne9':       0.724,\
        'h1':        0.5644956,\
        'lyalpha':   0.4162,\
@@ -134,12 +135,13 @@ fosc ={'o7':        0.696,\
         
 
   
-multip = {'o8': ['o8major', 'o8minor', 'o8_2major', 'o8_2minor'],\
-          'fe17': ['fe17major', 'fe17minor'],\
-          'n7': ['n7major', 'n7minor'],\
-          'c6': ['c6major', 'c6minor', 'c6_2major', 'c6_2minor'],\
-          'o7': ['o7major', 'o7_2'],\
-          }
+#multip = {'o8': ['o8major', 'o8minor', 'o8_2major', 'o8_2minor'],\
+#          'fe17': ['fe17major', 'fe17minor'],\
+#          'n7': ['n7major', 'n7minor'],\
+#          'c6': ['c6major', 'c6minor', 'c6_2major', 'c6_2minor'],\
+#          'o7': ['o7major', 'o7_2'],\
+#          }
+multip = {'o8': ['o8major', 'o8minor']} 
 
 #from Lan & Fukugita 2017, citing e.g. B.T. Draine, 2011: Physics of the interstellar and intergalactic medium
 # ew in angstrom, Nion in cm^-2
@@ -154,7 +156,7 @@ def lingrowthcurve_inv(Nion,ion):
         ion = ion + 'major'
     return Nion * (fosc[ion]*lambda_rest[ion]**2) * (np.pi* cu.c.electroncharge**2 /(cu.c.electronmass*cu.c.c**2)*1e-8)
 
-def linflatcurveofgrowth_inv(Nion,b,ion):
+def linflatcurveofgrowth_inv(Nion, b, ion):
     '''
     equations from zuserver2.star.ucl.ac.uk/~idh/PHAS2112/Lectures/Current/Part4.pdf
     b in cm/s
@@ -166,6 +168,11 @@ def linflatcurveofgrowth_inv(Nion,b,ion):
     #print('fosc[ion]: %f'%fosc[ion])
     #print('Nion: ' + str(Nion))
     #print('b: ' + str(b))
+    
+    # array-valued b needed for a fit somewhere
+    if hasattr(b, '__len__'):
+        return np.array([linflatcurveofgrowth_inv(Nion, _b, ion) for _b in b])
+    
     if not hasattr(Nion, '__len__'):
         Nion = np.array([Nion])
             
@@ -1795,12 +1802,171 @@ def getNEW_wsubsamples_multiion():
             sgrp = grp.create_group('%s_data'%ion)
             sgrp.create_dataset('logN_cmm2', data=so.coldens[ion])
             sgrp.create_dataset('EWrest_A', data=so.EW[ion])
+            
+            
+def addbparfit_NEW_wsubsamples_multiion():
+    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'] # only o8 doublet is expected to be unresolved -> rest is fine to use single lines   
+    filen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
+    
+    with h5py.File(filen, 'a') as fo:
+        selections = list(fo.keys())
+        selections.remove('Header')
+        for sel in selections:
+            for ion in ions:
+                grp = fo['%s/%s_data'%(sel, ion)]
+                EWrest_A = np.array(grp['EWrest_A'])
+                logN_cmm2 = np.array(grp['logN_cmm2'])
                 
-
+                def fitfunc_lin(logNion, b):
+                    return linflatcurveofgrowth_inv(10**logNion, b, ion)
+                
+                bfit_linEW = sp.optimize.curve_fit(fitfunc_lin, logN_cmm2, EWrest_A, p0=100*1e5, bounds=(np.array([0]), np.array([3e5*1e5])))
+                print('%s, sample %s: b parameter fit to lin EW: %s'%(ion, sel, bfit_linEW))
+                
+                def fitfunc_log(logNion, b):
+                    return np.log10(linflatcurveofgrowth_inv(10**logNion, b, ion))
+                
+                bfit_logEW = sp.optimize.curve_fit(fitfunc_log, logN_cmm2, np.log10(EWrest_A), p0=100*1e5, bounds=(np.array([0]), np.array([3e5*1e5])))
+                print('%s, sample %s: b parameter fit to log EW: %s'%(ion, sel, bfit_logEW))
+                
+                grp.attrs.create('bparfit_cmps_linEW', np.array([bfit_linEW[0][0], bfit_linEW[1][0][0]]))
+                grp.attrs.create('bparfit_cmps_logEW', np.array([bfit_logEW[0][0], bfit_logEW[1][0][0]]))
+                
+def printbpartable_wsubsamples_multiion():
+    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'] # only o8 doublet is expected to be unresolved -> rest is fine to use single lines   
+    filen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
     
+    data = {}
+    with h5py.File(filen, 'r') as fo:
+        selections = list(fo.keys())
+        selections.remove('Header')
+        for sel in selections:
+            data[sel] = {}
+            for ion in ions:
+                grp = fo['%s/%s_data'%(sel, ion)]
+                
+                bfit_lin = grp.attrs['bparfit_cmps_linEW']
+                bfit_log = grp.attrs['bparfit_cmps_logEW']
+                
+                data[sel][ion] = {'lin': bfit_lin, 'log': bfit_log}
+    print('best-fit b parameters (km/s)')
+    for ion in ions:
+        print('')
+        print('Ion: %s'%ion)
+        print('selection \t linear fit \t fit err \t log fit \t log err')
+        for sel in selections:
+            print('%s: \t %s \t %s \t %s \t %s'%(sel,\
+                                                 data[sel][ion]['lin'][0] * 1e-5,\
+                                                 np.sqrt(data[sel][ion]['lin'][1]) * 1e-5,\
+                                                 data[sel][ion]['log'][0] * 1e-5,\
+                                                 np.sqrt(data[sel][ion]['log'][1]) * 1e-5,\
+                                                 ))                      
+
+def global_approx_percentiles_NEW_multiion(subsample='full_sample',\
+                                           percentiles=(5., 50., 95.),\
+                                           binsize=0.1, maxbin=100,\
+                                           minlogEWdiff=0.1):
+    '''
+    one subsample at a time here. Gets b-values corresponding to percentiles
+    over a range of column densities set by
+    - on the lower end: a minimum log EW difference for the outermost
+      percentiles in question (since b values don't matter in the linear
+      regime, which would lead to 'compensation' in the included fractions in 
+      the non-linear regime).
+      <minlogEWdiff> sets this difference
+    - downsampling bins with many measured column density values to <maxbin> to
+      avoid putting to much weight in the lower column density regime, while
+      maintaining lower weight for the poorly sampled higher column densities
+    - <binsize> controls the size of the bins (log column density) for sample
+      determination and subsampling
+    '''
+    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'] # only o8 doublet is expected to be unresolved -> rest is fine to use single lines   
+    filen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
     
+    percentiles = np.array(percentiles)
+    percentiles.sort()
+    
+    with h5py.File(filen, 'a') as fo:
+        sel = subsample
+        res = {}
+        for ion in ions:
+            # read in data
+            grp = fo['%s/%s_data'%(sel, ion)]
+            EWrest_A = np.array(grp['EWrest_A'])
+            logN_cmm2 = np.array(grp['logN_cmm2'])
+            bstart = grp.attrs['bparfit_cmps_logEW'][0] * 1e-5 # start iteration with soimething reasonable for this ion
 
+            # set up bins
+            minN = np.min(logN_cmm2) 
+            maxN = np.max(logN_cmm2)
+            minN -= 1e-7 * np.abs(minN)
+            maxN += 1e-7 * np.abs(maxN)
+            bminN = np.floor(minN / binsize) * binsize
+            bmaxN = np.ceil(maxN / binsize) * binsize
+            Nbins = np.arange(bminN, bmaxN + 0.5 * binsize, binsize)
+            
+            # bin the data
+            bininds = np.array(np.digitize(logN_cmm2, Nbins))
+            EWs_bin = [EWrest_A[np.where(bininds == i + 1)] for i in range(len(Nbins) - 1)]
+            Ns_bin  = [logN_cmm2[np.where(bininds == i + 1)] for i in range(len(Nbins) - 1)]
+            
+            # get the minimum column density to use, select only that data
+            percvals_bin = np.array([np.percentile(EWs, percentiles) \
+                                     if len(EWs) > 0 else \
+                                     np.ones(len(percentiles)) * np.NaN
+                                     for EWs in EWs_bin])
+            wherenonlin = np.where(np.log10(percvals_bin[:, -1]) - np.log10(percvals_bin[:, 0]) >= minlogEWdiff)[0]
+            usemin = wherenonlin[0]
+            useminN = Nbins[usemin]
+            print('For ion %s, using minimum logN [cm**-2] = %f'%(ion, useminN))
+            EWs_bin = EWs_bin[usemin:]
+            Ns_bin = Ns_bin[usemin:]
+            
+            # apply subsampling for lower-N data
+            inds_subsample = [np.random.choice(len(Ns), size=maxbin, replace=False) \
+                              if len(Ns) > maxbin else \
+                              slice(None, None, None) \
+                              for Ns in Ns_bin]
+            EWs_subsample = [EWs_bin[i][inds_subsample[i]] for i in range(len(Ns_bin))]
+            Ns_subsample = [Ns_bin[i][inds_subsample[i]] for i in range(len(Ns_bin))]
+            
+            EW_fitdata = np.array([_EW for _bin in EWs_subsample for _EW in _bin])
+            N_fitdata = np.array([_N for _bin in Ns_subsample for _N in _bin])
+            plt.plot(N_fitdata, np.log10(EW_fitdata))
+            
+            bfits = []
+            for perc in percentiles:
+                def fitfunc(b):
+                    EWs_pred = linflatcurveofgrowth_inv(10**N_fitdata, b * 1e5, ion)
+                    pval = (np.sum(EWs_pred > EW_fitdata) + 0.5 * np.sum(EWs_pred == EW_fitdata)) / float(len(EW_fitdata))
+                    return np.abs(pval * 100. - perc)
+                #print('example call: fitfunc(%f) = %s'%(bstart, fitfunc(bstart)))
+                
+                bfit = sp.optimize.minimize_scalar(fitfunc, bracket=(bstart * 0.5, bstart * 2.), bounds=(np.array([0]), np.array([3e5*1e5])), tol=0.1)
+                if bfit.success:
+                    val = bfit.x
+                    print('For ion %s, percentile %f, best-fit b = %f'%(ion, perc, val))
+                    bfits.append(val)
+                else:
+                    print('For ion %s, percentile %f, b fit failed at value b = %f'%(ion, perc, bfit.x))
+                    print(bfit.message)
+                    bfits.append(np.NaN)
+            res[ion] = bfits         
+    return res
 
+def printtotxt_bparglobalperfits(filen, fits, percentiles, maxbins, binsizes, mindiffs, realizationids):
+    fdir = ol.ndir
+    ions = fits[0].keys()
+    with open(fdir + filen, 'w') as fo:
+        hed = 'ion\tpercentile\tbinsize_logN\tmaxinbin\tminlogEWdiff\trealization\tb_kmps\n'
+        fo.write(hed)
+        base = '%s\t%f\t%f\t%i\t%f\t%i\t%f\n' 
+        for find in range(len(fits)):
+            for ion in ions:
+                for pind in range(len(percentiles)):
+                    _str = base%(ion, percentiles[pind], binsizes[find], maxbins[find], mindiffs[find], realizationids[find], fits[find][ion][pind])
+                    fo.write(_str)
+                    
 # ----------------------- MERGE OUTPUT FILES FROM 'PARALLEL' RUNS: only sightlines differ -----------------------
 # groups in specwizard hdf5 files that contain non-l.o.s.-dependent parameters
 # check attributes ('Parameters' has no attributes, only subgroups):

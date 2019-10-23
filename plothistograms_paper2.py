@@ -57,6 +57,7 @@ approx_breaks = {'o7': 16.0,\
              'hneutralssh': 20.3,\
              'fe17': 15.0}
 
+
 rho_to_nh = 0.752 / (c.atomw_H * c.u)
 
 #retrieved with mc.getcosmopars
@@ -2736,13 +2737,34 @@ def plot3Dprof_overview(weighttype='Mass'):
 
 def plotsubsamplediffs_NEW():
     dfilen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
-    percentiles = [10., 50., 90.]
+    percentiles = [5., 50., 95.]
     logNspacing = 0.2
     linemin = 10
     ncols = 3
     ylabel = r'$\log_{10} \, \mathrm{EW} \; [\mathrm{m\AA}]$'
     xlabel = r'$\log_{10} \, \mathrm{N}(\mathrm{%s}) \; [\mathrm{cm}^{-2}]$'
     fontsize = 12
+    uselines = {'o7': ild.o7major,\
+                'o8': ild.o8doublet,\
+                'o6': ild.o6major,\
+                'ne8': ild.ne8major,\
+                'ne9': ild.ne9major,\
+                'fe17': ild.fe17major,\
+                }
+    Nminmax =  {'o7':   (15.5, 18.3),\
+                'o8':   (15.8, 17.5),\
+                'o6':   (14.2, 17.0),\
+                'ne9':  (15.7, 17.4),\
+                'ne8':  (14.7, 16.4),\
+                'fe17': (14.9, 16.6),\
+                }
+    logEWminmax = {'o7':   (0.8, 1.6),\
+                   'o8':   (1.0, 1.7),\
+                   'o6':   (2.0, 3.0),\
+                   'ne9':  (0.6, 1.3),\
+                   'ne8':  (2.1, 2.8),\
+                   'fe17': (0.6, 1.3),\
+                   }
     
     data = {}
     with h5py.File(dfilen, 'r') as fi:
@@ -2754,8 +2776,11 @@ def plotsubsamplediffs_NEW():
                 grp = fi['%s/%s'%(selection, ionk)]
                 logN = np.array(grp['logN_cmm2'])
                 EW = np.array(grp['EWrest_A'])
+                blin = np.array(grp.attrs['bparfit_cmps_linEW'])[0] * 1e-5
+                blog = np.array(grp.attrs['bparfit_cmps_logEW'])[0] * 1e-5
                 ion = ionk.split('_')[0]
-                data[selection][ion] = {'logN': logN, 'EW': EW}
+                data[selection][ion] = {'logN': logN, 'EW': EW,\
+                                        'blin': blin, 'blog': blog}
                 
     ions = {val for sub in data for val in data[sub]}
     ions = list(ions)
@@ -2764,19 +2789,21 @@ def plotsubsamplediffs_NEW():
     
     selkeys = selections
     colors = {selkeys[i]: 'C%i'%(i % 10) for i in range(len(selkeys))}
-    _linestyles = ['solid', 'dashdot', 'dashed', 'dotted']
+    _linestyles = ['solid'] * 4
     linestyles = {selkeys[i]: _linestyles[i] for i in range(len(selkeys))}
     
     panelwidth = 2.5
     panelheight = 2.5
+    legheight = 1.5
     wspace = 0.5
     hspace = 0.5
     nrows = nions // ncols
     
-    fig = plt.figure(figsize=(panelwidth * ncols + wspace * (ncols - 1), panelheight * nrows + hspace * (nrows - 1)))
-    grid = gsp.GridSpec(ncols=ncols, nrows=nrows, wspace=wspace, hspace=hspace)   
+    fig = plt.figure(figsize=(panelwidth * ncols + wspace * (ncols - 1), panelheight * nrows + hspace * nrows + legheight))
+    grid = gsp.GridSpec(ncols=ncols, nrows=nrows + 1, wspace=wspace, hspace=hspace)   
     axes = [fig.add_subplot(grid[ioni // ncols, ioni % ncols]) for ioni in range(nions)]
-    
+    lax = fig.add_subplot(grid[nrows, :])
+
     for ioni in range(nions):
         ax = axes[ioni]
         ion = ions[ioni]
@@ -2823,10 +2850,49 @@ def plotsubsamplediffs_NEW():
             Ns_sc = [val for bi in range(plotmin) + range(plotmax + 1, len(Ncens)) for val in Ns_bin[bi]]
             EWs_sc = [val for bi in range(plotmin) + range(plotmax + 1, len(Ncens)) for val in EWs_bin[bi]]
             ax.scatter(Ns_sc, EWs_sc, color=colors[key], alpha=0.1)
-        
-        if ioni == 0:
-            ax.legend(fontsize=fontsize, loc='lower right')
             
+            blin = data[key][ion]['blin']
+            blog = data[key][ion]['blog']
+            
+            lines = uselines[ion]
+            EWslin = ild.linflatcurveofgrowth_inv(10**Ncens, blin * 1e5, lines)
+            EWslog = ild.linflatcurveofgrowth_inv(10**Ncens, blog * 1e5, lines)
+            if isinstance(lines, ild.SpecLine): 
+                EWsthin = ild.lingrowthcurve_inv(10**Ncens, lines)
+            else:
+                EWsthin = np.sum([ild.lingrowthcurve_inv(10**Ncens, lines.speclines[lkey])\
+                                 for lkey in lines.speclines],axis=0)
+            ax.plot(Ncens, np.log10(EWsthin) + 3., color='gray', linestyle='dotted', label='opt. thin')
+            ax.plot(Ncens, np.log10(EWslin) + 3., color=colors[key], label='lin. fit', linestyle='dashed')
+            ax.plot(Ncens, np.log10(EWslog) + 3., color=colors[key], label='log fit', linestyle='dashdot')
+            
+            ax.set_xlim(Nminmax[ion])
+            ax.set_ylim(logEWminmax[ion])
+    lcs = []
+    line = [[(0, 0)]]    
+    # set up the proxy artist
+    for ls in ['dashed', 'dashdot']:
+        subcols = [mpl.colors.to_rgba(colors[key]) for key in colors]
+        subcols = np.array(subcols)
+        subcols[:, 3] = 1. # alpha value
+        #print(subcols)
+        lc = mcol.LineCollection(line * len(subcols), linestyle=ls, colors=subcols)
+        lcs.append(lc)
+    # create the legend
+    #lax.legend(lcs, [legendnames_techvars[var] for var in techvars], handler_map={type(lc): HandlerDashedLines()}) #handlelength=2.5, handleheight=3
+    #handles_ax1, labels_ax1 = axes[0].get_legend_handles_labels()
+    selhandles = [mlines.Line2D([], [], color=colors[key], linestyle='solid', label=key.split('_')[0] + ' sample') 
+                  for key in colors]
+    sellabels = [key.split('_')[0] + ' sample' for key in colors]
+    linhandle = [mlines.Line2D([], [], color='gray', linestyle='dotted', label='opt. thin') ]
+    linlabel = ['opt. thin']
+    lcs_labels = ['lin. fit', 'log fit']
+    lax.legend(selhandles + lcs + linhandle, sellabels + lcs_labels + linlabel,\
+               handler_map={type(lc): HandlerDashedLines()},\
+               fontsize=fontsize, ncol=ncols, loc='upper center', bbox_to_anchor=(0.5, 1.))
+    lax.axis('off')
+    
+    plt.savefig('/net/luttero/data2/specwizard_data/sample3_specwizard-NEW_wbparfit_wsubsamples.pdf', format='pdf', bbox_inches='tight')       
             
         
         
@@ -4552,3 +4618,254 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
     #ax1.text(0.02, 0.05, r'absorbers close to galaxies at $z=0.37$', horizontalalignment='left', verticalalignment='bottom', transform=ax1.transAxes, fontsize=fontsize)
     
     plt.savefig(imgname, format='pdf', bbox_inches='tight')
+
+def plot_NEW():
+    dfilen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
+    percentiles = [5., 50., 95.]
+    logNspacing = 0.1
+    linemin = 20
+    ncols = 3
+    ylabel = r'$\log_{10} \, \mathrm{EW} \; [\mathrm{m\AA}]$'
+    xlabel = r'$\log_{10} \, \mathrm{N} \; [\mathrm{cm}^{-2}]$'
+    fontsize = 12
+    uselines = {'o7': ild.o7major,\
+                'o8': ild.o8doublet,\
+                'o6': ild.o6major,\
+                'ne8': ild.ne8major,\
+                'ne9': ild.ne9major,\
+                'fe17': ild.fe17major,\
+                }
+    Nminmax =  {'o7':   (14.5, 18.3),\
+                'o8':   (14.8, 17.5),\
+                'o6':   (12.8, 17.0),\
+                'ne9':  (14.9, 17.4),\
+                'ne8':  (13.5, 16.4),\
+                'fe17': (14.2, 16.6),\
+                }
+    logEWminmax = {'o7':   (0.0, 1.8),\
+                   'o8':   (0.0, 1.7),\
+                   'o6':   (1.0, 3.2),\
+                   'ne9':  (0.0, 1.3),\
+                   'ne8':  (1.3, 2.8),\
+                   'fe17': (0.0, 1.3),\
+                   }
+    # T vals from plot_Tvir_ions
+    #Ion o6   has maximum CIE fraction 0.196, at log T[K] = 5.5, 0.1 max range is [5.29739276 5.75294118]
+    #Ion ne8  has maximum CIE fraction 0.233, at log T[K] = 5.8, 0.1 max range is [5.6208641  6.14552226]
+    #Ion o7   has maximum CIE fraction 0.994, at log T[K] = 5.9, 0.1 max range is [5.40228139 6.4949395 ]
+    #Ion ne9  has maximum CIE fraction 0.981, at log T[K] = 6.2, 0.1 max range is [5.71844286 6.80842876]
+    #Ion o8   has maximum CIE fraction 0.448, at log T[K] = 6.4, 0.1 max range is [6.10214446 6.80841602]
+    #Ion fe17 has maximum CIE fraction 0.491, at log T[K] = 6.7, 0.1 max range is [6.30526704 7.02535685]
+
+    Tmax_CIE = {'o6':   10**5.5,\
+                'ne8':  10**5.8,\
+                'o7':   10**5.9,\
+                'ne9':  10**6.2,\
+                'o8':   10**6.4,\
+                'fe17': 10**6.7,\
+                }
+    bvals_CIE = {ion: np.sqrt(2. * c.boltzmann * Tmax_CIE[ion] / \
+                              (ionh.atomw[string.capwords(ol.elements_ion[ion])] * c.u)) \
+                      * 1e-5
+                 for ion in Tmax_CIE}
+    bvals_indic = {'o7': [50., 220.],\
+                   'o8': [70., 300.],\
+                   'o6': [5., 90.],\
+                   'ne8': [80.],\
+                   'ne9': [50., 140.],\
+                   'fe17': [50, 200.],\
+                   }
+    bvals = {ion: [bvals_CIE[ion]] + bvals_indic[ion] for ion in bvals_CIE}
+
+    data = {}
+    with h5py.File(dfilen, 'r') as fi:
+        selections = list(fi.keys())
+        selections.remove('Header')
+        selection = 'full_sample'
+            
+        for ionk in fi[selection].keys():
+            grp = fi['%s/%s'%(selection, ionk)]
+            logN = np.array(grp['logN_cmm2'])
+            EW = np.array(grp['EWrest_A'])
+            blin = np.array(grp.attrs['bparfit_cmps_linEW'])[0] * 1e-5
+            blog = np.array(grp.attrs['bparfit_cmps_logEW'])[0] * 1e-5
+            ion = ionk.split('_')[0]
+            data[ion] = {'logN': logN, 'EW': EW,\
+                         'blin': blin, 'blog': blog}
+                
+    ions = list(data.keys())
+    ions.sort()
+    nions = len(ions)
+    
+    linestyles = {'med': 'solid',\
+                  'out': 'solid',\
+                  'EWfit_lin': 'dashed',\
+                  'EWfit_log': 'dashed',\
+                  'linCOG': 'dotted',\
+                  'b_indic': 'dashdot'}
+    colors = {'data': 'gray',\
+              'med':  'green',\
+              'out':  'yellowgreen',\
+              'EWfit_lin': 'blue',\
+              'EWfit_log': 'cyan',\
+              'linCOG': 'cadetblue',\
+              'b_indic': ['red', 'firebrick', 'lightcoral']}
+    alpha_data = 0.05
+    size_data = 10.
+    linewidth = 2.
+    path_effects = [mppe.Stroke(linewidth=linewidth - 0.5, foreground="black"), mppe.Normal()]
+    
+    panelwidth = 2.8
+    panelheight = 2.8
+    legheight = 0.5
+    wspace = 0.25
+    hspace = 0.2
+    nrows = nions // ncols
+    
+    fig = plt.figure(figsize=(panelwidth * ncols + wspace * (ncols - 1), panelheight * nrows + hspace * nrows + legheight))
+    grid = gsp.GridSpec(ncols=ncols, nrows=nrows + 1, wspace=wspace, hspace=hspace, height_ratios=[panelheight] * nrows + [legheight])   
+    axes = [fig.add_subplot(grid[ioni // ncols, ioni % ncols]) for ioni in range(nions)]
+    lax = fig.add_subplot(grid[nrows, :])
+
+    outdata = {}
+    for ioni in range(nions):
+        ax = axes[ioni]
+        ion = ions[ioni]
+        if ioni // ncols == nrows - 1:
+            ax.set_xlabel(xlabel, fontsize=fontsize)
+        if ioni % ncols == 0:
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+        axlabel = r'$\mathrm{%s}$'%(ild.getnicename(ion, mathmode=True))
+        ax.text(0.05, 0.95, axlabel, fontsize=fontsize,\
+                verticalalignment='top', horizontalalignment='left',\
+                transform=ax.transAxes)
+        
+        logN = data[ion]['logN']
+        EW   = np.log10(data[ion]['EW']) + 3.
+        minN = np.min(logN) 
+        maxN = np.max(logN)
+        minN -= 1e-7 * np.abs(minN)
+        maxN += 1e-7 * np.abs(maxN)
+        bminN = np.floor(minN / logNspacing) * logNspacing
+        bmaxN = np.ceil(maxN / logNspacing) * logNspacing
+        Nbins = np.arange(bminN, bmaxN + 0.5 * logNspacing, logNspacing)
+        Ncens = Nbins[:-1] + 0.5 * np.diff(Nbins)
+        
+        bininds = np.array(np.digitize(logN, Nbins))
+        EWs_bin = [EW[np.where(bininds == i + 1)] for i in range(len(Ncens))]
+        #Ns_bin  = [logN[np.where(bininds == i + 1)] for i in range(len(Ncens))]
+        percvals = np.array([np.percentile(EWs, percentiles) \
+                                if len(EWs) > 0 else \
+                                np.ones(len(percentiles)) * np.NaN
+                                for EWs in EWs_bin])
+        
+        whereplot = np.where(np.array([len(_EW) >= linemin for _EW in EWs_bin]))[0]
+        plotmin = whereplot[0]
+        plotmax = whereplot[-1]
+        #ax.fill_between(Ncens[plotmin : plotmax + 1],\
+        #                percvals[plotmin : plotmax + 1, 0],\
+        #                percvals[plotmin : plotmax + 1, 2],\
+        #                color=colors[key], alpha=0.1)
+        ax.scatter(logN, EW, color=colors['data'], alpha=alpha_data, s=size_data, rasterized=True)
+        ax.plot(Ncens[plotmin : plotmax + 1],\
+                        percvals[plotmin : plotmax + 1, 1],\
+                        color=colors['med'], linestyle=linestyles['med'],\
+                        label=None, linewidth=linewidth, path_effects=path_effects)
+        ax.plot(Ncens[plotmin : plotmax + 1],\
+                        percvals[plotmin : plotmax + 1, 0],\
+                        color=colors['out'], linestyle=linestyles['out'],\
+                        label=None, linewidth=linewidth, path_effects=path_effects)
+        ax.plot(Ncens[plotmin : plotmax + 1],\
+                        percvals[plotmin : plotmax + 1, 2],\
+                        color=colors['out'], linestyle=linestyles['out'],\
+                        label=None, linewidth=linewidth, path_effects=path_effects)
+        
+        outdata[ion] = {'Ncens': Ncens, 'Nbins': Nbins,\
+                        'bincount': np.array([len(_EW) for _EW in EWs_bin]),\
+                        
+                        'percvals_logmA': percvals, 'percentiles': percentiles}
+        #Ns_sc = [val for bi in range(plotmin) + range(plotmax + 1, len(Ncens)) for val in Ns_bin[bi]]
+        #EWs_sc = [val for bi in range(plotmin) + range(plotmax + 1, len(Ncens)) for val in EWs_bin[bi]]
+        #ax.scatter(Ns_sc, EWs_sc, color=colors[key], alpha=0.1)
+        
+        blin = data[ion]['blin']
+        blog = data[ion]['blog']
+        
+        lines = uselines[ion]
+        #EWslin = ild.linflatcurveofgrowth_inv(10**Ncens, blin * 1e5, lines)
+        EWslog = ild.linflatcurveofgrowth_inv(10**Ncens, blog * 1e5, lines)
+        if isinstance(lines, ild.SpecLine): 
+            EWsthin = ild.lingrowthcurve_inv(10**Ncens, lines)
+        else:
+            EWsthin = np.sum([ild.lingrowthcurve_inv(10**Ncens, lines.speclines[lkey])\
+                             for lkey in lines.speclines],axis=0)
+        label = '%.0f'%blin
+        ax.plot(Ncens, np.log10(EWsthin) + 3., color=colors['linCOG'], linestyle=linestyles['linCOG'])
+        #ax.plot(Ncens, np.log10(EWslin) + 3., color=colors['EWfit_lin'], label=None, linestyle=linestyles['EWfit_lin'])
+        ax.plot(Ncens, np.log10(EWslog) + 3., color=colors['EWfit_log'], linestyle=linestyles['EWfit_log'], label=label)
+        
+        bvals_this = bvals[ion]
+        for bi in range(len(bvals_this)):
+            bval = bvals_this[bi]
+            EWs = np.log10(ild.linflatcurveofgrowth_inv(10**Ncens, bval * 1e5, lines)) + 3.
+            label = '%.0f'%bval
+            ax.plot(Ncens, EWs, linestyle=linestyles['b_indic'], color=colors['b_indic'][bi],\
+                    linewidth=linewidth, label=label)
+        
+        hnd, lab = ax.get_legend_handles_labels()
+        leg1 = ax.legend(hnd[:1], lab[:1], fontsize=fontsize, loc='upper left',\
+                         ncol=1, frameon=False, bbox_to_anchor=(-0.015, 0.91),\
+                         handlelength=1.5)
+        leg2 = ax.legend(hnd[1:], lab[1:], fontsize=fontsize, loc='lower right',\
+                         frameon=False, bbox_to_anchor=(1.02, -0.02))
+        ax.add_artist(leg1)
+        ax.add_artist(leg2)
+        
+        ax.set_xlim(Nminmax[ion])
+        ax.set_ylim(logEWminmax[ion])
+        pu.setticks(ax, fontsize=fontsize)
+        
+    lcs = []
+    line = [[(0, 0)]]    
+    # set up the proxy artist
+    linestyles = {'med': 'solid',\
+                  'out': 'solid',\
+                  'EWfit_lin': 'dashed',\
+                  'EWfit_log': 'dashed',\
+                  'linCOG': 'dotted',\
+                  'b_indic': 'dashdot'}
+    colors = {'data': 'gray',\
+              'med':  'green',\
+              'out': 'yellowgreen',\
+              'EWfit_lin': 'blue',\
+              'EWfit_log': 'cyan',\
+              'linCOG': 'cadetblue',\
+              'b_indic': ['red', 'firebrick', 'rosybrown', 'lightcoral']}
+    
+    for ls in [linestyles['b_indic']]:
+        subcols = [mpl.colors.to_rgba(color) for color in colors['b_indic']]
+        subcols = np.array(subcols)
+        subcols[:, 3] = 1. # alpha value
+        #print(subcols)
+        lc = mcol.LineCollection(line * len(subcols), linestyle=ls, colors=subcols)
+        lcs.append(lc)
+    # create the legend
+    #lax.legend(lcs, [legendnames_techvars[var] for var in techvars], handler_map={type(lc): HandlerDashedLines()}) #handlelength=2.5, handleheight=3
+    #handles_ax1, labels_ax1 = axes[0].get_legend_handles_labels()
+    #selhandles = [mlines.Line2D([], [], color=colors[key], linestyle='solid', label=key.split('_')[0] + ' sample') 
+    #              for key in colors]
+    #sellabels = [key.split('_')[0] + ' sample' for key in colors]
+    handles1 = [mlines.Line2D([], [], color=colors['med'], linestyle=linestyles['med'], label='median'),\
+                mlines.Line2D([], [], color=colors['out'], linestyle=linestyles['out'], label='%.0f %%'%(percentiles[2] - percentiles[0])),\
+                mlines.Line2D([], [], color=colors['linCOG'], linestyle=linestyles['linCOG'], label='opt. thin'),\
+                mlines.Line2D([], [], color=colors['EWfit_log'], linestyle=linestyles['EWfit_log'], label='best-fit b'),\
+                mlines.Line2D([], [], color=colors['b_indic'][0], linestyle=linestyles['b_indic'], label=r'$b(T_{\max, \mathrm{CIE}})$'),\
+                ]
+    labels1 = ['median', '%.0f %%'%(percentiles[2] - percentiles[0]), 'opt. thin', r'best-fit $b$', r'$b(T_{\max, \mathrm{CIE}})$']
+    lax.legend(handles1 + lcs, labels1 + [r'var. $b \; [\mathrm{km} \, \mathrm{s}^{-1}]$'],\
+               handler_map={type(lc): HandlerDashedLines()},\
+               fontsize=fontsize, ncol=ncols, loc='upper center', bbox_to_anchor=(0.5, 0.6))
+    lax.axis('off')
+    
+    plt.savefig('/net/luttero/data2/specwizard_data/sample3_specwizard-NEW_wbparfit_fullsample.pdf', format='pdf', bbox_inches='tight')
+    return outdata

@@ -22,7 +22,7 @@ import pandas as pd
 import scipy.integrate as si
 import string
 
-import eagle_constants_and_units as cu
+import eagle_constants_and_units as c
 
 elements_ion = {'c1': 'carbon', 'c2': 'carbon', 'c3': 'carbon', 'c4': 'carbon', 'c5': 'carbon', 'c6': 'carbon',\
              'fe2': 'iron', 'fe3': 'iron', 'fe17': 'iron', \
@@ -599,9 +599,9 @@ def lingrowthcurve(ew, ion):
         except AttributeError:
             lambda_rest = ion.major.lambda_angstrom
             fosc = ion.major.fosc
-    return (np.pi* cu.c.electroncharge**2 /(cu.c.electronmass*cu.c.c**2) *1e-8)**-1 /(fosc * lambda_rest**2) * ew
+    return (np.pi* c.electroncharge**2 / (c.electronmass * c.c**2) *1e-8)**-1 /(fosc * lambda_rest**2) * ew
   
-def lingrowthcurve_inv(Nion,ion):
+def lingrowthcurve_inv(Nion, ion):
     if isinstance(ion, str):
         lambda_rest = linetable['lambda_angstrom'][ion]
         fosc = linetable['fosc'][ion]
@@ -612,9 +612,9 @@ def lingrowthcurve_inv(Nion,ion):
         except AttributeError:
             lambda_rest = ion.major.lambda_angstrom
             fosc = ion.major.fosc
-    return Nion * (fosc * lambda_rest**2) * (np.pi* cu.c.electroncharge**2 / (cu.c.electronmass*cu.c.c**2) * 1e-8)
+    return Nion * (fosc * lambda_rest**2) * (np.pi* c.electroncharge**2 / (c.electronmass * c.c**2) * 1e-8)
 
-def linflatcurveofgrowth_inv(Nion,b,ion):
+def linflatcurveofgrowth_inv(Nion, b, ion):
     '''
     equations from zuserver2.star.ucl.ac.uk/~idh/PHAS2112/Lectures/Current/Part4.pdf
     b in cm/s
@@ -637,8 +637,8 @@ def linflatcurveofgrowth_inv(Nion,b,ion):
             #fosc_m   = ion.major.fosc
             wavelen_m = ion.major.lambda_angstrom
             lines = ion.speclines.keys()
-            fosc    = {line: ion.speclines['line'].fosc for line in lines}
-            wavelen = {line: ion.speclines['line'].lambda_angstrom for line in lines}
+            fosc    = {line: ion.speclines[line].fosc for line in lines}
+            wavelen = {line: ion.speclines[line].lambda_angstrom for line in lines}
         else:
             ionlines = linetable.loc[linetable['ion'] == ion]
             lines    = ionlines.index 
@@ -649,11 +649,11 @@ def linflatcurveofgrowth_inv(Nion,b,ion):
             fosc = dct['fosc']
             wavelen = dct['lambda_angstrom']
             
-        tau0s = np.array([(np.pi**0.5* cu.electroncharge**2 /(cu.electronmass*cu.c) *1e-8) * wavelen[line] * fosc[line] * Nion / b for line in lines]).T
-        xoffsets = (cu.c / b)* (np.array([wavelen[line] for line in lines]) - wavelen_m) / wavelen_m # it shouldn't matter relative to which the offset is taken
+        tau0s = np.array([(np.pi**0.5 * c.electroncharge**2 / (c.electronmass * c.c) * 1e-8) * wavelen[line] * fosc[line] * Nion / b for line in lines]).T
+        xoffsets = (c.c / b)* (np.array([wavelen[line] for line in lines]) - wavelen_m) / wavelen_m # it shouldn't matter relative to which the offset is taken
         #print(tau0s)
         #print(xoffsets)     
-        prefactor = wavelen_m / cu.c * b # just use the average here
+        prefactor = wavelen_m / c.c * b # just use the average here
         # absorption profiles are multiplied to get total absorption
         
         integral = np.array([si.quad(lambda x: 1- np.exp(np.sum(-taus*np.exp(-1*(x-xoffsets)**2),axis=0)),-np.inf,np.inf) for taus in tau0s])
@@ -667,8 +667,8 @@ def linflatcurveofgrowth_inv(Nion,b,ion):
             fosc     = line['fosc']
             wavelen  = line['lambda_angstrom']
             
-        tau0 = (np.pi**0.5* cu.electroncharge**2 /(cu.electronmass*cu.c) *1e-8) * wavelen * fosc * Nion / b
-        prefactor = wavelen / cu.c * b
+        tau0 = (np.pi**0.5* c.electroncharge**2 / (c.electronmass * c.c) *1e-8) * wavelen * fosc * Nion / b
+        prefactor = wavelen / c.c * b
         #def integrand(x):
         #    1- np.exp(-tau0*np.exp(-1*x**2))
         integral = np.array([si.quad(lambda x: 1. - np.exp(-tau*np.exp(-1*x**2)), -np.inf, np.inf) for tau in tau0])
@@ -700,7 +700,7 @@ def nion_ppv_from_tauv(tau,ion):
             line     = linetable.loc[ion]
             fosc     = line['fosc']
             wavelen  = line['lambda_angstrom']
-    return (np.pi* cu.electroncharge**2 / (cu.electronmass*cu.c**2))**-1  * 1. / (fosc * wavelen**2 * 1.e-8**2) * tau 
+    return (np.pi * c.electroncharge**2 / (c.electronmass * c.c**2))**-1  * 1. / (fosc * wavelen**2 * 1.e-8**2) * tau 
     # tau at that pixel -> total Nion represented there 
     # (really Nion*normailised spectrum, but we've got the full tau spectra, so no need to factor that out)
 
