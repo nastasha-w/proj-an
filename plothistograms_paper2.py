@@ -2894,9 +2894,71 @@ def plotsubsamplediffs_NEW():
     
     plt.savefig('/net/luttero/data2/specwizard_data/sample3_specwizard-NEW_wbparfit_wsubsamples.pdf', format='pdf', bbox_inches='tight')       
             
-        
-        
+ 
+def plotdiffs_bparglobalperc(bparfit='bpar_global_perc_set1.txt'):
+    fontsize=12
+    fdir = '/net/luttero/data2/specwizard_data/'
+    df = pd.read_csv(fdir + bparfit, sep='\t')
     
+    colors = {50: 'red', 100: 'green', 200: 'blue'}
+    markers = {0.1: 'o', 0.15: 'p', 0.2: '^'}
+    sizes  = {5.0: 15, 50.0: 30, 95.0: 45}
+    ionpos = {'o6': 0.9, 'ne8': 0.8, 'o7': 0.7, 'ne9': 0.6, 'o8': 0.5, 'fe17': 0.4}
+    ylim = (0.35, 0.95)
+
+    fig = plt.figure(figsize=(5.5, 5.))
+    grid = gsp.GridSpec(nrows=2, ncols=1, hspace=0.3, height_ratios=[4.0, 2.0])
+    ax = fig.add_subplot(grid[0])
+    lax = fig.add_subplot(grid[1])
+    
+    for rowi in df.index:
+        ion  = df.at[rowi, 'ion']
+        perc = df.at[rowi, 'percentile']
+        #bs   = df.at['binsize_logN', rowi]
+        bn   = df.at[rowi, 'maxinbin']
+        mn   = df.at[rowi, 'minlogEWdiff']
+        bval = df.at[rowi, 'b_kmps']
+        
+        ax.scatter(bval, ionpos[ion], s=sizes[perc], c=colors[bn], marker=markers[mn], alpha=0.3)
+    
+    ax.tick_params(axis='x', which='both', top=True, labelsize=fontsize-1, direction='in')
+    ax.minorticks_on()
+    ax.set_xlabel(r'$b \; [\mathrm{km} \, \mathrm{s}^{-1}]$', fontsize=fontsize)
+    
+    ax.tick_params(axis='y', which='both', right=False, labelsize=fontsize)
+    ax.set_ylim(ylim)
+    tickpos = [ionpos[ion] for ion in ionpos]
+    tickpos.sort()
+    ticklabels = [ild.getnicename(ion) for ion in [''.join([ion if ionpos[ion] == pos else '' for ion in ionpos]) for pos in tickpos]]
+    
+    ax.set_yticks(tickpos)
+    ax.set_yticklabels(ticklabels)
+    ax.tick_params(which='minor', axis='y', left=False, right=False)
+    
+    mklist = list(markers.keys())
+    mklist.sort
+    markers_handles = [mlines.Line2D([], [], color='black', marker=markers[minN], linestyle='None', markersize=sizes[50.] / 5.) \
+               for minN in mklist] 
+    markers_labels = [r'min. $\Delta \, \log_{10} \, \mathrm{EW} = %.2f$'%(minN) for minN in mklist]
+    
+    cllist = list(colors.keys())
+    cllist.sort()
+    colors_handles = [mlines.Line2D([], [], color=colors[cl], marker='d', linestyle='None', markersize=sizes[50.] / 5.) \
+               for cl in cllist] 
+    colors_labels = [r'max. sl. in bin = %i'%(cl) for cl in cllist]
+    
+    szlist = list(sizes.keys())
+    szlist.sort()
+    sizes_handles = [mlines.Line2D([], [], color='black', marker='d', linestyle='None', markersize=sizes[sz] / 5.) \
+               for sz in szlist] 
+    sizes_labels = [r'percentile %.0f'%(sz) for sz in szlist]
+    
+    lax.axis('off')
+    lax.legend(markers_handles + colors_handles + sizes_handles,\
+               markers_labels  + colors_labels  + sizes_labels,\
+               fontsize=fontsize, loc='upper center', ncol=2)
+    
+    plt.savefig(fdir + bparfit[:-4] + '.pdf', format='pdf', bbox_inches='tight')    
     
 ###############################################################################
 #                  nice plots for the paper: simplified                       #
