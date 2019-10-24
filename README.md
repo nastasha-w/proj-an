@@ -5,7 +5,7 @@ code and scripts for making 2D projected maps from SPH simulations (Eagle and so
 main files for making projections:
 ---------------------------------------------------------------------------------------------------
 make_maps_v3_master contains code for projecting Eagle data into 2d maps
-it dpeends on some of the files here, and most of the other focus on analysis of these 2D maps,
+it depends on some of the files here, and most of the other focus on analysis of these 2D maps,
 sometimes in combination with other data (specwizard outputs or halo catalogues)
 
 --------------------------------------------------------------------------------------------------
