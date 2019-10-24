@@ -3020,10 +3020,68 @@ def readbasic(vardict, quantity, excludeSFR, last=True, **kwargs):
 
 
 
-def project(NumPart, Ls, Axis1, Axis2, Axis3, box3, periodic, npix_x, npix_y, kernel, dct, tree, ompproj=True, projmin=None, projmax=None):
+def project(NumPart, Ls, Axis1, Axis2, Axis3, box3, periodic, npix_x, npix_y,\
+            kernel, dct, tree, ompproj=True, projmin=None, projmax=None):
     '''
-    dct must be a dictionary containing arrays 'coords', 'lsmooth', 'qW', 'qQ' (prevents copying of large arrays)
-    projmin, projmax: maximum coordinate values in projection direction (override default values in Ls)
+    input:
+    --------------------------------------------------------------------------
+    - NumPart: number of SPH particles to project (int)
+    - Ls:      dimensions (diameter) of the box to project (same units as 
+               coordinates)
+               length 3, indexable
+    - Axis<i>: for Ls and coordinates, these variables control which axis is 
+               the the projection axis (Axis3), and the orientation of the 
+               other two. For a z-projection with a resulting array 
+               (X index, Y index), use Axis1=0, Axis2=1, Axis3=2
+    - box3:    the dimensions of the parent box (same units as Ls)
+               length 3, indexable
+    - periodic: is the projected region (perpendicular to the line of sight) a
+               full slice of a periodic simulation (gas distributions at the 
+               edges should be wrapped around the box), or a smaller part of 
+               the simulation (gas contributions outside the projected region 
+               edges should be ignored)
+    - npix_x,y: how many pixels to use in the Axis1 and Axis2 directions, 
+               respectively. Note that the minimum smoothing length is set to 
+               the pixel diagonal, so very non-square pixels won't actually add
+               much resolution in the higher-resolution direction.
+               integers
+    - kernel:  what shape to assume for the gas distribution respresented by a 
+               single SPH particle 
+               'C2' or 'gadget'
+    - dct must be a dictionary containing arrays 
+      'coords', 'lsmooth', 'qW', 'qQ' (prevents copying of large arrays)
+      o 'coords': coordinates, (Numpart, 3) array. Coordinates should be 
+                  transformed so that the projected region is a 
+                  [-Ls[0] / 2., Ls[0] / 2.,\
+                   -Ls[1] / 2., Ls[1] / 2.,\
+                   -Ls[2] / 2., Ls[2] / 2. ]
+                  box (if not perdiodic) or
+                  [0., Ls[0], 0., Ls[1], 0., Ls[2]] if it is.
+                  (The reason for this assumption in the periodic case is that 
+                  it makes it easy to determine when something needs to be 
+                  wrapped around the edge, and for the non-periodic case, it 
+                  allows the code to ignore periodic conditions even though the
+                  simulations are periodic and the selected region could 
+                  therefore in principle require wrapping.)
+      o 'lsmooth': gas smoothing lengths (same units as coords)
+      o 'qW':     the array containing the particle property to directly,
+                  project, and to weight qQ by
+      o 'qQ':     the array to get a qW-weighted average for in eahc pizel
+    - projmin, projmax: maximum coordinate values in projection direction
+              (override default values in Ls; I put this in for a specific
+              application)
+              
+    returns:
+    --------------------------------------------------------------------------
+    (ResultW, ResultQ) : tuple of npix_x, npix_y arrays (float32)
+    - ResultW: qW projected onto the grid. The array contains the sum of qW 
+               contributions to each pixel, not a qW surface density.
+               the sums of ResultW and qW shoudl be the same to floating-point 
+               errors when projecting a whole simulation, but apparent mass 
+               loss in the projection may occur when projecting smaller 
+               regions, where some particles in the qW array are (partially) 
+               outside the projected region
+    - ResultQ: qW-weighted average of qQ in each pixel
     '''
 
     # positions [Mpc / cm/s], kernel sizes [Mpc] and input quantities
@@ -3035,13 +3093,13 @@ def project(NumPart, Ls, Axis1, Axis2, Axis3, box3, periodic, npix_x, npix_y, ke
         qQ = dct['qQ'].astype(np.float32)
 
     else:
-        qQ = np.zeros((100,),dtype = np.float32)
+        qQ = np.zeros((100,), dtype=np.float32)
         qQ[:NumPart] = dct['qQ'].astype(np.float32)
-        qW = np.zeros((100,),dtype = np.float32)
+        qW = np.zeros((100,), dtype=np.float32)
         qW[:NumPart] = dct['qW'].astype(np.float32)
-        Hsml = np.zeros((100,),dtype = np.float32)
+        Hsml = np.zeros((100,), dtype=np.float32)
         Hsml[:NumPart] = dct['lsmooth'].astype(np.float32)
-        pos = np.ones((100,3),dtype = np.float32)*1e8 #should put the particles outside any EAGLE projection region
+        pos = np.ones((100,3), dtype=np.float32) * 1e8  #should put the particles outside any EAGLE projection region
         pos[:NumPart,:] = dct['coords'].astype(np.float32)
         NumPart = 100
 
