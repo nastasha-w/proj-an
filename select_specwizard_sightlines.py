@@ -1292,6 +1292,7 @@ def generate_unisample(samplename='sample3'):
         # (number of bins needs to be fixed to guarantee divisibility by the number of cores specwizard is run on)
     
     elif samplename == 'sample7':  
+        losdir = '/cosma/home/dp004/dc-wije1/specwizard/Ali_Spec_src/los/'
         # sample for the z=0.5 O7/O8-selected specwizard run for EW from column density
         file1 = '/cosma5/data/dp004/dc-wije1/line_em_abs/temp/coldens_o7_L0100N1504_23_test3.31_PtAb_C2Sm_32000pix_25.0slice_zcen-sum_z-projection_T4EOS_totalbox.npz'
         file2 = '/cosma5/data/dp004/dc-wije1/line_em_abs/temp/coldens_o8_L0100N1504_23_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-sum_z-projection_T4EOS_totalbox.npz'
