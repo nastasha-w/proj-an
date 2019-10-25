@@ -1249,5 +1249,166 @@ def getmatch_2dprojections_sample3():
     return outfilename
 
 
+def generate_unisample(samplename='sample3'):
+    if samplename == 'sample3':
+        # sample for the z=0.1 O6/O7/O8-selected specwizard run for EW from column density (sample3)
+        file1 = '/cosma5/data/dp004/dc-wije1/line_em_abs/temp/coldens_o7_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-sum_T4SFR_totalbox.npz'
+        file2 = '/cosma5/data/dp004/dc-wije1/line_em_abs/temp/coldens_o8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-sum_T4SFR_totalbox.npz'
+        file3 = '/cosma5/data/dp004/dc-wije1/line_em_abs/temp/coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-sum_z-projection_T4EOS_totalbox.npz'
+        data1 = np.load(file1)['arr_0']
+        data2 = np.load(file2)['arr_0']
+        data3 = np.load(file3)['arr_0']
+        name = 'los_sample3_o6-o7-o8_L0100N1504'
+    
+        datas = [data1, data2, data3]
+        files = [file1, file2, file3]
+        maxcols = [np.max(data) for data in datas]
+        mincols = [13., 13., 13.]
+        numbins = 128
+        sightlines_per_bin = 128
+        numpix = 32000 #used to convert index -> position
+        
+        maxaddtobin = sightlines_per_bin # max number of remainder sightlines to add to a single bin (first round) 
+        # (number of bins needs to be fixed to guarantee divisibility by the number of cores specwizard is run on)
+    elif samplename == 'sample6':
+        losdir = '/net/luttero/data2/specwizard_data/sample6/' # changed output directory for Leiden
+        file1 = '/net/quasar/data2/wijers/temp/coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-sum_T4SFR_totalbox.npz'
+        file2 = '/net/quasar/data2/wijers/temp/coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-sum_z-projection_T4EOS_totalbox.npz'
+        file3 = '/net/quasar/data2/wijers/temp/coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-sum_z-projection_T4EOS_totalbox.npz'
+        data1 = np.load(file1)['arr_0']
+        data2 = np.load(file2)['arr_0']
+        data3 = np.load(file3)['arr_0']
+        name = 'los_sample6_ne8-ne9-fe17_L0100N1504'
+    
+        datas = [data1, data2, data3]
+        files = [file1, file2, file3]
+        maxcols = [np.max(data) for data in datas]
+        mincols = [13., 13., 13.]
+        numbins = 128
+        sightlines_per_bin = 128
+        numpix = 32000 #used to convert index -> position
+        
+        maxaddtobin = sightlines_per_bin # max number of remainder sightlines to add to a single bin (first round) 
+        # (number of bins needs to be fixed to guarantee divisibility by the number of cores specwizard is run on)
+    
+    elif samplename == 'sample7':  
+        # sample for the z=0.5 O7/O8-selected specwizard run for EW from column density
+        file1 = '/cosma5/data/dp004/dc-wije1/line_em_abs/temp/coldens_o7_L0100N1504_23_test3.31_PtAb_C2Sm_32000pix_25.0slice_zcen-sum_z-projection_T4EOS_totalbox.npz'
+        file2 = '/cosma5/data/dp004/dc-wije1/line_em_abs/temp/coldens_o8_L0100N1504_23_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-sum_z-projection_T4EOS_totalbox.npz'
+        data1 = np.load(file1)['arr_0']
+        data2 = np.load(file2)['arr_0']
+        name = 'los_sample7_o7-o8_L0100N1504'
+    
+        datas = [data1, data2]
+        files = [file1, file2]
+        maxcols = [np.max(data) for data in datas]
+        mincols = [13., 13.]
+        numbins = 128
+        sightlines_per_bin = 128
+        numpix = 32000 #used to convert index -> position
 
+
+    # below this line: everything should allow modification of the above, including number of data sets
+    numions = len(datas)
+    if numbins*sightlines_per_bin > numpix**2:
+        print('You cannot select %i sightlines from a sample of %i pixels.'%(numbins*sightlines_per_bin, numpix**2))
+        return None
+    binss = [np.arange(mincols[i],1.001*maxcols[i],(1.0001*maxcols[i]-mincols[i])/float(numbins)) for i in range(numions)] # generate numbins+1 edges values -> numbins bins
+    # store metadata
+    mdfile = h5py.File(losdir + name + '_data.hdf5', 'w')
+    header = mdfile.create_group('Header')
+    header.attrs.create('input_files', np.array(files))
+    header.attrs.create('los_file', losdir + name + '.txt')
+    header.attrs.create('numbins', numbins)
+    header.attrs.create('total_sightlines_per_bin', sightlines_per_bin)
+    header.attrs.create('min_values', mincols)
+    header.attrs.create('max_values', maxcols)
+    header.attrs.create('numpix', numpix)   
+    header.create_dataset('bins', data = binss)
+
+    binindss = [np.digitize(datas[i],binss[i]) for i in range(len(datas))]
+    indslist = [[np.array(np.where(binindss[dataind] == i+1)).T for i in range(numbins)] for dataind in range(numions)]
+    indslist = [[ indslist[dataind][binind][:,0]*numpix + indslist[dataind][binind][:,1] for binind in range(numbins)] for dataind in range(numions)] #set cannot contain arrays -> change to tuples in innermost nest; list of flattened indices corresponding in each bin for each ion
+    del binindss
+    chosen = set()
+    chosens = [set() for data in datas]
+    #bins_allchosen = [[] for dataind in range(len(datas))] # track where the sampling is complete for each data set
+        
+    sightlines_per_bin_per_ion = sightlines_per_bin/numions #any remainder here goed into the remainder accounting
+    final_sample_size = numbins*sightlines_per_bin
+    collected_sample_size = len(chosen)
+    sightlines_per_ion = final_sample_size/numions 
+    maxaddtobin = sightlines_per_bin_per_ion
+
+    doselectionloop = True
+    while(doselectionloop):
+        # outer loop: over ions, independent of each other
+        for dataind in range(numions):
+            print("Doing file %i"%dataind)
+            remainder_ion = sightlines_per_ion - numbins*sightlines_per_bin_per_ion 
+            print("initial remainder: %i"%remainder_ion)
+            for binind in range(numbins-1,-1,-1): 
+                sample_bin = set(indslist[dataind][binind]) - chosens[dataind]  # sightlines in this bin that have not been selected yet for this ion
+                targetnumsightlines_sub = sightlines_per_bin_per_ion + min(remainder_ion, maxaddtobin) # number of sightlines we want from this bin   
+                if targetnumsightlines_sub == 0: # on non-first loops: remainder used up, no baseline number to select
+                    print('Out of sightlines for file %i'%dataind)
+                    break      
+                # if the bin only has a small number of sightlines, use them all
+                if len(sample_bin) <= targetnumsightlines_sub:
+                    chosens[dataind] |= sample_bin
+                    remainder_ion += sightlines_per_bin_per_ion - len(sample_bin) # negative difference if some of the new sightlines are coming out of the remainder
+                # otherwise, take a random sample
+                else:
+                    sample_temp = set(random.sample(sample_bin,targetnumsightlines_sub))
+                    chosens[dataind] |= sample_temp
+                    remainder_ion += sightlines_per_bin_per_ion - targetnumsightlines_sub # negative difference if some of the new sightlines are coming out of the remainder
+            print("final remainder: %i"%remainder_ion)
+        # get total sample set, check size
+        for sub in chosens: 
+            chosen |= sub
+        collected_sample_size = len(chosen)
+        remainder_total = final_sample_size - collected_sample_size
+        print("Total remainder: %i"%remainder_total)
+        # as long as there is enough to divide over the ions uniformly, redo the bin loop
+        if remainder_total > numions-1: # can still divide more of the sightlines
+            sightlines_per_ion = remainder_total/numions
+            sightlines_per_bin_per_ion = sightlines_per_ion/numbins # may be zero: in this case, just the remainder is divided up
+            maxaddtobin = max(sightlines_per_bin_per_ion, 1) #if sightlines_per_bin_per_ion=0, still want to add to bins
+        else: # end the while loop
+            doselectionloop = False  
+
+    # if there is a remainder left, just add some random sightlines
+    if remainder_total > 0:
+        notchosen = set([indslist[0][binind] for binind in range(numbins)]) - chosen
+        chosen_remainder = random.sample(notchosen,remainder_total)
+    else:
+        chosen_remainder = set()
+
+    chosens = [np.array(list(chosen_sub)) for chosen_sub in chosens]
+    chosen = np.array(list(chosen))
+    chosen_remainder = np.array(list(chosen_remainder))
+    # save metadata
+    selection = mdfile.create_group('Selection') 
+    for i in range(numions):
+        group = mdfile.create_group('Selection/file%i'%i)
+        group.attrs.create('filename', files[i])
+        group.create_dataset('bins',data = binss[i])
+        group.create_dataset('selected_pixels_thision', data=np.array([chosens[i]/numpix,chosens[i]%numpix]).T)
+        group.create_dataset('selected_values_thision', data=np.array([datas[i][ch/numpix,ch%numpix] for ch in chosens[i]]))
+        group.create_dataset('selected_values_allions', data=np.array([datas[i][ch/numpix,ch%numpix] for ch in chosen]))
+        group.create_dataset('sample_pixels_per_bin', data=np.array([len(indslist[i][binind]) for binind in range(numbins)]))    
+    selection.create_dataset('selected_pixels_allions', data=np.array([chosen/numpix,chosen%numpix]).T)
+    group = mdfile.create_group('Selection/remainder')
+    group.create_dataset('selected_pixels', data=np.array([chosen_remainder/numpix,chosen_remainder%numpix]).T)  
+    mdfile.close()
+    
+    # make los file for specwizard
+    fil = open(losdir + name + '.txt','w')
+    fil.write('%i\n'%(len(chosen)))
+    chosen = list(chosen)
+    for i in range(len(chosen)):
+        fil.write('%f\t%f\t0\n'%((chosen[i]/numpix+0.5)/(float(numpix)), (chosen[i]%numpix+0.5)/(float(numpix)))) 
+    fil.close()
+
+    return None
     
