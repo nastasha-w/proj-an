@@ -3127,7 +3127,7 @@ def project(NumPart, Ls, Axis1, Axis2, Axis3, box3, periodic, npix_x, npix_y,\
             Zmax = projmax
 
     else: # half box centered (BoxSize used for x-y periodic boundary conditions)
-        Xmin, Ymin = (0.,)*2
+        Xmin, Ymin = (0.,) * 2
         Xmax, Ymax = (box3[Axis1], box3[Axis2])
         if projmin is None:
             Zmin = 0.5 * (box3[Axis3] - Ls[Axis3])
@@ -3141,7 +3141,7 @@ def project(NumPart, Ls, Axis1, Axis2, Axis3, box3, periodic, npix_x, npix_y,\
     BoxSize = box3[Axis1]
 
     # maximum kernel size [Mpc] (modified from Marijke's version)
-    Hmax = 0.5*min(Ls[Axis1],Ls[Axis2]) # Axis3 might be velocity; whole different units, so just ignore
+    Hmax = 0.5 * min(Ls[Axis1],Ls[Axis2]) # Axis3 might be velocity; whole different units, so just ignore
 
     # arrays to be filled with resulting maps
     ResultW = np.zeros((npix_x, npix_y)).astype(np.float32)
