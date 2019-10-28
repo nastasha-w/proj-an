@@ -1378,11 +1378,11 @@ def generate_unisample(samplename='sample3'):
             doselectionloop = False  # equivalent to break
 
     # if there is a remainder left, just add some random sightlines
-    if remainder_total > 0:
-        notchosen = set(np.arange(numpix**2)) - chosen
-        chosen_remainder = random.sample(notchosen, remainder_total)
-    else:
-        chosen_remainder = set()
+    chosen_remainder = set()
+    while(remainder_total > 0):
+        add = set(np.random.choice(numpix**2, remainder_total))
+        chosen_remainder |= add - chosen
+        remainder_total -= len(chosen_remainder)
     chosen |= chosen_remainder
 
     chosens = [np.array(list(chosen_sub)) for chosen_sub in chosens]

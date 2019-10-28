@@ -154,6 +154,7 @@ class ParticleQuantity:
         
     def __repr__(self):
         return 'ParticleQuantity %s; derived: %s,\nsettings: %s'%(self.name, self.derived, self.settings)
+    
     def __str__(self):
         return 'ParticleQuantity %s'%(self.name)
     
@@ -187,7 +188,7 @@ class ParticleQuantity:
         try:
             del self.arr
         except AttributeError:
-            print('%s did not have an array read in'%self)
+            print('%s did not have an array read in'%(self))
         try:
             del self.tocgs
         except: # it doesn't really matter if one float is kept accidentally

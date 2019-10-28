@@ -733,7 +733,7 @@ def findiontables_bensgadget2(ion, z):
                                \n%s\n%s\nused for redshifts %s, %s around desired %s'%(file1, file2, z1, z2, z))
         logTK = logTK1 #np.average([logTK1, logTK2], axis=0)
         lognHcm3 = lognHcm31 #np.average([lognHcm31, lognHcm32], axis=1)
-        logionbal = w1 * ionbal1 + w2 * ionbal2
+        logionbal = np.log10(w1 * 10**ionbal1 + w2 * 10**ionbal2)
 
     return logionbal, lognHcm3, logTK
 
@@ -772,7 +772,7 @@ def find_ionbal_bensgadget2(z, ion, dct_nH_T):
     res = interpfunction(lognH.astype(np.float32),\
                logT.astype(np.float32),\
                ct.c_longlong(NumPart),\
-               np.ndarray.flatten(logionbal.astype(np.float32)),\
+               np.ndarray.flatten((10**logionbal).astype(np.float32)),\
                lognH_tab.astype(np.float32),\
                ct.c_int(len(lognH_tab)),\
                logTK_tab.astype(np.float32),\
@@ -784,8 +784,7 @@ def find_ionbal_bensgadget2(z, ion, dct_nH_T):
 
     if res != 0:
         raise RuntimeError('find_ionbal_bensgadget2: Something has gone wrong in the C function: output %s. \n'%str(res))
-    
-    inbalance = 10**inbalance
+        
     inbalance[inbalance == table_zeroequiv] = 0.
     return inbalance
     
@@ -1642,7 +1641,7 @@ def translate(old_dct, old_nm, centre, boxsize, periodic):
 
 def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,\
                npix_x, L_x, L_y, L_z, centre, BoxSize, hconst,\
-               excludeSFRW, excludeSFRQ, velcut, sylviasshtables,\
+               excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,\
                axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, quantityW, quantityQ,\
                simulation, LsinMpc, halosel, kwargs_halosel, misc, hdf5):
     # some messiness is hard to avoid, but it's contained
@@ -1706,10 +1705,14 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,\
 
     if sylviasshtables and ptypeW == 'coldens':
         iontableindW = '_iontab-sylviasHM12shh'
+    elif bensgadget2tables and ptypeW == 'coldens':
+        iontableindW = '_iontab-bensgagdet2'
     else:
         iontableindW = ''
     if sylviasshtables and ptypeQ == 'coldens':
         iontableindQ = '_iontab-sylviasHM12shh'
+    elif bensgadget2tables and ptypeQ == 'coldens':
+        iontableindQ = '_iontab-bensgagdet2'
     else:
         iontableindQ = ''
     # abundances
@@ -1832,7 +1835,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          ionQ, abundsQ, quantityQ, ptypeQ,\
          excludeSFRW, excludeSFRQ, parttype,\
          theta, phi, psi, \
-         sylviasshtables,\
+         sylviasshtables, bensgadget2tables,\
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc,\
@@ -1843,7 +1846,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     This is not an exhaustive check; it does handle the default/auto options
     return numbers are not ordered; just search <return ##>
     '''
-    # max used number: 45
+    # max used number: 48
 
     # basic type and valid option checks
     if not isinstance(var, str):
@@ -1876,6 +1879,18 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         if ionW == 'hneutralssh' or ionQ == 'hneutralssh':
             print("Neutral hydrogen is not currenty available from Sylvia's tables")
             return 36
+    if not isinstance(bensgadget2tables, bool):
+        print('bensgadget2tables should be True or False.\n')
+        return 46
+    elif bensgadget2tables:
+        if not (ptypeW == 'coldens' or ptypeQ == 'coldens'):
+            print('Warning: setting for ion tables will not be used in this calculation; only absorption is available')
+        if ionW == 'hneutralssh' or ionQ == 'hneutralssh':
+            print("Neutral hydrogen is not currenty available from Ben's gadget 2 tables")
+            return 47
+    if sylviasshtables and bensgadget2tables:
+        print('Cannot use both sylviasshtables and bensgadget2tables; choose one')
+        return 48
     if not isinstance(saveres, bool):
         print('saveres should be True or False.\n')
         return 14
@@ -2177,7 +2192,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          ionQ, abundsQ, quantityQ, ptypeQ,\
          excludeSFRW, excludeSFRQ, parttype,\
          theta, phi, psi, \
-         sylviasshtables,\
+         sylviasshtables, bensgadget2tables,\
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
@@ -2743,7 +2758,8 @@ def lumninosty_to_Sb(vardict, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ion):
 
 
 
-def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False, last=True, updatesel=True, misc=None):
+def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,\
+              last=True, updatesel=True, misc=None, bensgadget2tables=False):
     '''
     When using Sylvia's tables, smoothed/particle/fixed metallicities match the choice for element abundance
     '''
@@ -2808,6 +2824,8 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False, last=
                 vardict.delif('logZ', last=True)
             else:
                 vardict.delif('logZ', last=last)
+        elif bensgadget2tables: # same data as the default tables from Serena Bertone
+            vardict.add_part('ionfrac', find_ionbal_bensgadget2(vardict.simfile.z, ion, vardict.particle))
         else:
             vardict.add_part('ionfrac', find_ionbal(vardict.simfile.z, ion, vardict.particle))
         vardict.delif('lognH', last=last)
@@ -3499,7 +3517,7 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,\
          ionQ, abundsQ, quantityQ, ptypeQ,\
          excludeSFRW, excludeSFRQ, parttype,\
          theta, phi, psi, \
-         sylviasshtables,\
+         sylviasshtables, bensgadget2tables,\
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
@@ -3548,6 +3566,7 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,\
         saveattr(hed, 'ompproj', ompproj)
         saveattr(hed, 'numslices', numslices)
         saveattr(hed, 'sylviasshtables', sylviasshtables)
+        saveattr(hed, 'bensgadget2tables', bensgadget2tables)
         saveattr(hed, 'theta', theta)
         saveattr(hed, 'phi', phi)
         saveattr(hed, 'psi', psi)
@@ -3596,7 +3615,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          ionQ=None, abundsQ='auto', quantityQ=None, ptypeQ=None,\
          excludeSFRW=False, excludeSFRQ=False, parttype='0',\
          theta=0.0, phi=0.0, psi=0.0, \
-         sylviasshtables=False,\
+         sylviasshtables=False, bensgadget2tables=False,\
          var='auto', axis='z',log=True, velcut=False,\
          periodic=True, kernel='C2', saveres=False,\
          simulation='eagle', LsinMpc=None,\
@@ -3776,6 +3795,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                do set OMP_NUM_THREADS in the shell to restrict the number of
                threads if you use the multithreading implementation on a shared 
                system
+               boolean
     sylviasshtables: use Sylvia's tables to calculate ion fractions. These
                assume an HM12 UV/X-ray background and use a newer Cloudy,
                version, compared to EAGLE's HM01 and older CLoudy cooling
@@ -3784,6 +3804,16 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                for realistic low ion properties
                These tables also contain a number of ions for which older 
                tables are not available
+               boolean
+    bensgadget2tables: use Ben's tables made for work on Gadegt-2 simulations 
+               to calculate ion fractions; these are made under the same 
+               assumptions (HM01 UV/X-ray background, solar Z), but with a 
+               newer cloudy version, than the default tables from Serena 
+               Bertone that are consistent with Eagle cooling.
+               These tables exist for a limited number of ions, but include
+               O I - VIII.
+               boolean
+               
     --------
      output
     --------
@@ -3828,7 +3858,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          ionQ, abundsQ, quantityQ, ptypeQ,\
          excludeSFRW, excludeSFRQ, parttype,\
          theta, phi, psi, \
-         sylviasshtables,\
+         sylviasshtables, bensgadget2tables,\
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc,\
@@ -3842,7 +3872,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          ionQ, abundsQ, quantityQ, ptypeQ,\
          excludeSFRW, excludeSFRQ, parttype,\
          theta, phi, psi, \
-         sylviasshtables,\
+         sylviasshtables, bensgadget2tables,\
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
@@ -3861,8 +3891,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                           %(ptypeW,   ionW,   abundsW,   quantityW,   excludeSFRW,   iseltW))
     print((':\t%s\t'.join(['ptypeQ', 'ionQ', 'abundsQ', 'quantityQ', 'excludeSFRQ', 'iseltQ', '']))\
                           %(ptypeQ,   ionQ,   abundsQ,   quantityQ,   excludeSFRQ,   iseltQ))
-    print((':\t%s\t'.join(['log', 'sylviasshtables', 'saveres', 'ompproj', 'hdf5', '']))\
-                          %(log,   sylviasshtables,   saveres,   ompproj,   hdf5))
+    print((':\t%s\t'.join(['log', 'sylviasshtables', 'bensgadget2tables','saveres', 'ompproj', 'hdf5', '']))\
+                          %(log,   sylviasshtables,   bensgadget2tables,  saveres,   ompproj,   hdf5))
     print((':\t%s\t'.join(['halosel', 'kwargs_halosel', '']))\
                           %(halosel,  kwargs_halosel))
     print((':\t%s\t'.join(['override_simdatapath', '']))\
@@ -3961,13 +3991,13 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     vardict_temp = pc.Vardict(simfile, parttype, []) #argument needed in selecthalos; only the naming and some input checks are called here, only simfile properties are used for those
     resfile = nameoutput(vardict_temp, ptypeW, simnum, snapnum, version, kernel,\
                          npix_x, L_x, L_y, L_z, centre, simfile.boxsize, simfile.h,\
-                         excludeSFRW, excludeSFRQ, velcut, sylviasshtables,
+                         excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,\
                          axis, var, abundsW, ionW, parttype, None, abundsQ, ionQ, quantityW, quantityQ,\
                          simulation, LsinMpc, halosel, kwargs_halosel, misc, hdf5)
     if ptypeQ !=None:
         resfile2 = nameoutput(vardict_temp, ptypeW, simnum, snapnum, version, kernel,\
                               npix_x, L_x, L_y, L_z, centre, simfile.boxsize, simfile.h,\
-                              excludeSFRW, excludeSFRQ, velcut, sylviasshtables,
+                              excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,\
                               axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, quantityW, quantityQ,\
                               simulation, LsinMpc, halosel, kwargs_halosel, misc, hdf5)
     del vardict_temp
@@ -4073,50 +4103,54 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         multipafterW = Nion_to_coldens(vardict_WQ,Ls,Axis1,Axis2,Axis3,npix_x,npix_y)*vardict_WQ.CGSconv[quantityW]
 
     elif ptypeW == 'coldens' and not iseltW:
-        if ionW in ['h1ssh', 'hmolssh', 'hneutralssh'] and not sylviasshtables:
+        if ionW in ['h1ssh', 'hmolssh', 'hneutralssh'] and not (sylviasshtables or bensgadget2tables):
             qW, multipafterW = Nion_calc_ssh(vardict_WQ, excludeSFRW, habW, ionW, last=True, updatesel=True, misc=misc)
         else:
-            qW, multipafterW = Nion_calc(vardict_WQ, excludeSFRW, eltabW, habW, ionW, sylviasshtables=sylviasshtables, last=last, updatesel=True, misc=misc,)
+            qW, multipafterW = Nion_calc(vardict_WQ, excludeSFRW, eltabW, habW, ionW,\
+                                         sylviasshtables=sylviasshtables, bensgadget2tables=bensgadget2tables,\
+                                         last=last, updatesel=True, misc=misc,)
         multipafterW *= Nion_to_coldens(vardict_WQ,Ls,Axis1,Axis2,Axis3,npix_x,npix_y)
     elif ptypeW == 'coldens' and iseltW:
-        qW, multipafterW = Nelt_calc(vardict_WQ,excludeSFRW,eltabW,ionW,last=last,updatesel=True)
-        multipafterW *= Nion_to_coldens(vardict_WQ,Ls,Axis1,Axis2,Axis3,npix_x,npix_y)
+        qW, multipafterW = Nelt_calc(vardict_WQ, excludeSFRW, eltabW, ionW, last=last, updatesel=True)
+        multipafterW *= Nion_to_coldens(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y)
 
     elif ptypeW == 'emission' and excludeSFRW != 'from':
-        qW, multipafterW = luminosity_calc(vardict_WQ,excludeSFRW,eltabW,habW,ionW,last=last,updatesel=True)
-        multipafterW *= lumninosty_to_Sb(vardict_WQ,Ls,Axis1,Axis2,Axis3,npix_x,npix_y,ionW)
+        qW, multipafterW = luminosity_calc(vardict_WQ, excludeSFRW, eltabW, habW, ionW, last=last, updatesel=True)
+        multipafterW *= lumninosty_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
     elif ptypeW == 'emission' and excludeSFRW == 'from':
         if ionW == 'halpha':
-            qW, multipafterW = luminosity_calc_halpha_fromSFR(vardict_WQ,excludeSFRW,last=last,updatesel=True)
-        multipafterW *= lumninosty_to_Sb(vardict_WQ,Ls,Axis1,Axis2,Axis3,npix_x,npix_y,ionW)
+            qW, multipafterW = luminosity_calc_halpha_fromSFR(vardict_WQ, excludeSFRW, last=last, updatesel=True)
+        multipafterW *= lumninosty_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
 
 
     if ptypeQ == 'basic':
-        readbasic(vardict_WQ,quantityQ,excludeSFRQ,last = True)
+        readbasic(vardict_WQ, quantityQ, excludeSFRQ, last=True)
         qQ  = vardict_WQ.particle[quantityQ]
         multipafterQ = vardict_WQ.CGSconv[quantityQ]
 
     elif ptypeQ == 'coldens' and not iseltQ:
-        if ionQ in ['h1ssh', 'hmolssh', 'hneutralssh'] and not sylviasshtables:
+        if ionQ in ['h1ssh', 'hmolssh', 'hneutralssh'] and not (sylviasshtables or bensgadget2tables):
             qQ, multipafterQ = Nion_calc_ssh(vardict_WQ, excludeSFRQ, habQ, ionQ, last=True, updatesel=False, misc=misc)
         else:
-            qQ, multipafterQ = Nion_calc(vardict_WQ, excludeSFRQ, eltabQ, habQ, ionQ, sylviasshtables=sylviasshtables, last=True, updatesel=False, misc=misc)
-        multipafterQ *= Nion_to_coldens(vardict_WQ,Ls,Axis1,Axis2,Axis3,npix_x,npix_y)
+            qQ, multipafterQ = Nion_calc(vardict_WQ, excludeSFRQ, eltabQ, habQ, ionQ,\
+                                         sylviasshtables=sylviasshtables, bensgadget2tables=bensgadget2tables,\
+                                         last=True, updatesel=False, misc=misc)
+        multipafterQ *= Nion_to_coldens(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y)
     elif ptypeQ == 'coldens' and iseltQ:
-        qQ, multipafterQ = Nelt_calc(vardict_WQ,excludeSFRQ,eltabQ,ionQ,last=True,updatesel=False)
-        multipafterQ *= Nion_to_coldens(vardict_WQ,Ls,Axis1,Axis2,Axis3,npix_x,npix_y)
+        qQ, multipafterQ = Nelt_calc(vardict_WQ, excludeSFRQ, eltabQ, ionQ, last=True, updatesel=False)
+        multipafterQ *= Nion_to_coldens(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y)
 
     elif ptypeQ == 'emission' and excludeSFRQ != 'from':
-        qQ, multipafterQ = luminosity_calc(vardict_WQ,excludeSFRQ,eltabQ,habQ,ionQ,last=True,updatesel=False)
-        multipafterQ *= lumninosty_to_Sb(vardict_WQ,Ls,Axis1,Axis2,Axis3,npix_x,npix_y,ionW)
+        qQ, multipafterQ = luminosity_calc(vardict_WQ, excludeSFRQ, eltabQ, habQ, ionQ, last=True, updatesel=False)
+        multipafterQ *= lumninosty_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
     elif ptypeQ == 'emission' and excludeSFRQ == 'from':
         if ionQ == 'halpha':
-            qQ, multipafterQ = luminosity_calc_halpha_fromSFR(vardict_WQ,excludeSFRQ,last=True,updatesel=False)
-        multipafterQ *= lumninosty_to_Sb(vardict_WQ,Ls,Axis1,Axis2,Axis3,npix_x,npix_y,ionW)
+            qQ, multipafterQ = luminosity_calc_halpha_fromSFR(vardict_WQ, excludeSFRQ, last=True, updatesel=False)
+        multipafterQ *= lumninosty_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
 
     if velcut == False:
         vardict_WQ.readif('Coordinates',rawunits=True)
-        vardict_WQ.add_part('coords_cMpc-vel',vardict_WQ.particle['Coordinates']*simfile.h**-1)
+        vardict_WQ.add_part('coords_cMpc-vel', vardict_WQ.particle['Coordinates'] * simfile.h**-1)
         vardict_WQ.delif('Coordinates',last=True) # essentially, force delete
         translate(vardict_WQ.particle,'coords_cMpc-vel', vardict_WQ.box['centre'], vardict_WQ.box['box3'], periodic)
 
@@ -4188,7 +4222,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                  ionQ, abundsQ, quantityQ, ptypeQ,\
                                  excludeSFRW, excludeSFRQ, parttype,\
                                  theta, phi, psi, \
-                                 sylviasshtables,\
+                                 sylviasshtables, bensgadget2tables,\
                                  var, axis, log, velcut,\
                                  periodic, kernel, saveres,\
                                  simulation, LsinMpc, misc, ompproj, numslices,\
@@ -4205,7 +4239,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                  ionQ, abundsQ, quantityQ, ptypeQ,\
                                  excludeSFRW, excludeSFRQ, parttype,\
                                  theta, phi, psi, \
-                                 sylviasshtables,\
+                                 sylviasshtables, bensgadget2tables,\
                                  var, axis, log, velcut,\
                                  periodic, kernel, saveres,\
                                  simulation, LsinMpc, misc, ompproj, numslices,\
@@ -4229,7 +4263,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      ionQ, abundsQ, quantityQ, ptypeQ,\
                                      excludeSFRW, excludeSFRQ, parttype,\
                                      theta, phi, psi, \
-                                     sylviasshtables,\
+                                     sylviasshtables, bensgadget2tables,\
                                      var, axis, log, velcut,\
                                      periodic, kernel, saveres,\
                                      simulation, LsinMpc, misc, ompproj, numslices,\
@@ -4245,7 +4279,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      ionQ, abundsQ, quantityQ, ptypeQ,\
                                      excludeSFRW, excludeSFRQ, parttype,\
                                      theta, phi, psi, \
-                                     sylviasshtables,\
+                                     sylviasshtables, bensgadget2tables,\
                                      var, axis, log, velcut,\
                                      periodic, kernel, saveres,\
                                      simulation, LsinMpc, misc, ompproj, numslices,\
@@ -4298,14 +4332,14 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
 
                 subresfile = nameoutput(ptypeW, simnum, snapnum, version, kernel,\
                          npix_x, L_x_temp, L_y_temp, L_z_temp, centre_temp, simfile.boxsize, simfile.h,\
-                         excludeSFRW, excludeSFRQ, velcut, sylviasshtables,
+                         excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,\
                          axis, var, abundsW, ionW, parttype, None, abundsQ, ionQ, quantityW, quantityQ,\
                          simulation, LsinMpc, misc)
                 print('Saving W result to %s'%subresfile)
                 if ptypeQ !=None:
                     subresfile2 = nameoutput(ptypeW, simnum, snapnum, version, kernel,\
                               npix_x, L_x_temp, L_y_temp, L_z_temp, centre_temp, simfile.boxsize, simfile.h,\
-                              excludeSFRW, excludeSFRQ, velcut, sylviasshtables,
+                              excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,\
                               axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, quantityW, quantityQ,\
                               simulation, LsinMpc, misc)
                     print('Saving Q result to %s'%subresfile2)
@@ -4337,7 +4371,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      ionQ, abundsQ, quantityQ, ptypeQ,\
                                      excludeSFRW, excludeSFRQ, parttype,\
                                      theta, phi, psi, \
-                                     sylviasshtables,\
+                                     sylviasshtables, bensgadget2tables,\
                                      var, axis, log, velcut,\
                                      periodic, kernel, saveres,\
                                      simulation, LsinMpc, misc, ompproj, numslices,\
@@ -4353,7 +4387,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      ionQ, abundsQ, quantityQ, ptypeQ,\
                                      excludeSFRW, excludeSFRQ, parttype,\
                                      theta, phi, psi, \
-                                     sylviasshtables,\
+                                     sylviasshtables, bensgadget2tables,\
                                      var, axis, log, velcut,\
                                      periodic, kernel, saveres,\
                                      simulation, LsinMpc, misc, ompproj, numslices,\
@@ -4377,7 +4411,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                          ionQ, abundsQ, quantityQ, ptypeQ,\
                                          excludeSFRW, excludeSFRQ, parttype,\
                                          theta, phi, psi, \
-                                         sylviasshtables,\
+                                         sylviasshtables, bensgadget2tables,\
                                          var, axis, log, velcut,\
                                          periodic, kernel, saveres,\
                                          simulation, LsinMpc, misc, ompproj, numslices,\
@@ -4393,7 +4427,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                          ionQ, abundsQ, quantityQ, ptypeQ,\
                                          excludeSFRW, excludeSFRQ, parttype,\
                                          theta, phi, psi, \
-                                         sylviasshtables,\
+                                         sylviasshtables, bensgadget2tables,\
                                          var, axis, log, velcut,\
                                          periodic, kernel, saveres,\
                                          simulation, LsinMpc, misc, ompproj, numslices,\
@@ -4900,7 +4934,9 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
 
 
 
-def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, sylviasshtables=False, last=True, updatesel=False, misc=None, mdef='200c', allinR200c=True):
+def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity,\
+                    sylviasshtables=False, bensgadget2tables=False,\
+                    last=True, updatesel=False, misc=None, mdef='200c', allinR200c=True):
     '''
     just copied bits from make_map
     '''
@@ -4945,14 +4981,16 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, sylviassh
             multipafter = 1.
 
     elif ptype in ['Nion', 'Niondens'] and not iselt:
-        if ion in ['h1ssh', 'hmolssh', 'hneutralssh'] and not sylviasshtables:
+        if ion in ['h1ssh', 'hmolssh', 'hneutralssh'] and not (sylviasshtables or bensgadget2tables):
             q, multipafter = Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=last, updatesel=updatesel, misc=misc)
             if ptype == 'Niondens':
                 readbasic(vardict, 'ipropvol', excludeSFR, last=last)
                 q *= vardict.particle['ipropvol'] 
                 multipafter *= vardict.CGSconv['ipropvol']
         else:
-            q, multipafter = Nion_calc(vardict, excludeSFR, eltab, hab, ion, last=last, sylviasshtables=sylviasshtables, updatesel=updatesel, misc=misc)
+            q, multipafter = Nion_calc(vardict, excludeSFR, eltab, hab, ion, last=last,\
+                                       sylviasshtables=sylviasshtables, bensgadget2tables=bensgadget2tables,\
+                                       updatesel=updatesel, misc=misc)
             if ptype == 'Niondens':
                 readbasic(vardict, 'ipropvol', excludeSFR, last=last)
                 q *= vardict.particle['ipropvol'] 
@@ -5002,7 +5040,8 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                                simulation='eagle',\
                                excludeSFR=False, abunds=None, ion=None, parttype='0', quantity=None,\
                                axbins=0.2,\
-                               sylviasshtables=False, allinR200c=True, mdef='200c',\
+                               sylviasshtables=False, bensgadget2tables=False,\
+                               allinR200c=True, mdef='200c',\
                                L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
                                misc=None,\
                                name_append=None, logax=True, loghist=False,
@@ -5022,6 +5061,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
     parttype
     quantity
     sylviasshtables (only available as a choice to apply to all weights/axes)
+    bensgadget2tables (only available as a choice to apply to all weights/axes)
     misc
     L_x, L_Y, L_z, centre, Ls_in_Mpc: not currently implemented beyond input
         check and autonaming
@@ -5109,15 +5149,15 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
     print('parttype: \t%s \tsimnum: \t%s snapnum: \t%s \tvar: \t%s \tsimulation: \t%s'%(parttype, simnum, snapnum, var, simulation))
     print('L_x: \t%s \tL_y: \t%s \tL_z: \t%s \tcentre: \t%s \tLs_in_Mpc: \t%s'%(L_x, L_y, L_z, centre, Ls_in_Mpc))
     print('loghist: \t%s \tnameonly: \t%s \tname_append: \t%s'%(loghist, nameonly, name_append))
-    fillstr_particleprop = 'ptype: \t%s \texcludeSFR: \t%s \tabunds: \t%s \tion: \t%s \tquantity: \t%s\n\tsylviasshtables: \t%s \tallinR200c: \t%s mdef: \t%s'
+    fillstr_particleprop = 'ptype: \t%s \texcludeSFR: \t%s \tabunds: \t%s \tion: \t%s \tquantity: \t%s\n\tsylviasshtables: \t%s bensgadget2tables: \t%s\n\tallinR200c: \t%s\n\t%s mdef: \t%s'
     print('histogram weight:')
-    print(fillstr_particleprop%(ptype, excludeSFR, abunds, ion, quantity, sylviasshtables, allinR200c, mdef))
+    print(fillstr_particleprop%(ptype, excludeSFR, abunds, ion, quantity, sylviasshtables, bensgadget2tables, allinR200c, mdef))
     print('misc: %s'%(misc))
     print('histogram axes:')
     for axi in range(len(axesdct)):
         dct_temp = axesdct[axi]
         print('axis %i'%axi)
-        print(fillstr_particleprop%(dct_temp['ptype'], dct_temp['excludeSFR'], dct_temp['abunds'], dct_temp['ion'], dct_temp['quantity'], sylviasshtables, dct_temp['allinR200c'], dct_temp['mdef']))
+        print(fillstr_particleprop%(dct_temp['ptype'], dct_temp['excludeSFR'], dct_temp['abunds'], dct_temp['ion'], dct_temp['quantity'], sylviasshtables, bensgadget2tables, dct_temp['allinR200c'], dct_temp['mdef']))
         print('\taxbin: \t%s \tlogax: \t%s'%(axbins[axi] if hasattr(axbins, '__getitem__') else axbins, logax[axi]))
     
     useparticledata = ptype == 'halo'
@@ -5260,7 +5300,9 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
             
             axdata_t, multipafter_t = getparticledata(vardict, ptype_t, excludeSFR_t, abunds_t,\
                                                      ion_t, quantity_t,\
-                                                     sylviasshtables=sylviasshtables, last=True,\
+                                                     sylviasshtables=sylviasshtables,\
+                                                     bensgadget2tables=bensgadget2tables,\
+                                                     last=True,\
                                                      updatesel=False, misc=misc_t, mdef=mdef_t,\
                                                      allinR200c=allinR200c_t)
             
@@ -5339,6 +5381,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
             saveattr(grp, 'ion', ion_t)
             saveattr(grp, 'quantity', quantity_t)
             saveattr(grp, 'sylviasshtables', sylviasshtables)
+            saveattr(grp, 'bensgadget2tables', bensgadget2tables)
             saveattr(grp, 'misc', misc_t)
             saveattr(grp, 'mdef', mdef_t)
             saveattr(grp, 'allinR200c', allinR200c_t)
