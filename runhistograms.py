@@ -1585,7 +1585,32 @@ if jobind >= 176 and jobind <= 183:
                                misc=None,\
                                name_append=None, logax=True, loghist=False,
                                nameonly=False)
+
+if jobind == 184:   
+    fillsea = [str(float(i)) for i in (np.arange(16) / 16. + 1 / 32.) * 100.]
+
+    T_NO6_name_16_27 = ol.ndir_old + 'Temperature_T4EOS_coldens_o6_PtAb_T4EOS_L0100N1504_27_test3.3_C2Sm_32000pix_6.25slice_zcen%s_z-projection.npz'
+    NO6_name_16_27 = ol.ndir + 'coldens_o6_L0100N1504_27_test3.3_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz'
     
+    edgesNO6 = np.array([-np.inf] + list((np.arange(5)/4.*(0.0+40.) -40.)[:-1]) + list((np.arange(11)/10.*(10.-0.0) +0.0)[:-1]) + list(np.arange(71)/70.*(17.-10.) +10.))
+    edgesT_NO6 = np.array([-np.inf] + list((np.arange(6)/5.*(0.0+50.) -50.)[:-1]) + list((np.arange(6)/5.*(2.5-0.0) +0.0)[:-1]) + list(np.arange(66)/65.*(9.0-2.5) +2.5))
+    
+    #T_NO7_name_16_27 = ol.ndir_old + 'Temperature_T4EOS_coldens_o7_PtAb_T4EOS_L0100N1504_27_test3.1_C2Sm_32000pix_6.25slice_zcen%s_z-projection.npz'
+    NO7_name_16_27 = ol.ndir + 'coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz'
+    
+    edgesNO7 = np.array([-np.inf] + list((np.arange(4)/3.*(0.0 + 30.) - 30.)[:-1]) + list((np.arange(11)/10.*(10.-0.0) +0.0)[:-1]) + list(np.arange(81)/80.*(18.-10.) +10.))
+    #edgesT_NO7 = np.array(list((np.arange(6)/5.*(0.0+50.) -50.)[:-1]) + list((np.arange(6)/5.*(2.5-0.0) +0.0)[:-1]) + list(np.arange(66)/65.*(9.0-2.5) +2.5))
+
+    # min/max: (8.870864, 22.710325)
+    NH1_name_16_27 = ol.ndir + 'coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz'
+    edgesNH1 = edgesNH1 = np.array([-np.inf] + [8.0, 9.0, 10.0] + list(np.arange(11.0, 22.85, 0.1)))
+    
+    print('Doing EA100, 16 slices, (NO6, NO7, NH1, T_NO6)')
+    mh.makehist_fromnpz(NO6_name_16_27, NO7_name_16_27, NH1_name_16_27, T_NO6_name_16_27,\
+                    bins = [edgesNO6, edgesNO7, edgesNH1, edgesT_NO6],\
+                    dimlabels = ['NO6','NO7','NH1', 'Temperature_w_NO6'],\
+                    save=mh.pdir +'hist_coldens_o6-o7-hneutralssh_L0100N1504_27_test3.x_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_and_weighted_Temperature-NO6',\
+                    fills = fillsea)   
 ################################################
 ################# CDDFS ########################
 ################################################
