@@ -877,14 +877,17 @@ def plot_coldenscorr_Tion_v3(plotnum=1, ionT_split=6.0, nh1_split=13.0, nsig_ran
     
     # get percentiles from true histogram
     ax_histsum = 1 if ax_no7 > ax_no6 else 0
-    percentiles_lower = percentiles_from_histogram(hist_lower, edges_o7, axis=ax_histsum, percentiles=percentiles)
-    percentiles_upper = percentiles_from_histogram(hist_upper, edges_o7, axis=ax_histsum, percentiles=percentiles)
-    percentiles_lower = percentiles_from_histogram(hist_lower, edges_o7, axis=ax_histsum, percentiles=percentiles)
-    percentiles = percentiles_from_histogram(hist, edges_o7, axis=ax_histsum, percentiles=percentiles)
+    plotlim = 20
+    percentiles_all = percentiles_from_histogram(hist, edges_o7, axis=ax_histsum, percentiles=percentiles)
     cens_o6 = edges_o6[:-1] + 0.5 * np.diff(edges_o6)
-    plotwhere_lower = np.sum(hist_lower, axis=ax_histsum) >= 20
-    plotwhere_upper = np.sum(hist_upper, axis=ax_histsum) >= 20
-    plotwhere = np.sum(hist, axis=ax_histsum) >= 20
+    plotwhere = np.sum(hist, axis=ax_histsum) >= plotlim
+    
+    if splitax is not None:
+        percentiles_lower = percentiles_from_histogram(hist_lower, edges_o7, axis=ax_histsum, percentiles=percentiles)
+        percentiles_upper = percentiles_from_histogram(hist_upper, edges_o7, axis=ax_histsum, percentiles=percentiles)
+        
+        plotwhere_lower = np.sum(hist_lower, axis=ax_histsum) >= plotlim
+        plotwhere_upper = np.sum(hist_upper, axis=ax_histsum) >= plotlim
     
     # switch to density histogram
     if ax_no6 < ax_no7:
@@ -920,7 +923,7 @@ def plot_coldenscorr_Tion_v3(plotnum=1, ionT_split=6.0, nh1_split=13.0, nsig_ran
             ax.plot(cens_o6[plotwhere_upper], percentiles_upper[pind][plotwhere_upper], color=color_upper, linewidth=2., linestyle=linestyles[pind])
             ax.plot(cens_o6[plotwhere_lower], percentiles_lower[pind][plotwhere_lower], color=color_lower, linewidth=2., linestyle=linestyles[pind])
         else:
-            ax.plot(cens_o6[plotwhere], percentiles[pind][plotwhere], color=color_all, linewidth=2., linestyle=linestyles[pind])
+            ax.plot(cens_o6[plotwhere], percentiles_all[pind][plotwhere], color=color_all, linewidth=2., linestyle=linestyles[pind])
     # add lines for detection limits and measurements
     if plotnum == 1:
         ancolor = 'C2'
@@ -984,7 +987,7 @@ def plot_coldenscorr_Tion_v3(plotnum=1, ionT_split=6.0, nh1_split=13.0, nsig_ran
         lax.add_artist(leg1)
         lax.add_artist(leg2)
     else:
-        lax.legend(lcs, perclabels, handler_map={type(lc): HandlerDashedLines()}, fontsize=fontsize, ncol=1, loc='lower right', bbox_to_anchor=(1.0, 0.0), frameon=False)
+        lax.legend(lcs, perclabels, fontsize=fontsize, ncol=1, loc='lower right', bbox_to_anchor=(1.0, 0.0), frameon=False)
     #lax.axis('off')
    
     #lax = axes[1]
