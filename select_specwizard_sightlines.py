@@ -1417,12 +1417,13 @@ def plot_unisample(filen_hdf5):
     fontsize = 12 
     with h5py.File(filen_hdf5) as df:
     
-        filekeys = list(df.keys())
+        filekeys = list(df['Selection'].keys())
         ionkeys = [name if 'file' in name else None for name in filekeys]
         while None in ionkeys:
             ionkeys.remove(None)
-        
+
         nions = len(ionkeys)
+        plt.figure(figsize=(4.5 * nions, 4.))
         for keyi in range(nions):
             key = ionkeys[keyi]
             grp = df['Selection/%s'%key]
@@ -1440,7 +1441,7 @@ def plot_unisample(filen_hdf5):
             else:
                 ionn = ion
     
-            plt.subplot(keyi, nions, 1)
+            plt.subplot(1, nions, keyi + 1)
     
             plt.hist(_all, bins=bins, log=True, label='total %s selection'%ion, color='yellowgreen')
             plt.hist(_sel, bins=bins, log=True, label='%s selection by %s'%(ion, ion), color='green')
