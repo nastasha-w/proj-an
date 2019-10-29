@@ -4538,6 +4538,7 @@ def get3ddist(vardict, cen, last=True, trustcoords=False):
 def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
                               L_x, L_y, L_z, centre, LsinMpc, BoxSize, hconst, excludeSFR,\
                               abunds, ion, parttype, quantity,\
+                              sylviasshtables, bensgadget2tables,\
                               misc):
     # some messiness is hard to avoid, but it's contained
     # Ls and centre have not been converted to Mpc when this function is called
@@ -4604,9 +4605,15 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
         squantity = quantity
         squantity = squantity.replace('/','-')
 
-    
+    if sylviasshtables and ptype == 'coldens':
+        iontableind = '_iontab-sylviasHM12shh'
+    elif bensgadget2tables and ptype == 'coldens':
+        iontableind = '_iontab-bensgagdet2'
+    else:
+        iontableind = ''
+        
     if ptype in ['Nion', 'Niondens', 'Lumninosity', 'Lumdens']:
-        resfile = ol.ndir + 'particlehist_%s_%s_%s_%s_test%s_%s' %(ptype, ion , ssimnum, snapnum, str(version), sabunds) + boxstring + SFRind
+        resfile = ol.ndir + 'particlehist_%s_%s%s_%s_%s_test%s_%s' %(ptype, ion, iontableind, ssimnum, snapnum, str(version), sabunds) + boxstring + SFRind
     elif ptype == 'basic':
         resfile = ol.ndir + 'particlehist_%s%s_%s_%s_test%s' %(squantity, sparttype, ssimnum, snapnum, str(version)) + boxstring + SFRind
     elif ptype in ['halo', 'coords']:
@@ -4686,7 +4693,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
     dct: ptype, excludeSFR, abunds, ion, parttype, quantity, misc
     dct_defaults: same entries, use to set defaults in dct
     '''
-    # largest int used : 41
+    # largest int used : 46
     if 'ptype' in dct:
         ptype = dct['ptype']
     else:
@@ -4748,6 +4755,8 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
                 abunds[1] = abunds[0]
         dct['abunds'] = tuple(abunds)
         abunds = tuple(abunds)
+        
+        
     else: # ptype == basic or halo
         if 'quantity' not in dct.keys():
             print('For ptypes basic, halo, coords, quantity must be specified.\n')
@@ -4831,7 +4840,37 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
     if not isinstance(dct['allinR200c'], bool):
         print('allinR200c should be True or False')
         return 40
-        
+    # table set checks
+    if ptype in ['Nion', 'Niondens']:
+        if 'sylviasshtables' in dct.keys():
+            sylviasshtables = dct['sylviasshtables']
+        else:
+            sylviasshtables = dct_defaults['sylviasshtables']
+        if 'bensgadget2tables' in dct.keys():
+            bensgadget2tables = dct['bensgadget2tables']
+        else:
+            bensgadget2tables = dct_defaults['bensgadget2tables']
+        if not isinstance(sylviasshtables, bool):
+            print('sylviasshtables should be True or False')
+            return 42
+        if not isinstance(bensgadget2tables, bool):
+            print('bensgadget2tables should be True or False')
+            return 43
+        if sylviasshtables and bensgadget2tables:
+            print('only one table set of sylviasshtables and bensgadget2tables can be used')
+            return 44
+        if sylviasshtables and ion == 'hneutralssh':
+            print("Neutral hydrogen is not currenty available from Sylvia's tables")
+            return 45
+        if bensgadget2tables and ion not in ol.ion_list_bensgadget2tables:
+            print("%s is not available from Ben's gadget 2 tables"%(ion))
+            return 46
+        dct['sylviasshtables'] = sylviasshtables
+        dct['bensgadget2tables'] = bensgadget2tables
+    else:
+        dct['sylviasshtables'] = False
+        dct['bensgadget2tables'] = False
+                
     dct['parttype'] = parttype
     
     # make sure there is something to check for dct keys (might be None or useless)
@@ -4844,6 +4883,7 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
                               L_x, L_y, L_z, centre, LsinMpc,\
                               excludeSFR, abunds, ion, parttype, quantity,\
                               axesdct, axbins, allinR200c, mdef,\
+                              sylviasshtables, bensgadget2tables,\
                               misc):
 
     '''
@@ -4851,7 +4891,7 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
     This is not an exhaustive check; it does handle the default/auto options
     return numbers are not ordered; just search <return ##>
     '''
-    # max used number: 40
+    # max used number: 45
 
     # basic type and valid option checks
     if not isinstance(var, str):
@@ -4867,6 +4907,22 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
     if np.any([dct['ptype'] == 'coords' for dct in axesdct]) and centre is None:
         print('For ptype coords, a centre must be specified')
         return 40
+    
+    if not isinstance(sylviasshtables, bool):
+        print('syvliasshtables should be True or False')
+        return 41
+    elif sylviasshtables and not np.any([ptype in ['Nion', 'Niondens']] + [_dct['ptype'] in ['Nion', 'Niondens'] for _dct in axesdct]):
+        print('Warning: the option sylviasshtables only applies to ion numbers or densities; it will be ignored altogether here')
+        return 42
+    if not isinstance(bensgadget2tables, bool):
+        print('bensgadget2tables should be True or False')
+        return 43
+    elif bensgadget2tables and not np.any([ptype in ['Nion', 'Niondens']] + [_dct['ptype'] in ['Nion', 'Niondens'] for _dct in axesdct]):
+        print('Warning: the option bensgadget2tables only applies to ion numbers or densities; it will be ignored altogether here')
+        return 44
+    if bensgadget2tables and sylviasshtables:
+        print('Only one tale set of bensgadget2tables and sylviasshtables can be used')
+        return 45
     
     if not (L_x is None and L_y is None and L_z is None and centre is None):
         if (not isinstance(centre[0], num.Number)) or (not isinstance(centre[1], num.Number)) or (not isinstance(centre[2], num.Number)):
@@ -4916,7 +4972,8 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
 
     dct_defaults = {'ptype': ptype, 'excludeSFR': excludeSFR, 'abunds': abunds,\
                     'ion': ion, 'parttype': parttype, 'quantity': quantity,\
-                    'misc': misc, 'allinR200c': allinR200c, 'mdef': mdef}
+                    'misc': misc, 'allinR200c': allinR200c, 'mdef': mdef,\
+                    'sylviasshtables': sylviasshtables, 'bensgadget2tables': bensgadget2tables}
     dct_defaults, parttype = check_particlequantity(dct_defaults, {}, parttype, simulation)
     axesdct = [check_particlequantity(dct, dct_defaults, parttype, simulation)[0] for dct in axesdct]
     if np.any(np.array([isinstance(dct, int) for dct in axesdct])):
@@ -4929,6 +4986,7 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
                               L_x, L_y, L_z, centre, LsinMpc,\
                               dct_defaults['excludeSFR'], dct_defaults['abunds'], dct_defaults['ion'], dct_defaults['parttype'], dct_defaults['quantity'],\
                               axesdct, axbins, dct_defaults['allinR200c'], dct_defaults['mdef'],\
+                              dct_defaults['sylviasshtables'], dct_defaults['bensgadget2tables'],\
                               misc
 
 
@@ -5124,6 +5182,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                               L_x, L_y, L_z, centre, Ls_in_Mpc,\
                               excludeSFR, abunds, ion, parttype, quantity,\
                               axesdct, axbins, allinR200c, mdef,\
+                              sylviasshtables, bensgadget2tables,\
                               misc)
     if isinstance(res, int):
         print('Input error %i'%res)
@@ -5157,7 +5216,11 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
     for axi in range(len(axesdct)):
         dct_temp = axesdct[axi]
         print('axis %i'%axi)
-        print(fillstr_particleprop%(dct_temp['ptype'], dct_temp['excludeSFR'], dct_temp['abunds'], dct_temp['ion'], dct_temp['quantity'], sylviasshtables, bensgadget2tables, dct_temp['allinR200c'], dct_temp['mdef']))
+        print(fillstr_particleprop%(dct_temp['ptype'], dct_temp['excludeSFR'],\
+                                    dct_temp['abunds'], dct_temp['ion'],\
+                                    dct_temp['quantity'], dct_temp['sylviasshtables'],\
+                                    dct_temp['bensgadget2tables'], dct_temp['allinR200c'],\
+                                    dct_temp['mdef']))
         print('\taxbin: \t%s \tlogax: \t%s'%(axbins[axi] if hasattr(axbins, '__getitem__') else axbins, logax[axi]))
     
     useparticledata = ptype == 'halo'
@@ -5231,6 +5294,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
     outfilename = namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
                               L_x, L_y, L_z, centre, Ls_in_Mpc, simfile.boxsize, simfile.h, excludeSFR,\
                               abunds, ion, parttype, quantity,\
+                              sylviasshtables, bensgadget2tables,\
                               misc)
     axnames = [namehistogram_perparticle_axis(dct) for dct in axesdct]
     groupname = '_'.join(axnames) 
@@ -5296,12 +5360,20 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                 allinR200c_t = dct_t['allinR200c']
             else:
                 allinR200c_t = None
+            if 'sylviasshtables' in dct_t.keys():
+                sylviasshtables_t = dct_t['sylviasshtables']
+            else:
+                sylviasshtables_t = None
+            if 'bensgadget2tables' in dct_t.keys():
+                bensgadget2tables_t = dct_t['bensgadget2tables']
+            else:
+                bensgadget2tables_t = None
             logax_t = logax[axind]
             
             axdata_t, multipafter_t = getparticledata(vardict, ptype_t, excludeSFR_t, abunds_t,\
                                                      ion_t, quantity_t,\
-                                                     sylviasshtables=sylviasshtables,\
-                                                     bensgadget2tables=bensgadget2tables,\
+                                                     sylviasshtables=sylviasshtables_t,\
+                                                     bensgadget2tables=bensgadget2tables_t,\
                                                      last=True,\
                                                      updatesel=False, misc=misc_t, mdef=mdef_t,\
                                                      allinR200c=allinR200c_t)
@@ -5380,8 +5452,8 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
             saveattr(grp, 'excludeSFR', excludeSFR_t)
             saveattr(grp, 'ion', ion_t)
             saveattr(grp, 'quantity', quantity_t)
-            saveattr(grp, 'sylviasshtables', sylviasshtables)
-            saveattr(grp, 'bensgadget2tables', bensgadget2tables)
+            saveattr(grp, 'sylviasshtables', sylviasshtables_t)
+            saveattr(grp, 'bensgadget2tables', bensgadget2tables_t)
             saveattr(grp, 'misc', misc_t)
             saveattr(grp, 'mdef', mdef_t)
             saveattr(grp, 'allinR200c', allinR200c_t)
@@ -5396,7 +5468,9 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
             axdata += [axdata_t]
             del axdata_t
             
-        weight, multipafter_w = getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity, last=True, updatesel=False, misc=None, allinR200c=allinR200c, mdef=mdef)
+        weight, multipafter_w = getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity,\
+                                                sylviasshtables=sylviasshtables, bensgadget2tables=bensgadget2tables,\
+                                                last=True, updatesel=False, misc=None, allinR200c=allinR200c, mdef=mdef)
         maxw = np.max(weight)
         lenw = len(weight)
         # rescale for fp precision and overflow avoidance
