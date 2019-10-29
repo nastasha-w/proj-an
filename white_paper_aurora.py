@@ -1208,3 +1208,256 @@ def plotionwpd(line, minsb, fraction=False):
     
     outname = 'phase_diagram_hist_emission_%s_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_14.2857142857slice_zcen-all_z-projection_T4EOS_and_weighted_rho_T_minSB-%s_fraction-%s.pdf'%(line, minsb_real, fraction)
     plt.savefig(mdir + outname, format='pdf', dpi=400)
+
+
+
+def plotsample2_presversion(parent=2, sub='a', o7only=False):
+    '''
+    no color bar, minimal labels, larger font, thicker lines
+    '''
+    if parent == 2 and sub == 'a':
+        samplename = mdir + 'sample_2%s.txt'%sub
+        metadataname = mdir + 'sample_2%s_projdata.txt'%sub
+        afactor = 0.908563 # from eagle wiki
+    elif parent == 2 and sub == 'c': # larger two of the sample 2a halos
+        samplename = mdir + 'sample_%s%s.txt'%(parent, sub)
+        metadataname = mdir + 'sample_%i%s_projdata.txt'%(parent, sub)
+        afactor = 0.908563 # from eagle wiki
+        
+    if o7only:
+        plotname = mdir + 'emission_sample%i%s_1.5R200c_presversion_o7only.pdf'%(parent, sub)
+    else:
+        plotname = mdir + 'emission_sample%i%s_1.5R200c_presversion.pdf'%(parent, sub)
+    ds = pd.read_csv(samplename, sep='\t', header=0)
+    dm = pd.read_csv(metadataname, sep='\t', header=0)
+    
+    linelabels = {'o7': 'O VII triplet',\
+                  'o8': 'O VIII',\
+                  'o6': 'O VI doublet',\
+                  'fe17': 'Fe XVII'}
+    
+    imgs = {}
+    extents = {}
+    rhalos = {}
+    mhalos = {}
+    centers = {}
+    for ind in np.array(ds.index):
+        galid = ds.loc[ind, 'galaxyid']
+        mhalo = ds.loc[ind, 'M200c_Msun']
+        rhalo = ds.loc[ind, 'R200c_cMpc']
+        
+        
+        filenames = dm[dm['galaxyid'] == galid]
+        lines = np.array(dm['line'])
+        indsel = {line: np.array(filenames.index[filenames['line'] == line])[0] for line in lines}
+        names = {line: filenames.loc[indsel[line], 'filename'] for line in lines}
+        files = {line: np.load(names[line] + '.npz')['arr_0'] + np.log10(arcmin2) for line in names.keys()}
+        files['o7'] = np.log10(np.sum(10**np.array([files[line] for line in ['o7r', 'o7ix', 'o7iy', 'o7f']]), axis=0))
+        files['o6'] = np.log10(np.sum(10**np.array([files[line] for line in ['o6major', 'o6minor']]), axis=0)) #  
+        # assuming  z-projection
+        sfn = names[lines[0]]
+        sfn = sfn.split('/')[-1]
+        sfn = sfn.split('_')
+
+        lxpart = set(part if len(part) > 0  else None for part in sfn)
+        lxpart = lxpart - {None}
+        lxpart = set(part if  (part[0] == 'x' and '-pm' in part) > 0  else None for part in sfn)
+        lxpart = lxpart - {None}
+        lxpart = list(lxpart)
+        if len(lxpart) != 1:
+            raise RuntimeError('Failed to retrieve projection size from file %s'(names[lines[0]]))
+        lxpart = lxpart[0].split('-')        
+        lx = float(lxpart[-1][2:])
+        cx = float(lxpart[0][1:])
+        
+        lypart = set(part if len(part) > 0  else None for part in sfn)
+        lypart = lypart - {None}
+        lypart = set(part if (part[0] == 'y' and '-pm' in part) else None for part in sfn)
+        lypart = lypart - {None}
+        lypart = list(lypart)
+        if len(lypart) != 1:
+            raise RuntimeError('Failed to retrieve projection size from file %s'(names[lines[0]]))
+        lypart = lypart[0].split('-')        
+        ly = float(lypart[-1][2:])
+        cy = float(lypart[0][1:])
+        
+        extent = (cx - 0.5 * lx, cx + 0.5 * lx, cy - 0.5 * ly, cy + 0.5 * ly)
+        
+        imgs[galid] = {'o7': files['o7'], 'o8': files['o8'], 'o6': files['o6']} # 'fe17': files['fe17']
+        rhalos[galid] = rhalo
+        mhalos[galid] = mhalo
+        extents[galid] = extent
+        centers[galid] = (cx, cy)
+        
+        
+    fontsize = 12
+    linewidth = 2
+    font0 = mpl.font_manager.FontProperties()
+    font1 = font0.copy()
+    font0.set_size(fontsize)
+    font1.set_size(fontsize + 1)
+    font0.set_weight('heavy')
+    font1.set_weight('heavy')
+    
+    vmax_xray = max([np.max(imgs[galid][line]) for line in ['o7', 'o8'] for galid in imgs.keys()]) #, 'fe17'
+    vmin_xray = min([np.min(imgs[galid][line][np.isfinite(imgs[galid][line])] if np.any(np.isfinite(imgs[galid][line])) else np.inf)  for line in ['o7', 'o8'] for galid in imgs.keys()]) #, 'fe17'
+    vmin_xray = max(vmin_xray, vmax_xray - 5.)
+    
+    vmax_uv = max([np.max(imgs[galid][line]) for line in ['o6'] for galid in imgs.keys()]) #, 'fe17'
+    vmin_uv = min([np.min(imgs[galid][line][np.isfinite(imgs[galid][line])] if np.any(np.isfinite(imgs[galid][line])) else np.inf)  for line in ['o6'] for galid in imgs.keys()]) #, 'fe17'
+    vmin_uv = max(vmin_uv, vmax_uv - 5.)
+    
+    numgals = len(imgs.keys())
+    panelsize = 2.0
+    #cbarsize  = 0.3
+    #labelsize = 0.3
+    
+    if o7only:
+        fig = plt.figure(figsize=(panelsize * 2, panelsize * numgals))
+        grid = gsp.GridSpec(nrows=numgals, ncols=2, hspace=0.0, wspace=0.0, width_ratios=[panelsize] * 2, height_ratios=[panelsize] * numgals)
+        axes = [[fig.add_subplot(grid[j, i]) for i in range(2)] for j in range(numgals)]
+    else:
+        fig = plt.figure(figsize=(panelsize * 4, panelsize * numgals))
+        grid = gsp.GridSpec(nrows=numgals, ncols=4, hspace=0.0, wspace=0.0, width_ratios=[panelsize] * 4, height_ratios=[panelsize] * numgals)
+        axes = [[fig.add_subplot(grid[j, i]) for i in range(4)] for j in range(numgals)]
+    
+    cmap_xray = 'inferno'
+    cmap_uv   = 'viridis'
+    ancolor = 'lightgray'
+    cmapf_xray = cm.get_cmap(cmap_xray)
+    cmapf_uv = cm.get_cmap(cmap_uv)
+    cmapf_xray = truncate_colormap(cmapf_xray, minval=0.15, maxval=1.0, n=-1)
+    cmapf_uv   = truncate_colormap(cmapf_uv, minval=0.0, maxval=0.93, n=-1)
+    cmapf_xray.set_under(cmapf_xray(0.))
+    cmapf_uv.set_under(cmapf_uv(0.))
+    
+    imgs = {key: {line: np.max([imgs[key][line], -100. * np.ones(imgs[key][line].shape)], axis=0) for line in imgs[key].keys()} for key in imgs.keys()}
+    
+    galids = sorted(imgs.keys(), key=mhalos.__getitem__)
+    for galind in range(len(galids)):
+        galid = galids[galind]
+        img_sub = imgs[galid]
+        mhalo = mhalos[galid]
+        rhalo = rhalos[galid]
+        extent = extents[galid]
+        _axes = axes[galind]
+        center = centers[galid]
+        
+        # o7 triplet
+        if not o7only:
+            line = 'o6'
+            ax = _axes[1]
+            ax.tick_params(left=False, right=False, top=False, bottom=False, labelleft=False, labelbottom=False)
+            #ax.set_xlabel('X [cMpc]', fontsize=fontsize)
+            #ax.set_ylabel('Y [cMpc]', fontsize=fontsize)
+            
+            ax.set_facecolor(cmapf_xray(0.))
+            img_uv = ax.imshow(img_sub[line].T, origin='lower', interpolation='nearest', extent=extent, vmin=vmin_uv, vmax=vmax_uv, cmap=cmapf_uv)
+            circle = plt.Circle(center, rhalo, color=ancolor, fill=False, linewidth=linewidth)
+            ax.add_artist(circle)
+            
+            if galind == 0:
+                ax.text(0.5, 0.97, linelabels[line], fontproperties=font1,\
+                        horizontalalignment='center', verticalalignment='top',\
+                        transform=ax.transAxes, color=ancolor) #bbox=dict(facecolor='white',alpha=0.3),
+        
+        
+        line = 'o7'
+        if o7only:
+            ax = _axes[1]
+        else:
+            ax = _axes[2]
+        ax.tick_params(left=False, right=False, top=False, bottom=False, labelleft=False, labelbottom=False)
+        #ax.set_xlabel('X [cMpc]', fontsize=fontsize)
+        #ax.set_ylabel('Y [cMpc]', fontsize=fontsize)
+        
+        ax.set_facecolor(cmapf_xray(0.))
+        ax.imshow(img_sub[line].T, origin='lower', interpolation='nearest', extent=extent, vmin=vmin_xray, vmax=vmax_xray, cmap=cmapf_xray)
+        circle = plt.Circle(center, rhalo, color=ancolor, fill=False, linewidth=linewidth)
+        ax.add_artist(circle)
+        
+        if galind == 0 and not o7only:
+            ax.text(0.5, 0.97, linelabels[line], fontproperties=font1,\
+                    horizontalalignment='center', verticalalignment='top',\
+                    transform=ax.transAxes, color=ancolor) #bbox=dict(facecolor='white',alpha=0.3),
+        
+        if not o7only:
+            ypos = center[1] - 1.4 * rhalo
+            xstart = center[0] - 1.4 * rhalo
+            xlen = 200e-3 / afactor # 200 pkpc in cMpc units
+            ax.plot([xstart, xstart + xlen], [ypos] * 2, color=ancolor, linewidth=linewidth + 1)
+            ax.text((xstart - extent[0]) / (extent[1] - extent[0]),\
+                    (ypos - extent[2]) / (extent[3] - extent[2]) + 0.02,\
+                    r'200 kpc', fontproperties=font0,\
+                    horizontalalignment='left', verticalalignment='bottom',\
+                    transform=ax.transAxes, color=ancolor)
+        
+        
+#        line = 'fe17'
+#        ax = _axes[3]
+#        ax.tick_params(left=False, right=False, top=False, bottom=False, labelleft=False, labelbottom=False)
+#        #ax.set_xlabel('X [cMpc]', fontsize=fontsize)
+#        #ax.set_ylabel('Y [cMpc]', fontsize=fontsize)
+#        
+#        ax.set_facecolor(cmapf(0.))
+#        ax.imshow(img_sub[line].T, origin='lower', interpolation='nearest', extent=extent, vmin=vmin, vmax=vmax, cmap=cmap)
+        if not o7only:
+            line = 'o8'
+            ax = _axes[3]
+            ax.tick_params(left=False, right=False, top=False, bottom=False, labelleft=False, labelbottom=False)
+            #ax.set_xlabel('X [cMpc]', fontsize=fontsize)
+            #ax.set_ylabel('Y [cMpc]', fontsize=fontsize)
+            
+            ax.set_facecolor(cmapf_xray(0.))
+            img_xray = ax.imshow(img_sub[line].T, origin='lower', interpolation='nearest', extent=extent, vmin=vmin_xray, vmax=vmax_xray, cmap=cmapf_xray)
+            circle = plt.Circle(center, rhalo, color=ancolor, fill=False, linewidth=linewidth)
+            ax.add_artist(circle)
+            
+            if galind == 0:
+                 ax.text(0.5, 0.97, linelabels[line], fontproperties=font1,\
+                         horizontalalignment='center', verticalalignment='top',
+                         transform=ax.transAxes, color=ancolor) #bbox=dict(facecolor='white',alpha=0.3),
+                 ax.text(0.52, 0.15, r'R(200c)', fontproperties=font0,\
+                         horizontalalignment='left', verticalalignment='top',\
+                         transform=ax.transAxes, color=ancolor) 
+        
+        
+        ax = _axes[0]
+        ax.tick_params(left=False, right=False, top=False, bottom=False, labelleft=False, labelbottom=False)
+        if galind == 0 and not o7only:
+             ax.text(0.5, 0.97, 'gri image', fontproperties=font1,\
+                     horizontalalignment='center', verticalalignment='top',\
+                     transform=ax.transAxes, color=ancolor) #bbox=dict(facecolor='white',alpha=0.3),
+        try:
+            gri = mpl.image.imread(mdir + 'galrand_%i.png'%galid)
+        except IOError:
+            gri = None
+        if gri is None:
+            with h5py.File('/home/wijers/Documents/papers/aurora_white_paper_wide-field-xray/parentsample2_Lstarish-centrals_REFERENCEL0100N1504_snap27_aperture30.hdf5', 'r') as cat:
+                _galids = np.array(cat['galaxyid'])
+                _ind = np.where(_galids == galid)[0][0]
+                mstar = np.log10(np.array(cat['Mstar_Msun'])[_ind])
+                del _ind
+                del _galids
+            ax.text(0.5, 0.5, 'Image not found\n' + r'$\log_{10} \, M_{*} = %.1f \mathrm{M}_{\odot}$'%(mstar), fontsize=fontsize, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+        else:
+            ax.imshow(gri, interpolation='nearest', extent=(-30., 30, -30., 30.))
+        
+        # add zoom box and outline
+        for spine in _axes[0].spines.values():
+            spine.set_edgecolor(ancolor)
+            spine.set_linewidth(linewidth)
+        spine = _axes[1].spines.values()[0]
+        spine.set_edgecolor(ancolor)
+        
+        size_sub = 60e-3 / afactor
+        ax = _axes[1]
+        ax.plot([center[0] - 0.5 * size_sub, center[0] + 0.5 * size_sub, center[0] + 0.5 * size_sub, center[0] - 0.5 * size_sub, center[0] - 0.5 * size_sub],\
+                [center[1] - 0.5 * size_sub, center[1] - 0.5 * size_sub, center[1] + 0.5 * size_sub, center[1] + 0.5 * size_sub, center[1] - 0.5 * size_sub],\
+                color=ancolor, linestyle='solid', linewidth=linewidth)
+        xlim = ax.get_xlim()
+        ylim = ax.get_ylim()
+        ax.plot([center[0] - 0.5 * size_sub, xlim[0]], [center[1] + 0.5 * size_sub, ylim[1]], color=ancolor, linestyle='dotted', linewidth=linewidth)
+        ax.plot([center[0] - 0.5 * size_sub, xlim[0]], [center[1] - 0.5 * size_sub, ylim[0]], color=ancolor, linestyle='dotted', linewidth=linewidth)
+    
+    plt.savefig(plotname)    
