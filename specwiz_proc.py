@@ -1760,19 +1760,23 @@ def getNEW_wsubsamples_multiion(sample=3):
         filen = '/net/luttero/data2/specwizard_data/sample3/spec.snap_027_z000p101.0.hdf5'
         sfilen = '/net/luttero/data2/specwizard_data/los_sample3_o6-o7-o8_L0100N1504_data.hdf5'
         outfilen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
+        ionselgrpn = {'o7': 'file0',\
+                      'o8': 'file1',\
+                      'o6': 'file2',\
+                      }
     elif sample == 6:
-        #filen = '/net/luttero/data2/specwizard_data/sample3/spec.snap_027_z000p101.0.hdf5'
-        #sfilen = '/net/luttero/data2/specwizard_data/los_sample3_o6-o7-o8_L0100N1504_data.hdf5'
-        #outfilen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
-        
+        filen = '/net/luttero/data2/specwizard_data/sample6/spec.snap_027_z000p101.0.hdf5'
+        sfilen = '/net/luttero/data2/specwizard_data/sample6/los_sample6_ne8-ne9-fe17_L0100N1504_data.hdf5'
+        outfilen = '/net/luttero/data2/specwizard_data/sample6_coldens_EW_subsamples.hdf5'
+        ionselgrpn = {'ne8': 'file0',\
+                      'ne9': 'file1',\
+                      'fe17': 'file2',\
+                      }
     so = Specout(filen, getall=False)
     so.getEW(dions=ions)
     so.getcoldens(dions=ions)
 
-    ionselgrpn = {'o7': 'file0',\
-                  'o8': 'file1',\
-                  'o6': 'file2',\
-                  }
+    
     
     selections = {}
     with h5py.File(sfilen, 'r') as fs:
@@ -1808,11 +1812,13 @@ def getNEW_wsubsamples_multiion(sample=3):
             sgrp.create_dataset('logN_cmm2', data=so.coldens[ion])
             sgrp.create_dataset('EWrest_A', data=so.EW[ion])
             
-            
-def addbparfit_NEW_wsubsamples_multiion():
-    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'] # only o8 doublet is expected to be unresolved -> rest is fine to use single lines   
-    filen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
-    
+
+def addbparfit_NEW_wsubsamples_multiion(sample=3):
+    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'] # only o8 doublet is expected to be unresolved -> rest is fine to use single lines
+    if sample == 3:
+        filen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
+    elif sample == 6:
+        filen = '/net/luttero/data2/specwizard_data/sample6_coldens_EW_subsamples.hdf5'
     with h5py.File(filen, 'a') as fo:
         selections = list(fo.keys())
         selections.remove('Header')
@@ -1822,21 +1828,93 @@ def addbparfit_NEW_wsubsamples_multiion():
                 EWrest_A = np.array(grp['EWrest_A'])
                 logN_cmm2 = np.array(grp['logN_cmm2'])
                 
-                def fitfunc_lin(logNion, b):
-                    return linflatcurveofgrowth_inv(10**logNion, b, ion)
+                if 'bparfit_cmps_linEW' not in grp.attrs.keys():
+                    def fitfunc_lin(logNion, b):
+                        return linflatcurveofgrowth_inv(10**logNion, b, ion)
+                    
+                    bfit_linEW = sp.optimize.curve_fit(fitfunc_lin, logN_cmm2, EWrest_A, p0=100*1e5, bounds=(np.array([0]), np.array([3e5*1e5])))
+                    print('%s, sample %s: b parameter fit to lin EW: %s'%(ion, sel, bfit_linEW))
+                    grp.attrs.create('bparfit_cmps_linEW', np.array([bfit_linEW[0][0], bfit_linEW[1][0][0]]))
                 
-                bfit_linEW = sp.optimize.curve_fit(fitfunc_lin, logN_cmm2, EWrest_A, p0=100*1e5, bounds=(np.array([0]), np.array([3e5*1e5])))
-                print('%s, sample %s: b parameter fit to lin EW: %s'%(ion, sel, bfit_linEW))
-                
-                def fitfunc_log(logNion, b):
-                    return np.log10(linflatcurveofgrowth_inv(10**logNion, b, ion))
-                
-                bfit_logEW = sp.optimize.curve_fit(fitfunc_log, logN_cmm2, np.log10(EWrest_A), p0=100*1e5, bounds=(np.array([0]), np.array([3e5*1e5])))
-                print('%s, sample %s: b parameter fit to log EW: %s'%(ion, sel, bfit_logEW))
-                
-                grp.attrs.create('bparfit_cmps_linEW', np.array([bfit_linEW[0][0], bfit_linEW[1][0][0]]))
-                grp.attrs.create('bparfit_cmps_logEW', np.array([bfit_logEW[0][0], bfit_logEW[1][0][0]]))
-                
+                if 'bparfit_cmps_logEW' not in grp.attrs.keys():
+                    def fitfunc_log(logNion, b):
+                        return np.log10(linflatcurveofgrowth_inv(10**logNion, b, ion))
+                    
+                    bfit_logEW = sp.optimize.curve_fit(fitfunc_log, logN_cmm2, np.log10(EWrest_A), p0=100*1e5, bounds=(np.array([0]), np.array([3e5*1e5])))
+                    print('%s, sample %s: b parameter fit to log EW: %s'%(ion, sel, bfit_logEW))
+                    grp.attrs.create('bparfit_cmps_logEW', np.array([bfit_logEW[0][0], bfit_logEW[1][0][0]]))
+
+def combine_sample_NEW_multiion(samples=(3, 6)):
+    '''
+    assumes selection for different ions are in different files, 
+    just copies over those subsets
+    '''
+    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'] # only o8 doublet is expected to be unresolved -> rest is fine to use single lines
+    if samples[0] == 3:
+        filen0 = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
+        ionselgrpn0 = {'o7': 'file0',\
+                       'o8': 'file1',\
+                       'o6': 'file2',\
+                       }
+    if samples[1] == 6:
+        filen1 = '/net/luttero/data2/specwizard_data/sample6_coldens_EW_subsamples.hdf5'
+        ionselgrpn1 = {'ne8': 'file0',\
+                       'ne9': 'file1',\
+                       'fe17': 'file2',\
+                       }
+    if samples == (3, 6):
+        outfilen = '/net/luttero/data2/specwizard_data/sample3-6_coldens_EW_subsamples.hdf5'
+    
+    with h5py.File(filen0, 'r') as f0,\
+         h5py.File(filen1, 'r') as f1,\
+         h5py.File(outfilen, 'w') as fo:
+        # just copy the datasets for subgroup selections
+        for ion in ionselgrpn0:
+            grpn = '%s_selection'%ion
+            f0.copy(grpn, fo, name=grpn)
+        for ion in ionselgrpn1:
+            grpn = '%s_selection'%ion
+            f1.copy(grpn, fo, name=grpn)
+        
+        # combine the full samples: compare integer pixel values -> can just check equality
+        grpn_full = 'full_sample'
+        
+        fn_samplesel0 = f0['Header'].attrs['filename_sample_selection']
+        fn_samplesel1 = f1['Header'].attrs['filename_sample_selection']
+        with h5py.File(fn_samplesel0, 'r') as ft:
+            pixels0 = np.array(ft['Selection/selected_pixels_allions'])
+        with h5py.File(fn_samplesel1, 'r') as ft:
+            pixels1 = np.array(ft['Selection/selected_pixels_allions'])
+        eqgrid = np.all(pixels0[:, np.newaxis, :] == pixels1[np.newaxis, :, :] , axis=2)
+        keep1  = np.logical_not(np.any(eqgrid, axis=0))
+        specnums_1in0part = [np.where(eqgrid[i])[0][0] if np.any(eqgrid[i]) else -1 for i in range(eqgrid.shape[0])]
+        specnums_1in1part = np.where(keep1)[0]
+        specnums_0in0part = np.arange(eqgrid.shape[0])
+        specnums_0in1part = [np.where(eqgrid[:, j])[0][0] if np.any(eqgrid[:, j]) else -1 for j in range(eqgrid.shape[1])]
+        print('Overlap between files: %i sightlines'%(eqgrid.shape[1] - len(keep1)))
+        
+        specnums_file0 = np.append(specnums_0in0part, specnums_0in1part)
+        specnums_file1 = np.append(specnums_1in0part, specnums_1in1part)
+        
+        grp = fo.create_group(grpn_full)
+        grp.create_dataset('specnums_sample%i'%samples[0], data=specnums_file0)
+        grp['specnums_sample%i'%samples[0]].attrs.create('info', np.string_('specnum -1 means the sightline is not present in the file'))
+        grp.create_dataset('specnums_sample%i'%samples[1], data=specnums_file1)
+        grp['specnums_sample%i'%samples[1]].attrs.create('info', np.string_('specnum -1 means the sightline is not present in the file'))
+        
+        for ion in ions:
+            Ns0 = np.array(f0['%s/%s_data/logN_cmm2'%(grpn_full, ion)])
+            EW0 = np.array(f0['%s/%s_data/EWrest_A'%(grpn_full, ion)])
+            Ns1 = np.array(f1['%s/%s_data/logN_cmm2'%(grpn_full, ion)])
+            EW1 = np.array(f1['%s/%s_data/EWrest_A'%(grpn_full, ion)])
+            
+            Ns = np.append(Ns0, Ns1[keep1])
+            EW = np.append(EW0, EW1[keep1])
+            
+            sgrp = grp.create_group('%s_data'%ion)
+            sgrp.create_dataset('logN_cmm2', data=Ns)
+            sgrp.create_dataset('EWrest_A', data=EW)
+
 def printbpartable_wsubsamples_multiion():
     ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'] # only o8 doublet is expected to be unresolved -> rest is fine to use single lines   
     filen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'

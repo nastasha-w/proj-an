@@ -735,7 +735,7 @@ def plot_coldenscorr_Tion_v2(ionT='o6', ion1='o6', ion2='o8', Tlim=6.0, nsig_ran
 # percentiles 1 and 99 to roughly mimic initial sightline selection
     
 
-def plot_coldenscorr_Tion_v3(plotnum=1, ionT_split=6.0, nh1_split=13.0, nsig_range=1., table=None):
+def plot_coldenscorr_Tion_v3(plotnum=1, ionT_split=5.7, nh1_split=13.0, nsig_range=1., table=None):
     '''
     plotnum 1: O VI - O VII correlation with 1, 50, 99% markers
     plotnum 2: O VI - O VII correlation with 1, 50, 99% markers 
@@ -760,12 +760,15 @@ def plot_coldenscorr_Tion_v3(plotnum=1, ionT_split=6.0, nh1_split=13.0, nsig_ran
     o8meas_slab_zo6 = (15.85, -0.65, 0.32)
     o8meas_slab_zo7 = (15.82, -0.78, 0.49)
     
+    o6meas_tot = (14.14, 0.22)
+    
     T_cie_zo6 = (1.7e6, 0.2e6)
     T_cie_zo7 = (1.7e6, 0.2e6)
     
     logTcuts = [5.7, 5.9, 6.0]
     
-    measvals = {'fuv': {'zo6': {'o6': o6meas_fuv_zo6}},\
+    measvals = {'tot': {'o6': o6meas_tot},\
+                'fuv': {'zo6': {'o6': o6meas_fuv_zo6}},\
                 'cie': {'zo6': {'o6': o6meas_cie_zo6,\
                                 'o7': o7meas_cie_zo6,\
                                 'o8': o8meas_cie_zo6,\
@@ -945,9 +948,9 @@ def plot_coldenscorr_Tion_v3(plotnum=1, ionT_split=6.0, nh1_split=13.0, nsig_ran
     ax.errorbar(fuvpoint[0], ylim[0] + 0.35 * (ylim[1] - ylim[0]), xerr=fuvpoint[1:],\
                 linewidth=1.5, color=fuvcolor, zorder=5)
     
-    # X-ray measurement point
+    # X-ray measurement point and X-ray + UV
     xraycolor = 'black'
-    xraypoint_x = measvals['cie']['zo7'][ion1]
+    xraypoint_x = measvals['tot'][ion1]
     xraypoint_y = measvals['cie']['zo7'][ion2]   
     ax.errorbar(xraypoint_x[0], xraypoint_y[0], xerr=xraypoint_x[1:], yerr=xraypoint_y[1:],\
                 linewidth=2., color=xraycolor, zorder=5)

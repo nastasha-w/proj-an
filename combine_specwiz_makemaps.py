@@ -1791,7 +1791,7 @@ def comp_EW_dists_fullspcms(openhdf5file, ion, snap):
         sampledataname = '/cosma/home/dp004/dc-wije1/specwizard/Ali_Spec_src/los/los_sample7_o7-o8_L0100N1504_data.hdf5'
         sampledataiondir = 'file0'
 
-        cddfname = None
+        cddfname = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/cddf_coldens_o7_L0100N1504_23_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_16-x-6.250000slices_range-25.0-28.0_1060bins'
         
     elif ion == 'o8' and snap == 23:
         spcmname = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/specwizard_map_match_coldens_o8_L0100N1504_23_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-sum_z-projection_T4EOS_totalbox_sample7_snap_023_z000p503.0.npz'
@@ -2142,12 +2142,18 @@ def getEWdistvals_o78_cddfsatz(plot=False): # just to store these lines, really
     #return dct_out['o7'][27]
 
 
-def getEWdistvals_o78_cddfsatz_sarahspaper(plot=False): # just to store these lines, really
+def getEWdistvals_o78_cddfsatz_sarahspaper(plot=False, fileset=0): # just to store these lines, really
     '''
     prints LaTeX table of these values
     '''
-    ions = ['o7', 'o8']
-    snapshots = [27, 26, 23, 19]
+    if fileset == 0:
+        snapshots = [27, 26, 19]
+        datafile = '/net/luttero/data2/paper1/specwizard_misc.hdf5'
+        ions = ['o7', 'o8']
+    elif fileset == 1:
+        snapshots = [23]
+        datafile = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/specwizard_EWdists.hdf5'
+        ions = ['o7', 'o8']
     #snapkeys = {19: 'snap19_snap27-N-EWconv', 26: 'snap26_snap27-N-EWconv', 27: 'snap27'} # old format using snap 27 CoG for all
     snapkeys = {19: 'snap19', 23: 'snap23', 26: 'snap26', 27: 'snap27'}
     # format: ion : snapshot : [bins, edges]
@@ -2157,7 +2163,7 @@ def getEWdistvals_o78_cddfsatz_sarahspaper(plot=False): # just to store these li
     grps = {ion: {snap: 'EWdists_%s_%s'%(ion, snapkeys[snap])  for snap in snapshots} for ion in ions}
     keyprefs = ['linear_cog_extrapolation_below_10^13cm^-2_all_sightlines_with_6.25cMpc_CDDF', 'linear_cog_extrapolation_below_10^13cm^-2_all_sightlines', 'linear_cog_extrapolation_below_10^13.0cm^-2_all_sightlines']
     
-    with h5py.File('/net/luttero/data2/paper1/specwizard_misc.hdf5', 'r') as fi:
+    with h5py.File(datafile, 'r') as fi:
         for ion in ions:
             for snap in snapshots:
                 grpname = grps[ion][snap]

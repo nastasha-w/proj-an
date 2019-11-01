@@ -2735,8 +2735,14 @@ def plot3Dprof_overview(weighttype='Mass'):
     
     plt.savefig(outname, format='pdf', box_inches='tight')
 
-def plotsubsamplediffs_NEW():
-    dfilen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
+def plotsubsamplediffs_NEW(sample=3):
+    if sample == 3:
+        dfilen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
+        fileout = '/net/luttero/data2/specwizard_data/sample3_specwizard-NEW_wbparfit_wsubsamples.pdf'
+    elif sample == (3, 6):
+        dfilen = None
+        fileout = None
+        
     percentiles = [5., 50., 95.]
     logNspacing = 0.2
     linemin = 10
@@ -2892,7 +2898,7 @@ def plotsubsamplediffs_NEW():
                fontsize=fontsize, ncol=ncols, loc='upper center', bbox_to_anchor=(0.5, 1.))
     lax.axis('off')
     
-    plt.savefig('/net/luttero/data2/specwizard_data/sample3_specwizard-NEW_wbparfit_wsubsamples.pdf', format='pdf', bbox_inches='tight')       
+    plt.savefig(fileout, format='pdf', bbox_inches='tight')       
             
  
 def plotdiffs_bparglobalperc(bparfit='bpar_global_perc_set1.txt'):
