@@ -1791,7 +1791,7 @@ def comp_EW_dists_fullspcms(openhdf5file, ion, snap):
         sampledataname = '/cosma/home/dp004/dc-wije1/specwizard/Ali_Spec_src/los/los_sample7_o7-o8_L0100N1504_data.hdf5'
         sampledataiondir = 'file0'
 
-        cddfname = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/cddf_coldens_o7_L0100N1504_23_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_16-x-6.250000slices_range-25.0-28.0_1060bins'
+        cddfname = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/cddf_coldens_o7_L0100N1504_23_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_16-x-6.250000slices_range-25.0-28.0_1060bins.npz'
         
     elif ion == 'o8' and snap == 23:
         spcmname = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/specwizard_map_match_coldens_o8_L0100N1504_23_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-sum_z-projection_T4EOS_totalbox_sample7_snap_023_z000p503.0.npz'
