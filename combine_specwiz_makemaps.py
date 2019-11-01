@@ -995,6 +995,12 @@ def gettable_bparfits(snap=27):
         sampledataname = '/net/luttero/data2/specwizard_data/sample4/los_sample4_o7-o8_L0100N1504_snap19_data.hdf5'
         sampledataiondir_o7 = 'file0'
         sampledataiondir_o8 = 'file1' 
+    elif snap == 23: # cosma
+        spcm_o7_name = None
+        spcm_o8_name = None
+        sampledataname = '/cosma/home/dp004/dc-wije1/specwizard/Ali_Spec_src/los/los_sample7_o7-o8_L0100N1504_data.hdf5'
+        sampledataiondir_o7 = 'file0'
+        sampledataiondir_o8 = 'file1'
     else:
         raise ValueError('Snapshot %i is not an option'%snap)
     
@@ -1780,6 +1786,19 @@ def comp_EW_dists_fullspcms(openhdf5file, ion, snap):
 
         cddfname = 'cddf_coldens_o8_L0100N1504_26_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_16-x-6.250000slices_range-25.0-28.0_1060bins.npz'
     
+    elif ion == 'o7' and snap == 23:
+        spcmname = None
+        sampledataname = '/cosma/home/dp004/dc-wije1/specwizard/Ali_Spec_src/los/los_sample7_o7-o8_L0100N1504_data.hdf5'
+        sampledataiondir = 'file0'
+
+        cddfname = None
+        
+    elif ion == 'o8' and snap == 23:
+        spcmname = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/specwizard_map_match_coldens_o8_L0100N1504_23_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-sum_z-projection_T4EOS_totalbox_sample7_snap_023_z000p503.0.npz'
+        sampledataname = '/cosma/home/dp004/dc-wije1/specwizard/Ali_Spec_src/los/los_sample7_o7-o8_L0100N1504_data.hdf5'
+        sampledataiondir = 'file1'
+
+        cddfname = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/cddf_coldens_o8_L0100N1504_23_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_16-x-6.250000slices_range-25.0-28.0_1060bins.npz'
     else:
         raise ValueError('conversion for ion %s, snapshot %i is not implemented, posssibly because the data is unavailable'%(ion, snap)) 
 
@@ -2128,9 +2147,9 @@ def getEWdistvals_o78_cddfsatz_sarahspaper(plot=False): # just to store these li
     prints LaTeX table of these values
     '''
     ions = ['o7', 'o8']
-    snapshots = [27, 26, 19]
+    snapshots = [27, 26, 23, 19]
     #snapkeys = {19: 'snap19_snap27-N-EWconv', 26: 'snap26_snap27-N-EWconv', 27: 'snap27'} # old format using snap 27 CoG for all
-    snapkeys = {19: 'snap19', 26: 'snap26', 27: 'snap27'}
+    snapkeys = {19: 'snap19', 23: 'snap23', 26: 'snap26', 27: 'snap27'}
     # format: ion : snapshot : [bins, edges]
     dct_out = {ion: {} for ion in ions}
     dct_dXoverdz = {ion: {} for ion in ions}

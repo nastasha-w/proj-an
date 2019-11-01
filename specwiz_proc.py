@@ -554,7 +554,7 @@ class Coldensmap:
         self.periodic = periodic
 
         print('File should contain %i pixels per side'%self.numpix)
-        self.slicecen = np.array(slicecen)*hcosm
+        self.slicecen = np.array(slicecen) * hcosm
         self.sidelength = sidelength*hcosm
 
     def getpixindsvals(self,specout, periodic=None):
@@ -1754,12 +1754,17 @@ def plot_EWconv_wi_gi(cubics, gaussians, ion, reslabels = None, fontsize=14):
      plt.savefig(mdir + 'specwiz_EW_convergence_sntd-gi_test4_test10-los_o8_standard-9x-i9x-i81x-stnd-projres_separate_distributions.png',format = 'png',bbox_inches='tight')
 
 
-def getNEW_wsubsamples_multiion():
+def getNEW_wsubsamples_multiion(sample=3):
     ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'] # only o8 doublet is expected to be unresolved -> rest is fine to use single lines
-    filen = '/net/luttero/data2/specwizard_data/sample3/spec.snap_027_z000p101.0.hdf5'
-    sfilen = '/net/luttero/data2/specwizard_data/los_sample3_o6-o7-o8_L0100N1504_data.hdf5'
-    outfilen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
-    
+    if sample == 3:
+        filen = '/net/luttero/data2/specwizard_data/sample3/spec.snap_027_z000p101.0.hdf5'
+        sfilen = '/net/luttero/data2/specwizard_data/los_sample3_o6-o7-o8_L0100N1504_data.hdf5'
+        outfilen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
+    elif sample == 6:
+        #filen = '/net/luttero/data2/specwizard_data/sample3/spec.snap_027_z000p101.0.hdf5'
+        #sfilen = '/net/luttero/data2/specwizard_data/los_sample3_o6-o7-o8_L0100N1504_data.hdf5'
+        #outfilen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
+        
     so = Specout(filen, getall=False)
     so.getEW(dions=ions)
     so.getcoldens(dions=ions)
