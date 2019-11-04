@@ -11,8 +11,10 @@ comparing distributions of different ions using the same galaxy sample
 """
 
 import numpy as np
+import scipy.optimize as spo
 import h5py
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gsp
 
 import cosmo_utils as cu
 import eagle_constants_and_units as c
@@ -1010,6 +1012,147 @@ L0100N1504_27_Mh0p5dex_7000 = Galaxyselector(halocat_L0100N1504_27, selections=M
 L0100N1504_27_Mh0p5dex_1000 = Galaxyselector(halocat_L0100N1504_27, selections=Mh_sels, names=Mh_names, number=1000, seed=0)
 L0100N1504_27_Mh0p5dex_100 = Galaxyselector(halocat_L0100N1504_27, selections=Mh_sels, names=Mh_names, number=100, seed=0)
 
+
+    
+
+def getmstarbins(m200cbins=(10., 10.5, 11., 11.5, 12., 12.5, 13., 13.5, 14.0),\
+                 halocat=halocat_L0100N1504_27,\
+                 method='maxpurefrac', plot=True):
+    '''
+    for a halo catalogue halocat and bins in logM200c_Msun
+    get the best bins in logMstar_Msun according to the chosen method
+    bins are optimized to 0.1 dex round numbers
+    
+    methods: 
+        'edgemedian':  median stellar mass around the halo masss bin edges
+        'maxpurefrac-<subopt>': optimize the stellar-mass halo-mass confusion 
+                       matrix (maximally pure halo mass sample in a stellar 
+                       mass bin)
+                       subopts use the minimum ('min'), product ('prod') or sum 
+                       ('sum') of the galaxy fraction in the stellar mass bins 
+                       that fall into the corresponding halo mass bins 
+    '''
+    binround = 0.1
+    
+    with h5py.File(halocat, 'r') as cat:
+        m200c = np.log10(np.array(cat['M200c_Msun']))
+        mstar = np.log10(np.array(cat['Mstar_Msun']))
+    
+    m200cbins = np.array(m200cbins)
+    expand = (np.floor(np.min(m200c) / binround) * binround, np.ceil(np.max(m200c) / binround) * binround)
+    m200cinds = np.digitize(m200c, m200cbins, right=True)
+    m200cbins = np.append(expand[0], m200cbins)
+    m200cbins = np.append(m200cbins, expand[1])
+    
+    xinds = [np.where(m200cinds == i) for i in range(len(m200cbins) - 1)]
+    binnedvals = [(m200c[xind], mstar[xind]) for xind in xinds]
+    
+    firstguess = np.array([np.median(mstar[np.abs(m200c - _bin) < 0.5 * binround]) for _bin in m200cbins])
+    mstar_rev =  (np.floor(np.min(mstar) / binround) * binround, np.ceil(np.max(mstar) / binround) * binround)
+    firstguess[0] = mstar_rev[0]
+    firstguess[-1] = mstar_rev[-1]
+    
+    if method == 'edgemedian':
+        outbins_mstar = firstguess
+        
+    elif method.startswith('maxpurefrac'):        
+        def minfunc(midbins):
+            #print(midbins)
+            tempbins = np.copy(firstguess)
+            tempbins[1:-1] = midbins
+            #print(tempbins)
+            if np.any(np.diff(tempbins) <= 0.): # penalty for non-monotonic bins
+                return 2. * (len(tempbins) - 1)
+            _xycounts = np.array([np.histogram(pair[1], bins=tempbins)[0] for pair in binnedvals]).astype(np.float)
+            _xycounts /= np.sum(_xycounts, axis=0)[np.newaxis, :] # purity of halo mass sample at fixed stellar mass
+            if np.any(np.isnan(_xycounts)): # no halos in a stelar mass bin ->  divide by zero
+                return 2. * (len(tempbins) - 1)
+            # sum opt.
+            if method.endswith('sum'):
+                optval = np.sum([_xycounts[i, i] for i in range(_xycounts.shape[0])])
+            # product opt.
+            elif method.endswith('prod'):
+                optval = np.prod([_xycounts[i, i] for i in range(_xycounts.shape[0])])
+            elif method.endswith('min'):
+                optval = np.min([_xycounts[i, i] for i in range(_xycounts.shape[0])])
+            #print(optval)
+            return - 1. * optval # minimization -> make negative
+       
+        binfit = spo.minimize(minfunc, x0=firstguess[1:-1], method='COBYLA') # just use defaults; the exact values aren't critical
+        if binfit.success:
+            outbins_mstar = np.copy(firstguess)
+            outbins_mstar[1:-1] = binfit.x
+            print(binfit.x)
+        else:
+            print('Bin fitting failed:')
+            print(binfit.message)
+            return binfit
+        
+    xycounts = np.array([np.histogram(pair[1], bins=outbins_mstar)[0] for pair in binnedvals])
+    
+    if plot:
+        xynorm = xycounts.astype(float) / np.sum(xycounts, axis=0)[np.newaxis, :]
+        cmap = 'viridis'
+        vmin = 0.
+        vmax = 1.
+        fontsize = 12
+        xmin = 9.0
+        ymin = 6.3
+        xlabel = r'$\log_{10} \, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'
+        ylabel = r'$\log_{10} \, \mathrm{M}_{\mathrm{\star}} \; [\mathrm{M}_{\odot}]$'
+        clabel = r'fraction at fixed $\mathrm{M}_{\star}$'
+        
+        plotbins_x = np.copy(m200cbins)
+        plotbins_x[0] = max(plotbins_x[0], xmin)
+        plotbins_y = np.copy(outbins_mstar)
+        plotbins_y[0] = max(plotbins_y[0], ymin)
+        
+        fig = plt.figure(figsize=(5.5, 5.))
+        grid = gsp.GridSpec(1, 2, hspace=0.0, wspace=0.1, width_ratios=[10., 1.])
+        ax = fig.add_subplot(grid[0])
+        cax = fig.add_subplot(grid[1])
+        
+        img = ax.pcolormesh(plotbins_x, plotbins_y, xynorm.T, cmap=cmap,\
+                            vmin=vmin, vmax=vmax, rasterized=True)
+        
+        ax.set_xticks(m200cbins[1:])
+        ax.set_yticks(outbins_mstar[1:])
+        ax.set_xlim((plotbins_x[0], plotbins_x[-1]))
+        ax.set_ylim((plotbins_y[0], plotbins_y[-1]))
+        ax.set_xlabel(xlabel, fontsize=fontsize)
+        ax.set_ylabel(ylabel, fontsize=fontsize)
+        ax.tick_params(labelsize=fontsize - 1, which='both')
+        
+        for i in range(len(plotbins_x) - 1):
+            for j in range(len(plotbins_y) - 1):
+                xcoord = 0.5 * (plotbins_x[i] + plotbins_x[i + 1])
+                ycoord = 0.5 * (plotbins_y[j] + plotbins_y[j + 1])
+                num = xycounts[i, j]
+                if num > 1000:
+                    rotation = 90
+                else:
+                    rotation = 0 
+                ax.text(xcoord, ycoord, xycounts[i, j], fontsize=fontsize,\
+                        color='gray', rotation = rotation,\
+                        horizontalalignment='center', verticalalignment='center')
+        plt.colorbar(img, cax=cax, orientation='vertical')
+        cax.set_ylabel(clabel, fontsize=fontsize)
+        cax.tick_params(labelsize=fontsize - 1, which='both')
+        plt.show()
+        
+    return outbins_mstar, xycounts
+
+
+### selected stellar mass bins (rounded versions of maxpurefrac-sum and -prod):
+Mstar_edges = np.array([8.7,  9.7, 10.3, 10.8, 11.1, 11.3, 11.5, 11.7])
+Mstar_sels = [[('Mstar_Msun', 10**Mstar_edges[i], 10**Mstar_edges[i + 1])] \
+              for i in range(len(Mstar_edges) - 1)]
+Mstar_names =['geq%s_le%s'%(Mstar_edges[i], Mstar_edges[i]) \
+              for i in range(len(Mstar_edges) - 1)]
+
+L0100N1504_27_Mstar_Mhbinmatch_1000 = Galaxyselector(halocat_L0100N1504_27, selections=Mstar_sels, names=Mstar_names, number=1000, seed=0)
+
+        
 ###############################################################################
 #                                  Tests                                      #
 ###############################################################################

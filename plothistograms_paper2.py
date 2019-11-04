@@ -2965,6 +2965,101 @@ def plotdiffs_bparglobalperc(bparfit='bpar_global_perc_set1.txt'):
                fontsize=fontsize, loc='upper center', ncol=2)
     
     plt.savefig(fdir + bparfit[:-4] + '.pdf', format='pdf', bbox_inches='tight')    
+
+
+def plotconfmatrix_mstarmhalo(halocat='/net/luttero/data2/proc/catalogue_RefL0100N1504_snap27_aperture30.hdf5',\
+                 method='rounded1'):
+    outname = '/net/luttero/data2/imgs/CGM/radprof/confusion_matrix_mstarcen_mhalo_%s-bins.pdf'%(method)
+    
+    #binround = 0.1
+    m200cbins = np.array([-np.inf, 10., 10.5, 11., 11.5, 12., 12.5, 13., 13.5, 14.0, 14.6])
+    if method == 'edgemedian':
+        mstarbins = np.array([     -np.inf,  7.0101724,  7.8082123,  8.664759 ,  9.578973 , 10.291372 ,\
+                                10.716454 , 10.952257 , 11.219421 , 11.433342 , 11.7      ], dtype=np.float32)
+    elif method == 'maxpurefrac-sum':
+        mstarbins = np.array([   -np.inf,  7.099232,  7.939403,  8.682909,  9.680908, 10.303451,\
+                              10.787625, 11.092827, 11.309834, 11.522154, 11.7     ],dtype=np.float32)
+    elif method == 'maxpurefrac-prod':
+        mstarbins = np.array([   -np.inf,  7.072308 ,  7.8946085,  8.725354 ,  9.675405 ,\
+                              10.338363 , 10.790792 , 11.088814 , 11.331073 , 11.533567 , 11.7], dtype=np.float32)
+    elif method == 'maxpurefrac-min':
+        mstarbins = np.array([   -np.inf,  7.1493073,  7.8008804,  8.597658 ,  9.566083 ,
+                              10.321982 , 10.776766 , 11.013796 , 11.289852 , 11.511742 , 11.7], dtype=np.float32)
+    elif method == 'rounded1':
+        mstarbins = np.array([   -np.inf,  7.1,  7.9,  8.7,  9.7, 10.3, 10.8, 11.1, 11.3, 11.5, 11.7], dtype=np.float32)
+    elif method == 'rounded2':
+        mstarbins = np.array([   -np.inf,  7.1,  7.8,  8.6,  9.6, 10.3, 10.8, 11.0, 11.3, 11.5, 11.7], dtype=np.float32)
+        
+    with h5py.File(halocat, 'r') as cat:
+        m200c = np.log10(np.array(cat['M200c_Msun']))
+        mstar = np.log10(np.array(cat['Mstar_Msun']))
+    
+    #m200cbins = np.array(m200cbins)
+    #expand = (np.floor(np.min(m200c) / binround) * binround, np.ceil(np.max(m200c) / binround) * binround)
+    #m200cbins = np.append(expand[0], m200cbins)
+    #m200cbins = np.append(m200cbins, expand[1])
+        
+    xycounts, xe, ye = np.histogram2d(m200c, mstar, bins=[m200cbins, mstarbins])
+
+    xynorm = xycounts.astype(float) / np.sum(xycounts, axis=0)[np.newaxis, :]
+    cmap = 'viridis'
+    vmin = 0.
+    vmax = 1.
+    fontsize = 12
+    xmin = 9.2
+    ymin = 6.6
+    xlabel = r'$\log_{10} \, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'
+    ylabel = r'$\log_{10} \, \mathrm{M}_{\mathrm{\star}} \; [\mathrm{M}_{\odot}]$'
+    clabel = r'fraction at fixed $\mathrm{M}_{\star}$'
+    
+    plotbins_x = np.copy(m200cbins)
+    plotbins_x[0] = max(plotbins_x[0], xmin)
+    plotbins_y = np.copy(mstarbins)
+    plotbins_y[0] = max(plotbins_y[0], ymin)
+    
+    fig = plt.figure(figsize=(5., 5.5))
+    grid = gsp.GridSpec(1, 2, hspace=0.0, wspace=0.1, width_ratios=[10., 1.])
+    ax = fig.add_subplot(grid[0])
+    cax = fig.add_subplot(grid[1])
+    
+    img = ax.pcolormesh(plotbins_x, plotbins_y, xynorm.T, cmap=cmap,\
+                        vmin=vmin, vmax=vmax, rasterized=True)
+    
+    ax.set_xticks(m200cbins[1:])
+    ax.set_yticks(mstarbins[1:])
+    ax.set_xlim((plotbins_x[0], plotbins_x[-1]))
+    ax.set_ylim((plotbins_y[0], plotbins_y[-1]))
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    ax.tick_params(labelsize=fontsize - 1, which='both')
+    for label in ax.get_xmajorticklabels():
+        label.set_rotation(45)
+
+    ylim = ax.get_ylim() 
+    offset = 0.025 * (ylim[1] - ylim[0])    
+    for i in range(len(plotbins_x) - 1):
+        for j in range(len(plotbins_y) - 1):
+            xcoord = 0.5 * (plotbins_x[i] + plotbins_x[i + 1])
+            ycoord = 0.5 * (plotbins_y[j] + plotbins_y[j + 1]) - 0.1 * offset
+            num = int(xycounts[i, j])
+            os = 0
+            #if num > 1000:
+            #    rotation = 90
+            #else:
+            #    rotation = 0
+            if (num >= 1000 or xycounts[max(i - 1, 0), j] >= 1000 or xycounts[min(i + 1, xycounts.shape[0] - 1), j] >= 1000) or\
+                (num >= 100 and xycounts[max(i - 1, 0), j] >= 100 and xycounts[min(i + 1, xycounts.shape[0] - 1), j] >= 100):
+                os = offset if i % 2 else -1 * offset
+            ax.text(xcoord, ycoord + os, num, fontsize=fontsize - 1.,\
+                    color='white', rotation=0.,\
+                    horizontalalignment='center', verticalalignment='center', 
+                    path_effects = [mppe.Stroke(linewidth=1.5, foreground='black'), mppe.Normal()] )
+    plt.colorbar(img, cax=cax, orientation='vertical')
+    cax.set_ylabel(clabel, fontsize=fontsize)
+    cax.tick_params(labelsize=fontsize - 1, which='both')
+    cax.set_aspect(10.)
+    
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
     
 ###############################################################################
 #                  nice plots for the paper: simplified                       #
@@ -4039,7 +4134,7 @@ def plotcddfs_fofvsmask(ion, relative=False):
 
 
 
-def plotfracs_by_halo(ions=['Mass', 'hneutralssh', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']):
+def plotfracs_by_halo(ions=['Mass', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']):
     '''
     first: group mass bins by halo mass or subhalo catgory first
     '''

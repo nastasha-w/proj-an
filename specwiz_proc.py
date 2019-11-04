@@ -1819,9 +1819,15 @@ def addbparfit_NEW_wsubsamples_multiion(sample=3):
         filen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
     elif sample == 6:
         filen = '/net/luttero/data2/specwizard_data/sample6_coldens_EW_subsamples.hdf5'
+    elif sample == (3, 6):
+        filen = '/net/luttero/data2/specwizard_data/sample3-6_coldens_EW_subsamples.hdf5'
     with h5py.File(filen, 'a') as fo:
         selections = list(fo.keys())
-        selections.remove('Header')
+        heds = {name if 'Header' in name else None for name in selections}
+        heds -= {None}
+        for hed in heds:
+            selections.remove(hed)
+            
         for sel in selections:
             for ion in ions:
                 grp = fo['%s/%s_data'%(sel, ion)]
@@ -1872,9 +1878,11 @@ def combine_sample_NEW_multiion(samples=(3, 6)):
         for ion in ionselgrpn0:
             grpn = '%s_selection'%ion
             f0.copy(grpn, fo, name=grpn)
+        f0.copy('Header', fo, name='Header_sample%s'%samples[0])
         for ion in ionselgrpn1:
             grpn = '%s_selection'%ion
             f1.copy(grpn, fo, name=grpn)
+        f1.copy('Header', fo, name='Header_sample%s'%samples[1])
         
         # combine the full samples: compare integer pixel values -> can just check equality
         grpn_full = 'full_sample'
@@ -1887,13 +1895,13 @@ def combine_sample_NEW_multiion(samples=(3, 6)):
             pixels1 = np.array(ft['Selection/selected_pixels_allions'])
         eqgrid = np.all(pixels0[:, np.newaxis, :] == pixels1[np.newaxis, :, :] , axis=2)
         keep1  = np.logical_not(np.any(eqgrid, axis=0))
-        specnums_1in0part = [np.where(eqgrid[i])[0][0] if np.any(eqgrid[i]) else -1 for i in range(eqgrid.shape[0])]
+        specnums_1in0part = np.array([np.where(eqgrid[i])[0][0] if np.any(eqgrid[i]) else -1 for i in range(eqgrid.shape[0])])
         specnums_1in1part = np.where(keep1)[0]
         specnums_0in0part = np.arange(eqgrid.shape[0])
-        specnums_0in1part = [np.where(eqgrid[:, j])[0][0] if np.any(eqgrid[:, j]) else -1 for j in range(eqgrid.shape[1])]
-        print('Overlap between files: %i sightlines'%(eqgrid.shape[1] - len(keep1)))
+        specnums_0in1part = np.array([np.where(eqgrid[:, j])[0][0] if np.any(eqgrid[:, j]) else -1 for j in range(eqgrid.shape[1])])
+        print('Overlap between files: %i sightlines'%(eqgrid.shape[1] - len(specnums_1in1part)))
         
-        specnums_file0 = np.append(specnums_0in0part, specnums_0in1part)
+        specnums_file0 = np.append(specnums_0in0part, specnums_0in1part[keep1])
         specnums_file1 = np.append(specnums_1in0part, specnums_1in1part)
         
         grp = fo.create_group(grpn_full)
@@ -1915,14 +1923,20 @@ def combine_sample_NEW_multiion(samples=(3, 6)):
             sgrp.create_dataset('logN_cmm2', data=Ns)
             sgrp.create_dataset('EWrest_A', data=EW)
 
-def printbpartable_wsubsamples_multiion():
-    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'] # only o8 doublet is expected to be unresolved -> rest is fine to use single lines   
-    filen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
-    
+def printbpartable_wsubsamples_multiion(sample=3):
+    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'] # only o8 doublet is expected to be unresolved -> rest is fine to use single lines
+    if sample == 3:
+        filen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
+    elif sample == (3, 6):
+        filen = '/net/luttero/data2/specwizard_data/sample3-6_coldens_EW_subsamples.hdf5'
     data = {}
     with h5py.File(filen, 'r') as fo:
         selections = list(fo.keys())
-        selections.remove('Header')
+        heds = {name if 'Header' in name else None for name in selections}
+        heds -= {None}
+        for hed in heds:
+            selections.remove(hed)
+            
         for sel in selections:
             data[sel] = {}
             for ion in ions:
@@ -1945,7 +1959,8 @@ def printbpartable_wsubsamples_multiion():
                                                  np.sqrt(data[sel][ion]['log'][1]) * 1e-5,\
                                                  ))                      
 
-def global_approx_percentiles_NEW_multiion(subsample='full_sample',\
+def global_approx_percentiles_NEW_multiion(sample=(3, 6),\
+                                           subsample='full_sample',\
                                            percentiles=(5., 50., 95.),\
                                            binsize=0.1, maxbin=100,\
                                            minlogEWdiff=0.1):
@@ -1964,8 +1979,11 @@ def global_approx_percentiles_NEW_multiion(subsample='full_sample',\
       determination and subsampling
     '''
     ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'] # only o8 doublet is expected to be unresolved -> rest is fine to use single lines   
-    filen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
-    
+    if sample == 3:
+        filen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
+    elif sample == (3, 6):
+        filen = '/net/luttero/data2/specwizard_data/sample3-6_coldens_EW_subsamples.hdf5'
+        
     percentiles = np.array(percentiles)
     percentiles.sort()
     
@@ -2038,7 +2056,7 @@ def global_approx_percentiles_NEW_multiion(subsample='full_sample',\
     return res
 
 def printtotxt_bparglobalperfits(filen, fits, percentiles, maxbins, binsizes, mindiffs, realizationids):
-    fdir = ol.ndir
+    fdir = '/net/luttero/data2/specwizard_data/'
     ions = fits[0].keys()
     with open(fdir + filen, 'w') as fo:
         hed = 'ion\tpercentile\tbinsize_logN\tmaxinbin\tminlogEWdiff\trealization\tb_kmps\n'
