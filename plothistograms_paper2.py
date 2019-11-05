@@ -212,7 +212,8 @@ class HandlerDashedLines(mlh.HandlerLineCollection):
             except IndexError:
                 lw = orig_handle.get_linewidths()[0]
             if dashes[0] is not None:
-                legline.set_dashes(dashes[1])
+                # seem to come out twice the input size when using dashes[1] -> fix
+                legline.set_dashes([_d *0.5 for _d in dashes[1]])
             legline.set_color(color)
             legline.set_transform(trans)
             legline.set_linewidth(lw)
@@ -2735,13 +2736,17 @@ def plot3Dprof_overview(weighttype='Mass'):
     
     plt.savefig(outname, format='pdf', box_inches='tight')
 
-def plotsubsamplediffs_NEW(sample=3):
+def plotsubsamplediffs_NEW(sample=(3, 6), allsamples=True):
+    if allsamples:
+        smpfill = ''
+    else:
+        smpfill = '_lesssamples'
     if sample == 3:
         dfilen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
-        fileout = '/net/luttero/data2/specwizard_data/sample3_specwizard-NEW_wbparfit_wsubsamples.pdf'
+        fileout = '/net/luttero/data2/specwizard_data/sample3_specwizard-NEW_wbparfit_wsubsamples%s.pdf'%(smpfill)
     elif sample == (3, 6):
-        dfilen = None
-        fileout = None
+        dfilen = '/net/luttero/data2/specwizard_data/sample3-6_coldens_EW_subsamples.hdf5'
+        fileout = '/net/luttero/data2/specwizard_data/sample3-6_specwizard-NEW_wbparfit_wsubsamples%s.pdf'%(smpfill)
         
     percentiles = [5., 50., 95.]
     logNspacing = 0.2
@@ -2750,6 +2755,8 @@ def plotsubsamplediffs_NEW(sample=3):
     ylabel = r'$\log_{10} \, \mathrm{EW} \; [\mathrm{m\AA}]$'
     xlabel = r'$\log_{10} \, \mathrm{N}(\mathrm{%s}) \; [\mathrm{cm}^{-2}]$'
     fontsize = 12
+    linewidth = 1.5
+    
     uselines = {'o7': ild.o7major,\
                 'o8': ild.o8doublet,\
                 'o6': ild.o6major,\
@@ -2775,27 +2782,36 @@ def plotsubsamplediffs_NEW(sample=3):
     data = {}
     with h5py.File(dfilen, 'r') as fi:
         selections = list(fi.keys())
-        selections.remove('Header')
-        for selection in selections:
-            data[selection] = {}
-            for ionk in fi[selection].keys():
-                grp = fi['%s/%s'%(selection, ionk)]
+        toremove = [] 
+        for _sel in selections:
+            if _sel.decode().startswith('Header'):
+                toremove.append(_sel)
+                continue
+            data[_sel] = {}
+            for ionk in fi[_sel].keys():
+                #print('%s/%s'%(selection, ionk))
+                if ionk.startswith('specnum'):
+                    continue
+                grp = fi['%s/%s'%(_sel, ionk)]
                 logN = np.array(grp['logN_cmm2'])
                 EW = np.array(grp['EWrest_A'])
                 blin = np.array(grp.attrs['bparfit_cmps_linEW'])[0] * 1e-5
                 blog = np.array(grp.attrs['bparfit_cmps_logEW'])[0] * 1e-5
                 ion = ionk.split('_')[0]
-                data[selection][ion] = {'logN': logN, 'EW': EW,\
-                                        'blin': blin, 'blog': blog}
-                
+                data[_sel][ion] = {'logN': logN, 'EW': EW,\
+                                   'blin': blin, 'blog': blog}
+    for sel in toremove:
+        selections.remove(sel)
+          
     ions = {val for sub in data for val in data[sub]}
     ions = list(ions)
     ions.sort()
     nions = len(ions)
     
     selkeys = selections
-    colors = {selkeys[i]: 'C%i'%(i % 10) for i in range(len(selkeys))}
-    _linestyles = ['solid'] * 4
+    colors = {key: ioncolors[key.split('_')[0]] if key.split('_')[0] in ioncolors else 'black' for key in selkeys}
+    #{selkeys[i]: 'C%i'%(i % 10) for i in range(len(selkeys))}
+    _linestyles = ['solid'] * len(selkeys)
     linestyles = {selkeys[i]: _linestyles[i] for i in range(len(selkeys))}
     
     panelwidth = 2.5
@@ -2819,7 +2835,10 @@ def plotsubsamplediffs_NEW(sample=3):
         for key in selkeys:
             logN = data[key][ion]['logN']
             EW   = np.log10(data[key][ion]['EW']) + 3.
-            
+            if not (allsamples or ion in key or 'full' in key):
+                continue
+ 
+            _linewidth = linewidth  
             if ioni == 0:
                 label = key
             else:
@@ -2851,7 +2870,7 @@ def plotsubsamplediffs_NEW(sample=3):
             ax.plot(Ncens[plotmin : plotmax + 1],\
                             percvals[plotmin : plotmax + 1, 1],\
                             color=colors[key], linestyle=linestyles[key],\
-                            label=label)
+                            label=label, linewidth=_linewidth)
             
             Ns_sc = [val for bi in range(plotmin) + range(plotmax + 1, len(Ncens)) for val in Ns_bin[bi]]
             EWs_sc = [val for bi in range(plotmin) + range(plotmax + 1, len(Ncens)) for val in EWs_bin[bi]]
@@ -2907,7 +2926,9 @@ def plotdiffs_bparglobalperc(bparfit='bpar_global_perc_set1.txt'):
     df = pd.read_csv(fdir + bparfit, sep='\t')
     
     colors = {50: 'red', 100: 'green', 200: 'blue'}
+    yoff1 = {50: 0.015, 100: 0.0, 200: -0.015}
     markers = {0.1: 'o', 0.15: 'p', 0.2: '^'}
+    yoff2  = {0.1: 0.01, 0.15: 0.0, 0.2: -0.01}
     sizes  = {5.0: 15, 50.0: 30, 95.0: 45}
     ionpos = {'o6': 0.9, 'ne8': 0.8, 'o7': 0.7, 'ne9': 0.6, 'o8': 0.5, 'fe17': 0.4}
     ylim = (0.35, 0.95)
@@ -2925,7 +2946,8 @@ def plotdiffs_bparglobalperc(bparfit='bpar_global_perc_set1.txt'):
         mn   = df.at[rowi, 'minlogEWdiff']
         bval = df.at[rowi, 'b_kmps']
         
-        ax.scatter(bval, ionpos[ion], s=sizes[perc], c=colors[bn], marker=markers[mn], alpha=0.3)
+        pos = ionpos[ion] + yoff1[bn] + yoff2[mn]
+        ax.scatter(bval, pos, s=sizes[perc], c=colors[bn], marker=markers[mn], alpha=0.3)
     
     ax.tick_params(axis='x', which='both', top=True, labelsize=fontsize-1, direction='in')
     ax.minorticks_on()
@@ -4783,7 +4805,8 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
     plt.savefig(imgname, format='pdf', bbox_inches='tight')
 
 def plot_NEW():
-    dfilen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
+    #dfilen = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
+    dfilen = '/net/luttero/data2/specwizard_data/sample3-6_coldens_EW_subsamples.hdf5'
     percentiles = [5., 50., 95.]
     logNspacing = 0.1
     linemin = 20
@@ -4831,23 +4854,34 @@ def plot_NEW():
                               (ionh.atomw[string.capwords(ol.elements_ion[ion])] * c.u)) \
                       * 1e-5
                  for ion in Tmax_CIE}
-    bvals_indic = {'o7': [50., 220.],\
-                   'o8': [70., 300.],\
-                   'o6': [5., 90.],\
-                   'ne8': [80.],\
-                   'ne9': [50., 140.],\
-                   'fe17': [50, 200.],\
+    # informed by ~ b par global percentiles
+    bvals_indic = {'o7': [45., 230., 20.],\
+                   'o8': [80., 320.],\
+                   'o6': [20., 120., 5.],\
+                   'ne8': [25., 90.],\
+                   'ne9': [50., 230.],\
+                   'fe17': [50, 180.],\
                    }
     bvals = {ion: [bvals_CIE[ion]] + bvals_indic[ion] for ion in bvals_CIE}
+    
 
     data = {}
     with h5py.File(dfilen, 'r') as fi:
-        selections = list(fi.keys())
-        selections.remove('Header')
+        #selections = list(fi.keys())
+        #selections.remove('Header')
         selection = 'full_sample'
-            
-        for ionk in fi[selection].keys():
+        
+        subsel = list(fi[selection].keys())
+        torem = []
+        for sub in subsel:
+            if sub.startswith('specnum'):
+                torem.append(sub)
+        for sub in torem:
+            subsel.remove(sub)
+        #print(subsel)    
+        for ionk in subsel:
             grp = fi['%s/%s'%(selection, ionk)]
+            #print(grp.keys())
             logN = np.array(grp['logN_cmm2'])
             EW = np.array(grp['EWrest_A'])
             blin = np.array(grp.attrs['bparfit_cmps_linEW'])[0] * 1e-5
@@ -4865,18 +4899,22 @@ def plot_NEW():
                   'EWfit_lin': 'dashed',\
                   'EWfit_log': 'dashed',\
                   'linCOG': 'dotted',\
-                  'b_indic': 'dashdot'}
+                  'b_indic': (0.0, [4., 1., 1., 1.])} # [9.6, 2.4, 1.6, 2.4]
     colors = {'data': 'gray',\
               'med':  'green',\
               'out':  'yellowgreen',\
               'EWfit_lin': 'blue',\
               'EWfit_log': 'cyan',\
               'linCOG': 'cadetblue',\
-              'b_indic': ['red', 'firebrick', 'lightcoral']}
+              'b_indic': ['red', 'firebrick', 'lightcoral', 'rosybrown']}
+    kws_sublegends = {'handlelength': 1.8,\
+                      'handletextpad': 0.5,\
+                      'columnspacing': 0.7,\
+                      }
     alpha_data = 0.05
     size_data = 10.
     linewidth = 2.
-    path_effects = [mppe.Stroke(linewidth=linewidth - 0.5, foreground="black"), mppe.Normal()]
+    path_effects = [mppe.Stroke(linewidth=linewidth, foreground="black"), mppe.Stroke(linewidth=linewidth - 0.5)]
     
     panelwidth = 2.8
     panelheight = 2.8
@@ -4963,9 +5001,9 @@ def plot_NEW():
             EWsthin = np.sum([ild.lingrowthcurve_inv(10**Ncens, lines.speclines[lkey])\
                              for lkey in lines.speclines],axis=0)
         label = '%.0f'%blin
-        ax.plot(Ncens, np.log10(EWsthin) + 3., color=colors['linCOG'], linestyle=linestyles['linCOG'])
+        ax.plot(Ncens, np.log10(EWsthin) + 3., color=colors['linCOG'], linestyle=linestyles['linCOG'], path_effects=path_effects)
         #ax.plot(Ncens, np.log10(EWslin) + 3., color=colors['EWfit_lin'], label=None, linestyle=linestyles['EWfit_lin'])
-        ax.plot(Ncens, np.log10(EWslog) + 3., color=colors['EWfit_log'], linestyle=linestyles['EWfit_log'], label=label)
+        ax.plot(Ncens, np.log10(EWslog) + 3., color=colors['EWfit_log'], linestyle=linestyles['EWfit_log'], label=label, path_effects=path_effects)
         
         bvals_this = bvals[ion]
         for bi in range(len(bvals_this)):
@@ -4973,14 +5011,21 @@ def plot_NEW():
             EWs = np.log10(ild.linflatcurveofgrowth_inv(10**Ncens, bval * 1e5, lines)) + 3.
             label = '%.0f'%bval
             ax.plot(Ncens, EWs, linestyle=linestyles['b_indic'], color=colors['b_indic'][bi],\
-                    linewidth=linewidth, label=label)
+                    linewidth=linewidth, label=label, path_effects=path_effects)
         
         hnd, lab = ax.get_legend_handles_labels()
+        if len(lab) > 4:
+            ncol_lr = 2
+            bbta = (1.04, -0.04)
+        else:
+            ncol_lr = 1
+            bbta = (1.02, -0.02)
         leg1 = ax.legend(hnd[:1], lab[:1], fontsize=fontsize, loc='upper left',\
                          ncol=1, frameon=False, bbox_to_anchor=(-0.015, 0.91),\
-                         handlelength=1.5)
+                         **kws_sublegends)
         leg2 = ax.legend(hnd[1:], lab[1:], fontsize=fontsize, loc='lower right',\
-                         frameon=False, bbox_to_anchor=(1.02, -0.02))
+                         frameon=False, bbox_to_anchor=bbta,\
+                         ncol=ncol_lr, **kws_sublegends)
         ax.add_artist(leg1)
         ax.add_artist(leg2)
         
@@ -4990,21 +5035,7 @@ def plot_NEW():
         
     lcs = []
     line = [[(0, 0)]]    
-    # set up the proxy artist
-    linestyles = {'med': 'solid',\
-                  'out': 'solid',\
-                  'EWfit_lin': 'dashed',\
-                  'EWfit_log': 'dashed',\
-                  'linCOG': 'dotted',\
-                  'b_indic': 'dashdot'}
-    colors = {'data': 'gray',\
-              'med':  'green',\
-              'out': 'yellowgreen',\
-              'EWfit_lin': 'blue',\
-              'EWfit_log': 'cyan',\
-              'linCOG': 'cadetblue',\
-              'b_indic': ['red', 'firebrick', 'rosybrown', 'lightcoral']}
-    
+    # set up the proxy artist    
     for ls in [linestyles['b_indic']]:
         subcols = [mpl.colors.to_rgba(color) for color in colors['b_indic']]
         subcols = np.array(subcols)
@@ -5018,17 +5049,18 @@ def plot_NEW():
     #selhandles = [mlines.Line2D([], [], color=colors[key], linestyle='solid', label=key.split('_')[0] + ' sample') 
     #              for key in colors]
     #sellabels = [key.split('_')[0] + ' sample' for key in colors]
-    handles1 = [mlines.Line2D([], [], color=colors['med'], linestyle=linestyles['med'], label='median'),\
-                mlines.Line2D([], [], color=colors['out'], linestyle=linestyles['out'], label='%.0f %%'%(percentiles[2] - percentiles[0])),\
-                mlines.Line2D([], [], color=colors['linCOG'], linestyle=linestyles['linCOG'], label='opt. thin'),\
-                mlines.Line2D([], [], color=colors['EWfit_log'], linestyle=linestyles['EWfit_log'], label='best-fit b'),\
-                mlines.Line2D([], [], color=colors['b_indic'][0], linestyle=linestyles['b_indic'], label=r'$b(T_{\max, \mathrm{CIE}})$'),\
+    handles1 = [mlines.Line2D([], [], color=colors['med'], linestyle=linestyles['med'], label='median', path_effects=path_effects),\
+                mlines.Line2D([], [], color=colors['out'], linestyle=linestyles['out'], label='%.0f %%'%(percentiles[2] - percentiles[0]), path_effects=path_effects),\
+                mlines.Line2D([], [], color=colors['linCOG'], linestyle=linestyles['linCOG'], label='opt. thin', path_effects=path_effects),\
+                mlines.Line2D([], [], color=colors['EWfit_log'], linestyle=linestyles['EWfit_log'], label='best-fit b', path_effects=path_effects),\
+                mlines.Line2D([], [], color=colors['b_indic'][0], linestyle=linestyles['b_indic'], label=r'$b(T_{\max, \mathrm{CIE}})$', path_effects=path_effects),\
                 ]
     labels1 = ['median', '%.0f %%'%(percentiles[2] - percentiles[0]), 'opt. thin', r'best-fit $b$', r'$b(T_{\max, \mathrm{CIE}})$']
     lax.legend(handles1 + lcs, labels1 + [r'var. $b \; [\mathrm{km} \, \mathrm{s}^{-1}]$'],\
                handler_map={type(lc): HandlerDashedLines()},\
-               fontsize=fontsize, ncol=ncols, loc='upper center', bbox_to_anchor=(0.5, 0.6))
+               fontsize=fontsize, ncol=ncols, loc='upper center', bbox_to_anchor=(0.5, 0.6),\
+               handlelength=1.8)
     lax.axis('off')
     
-    plt.savefig('/net/luttero/data2/specwizard_data/sample3_specwizard-NEW_wbparfit_fullsample.pdf', format='pdf', bbox_inches='tight')
-    return outdata
+    plt.savefig('/net/luttero/data2/specwizard_data/sample3-6_specwizard-NEW_wbparfit_fullsample.pdf', format='pdf', bbox_inches='tight')
+    #return outdata
