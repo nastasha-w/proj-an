@@ -22,6 +22,7 @@ reload(m3)
 import simfileclone as sfc
 reload(sfc)
 #import make_maps_opts_locs as ol
+from prof3d_galsets import combine_hists
 
 
 def getaveragecolumndensity():
@@ -204,6 +205,74 @@ def comparehist(arr1,arr2,fontsize=12,clabel = '',name = dd_new + 'test.png',dif
     fig.tight_layout()
     plt.savefig(name,format = 'png')
     
+
+def compare3dhist(arr1, arr2, bins1, bins2, fontsize=12, clabel='',\
+                  name=dd_new + 'test.pdf', diffmax=None):
+    
+    if (len(arr1.shape) != 2) or (len(arr2.shape) != 2):
+        raise ValueError('compare3dhist only works for 2d arrays')
+    #min(np.min(arr1[np.isfinite(arr1)]),np.min(arr2[np.isfinite(arr2)]))
+    Vmax = max(np.max(arr1[np.isfinite(arr1)]), np.max(arr2[np.isfinite(arr2)]))
+    Vmin = min(np.min(arr1[np.isfinite(arr1)]), np.min(arr2[np.isfinite(arr2)]))
+    Vmin = max(Vmax - 10., Vmin)
+    
+    fig, ((ax1,ax2),(ax3,ax4)) = plt.subplots(nrows=2,ncols=2,sharex=False,sharey=False)
+    fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=None)
+
+    ph1, ph2, eds = combine_hists(arr1, arr2, bins1, bins2, rtol=1e-5, atol=1e-8, add=False)
+    diff = ph1 - ph2
+    if diffmax is not None:
+        maxdiff = diffmax
+    else:    
+        maxdiff = np.max(np.abs(diff)[np.isfinite(np.abs(diff))])
+        
+    ax1.tick_params(labelsize=fontsize)
+    ax1.patch.set_facecolor(cm.get_cmap('viridis')(0.))
+    img = ax1.pcolormesh(eds[0], eds[1], ph1.T, cmap=cm.get_cmap('viridis'),\
+                         vmin=Vmin, vmax=Vmax,\
+                         rasterized=True) 
+    ax1.set_title('test run', fontsize=fontsize)
+    div = axgrid.make_axes_locatable(ax1)
+    cax1 = div.append_axes("right", size="5%", pad=0.1)
+    cbar1 = plt.colorbar(img, cax=cax1)
+    cbar1.solids.set_edgecolor("face")
+    cbar1.ax.set_ylabel(clabel, fontsize=fontsize)
+    cbar1.ax.tick_params(labelsize=fontsize)
+
+    ax2.tick_params(labelsize=fontsize)
+    ax2.patch.set_facecolor(cm.get_cmap('viridis')(0.))
+    img = ax2.pcolormesh(eds[0], eds[1], ph2.T, cmap=cm.get_cmap('viridis'),\
+                          vmin=Vmin, vmax=Vmax,\
+                          rasterized=True) 
+    ax2.set_title('check run', fontsize=fontsize)
+    div = axgrid.make_axes_locatable(ax2)
+    cax2 = div.append_axes("right", size="5%",pad=0.1)
+    cbar2 = plt.colorbar(img, cax=cax2)
+    cbar2.solids.set_edgecolor("face")
+    cbar2.ax.set_ylabel(clabel, fontsize=fontsize)
+    cbar2.ax.tick_params(labelsize=fontsize)
+
+    ax3.tick_params(labelsize=fontsize)
+    ax3.patch.set_facecolor('black')
+    img = ax3.pcolormesh(eds[0], eds[1], (diff).T,\
+                         cmap=cm.get_cmap('RdBu'),\
+                         vmin=-maxdiff, vmax=maxdiff,\
+                         rasterized=True) 
+    ax3.set_title('test - check', fontsize=fontsize)
+    div = axgrid.make_axes_locatable(ax3)
+    cax3 = div.append_axes("right", size="5%", pad=0.1)
+    cbar3 = plt.colorbar(img, cax=cax3)
+    cbar3.solids.set_edgecolor("face")
+    cbar3.ax.set_ylabel(r'$\Delta$' + clabel, fontsize=fontsize)
+    cbar3.ax.tick_params(labelsize=fontsize)
+    
+    ax4.set_title('test - check')
+    ax4.hist(np.ndarray.flatten(diff[np.isfinite(diff)]), log=True, bins=50)
+    ax4.set_ylabel('number of pixels', fontsize=fontsize)
+    ax4.set_xlabel(r'$\Delta$' + clabel, fontsize=fontsize)
+
+    fig.tight_layout()
+    plt.savefig(name, format='pdf')
     
 ##############################################################################    
 ####################### cooling table tests ##################################

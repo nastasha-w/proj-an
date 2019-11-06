@@ -4604,13 +4604,13 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
     if ptype == 'basic':
         squantity = quantity
         squantity = squantity.replace('/','-')
-
-    if sylviasshtables and ptype == 'coldens':
-        iontableind = '_iontab-sylviasHM12shh'
-    elif bensgadget2tables and ptype == 'coldens':
-        iontableind = '_iontab-bensgagdet2'
-    else:
-        iontableind = ''
+    
+    iontableind = ''
+    if ptype in ['Nion', 'Niondens']:
+        if sylviasshtables:
+            iontableind = '_iontab-sylviasHM12shh'
+        elif bensgadget2tables:
+            iontableind = '_iontab-bensgagdet2'
         
     if ptype in ['Nion', 'Niondens', 'Lumninosity', 'Lumdens']:
         resfile = ol.ndir + 'particlehist_%s_%s%s_%s_%s_test%s_%s' %(ptype, ion, iontableind, ssimnum, snapnum, str(version), sabunds) + boxstring + SFRind
@@ -4628,6 +4628,9 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
     return resfile
 
 def namehistogram_perparticle_axis(dct):
+    '''
+    dct should contain all the axesdct entires (with defaults included)
+    '''
     ptype = dct['ptype']
     excludeSFR = dct['excludeSFR']
     if 'misc' in dct.keys():
@@ -4656,7 +4659,12 @@ def namehistogram_perparticle_axis(dct):
             sabunds = sabunds + '-%smassfracHAb'%str(abunds[1])
         elif abunds[1] != abunds[0]:
             sabunds = sabunds + '-%smassfracHAb'%abunds[1]
-        axname = '%s_%s_%s' %(ptype, dct['ion'], sabunds) + SFRind
+        stables = ''
+        if dct['sylviasshtables']:
+            stables = '_iontab-sylviasHM12shh'
+        elif dct['bensgadget2tables']:
+            stables = '_iontab-bensgagdet2'
+        axname = '%s_%s_%s%s' %(ptype, dct['ion'], sabunds, stables) + SFRind
 
     elif ptype == 'basic':
         parttype = dct['parttype']
@@ -4709,7 +4717,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
         return 3
     elif ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
         if 'ion' not in dct.keys():
-            print('For ptype %s, an ion must be specified')
+            print('For ptype %s, an ion must be specified'%(ptype))
             return 37
         else:
             ion = dct['ion']
@@ -4921,7 +4929,7 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
         print('Warning: the option bensgadget2tables only applies to ion numbers or densities; it will be ignored altogether here')
         return 44
     if bensgadget2tables and sylviasshtables:
-        print('Only one tale set of bensgadget2tables and sylviasshtables can be used')
+        print('Only one table set of bensgadget2tables and sylviasshtables can be used')
         return 45
     
     if not (L_x is None and L_y is None and L_z is None and centre is None):
@@ -5094,7 +5102,7 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity,\
 
 
 
-def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
+def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
                                simulation='eagle',\
                                excludeSFR=False, abunds=None, ion=None, parttype='0', quantity=None,\
                                axbins=0.2,\
@@ -5145,7 +5153,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
            
     not in make_map:
     ----------------
-    axesdct: list of dictionaries for each hist: the axes of the histogram
+    _axesdct: list of dictionaries for each hist: the axes of the histogram
         entires are (the non-None elements of) ptype, exlcudeSFR, abunds, ion, 
         parttype, quantity, mdef, allinR200c, (defaults are same as general/
         weight values)
@@ -5178,6 +5186,8 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
     TODO: wishlisting implementation: avoid double read-ins (currently only
     indirectly done for coords-r3D and region selection)
     '''
+    axesdct = [_dct.copy() for _dct in _axesdct]
+    
     res = inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
                               L_x, L_y, L_z, centre, Ls_in_Mpc,\
                               excludeSFR, abunds, ion, parttype, quantity,\
@@ -5198,17 +5208,19 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
     if not isinstance(loghist, bool):
         raise ValueError('loghist should be True or False')
 
-    ptype, simnum, snapnum, var, simulation,\
-    L_x, L_y, L_z, centre, Ls_in_Mpc,\
-    excludeSFR, abunds, ion, parttype, quantity,\
-    axesdct, axbins, allinR200c, mdef, misc = res[1:]
+    pytpe, simnum, snapnum, var, simulation,\
+    L_x, L_y, L_z, centre, LsinMpc,\
+    exlcudeSFR, abunds, ion, parttype, quantity,\
+    axesdct, axbins, allinR200c, mdef,\
+    sylviasshtables, bensgadget2tables,\
+    misc = res[1:]
 
     print('Processed input for makehstograms_perparticle:')
     print('general:')
     print('parttype: \t%s \tsimnum: \t%s snapnum: \t%s \tvar: \t%s \tsimulation: \t%s'%(parttype, simnum, snapnum, var, simulation))
     print('L_x: \t%s \tL_y: \t%s \tL_z: \t%s \tcentre: \t%s \tLs_in_Mpc: \t%s'%(L_x, L_y, L_z, centre, Ls_in_Mpc))
     print('loghist: \t%s \tnameonly: \t%s \tname_append: \t%s'%(loghist, nameonly, name_append))
-    fillstr_particleprop = 'ptype: \t%s \texcludeSFR: \t%s \tabunds: \t%s \tion: \t%s \tquantity: \t%s\n\tsylviasshtables: \t%s bensgadget2tables: \t%s\n\tallinR200c: \t%s\n\t%s mdef: \t%s'
+    fillstr_particleprop = 'ptype: \t%s \texcludeSFR: \t%s \tabunds: \t%s \tion: \t%s \tquantity: \t%s\n\tsylviasshtables: \t%s \tbensgadget2tables: \t%s\tallinR200c: \t%s\tmdef: \t%s'
     print('histogram weight:')
     print(fillstr_particleprop%(ptype, excludeSFR, abunds, ion, quantity, sylviasshtables, bensgadget2tables, allinR200c, mdef))
     print('misc: %s'%(misc))
@@ -5517,4 +5529,4 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
         for i in range(len(edges)):
             bingrp.create_dataset('Axis%i'%(i), data=edges[i])
 
-    return hist, axbins
+    return hist, axbins_touse

@@ -36,9 +36,11 @@ def dataname(samplen):
 def files(samplen, weighttype):
     return tdir + 'filenames_%s_%s.txt'%(samplen, weighttype)
 
-def combine_hists(h1, h2, e1, e2, rtol=1e-5, atol=1e-8):
+def combine_hists(h1, h2, e1, e2, rtol=1e-5, atol=1e-8, add=True):
     '''
     add histograms h1, h2 with the same dimension, after aligning edges e1, e2
+    add = True -> add histograms, return sum
+    add = False -> align histograms, return padded histograms and bins
     
     e1, e2 are sequences of arrays, h1, h2 are arrays
     edgetol specifies what relative/absolute (absolute if one is zero) 
@@ -135,9 +137,12 @@ def combine_hists(h1, h2, e1, e2, rtol=1e-5, atol=1e-8):
         
     h1 = np.pad(h1, mode='constant', constant_values=0, pad_width=p1)
     h2 = np.pad(h2, mode='constant', constant_values=0, pad_width=p2)
-    hs = h1 + h2
-    return hs, es
-
+    if add:
+        hs = h1 + h2
+        return hs, es
+    else:
+        return h1, h2, es
+    
 def gensample(samplename=None, galaxyselector=None):
     '''
     retrieve and store metadata for a given sample
