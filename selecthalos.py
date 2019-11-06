@@ -1147,7 +1147,7 @@ def getmstarbins(m200cbins=(10., 10.5, 11., 11.5, 12., 12.5, 13., 13.5, 14.0),\
 Mstar_edges = np.array([8.7,  9.7, 10.3, 10.8, 11.1, 11.3, 11.5, 11.7])
 Mstar_sels = [[('Mstar_Msun', 10**Mstar_edges[i], 10**Mstar_edges[i + 1])] \
               for i in range(len(Mstar_edges) - 1)]
-Mstar_names =['geq%s_le%s'%(Mstar_edges[i], Mstar_edges[i]) \
+Mstar_names =['geq%s_le%s'%(Mstar_edges[i], Mstar_edges[i + 1]) \
               for i in range(len(Mstar_edges) - 1)]
 
 L0100N1504_27_Mstar_Mhbinmatch_1000 = Galaxyselector(halocat_L0100N1504_27, selections=Mstar_sels, names=Mstar_names, number=1000, seed=0)
