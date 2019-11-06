@@ -848,7 +848,11 @@ def rdists_sl_from_haloids(base, szcens, L_x, npix_x,\
     adjustscale = rmax_r200c * R200c < mindist_cMpc
     if np.sum(adjustscale) > 0:
         rmax_r200c = np.ones(len(halos)) * rmax_r200c 
-        rmax_r200c[adjustscale] = mindist_cMpc / R200c[adjustscale]
+        if hasattr(mindist_cMpc, '__len__'):
+            _mindist_cMpc = mindist_cMpc[adjustscale]
+        else:
+            _mindist_cMpc = mindist_cMpc            
+        rmax_r200c[adjustscale] = _mindist_cMpc / R200c[adjustscale]
     
     if stamps:
         return stamps_sl(base, szcens, L_x, npix_x,\
