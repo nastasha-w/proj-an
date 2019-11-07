@@ -2374,6 +2374,12 @@ if jobind in range(20066, 20072):
                          selection, np.inf, outname=outname,\
                          numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
                          axis='z', velspace=False, offset_los=0., stamps=False)
+
+elif jobind in range(20072, 20086):
+    weighttype = ['o1', 'o2', 'o3', 'o4', 'o5', 'o6', 'o7', 'o8', 'oxygen',\
+                  'ne8', 'ne9', 'neon', 'fe17', 'iron'][jobind - 20072]
+    p3g.genhists_ionmass(samplename=None, rbinu='R200c', idsel=None,\
+                         weighttype=weighttype, logM200min=11.0)   
     
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #

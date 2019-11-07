@@ -4730,7 +4730,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
         parttype = '0'
         if ion in ol.elements_ion.keys():
             iselt = False
-        elif ion in ol.elements and ptype == 'coldens':
+        elif ion in ol.elements and ptype in ['Nion', 'Niondens']:
             iselt = True
         else:
             print('%s is an invalid ion option for ptype %s\n'%(ion,ptype))
