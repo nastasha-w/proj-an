@@ -415,7 +415,7 @@ def genhists_ionmass(samplename=None, rbinu='R200c', idsel=None, weighttype='o6'
                 m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
             
             fdoc.write('%i\t%s\t%s\n'%(gid, outname[0], outname[1]))
-            break
+
 def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
               binby=('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),\
               combmethod='addnormed-R200c'):
