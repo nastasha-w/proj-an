@@ -2366,7 +2366,7 @@ if jobind in range(20066, 20072):
                  'ne9': ol.ndir + 'coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
                  }
     filename = filenames[ion]
-    outname = ol.pdir + 'rdist_%s_%islice_to-500-pkpc-or-2p5-R200c_Mstar-M200c-0p5dex-match_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+    outname = ol.pdir + 'rdist_%s_%islice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
     
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
