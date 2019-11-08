@@ -5008,7 +5008,7 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity,\
     '''
             
     iselt = False
-    if ion in ol.elements and ptype == 'coldens':
+    if ion in ol.elements and ptype == ['Nion', 'Niondens']:
         iselt = True
     if ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
         eltab, hab = get_eltab_names(abunds, iselt, ion)
