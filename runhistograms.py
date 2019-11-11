@@ -2856,28 +2856,27 @@ if jobind in range(30017, 30023): # cosma
         if _rbins_pkpc[-1] < maxallstored:
             _rbins_pkpc = np.append(_rbins_pkpc, maxallstored)
         
-        for rqfile in filenames:   
-            if iscoresample:
-                print('Starting %s, core subsample, R200c'%rqfile)
-                crd.get_radprof(rqfile, halocat, rbins_r200c, yvals_perc,\
-                            xunit='R200c', ytype='perc',\
-                            galids=galids, combinedprofile=True,\
-                            separateprofiles=False,\
-                            rpfilename=None, galsettag=skey)
-                print('Finished %s, core subsample, R200c\n'%rqfile)
-                
-                print('Starting %s, core subsample, R200c'%rqfile)
-                crd.get_radprof(rqfile, halocat, _rbins_pkpc, yvals_perc,\
-                            xunit='pkpc', ytype='perc',\
-                            galids=galids, combinedprofile=True,\
-                            separateprofiles=False,\
-                            rpfilename=None, galsettag=skey)
-                print('Finished %s, core subsample, R200c\n'%rqfile)
-                
-            print('Starting %s, full sample, pkpc'%rqfile)
+        if iscoresample:
+            print('Starting %s, core subsample, R200c'%rqfile)
+            crd.get_radprof(rqfile, halocat, rbins_r200c, yvals_perc,\
+                        xunit='R200c', ytype='perc',\
+                        galids=galids, combinedprofile=True,\
+                        separateprofiles=False,\
+                        rpfilename=None, galsettag=skey)
+            print('Finished %s, core subsample, R200c\n'%rqfile)
+            
+            print('Starting %s, core subsample, R200c'%rqfile)
             crd.get_radprof(rqfile, halocat, _rbins_pkpc, yvals_perc,\
                         xunit='pkpc', ytype='perc',\
                         galids=galids, combinedprofile=True,\
                         separateprofiles=False,\
                         rpfilename=None, galsettag=skey)
-            print('Finished %s, full sample, pkpc\n'%rqfile)
+            print('Finished %s, core subsample, R200c\n'%rqfile)
+            
+        print('Starting %s, full sample, pkpc'%rqfile)
+        crd.get_radprof(rqfile, halocat, _rbins_pkpc, yvals_perc,\
+                    xunit='pkpc', ytype='perc',\
+                    galids=galids, combinedprofile=True,\
+                    separateprofiles=False,\
+                    rpfilename=None, galsettag=skey)
+        print('Finished %s, full sample, pkpc\n'%rqfile)
