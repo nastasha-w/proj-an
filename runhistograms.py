@@ -2836,7 +2836,14 @@ if jobind in range(30017, 30023): # cosma
     rbins_pkpc = np.array([0., 3., 5., 7., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 120., 140., 160., 180.] + list(np.arange(200., maxrad_all, 25.)))
     rbins_r200c = np.arange(0., rmax_r200c + 0.01, 0.05)
     
-
+    fcovs_ion = {'o6':   np.array([12.5, 13.0, 13.5, 14.0, 14.3, 14.5]),\
+                 'o7':   np.array([14.5, 15.0, 15.1, 15.5, 16.0]),\
+                 'o8':   np.array([14.5, 15.0, 15.5, 15.7, 16.0]),\
+                 'ne8':  np.array([12.5, 13.0, 13.5, 13.7, 14.0, 14.5]),\
+                 'ne9':  np.array([14.5, 15.0, 15.3, 15.5, 15.6]),\
+                 'fe17': np.array([13.5, 14.0, 14.5, 14.9, 15.0]),\
+                 }
+    
     # galids selection from galaxyselector (halo masses in 0.5 dex)
     selcombs_full_sample = {'logMstar_Msun_1000_%s'%key: galids_dct[key] for key in galids_dct.keys()}
     gkeys = galids_dct.keys() # set up beforehand to match orders in lists
@@ -2880,3 +2887,11 @@ if jobind in range(30017, 30023): # cosma
                     separateprofiles=False,\
                     rpfilename=None, galsettag=skey)
         print('Finished %s, full sample, pkpc\n'%rqfile)
+        
+        print('Starting %s, full sample, pkpc, fcovs'%rqfile)
+        crd.get_radprof(rqfile, halocat, _rbins_pkpc, fcovs_ion[ion],\
+                    xunit='pkpc', ytype='fcov',\
+                    galids=galids, combinedprofile=True,\
+                    separateprofiles=False,\
+                    rpfilename=None, galsettag=skey)
+        print('Finished %s, full sample, pkpc, fcovs\n'%rqfile)
