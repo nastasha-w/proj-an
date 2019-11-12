@@ -763,3 +763,35 @@ def extracthists_ionfrac(samplename='L0100N1504_27_Mh0p5dex_1000',\
             egrp.attrs.create('element', np.string_(eltlist[0]))
             egrp.attrs.create('ions', np.array([np.string_(ion) for ion in eltlist[1:]]))
             egrp.create_dataset('fractions', data=savelist)
+
+def addhalomasses_hists_ionfrac(samplename='L0100N1504_27_Mh0p5dex_1000',\
+              addedges=(0.1, 1.)):
+    rbinu='R200c'
+    filename = ol.pdir + 'ionfracs_halos_%s_%s-%s-%s_PtAb.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)
+    
+    fdata = dataname(samplename)
+    
+    with open(fdata, 'r') as fi:
+        # scan for halo catalogue (only metadata needed for this)
+        headlen = 0
+        halocat = None
+        while True:
+            line = fi.readline()
+            if line == '':
+                if halocat is None:
+                    raise RuntimeError('Reached the end of %s without finding the halo catalogue name'%(fdata))
+                else:
+                    break
+            elif line.startswith('halocat'):
+                halocat = line.split(':')[1]
+                halocat = halocat.strip()
+                headlen += 1
+            elif ':' in line or line == '\n':
+                headlen += 1
+                
+    galdata_all = pd.read_csv(fdata, header=headlen, sep='\t', index_col='galaxyid')
+    
+    with h5py.File(filename, 'a') as fn:
+        galaxyids_if = np.array(fn['galaxyids'])
+        m200c = np.array(galdata_all['M200c_Msun'][galaxyids_if])
+        fn.create_dataset('M200c_Msun', data=m200c)

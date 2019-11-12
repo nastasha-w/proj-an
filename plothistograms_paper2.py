@@ -69,11 +69,12 @@ logrhoc_ea_27 = np.log10( 3. / (8. * np.pi * c.gravity) * cu.Hubble(cosmopars_ea
 
 def T200c_hot(M200c, cosmopars):
     # checked against notes from Joop's lecture: agrees pretty well at z=0, not at z=9 (proabably a halo mass definition issue)
-    M200c *= c.solar_mass # to cgs
+    _M200c = np.copy(M200c)
+    _M200c *= c.solar_mass # to cgs
     rhoc = (3. / (8. * np.pi * c.gravity) * cu.Hubble(cosmopars['z'], cosmopars=cosmopars)**2) # Hubble(z) will assume an EAGLE cosmology
     mu = 0.59 # about right for ionised (hot) gas, primordial
-    R200c = (M200c / (200. * rhoc))**(1./3.)
-    return (mu * c.protonmass) / (3. * c.boltzmann) * c.gravity * M200c/R200c
+    R200c = (_M200c / (200. * rhoc))**(1./3.)
+    return (mu * c.protonmass) / (3. * c.boltzmann) * c.gravity * _M200c / R200c
 
 def R200c_pkpc(M200c, cosmopars):
     M200c *= c.solar_mass # to cgs
@@ -3083,6 +3084,118 @@ def plotconfmatrix_mstarmhalo(halocat='/net/luttero/data2/proc/catalogue_RefL010
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     
+    
+def plot_ionfracs_firstlook(addedges=(0.1, 1.), var='focus'):
+    '''
+    var: 'focus' for o6, o7, o8, ne8, ne9, fe17
+         'oxygen' for all the oxygen species
+    '''
+    fontsize = 12
+    
+    filename_in = ol.pdir + 'ionfracs_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb.hdf5'%(str(addedges[0]), str(addedges[1]))
+    outname = '/net/luttero/data2/imgs/CGM/3dprof/' + 'ionfracs_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb_%s.pdf'%(str(addedges[0]), str(addedges[1]), var)
+    m200cbins = np.array(list(np.arange(11., 13.05, 0.1)) + [13.25, 13.5, 13.75, 14.0, 14.6])
+    percentiles = [10., 50., 90.]
+    alpha = 0.3
+    lw = 2
+    xlabel = r'$\log_{10} \, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'
+    ylabel = r'CGM ion fraction'
+    
+    iondata = {}
+    with h5py.File(filename_in, 'r') as fd:
+        cosmopars = {key: item for key, item in fd['Header/cosmopars'].attrs.items()}
+        m200cvals = np.log10(np.array(fd['M200c_Msun']))
+        fkeys = list(fd.keys())
+        for key in ['Header', 'M200c_Msun', 'galaxyids']:
+            if key in fkeys:
+                fkeys.remove(key)
+        for key in fkeys:
+            grp = fd[key]
+            _ions = grp.attrs['ions']
+            try: # only one ion
+                _ions = [_ions.decode()]
+            except: # list/array of ions
+                _ions = [_ion.decode() for _ion in _ions]
+            allfracs = np.array(grp['fractions'])
+            for ii in range(len(_ions)):
+                iondata[_ions[ii]] = allfracs[:, ii]
+            
+        basesel = np.all(np.array([np.isfinite(iondata[ion]) for ion in iondata]), axis=0) # issues from a low-mass halo: probably a very small metal-free system
+        m200cvals = m200cvals[basesel]
+        for ion in iondata:
+            iondata[ion] = iondata[ion][basesel]
+        
+    bininds = np.digitize(m200cvals, m200cbins)
+    bincens = m200cbins[:-1] + 0.5 * np.diff(m200cbins)
+    #bincens[-1] = np.median(m200cvals[bininds == len(m200cbins) - 1])
+    #print(bincens)
+    T200cvals = T200c_hot(10**bincens, cosmopars)
+    
+    fig = plt.figure(figsize=(5.5, 5.))
+    grid = grid = gsp.GridSpec(ncols=2, nrows=2, hspace=0.0, wspace=0.1, width_ratios=[5., 1.], height_ratios=[0.7, 2.])
+    ax  = fig.add_subplot(grid[1, 0])
+    ax2 = fig.add_subplot(grid[0, 0])
+    lax = fig.add_subplot(grid[:, 1])
+    
+    extracolors = {'o1': 'navy', 'o2': 'skyblue', 'o3': 'olive', 'o4': 'darksalmon', 'o5': 'darkred'}
+    if var == 'focus':
+        plotions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
+    elif var == 'oxygen':
+        plotions = ['o1', 'o2', 'o3', 'o4', 'o5', 'o6', 'o7', 'o8']
+    
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    setticks(ax, fontsize=fontsize) 
+    ax2.set_ylabel('CIE fraction', fontsize=fontsize)
+    if var == 'focus':
+        ax.set_yscale('log')
+        ax2.set_yscale('log')
+        ax.set_ylim(1e-4, 0.7)
+        ax2.set_ylim(1e-4, 1.3)
+    else:
+        ax.set_ylim(0., 1.)
+        ax2.set_ylim(0., 1.)
+    prev_halo = np.zeros(len(bincens))
+    prev_cie = np.zeros(len(bincens))
+    
+    for ion in plotions:
+        _iondata = iondata[ion]
+        _color = ioncolors[ion] if ion in ioncolors else extracolors[ion]
+        
+        if var == 'focus':
+            percvals = np.array([np.percentile(_iondata[bininds == i], percentiles) for i in range(1, len(m200cbins))]).T
+            ax.plot(bincens, percvals[1], label=r'$\mathrm{%s}$'%(ild.getnicename(ion, mathmode=True)), color=_color, linewidth=lw)
+            ax.fill_between(bincens, percvals[0], percvals[2], color=_color, alpha=alpha)
+            tablevals = m3.find_ionbal(cosmopars['z'], ion, {'logT': np.log10(T200cvals), 'lognH': np.ones(len(T200cvals)) * 6.}) # extreme nH -> highest tabulated values used
+            ax2.plot(np.log10(T200cvals), tablevals, color=_color, linewidth=lw)  
+        else:
+            avgs = np.array([np.average(_iondata[bininds == i]) for i in range(1, len(m200cbins))])
+            tablevals = m3.find_ionbal_bensgadget2(cosmopars['z'], ion, {'logT': np.log10(T200cvals), 'lognH': np.ones(len(T200cvals)) * 6.}) # extreme nH -> highest tabulated values used
+            
+            ax.fill_between(bincens, prev_halo, prev_halo + avgs, color=_color, label=r'$\mathrm{%s}$'%(ild.getnicename(ion, mathmode=True)))
+            prev_halo += avgs
+            ax2.fill_between(np.log10(T200cvals), prev_cie, prev_cie + tablevals, color=_color)
+            prev_cie += tablevals
+    
+    # set T ticks
+    mlim = 10**np.array(ax.get_xlim())
+    tlim = np.log10(T200c_hot(mlim, cosmopars))
+    ax2.set_xlim(tuple(tlim))
+    ax2.set_xlabel(r'$\log_{10} \, \mathrm{T}_{\mathrm{200c}} \; [\mathrm{K}]$', fontsize=fontsize)
+    setticks(ax2, fontsize=fontsize, labelbottom=False, labeltop=True)
+    ax2.xaxis.set_label_position('top') 
+    
+    handles, lables = ax.get_legend_handles_labels()
+    
+    if var == 'focus':
+        legelts = [mpatch.Patch(facecolor='gray', alpha=alpha, label='%.1f %%'%(percentiles[2] - percentiles[0]))] + \
+                  [mlines.Line2D([], [], color='gray', label='median')]
+    else:
+        legelts = []
+    lax.legend(handles=handles + legelts, ncol=1, fontsize=fontsize, bbox_to_anchor=(0.02, 0.98), loc='upper left')
+    lax.axis('off')
+    
+    plt.savefig(outname, format='pdf', box_inches='tight')
 ###############################################################################
 #                  nice plots for the paper: simplified                       #
 ###############################################################################
