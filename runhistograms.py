@@ -2392,7 +2392,6 @@ if jobind in range(20086, 20012): # quasar
     mindist_pkpc = 100.
     numsl = 1
     
-    
     hmfills = {'geq11.0_le11.5': '_halosel_Mhalo_11.0<=log200c<11.5_allinR200c_endhalosel',\
                'geq11.5_le12.0': '_halosel_Mhalo_11.5<=log200c<12.0_allinR200c_endhalosel',\
                'geq12.0_le12.5': '_halosel_Mhalo_12.0<=log200c<12.5_allinR200c_endhalosel',\
@@ -2415,7 +2414,7 @@ if jobind in range(20086, 20012): # quasar
         filen_in = ol.ndir + fnbase_ions[ion]%('%s', hmfills[hmkey])
         print('Processing %s'%filen_in)
         selection = [('galaxyid', np.array(galset))]
-        outname = ol.ndir + 'rdist_%s_%islice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+        outname = ol.ndir + 'rdist_%s_%islice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filen_in.split('/')[-1][:-4])%('-all'), numsl) # store here for fast access
         crd.rdists_sl_from_selection(filen_in, zfills, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
