@@ -2870,7 +2870,7 @@ if jobind in range(30017, 30023): # cosma
                       'ne9': ol.ndir + 'coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
                       }
     filename_proj = filenames_proj[ion]
-    rqfile = rdir + 'rdist_%s_%islice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals.hdf5'%((filename_proj.split('/')[-1][:-4])%('-all'), numsl)
+    rqfile = 'rdist_%s_%islice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals.hdf5'%((filename_proj.split('/')[-1][:-4])%('-all'), numsl)
     
     yvals_perc = [1., 5., 10., 25., 50., 75., 90., 95., 99.]
 

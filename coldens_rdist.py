@@ -1731,7 +1731,7 @@ def get_radprof(rqfilenames, halocat, rbins, yvals,\
         else:
             raise ValueError('If the input property-r distributions are stored over multiple files, the file for radial profiles (rpfilename) must be specified')
         if '/' in rqfilename:
-            rdir = '/'.join(rqfilename.split('/')[:-1])
+            rdir = '/'.join(rqfilename.split('/')[:-1]) + '/'
         else:
             rdir = ol.pdir + 'radprof/'
         rqfilename = rqfilename.split('/')[-1]
