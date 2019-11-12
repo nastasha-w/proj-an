@@ -2380,7 +2380,49 @@ elif jobind in range(20072, 20086):
                   'ne8', 'ne9', 'neon', 'fe17', 'iron'][jobind - 20072]
     p3g.genhists_ionmass(samplename=None, rbinu='R200c', idsel=None,\
                          weighttype=weighttype, logM200min=11.0)   
+
+if jobind in range(20086, 20012): # quasar
+    ion = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'][jobind - 20086]
+    galaxyids = sh.L0100N1504_27_Mh0p5dex_7000.galids()
+    L_x = 100.
+    npix_x = 32000
+    rmin_r200c = 0.
+    rmax_r200c = 3.
+    catname = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    mindist_pkpc = 100.
+    numsl = 1
     
+    
+    hmfills = {'geq11.0_le11.5': '_halosel_Mhalo_11.0<=log200c<11.5_allinR200c_endhalosel',\
+               'geq11.5_le12.0': '_halosel_Mhalo_11.5<=log200c<12.0_allinR200c_endhalosel',\
+               'geq12.0_le12.5': '_halosel_Mhalo_12.0<=log200c<12.5_allinR200c_endhalosel',\
+               'geq12.5_le13.0': '_halosel_Mhalo_12.5<=log200c<13.0_allinR200c_endhalosel',\
+               'geq13.0_le13.5': '_halosel_Mhalo_13.0<=log200c<13.5_allinR200c_endhalosel',\
+               'geq13.5_le14.0': '_halosel_Mhalo_13.5<=log200c<14.0_allinR200c_endhalosel',\
+               'geq14.0': '_halosel_Mhalo_14.0<=log200c_allinR200c_endhalosel',\
+               }
+    fnbase_ions = {'o6':   'coldens_o6_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.hdf5',\
+                   'o7':   'coldens_o7_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.hdf5',\
+                   'o8':   'coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.hdf5',\
+                   'fe17': 'coldens_fe17_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.hdf5',\
+                   'ne8':  'coldens_ne8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.hdf5',\
+                   'ne9':  'coldens_ne9_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.hdf5',\
+                  }
+    zfills = [str(i) for i in np.arange(16) / 16. * 100. + 100. / 32.]
+    
+    for hmkey in hmfills:
+        galset = galaxyids[hmkey]
+        filen_in = ol.ndir + fnbase_ions[ion]%('%s', hmfills[hmkey])
+        print('Processing %s'%filen_in)
+        selection = [('galaxyid', np.array(galset))]
+        outname = ol.ndir + 'rdist_%s_%islice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+        crd.rdists_sl_from_selection(filen_in, zfills, L_x, npix_x,\
+                         rmin_r200c, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=False)
+        
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################
@@ -2828,14 +2870,14 @@ if jobind in range(30017, 30023): # cosma
                       'ne9': ol.ndir + 'coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
                       }
     filename_proj = filenames_proj[ion]
-    rqfile = ol.pdir + 'rdist_%s_%islice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals.hdf5'%((filename_proj.split('/')[-1][:-4])%('-all'), numsl)
+    rqfile = rdir + 'rdist_%s_%islice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals.hdf5'%((filename_proj.split('/')[-1][:-4])%('-all'), numsl)
     
     yvals_perc = [1., 5., 10., 25., 50., 75., 90., 95., 99.]
-    yvals_fcov_ion = {} # 3 mA (~ Arcus optimistic), Athena 2.5 eV, CDDF break pos.
 
     rbins_pkpc = np.array([0., 3., 5., 7., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 120., 140., 160., 180.] + list(np.arange(200., maxrad_all, 25.)))
     rbins_r200c = np.arange(0., rmax_r200c + 0.01, 0.05)
     
+    # 4 mA (~ Arcus), Athena 0.18 eV, CDDF break pos.
     fcovs_ion = {'o6':   np.array([12.5, 13.0, 13.5, 14.0, 14.3, 14.5]),\
                  'o7':   np.array([14.5, 15.0, 15.1, 15.5, 16.0]),\
                  'o8':   np.array([14.5, 15.0, 15.5, 15.7, 16.0]),\
@@ -2895,3 +2937,4 @@ if jobind in range(30017, 30023): # cosma
                     separateprofiles=False,\
                     rpfilename=None, galsettag=skey)
         print('Finished %s, full sample, pkpc, fcovs\n'%rqfile)
+
