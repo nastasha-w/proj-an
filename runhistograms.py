@@ -30,8 +30,10 @@ import prof3d_galsets as p3g
 
 if __name__ == '__main__':
     jobind = int(sys.argv[1])
+    print('Called runhistograms with jobind %i'%jobind)
 else:
     jobind = None
+    
 
 def getcenfills(base, closevals=None, searchdir=None, tolerance=1e-4):
     if searchdir is None:
@@ -2381,8 +2383,9 @@ elif jobind in range(20072, 20086):
     p3g.genhists_ionmass(samplename=None, rbinu='R200c', idsel=None,\
                          weighttype=weighttype, logM200min=11.0)   
 
-if jobind in range(20086, 20012): # quasar
+if jobind in range(20086, 20092): # quasar
     ion = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'][jobind - 20086]
+    print('Attempting FoF radial profiles for %s'%ion)
     galaxyids = sh.L0100N1504_27_Mh0p5dex_7000.galids()
     L_x = 100.
     npix_x = 32000
@@ -2410,11 +2413,12 @@ if jobind in range(20086, 20012): # quasar
     zfills = [str(i) for i in np.arange(16) / 16. * 100. + 100. / 32.]
     
     for hmkey in hmfills:
+        print('Trying halo set %s'%(hmkey))
         galset = galaxyids[hmkey]
         filen_in = ol.ndir + fnbase_ions[ion]%('%s', hmfills[hmkey])
         print('Processing %s'%filen_in)
         selection = [('galaxyid', np.array(galset))]
-        outname = ol.ndir + 'rdist_%s_%islice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filen_in.split('/')[-1][:-4])%('-all'), numsl) # store here for fast access
+        outname = '/net/quasar/data2/wijers/proc/' + 'rdist_%s_%islice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filen_in.split('/')[-1][:-5])%('-all'), numsl) # store here for fast access
         crd.rdists_sl_from_selection(filen_in, zfills, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
@@ -2937,3 +2941,49 @@ if jobind in range(30017, 30023): # cosma
                     rpfilename=None, galsettag=skey)
         print('Finished %s, full sample, pkpc, fcovs\n'%rqfile)
 
+
+if jobind in range(30023, 30029): # cosma
+    ion = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'][jobind - 30023]
+    print('Attempting FoF radial profiles for %s'%ion)
+    numsl = 1
+    
+    yvals = [1., 5., 10., 25., 50., 75., 90., 95., 99.]
+    #rbins_R200c = np.arange(0., 2.55, 0.1)
+    rbins_pkpc = np.array([0., 3., 5., 7., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 120., 140., 160., 180., 200., 225., 250., 275., 300., 325., 350., 375., 400., 425., 450., 475., 500.])
+    rbins_r200c = np.arange(0., 2.51, 0.05)
+    
+    halocat = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'   
+    galaxyids = sh.L0100N1504_27_Mh0p5dex_7000.galids()
+    L_x = 100.
+    npix_x = 32000
+    
+    hmfills = {'geq11.0_le11.5': '_halosel_Mhalo_11.0<=log200c<11.5_allinR200c_endhalosel',\
+               'geq11.5_le12.0': '_halosel_Mhalo_11.5<=log200c<12.0_allinR200c_endhalosel',\
+               'geq12.0_le12.5': '_halosel_Mhalo_12.0<=log200c<12.5_allinR200c_endhalosel',\
+               'geq12.5_le13.0': '_halosel_Mhalo_12.5<=log200c<13.0_allinR200c_endhalosel',\
+               'geq13.0_le13.5': '_halosel_Mhalo_13.0<=log200c<13.5_allinR200c_endhalosel',\
+               'geq13.5_le14.0': '_halosel_Mhalo_13.5<=log200c<14.0_allinR200c_endhalosel',\
+               'geq14.0': '_halosel_Mhalo_14.0<=log200c_allinR200c_endhalosel',\
+               }
+    fnbase_ions = {'o6':   'coldens_o6_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.hdf5',\
+                   'o7':   'coldens_o7_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.hdf5',\
+                   'o8':   'coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.hdf5',\
+                   'fe17': 'coldens_fe17_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.hdf5',\
+                   'ne8':  'coldens_ne8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.hdf5',\
+                   'ne9':  'coldens_ne9_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.hdf5',\
+                  }
+    zfills = [str(i) for i in np.arange(16) / 16. * 100. + 100. / 32.]
+    
+    for hmkey in hmfills:
+        print('Trying halo set %s'%(hmkey))
+        galset = galaxyids[hmkey]
+        filen_slice = ol.ndir + fnbase_ions[ion]%('%s', hmfills[hmkey])
+        rqfile = '/net/quasar/data2/wijers/proc/' + 'rdist_%s_%islice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filen_slice.split('/')[-1][:-5])%('-all'), numsl) # store here for fast access
+        
+        print('Starting %s, R200c'%rqfile)
+        crd.get_radprof(rqfile, halocat, rbins_r200c, yvals,\
+                    xunit='R200c', ytype='perc',\
+                    galids=galset, combinedprofile=True,\
+                    separateprofiles=False,\
+                    rpfilename=None, galsettag=hmkey)
+        print('Finished %s, R200c\n'%rqfile)
