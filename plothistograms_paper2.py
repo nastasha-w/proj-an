@@ -12,6 +12,7 @@ import h5py
 import scipy
 import pandas as pd
 import string
+import os
 
 ndir = ol.ndir
 mdir = '/net/luttero/data2/imgs/CGM/misc_start/' # luttero location
@@ -57,7 +58,14 @@ approx_breaks = {'o7': 16.0,\
              'hneutralssh': 20.3,\
              'fe17': 15.0}
 
-
+# at max. tabulated density, range where ion frac. is >= 10% of the maximum at max density
+Tranges_CIE = {'o6':   (5.3, 5.8),\
+               'o7':   (5.4, 6.5),\
+               'o8':   (6.1, 6.8),\
+               'ne8':  (5.6, 6.1),\
+               'ne9':  (5.7, 6.8),\
+               'fe17': (6.3, 7.0),\
+               }
 rho_to_nh = 0.752 / (c.atomw_H * c.u)
 
 #retrieved with mc.getcosmopars
@@ -727,7 +735,7 @@ def plot_Tvir_ions(snap=27, _ioncolors=ioncolors):
     handles = [mlines.Line2D([], [], label=ild.getnicename(ion, mathmode=False), color=ioncolors[ion]) for ion in allions]
     ax.legend(handles=handles, fontsize=fontsize, ncol=3, bbox_to_anchor=(0.0, 1.0), loc='upper left', frameon=False)
 
-    plt.savefig(mdir + 'ionbals_snap27_HM01_ionizedmu.pdf', format='pdf', bbox_inches='tight')
+    plt.savefig(mdir + 'ionbals_snap27_HM01_ionizedmu_inclhneutralssh.pdf', format='pdf', bbox_inches='tight')
 
 
 
@@ -5218,59 +5226,19 @@ def plot_NEW():
     
     plt.savefig('/net/luttero/data2/specwizard_data/sample3-6_specwizard-NEW_wbparfit_fullsample.pdf', format='pdf', bbox_inches='tight')
     #return outdata
-    
 
-def plot3Dprof_niceversion(variation, minrshow=0.05, Mhranges=[(12., 12.5)], weighttype='Mass'):
-    '''
-    variation: 'cumul' - cumulative mass and ion fraction plots for each halo mass
-               'focus' - plot of T, nH weighted by weighttype for halo in Mhrange
-    '''
-    outdir = '/net/luttero/data2/imgs/CGM/3dprof/'
+def savedata_plotform_3dhists(minrshow=0.05):
     weighttypes = ['Mass', 'Volume', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']
-    if variation == 'cumul':
-        pass
-    else:
-        outname = outdir + 'focus_radprofs_%s_M200c_%s_L0100N1504_27_Mh0p5dex_1000.pdf'%(weighttype, '_'.join(['%.1f-%.1f'%Mhrange for Mhrange in Mhranges]))
-        
-    fontsize = 12
-    cmap = truncate_colormap(cm.get_cmap('gist_yarg'), minval=0.0, maxval=0.7, n=-1)
-    cmap.set_under(cmap(0.))
-    percentiles = [0.05, 0.50, 0.95]
-    linestyles = ['dashed', 'solid', 'dashed']
+    outdir = '/net/luttero/data2/imgs/CGM/3dprof/'
+    outfile = 'hists3d_forplot_to2d-1dversions_minr-%s.hdf5'%(minrshow)
     
-    rbinu = 'R200c'
-    combmethod = 'addnormed-R200c'
-    #binq = 'M200c_Msun'
-    binqn = r'$\mathrm{M}_{\mathrm{200c}} \, [\mathrm{M}_{\odot}]$' 
-    cosmopars = {'a': 0.9085634947881763,\
-                 'boxsize': 67.77,\
-                 'h': 0.6777,\
-                 'omegab': 0.0482519,\
-                 'omegalambda': 0.693,\
-                 'omegam':  0.307,\
-                 'z': 0.10063854175996956,\
-                 } # avoid having to read in the halo catalogue just for this; copied from there
-    
-    wnames = {weighttype: r'\mathrm{%s}'%(ild.getnicename(weighttype, mathmode=True)) if weighttype in ol.elements_ion.keys() else \
-                          r'\mathrm{Mass}' if weighttype == 'Mass' else \
-                          r"\mathrm{'Vol.'}" if weighttype == 'Volume' else \
-                          None \
-              for weighttype in weighttypes}
-    
-    axlabels = {'T': r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$',\
-                'rho': r'$\log_{10} \, \mathrm{n}(\mathrm{H}) \; [\mathrm{cm}^{-3}]$',\
-                #'nion': r'$\log_{10} \, \mathrm{n}(\mathrm{%s}) \; [\mathrm{cm}^{-3}]$'%(wname),\
-                'weight': r'$\log_{10} \, %s(< r) \,/\, %s(< \mathrm{R}_{\mathrm{200c}})$'%('q', 'q') 
-                }
-    clabel = r'$\log_{10} \, \left\langle %s(< r) \,/\, %s(< \mathrm{R}_{\mathrm{200c}}) \right\rangle \, / \,$'%('q', 'q') + 'bin size'
-    
-    mgrpn = 'L0100N1504_27_Mh0p5dex_1000/%s-%s'%(combmethod, rbinu)
-    
-    # read in data: stacked histograms -> process to plottables
     hists_main = {}
     edges_main = {}
-    galids_main = {}
-    
+    edges_rmin = {}
+    galids_main = {}  
+    lminrshow = np.log10(minrshow)
+    hists_rmin = {}
+    hists_rmin_norm = {}
     for _wt in weighttypes:
         if _wt in ol.elements_ion.keys():
             filename = ol.ndir + 'particlehist_Nion_%s_L0100N1504_27_test3.4_PtAb_T4EOS_galcomb.hdf5'%(_wt)
@@ -5295,7 +5263,14 @@ def plot3Dprof_niceversion(variation, minrshow=0.05, Mhranges=[(12., 12.5)], wei
             
         hists_main[_wt] = {}
         edges_main[_wt] = {}
+        edges_rmin[_wt] = {}
         galids_main[_wt] = {}
+        hists_rmin[_wt] = {}
+        hists_rmin_norm[_wt] = {}
+        
+        rbinu = 'R200c'
+        combmethod = 'addnormed-R200c'
+        mgrpn = 'L0100N1504_27_Mh0p5dex_1000/%s-%s'%(combmethod, rbinu)
         
         with h5py.File(filename, 'r') as fi:
             grp = fi[tgrpn + '/' + mgrpn]
@@ -5320,7 +5295,10 @@ def plot3Dprof_niceversion(variation, minrshow=0.05, Mhranges=[(12., 12.5)], wei
                    axes[axn] = grp_t[axns[axn]].attrs['histogram axis']  
                 
                 edges_main[_wt][mkey] = {}
+                edges_rmin[_wt][mkey] = {}
                 hists_main[_wt][mkey] = {}
+                hists_rmin[_wt][mkey] = {}
+                hists_rmin_norm[_wt][mkey] = {}
                 
                 # apply normalization consisent with stacking method
                 if rbinu == 'pkpc':
@@ -5365,7 +5343,27 @@ def plot3Dprof_niceversion(variation, minrshow=0.05, Mhranges=[(12., 12.5)], wei
                     hists_main[_wt][mkey][pt] = hist_t
                     edges_main[_wt][mkey][pt] = [edges_r, edges_y]
                     #print(hist_t.shape)
-                
+                    
+                    # sum everything up to minrshow (keep 1 column < minrshow)
+                    try:
+                        rminind = np.where(np.isclose(edges_r, lminrshow))[0][0]
+                    except IndexError:
+                        rminind = np.argmax(lminrshow < edges_r)
+                    sl_sum = slice(0, rminind, None)
+                    sl_new = slice(rminind - 1, None, None)
+                    firstcol = np.sum(hist_t[sl_sum, :], axis=0)
+                    hist_tt = np.copy(hist_t[sl_new, :])
+                    hist_tt[0, :] = firstcol
+                    edges_r_tt = np.copy(edges_r[sl_new])
+                    edges_r_tt[0] = edges_r[0]
+                    
+                    hists_rmin[_wt][mkey][pt] = hist_tt
+                    edges_rmin[_wt][mkey][pt] = [edges_r_tt, edges_y]
+                    
+                    # normalize histogram to bin size
+                    hists_rmin_norm[_wt][mkey][pt] = hist_tt / (np.diff(edges_r_tt)[:, np.newaxis] * np.diff(edges_y)[np.newaxis, :])
+        
+                    
                 # add in cumulative plot for the weight
                 hist_t = np.copy(hist)
                 sax = range(len(hist_t.shape))
@@ -5377,224 +5375,350 @@ def plot3Dprof_niceversion(variation, minrshow=0.05, Mhranges=[(12., 12.5)], wei
                     
                 galids_main[_wt][mkey] = np.array(grp_t['galaxyids'])
                 
+    with h5py.File(outdir + outfile, 'w') as fo:
+        masskeys = list(edges_main[weighttypes[0]].keys())
+        fo.create_dataset('mass_keys', data=np.array([np.string_('%.1f'%_mkey) for _mkey in masskeys]))
+        fo.create_dataset('weights', data=np.array([np.string_(_wt) for _wt in weighttypes]))
+        fo.create_dataset('mass_bins', data=np.array(massbins))
+        fo.create_dataset('histogram_types', data=np.array([np.string_(name) for name in ['rho', 'T', 'nion', 'weight']]))
+        units = {'r3d': np.string_('log10 r3d / R200c'),\
+                 'T':   np.string_('log10 T / K'),\
+                 'rho': np.string_('log10 nH / cm**-3, from rho with X=0.752'),\
+                 'nion': np.string_('log10 nion / cm**-3')}
+        
+        for _wt in weighttypes:
+            for mkey in masskeys:
+                for htype in edges_main[_wt][mkey].keys():
+                    grp = fo.create_group('%s/%.1f/%s'%(_wt, mkey, htype))
+                    if htype == 'weight':
+                        grp.create_dataset('hist', data=hists_main[_wt][mkey][htype])
+                        grp.create_dataset('edges', data=edges_main[_wt][mkey][htype])
+                        grp['edges'].attrs.create('units', units['r3d'])
+                        grp['hist'].attrs.create('units', np.string_('cumulative enclosed fraction rel. to R200c'))
+                    else:
+                        grp.create_dataset('hist', data=hists_main[_wt][mkey][htype])
+                        grp.create_dataset('edges_0', data=edges_main[_wt][mkey][htype][0])
+                        grp.create_dataset('edges_1', data=edges_main[_wt][mkey][htype][1])
+                        grp['edges_0'].attrs.create('units', units['r3d'])
+                        grp['edges_1'].attrs.create('units', units[htype])
+                        
+                        grp.create_dataset('hist_rmin', data=hists_rmin[_wt][mkey][htype])
+                        grp.create_dataset('edges_rmin_0', data=edges_rmin[_wt][mkey][htype][0])
+                        grp.create_dataset('edges_rmin_1', data=edges_rmin[_wt][mkey][htype][1])
+                        grp['edges_rmin_0'].attrs.create('units', units['r3d'])
+                        grp['edges_rmin_1'].attrs.create('units', units[htype])
+                        
+                        grp.create_dataset('hist_rmin_norm', data=hists_rmin_norm[_wt][mkey][htype])
+                        grp['hist_rmin_norm'].attrs.create('units', np.string_('cumulative enclosed fraction rel. to R200c / Delta edges_0 / Delta edges_1'))
+                        
+                
+def plot3Dprof_niceversion(variation, minrshow=0.05, Mhrange=(12., 12.5), weighttype='Mass', ionset='all'):
+    '''
+    variation: 'cumul' - cumulative mass and ion fraction plots for each halo mass
+               'focus-Mass' - plot of T, nH weighted by ion weight in Mhrange
+                              ionset: use all ions, or a listed subset
+               noit implemented 'focus-weight' - plot T, nH for different masses weighted by weighttype
+    '''
+    outdir = '/net/luttero/data2/imgs/CGM/3dprof/'
+    weighttypes = ['Mass', 'Volume', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']
+        
+    fontsize = 12
+    cmap = truncate_colormap(cm.get_cmap('gist_yarg'), minval=0.0, maxval=0.7, n=-1)
+    cmap.set_under(cmap(0.))
+    percentiles = [0.05, 0.50, 0.95]
+    linestyles = ['dashed', 'solid', 'dashed']
+    
+    rbinu = 'R200c'
+    combmethod = 'addnormed-R200c'
+    #binq = 'M200c_Msun'
+    binqn = r'$\mathrm{M}_{\mathrm{200c}} \, [\mathrm{M}_{\odot}]$' 
+    cosmopars = {'a': 0.9085634947881763,\
+                 'boxsize': 67.77,\
+                 'h': 0.6777,\
+                 'omegab': 0.0482519,\
+                 'omegalambda': 0.693,\
+                 'omegam':  0.307,\
+                 'z': 0.10063854175996956,\
+                 } # avoid having to read in the halo catalogue just for this; copied from there
+    
+    wnames = {weighttype: r'\mathrm{%s}'%(ild.getnicename(weighttype, mathmode=True)) if weighttype in ol.elements_ion.keys() else \
+                          r'\mathrm{Mass}' if weighttype == 'Mass' else \
+                          r"\mathrm{'Vol.'}" if weighttype == 'Volume' else \
+                          None \
+              for weighttype in weighttypes}
+    
+    axlabels = {'T': r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$',\
+                'rho': r'$\log_{10} \, \mathrm{n}(\mathrm{H}) \; [\mathrm{cm}^{-3}]$',\
+                #'nion': r'$\log_{10} \, \mathrm{n}(\mathrm{%s}) \; [\mathrm{cm}^{-3}]$'%(wname),\
+                'weight': r'$\log_{10} \, %s(< r) \,/\, %s(< \mathrm{R}_{\mathrm{200c}})$'%('q', 'q') 
+                }
+    clabel = r'$\log_{10} \, \left\langle %s(< r) \,/\, %s(< \mathrm{R}_{\mathrm{200c}}) \right\rangle \, / \,$'%('q', 'q') + 'bin size'
+    
+    saveddata = outdir + 'hists3d_forplot_to2d-1dversions_minr-%s.hdf5'%(minrshow)
+    if not os.path.isfile(saveddata):
+        savedata_plotform_3dhists(minrshow=minrshow)
+                
     linewidth = 1.5
     patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"), mppe.Stroke(linewidth=linewidth, foreground="w"), mppe.Normal()]
-    patheff_thick = [mppe.Stroke(linewidth=linewidth + 1.5, foreground="black"), mppe.Stroke(linewidth=linewidth + 1., foreground="w"), mppe.Normal()]
+    patheff_thick = [mppe.Stroke(linewidth=linewidth + 1., foreground="black"), mppe.Stroke(linewidth=linewidth + 1., foreground="w"), mppe.Normal()]
+    cmap = truncate_colormap(cm.get_cmap('gist_yarg'), minval=0.0, maxval=0.7, n=-1)
+    cmap.set_under(cmap(0.))
     
-    if variation == 'cumul':
-        outname = outdir + 'cumul_radprofs_L0100N1504_27_Mh0p5dex_1000.pdf'
+    with h5py.File(saveddata, 'r') as df:
+        masskeys = [_str.decode() for _str in np.array(df['mass_keys'])]
+        massbins = np.array(df['mass_bins'])
         
-        figsize = (11., 6.) # full-page figure
-        masskeys = list(hists_main[weighttypes[0]].keys())
-        nmasses = len(masskeys)
-        masskeys.sort()
-        xlim = (np.log10(minrshow), np.log10(4.2)) # don't care too  uch about the inner details, extracted out to 4 * R200c
-        ylim = (-3.9, 2.1)
-
-        if nmasses != 7:
-            raise RuntimeError('Cumulative profile plot is set up for 7 mass bins; found %i'%nmasses)
-        ncols = 4
-        nrows = 2
-        
-        fig = plt.figure(figsize=figsize)
-        grid = gsp.GridSpec(nrows=nrows, ncols=ncols, hspace=0.0, wspace=0.0, width_ratios=[1.] * ncols, height_ratios=[1.] * nrows )
-        axes = np.array([fig.add_subplot(grid[mi // ncols, mi % ncols]) for mi in range(nmasses)])
-        lax  = fig.add_subplot(grid[nrows - 1, -1])
-        
-        colors = ioncolors.copy()
-        colors.update({'Mass': 'black', 'Volume': 'gray'})
-        linestyle_kw = {'Mass': {'linestyle': 'solid'},\
-                        'Volume': {'linestyle': 'solid'},\
-                        'o6':   {'dashes': [6, 2]},\
-                        'o7':   {'dashes': [3, 1]},\
-                        'o8':   {'dashes': [1, 1]},\
-                        'ne8':  {'dashes': [6, 2, 3, 2]},\
-                        'ne9':  {'dashes': [6, 2, 1, 2]},\
-                        'fe17': {'dashes': [3, 1, 1, 1]},\
-                        }
-        
-        for mi in range(nmasses):
-            mkey = masskeys[mi]
-            binind = np.where(np.array(massbins)[:, 0] == mkey)[0][0]
-            ax = axes[mi]
+        if variation == 'cumul':
+            outname = outdir + 'cumul_radprofs_L0100N1504_27_Mh0p5dex_1000.pdf'
             
-            # add mass range indicator            
-            text = r'$%.1f \, \endash \, %.1f$'%(massbins[binind][0], massbins[binind][1]) #r'$\log_{10} \,$' + binqn + r':            
-            ax.text(0.05, 0.95, text, fontsize=fontsize, transform=ax.transAxes,\
-                    horizontalalignment='left', verticalalignment='top')
+            figsize = (11., 6.) # full-page figure
+            nmasses = len(masskeys)
+            masskeys.sort()
             
-            # axis labels and ticks
-            labelx = (mi // ncols == nrows - 1) or (mi // ncols == nrows - 2 and nmasses % ncols > 0 and  nmasses % ncols <= mi % ncols)
-            labely = mi % ncols == 0
+            xlim = (np.log10(minrshow), np.log10(4.2)) # don't care too  uch about the inner details, extracted out to 4 * R200c
+            ylim = (-3.9, 2.1)
+    
+            if nmasses != 7:
+                raise RuntimeError('Cumulative profile plot is set up for 7 mass bins; found %i'%nmasses)
+            ncols = 4
+            nrows = 2
             
-            # set up axis labels and ticks
-            setticks(ax, top=True, left=True, labelleft=labely, labelbottom=labelx, fontsize=fontsize)
-            if labelx:
-                ax.set_xlabel(r'$\log_{10} \, \mathrm{r} \, / \, \mathrm{R}_{\mathrm{200c}}$', fontsize=fontsize)
-            if labely:
-                ax.set_ylabel(r'$\log_{10} \, q(<r) \, / \, q(< \mathrm{R}_{\mathrm{200c}})$', fontsize=fontsize)
+            fig = plt.figure(figsize=figsize)
+            grid = gsp.GridSpec(nrows=nrows, ncols=ncols, hspace=0.0, wspace=0.0, width_ratios=[1.] * ncols, height_ratios=[1.] * nrows )
+            axes = np.array([fig.add_subplot(grid[mi // ncols, mi % ncols]) for mi in range(nmasses)])
+            lax  = fig.add_subplot(grid[nrows - 1, -1])
             
-            # plot the data
-            yq = 'weight'
-            for weight in weighttypes:
-                hist = hists_main[weight][mkey][yq]
-                edges_r = edges_main[weight][mkey][yq]
-                #print(hist)
-                #print(edges_r)
-                if np.any(np.isnan(hist)) or np.any(np.isnan(edges_r)):
-                    print('Got NaN values for %s, %s'%(weight, mkey))
-                    print('edges: %s'%edges_r)
-                    print('hist.: %s'%hist)
+            colors = ioncolors.copy()
+            colors.update({'Mass': 'black', 'Volume': 'gray'})
+            linestyle_kw = {'Mass': {'linestyle': 'solid'},\
+                            'Volume': {'linestyle': 'solid'},\
+                            'o6':   {'dashes': [6, 2]},\
+                            'o7':   {'dashes': [3, 1]},\
+                            'o8':   {'dashes': [1, 1]},\
+                            'ne8':  {'dashes': [6, 2, 3, 2]},\
+                            'ne9':  {'dashes': [6, 2, 1, 2]},\
+                            'fe17': {'dashes': [3, 1, 1, 1]},\
+                            }
+            
+            for mi in range(nmasses):
+                mkey = masskeys[mi]
+                binind = np.where(np.array(massbins)[:, 0] == float(mkey))[0][0]
+                ax = axes[mi]
                 
-                ax.plot(edges_r, np.log10(hist), color=colors[weight],\
-                            alpha=1.,\
-                            path_effects=None, linewidth=linewidth + 0.5,\
-                            label=r'$%s$'%(wnames[weight]),\
-                            **linestyle_kw[weight])
-                ax.set_xlim(xlim)
+                # add mass range indicator            
+                text = r'$%.1f \, \endash \, %.1f$'%(massbins[binind][0], massbins[binind][1]) #r'$\log_{10} \,$' + binqn + r':            
+                ax.text(0.05, 0.95, text, fontsize=fontsize, transform=ax.transAxes,\
+                        horizontalalignment='left', verticalalignment='top')
                 
-        # add legend
-        handles, labels = axes[0].get_legend_handles_labels()
-        leg = lax.legend(handles=handles, fontsize=fontsize, loc='upper left',\
-                   bbox_to_anchor=(0.01, 0.80), ncol=2,\
-                   handlelength=2.5, handletextpad=0.5, columnspacing=1.0,\
-                   frameon=True)
-        leg.set_title(r'quantity $q$', prop={'size': fontsize})
-        lax.axis('off')
-        
-        # sync y lim ranges
-        #ylims = np.array([_ax.get_ylim() for _ax in axes])
-        #y0 = np.min(ylims[:, 0])
-        #y1 = np.max(ylims[:, 1])
-        [_ax.set_ylim(ylim) for _ax in axes]
-        
-        plt.savefig(outname, format='pdf', bbox_inches='tight')
+                # axis labels and ticks
+                labelx = (mi // ncols == nrows - 1) or (mi // ncols == nrows - 2 and nmasses % ncols > 0 and  nmasses % ncols <= mi % ncols)
+                labely = mi % ncols == 0
                 
-#    # set up plot grid
-#    panelwidth = 3.
-#    panelheight = 3.
-#    toplabelheight = 0.5
-#    caxwidth = 0.5
-#    nmassbins = len(hists_main)
-#    
-#    fig = plt.figure(figsize=(nmassbins * panelwidth + caxwidth, nprof * panelheight + toplabelheight))
-#    grid = gsp.GridSpec(nrows=nprof + 1, ncols=nmassbins + 1, hspace=0.0, wspace=0.0, width_ratios=[panelwidth] * nmassbins + [caxwidth], height_ratios=[toplabelheight] + [panelheight] * nprof )
-#    axes = np.array([[fig.add_subplot(grid[yi + 1, xi]) for xi in range(nmassbins)] for yi in range(nprof)])
-#    cax  = fig.add_subplot(grid[1:, nmassbins])
-#    laxes = [fig.add_subplot(grid[0, xi]) for xi in range(nmassbins)]
-#    
-#    vmax = np.log10(np.max([np.max([np.max(hists_main[mkey][axn]) for axn in axnl]) for mkey in hists_main]))
-#    vmin = np.log10(np.min([np.min([np.min(hists_main[mkey][axn]) for axn in axnl]) for mkey in hists_main]))
-#    vmin = max(vmin, vmax - 7.)
-#    
-#    massmins = sorted(list(hists_main.keys()))
-#
-#    for mi in range(nmassbins):
-#        ind = np.where(np.array(massbins)[:, 0] == massmins[mi])[0][0]
-#        text = r'$%.1f \, \endash \, %.1f$'%(massbins[ind][0], massbins[ind][1]) #r'$\log_{10} \,$' + binqn + r': 
-#        
-#        ax = laxes[mi]
-#        ax.text(0.5, 0.1, text, fontsize=fontsize, transform=ax.transAxes,\
-#                horizontalalignment='center', verticalalignment='bottom')
-#        ax.axis('off') 
-#        
-#    for mi in range(nmassbins):
-#        for ti in range(nprof):
-#            # where are we
-#            ax = axes[ti, mi]
-#            labelx = ti == nprof - 1
-#            labely = mi == 0
-#            
-#            if ti == 0:
-#                yq = 'weight'
-#            else:
-#                yq = axnl[ti - 1]
-#            mkey = massmins[mi]
-#            
-#            # set up axis
-#            setticks(ax, top=True, left=True, labelleft=labely, labelbottom=labelx, fontsize=fontsize)
-#            if labelx:
-#                ax.set_xlabel(r'$\log_{10} \, \mathrm{r} \, / \, \mathrm{R}_{\mathrm{200c}}$', fontsize=fontsize)
-#            if labely:
-#                ax.set_ylabel(axlabels[yq], fontsize=fontsize)
-#            
-#            # plot stacked histogram
-#            edges_r = edges_main[mkey][yq][0] 
-#            if yq != 'weight':
-#                edges_y = edges_main[mkey][yq][1]
-#                hist = hists_main[mkey][yq]
-#                
-#                img, _1, _2 = pu.add_2dplot(ax, hist, [edges_r, edges_y], toplotaxes=(0, 1),\
-#                              log=True, usepcolor=True, pixdens=True,\
-#                              cmap=cmap, vmin=vmin, vmax=vmax, zorder=-2)
-#                perclines = pu.percentiles_from_histogram(hist, edges_y, axis=1, percentiles=np.array(percentiles))
-#                mid_r = edges_r[:-1] + 0.5 * np.diff(edges_r)
-#                
-#                for pi in range(len(percentiles)):
-#                    ax.plot(mid_r, perclines[pi], color='white',\
-#                            linestyle=linestyles[pi], alpha=1.,\
-#                            path_effects=patheff_thick, linewidth=linewidth + 1)
-#                
-#                mmatch = np.array(list(galids_per_bin.keys()))
-#                ind = np.where(np.isclose(mkey, mmatch))[0][0]
-#                galids = galids_per_bin[mmatch[ind]]
-#                
-#                for galidi in range(len(galids)):
-#                    galid = galids[galidi]
-#                    color = 'C%i'%(galidi % 10)
-#                    
-#                    hist = hists_single[galid][yq]
-#                    edges_r = edges_single[galid][yq][0]
-#                    edges_y = edges_single[galid][yq][1]
-#                    
-#                    perclines = pu.percentiles_from_histogram(hist, edges_y, axis=1, percentiles=np.array(percentiles))
-#                    mid_r = edges_r[:-1] + 0.5 * np.diff(edges_r)
-#                    
-#                    for pi in range(len(percentiles)):
-#                        ax.plot(mid_r, perclines[pi], color=color,\
-#                                linestyle=linestyles[pi], alpha=1.,\
-#                                path_effects=patheff, linewidth=linewidth,\
-#                                zorder = -1)
-#            else:
-#                hist = hists_main[mkey][yq]
-#                
-#                ax.plot(edges_r, np.log10(hist), color='black',\
-#                            linestyle='solid', alpha=1.,\
-#                            path_effects=None, linewidth=linewidth + 1.5)
-#                
-#                mmatch = np.array(list(galids_per_bin.keys()))
-#                ind = np.where(np.isclose(mkey, mmatch))[0][0]
-#                galids = galids_per_bin[mmatch[ind]]
-#                
-#                for galidi in range(len(galids)):
-#                    galid = galids[galidi]
-#                    color = 'C%i'%(galidi % 10)
-#                    
-#                    hist = hists_single[galid][yq]
-#                    edges_r = edges_single[galid][yq][0]
-#                    
-#                    ax.plot(edges_r, np.log10(hist), color=color,\
-#                            linestyle='solid', alpha=1.,\
-#                            path_effects=None, linewidth=linewidth + 0.5,\
-#                            zorder=-1)
-#    # color bar 
-#    pu.add_colorbar(cax, img=img, vmin=vmin, vmax=vmax, cmap=cmap,\
-#                    clabel=clabel, fontsize=fontsize, orientation='vertical',\
-#                    extend='min')
-#    cax.set_aspect(10.)
-#    
-#    # sync y limits on plots
-#    for yi in range(nprof):
-#        ylims = np.array([axes[yi, mi].get_ylim() for mi in range(nmassbins)])
-#        miny = np.min(ylims[:, 0])
-#        maxy = np.max(ylims[:, 1])
-#        # intended for ion number densities
-#        miny = max(miny, maxy - 17.)
-#        [[axes[yi, mi].set_ylim(miny, maxy) for mi in range(nmassbins)]]
-#    for xi in range(nmassbins):
-#        xlims = np.array([axes[i, xi].get_xlim() for i in range(nprof)])
-#        minx = np.min(xlims[:, 0])
-#        maxx = np.max(xlims[:, 1])
-#        [axes[i, xi].set_xlim(minx, maxx) for i in range(nprof)]
-#    
-#    plt.savefig(outname, format='pdf', box_inches='tight')
+                # set up axis labels and ticks
+                setticks(ax, top=True, left=True, labelleft=labely, labelbottom=labelx, fontsize=fontsize)
+                if labelx:
+                    ax.set_xlabel(r'$\log_{10} \, \mathrm{r} \, / \, \mathrm{R}_{\mathrm{200c}}$', fontsize=fontsize)
+                if labely:
+                    ax.set_ylabel(r'$\log_{10} \, \mathrm{ions}(<r) \, / \, \mathrm{ions}(< \mathrm{R}_{\mathrm{200c}})$', fontsize=fontsize)
+                
+                # plot the data
+                yq = 'weight'
+                for weight in weighttypes:
+                    hist = np.array(df['%s/%s/%s/hist'%(weight, mkey, yq)])
+                    edges_r = np.array(df['%s/%s/%s/edges'%(weight, mkey, yq)])
+                    #print(hist)
+                    #print(edges_r)
+                    if np.any(np.isnan(hist)) or np.any(np.isnan(edges_r)):
+                        print('Got NaN values for %s, %s'%(weight, mkey))
+                        print('edges: %s'%edges_r)
+                        print('hist.: %s'%hist)
+                    
+                    ax.plot(edges_r, np.log10(hist), color=colors[weight],\
+                                alpha=1.,\
+                                path_effects=None, linewidth=linewidth + 0.5,\
+                                label=r'$%s$'%(wnames[weight]),\
+                                **linestyle_kw[weight])
+                    ax.set_xlim(xlim)
+                    
+            # add legend
+            handles, labels = axes[0].get_legend_handles_labels()
+            leg = lax.legend(handles=handles, fontsize=fontsize, loc='upper left',\
+                       bbox_to_anchor=(0.01, 0.80), ncol=2,\
+                       handlelength=2.5, handletextpad=0.5, columnspacing=1.0,\
+                       frameon=True)
+            leg.set_title(r'quantity $q$', prop={'size': fontsize})
+            lax.axis('off')
+            
+            # sync y lim ranges
+            #ylims = np.array([_ax.get_ylim() for _ax in axes])
+            #y0 = np.min(ylims[:, 0])
+            #y1 = np.max(ylims[:, 1])
+            [_ax.set_ylim(ylim) for _ax in axes]
+            
+            plt.savefig(outname, format='pdf', bbox_inches='tight')
+         
+        elif variation == 'focus-Mass':
+            if isinstance(ionset, (list, np.array, tuple)):
+                weighttypes_panel = list(ionset)
+                outname = outdir + 'focus_radprofs_ions-%s_M200c-%.1f-%.1f_L0100N1504_27_Mh0p5dex_1000.pdf'%(('-'.join(sorted(weighttypes_panel)),) + tuple(Mhrange))
+            elif ionset is None or ionset == 'all':
+                weighttypes_panel = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'] 
+                outname = outdir + 'focus_radprofs_ions_M200c-%.1f-%.1f_L0100N1504_27_Mh0p5dex_1000.pdf'%(Mhrange)
+                
+            weighttypes_overlay = ['Mass', 'Volume']
+            colors_overlay = {'Mass': 'turquoise',\
+                              'Volume': 'yellowgreen',\
+                              'ion': 'lightsalmon'}
+            color_Tcie = 'red'
+            color_Tvir = 'blue'
+            linestyle_Tindic = 'dotted'
+            percentiles = [5., 50., 95.]
+            percstyles = ['dashed', 'solid', 'dashed']
+            
+            
+            
+            mind = np.where(np.isclose([float(_mk) for _mk in masskeys], Mhrange[0]))[0][0]
+            mkey = masskeys[mind]
+            binind = np.where(np.isclose(np.array(massbins)[:, 0], Mhrange[0]))[0][0]
+            masstext = r'$%.1f \, \endash \, %.1f$'%(massbins[binind][0], massbins[binind][1])
+            
+            if len(weighttypes_panel) > 3:
+                figsize = (11., 11.) # full-page figure
+            else:
+                figsize = (11., 6.)
+            nions = len(weighttypes_panel)
+            ncols = 3
+            nrows = ((nions - 1) // ncols + 1) * 2
+                    
+            xlim = (np.log10(minrshow), np.log10(4.0)) # don't care too much about the inner details, extracted out to 4 * R200c
+            #ylim = (-3.9, 2.1)
+    
+                
+            fig = plt.figure(figsize=figsize)
+            grid = gsp.GridSpec(nrows=nrows, ncols=ncols + 1, hspace=0.0, wspace=0.0, width_ratios=[1.] * ncols + [0.5], height_ratios=[1.] * nrows )
+            axes = np.array([[fig.add_subplot(grid[xi, yi]) for xi in range(nrows)] for yi in range(ncols)])
+            if nrows > 2:
+                lax  = fig.add_subplot(grid[0:2, ncols])
+                cax =  fig.add_subplot(grid[2:, ncols])
+                lbbox = (0.02, 0.78)
+                caspect = 10.
+            else:
+                lax  = fig.add_subplot(grid[0:1, ncols])
+                cax =  fig.add_subplot(grid[1:, ncols])
+                lbbox = (0.02, 0.99)
+                caspect = 7.
+            hists_rmin_norm = {ion: {axn: np.array(df['%s/%s/%s/hist_rmin_norm'%(ion, mkey, axn)]) for axn in ['rho', 'T']} for ion in weighttypes}
+            hists_rmin = {ion: {axn: np.array(df['%s/%s/%s/hist_rmin'%(ion, mkey, axn)]) for axn in ['rho', 'T']} for ion in weighttypes}
+            edges0_rmin = {ion: {axn: np.array(df['%s/%s/%s/edges_rmin_0'%(ion, mkey, axn)]) for axn in ['rho', 'T']} for ion in weighttypes}
+            edges1_rmin = {ion: {axn: np.array(df['%s/%s/%s/edges_rmin_1'%(ion, mkey, axn)]) for axn in ['rho', 'T']} for ion in weighttypes}
+            
+            vmax = np.log10(np.max([[np.max(hists_rmin_norm[ion][axn]) for axn in ['rho', 'T']] for ion in weighttypes_panel]))
+            vmin = np.log10(np.min([[np.min(hists_rmin_norm[ion][axn]) for axn in ['rho', 'T']] for ion in weighttypes_panel]))
+            vmin = max(vmin, vmax - 7.)
+            
+            for ii in range(nions):
+                xi = ii % ncols
+                yi = ii // ncols
+                axnh = axes[xi, 2 * yi]
+                axt  = axes[xi, 2 * yi + 1]
+                ion = weighttypes_panel[ii]
+                
+                labelx = yi == nrows // 2 - 1
+                labely = xi == 0
+                
+                # set up axes
+                setticks(axnh, top=True, left=True, labelleft=labely, labelbottom=False, fontsize=fontsize)
+                setticks(axt,  top=True, left=True, labelleft=labely, labelbottom=labelx, fontsize=fontsize)
+                if labelx:
+                    axt.set_xlabel(r'$\log_{10} \, \mathrm{r} \, / \, \mathrm{R}_{\mathrm{200c}}$', fontsize=fontsize)
+                if labely:
+                    axt.set_ylabel(axlabels['T'], fontsize=fontsize)
+                    axnh.set_ylabel(axlabels['rho'], fontsize=fontsize)
+                axt.set_xlim(xlim)
+                axnh.set_xlim(xlim)
+                
+                # nH plot
+                for ax, yq in zip([axnh, axt], ['rho', 'T']):
+                    ax.text(0.95, 0.95, r'$\mathrm{%s}$'%(ild.getnicename(ion, mathmode=True)),\
+                            fontsize=fontsize, transform=ax.transAxes,\
+                            verticalalignment='top', horizontalalignment='right')
+                    
+                    edges_r = edges0_rmin[ion][yq]
+                    edges_y = edges1_rmin[ion][yq]
+                    hist = hists_rmin[ion][yq]
+                    hist_n = hists_rmin_norm[ion][yq]
+                    
+                    # pixdens False: already normalized
+                    img, _1, _2 = pu.add_2dplot(ax, hist_n, [edges_r, edges_y], toplotaxes=(0, 1),\
+                                  log=True, usepcolor=True, pixdens=False,\
+                                  cmap=cmap, vmin=vmin, vmax=vmax, zorder=-2)
+                    
+                    perclines = pu.percentiles_from_histogram(hist, edges_y, axis=1, percentiles=np.array(percentiles) / 100.)
+                    mid_r = edges_r[:-1] + 0.5 * np.diff(edges_r)
+                    
+                    for pi in range(len(percentiles)):
+                        ax.plot(mid_r, perclines[pi], color=colors_overlay['ion'],\
+                                linestyle=percstyles[pi], alpha=1.,\
+                                path_effects=patheff_thick, linewidth=linewidth + 1)
+                    
+                    for wt in weighttypes_overlay:
+                        hist = hists_rmin[wt][yq]
+                        edges_r = edges0_rmin[wt][yq]
+                        edges_y = edges1_rmin[wt][yq]
+                        perclines = pu.percentiles_from_histogram(hist, edges_y, axis=1, percentiles=np.array(percentiles) / 100.)
+                        mid_r = edges_r[:-1] + 0.5 * np.diff(edges_r)
+                         
+                        for pi in range(len(percentiles)):
+                            ax.plot(mid_r, perclines[pi], color=colors_overlay[wt],\
+                                    linestyle=percstyles[pi], alpha=1.,\
+                                    path_effects=patheff, linewidth=linewidth + 0.5)
+                
+                axt.axhline(Tranges_CIE[ion][0], color=color_Tcie, linestyle=linestyle_Tindic, linewidth=linewidth)
+                axt.axhline(Tranges_CIE[ion][1], color=color_Tcie, linestyle=linestyle_Tindic, linewidth=linewidth)
+                axt.axhline(np.log10(T200c_hot(10**massbins[binind][0], cosmopars)),\
+                            color=color_Tvir, linestyle=linestyle_Tindic, linewidth=linewidth )
+                axt.axhline(np.log10(T200c_hot(10**massbins[binind][1], cosmopars)),\
+                            color=color_Tvir, linestyle=linestyle_Tindic, linewidth=linewidth )
+            # color bar 
+            pu.add_colorbar(cax, img=img, vmin=vmin, vmax=vmax, cmap=cmap,\
+                            clabel=clabel, fontsize=fontsize, orientation='vertical',\
+                            extend='min')
+            cax.set_aspect(caspect)
+            cax.tick_params(labelsize=fontsize - 1)
+            
+            # legend
+            typehandles = [mlines.Line2D([], [], color=colors_overlay[key], label='%s-weighted'%(key),\
+                                         path_effects=patheff_thick if key=='ion' else patheff,\
+                                         linewidth=linewidth + 1 if key=='ion' else linewidth + 0.5,\
+                                         ) for key in colors_overlay]
+            perchandles = [mlines.Line2D([], [], color='gray', label='median', linewidth=linewidth + 0.75,\
+                                         linestyle=percstyles[1]),\
+                           mlines.Line2D([], [], color='gray', label='%s %%'%(percentiles[2] - percentiles[0]),\
+                                         linewidth=linewidth + 0.75,\
+                                         linestyle=percstyles[0]),\
+                          ]
+            thandles = [mlines.Line2D([], [],  color=color_Tcie, linestyle=linestyle_Tindic, linewidth=linewidth,\
+                                      label='CIE range'),\
+                        mlines.Line2D([], [],  color=color_Tvir, linestyle=linestyle_Tindic, linewidth=linewidth,\
+                                      label=r'$\mathrm{T}_{\mathrm{200c}}$ range'),\
+                        ]
+            #lax.text(0.1, 0.95, masstext, horizontalalignment='left',\
+            #         verticalalignment='top', fontsize=fontsize,\
+            #         transform=lax.transAxes)
+            lax.legend(handles=typehandles + perchandles + thandles, fontsize=fontsize,\
+                       loc='upper left', bbox_to_anchor=lbbox,\
+                       frameon=True, ncol=1)
+            lax.axis('off')
+            
+            # sync y limits on plots
+            ylims = np.array([axes[xi, 2 * yi].get_ylim() for xi in range(ncols) for yi in range(nrows // 2)])
+            y0 = np.min(ylims[:, 0])
+            y1 = np.max(ylims[:, 1])
+            [axes[xi, 2 * yi].set_ylim((y0, y1)) for xi in range(ncols) for yi in range(nrows // 2)]
+             
+            ylims = np.array([axes[xi, 2 * yi + 1].get_ylim() for xi in range(ncols) for yi in range(nrows // 2)])
+            y0 = np.min(ylims[:, 0])
+            y1 = np.max(ylims[:, 1])
+            [axes[xi, 2 * yi + 1].set_ylim((y0, y1)) for xi in range(ncols) for yi in range(nrows // 2)]
+                
+            plt.savefig(outname, format='pdf', box_inches='tight')

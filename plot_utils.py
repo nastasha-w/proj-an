@@ -80,6 +80,8 @@ def percentiles_from_histogram(histogram, edgesaxis, axis=-1, percentiles=np.arr
 
     leftarr  = cdists[np.newaxis, :, :, :] <= percentiles[:, np.newaxis, np.newaxis, np.newaxis]
     rightarr = cdists[np.newaxis, :, :, :] >= percentiles[:, np.newaxis, np.newaxis, np.newaxis]
+    print(leftarr)
+    print(rightarr)
     
     leftbininds = np.array([[[ np.max(np.where(leftarr[pind, ind1, :, ind2])[0]) \
                                for ind2 in range(newlen2)] for ind1 in range(newlen1)] for pind in range(len(percentiles))])
