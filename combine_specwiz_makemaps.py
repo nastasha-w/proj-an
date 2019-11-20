@@ -2142,61 +2142,73 @@ def getEWdistvals_o78_cddfsatz(plot=False): # just to store these lines, really
     #return dct_out['o7'][27]
 
 
-def getEWdistvals_o78_cddfsatz_sarahspaper(plot=False, fileset=0): # just to store these lines, really
+def getEWdistvals_o78_cddfsatz_sarahspaper(plot=False, fileset=(0, 1)): # just to store these lines, really
     '''
     prints LaTeX table of these values
+    issue will arise if using different filesets with overlapping  ion, snapshot
     '''
-    if fileset == 0:
-        snapshots = [27, 26, 19]
-        datafile = '/net/luttero/data2/paper1/specwizard_misc.hdf5'
-        ions = ['o7', 'o8']
-    elif fileset == 1:
-        snapshots = [23]
-        datafile = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/specwizard_EWdists.hdf5'
-        ions = ['o7', 'o8']
+    snapshotss = {}
+    datafiles = {}
+    ionss = {}
+    ionindic = {'o7': '\\ion{O}{vii}',\
+                'o8': '\\ion{O}{viii}'}
+    if 0 in fileset:
+        snapshotss[0] = [27, 26, 19]
+        datafiles[0] = '/net/luttero/data2/paper1/specwizard_misc.hdf5'
+        ionss[0] = ['o7', 'o8']
+    if 1 in fileset:
+        snapshotss[1] = [23]
+        datafiles[1] = '/net/luttero/data2/specwizard_data/specwizard_EWdists_snap23_o7-o8.hdf5' #'/cosma5/data/dp004/dc-wije1/line_em_abs/proc/specwizard_EWdists.hdf5' # same file, different locations
+        ionss[1] = ['o7', 'o8']
     #snapkeys = {19: 'snap19_snap27-N-EWconv', 26: 'snap26_snap27-N-EWconv', 27: 'snap27'} # old format using snap 27 CoG for all
     snapkeys = {19: 'snap19', 23: 'snap23', 26: 'snap26', 27: 'snap27'}
     # format: ion : snapshot : [bins, edges]
-    dct_out = {ion: {} for ion in ions}
-    dct_dXoverdz = {ion: {} for ion in ions}
-    dct_zvals = {ion: {} for ion in ions}
-    grps = {ion: {snap: 'EWdists_%s_%s'%(ion, snapkeys[snap])  for snap in snapshots} for ion in ions}
+    dct_out = {ion: {} for key in ionss for ion in ionss[key]}
+    dct_dXoverdz = {ion: {} for key in ionss for ion in ionss[key]}
+    dct_zvals = {ion: {} for key in ionss for ion in ionss[key]}
+    grps = {ion: {snap: 'EWdists_%s_%s'%(ion, snapkeys[snap]) for key in snapshotss for snap in snapshotss[key]} for key in ionss for ion in ionss[key]}
     keyprefs = ['linear_cog_extrapolation_below_10^13cm^-2_all_sightlines_with_6.25cMpc_CDDF', 'linear_cog_extrapolation_below_10^13cm^-2_all_sightlines', 'linear_cog_extrapolation_below_10^13.0cm^-2_all_sightlines']
     
-    with h5py.File(datafile, 'r') as fi:
-        for ion in ions:
-            for snap in snapshots:
-                grpname = grps[ion][snap]
-                grp = fi[grpname]
-                key = keyprefs[0]
-                ki = 0
-                while key not in grp.keys():
-                    try:
-                        ki += 1
-                        key = keyprefs[ki]
-                    except IndexError:
-                        raise ValueError('None of the listed keys %s were datasets in group %s'%(keyprefs, grpname))
-                bins = np.array(grp['%s/bins'%key])     
-                edges = np.array(grp['%s/edges'%key])
-                cosmopars = {key: item for (key, item) in grp['cosmopars'].attrs.items()}
-                simdata = {key: item for (key, item) in grp['simdata'].attrs.items()}
-                print('For group %s:'%grpname)
-                print('\tusing key: \t%s'%key)
-                print('\tcosmopars: \t%s'%cosmopars)
-                print('\tsimdata: \t%s'%simdata)
-                print('')
-                
-                dXtot = float(simdata['numpix'])**2 * mc.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars)
-                bins_cumul = np.cumsum(bins[::-1])[::-1] / dXtot
-                cumulpoints = edges[:-1] # left edges of bins are the values at which >= edge cumulative values are defined
-                
-                
-                if plot:
-                    plt.plot(cumulpoints + 3., bins_cumul, label=grpname)
-                dct_out[ion][snap] = [bins_cumul, cumulpoints]
-                dct_dXoverdz[ion][snap] = mc.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) / mc.getdz(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars)
-                dct_zvals[ion][snap] = cosmopars['z']
-                
+    for key in datafiles:
+        datafile = datafiles[key]
+        ions = ionss[key]
+        snapshots = snapshotss[key]
+        with h5py.File(datafile, 'r') as fi:
+            for ion in ions:
+                for snap in snapshots:
+                    grpname = grps[ion][snap]
+                    grp = fi[grpname]
+                    key = keyprefs[0]
+                    ki = 0
+                    while key not in grp.keys():
+                        try:
+                            ki += 1
+                            key = keyprefs[ki]
+                        except IndexError:
+                            raise ValueError('None of the listed keys %s were datasets in group %s'%(keyprefs, grpname))
+                    bins = np.array(grp['%s/bins'%key])     
+                    edges = np.array(grp['%s/edges'%key])
+                    cosmopars = {key: item for (key, item) in grp['cosmopars'].attrs.items()}
+                    simdata = {key: item for (key, item) in grp['simdata'].attrs.items()}
+                    print('For group %s:'%grpname)
+                    print('\tusing key: \t%s'%key)
+                    print('\tcosmopars: \t%s'%cosmopars)
+                    print('\tsimdata: \t%s'%simdata)
+                    print('')
+                    
+                    dXtot = float(simdata['numpix'])**2 * mc.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars)
+                    bins_cumul = np.cumsum(bins[::-1])[::-1] / dXtot
+                    cumulpoints = edges[:-1] # left edges of bins are the values at which >= edge cumulative values are defined
+                    
+                    
+                    if plot:
+                        plt.plot(cumulpoints + 3., bins_cumul, label=grpname)
+                    dct_out[ion][snap] = [bins_cumul, cumulpoints]
+                    dct_dXoverdz[ion][snap] = mc.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) / mc.getdz(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars)
+                    dct_zvals[ion][snap] = cosmopars['z']
+    
+    snapshots = sorted([snap for key in snapshotss for snap in snapshotss[key]])[::-1]  
+    ions = sorted([ion for key in ionss for ion in ionss[key]])          
     if not (np.all([np.abs(dct_zvals['o7'][snap] - dct_zvals['o8'][snap]) <= 1e-5 for snap in snapshots]) and \
             np.all([np.abs(dct_dXoverdz['o7'][snap] - dct_dXoverdz['o8'][snap]) <= 1e-6 for snap in snapshots]) ):
         raise RuntimeError('Extracted z, dX / dz for same snapshots did not match')
@@ -2222,13 +2234,27 @@ def getEWdistvals_o78_cddfsatz_sarahspaper(plot=False, fileset=0): # just to sto
     ## old values
     #EWobs_o7 = np.array([0.12, 0.15, 0.19, 0.29, 0.34]) #eV 
     #EWobs_o8 = np.array([0.08, 0.1, 0.13, 0.19, 0.23])  
-    EWobs_o7 = np.array([0.12, 0.15, 0.19, 0.29, 0.34]) #eV 
-    EWobs_o8 = np.array([0.08, 0.1, 0.13, 0.19, 0.23])  
+    EWobs_o7 = np.array([0.13, 0.18, 0.20, 0.30, 0.39]) #eV 
+    EWobs_o8 = np.array([0.09, 0.12, 0.13, 0.20, 0.26])  
     print(dct_dXoverdz)
     print(dct_zvals)
     dct_zvals['o7'][27] = 0.11
     
+    numz = len(snapshots)
+    cols1 = ' r' * numz
+    cols2 = ' r@{.}l' * numz
+    nions = len(ions)
     
+    headerline = '\\begin{tabular}{%s%s%s} \n\
+        \\multicolumn{%i}{c}{$\\mathrm{EW}_{\\mathrm{obs}}\\; [\\mathrm{m{\AA}}]$} & \n\
+        \\multicolumn{%i}{c}{%s} & \n\
+        \\multicolumn{%i}{c}{%s} \\\\'\
+        %((cols1, cols2, cols2, numz, 2 * numz, ionindic[ions[0]] , 2 * numz, ionindic[ions[1]]))
+    print(headerline)
+    zcols = ['$z = %.1f$'%dct_zvals['o7'][snap] for snap in snapshots]
+    zcols2 = ['\\multicolumn{2}{c}{%s}'%(zcol) for zcol in zcols]
+    print(' & '.join(zcols) + ' & \n' + ' & '.join(zcols2) + ' & \n' + ' & '.join(zcols2) + r'\\')
+    print('\\hline \\hline')
     for EWi in range(len(EWobs_o7) + len(EWobs_o8)):
         cut = len(EWobs_o7)
         if EWi < cut:
@@ -2259,6 +2285,7 @@ def getEWdistvals_o78_cddfsatz_sarahspaper(plot=False, fileset=0): # just to sto
         linevalues = linevalues_base%tuple(strvals_split) + r'\\'
         line = lineheader + linevalues
         print(line)
+    print('\end{tabular}')
 ##### associated plots #####
 ## some are more or less copied from specwiz_proc, but more for talks and papers than just quick looks
 
