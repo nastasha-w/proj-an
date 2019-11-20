@@ -13,6 +13,7 @@ import make_maps_opts_locs as ol # needed for some ion data
 import eagle_constants_and_units as c
 import ctypes as ct
 import h5py
+import numbers as num # for instance checking
 
 def findemtables(element,zcalc):
     
@@ -293,8 +294,88 @@ def Hubble(z, cosmopars=None):
         omega0 = cosmopars['omegam']
         omegalambda = cosmopars['omegalambda']
         
-    return (c.hubble*hpar)*(omega0*(1.+z)**3 + omegalambda)**0.5
-      
+    return (c.hubble * hpar) * (omega0 * (1. + z)**3 + omegalambda)**0.5
+
+def rhocrit(z, cosmopars=None):
+    '''
+    critical density at z; units: g / cm^-3
+    cosmopars z overrides input z if cosmopars are given
+    '''
+    rhoc = 3. / (8. * np.pi * c.gravity) * (Hubble(z, cosmopars=cosmopars))**2
+    return rhoc
+
+def rhom(z, cosmopars=None):
+    '''
+    mean matter (DM + baryons) density at z; units: g / cm^-3
+    cosmopars z overrides input z if cosmopars are given 
+    '''
+    if cosmopars is None:
+        rhoc0 = rhocrit(0., None)
+        omegam0 = c.omega0
+        _z = z
+    else:
+        cp = cosmopars.copy()
+        cp['z'] = 0.
+        cp['a'] = 1.
+        rhoc0 = rhocrit(0., cosmopars=cp)
+        omegam0 = cosmopars['omegam']
+        _z = cosmopars['z']
+    rhom = rhoc0 * omegam0 * (1. + _z)**3
+    return rhom
+
+def conc_mass_MS15(Mh, cosmopars=None):
+    '''
+    Schaller et al. 2015 Eagle concentration-mass relation: 
+    DM in full hydro Eagle fit
+    Note: fit is for z=0, so avoid at high z!!
+    '''
+    if cosmopars is None:
+        hpar = c.hubbleparam
+    else:
+        hpar = cosmopars['h']
+    
+    return 5.699 * (Mh / (1e14 * hpar * c.solar_mass))**-0.074
+
+def rho_NFW(r, Mh, delta=200, ref='rhocrit', z=0., cosmopars=None, c='Schaller15'):
+    '''
+    returns: density (g /cm^3)
+    Mh: halo mass (g)
+    r: cm, physical
+    delta: overdensity threshold
+    c: concentration - number or 'Schaller15' for that relation (z=0 fit)
+    ref: reference density for delta ('rhocrit' or 'rhom')
+    '''
+    if c == 'Schaller15':
+        c = conc_mass_MS15(Mh, cosmopars=cosmopars)
+    elif not isinstance(c, num.Number):
+        raise ValueError('Value %s for c is not a valid option'%(c))
+    if ref == 'rhocrit':
+        rho_ref = rhocrit(z, cosmopars=cosmopars)
+    elif ref == 'rhom':
+        rho_ref = rhom(z, cosmopars=cosmopars)
+    else:
+        raise ValueError('Value %s for ref is not a valid option'%(ref))
+    Redge = (Mh * 3. / (4. * np.pi * delta * rho_ref)) ** (1. / 3.)
+    rnorm = c * r / Redge
+    rhoval = (delta * rho_ref * c**3 ) / \
+             (3. * (np.log(1. + c) - c / (1. + c)) * rnorm * (1. + rnorm)**2)
+    return rhoval
+
+def Rhalo(Mh, delta=200, ref='rhocrit', z=0., cosmopars=None):
+    if ref == 'rhocrit':
+        rho_ref = rhocrit(z, cosmopars=cosmopars)
+    elif ref == 'rhom':
+        rho_ref = rhom(z, cosmopars=cosmopars)
+    else:
+        raise ValueError('Value %s for ref is not a valid option'%(ref))
+    Redge = (Mh * 3. / (4. * np.pi * delta * rho_ref)) ** (1. / 3.)
+    return Redge
+
+def Tvir_hot(Mh, delta=200, ref='rhocrit', z=0., cosmopars=None):
+    mu = 0.59 # about right for ionised (hot) gas, primordial
+    Rh = Rhalo(Mh, delta=delta, ref=ref, z=z, cosmopars=cosmopars)
+    return (mu * c.protonmass) / (3. * c.boltzmann) * c.gravity * Mh / Rh
+
 def solidangle(alpha,beta): # alpha = 0.5 * pix_length_1/D_A, beta = 0.5 * pix_length_2/D_A
     #from www.mpia.de/~mathar/public/mathar20051002.pdf
     # citing  A. Khadjavi, J. Opt. Soc. Am. 58, 1417 (1968).
@@ -310,7 +391,6 @@ def solidangle(alpha,beta): # alpha = 0.5 * pix_length_1/D_A, beta = 0.5 * pix_l
         return 4*alpha*beta - 2*alpha*beta*(alpha**2+beta**2)
     else: 
         return 4*np.arccos(((1+alpha**2 +beta**2)/((1+alpha**2)*(1+beta**2)))**0.5)
-
 
 def Tvir(m200c, cosmopars='eagle', mu=0.59, z=None):
     '''

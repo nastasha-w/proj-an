@@ -208,6 +208,39 @@ def find_intercepts(yvals, xvals, ypoint):
         intercepts = intercepts[:-1]
     return np.array(intercepts)
 
+### find some rough FoF radius to R200c conversions
+def get_FoF_to_200c():
+    '''
+    rough numerical solver
+    '''
+    Mhvals = 10**np.arange(11., 14.6, 0.5) * c.solar_mass
+    cosmopars = cosmopars_ea_27
+    Rh = cu.Rhalo(Mhvals, cosmopars=cosmopars)
+        
+    rho_fof_edge = (1. / 0.2)**3 * cu.rhom(cosmopars['z'], cosmopars=cosmopars)
+    print(rho_fof_edge)
+    
+    rvals = Rh[:, np.newaxis] * np.arange(0., 5., 0.005)[np.newaxis, :]
+    rprof = cu.rho_NFW(rvals, Mhvals[:, np.newaxis], delta=200, ref='rhocrit', z=0., cosmopars=cosmopars, c='Schaller15')
+    
+    rvals *= (1./ Rh)[:, np.newaxis]
+    sols = []
+    for Mhi in range(rprof.shape[0]):
+        rsol = linterpsolve(rprof[Mhi, :], rvals[Mhi, :], rho_fof_edge)
+        sols.append(rsol)
+   
+        color='C%i'%(Mhi%10)
+        plt.plot(rvals[Mhi, :], rprof[Mhi, :], color=color, label='%.1f'%(np.log10(Mhvals[Mhi] / c.solar_mass)))
+        plt.axvline(rsol, linestyle='dashed', color=color)
+        
+    plt.axhline(rho_fof_edge, linestyle='dotted')
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.legend()
+    
+    return sols, np.log10(Mhvals / c.solar_mass)
+    
+    
 def setticks(ax, fontsize, color='black', labelbottom=True, top=True, labelleft=True, labelright=False, right=True, labeltop=False, left=True):
     ax.minorticks_on()
     ax.tick_params(labelsize=fontsize, direction='in', right=right, top=top, left=left, axis='both', which='both', color=color,\
@@ -4515,7 +4548,7 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
                           - use halo range only projections
                           - use halo mass only projections with the masking variations
     '''
-    techvars_touse=[0]
+    techvars_touse=[0, 7]
     units='R200c'
     ytype='perc'
     yvals_toplot=[10., 50., 90.]
@@ -4607,6 +4640,14 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
                                   'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-1000_centrals_stored_profiles.hdf5',\
                                   'o8':   'rdist_coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-1000_centrals_stored_profiles.hdf5',\
                                  }
+    
+    ion_filedct_1sl_binfofonly = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                           'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                           'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                           'o6':   'rdist_coldens_o6_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                           'o7':   'rdist_coldens_o7_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                           'o8':   'rdist_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                           }
         
     # define used mass ranges
     Mh_edges = np.array([11., 11.5, 12., 12.5, 13., 13.5, 14.]) # 9., 9.5, 10., 10.5
@@ -4618,17 +4659,27 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
     Mh_names =['logM200c_Msun_geq%s_le%s'%(Mh_mins[i], Mh_maxs[i]) if Mh_maxs[i] is not None else\
                'logM200c_Msun_geq%s'%(Mh_mins[i])\
                for i in range(len(Mh_mins))]
+    Mh_names_1sl_binfofonly = ['geq%s_le%s'%(Mh_mins[i], Mh_maxs[i]) if Mh_maxs[i] is not None else\
+                              'geq%s'%(Mh_mins[i])\
+                              for i in range(len(Mh_mins))]
 
     galsetnames_massonly = {name: sel for name, sel in zip(Mh_names, Mh_sels)}
     galsetnames_offedges = {name + '_Z_off-edge-by-R200c':  galsetnames_massonly[name] for name in galsetnames_massonly.keys()}
+    galsetnames_1sl_binfofonly = {name: sel for name, sel in zip(Mh_names_1sl_binfofonly, Mh_sels)}
     
-    techvars = {0: {'filenames': ion_filedct_1sl, 'setnames': galsetnames_massonly.keys()},\
-                1: {'filenames': ion_filedct_1sl, 'setnames': galsetnames_offedges.keys()},\
-                2: {'filenames': ion_filedct_2sl, 'setnames': galsetnames_massonly.keys()},\
-                3: {'filenames': ion_filedct_2sl, 'setnames': galsetnames_offedges.keys()},\
-                4: {'filenames': ion_filedct_subsample_1sl, 'setnames': galsetnames_massonly.keys()},\
-                5: {'filenames': ion_filedct_subsample_2sl, 'setnames': galsetnames_massonly.keys()},\
-                6: {'filenames': ion_filedct_subsample2_1sl, 'setnames': galsetnames_massonly.keys()}}
+    fills_filedct_fofonly = {Mh_names_1sl_binfofonly[i]: 'Mhalo_%.1f<=log200c<%.1f'%(Mh_mins[i], Mh_maxs[i]) if Mh_maxs[i] is not None else \
+                                                         'Mhalo_%.1f<=log200c'%(Mh_mins[i]) \
+                             for i in range(len(Mh_mins))}
+    
+    techvars = {0: {'filenames': ion_filedct_1sl, 'setnames': galsetnames_massonly.keys(), 'setfills': None},\
+                1: {'filenames': ion_filedct_1sl, 'setnames': galsetnames_offedges.keys(), 'setfills': None},\
+                2: {'filenames': ion_filedct_2sl, 'setnames': galsetnames_massonly.keys(), 'setfills': None},\
+                3: {'filenames': ion_filedct_2sl, 'setnames': galsetnames_offedges.keys(), 'setfills': None},\
+                4: {'filenames': ion_filedct_subsample_1sl, 'setnames': galsetnames_massonly.keys(), 'setfills': None},\
+                5: {'filenames': ion_filedct_subsample_2sl, 'setnames': galsetnames_massonly.keys(), 'setfills': None},\
+                6: {'filenames': ion_filedct_subsample2_1sl, 'setnames': galsetnames_massonly.keys(), 'setfills': None},\
+                7: {'filenames': ion_filedct_1sl_binfofonly, 'setnames': galsetnames_1sl_binfofonly.keys(), 'setfills': fills_filedct_fofonly},\
+                }
     
     linewidths = {0: 1.5,\
                   1: 1.5,\
@@ -4636,16 +4687,18 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
                   3: 2.5,\
                   4: 1.5,\
                   5: 2.5,\
-                  6: 1.5}
-    
-    
+                  6: 1.5,\
+                  7: 1.}
+       
     linestyles = {0: 'solid',\
                   1: 'dashed',\
                   2: 'solid',\
                   3: 'dotted',\
                   4: 'solid',\
                   5: 'solid',\
-                  6: 'solid'}
+                  6: 'solid',\
+                  7: 'dashed',\
+                  }
     
     alphas = {0: 1.,\
               1: 1.,\
@@ -4653,34 +4706,40 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
               3: 1.,\
               4: 0.4,\
               5: 0.4,\
-              6: 0.6}
+              6: 0.6,\
+              7: 1.}
     
-    legendnames_techvars = {0: r'1 sl., all',\
+    legendnames_techvars = {0: 'all gas',\
+                            # 0: r'1 sl., all',\
                             1: r'1 sl., off-edge',\
                             2: r'2 sl., all',\
                             3: r'2 sl., off-edge',\
                             4: r'1 sl., 100',\
                             5: r'2 sl., 100',\
-                            6: r'1 sl., 1000'}
+                            6: r'1 sl., 1000',\
+                            7: r'FoF gas only',\
+                            }
     
     readpaths = {val: '%s_bins/binset_0/%s_%s'%(units, ytype, val) for val in yvals_toplot}
     readpath_bins = '/'.join((readpaths[readpaths.keys()[0]]).split('/')[:-1]) + '/bin_edges'
     print(readpaths)
     panelwidth = 2.5
     panelheight = 2.
-    legheight = 1.2
+    legheight = 0.9
+    cwidth = 0.6
     if ytype == 'perc':
         wspace = 0.2
     else:
         wspace = 0.0
     #fcovticklen = 0.035
-    figwidth = numcols * panelwidth + 0.6 
-    figheight = numcols * panelheight + 0.2 * numcols + legheight
+    figwidth = numcols * panelwidth + cwidth + wspace * numcols
+    figheight = numcols * panelheight + legheight
     fig = plt.figure(figsize=(figwidth, figheight))
-    grid = gsp.GridSpec(numrows + 1, numcols + 1, hspace=0.0, wspace=wspace, width_ratios=[panelwidth] * numcols + [0.6], height_ratios=[panelheight] * numrows + [legheight])
+    grid = gsp.GridSpec(numrows + 1, numcols + 1, hspace=0.0, wspace=wspace, width_ratios=[panelwidth] * numcols + [cwidth], height_ratios=[panelheight] * numrows + [legheight])
     axes = [fig.add_subplot(grid[i // numcols, i % numcols]) for i in range(len(ions))]
     cax  = fig.add_subplot(grid[:numrows, numcols])
-    lax  = fig.add_subplot(grid[numrows, :])
+    if len(techvars_touse) > 1:
+        lax  = fig.add_subplot(grid[numrows, :])
     
     yvals = {}
     #cosmopars = {}
@@ -4704,49 +4763,94 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
             print('Reading in data for ion %s'%ion)
             filename = techvars[var]['filenames'][ion]
             goaltags = techvars[var]['setnames']
+            setfills = techvars[var]['setfills']
             
             if ion not in filename:
                 raise RuntimeError('File %s attributed to ion %s, mismatch'%(filename, ion))
             
-            with h5py.File(ol.pdir + 'radprof/' + filename, 'r') as fi:
+            if setfills is None:
+                with h5py.File(ol.pdir + 'radprof/' + filename, 'r') as fi:
+                    bins[var][ion] = {}
+                    yvals[var][ion] = {}
+                    numgals[var][ion] = {}
+                    galsets = fi.keys()
+                    tags = {} 
+                    for galset in galsets:
+                        ex = True
+                        for val in readpaths.keys():
+                            try:
+                                temp = np.array(fi[galset + '/' + readpaths[val]])
+                            except KeyError:
+                                ex = False
+                                break
+                        
+                        if ex:
+                            tags[fi[galset].attrs['seltag']] = galset
+                        
+                    tags_toread = set(goaltags) &  set(tags.keys())
+                    tags_unread = set(goaltags) - set(tags.keys())
+                    #print(goaltags)
+                    #print(tags.keys())
+                    if len(tags_unread) > 0:
+                        print('For file %s, missed the following tags:\n\t%s'%(filename, tags_unread))
+                    
+                    for tag in tags_toread:
+                        _bins = np.array(fi[tags[tag] + '/' + readpath_bins])
+                        # handle +- infinity edges for plotting; should be outside the plot range anyway
+                        if _bins[0] == -np.inf:
+                            _bins[0] = -100.
+                        if _bins[-1] == np.inf:
+                            _bins[-1] = 100.
+                        bins[var][ion][tag] = _bins
+                        
+                        # extract number of pixels from the input filename, using naming system of make_maps
+                        
+                        yvals[var][ion][tag] = {val: np.array(fi['%s/%s'%(tags[tag], readpaths[val])]) for val in readpaths.keys()}
+                        numgals[var][ion][tag] = len(np.array(fi['%s/galaxyid'%(tags[tag])]))
+            else:
                 bins[var][ion] = {}
                 yvals[var][ion] = {}
                 numgals[var][ion] = {}
-                galsets = fi.keys()
-                tags = {} 
-                for galset in galsets:
-                    ex = True
-                    for val in readpaths.keys():
-                        try:
-                            temp = np.array(fi[galset + '/' + readpaths[val]])
-                        except KeyError:
-                            ex = False
-                            break
-                    
-                    if ex:
-                        tags[fi[galset].attrs['seltag']] = galset
-                    
-                tags_toread = set(goaltags) &  set(tags.keys())
-                tags_unread = set(goaltags) - set(tags.keys())
-                #print(goaltags)
-                #print(tags.keys())
-                if len(tags_unread) > 0:
-                    print('For file %s, missed the following tags:\n\t%s'%(filename, tags_unread))
-                
-                for tag in tags_toread:
-                    _bins = np.array(fi[tags[tag] + '/' + readpath_bins])
-                    # handle +- infinity edges for plotting; should be outside the plot range anyway
-                    if _bins[0] == -np.inf:
-                        _bins[0] = -100.
-                    if _bins[-1] == np.inf:
-                        _bins[-1] = 100.
-                    bins[var][ion][tag] = _bins
-                    
-                    # extract number of pixels from the input filename, using naming system of make_maps
-                    
-                    yvals[var][ion][tag] = {val: np.array(fi['%s/%s'%(tags[tag], readpaths[val])]) for val in readpaths.keys()}
-                    numgals[var][ion][tag] = len(np.array(fi['%s/galaxyid'%(tags[tag])]))
-                    
+                for tag in goaltags:
+                    fill = setfills[tag]                    
+                    #print('Using %s, %s, %s'%(var, ion, tag))
+                    fn_temp = ol.pdir + 'radprof/' + filename%(fill)
+                    #print('For ion %s, tag %s, trying file %s'%(ion, tag, fn_temp))
+                    with h5py.File(fn_temp, 'r') as fi:                       
+                        galsets = fi.keys()
+                        tags = {} 
+                        for galset in galsets:
+                            ex = True
+                            for val in readpaths.keys():
+                                try:
+                                    temp = np.array(fi[galset + '/' + readpaths[val]])
+                                except KeyError:
+                                    ex = False
+                                    break
+                            
+                            if ex:
+                                tags[fi[galset].attrs['seltag']] = galset
+                            
+                        #tags_toread = {tag} &  set(tags.keys())
+                        tags_unread = {tag} - set(tags.keys())
+                        #print(goaltags)
+                        #print(tags.keys())
+                        if len(tags_unread) > 0:
+                            print('For file %s, missed the following tags:\n\t%s'%(filename, tags_unread))
+                        
+                        #for tag in tags_toread:
+                        _bins = np.array(fi[tags[tag] + '/' + readpath_bins])
+                        # handle +- infinity edges for plotting; should be outside the plot range anyway
+                        if _bins[0] == -np.inf:
+                            _bins[0] = -100.
+                        if _bins[-1] == np.inf:
+                            _bins[-1] = 100.
+                        bins[var][ion][tag] = _bins
+                        
+                        # extract number of pixels from the input filename, using naming system of make_maps
+                        
+                        yvals[var][ion][tag] = {val: np.array(fi['%s/%s'%(tags[tag], readpaths[val])]) for val in readpaths.keys()}
+                        numgals[var][ion][tag] = len(np.array(fi['%s/galaxyid'%(tags[tag])]))
     ## checks: will fail with e.g. halo-only projection, though
     #filekeys = h5files.keys()
     #if np.all([np.all(bins[key] == bins[filekeys[0]]) if len(bins[key]) == len(bins[filekeys[0]]) else False for key in filekeys]):
@@ -4780,16 +4884,19 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
         massedges[-1] = 2. * massedges[-2] - massedges[-3]
     masslabels1 = {name: tuple(np.log10(np.array(galsetnames_massonly[name][1:]))) for name in galsetnames_massonly.keys()}
     masslabels2 = {name: tuple(np.log10(np.array(galsetnames_offedges[name][1:]))) for name in galsetnames_offedges.keys()}
+    masslabels3 = {name: tuple(np.log10(np.array(galsetnames_1sl_binfofonly[name][1:]))) for name in galsetnames_1sl_binfofonly.keys()}
     
     clist = cm.get_cmap(cmapname, len(massedges) - 1)(np.linspace(0., 1.,len(massedges) - 1))
     _masks1 = sorted(masslabels1.keys(), key=masslabels1.__getitem__)
     colors = {_masks1[i]: clist[i] for i in range(len(_masks1))}
     _masks2 = sorted(masslabels2.keys(), key=masslabels2.__getitem__)
     colors.update({_masks2[i]: clist[i] for i in range(len(_masks2))})
+    _masks3 = sorted(masslabels3.keys(), key=masslabels3.__getitem__)
+    colors.update({_masks3[i]: clist[i] for i in range(len(_masks3))})
     #del _masks
     masslabels_all = masslabels1
     masslabels_all.update(masslabels2)
-    
+    masslabels_all.update(masslabels3)
     #print(clist)
     cmap = mpl.colors.ListedColormap(clist[:-1])
     cmap.set_over(clist[-1])
@@ -4819,7 +4926,6 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
     #        xpos = 0.5
     #        cax.text(xpos, (ypos - massedges[0]) / (massedges[-2] - massedges[0]), str(numgals[lines[0]][tag]), fontsize=fontsize, color=ancolor, verticalalignment='center', horizontalalignment='center')
     
-
     for ionind in range(len(ions)):
         xi = ionind % numcols
         yi = ionind // numcols
@@ -4863,7 +4969,7 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
         ax.text(0.95, 0.95, ild.getnicename(ion, mathmode=False), horizontalalignment='right', verticalalignment='top', fontsize=fontsize, transform=ax.transAxes)
         
         #hatchind = 0
-        for vi in range(len(techvars_touse)):
+        for vi in range(len(techvars_touse) -1, -1, -1): # backwards to get lowest techvars on top
             tags = techvars[techvars_touse[vi]]['setnames']
             tags = sorted(tags, key=masslabels_all.__getitem__)
             var = techvars_touse[vi]
@@ -4873,6 +4979,7 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
                 try:
                     plotx = bins[var][ion][tag]
                 except KeyError: # dataset not read in
+                    print('Could not find techvars %i, ion %s, tag %s'%(var, ion, tag))
                     continue
                 plotx = plotx[:-1] + 0.5 * np.diff(plotx)
 
@@ -4957,7 +5064,7 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
     #sumlabels = ['all halos', 'total']
     if len(techvars_touse) > 1:
         lax.legend(lcs, [legendnames_techvars[var] for var in techvars_touse], handler_map={type(lc): HandlerDashedLines()}, fontsize=fontsize, ncol=2 * numcols, loc='lower center', bbox_to_anchor=(0.5, 0.))
-    lax.axis('off')
+        lax.axis('off')
     #leg1 = lax.legend(handles=legend_handles, fontsize=fontsize-1, loc='lower left', bbox_to_anchor=(0.01, 0.01), frameon=False)
     #leg2 = lax.legend(handles=legend_handles_ls,fontsize=fontsize-1, loc='upper right', bbox_to_anchor=(0.99, 0.99), frameon=False)
     #lax.add_artist(leg1)

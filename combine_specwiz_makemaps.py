@@ -2219,6 +2219,9 @@ def getEWdistvals_o78_cddfsatz_sarahspaper(plot=False, fileset=0): # just to sto
     # Delta lambda = Delta E * lambda / E = Delta E_rest / (1 + z) * (lambda_rest * (1 + z)) / (E_rest / (1 + z))
     # (E and lambda are both redshifted, but that doesn't affect the ratios)
     
+    ## old values
+    #EWobs_o7 = np.array([0.12, 0.15, 0.19, 0.29, 0.34]) #eV 
+    #EWobs_o8 = np.array([0.08, 0.1, 0.13, 0.19, 0.23])  
     EWobs_o7 = np.array([0.12, 0.15, 0.19, 0.29, 0.34]) #eV 
     EWobs_o8 = np.array([0.08, 0.1, 0.13, 0.19, 0.23])  
     print(dct_dXoverdz)

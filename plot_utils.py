@@ -258,7 +258,10 @@ def add_2dplot(ax, bins, edges, toplotaxes, log=True, usepcolor=False, pixdens=F
     if axis1 < axis2:
         imgtoplot = imgtoplot.T
     if usepcolor:
-        img = ax.pcolormesh(edges[axis1] + shiftx, edges[axis2] + shifty, imgtoplot, **kwargs)
+        _kwargs = kwargs.copy()
+        if 'rasterized' not in _kwargs:
+            _kwargs['rasterized'] = True           
+        img = ax.pcolormesh(edges[axis1] + shiftx, edges[axis2] + shifty, imgtoplot, **_kwargs)
     else:
         img = ax.imshow(imgtoplot, origin='lower', interpolation='nearest',\
                         extent=(edges[axis1][0] + shiftx, edges[axis1][-1] + shiftx,\
