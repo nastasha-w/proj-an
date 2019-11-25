@@ -1989,12 +1989,12 @@ def plot_pethalos1_rpofiles(dct_rp, ionname, ion):
     fig.suptitle(r'2d radial profiles for $\mathrm{%s}$'%ionname)
     for label in labels:
         for mind in range(len(masses)):
-	    if pets[label][mind] is None:
-	        continue
-	    subplot_pethalos(dct_rp[str(pets[label][mind])],\
-	      bins, label, axes[mind], color=petcolors[label],\
-	      ylabel=ylabel, xlabel=xlabel, title=titles[mind],\
-	      fontsize=fontsize)
+    	    if pets[label][mind] is None:
+    	        continue
+    	    subplot_pethalos(dct_rp[str(pets[label][mind])],\
+    	      bins, label, axes[mind], color=petcolors[label],\
+    	      ylabel=ylabel, xlabel=xlabel, title=titles[mind],\
+    	      fontsize=fontsize)
     handles, labels = axes[0].get_legend_handles_labels()
     lax.legend(handles, labels, fontsize=fontsize, ncol=2)
     lax.axis('off')
@@ -2933,7 +2933,7 @@ def plotenv_slices(galid, catset='posspace'):
         cosmopars = {key: item for (key, item) in hc['Header/cosmopars'].attrs.items()}
         
         pos_cMpc_to_vrf_kmps = cu.Hubble(cosmopars['z'], cosmopars=cosmopars) * cu.c.cm_per_mpc * cosmopars['a'] * 1e-5
-        print cosmopars
+        print(cosmopars)
         cMpc_to_pkpc = 1e3 * cosmopars['a']
         
     nsub = len(crcats)
@@ -2952,7 +2952,7 @@ def plotenv_slices(galid, catset='posspace'):
     titles = {}
     for i in range(len(keys)):
         key = keys[i]
-        print key
+        print(key)
         titles[key] = 'slice offset: %.0f km/s'%(key * pos_cMpc_to_vrf_kmps)
         with h5py.File(crcats[key], 'r') as fi:
             img = np.array(fi[str(galid)])
@@ -3153,7 +3153,7 @@ def plot_rdistsbyprops_from_hdf5(crcat, halocat, xunit='R200c', yaxis='perc',\
         extend=cbar_extend, orientation='vertical')
     
     sample_cnormed = {key: (samplecens[key] - bounds[0]) / (bounds[-1] - bounds[0]) for key in samplecens.keys()}
-    print sample_cnormed
+    print(sample_cnormed)
     
     cax.tick_params(labelsize=fontsize-1)
     cax.set_ylabel(clabel, fontsize=fontsize)

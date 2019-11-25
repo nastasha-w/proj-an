@@ -11,9 +11,9 @@ import mpl_toolkits.axes_grid1 as axgrid
 import matplotlib.gridspec as gsp
 import matplotlib.lines as mlines
 import ctypes as ct
-import numbers #useful for type checks
+#import numbers #useful for type checks
 import scipy
-import scipy.signal as scisig
+#import scipy.signal as scisig
 
 import cosmo_utils as cu
 import make_maps_opts_locs as ol
@@ -114,7 +114,7 @@ class Sightline:
             key = 'o8/FluxCorr'
         else:
             key = getspecname(ion, qty=qty)
-            print key
+            print(key)
             self.spectra[key] = np.array(self.tempfile['Spectrum%i/%s'%(self.specnum, key)])
         
             # overwrtitten and handled by correct_o8 if that was called 
@@ -633,7 +633,7 @@ class Sightline:
                 self.edgeinds_v = [[0, len(vvals)]] 
         self.numsys = len(self.edgeinds_v)
         self.egdeinds_v = np.array(self.edgeinds_v)
-        print self.edgeinds_v
+        print(self.edgeinds_v)
         self.edgeinds_v_new = []
         # extend found components to region enclosing a decrement limit of decr_lim * max decrement in component (this does not exclude overlap between absorbers, which may occur if the max absorption is clode to the limit)
         if self.numsys > 0:
@@ -718,7 +718,7 @@ class Sightline:
             del self.edgeinds_v_new                
             self.edgevals_v = [[vvals[self.inds[0]], vvals[self.inds[1] - 1]] for self.inds in self.edgeinds_v]
             del self.inds
-            print self.edgeinds_v
+            print(self.edgeinds_v)
         # end of if numsys > 0 (edge reset based on max flux decrement in system)
         # record velocity-only data
         if saveto_file is not None:
@@ -777,7 +777,7 @@ class Sightline:
                 self.pinds %= len(vvals) # pinds_init were not `modularized'
                 # apply the ion density selection
                 self.pinds = np.round(self.pinds, 0).astype(np.int) #float coordinates in pixel units -> int indices
-                print self.pinds
+                print(self.pinds)
                 self.maxnion = np.max(self.nion[self.pinds])
                 self.minnion = self.maxnion * nion_decr_lim
                 self.pinds = self.pinds[self.nion[self.pinds] >= self.minnion]
@@ -959,7 +959,7 @@ def downsample(array,outpixels,average=True,axis=0):
                ct.byref(ct.c_int(average))\
               )
     print(outarray.shape)
-    return np.reshape(outarray,outshape)
+    return np.reshape(outarray, outshape)
 
 def smoothspectrum(spectrum, vvals_rf_kmps, ion, z, fwhm_ev, pix_per_fwhm=2.):
     try:
@@ -1114,13 +1114,13 @@ def getselections_by_coldens(dct, number, losfilename):
 def checkT4EOS_sample3sub_coldenscomp(sample_in=None, subsample_in=None):
 # 16 ions
     if sample_in is None:
-        sample =  sample
+        sample = sample
         samplename = 'sample3'
     else:
         sample = sample = SpecSample(sdir+sample_in)
         samplename = sample_in.split('/')[0]
     if subsample_in is None:
-        subasample = subsample
+        subsample = subsample
         subsample_name = 'subsample3'
     else:
         subsample = SpecSample(sdir + subsample_in, specnums = np.arange(512))
@@ -1631,7 +1631,7 @@ def plot_multiline_vpanels(specnum, lines, filename=None, vedges=None, savedir=N
                     r'$f_{\mathrm{osc}} = %.3f$'%(ild.linetable.loc[lineset[li], 'fosc'])
             ax.text(xpos, ypos, label, fontsize=fontsize, transform=ax.transAxes,\
                     verticalalignment='bottom', horizontalalignment='left') # bbox=dict(facecolor='white',alpha=0.3)
-        print vedges
+        print(vedges)
         if vedges is not None:
             EWs_mA = [sl.getEW(ion, corr=True, vrange=list(np.copy(vrange)), vvals=xvals) for vrange in vedges]
             xlim = ax.get_xlim()
@@ -1641,7 +1641,7 @@ def plot_multiline_vpanels(specnum, lines, filename=None, vedges=None, savedir=N
                 ax.axvline(vset[1], color='gray', linestyle='dotted')
                 ax.text((vset[0] - xlim[0]) / (xlim[1] - xlim[0]), 0.95, r'$%.2f \, \mathrm{m\AA}$'%(EWs_mA[vi]),\
                         fontsize=fontsize, transform=ax.transAxes, verticalalignment='top', horizontalalignment='left' )
-        print vedges
+        print(vedges)
     fig.suptitle('Spectrum %i'%specnum, fontsize=fontsize)        
     plt.savefig(savename, format='pdf', bbox_inches='tight')
     
@@ -1834,25 +1834,25 @@ def plotspectrum_o78(sightline, sample_in=None, auxdata = None):
     
     maxv = vvals[-1] + np.average(np.diff(vvals)) # periodicity in velocity space
     vranges = [sl.componentdct[ion]['edgevals_v'] for ion in includeions] # trying to access edgevals_p will give an error if there are no components
-    print vranges
+    print(vranges)
     vranges = np.array([[vrange if vrange[0] <= vrange[1] else\
                         np.array([vrange[0] - maxv, vrange[1] + maxv])\
                         for vrange in vranges_ion]\
                         for vranges_ion in vranges])
-    print vranges
+    print(vranges)
     vrange = np.array([np.min(vranges[:, :, 0], axis=0), np.max(vranges[:, :, 1], axis=0)]).T % maxv    
-    print vrange
+    print(vrange)
     vrange[:, 0] -= vmar_plot
     vrange[:, 1] += vmar_plot
     vrange %= maxv
     vranges %= maxv
     
-    print vrange
-    print vranges
-    print maxv
-    print prange
-    print pranges
-    print sl.slicelength
+    print(vrange)
+    print(vranges)
+    print(maxv)
+    print(prange)
+    print(pranges)
+    print(sl.slicelength)
     
     # set up grid and axes
     nlines = len(prange)
@@ -1974,7 +1974,7 @@ def plotspectrum_o78(sightline, sample_in=None, auxdata = None):
     ## Nion spectrum (in vspace equivalent units)
     ax = axes_ts[3]
     xvals = pvals
-    print min(pvals), max(pvals)
+    print(min(pvals), max(pvals))
     yvals  = [np.log10(sl.spectra[getspecname(ion, 'realnionw/NIon_CM3')]) for ion in includeions]
     for ionind in range(len(includeions)):
         ax.plot(xvals, yvals[ionind], color=clist[ionind])
@@ -2068,7 +2068,7 @@ def plotspectrum_o78(sightline, sample_in=None, auxdata = None):
         # add info to relevant plots
    
         ypos = 0.05 + ionind/float(len(includeions))
-        print ypos
+        print(ypos)
         axes_ts[2].text(0.01, ypos, r'$EW = %.2e \, \mathrm{m\AA}$'%(EWs[ionind]/1.e-3), fontsize=fontsize, transform=axes_ts[2].transAxes, verticalalignment='bottom', horizontalalignment='left', bbox=bbox, color=clist[ionind])
         axes_ts[3].text(0.01, ypos, r'$\log_{10}N = %.1f \, \mathrm{cm}^{-2}$'%(coldens[ionind]), fontsize=fontsize, transform=axes_ts[3].transAxes, verticalalignment='bottom', horizontalalignment='left', bbox=bbox, color=clist[ionind])
         for sysind in range(len(vrange)):

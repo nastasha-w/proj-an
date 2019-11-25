@@ -6,7 +6,7 @@ for making histograms (in n dimensions) from images
 
 also has some specific histogram implementations 
 (basic means: does not need make_maps as an import, and all the installation 
-that comes with)
+that comes with, except for cases where ion balances are calculated explicitly)
 '''
 
 import numpy as np

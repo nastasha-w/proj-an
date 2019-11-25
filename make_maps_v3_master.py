@@ -3482,7 +3482,7 @@ def combwishlist(neededsubssettingsfirst,neededsubssettingssecond):
 
 def saveattr(grp, name, val):
     '''
-    meant for realtively simple cases; do not apply to e.g. selection tuples 
+    meant for relatively simple cases; do not apply to e.g. selection tuples 
     with mixed types
     '''
     if sys.version.split('.')[0] == '3':

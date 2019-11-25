@@ -9,7 +9,6 @@ Created on Thu Apr 25 14:49:22 2019
 import numpy as np
 import make_maps_opts_locs as ol
 import h5py
-import scipy
 import pandas as pd
 import string
 import os
@@ -32,9 +31,7 @@ import matplotlib.patches as mpatch
 import makecddfs as mc
 import eagle_constants_and_units as c #only use for physical constants and unit conversion!
 import ion_header as ionh
-import loadnpz_and_plot as lnp
 import make_maps_v3_master as m3 # for ion balances
-import simfileclone as sfc # for cooling contours
 import cosmo_utils as cu
 import ion_line_data as ild
 import plot_utils as pu
@@ -934,7 +931,7 @@ def plot_cddfsplits(ions, fontsize=fontsize, imgname=None, techvars=[0], relativ
     #if not np.all(np.array([np.all(hists[key]['nomask'] == hists[filekeys[0]]['nomask']) for key in filekeys])):
    #     raise RuntimeError('total histograms from different files do not match')
         
-    massranges = [(float(i) for i in name.split('-')[-2:]) if name is not 'nomask' else None for name in masknames]
+    massranges = [(float(i) for i in name.split('-')[-2:]) if name != 'nomask' else None for name in masknames]
     massranges.remove(None)
     massedges = sorted(list(set([val for rng in massranges for val in rng])))
     if massedges[-1] == np.inf: # used for setting the color bar -> just need some dummy value higher than the last one
@@ -1945,7 +1942,7 @@ def quicklook_particlehist(h5name, group=None, plotlog=None):
             print('Which group do you want to plot?')
             for i in range(len(keys)):
                 print('%i\t%s'%(i, keys[i]))
-            choice = raw_input('Please enter name or index: ')
+            choice = input('Please enter name or index: ')
             choice = choice.strip()
             try:
                 ci = int(choice)
