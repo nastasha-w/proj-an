@@ -244,8 +244,8 @@ def setticks(ax, fontsize, color='black', labelbottom=True, top=True, labelleft=
                    labelleft=labelleft, labeltop=labeltop, labelbottom=labelbottom, labelright=labelright)
 
 def checksubdct_equal(dct):
-    keys = dct.keys()
-    if not np.all(np.array([set(dct[key].keys()) == set(dct[keys[0]].keys()) for key in keys])):
+    keys = list(dct.keys())
+    if not np.all(np.array([set(list(dct[key].keys())) == set(list(dct[keys[0]].keys())) for key in keys])):
         print('Keys do not match')
         return False
     if not np.all(np.array([np.all(np.array([np.all(dct[keys[0]][sub] == dct[key][sub]) for sub in dct[keys[0]].keys() ])) for key in keys])):
@@ -3375,7 +3375,7 @@ def plot_cddfs_nice(ions=None, fontsize=fontsize, imgname=None, techvars=[0]):
                 bins[var][ion] = _bins
                 
                 # extract number of pixels from the input filename, using naming system of make_maps
-                inname = np.array(fi['input_filenames'])[0]
+                inname = np.array(fi['input_filenames'])[0].decode()
                 inname = inname.split('/')[-1] # throw out directory path
                 parts = inname.split('_')
         
@@ -3391,8 +3391,8 @@ def plot_cddfs_nice(ions=None, fontsize=fontsize, imgname=None, techvars=[0]):
         
                 hists[var][ion] = {mask: np.array(fi['%s/hist'%mask]) for mask in masks}
                 
-                examplemaskdir = fi['masks'].keys()[0]
-                examplemask = fi['masks/%s'%(examplemaskdir)].keys()[0]
+                examplemaskdir = list(fi['masks'].keys())[0]
+                examplemask = list(fi['masks/%s'%(examplemaskdir)].keys())[0]
                 cosmopars[var][ion] = {key: item for (key, item) in fi['masks/%s/%s/Header/cosmopars/'%(examplemaskdir, examplemask)].attrs.items()}
                 dXtot[var][ion] = mc.getdX(cosmopars[var][ion]['z'], cosmopars[var][ion]['boxsize'] / cosmopars[var][ion]['h'], cosmopars=cosmopars[var][ion]) * float(numpix_1sl**2)
                 dztot[var][ion] = mc.getdz(cosmopars[var][ion]['z'], cosmopars[var][ion]['boxsize'] / cosmopars[var][ion]['h'], cosmopars=cosmopars[var][ion]) * float(numpix_1sl**2)
@@ -3412,7 +3412,7 @@ def plot_cddfs_nice(ions=None, fontsize=fontsize, imgname=None, techvars=[0]):
         
     
     ax1.set_xlim(12.0, 17.)
-    ax1.set_ylim(-5.0, 2.5)
+    ax1.set_ylim(-4.05, 2.5)
     #ax2.set_xlim(12.0, 23.0)
     #ax2.set_ylim(-5.0, 2.5)
     
@@ -3527,34 +3527,29 @@ def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors):
         
     allions = ions #['hneutralssh'] + 
     
-    fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(5.5, 5.0))
-    ax.set_xlim(-8., -1.5)
-    ax.set_ylim(3.4, 8.0)
+    fig, (ax1, ax2) = plt.subplots(ncols=1, nrows=2, figsize=(5.5, 10.), gridspec_kw={'hspace': 0.})
+    ax1.set_xlim(-8., -1.5)
+    ax1.set_ylim(3.4, 7.65)
+    ax2.set_xlim(-8., -1.5)
+    ax2.set_ylim(3.4, 7.65)
+    axions = {1: ['o6', 'o7', 'o8'], 2: ['ne8', 'ne9', 'fe17']}
     
-    ax.set_ylabel(r'$\log_{10} \, T \; [K]$', fontsize=fontsize)
-    ax.set_xlabel(r'$\log_{10} \, n_{\mathrm{H}} \; [\mathrm{cm}^{-3}]$', fontsize=fontsize)
-    setticks(ax, fontsize=fontsize, right=False)
+    ax1.set_ylabel(r'$\log_{10} \, T \; [K]$', fontsize=fontsize)
+    ax2.set_ylabel(r'$\log_{10} \, T \; [K]$', fontsize=fontsize)
+    ax2.set_xlabel(r'$\log_{10} \, n_{\mathrm{H}} \; [\mathrm{cm}^{-3}]$', fontsize=fontsize)
+    setticks(ax1, fontsize=fontsize, right=False, labelbottom=False)
+    setticks(ax2, fontsize=fontsize, right=False)
     
-    axy2 = ax.twinx()
-    ylim = ax.get_ylim()
-    axy2.set_ylim(*ylim)
-    mhalos = np.arange(9.0, 15.1, 0.5)
-    Tvals = np.log10(T200c_hot(10**mhalos, cosmopars))
-    Tlabels = ['%.1f'%mh for mh in mhalos]
-    axy2.set_yticks(Tvals)
-    axy2.set_yticklabels(Tlabels)
-    setticks(axy2, fontsize=fontsize, left=False, right=True, labelleft=False, labelright=True)
-    axy2.minorticks_off()
-    axy2.set_ylabel(r'$\log_{10} \, \mathrm{M_{\mathrm{200c}}} (T_{\mathrm{200c}}) \; [\mathrm{M}_{\odot}]$', fontsize=fontsize)
-    
-    ax.axvline(logrhob + np.log10(rho_to_nh), 0., 0.8, color='gray', linestyle='dashed', linewidth=1.5)
+    ax1.axvline(logrhob + np.log10(rho_to_nh), 0., 0.85, color='gray', linestyle='dashed', linewidth=1.5)
+    ax2.axvline(logrhob + np.log10(rho_to_nh), 0., 0.85, color='gray', linestyle='dashed', linewidth=1.5)
     #ax.axvline(logrhoc + np.log10(rho_to_nh * 200. * cosmopars['omegab'] / cosmopars['omegam']), 0., 0.75, color='gray', linestyle='solid', linewidth=1.5)
     
 
-    for ion in allions:
-        ax.contourf(nHs[ion], Ts[ion], bals[ion].T, colors=ioncolors[ion], alpha=0.1, linewidths=[3.], levels=[0.1 * maxfracs[ion], 1.])
-        ax.contour(nHs[ion], Ts[ion], bals[ion].T, colors=ioncolors[ion], linewidths=[2.], levels=[0.1 * maxfracs[ion]], linestyles=['solid'])
-        if ion != 'hneutralssh':
+    for ax, axi in zip([ax1, ax2], [1, 2]):
+        for ion in axions[axi]:
+            ax.contourf(nHs[ion], Ts[ion], bals[ion].T, colors=ioncolors[ion], alpha=0.1, linewidths=[3.], levels=[0.1 * maxfracs[ion], 1.])
+            ax.contour(nHs[ion], Ts[ion], bals[ion].T, colors=ioncolors[ion], linewidths=[2.], levels=[0.1 * maxfracs[ion]], linestyles=['solid'])
+        for ion in allions:
             ax.axhline(Tmaxs[ion], 0.95, 1., color=ioncolors[ion], linewidth=3.)
             
         #bal = bals[ion]
@@ -3568,9 +3563,21 @@ def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors):
         #diffs[mask] = np.NaN
 
         #ax.contour(nHs[ion], Ts[ion][np.isfinite(maxcol)], (diffs[:, np.isfinite(maxcol)]).T, levels=[np.log10(ciemargin)], linestyles=['solid'], linewidths=[1.], alphas=0.5, colors=ioncolors[ion])
-        
-    handles = [mlines.Line2D([], [], label=ild.getnicename(ion, mathmode=False), color=ioncolors[ion]) for ion in allions]
-    ax.legend(handles=handles, fontsize=fontsize, ncol=3, bbox_to_anchor=(0.0, 1.0), loc='upper left', frameon=False)
+
+        axy2 = ax.twinx()
+        ylim = ax.get_ylim()
+        axy2.set_ylim(*ylim)
+        mhalos = np.arange(9.0, 15.1, 0.5)
+        Tvals = np.log10(T200c_hot(10**mhalos, cosmopars))
+        Tlabels = ['%.1f'%mh for mh in mhalos]
+        axy2.set_yticks(Tvals)
+        axy2.set_yticklabels(Tlabels)
+        setticks(axy2, fontsize=fontsize, left=False, right=True, labelleft=False, labelright=True)
+        axy2.minorticks_off()
+        axy2.set_ylabel(r'$\log_{10} \, \mathrm{M_{\mathrm{200c}}} (T_{\mathrm{200c}}) \; [\mathrm{M}_{\odot}]$', fontsize=fontsize)
+    
+        handles = [mlines.Line2D([], [], label=ild.getnicename(ion, mathmode=False), color=ioncolors[ion]) for ion in axions[axi]]
+        ax.legend(handles=handles, fontsize=fontsize, ncol=3, bbox_to_anchor=(0.0, 1.0), loc='upper left', frameon=False)
 
     plt.savefig(mdir + 'ionbals_snap27_HM01_ionizedmu.pdf', format='pdf', bbox_inches='tight')
     
@@ -3637,14 +3644,15 @@ def plotcddfsplits_fof(relative=False):
                         
                     dct_fofcddf[ion][pmass]['bins'] = bins
                     
-                    inname = np.array(fi['input_filenames'])[0]
+                    inname = np.array(fi['input_filenames'])[0].decode()
                     inname = inname.split('/')[-1] # throw out directory path
                     parts = inname.split('_')
             
                     numpix_1sl = set(part if 'pix' in part else None for part in parts) # find the part of the name needed: '...pix'
                     numpix_1sl.remove(None)
                     numpix_1sl = int(list(numpix_1sl)[0][:-3])
-                    print('Using %i pixels per side for the sample size'%numpix_1sl) # needed for the total path length
+                    if numpix_1sl != 32000: # expected for standard CDDFs
+                        print('Using %i pixels per side for the sample size'%numpix_1sl) # needed for the total path length
                     
                     for mmass in masses_proj[1:]:
                         grp = fi[maskdct[mmass]]
@@ -3653,8 +3661,8 @@ def plotcddfsplits_fof(relative=False):
                         # recover cosmopars:
                         mask_examples = {key: item for (key, item) in grp.attrs.items()}
                         del mask_examples['covfrac']
-                        example_key = mask_examples.keys()[0] # 'mask_<slice center>'
-                        example_mask = mask_examples[example_key] # '<dir path><mask file name>'
+                        example_key = list(mask_examples.keys())[0] # 'mask_<slice center>'
+                        example_mask = mask_examples[example_key].decode() # '<dir path><mask file name>'
                         path = 'masks/%s/%s/Header/cosmopars'%(example_key[5:], example_mask.split('/')[-1])
                         #print(path)
                         cosmopars = {key: item for (key, item) in fi[path].attrs.items()}
@@ -3700,7 +3708,7 @@ def plotcddfsplits_fof(relative=False):
                 
             dct_totcddf[ion]['bins'] = bins
             
-            inname = np.array(fi['input_filenames'])[0]
+            inname = np.array(fi['input_filenames'])[0].decode()
             inname = inname.split('/')[-1] # throw out directory path
             parts = inname.split('_')
     
@@ -3716,8 +3724,8 @@ def plotcddfsplits_fof(relative=False):
                 # recover cosmopars:
                 mask_examples = {key: item for (key, item) in grp.attrs.items()}
                 del mask_examples['covfrac']
-                example_key = mask_examples.keys()[0] # 'mask_<slice center>'
-                example_mask = mask_examples[example_key] # '<dir path><mask file name>'
+                example_key = list(mask_examples.keys())[0] # 'mask_<slice center>'
+                example_mask = mask_examples[example_key].decode() # '<dir path><mask file name>'
                 path = 'masks/%s/%s/Header/cosmopars'%(example_key[5:], example_mask.split('/')[-1])
                 cosmopars = {key: item for (key, item) in fi[path].attrs.items()}
                 dXtot = mc.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
@@ -3780,9 +3788,6 @@ def plotcddfsplits_fof(relative=False):
         lax  = fig.add_subplot(grid[numrows, :])
     else:
         lax = fig.add_subplot(grid[numrows - 1, legindstart:])
-    
-    
-    
     
     clist = cm.get_cmap(cmapname, len(massedges) - 1)(np.linspace(0., 1.,len(massedges) - 1))
     _masks = sorted(masslabels.keys(), key=masslabels.__getitem__)
@@ -3855,7 +3860,7 @@ def plotcddfsplits_fof(relative=False):
         if relative:
             ax.set_ylim(-4.5, 1.)
         else:
-            ax.set_ylim(-6.0, 2.5)
+            ax.set_ylim(-4.1, 2.5)
         
         labelx = yi == numrows - 1 #or (yi == numrows - 2 and numcols * yi + xi > len(masses_proj) + 1) 
         labely = xi == 0
@@ -3932,7 +3937,7 @@ def plotcddfsplits_fof(relative=False):
     #lax.add_artist(leg2)
     #ax1.text(0.02, 0.05, r'absorbers close to galaxies at $z=0.37$', horizontalalignment='left', verticalalignment='bottom', transform=ax1.transAxes, fontsize=fontsize)
     
-    plt.savefig(outname, format='pdf')
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
     
     
 ## CDDFsplits: comparing Fof-only projections and masks
@@ -4471,7 +4476,7 @@ def plotfracs_by_halo(ions=['Mass', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']):
     colors[len(hbins) - 1] = mpl.colors.to_rgba('magenta') # shouldn't actaully be used
     #print(colors)
 
-    fig = plt.figure(figsize=(5.5, 3.))
+    fig = plt.figure(figsize=(5.5, 4.))
     maingrid = gsp.GridSpec(ncols=2, nrows=2, hspace=0.0, wspace=0.05, height_ratios=[0.7, 4.3], width_ratios=[5., 1.])
     cax = fig.add_subplot(maingrid[1, 1])
     lax = fig.add_subplot(maingrid[0, :])
@@ -4511,10 +4516,19 @@ def plotfracs_by_halo(ions=['Mass', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']):
             color = nigmcolor
         sel = (ind1,) 
         
-        vals = np.array([data_dct[ion]['hist'][sel] / data_dct[ion]['total'] for ion in ions])
-        
-        ax.bar(xvals, vals, barwidth, bottom=bottom, color=color)
-        bottom += vals
+        if ind1 > 0 and ind1 < indmin + 2:
+            if ind1 == 1: # start addition for nigm bins
+                vals = np.array([data_dct[ion]['hist'][sel] / data_dct[ion]['total'] for ion in ions])
+            else:
+                vals += np.array([data_dct[ion]['hist'][sel] / data_dct[ion]['total'] for ion in ions])
+            if ind1 == indmin + 1: # end of addition; plot
+                ax.bar(xvals, vals, barwidth, bottom=bottom, color=color)
+                bottom += vals
+        else:
+            vals = np.array([data_dct[ion]['hist'][sel] / data_dct[ion]['total'] for ion in ions])
+            
+            ax.bar(xvals, vals, barwidth, bottom=bottom, color=color)
+            bottom += vals
             
     setticks(ax, fontsize, top=False)
     ax.xaxis.set_tick_params(which='both', length=0.) # get labels without showing the ticks        
@@ -5172,7 +5186,7 @@ def plot_NEW():
               'EWfit_lin': 'blue',\
               'EWfit_log': 'cyan',\
               'linCOG': 'cadetblue',\
-              'b_indic': ['red', 'firebrick', 'lightcoral', 'rosybrown']}
+              'b_indic': ['blue', 'red', 'firebrick', 'lightcoral']}
     kws_sublegends = {'handlelength': 1.8,\
                       'handletextpad': 0.5,\
                       'columnspacing': 0.7,\

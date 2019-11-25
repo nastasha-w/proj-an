@@ -741,7 +741,7 @@ def getlabel(hist,axis):
         return r'$\log_{10} N_{\mathrm{H}} \, [\mathrm{cm}^{-2}]$'    
     else:
         print('No label found for axis %i: %s'%(axis, hist['dimension'][axis]))
-	return None
+    return None
 
 ## from stackexchange
 def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=-1):
@@ -972,7 +972,7 @@ def add_ax2rho(ax,xory = 'x',fontsize=fontsize, labelax = True):
     newticklabels = [str(int(tick)) if int(tick)== tick else str(tick) for tick in newticks]
    	
 	#print old_ticklocs
-    print newticklabels
+    print(newticklabels)
         #ax2.set_xticks(np.round(old_ticklocs + np.log10(rho_to_nh),2) - np.log10(rho_to_nh)) # old locations, shifted just so that the round-off works out
         #ax2.set_xticklabels(['%.2f' %number for number in np.round(old_ticklocs + np.log10(rho_to_nh),2)]) 
     ax2.set_xticks(newticks - np.log10(rho_to_nh)) # old locations, shifted just so that the round-off works out
@@ -1720,17 +1720,17 @@ def plotrhoT_eaba_byNO7(slidemode = False,fontsize=14):
         grid = gsp.GridSpec(2,2,height_ratios=[6.,2.],width_ratios=[7.,1.],wspace=0.0)
         ax1, ax2 = tuple(plt.subplot(grid[0,i]) for i in range(2)) 
         ax3 = plt.subplot(grid[1,:])
-	ncols_legend = 2
-	legendloc=9
-	legend_bbox_to_anchor=(0.5,1.)
+    ncols_legend = 2
+    legendloc=9
+    legend_bbox_to_anchor=(0.5,1.)
     if slidemode: # ax3 for legend right of plot
         fontsize=14
         fig = plt.figure(figsize=(12.,6.))
         grid = gsp.GridSpec(1,3,width_ratios=[4.,7.,1.],wspace=0.0)
         ax3, ax1, ax2 = tuple(plt.subplot(grid[0,i]) for i in range(3))
-	ncols_legend = 1 
-	legendloc= 1
-	legend_bbox_to_anchor=(0.95,1.)
+    ncols_legend = 1 
+    legendloc= 1
+    legend_bbox_to_anchor=(0.95,1.)
 
     # set up x-y extents from data range
     ax1.set_xlim(h3eahi['edges'][0][0],h3eahi['edges'][0][-1])
