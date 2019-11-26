@@ -5840,3 +5840,545 @@ def plot3Dprof_niceversion(variation, minrshow=0.05, Mhrange=(12., 12.5), weight
             [axes[xi, 2 * yi + 1].set_ylim((y0, y1)) for xi in range(ncols) for yi in range(nrows // 2)]
                 
             plt.savefig(outname, format='pdf', box_inches='tight')
+            
+
+def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
+    '''
+    var:  main (just the Mstar bins) or appendix (lots more info)
+    
+    appendix:
+        - Mhalo plots (mvir -> pkpc)
+        - Mhalo subsample of Mstar (mvir -> pkpc)
+        - Mhalo subsample of Mstar (pkpc stacked)
+        - Mstar sample (pkpc stacked)
+    '''
+    if var == 'main':
+        techvars_touse = [3]
+        highlightcrit = {'techvars': [3]} 
+        ytype='perc'
+        yvals_toplot=[10., 50., 90.]
+        printnumgals=False
+    elif var == 'main-fcov':
+        techvars_touse = [3]
+        highlightcrit = None
+        ytype='fcov'
+        yvals_toplot = {'o6':   [14.3, 13.5],\
+                        'ne8':  [13.7, 13.5],\
+                        'o7':   [16.0, 15.5],\
+                        'ne9':  [15.3, 15.5],\
+                        'o8':   [16.0, 15.7],\
+                        'fe17': [15.0, 14.9]}
+        printnumgals=False
+    elif var == 'appendix':
+        techvars_touse = range(4)
+        highlightcrit = {'techvars': []} # busy enough
+        ytype='perc'
+        yvals_toplot=[10., 50., 90.]
+        printnumgals=False
+    
+    mdir = '/net/luttero/data2/imgs/CGM/radprof/'
+    if ions is None:
+        ions = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']
+    
+    imgname = 'radprof_bystellarmass_%s_L0100N1504_27_PtAb_C2Sm_32000pix_T4EOS_6.25slice_zcen-all_techvars-%s_%s.pdf'%('-'.join(sorted(ions)), '-'.join(sorted([str(var) for var in techvars_touse])), ytype)
+    imgname = mdir + imgname        
+    if (ytype=='perc' and 50.0 not in yvals_toplot):
+        imgname = imgname[:-4] + '_yvals-%s'%('-'.join([str(val) for val in yvals_toplot])) + '.pdf'
+        
+    if isinstance(ions, str):
+        ions = [ions]
+    if len(ions) <= 3:
+        numrows = 1
+        numcols = len(ions)
+    elif len(ions) == 4:
+        numrows = 2
+        numcols = 2
+    else:
+        numrows = (len(ions) - 1) // 3 + 1
+        numcols = 3
+    
+    cmapname = 'rainbow'
+    #hatches = ['\\', '/', '|', 'o', '+', '*', '-', 'x', '.']
+    #sumcolor = 'saddlebrown'
+    totalcolor = 'black'
+    shading_alpha = 0.45 
+    if ytype == 'perc':
+        ylabel = r'$\log_{10} \, \mathrm{N} \; [\mathrm{cm}^{-2}]$'
+    elif ytype == 'fcov':
+        ylabel = 'covering fraction'
+    xlabel = r'$r_{\perp} \; [\mathrm{pkpc}]$'
+    clabel = r'$\log_{10}\, \mathrm{M}_{\star} \; [\mathrm{M}_{\odot}]$'
+    linestyles_fcov = ['solid', 'dashed', 'dotted', 'dotdash']
+    cosmopars = cosmopars_ea_27
+    # up to 2.5 Rvir / 500 pkpc
+    ion_filedct_Mhalo = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                         'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                         'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                         'o8':   'rdist_coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                         'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                         'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                         #'hneutralssh': 'rdist_coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                         }
+    
+    ion_filedct_Mstar = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
+                         'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
+                         'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
+                         'o8':   'rdist_coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
+                         'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
+                         'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
+                         #'hneutralssh': 'rdist_coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                         }
+
+    # define used mass ranges
+    Mh_edges = np.array([11., 11.5, 12., 12.5, 13., 13.5, 14.]) # 9., 9.5, 10., 10.5
+    Mh_mins = list(Mh_edges)
+    Mh_maxs = list(Mh_edges[1:]) + [None]
+    Mh_sels = [('M200c_Msun', 10**Mh_mins[i], 10**Mh_maxs[i]) if Mh_maxs[i] is not None else\
+               ('M200c_Msun', 10**Mh_mins[i], np.inf)\
+               for i in range(len(Mh_mins))]
+    Mh_names =['logM200c_Msun_geq%s_le%s'%(Mh_mins[i], Mh_maxs[i]) if Mh_maxs[i] is not None else\
+               'logM200c_Msun_geq%s'%(Mh_mins[i])\
+               for i in range(len(Mh_mins))]
+    galsetnames_hmassonly = {name: sel for name, sel in zip(Mh_names, Mh_sels)}
+    
+    Ms_edges = np.array([8.7, 9.7, 10.3, 10.8, 11.1, 11.3, 11.5, 11.7])
+    Ms_mins = list(Ms_edges[:-1])
+    Ms_maxs = list(Ms_edges[1:]) 
+    Ms_base = ['geq%.1f_le%.1f'%(smin, smax) for smin, smax in zip(Ms_mins, Ms_maxs)]
+    Ms_names = ['logMstar_Msun_1000_geq%.1f_le%.1f'%(smin, smax) for smin, smax in zip(Ms_mins, Ms_maxs)]
+    Ms_sels = [('logMstar_Msun', Ms_mins[i], Ms_maxs[i]) if Ms_maxs[i] is not None else\
+               ('logMstar_Msun', Ms_mins[i], np.inf)\
+               for i in range(len(Ms_mins))]
+    galsetnames_smass = {name: sel for name, sel in zip(Ms_names, Ms_sels)}
+    
+    matchvals_Mstar_Mhalo = {'geq8.7_le9.7':   (11.0, 11.5),\
+                             'geq9.7_le10.3':  (11.5, 12.0),\
+                             'geq10.3_le10.8': (12.0, 12.5),\
+                             'geq10.8_le11.1': (12.5, 13.0),\
+                             'geq11.1_le11.3': (13.0, 13.5),\
+                             'geq11.3_le11.5': (13.5, 14.0),\
+                             'geq11.5_le11.7': (14.0, 14.6),\
+                             }
+    Ms_hmatch_names = ['logMstar_Msun_1000_%s_M200c-%.1f-%.1f-sub'%(key, matchvals_Mstar_Mhalo[key][0], matchvals_Mstar_Mhalo[key][1]) for key in Ms_base]
+    galsetnames_smass_hmatch = {name: sel for name, sel in zip(Ms_hmatch_names, Ms_sels)}
+    
+    # to put R200c-binned values into pkpc plots
+    R200c_toassume_vals = [11.25, 11.75, 12.25, 12.75, 13.25, 13.75, 14.25]    
+    R200c_toassume = {name: val for name, val in zip(Ms_hmatch_names, R200c_toassume_vals)}
+    R200c_toassume.update({name: val for name, val in zip(Mh_names, R200c_toassume_vals)})
+    
+    techvars = {0: {'filenames': ion_filedct_Mhalo, 'setnames': list(galsetnames_hmassonly.keys()), 'setfills': None, 'units': 'R200c'},\
+                1: {'filenames': ion_filedct_Mstar, 'setnames': Ms_hmatch_names, 'setfills': None, 'units': 'R200c'},\
+                2: {'filenames': ion_filedct_Mstar, 'setnames': Ms_hmatch_names, 'setfills': None, 'units': 'pkpc'},\
+                3: {'filenames': ion_filedct_Mstar, 'setnames': Ms_names, 'setfills': None, 'units': 'pkpc'},\
+                }
+    
+    linewidths = {0: 2.5,\
+                  1: 1.5,\
+                  2: 1.5,\
+                  3: 2.5,\
+                  }
+       
+    linestyles = {0: 'dashed',\
+                  1: 'dotted',\
+                  2: 'dashdot',\
+                  3: 'solid',\
+                  }
+    
+    alphas = {0: 1.,\
+              1: 1.,\
+              2: 1.,\
+              3: 1.,\
+              }
+    
+    legendnames_techvars = {0: r'$\mathrm{M}_{\mathrm{200c}}$, $\mathrm{R}_{\mathrm{200c}}$-stacked',\
+                            1: r'$\mathrm{M}_{\mathrm{200c}} + \mathrm{M}_{\star}$, $\mathrm{R}_{\mathrm{200c}}$-stacked',\
+                            2: r'$\mathrm{M}_{\mathrm{200c}} + \mathrm{M}_{\star}$, pkpc-stacked',\
+                            3: r'$\mathrm{M}_{\star}$, pkpc-stacked',\
+                            }
+    
+    if isinstance(yvals_toplot, dict):
+        readpaths = {tv: {ion: {val: '%s_bins/binset_0/%s_%s'%(techvars[tv]['units'], ytype, val) for val in yvals_toplot[ion]} for ion in ions} for tv in techvars}
+    else:
+        readpaths = {tv: {ion: {val: '%s_bins/binset_0/%s_%s'%(techvars[tv]['units'], ytype, val) for val in yvals_toplot} for ion in ions} for tv in techvars}
+    readpath_bins = {tv: '/'.join((readpaths[tv][ions[0]][yvals_toplot[ions[0]][0]]).split('/')[:-1]) + '/bin_edges' for tv in techvars}
+    print(readpaths)
+    panelwidth = 2.5
+    panelheight = 2.
+    legheight = 1.3
+    cwidth = 0.6
+    if ytype == 'perc':
+        wspace = 0.2
+    else:
+        wspace = 0.0
+    #fcovticklen = 0.035
+    figwidth = numcols * panelwidth + cwidth + wspace * numcols
+    figheight = numcols * panelheight + legheight
+    fig = plt.figure(figsize=(figwidth, figheight))
+    grid = gsp.GridSpec(numrows + 1, numcols + 1, hspace=0.0, wspace=wspace, width_ratios=[panelwidth] * numcols + [cwidth], height_ratios=[panelheight] * numrows + [legheight])
+    axes = [fig.add_subplot(grid[i // numcols, i % numcols]) for i in range(len(ions))]
+    cax  = fig.add_subplot(grid[:numrows, numcols])
+    if len(techvars_touse) > 1:
+        lax  = fig.add_subplot(grid[numrows, :])
+    
+    yvals = {}
+    #cosmopars = {}
+    #fcovs = {}
+    #dXtot = {}
+    #dztot = {}
+    #dXtotdlogN = {}
+    bins = {}
+    numgals = {}
+    
+    for var in techvars_touse:
+        yvals[var] = {}
+        #cosmopars[var] = {}
+        #fcovs[var] = {}
+        #dXtot[var] = {}
+        #dztot[var] = {}
+        #dXtotdlogN[var] = {}
+        bins[var] = {}
+        numgals[var] = {}
+        for ion in ions:
+            print('Reading in data for ion %s'%ion)
+            filename = techvars[var]['filenames'][ion]
+            goaltags = techvars[var]['setnames']
+            setfills = techvars[var]['setfills']
+            
+            #_units   = techvars[var]['units']
+            if ion not in filename:
+                raise RuntimeError('File %s attributed to ion %s, mismatch'%(filename, ion))
+            
+            if setfills is None:
+                with h5py.File(ol.pdir + 'radprof/' + filename, 'r') as fi:
+                    bins[var][ion] = {}
+                    yvals[var][ion] = {}
+                    numgals[var][ion] = {}
+                    galsets = fi.keys()
+                    tags = {} 
+                    for galset in galsets:
+                        ex = True
+                        for val in readpaths[var][ion].keys():
+                            try:
+                                temp = np.array(fi[galset + '/' + readpaths[var][ion][val]])
+                            except KeyError:
+                                ex = False
+                                break
+                        
+                        if ex:
+                            tags[fi[galset].attrs['seltag'].decode()] = galset
+                        
+                    tags_toread = set(goaltags) &  set(tags.keys())
+                    tags_unread = set(goaltags) - set(tags.keys())
+                    #print(goaltags)
+                    #print(tags.keys())
+                    if len(tags_unread) > 0:
+                        print('For file %s, missed the following tags:\n\t%s'%(filename, tags_unread))
+                    
+                    for tag in tags_toread:
+                        _bins = np.array(fi[tags[tag] + '/' + readpath_bins[var]])
+                        # handle +- infinity edges for plotting; should be outside the plot range anyway
+                        if _bins[0] == -np.inf:
+                            _bins[0] = -100.
+                        if _bins[-1] == np.inf:
+                            _bins[-1] = 100.
+                        bins[var][ion][tag] = _bins
+                        
+                        # extract number of pixels from the input filename, using naming system of make_maps
+                        
+                        yvals[var][ion][tag] = {val: np.array(fi['%s/%s'%(tags[tag], readpaths[var][ion][val])]) for val in readpaths[var][ion].keys()}
+                        numgals[var][ion][tag] = len(np.array(fi['%s/galaxyid'%(tags[tag])]))
+            else:
+                bins[var][ion] = {}
+                yvals[var][ion] = {}
+                numgals[var][ion] = {}
+                for tag in goaltags:
+                    fill = setfills[tag]                    
+                    #print('Using %s, %s, %s'%(var, ion, tag))
+                    fn_temp = ol.pdir + 'radprof/' + filename%(fill)
+                    #print('For ion %s, tag %s, trying file %s'%(ion, tag, fn_temp))
+                    with h5py.File(fn_temp, 'r') as fi:                       
+                        galsets = fi.keys()
+                        tags = {} 
+                        for galset in galsets:
+                            ex = True
+                            for val in readpaths[var][ion].keys():
+                                try:
+                                    temp = np.array(fi[galset + '/' + readpaths[var][ion][val]])
+                                except KeyError:
+                                    ex = False
+                                    break
+                            
+                            if ex:
+                                tags[fi[galset].attrs['seltag']] = galset
+                            
+                        #tags_toread = {tag} &  set(tags.keys())
+                        tags_unread = {tag} - set(tags.keys())
+                        #print(goaltags)
+                        #print(tags.keys())
+                        if len(tags_unread) > 0:
+                            print('For file %s, missed the following tags:\n\t%s'%(filename, tags_unread))
+                        
+                        #for tag in tags_toread:
+                        _bins = np.array(fi[tags[tag] + '/' + readpath_bins])
+                        # handle +- infinity edges for plotting; should be outside the plot range anyway
+                        if _bins[0] == -np.inf:
+                            _bins[0] = -100.
+                        if _bins[-1] == np.inf:
+                            _bins[-1] = 100.
+                        bins[var][ion][tag] = _bins
+                        
+                        # extract number of pixels from the input filename, using naming system of make_maps
+                        
+                        yvals[var][ion][tag] = {val: np.array(fi['%s/%s'%(tags[tag], readpaths[var][ion][val])]) for val in readpaths[var][ion].keys()}
+                        numgals[var][ion][tag] = len(np.array(fi['%s/galaxyid'%(tags[tag])]))
+    ## checks: will fail with e.g. halo-only projection, though
+    #filekeys = h5files.keys()
+    #if np.all([np.all(bins[key] == bins[filekeys[0]]) if len(bins[key]) == len(bins[filekeys[0]]) else False for key in filekeys]):
+    #    bins = bins[filekeys[0]]
+    #else:
+    #    raise RuntimeError("bins for different files don't match")
+    
+    #if not np.all(np.array([np.all(hists[key]['nomask'] == hists[filekeys[0]]['nomask']) for key in filekeys])):
+    #    raise RuntimeError('total histograms from different files do not match')
+    if printnumgals:
+       print('tech vars: 0 = 1 slice, all, 1 = 1 slice, off-edge, 2 = 2 slices, all, 3 = 2 slices, off-edge')
+       print('\n')
+       
+       for ion in ions:
+           for var in techvars_touse:
+               tags = techvars[var]['setnames']
+               if var in [0, 2]:
+                   tags = sorted(tags, key=galsetnames_hmassonly.__getitem__)
+               print('%s, var %s:'%(ion, var))
+               print('\n'.join(['%s\t%s'%(tag, numgals[var][ion][tag]) for tag in tags]))
+               print('\n')
+       return numgals
+   
+    # assumes matching numbers of Mstar, Mh bins
+    hmassranges = [sel[1:] for sel in Mh_sels]
+    smassranges = [sel[1:] for sel in Ms_sels]
+    #print(massranges)
+    hmassedges = sorted(list(set([np.log10(val) for rng in hmassranges for val in rng])))
+    smassedges = sorted(list(set([val for rng in smassranges for val in rng])))
+    #print(massedges)
+    if hmassedges[-1] == np.inf: # used for setting the color bar -> just need some dummy value higher than the last one
+        hmassedges[-1] = 2. * hmassedges[-2] - hmassedges[-3]
+    hmasslabels1 = {name: tuple(np.log10(np.array(galsetnames_hmassonly[name][1:]))) for name in galsetnames_hmassonly.keys()}
+    smasslabels2 = {name: tuple(galsetnames_smass_hmatch[name][1:]) for name in galsetnames_smass_hmatch.keys()}
+    smasslabels3 = {name: tuple(galsetnames_smass[name][1:]) for name in galsetnames_smass.keys()}
+    
+    clist = cm.get_cmap(cmapname, len(smassedges) - 1)(np.linspace(0., 1., len(smassedges) - 1))
+    _hmasks1 = sorted(hmasslabels1.keys(), key=hmasslabels1.__getitem__)
+    colors = {_hmasks1[i]: clist[i] for i in range(len(_hmasks1))}
+    _smasks2 = sorted(smasslabels2.keys(), key=smasslabels2.__getitem__)
+    colors.update({_smasks2[i]: clist[i] for i in range(len(_smasks2))})
+    _smasks3 = sorted(smasslabels3.keys(), key=smasslabels3.__getitem__)
+    colors.update({_smasks3[i]: clist[i] for i in range(len(_smasks3))})
+    #del _masks
+    masslabels_all = hmasslabels1
+    masslabels_all.update(smasslabels2)
+    masslabels_all.update(smasslabels3)
+
+    #print(clist)
+    cmap = mpl.colors.ListedColormap(clist)
+    #cmap.set_over(clist[-1])
+    norm = mpl.colors.BoundaryNorm(smassedges, cmap.N)
+    cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,\
+                                norm=norm,\
+                                boundaries=smassedges,\
+                                ticks=smassedges,\
+                                spacing='proportional', extend='neither',\
+                                orientation='vertical')
+    # to use 'extend', you must
+    # specify two extra boundaries:
+    # boundaries=[0] + bounds + [13],
+    # extend='both',
+    # ticks=bounds,  # optional
+    cbar.set_label(clabel, fontsize=fontsize)
+    cax.tick_params(labelsize=fontsize - 1)
+    cax.set_aspect(9.)
+    
+    #print(clist)
+    
+    # annotate color bar with sample size per bin
+    #if indicatenumgals:
+    #    ancolor = 'black'
+    #    for tag in masslabels.keys():
+    #        ypos = masslabels[tag]
+    #        xpos = 0.5
+    #        cax.text(xpos, (ypos - massedges[0]) / (massedges[-2] - massedges[0]), str(numgals[lines[0]][tag]), fontsize=fontsize, color=ancolor, verticalalignment='center', horizontalalignment='center')
+        
+    for ionind in range(len(ions)):
+        xi = ionind % numcols
+        yi = ionind // numcols
+        ion = ions[ionind]
+        ax = axes[ionind]
+
+        if ytype == 'perc':
+            if ion[0] == 'h':
+                ax.set_ylim(12.0, 21.0)
+            #else:
+            #    ax.set_ylim(11.5, 17.0)
+            elif ion == 'fe17':
+                ax.set_ylim(11.5, 15.5)
+            elif ion == 'o7':
+                ax.set_ylim(12.5, 16.5)
+            elif ion == 'o8':
+                ax.set_ylim(12.5, 16.5)
+            elif ion == 'o6':
+                ax.set_ylim(10.8, 14.8)
+            elif ion == 'ne9':
+                ax.set_ylim(11.9, 15.9)
+            elif ion == 'ne8':
+                ax.set_ylim(10.5, 14.5)
+        
+        elif ytype == 'fcov':
+            ax.set_ylim(10**-2., 1.)
+            ax.set_yscale('log')
+        
+        labelx = (yi == numrows - 1 or (yi == numrows - 2 and (yi + 1) * numcols + xi > len(ions) - 1)) # bottom plot in column
+        labely = xi == 0
+        if wspace == 0.0:
+            ticklabely = xi == 0
+        else:
+            ticklabely = True
+        setticks(ax, fontsize=fontsize, labelbottom=labelx, labelleft=ticklabely)
+        if labelx:
+            ax.set_xlabel(xlabel, fontsize=fontsize)
+        if labely:
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+        
+
+        ax.text(0.95, 0.95, ild.getnicename(ion, mathmode=False), horizontalalignment='right', verticalalignment='top', fontsize=fontsize, transform=ax.transAxes)
+        
+        #hatchind = 0
+        for vi in range(len(techvars_touse)):
+            tags = techvars[techvars_touse[vi]]['setnames']
+            _units = techvars[techvars_touse[vi]]['units']
+            tags = sorted(tags, key=masslabels_all.__getitem__)
+            var = techvars_touse[vi]
+            for ti in range(len(tags)):
+                tag = tags[ti]
+                
+                try:
+                    plotx = bins[var][ion][tag]
+                    if _units == 'R200c': # plots are in pkpc -> need to convert to pkpc in some reasonable way
+                        basesize = R200c_pkpc(10**R200c_toassume[tag], cosmopars)
+                        plotx *= basesize
+                except KeyError: # dataset not read in
+                    print('Could not find techvars %i, ion %s, tag %s'%(var, ion, tag))
+                    continue
+                plotx = plotx[:-1] + 0.5 * np.diff(plotx)
+
+                if highlightcrit is not None: #highlightcrit={'techvars': [0], 'Mmin': [10.0, 12.0, 14.0]}
+                    matched = True
+                    _highlightcrit = highlightcrit
+                    _highlightcrit['Mmin'] = \
+                        10.3 if ion == 'o6' else \
+                        10.3 if ion == 'ne8' else \
+                        10.8 if ion == 'o7' else \
+                        11.1 if ion == 'ne9' else \
+                        11.1 if ion == 'o8' else \
+                        11.1 if ion == 'fe17' else \
+                        np.inf 
+                    if 'techvars' in highlightcrit.keys():
+                        matched &= var in _highlightcrit['techvars']
+                    if 'Mmin' in highlightcrit.keys():
+                        matched &= np.min(np.abs(masslabels_all[tag][0] - np.array(_highlightcrit['Mmin']))) <= 0.01
+                    if matched:
+                        yvals_toplot_temp = yvals_toplot[ion]
+                    else:
+                        yvals_toplot_temp = [yvals_toplot[ion][0]] if len(yvals_toplot[ion]) == 1 else [yvals_toplot[ion][1]]
+                else:
+                    yvals_toplot_temp = yvals_toplot[ion]
+                
+                
+                if ytype == 'perc':
+                    if len(yvals_toplot_temp) == 3:
+                        yval = yvals_toplot_temp[0]
+                        try:                      
+                            ploty1 = yvals[var][ion][tag][yval]
+                        except KeyError:
+                            print('Failed to read in %s - %s - %s -%s'%(var, ion, tag, val)) 
+                        yval = yvals_toplot_temp[2]
+                        try:                      
+                            ploty2 = yvals[var][ion][tag][yval]
+                        except KeyError:
+                            print('Failed to read in %s - %s - %s -%s'%(var, ion, tag, val)) 
+                        # according to stackexchange, this is the only way to set the hatch color in matplotlib 2.0.0 (quasar); does require the same color for all hatches...
+                        #plt.rcParams['hatch.color'] = (0.5, 0.5, 0.5, alphas[var] * shading_alpha,) #mpl.colors.to_rgb(colors[tag]) + (alphas[var] * shading_alpha,)
+                        #ax.fill_between(plotx, ploty1, ploty2, color=(0., 0., 0., 0.), hatch=hatches[hatchind], facecolor=mpl.colors.to_rgb(colors[tag]) + (alphas[var] * shading_alpha,), edgecolor='face', linewidth=0.0)
+                        ax.fill_between(plotx, ploty1, ploty2, color=colors[tag], alpha=alphas[var] * shading_alpha, label=masslabels_all[tag])
+                        
+                        #hatchind += 1
+                        yvals_toplot_temp = [yvals_toplot_temp[1]]
+                        
+                    if len(yvals_toplot_temp) == 1:
+                        yval = yvals_toplot_temp[0]
+                        try:
+                            ploty = yvals[var][ion][tag][yval]
+                        except KeyError:
+                            print('Failed to read in %s - %s - %s -%s'%(var, ion, tag, val))
+                            continue
+                        if yval == 50.0: # only highlight the medians
+                            patheff = [mppe.Stroke(linewidth=linewidths[var] + 0.5, foreground="b"), mppe.Stroke(linewidth=linewidths[var], foreground="w"), mppe.Normal()]
+                        else:
+                            patheff = []
+                        ax.plot(plotx, ploty, color=colors[tag], linestyle=linestyles[var], linewidth=linewidths[var], alpha=alphas[var], label=masslabels_all[tag], path_effects=patheff)
+
+                elif ytype == 'fcov':
+                    for yi in range(len(yvals_toplot_temp)):
+                        linestyle = linestyles_fcov[yi]
+                        yval = yvals_toplot_temp[yi]
+                        ploty = yvals[var][ion][tag][yval]
+                        patheff = []
+                        ax.plot(plotx, ploty, color=colors[tag], linestyle=linestyle, linewidth=linewidths[var], alpha=alphas[var], label=masslabels_all[tag], path_effects=patheff)
+                        
+                    
+        if ytype == 'perc':
+            #ax.axhline(0., color=totalcolor, linestyle='solid', linewidth=1.5, alpha=0.7)
+            #xlim = ax.get_xlim()
+            ax.axhline(approx_breaks[ion], 0., 0.1, color='gray', linewidth=1.5, zorder=-1) # ioncolors[ion]
+        if ytype == 'fcov': # add value labels
+            linewidth = np.average([linewidths[var] for var in techvars_touse])
+            alpha = np.average([alphas[var] for var in techvars_touse])
+            patheff = []
+            color = 'gray'
+            legend_handles = [mlines.Line2D([], [], linewidth=linewidth,\
+                                            alpha=alpha, color=color,\
+                                            path_effects=patheff,\
+                                            label='%.1f'%yvals_toplot_temp[yi],\
+                                            linestyle=linestyles_fcov[yi]) \
+                              for yi in range(len(yvals_toplot_temp))]
+            ax.legend(handles=legend_handles, fontsize=fontsize,\
+                      loc='lower left', bbox_to_anchor=(0.0, 0.0))
+    #lax.axis('off')
+        ax.set_xscale('log')
+    
+    lcs = []
+    line = [[(0, 0)]]
+    for var in techvars_touse:
+        # set up the proxy artist
+        subcols = list(clist) #+ [mpl.colors.to_rgba(sumcolor, alpha=alphas[var])]
+        subcols = np.array(subcols)
+        subcols[:, 3] = alphas[var]
+        #print(subcols)
+        lc = mcol.LineCollection(line * len(subcols), linestyle=linestyles[var], linewidth=linewidths[var], colors=subcols)
+        lcs.append(lc)
+    # create the legend
+    #lax.legend(lcs, [legendnames_techvars[var] for var in techvars], handler_map={type(lc): HandlerDashedLines()}) #handlelength=2.5, handleheight=3
+    #handles_ax1, labels_ax1 = axes[0].get_legend_handles_labels()
+    #sumhandles = [mlines.Line2D([], [], color=sumcolor, linestyle='solid', label='all halos', linewidth=2.),\
+    #              mlines.Line2D([], [], color=totalcolor, linestyle='solid', label='total', linewidth=2.)]
+    #sumlabels = ['all halos', 'total']
+    if len(techvars_touse) > 1:
+        lax.legend(lcs, [legendnames_techvars[var] for var in techvars_touse], handler_map={type(lc): HandlerDashedLines()}, fontsize=fontsize, ncol=2, loc='lower center', bbox_to_anchor=(0.5, 0.))
+        lax.axis('off')
+    #leg1 = lax.legend(handles=legend_handles, fontsize=fontsize-1, loc='lower left', bbox_to_anchor=(0.01, 0.01), frameon=False)
+    #leg2 = lax.legend(handles=legend_handles_ls,fontsize=fontsize-1, loc='upper right', bbox_to_anchor=(0.99, 0.99), frameon=False)
+    #lax.add_artist(leg1)
+    #lax.add_artist(leg2)
+    #ax1.text(0.02, 0.05, r'absorbers close to galaxies at $z=0.37$', horizontalalignment='left', verticalalignment='bottom', transform=ax1.transAxes, fontsize=fontsize)
+    
+    plt.savefig(imgname, format='pdf', bbox_inches='tight')
