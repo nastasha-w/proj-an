@@ -6234,7 +6234,7 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
                 ax.set_ylim(10.5, 14.5)
         
         elif ytype == 'fcov':
-            ax.set_ylim(10**-2., 1.)
+            ax.set_ylim(10**-1.95, 10**0.3)
             ax.set_yscale('log')
         
         labelx = (yi == numrows - 1 or (yi == numrows - 2 and (yi + 1) * numcols + xi > len(ions) - 1)) # bottom plot in column
@@ -6249,9 +6249,10 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
         if labely:
             ax.set_ylabel(ylabel, fontsize=fontsize)
         
-
-        ax.text(0.95, 0.95, ild.getnicename(ion, mathmode=False), horizontalalignment='right', verticalalignment='top', fontsize=fontsize, transform=ax.transAxes)
-        
+        if ytype == 'perc':
+            ax.text(0.95, 0.95, ild.getnicename(ion, mathmode=False), horizontalalignment='right', verticalalignment='top', fontsize=fontsize, transform=ax.transAxes)
+        else:
+            ax.text(0.95, 0.85, ild.getnicename(ion, mathmode=False), horizontalalignment='right', verticalalignment='top', fontsize=fontsize - 1, transform=ax.transAxes)
         #hatchind = 0
         for vi in range(len(techvars_touse)):
             tags = techvars[techvars_touse[vi]]['setnames']
@@ -6332,7 +6333,7 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
                         linestyle = linestyles_fcov[yi]
                         yval = yvals_toplot_temp[yi]
                         ploty = yvals[var][ion][tag][yval]
-                        patheff = []
+                        patheff = [mppe.Stroke(linewidth=linewidths[var] + 0.5, foreground="b"), mppe.Stroke(linewidth=linewidths[var], foreground="w"), mppe.Normal()]
                         ax.plot(plotx, ploty, color=colors[tag], linestyle=linestyle, linewidth=linewidths[var], alpha=alphas[var], label=masslabels_all[tag], path_effects=patheff)
                         
                     
@@ -6343,7 +6344,7 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
         if ytype == 'fcov': # add value labels
             linewidth = np.average([linewidths[var] for var in techvars_touse])
             alpha = np.average([alphas[var] for var in techvars_touse])
-            patheff = []
+            patheff = [] #[mppe.Stroke(linewidth=linewidths[var] + 0.5, foreground="b"), mppe.Stroke(linewidth=linewidths[var], foreground="w"), mppe.Normal()]
             color = 'gray'
             legend_handles = [mlines.Line2D([], [], linewidth=linewidth,\
                                             alpha=alpha, color=color,\
@@ -6351,8 +6352,10 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
                                             label='%.1f'%yvals_toplot_temp[yi],\
                                             linestyle=linestyles_fcov[yi]) \
                               for yi in range(len(yvals_toplot_temp))]
-            ax.legend(handles=legend_handles, fontsize=fontsize,\
-                      loc='lower left', bbox_to_anchor=(0.0, 0.0))
+            ax.legend(handles=legend_handles, fontsize=fontsize - 1,\
+                      loc='upper right', bbox_to_anchor=(1.02, 1.02),\
+                      columnspacing=1.2, handletextpad=0.5,\
+                      frameon=False, ncol=2)
     #lax.axis('off')
         ax.set_xscale('log')
     
