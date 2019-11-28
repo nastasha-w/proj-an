@@ -441,7 +441,7 @@ def genhists_ionmass(samplename=None, rbinu='R200c', idsel=None, weighttype='o6'
 
 def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
               binby=('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),\
-              combmethod='addnormed-R200c'):
+              combmethod='addnormed-R200c', histtype='rprof_rho-T-nion'):
     '''
     generate the histograms for a given sample
     rbinu: used fixed bins in pkpc or in R200c (relevant for stacking)
@@ -466,7 +466,7 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
     if samplename is None:
         samplename = defaults['sample']
     fdata = dataname(samplename)
-    fname = files(samplename, weighttype)
+    fname = files(samplename, weighttype, histtype=histtype)
     
     with open(fdata, 'r') as fi:
         # scan for halo catalogue (only metadata needed for this)
