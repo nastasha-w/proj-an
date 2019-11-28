@@ -2322,8 +2322,7 @@ elif jobind == 20057:
 elif jobind in range(20058, 20066):
     weighttype = ['Mass', 'Volume', 'o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'][jobind - 20058]
     p3g.genhists(samplename=None, rbinu='R200c', idsel=None, weighttype=weighttype, logM200min=11.0)    
-
-
+    
 ### get 2d profiles by stellar mass sample
 if jobind in range(20066, 20072): 
     szcens = [str(i) for i in np.arange(16)/16. * 100. + 100./32.]
@@ -2425,7 +2424,15 @@ if jobind in range(20086, 20092): # quasar
                          selection, np.inf, outname=outname,\
                          numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
                          axis='z', velspace=False, offset_los=0., stamps=False)
-        
+
+# metallicity profiles: Mass, Volume, ion-weighted 
+elif jobind in range(20092, 20104):
+    ind = jobind - 20092
+    weighttypes = ['Mass', 'Mass', 'Mass', 'Volume', 'Volume', 'Volume', 'o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
+    axdcts = ['Zprof-oxygen', 'Zprof-neon', 'Zprof-iron'] * 3 + ['Zprof'] * 6
+    p3g.genhists(samplename=None, rbinu='R200c', idsel=None, weighttype=weighttypes[ind],\
+             logM200min=11.0, axdct=axdcts[ind])
+       
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################

@@ -10,6 +10,7 @@ import numpy as np
 import h5py
 import pandas as pd
 import os
+import string
 
 import selecthalos as sh
 import cosmo_utils as cu
@@ -36,10 +37,12 @@ def dataname(samplen):
     return tdir + 'halodata_%s.txt'%(samplen)
 
 def files(samplen, weighttype, histtype=None):
-    if histtype is None:
+    if histtype is None or histtype == 'rprof_rho-T-nion':
         return tdir + 'filenames_%s_%s.txt'%(samplen, weighttype)
     elif histtype == 'ionmass':
         return tdir + 'filenames_%s_%s_ionmass.txt'%(samplen, weighttype)
+    elif histtype.startswith('Zprof'):
+        return tdir + 'filenames_%s_%s_%s.txt'%(samplen, weighttype, histtype)
     
 def combine_hists(h1, h2, e1, e2, rtol=1e-5, atol=1e-8, add=True):
     '''
@@ -198,11 +201,17 @@ def gensample(samplename=None, galaxyselector=None):
         for gi in range(len(galids)):
             fo.write('%i\t%f\t%f\t%f\t%f\t%f\t%f\n'%(galids[gi], Xcom[gi], Ycom[gi], Zcom[gi], R200c[gi], M200c[gi], Mstar[gi]))
         
-def genhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass', logM200min=11.0):
+def genhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
+             logM200min=11.0, axdct='rprof_rho-T-nion'):
     '''
     generate the histograms for a given sample
     rbins: used fixed bins in pkpc or in R200c (relevant for stacking)
-    
+    axdct: axdct to use for a given wieght type (names for different sets)
+           'rprof_rho-T-nion': ion-weighted temperature, density, ion density (if 
+           ion-weighted) as a function of radius
+           'Zprof[-<elt>]': metallicity profile. Abundance of the parent 
+           element for ions, otherwise or overwritten by element after '-'
+           (e.g. 'Zprof' or 'Zprof-oxygen')
     idsel: project only a subset of galaxies according to the given list
            useful for testing on a few galaxies
            ! do not run in  parallel: different processes will try to write to
@@ -248,14 +257,28 @@ def genhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass', logM2
         galaxyids = np.array(galdata_all.index)
     
     name_append = '_%s_snapdata'%rbinu
-    axesdct = [{'ptype': 'coords', 'quantity': 'r3D'},\
-               {'ptype': 'basic', 'quantity': 'Temperature'},\
-               {'ptype': 'basic', 'quantity': 'Density'},\
-               ]
-    if weighttype in ol.elements_ion.keys():
-        axesdct =  axesdct + [{'ptype': 'Niondens', 'ion': weighttype}]
-    
-    with open(files(samplename, weighttype), 'w') as fdoc:
+    if axdct == 'rprof_rho-T-nion':
+        axesdct = [{'ptype': 'coords', 'quantity': 'r3D'},\
+                   {'ptype': 'basic', 'quantity': 'Temperature'},\
+                   {'ptype': 'basic', 'quantity': 'Density'},\
+                   ]
+        if weighttype in ol.elements_ion.keys():
+            axesdct =  axesdct + [{'ptype': 'Niondens', 'ion': weighttype}]
+    elif axdct.startswith('Zprof'):
+        axesdct = [{'ptype': 'coords', 'quantity': 'r3D'},\
+                   ]
+        parts = axdct.split('-')
+        if len(parts) > 1:
+            elt = parts[1]
+            axesdct + [{'ptype': 'basic', 'quantity': 'SmoothedElementAbundance/%s'%(string.capwords(elt))}]
+            axdct = axdct + '-%s'%(elt)
+        elif weighttype in ol.elements_ion.keys():
+            elt = ol.elements_ion[weighttype]
+            axesdct =  axesdct + [{'ptype': 'basic', 'quantity': 'SmoothedElementAbundance/%s'%(string.capwords(elt))}]
+        else:
+            raise ValueError('axdct Zprof for weighttype %s needs an element specifier'%weighttype)
+            
+    with open(files(samplename, weighttype, histtype=axdct), 'w') as fdoc:
         fdoc.write('galaxyid\tfilename\tgroupname\n')
         
         for gid in galaxyids:
