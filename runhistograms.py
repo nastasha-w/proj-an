@@ -2427,12 +2427,19 @@ if jobind in range(20086, 20092): # quasar
 
 # metallicity profiles: Mass, Volume, ion-weighted 
 elif jobind in range(20092, 20104):
-    ind = jobind - 20092
+    ind = [0, 3, 6, 7, 1, 4, 8, 9, 2, 5, 10, 11][jobind - 20092] # reshuffle to avoid multiple processes working on the same file
     weighttypes = ['Mass', 'Mass', 'Mass', 'Volume', 'Volume', 'Volume', 'o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
-    axdcts = ['Zprof-oxygen', 'Zprof-neon', 'Zprof-iron'] * 3 + ['Zprof'] * 6
+    axdcts = ['Zprof-oxygen', 'Zprof-neon', 'Zprof-iron'] * 2 + ['Zprof'] * 6
     p3g.genhists(samplename=None, rbinu='R200c', idsel=None, weighttype=weighttypes[ind],\
              logM200min=11.0, axdct=axdcts[ind])
-       
+
+elif jobind in range(20104, 20116):
+    ind = [0, 3, 6, 7, 1, 4, 8, 9, 2, 5, 10, 11][jobind - 20104]
+    weighttypes = ['Mass', 'Mass', 'Mass', 'Volume', 'Volume', 'Volume', 'o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
+    histtypes = ['Zprof-oxygen', 'Zprof-neon',  'Zprof-iron'] * 2 + ['Zprof-oxygen'] * 3 + ['Zprof-neon'] * 2 + ['Zprof-iron'] 
+    combhists(samplename=None, rbinu='R200c', idsel=None, weighttype=weighttypes[ind],\
+              binby=('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),\
+              combmethod='addnormed-R200c', histtype=histtypes[ind])
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################

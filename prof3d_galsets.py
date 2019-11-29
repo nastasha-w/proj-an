@@ -270,14 +270,13 @@ def genhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
         parts = axdct.split('-')
         if len(parts) > 1:
             elt = parts[1]
-            axesdct + [{'ptype': 'basic', 'quantity': 'SmoothedElementAbundance/%s'%(string.capwords(elt))}]
-            axdct = axdct + '-%s'%(elt)
         elif weighttype in ol.elements_ion.keys():
             elt = ol.elements_ion[weighttype]
-            axesdct =  axesdct + [{'ptype': 'basic', 'quantity': 'SmoothedElementAbundance/%s'%(string.capwords(elt))}]
+            axdct = axdct + '-%s'%(elt)
         else:
             raise ValueError('axdct Zprof for weighttype %s needs an element specifier'%weighttype)
-            
+        axesdct =  axesdct + [{'ptype': 'basic', 'quantity': 'SmoothedElementAbundance/%s'%(string.capwords(elt))}]  
+        
     with open(files(samplename, weighttype, histtype=axdct), 'w') as fdoc:
         fdoc.write('galaxyid\tfilename\tgroupname\n')
         
@@ -601,7 +600,7 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
                 _a = range(len(hist_t.shape))
                 _s = [slice(None, None, None) for dummy in _a]
                 _s[rax] = slice(None, _i, None)
-                norm_t = np.sum(hist_t[_s])
+                norm_t = np.sum(hist_t[tuple(_s)])
             elif combmethod == 'addnormed-M200c':
                 norm_t = galdata_all.at[galid, 'M200c_Msun']
                 norm_t *= c.solar_mass
@@ -623,8 +622,14 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
         # store the data
         # don't forget the list of galids (galids_bin, and edgedata)
         #print(hists)
-        ogrp = fo.create_group('%s/%s'%(igrpn, samplename))
-        bgrps = [ogrp.create_group(name) for name in bgrpns]
+        print('Histogramming finished. Saving data...')
+        ogrpn = '%s/%s'%(igrpn, samplename)
+        if ogrpn in outname.keys():
+            ogrp = fo[ogrpn]
+        else:
+            ogrp = fo.create_group(ogrpn)
+        bgrps = [ogrp.create_group(name) if name not in ogrpn.keys()\
+                 else ogrp[name] for name in bgrpns]
         
         for bind in range(numgalbins):
             bgrp = bgrps[bind]
@@ -633,22 +638,48 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
             edged = edgedata[bind]
             galids = galids_bin[bind]
             
-            bgrp.create_dataset('histogram', data=hist)
-            bgrp['histogram'].attrs.create('log', False)
-            
-            bgrp.create_group('binedges')
-            for i in range(len(edge)):
-                bgrp['binedges'].create_dataset('Axis%i'%(i), data=edge[i])
-            
-            for key in edged.keys():
-                bgrp.create_group(key)
-                for skey in edged[key].keys():
-                    m3.saveattr(bgrp[key], skey, edged[key][skey])
-                hax = edged[key]['histogram axis']
-                bgrp[key].create_dataset('bins', data=edge[hax])
-            
-            bgrp.create_dataset('galaxyids', data=np.array(galids_bin[binind]))
-            
+            try:
+                bgrp.create_dataset('histogram', data=hist)
+                bgrp['histogram'].attrs.create('log', False)
+                
+                bgrp.create_group('binedges')
+                for i in range(len(edge)):
+                    bgrp['binedges'].create_dataset('Axis%i'%(i), data=edge[i])
+                
+                for key in edged.keys():
+                    bgrp.create_group(key)
+                    for skey in edged[key].keys():
+                        m3.saveattr(bgrp[key], skey, edged[key][skey])
+                    hax = edged[key]['histogram axis']
+                    bgrp[key].create_dataset('bins', data=edge[hax])
+                
+                bgrp.create_dataset('galaxyids', data=np.array(galids_bin[binind]))
+            except ValueError: # datasets already existed -> delete first
+                print('Overwriting group {}/{}'.format(ogrp, bgrp))
+                del bgrp['histogram']
+                del bgrp['binedges']
+                del bgrp['galaxyids']
+                
+                bgrp.create_dataset('histogram', data=hist)
+                bgrp['histogram'].attrs.create('log', False)
+                
+                bgrp.create_group('binedges')
+                for i in range(len(edge)):
+                    bgrp['binedges'].create_dataset('Axis%i'%(i), data=edge[i])
+                
+                for key in edged.keys():
+                    bgrp.create_group(key)
+                    for skey in edged[key].keys():
+                        m3.saveattr(bgrp[key], skey, edged[key][skey])
+                    hax = edged[key]['histogram axis']
+                    bgrp[key].create_dataset('bins', data=edge[hax])
+                
+                bgrp.create_dataset('galaxyids', data=np.array(galids_bin[binind]))
+                
+    print('Saved data to file {}'.format(outname))  
+    print('Main hdf5 group: {}/{}'.format(igrpn, samplename))
+    print('and subgroups: ' + (', '.join(['{}'] * len(bgrpns))).format(*tuple(bgrpns)))      
+    
 def extracthists_ionfrac(samplename='L0100N1504_27_Mh0p5dex_1000',\
               addedges=(0.1, 1.)):
     '''
