@@ -542,7 +542,7 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
             # retrieve data from this histogram for checks
             igrpn_temp = galname_all.at[galid, 'groupname']   
             if igrpn_temp != igrpn:
-                raise RuntimeError('histogram names for galaxyid %i, %i did not match'%(galids[0], galid))
+                raise RuntimeError('histogram names for galaxyid %i: %s, %i: %s did not match'%(galids[0], igrpn, galid, igrpn_temp))
             ifilen_temp = galname_all.at[galid, 'filename']   
             
             #try:
@@ -624,11 +624,11 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
         #print(hists)
         print('Histogramming finished. Saving data...')
         ogrpn = '%s/%s'%(igrpn, samplename)
-        if ogrpn in outname.keys():
+        if ogrpn in fo:
             ogrp = fo[ogrpn]
         else:
             ogrp = fo.create_group(ogrpn)
-        bgrps = [ogrp.create_group(name) if name not in ogrpn.keys()\
+        bgrps = [ogrp.create_group(name) if name not in ogrp\
                  else ogrp[name] for name in bgrpns]
         
         for bind in range(numgalbins):
@@ -654,11 +654,10 @@ def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
                     bgrp[key].create_dataset('bins', data=edge[hax])
                 
                 bgrp.create_dataset('galaxyids', data=np.array(galids_bin[binind]))
-            except ValueError: # datasets already existed -> delete first
+            except RuntimeError: # datasets already existed -> delete first
                 print('Overwriting group {}/{}'.format(ogrp, bgrp))
-                del bgrp['histogram']
-                del bgrp['binedges']
-                del bgrp['galaxyids']
+                for name in bgrp.keys():
+                    del bgrp[name]
                 
                 bgrp.create_dataset('histogram', data=hist)
                 bgrp['histogram'].attrs.create('log', False)

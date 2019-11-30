@@ -17,7 +17,7 @@ import make_maps_opts_locs as ol
 pdir = ol.pdir
 
 def dictfromnpz(filename):
-    npz = np.load(filename)
+    npz = np.load(filename, encoding='bytes') # encoding: python 2 -> 3 fix
     dct = {key: npz[key] for key in npz.keys()}
     return dct
 # stick loaded histograms in dict-like object to get backwards compatibilty, but only load if used to preventunnecessary  up-front load time

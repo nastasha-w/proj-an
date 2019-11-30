@@ -2859,11 +2859,11 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,\
 def Nelt_calc(vardict,excludeSFR,eltab,ion,last=True,updatesel=True):
 
     if isinstance(eltab, str):
-        vardict.readif(eltab,rawunits=True)
+        vardict.readif(eltab, rawunits=True)
         if updatesel and (ion not in ['hydrogen', 'helium']):
-            vardict.update(vardict.particle[eltab]>0.)
+            vardict.update(vardict.particle[eltab] > 0.)
 
-    vardict.readif('Mass',rawunits=True)
+    vardict.readif('Mass', rawunits=True)
 
     if isinstance(eltab, str):
         Nelt = vardict.particle[eltab]*vardict.particle['Mass']
@@ -2872,7 +2872,6 @@ def Nelt_calc(vardict,excludeSFR,eltab,ion,last=True,updatesel=True):
     else:
         Nelt = eltab*vardict.particle['Mass']
         vardict.delif('Mass',last=last)
-
 
     ionmass = ionh.atomw[string.capwords(ion)]
     to_cgs_numdens = vardict.CGSconv['Mass'] / (ionmass * c.u)
@@ -4701,7 +4700,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
     dct: ptype, excludeSFR, abunds, ion, parttype, quantity, misc
     dct_defaults: same entries, use to set defaults in dct
     '''
-    # largest int used : 46
+    # largest int used : 47
     if 'ptype' in dct:
         ptype = dct['ptype']
     else:
@@ -4727,11 +4726,16 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
             abunds = dct_defaults['abunds']
         else:
             abunds = None
-        parttype = '0'
         if ion in ol.elements_ion.keys():
             iselt = False
+            parttype = '0'
         elif ion in ol.elements and ptype in ['Nion', 'Niondens']:
             iselt = True
+            if parttype not in ['0', '4', 0, 4]:
+                print('Element masses are only available for gas and stars')
+                return 47
+            else:
+                parttype = str(parttype)
         else:
             print('%s is an invalid ion option for ptype %s\n'%(ion,ptype))
             return 8
@@ -4969,7 +4973,6 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
     elif simulation == 'eagle-ioneq' and simnum != 'L0025N0752':
         print('For eagle-ioneq, only L0025N0752 is avilable')
         return 33
-
 
     # combination-dependent checks
     if var == 'auto':
@@ -5411,11 +5414,11 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
                 else:
                     bins = np.array([0., 1., 2., 3.])
                 axbins_t = bins
-                if axbins[-1] < max_t:
+                if axbins_t[-1] < max_t:
                     numgtr = np.sum(axdata_t[np.isfinite(axdata_t)] > axbins_t[-1])
                 else:
                     numgtr = 0
-                if axbins[0] > min_t:
+                if axbins_t[0] > min_t:
                     numltr = np.sum(axdata_t[np.isfinite(axdata_t)] < axbins_t[0])
                 else:
                     numltr = 0
@@ -5443,8 +5446,8 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
                     grp.attrs.create('number of particles > max value', 0)
                     grp.attrs.create('number of particles < min value', 0)
                 else: # list/array of bin edges
-                    print(axbins_t)
-                    print(min_t)
+                    #print(axbins_t)
+                    #print(min_t)
                     if axbins_t[-1] < max_t:
                         numgtr = np.sum(axdata_t[np.isfinite(axdata_t)] > axbins_t[-1])
                     else:

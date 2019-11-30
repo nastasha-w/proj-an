@@ -1613,6 +1613,41 @@ if jobind == 184:
                     dimlabels = ['NO6','NO7','NH1', 'Temperature_w_NO6'],\
                     save=mh.pdir +'hist_coldens_o6-o7-hneutralssh_L0100N1504_27_test3.x_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_and_weighted_Temperature-NO6',\
                     fills = fillsea)   
+    
+if jobind in range(185, 195):   
+    ind = jobind - 185
+    # halo statistics for the baryon distribution
+    # total mass: stars, BH, gas
+    # metals: stars, gas (not stored for BH)
+    import make_maps_v3_master as m3
+    simnum = 'L0100N1504'
+    snapnum = 27
+    var = 'REFERENCE'
+    axesdct = [{'ptype': 'halo', 'quantity': 'Mass'},\
+               {'ptype': 'halo', 'quantity': 'subcat'}]
+    axbins = [np.array([-np.inf, 0.0, 9.0, 9.5, 10., 10.5, 11., 11.5, 12., 12.5, 13., 13.5, 14., 14.5, 15., np.inf]) + np.log10(c.solar_mass), None]
+    weights = [{'ptype': 'basic', 'quantity': 'Mass', 'ion': None, 'parttype': 0},\
+               {'ptype': 'Nion', 'quantity': None, 'ion': 'oxygen', 'parttype': 0},\
+               {'ptype': 'Nion', 'quantity': None, 'ion': 'neon', 'parttype': 0},\
+               {'ptype': 'Nion', 'quantity': None, 'ion': 'iron', 'parttype': 0},\
+               {'ptype': 'basic', 'quantity': 'Mass', 'ion': None, 'parttype': 4},\
+               {'ptype': 'Nion', 'quantity': None, 'ion': 'oxygen', 'parttype': 4},\
+               {'ptype': 'Nion', 'quantity': None, 'ion': 'neon', 'parttype': 4},\
+               {'ptype': 'Nion', 'quantity': None, 'ion': 'iron', 'parttype': 4},\
+               {'ptype': 'basic', 'quantity': 'Mass', 'ion': None, 'parttype': 5},\
+               {'ptype': 'basic', 'quantity': 'BH_Mass', 'ion': None, 'parttype': 5},\
+               ]
+    wt = weights[ind]
+        
+    m3.makehistograms_perparticle(wt['ptype'], simnum, snapnum, var, axesdct,
+                               simulation='eagle',\
+                               excludeSFR='T4', abunds='Pt', ion=wt['ion'], parttype=wt['parttype'], quantity=wt['quantity'],\
+                               axbins=axbins,\
+                               sylviasshtables=False, allinR200c=True, mdef='200c',\
+                               L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
+                               misc=None,\
+                               name_append=None, logax=True, loghist=False,
+                               nameonly=False)
 ################################################
 ################# CDDFS ########################
 ################################################
@@ -2437,7 +2472,7 @@ elif jobind in range(20104, 20116):
     ind = [0, 3, 6, 7, 1, 4, 8, 9, 2, 5, 10, 11][jobind - 20104]
     weighttypes = ['Mass', 'Mass', 'Mass', 'Volume', 'Volume', 'Volume', 'o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
     histtypes = ['Zprof-oxygen', 'Zprof-neon',  'Zprof-iron'] * 2 + ['Zprof-oxygen'] * 3 + ['Zprof-neon'] * 2 + ['Zprof-iron'] 
-    combhists(samplename=None, rbinu='R200c', idsel=None, weighttype=weighttypes[ind],\
+    p3g.combhists(samplename=None, rbinu='R200c', idsel=None, weighttype=weighttypes[ind],\
               binby=('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),\
               combmethod='addnormed-R200c', histtype=histtypes[ind])
 ###############################################################################
