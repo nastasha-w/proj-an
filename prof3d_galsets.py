@@ -256,7 +256,6 @@ def genhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
     else:
         galaxyids = np.array(galdata_all.index)
     
-    name_append = '_%s_snapdata'%rbinu
     if axdct == 'rprof_rho-T-nion':
         axesdct = [{'ptype': 'coords', 'quantity': 'r3D'},\
                    {'ptype': 'basic', 'quantity': 'Temperature'},\
@@ -264,6 +263,8 @@ def genhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
                    ]
         if weighttype in ol.elements_ion.keys():
             axesdct =  axesdct + [{'ptype': 'Niondens', 'ion': weighttype}]
+        nonrbins = [0.1] * (len(axesdct) - 1)
+        name_append = '_%s_snapdata'%rbinu
     elif axdct.startswith('Zprof'):
         axesdct = [{'ptype': 'coords', 'quantity': 'r3D'},\
                    ]
@@ -276,6 +277,9 @@ def genhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
         else:
             raise ValueError('axdct Zprof for weighttype %s needs an element specifier'%weighttype)
         axesdct =  axesdct + [{'ptype': 'basic', 'quantity': 'SmoothedElementAbundance/%s'%(string.capwords(elt))}]  
+        Zbins = np.array([-np.inf] + list(np.arange(-38.0, -0.95, 0.1)) + [np.inf]) # need the -inf in there to deal with Z=0 particles properly; non-inf edges from stacks with bin=0.1 runs
+        nonrbins = [Zbins] * (len(axesdct) - 1)
+        name_append = '_%s_snapdata_corrZ'%rbinu
         
     with open(files(samplename, weighttype, histtype=axdct), 'w') as fdoc:
         fdoc.write('galaxyid\tfilename\tgroupname\n')
@@ -298,7 +302,7 @@ def genhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
             cen = [Xcom, Ycom, Zcom]
             L_x, L_y, L_z = (2. * rbins[-1] / c.cm_per_mpc / cosmopars['a'],) * 3
             
-            axbins =  [rbins] + [0.1] * (len(axesdct) - 1)
+            axbins =  [rbins] + nonrbins
             logax = [False] + [True] * (len(axesdct) - 1)
             
             args = (weighttypes[weighttype]['ptype'], simnum, snapnum, var, axesdct,)

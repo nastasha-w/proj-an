@@ -57,6 +57,9 @@ def percentiles_from_histogram(histogram, edgesaxis, axis=-1, percentiles=np.arr
     histograms can be weighted by something: this function just solves 
     cumulative distribution == percentiles
     '''
+    percentiles = np.array(percentiles)
+    if not np.all(percentiles >= 0.) and np.all(percentiles <= 1.):
+        raise ValueError('Input percentiles shoudl be fractions in the range [0, 1]')
     cdists = np.cumsum(histogram, axis=axis, dtype=np.float) 
     sel = list((slice(None, None, None),) * len(histogram.shape))
     sel2 = np.copy(sel)
@@ -80,8 +83,6 @@ def percentiles_from_histogram(histogram, edgesaxis, axis=-1, percentiles=np.arr
 
     leftarr  = cdists[np.newaxis, :, :, :] <= percentiles[:, np.newaxis, np.newaxis, np.newaxis]
     rightarr = cdists[np.newaxis, :, :, :] >= percentiles[:, np.newaxis, np.newaxis, np.newaxis]
-    print(leftarr)
-    print(rightarr)
     
     leftbininds = np.array([[[ np.max(np.where(leftarr[pind, ind1, :, ind2])[0]) \
                                for ind2 in range(newlen2)] for ind1 in range(newlen1)] for pind in range(len(percentiles))])
