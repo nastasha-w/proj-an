@@ -206,12 +206,16 @@ def genhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
     '''
     generate the histograms for a given sample
     rbins: used fixed bins in pkpc or in R200c (relevant for stacking)
-    axdct: axdct to use for a given wieght type (names for different sets)
+    axdct: axdct to use for a given weight type (names for different sets)
            'rprof_rho-T-nion': ion-weighted temperature, density, ion density (if 
            ion-weighted) as a function of radius
            'Zprof[-<elt>]': metallicity profile. Abundance of the parent 
            element for ions, otherwise or overwritten by element after '-'
            (e.g. 'Zprof' or 'Zprof-oxygen')
+           'baryons-<species>[-<metal species>]': baryon mass profile
+           species: gas, DM, stars, or BHs (total mass in each bin)
+           metal species: element name or metallcity (smoothed is used)
+             (total metal/element mass in each bin)
     idsel: project only a subset of galaxies according to the given list
            useful for testing on a few galaxies
            ! do not run in  parallel: different processes will try to write to
@@ -280,7 +284,12 @@ def genhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
         Zbins = np.array([-np.inf] + list(np.arange(-38.0, -0.95, 0.1)) + [np.inf]) # need the -inf in there to deal with Z=0 particles properly; non-inf edges from stacks with bin=0.1 runs
         nonrbins = [Zbins] * (len(axesdct) - 1)
         name_append = '_%s_snapdata_corrZ'%rbinu
-        
+    elif axdct.startswith('baryons'): # total mass profiles for gas, stars, BHs, DM, or Z mass profiles 
+        #'baryons-<species>[-<metal species>]': baryon mass profile
+        #   species: gas, DM, stars, or BHs (total mass in each bin)
+        #   metal species: element name  (smoothed is used)
+        #     (total element mass in each bin)
+        pass
     with open(files(samplename, weighttype, histtype=axdct), 'w') as fdoc:
         fdoc.write('galaxyid\tfilename\tgroupname\n')
         
