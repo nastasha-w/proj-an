@@ -28,10 +28,18 @@ samples = {'L0100N1504_27_Mh0p5dex_1000': sh.L0100N1504_27_Mh0p5dex_1000,\
 
 weighttypes = {'Mass': {'ptype': 'basic', 'quantity': 'Mass'},\
                'Volume': {'ptype': 'basic', 'quantity': 'propvol'},\
+               'gas':   {'ptype': 'basic', 'quantity': 'Mass', 'parttype': '0'},\
+               'stars': {'ptype': 'basic', 'quantity': 'Mass', 'parttype': '4'},\
+               'BHs':   {'ptype': 'basic', 'quantity': 'Mass', 'parttype': '5'},\
+               'DM':    {'ptype': 'basic', 'quantity': 'Mass', 'parttype': '1'},\
                }
 weighttypes.update({ion: {'ptype': 'Nion', 'ion': ion} for ion in\
                     ['o1', 'o2', 'o3', 'o4', 'o5', 'o6', 'o7', 'o8', 'oxygen',\
                      'ne8', 'ne9', 'neon', 'fe17', 'iron', 'hneutralssh']}) 
+for ion in ['oxygen', 'neon', 'iron']:
+    weighttypes.update({'gas-%s'%{ion}: {'ptype': 'Nion', 'ionW': ion, 'parttype': '0'},\
+                        'stars-%s'%{ion}: {'ptype': 'Nion', 'ionW': ion, 'parttype': '4'},\
+                        })
 
 def dataname(samplen):
     return tdir + 'halodata_%s.txt'%(samplen)
@@ -212,10 +220,6 @@ def genhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
            'Zprof[-<elt>]': metallicity profile. Abundance of the parent 
            element for ions, otherwise or overwritten by element after '-'
            (e.g. 'Zprof' or 'Zprof-oxygen')
-           'baryons-<species>[-<metal species>]': baryon mass profile
-           species: gas, DM, stars, or BHs (total mass in each bin)
-           metal species: element name or metallcity (smoothed is used)
-             (total metal/element mass in each bin)
     idsel: project only a subset of galaxies according to the given list
            useful for testing on a few galaxies
            ! do not run in  parallel: different processes will try to write to
@@ -284,12 +288,7 @@ def genhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
         Zbins = np.array([-np.inf] + list(np.arange(-38.0, -0.95, 0.1)) + [np.inf]) # need the -inf in there to deal with Z=0 particles properly; non-inf edges from stacks with bin=0.1 runs
         nonrbins = [Zbins] * (len(axesdct) - 1)
         name_append = '_%s_snapdata_corrZ'%rbinu
-    elif axdct.startswith('baryons'): # total mass profiles for gas, stars, BHs, DM, or Z mass profiles 
-        #'baryons-<species>[-<metal species>]': baryon mass profile
-        #   species: gas, DM, stars, or BHs (total mass in each bin)
-        #   metal species: element name  (smoothed is used)
-        #     (total element mass in each bin)
-        pass
+        
     with open(files(samplename, weighttype, histtype=axdct), 'w') as fdoc:
         fdoc.write('galaxyid\tfilename\tgroupname\n')
         
@@ -451,6 +450,118 @@ def genhists_ionmass(samplename=None, rbinu='R200c', idsel=None, weighttype='o6'
             
             fdoc.write('%i\t%s\t%s\n'%(gid, outname[0], outname[1]))
 
+
+def genhists_massdist(samplename=None, rbinu='pkpc', idsel=None,\
+                      weighttype='gas',\
+                      logM200min=11.0, axdct='rprof'):
+    '''
+    generate the histograms for a given sample
+    rbins: used fixed bins in pkpc or in R200c (relevant for stacking)
+    axdct: axdct to use for a given weight type (names for different sets)
+           'rprof': total mass in each radial bin
+    idsel: project only a subset of galaxies according to the given list
+           useful for testing on a few galaxies
+           ! do not run in  parallel: different processes will try to write to
+           the same list of output files
+    '''
+    if samplename is None:
+        samplename = defaults['sample']
+    fin = dataname(samplename)
+    
+    with open(fin, 'r') as fi:
+        # scan for halo catalogue (only metadata needed for this)
+        headlen = 0
+        halocat = None
+        while True:
+            line = fi.readline()
+            if line == '':
+                if halocat is None:
+                    raise RuntimeError('Reached the end of %s without finding the halo catalogue name'%fin)
+                else:
+                    break
+            elif line.startswith('halocat'):
+                halocat = line.split(':')[1]
+                halocat = halocat.strip()
+                headlen += 1
+            elif ':' in line or line == '\n':
+                headlen += 1
+    
+    with h5py.File(halocat, 'r') as hc:
+        hed = hc['Header']
+        cosmopars = {key: item for key, item in hed['cosmopars'].attrs.items()}
+        simnum = hed.attrs['simnum']
+        snapnum = hed.attrs['snapnum']
+        var = hed.attrs['var']
+        #ap = hed.attrs['subhalo_aperture_size_Mstar_Mbh_SFR_pkpc']
+    
+    galdata_all = pd.read_csv(fin, header=headlen, sep='\t', index_col='galaxyid')
+    if idsel is not None:
+        if isinstance(idsel, slice):
+            galaxyids = np.array(galdata_all.index)[idsel]
+        else:
+            galaxyids = idsel
+    else:
+        galaxyids = np.array(galdata_all.index)
+    
+    if axdct == 'rprof':
+        axesdct = [{'ptype': 'coords', 'quantity': 'r3D'},\
+                   ]
+        nonrbins = [0.1] * (len(axesdct) - 1)
+        name_append = '_%s_snapdata'%rbinu
+    
+        
+    with open(files(samplename, weighttype, histtype=axdct), 'w') as fdoc:
+        fdoc.write('galaxyid\tfilename\tgroupname\n')
+        
+        for gid in galaxyids:
+            R200c = galdata_all.at[gid, 'R200c_cMpc']
+            Xcom = galdata_all.at[gid, 'Xcom_cMpc']
+            Ycom = galdata_all.at[gid, 'Ycom_cMpc']
+            Zcom = galdata_all.at[gid, 'Zcom_cMpc']
+            M200 = galdata_all.at[gid, 'M200c_Msun']
+            if M200 < 10**logM200min:
+                continue
+            
+            if rbinu == 'pkpc':
+                rbins = np.array([0., 5., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 125., 150., 175., 200., 250., 300., 350., 400., 450., 500.]) * 1e-3 * c.cm_per_mpc
+                if rbins[-1] < R200c:
+                    rbins = np.append(rbins, [R200c])
+            else:
+                rbins = np.array([0., 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.25, 1.50, 2., 2.5, 3., 3.5, 4.]) * R200c * c.cm_per_mpc * cosmopars['a']
+            cen = [Xcom, Ycom, Zcom]
+            L_x, L_y, L_z = (2. * rbins[-1] / c.cm_per_mpc / cosmopars['a'],) * 3
+            
+            axbins =  [rbins] + nonrbins
+            logax = [False] + [True] * (len(axesdct) - 1)
+            
+            args = (weighttypes[weighttype]['ptype'], simnum, snapnum, var, axesdct,)
+            kwargs = {'simulation': 'eagle', 'excludeSFR': 'T4', 'abunds': 'Pt',\
+                      'sylviasshtables': False, 'allinR200c': True, 'mdef': '200c',\
+                      'L_x': L_x, 'L_y': L_y, 'L_z': L_z, 'centre': cen, 'Ls_in_Mpc': True,\
+                      'misc': None,\
+                      'axbins': axbins, 'logax': logax,\
+                      'name_append': name_append, 'loghist': False}
+            
+            kwargs_extra = weighttypes[weighttype].copy()
+            del kwargs_extra['ptype']
+            kwargs.update(kwargs_extra)
+            
+            # ion, quantity, nameonly,
+            outname = m3.makehistograms_perparticle(*args, nameonly=True, **kwargs)
+            
+            alreadyexists = False
+            if os.path.isfile(outname[0]):
+                with h5py.File(outname[0]) as fo_t:
+                    if outname[1] in fo_t.keys():
+                        alreadyexists = True
+            if alreadyexists:
+                print('For galaxy %i, a histogram already exists; skipping'%(gid))
+            else:
+                m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
+            
+            fdoc.write('%i\t%s\t%s\n'%(gid, outname[0], outname[1]))
+            
+        
 def combhists(samplename=None, rbinu='pkpc', idsel=None, weighttype='Mass',\
               binby=('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),\
               combmethod='addnormed-R200c', histtype='rprof_rho-T-nion'):
