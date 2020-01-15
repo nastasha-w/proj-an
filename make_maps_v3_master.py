@@ -2969,10 +2969,10 @@ def Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=True, updatesel=True, misc
     return Nion, to_cgs_numdens # array, cgsconversion
 
 
-def Nion_to_coldens(vardict,Ls,Axis1,Axis2,Axis3,npix_x,npix_y):
+def Nion_to_coldens(vardict, Ls, Axis1, Axis2, Axis3, npix_x, npix_y):
     afact = vardict.simfile.a
-    area = (Ls[Axis1] / np.float32(npix_x)) * (Ls[Axis2] / np.float32(npix_y)) * c.cm_per_mpc ** 2 *afact**2
-    return 1./area
+    area = (Ls[Axis1] / np.float32(npix_x)) * (Ls[Axis2] / np.float32(npix_y)) * c.cm_per_mpc ** 2 * afact**2
+    return 1. / area
 
 
 def luminosity_calc_halpha_fromSFR(vardict,excludeSFR,last=True,updatesel=True):
@@ -3010,8 +3010,9 @@ def readbasic(vardict, quantity, excludeSFR, last=True, **kwargs):
     # Mass is not actually stored for DM: just use ones, and DM mass from file
     elif vardict.parttype == '1' and quantity == 'Mass':
         vardict.readif('ParticleIDs', rawunits=True)
-        vardict.add_part('Mass', np.ones((vardict.particle['Coordinates'].shape[0],)))
+        vardict.add_part('Mass', np.ones((vardict.particle['ParticleIDs'].shape[0],)))
         vardict.CGSconv['Mass'] = vardict.simfile.particlemass_DM_g
+        vardict.delif('ParticleIDs', last=last)
         
     # derived properties with vardict read-in method
     elif quantity == 'lognH':
@@ -4101,9 +4102,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     if ptypeW == 'basic':
         readbasic(vardict_WQ, quantityW, excludeSFRW, last=last)
         qW  = vardict_WQ.particle[quantityW]
-        multipafterW = Nion_to_coldens(vardict_WQ,Ls,Axis1,Axis2,Axis3,npix_x,npix_y)*vardict_WQ.CGSconv[quantityW]
-        if quantityW in vardict_WQ.CGSconv:
-            multipafterW *= vardict_WQ.CGSconv[quantityW]
+        multipafterW = Nion_to_coldens(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y) *\
+                       vardict_WQ.CGSconv[quantityW]
             
     elif ptypeW == 'coldens' and not iseltW:
         if ionW in ['h1ssh', 'hmolssh', 'hneutralssh'] and not (sylviasshtables or bensgadget2tables):
