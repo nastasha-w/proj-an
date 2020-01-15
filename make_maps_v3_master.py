@@ -3007,11 +3007,12 @@ def readbasic(vardict, quantity, excludeSFR, last=True, **kwargs):
         else:
             vardict.readif('Temperature',rawunits=True)
 
-    # Mass is not actually stored for DM: just use ones
+    # Mass is not actually stored for DM: just use ones, and DM mass from file
     elif vardict.parttype == '1' and quantity == 'Mass':
-        vardict.readif('Coordinates',rawunits=True)
-        vardict.add_part('Mass',np.ones((vardict.particle['Coordinates'].shape[0],)))
-
+        vardict.readif('ParticleIDs', rawunits=True)
+        vardict.add_part('Mass', np.ones((vardict.particle['Coordinates'].shape[0],)))
+        vardict.CGSconv['Mass'] = vardict.simfile.particlemass_DM_g
+        
     # derived properties with vardict read-in method
     elif quantity == 'lognH':
         vardict.getlognH(last=last,**kwargs)
@@ -3742,7 +3743,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                for ptype options 'emission' and 'coldens', option is ignored
                the particle type for which to project (string!)
                0 (default): gas
-               1: DM
+               1: DM !! DM mass projection only work for Eagle 
+                        (Simfile particle mass read-in)
                4: Stars
                5: BHs
 
@@ -4097,10 +4099,12 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     else:
         last = False
     if ptypeW == 'basic':
-        readbasic(vardict_WQ,quantityW,excludeSFRW,last = last)
+        readbasic(vardict_WQ, quantityW, excludeSFRW, last=last)
         qW  = vardict_WQ.particle[quantityW]
         multipafterW = Nion_to_coldens(vardict_WQ,Ls,Axis1,Axis2,Axis3,npix_x,npix_y)*vardict_WQ.CGSconv[quantityW]
-
+        if quantityW in vardict_WQ.CGSconv:
+            multipafterW *= vardict_WQ.CGSconv[quantityW]
+            
     elif ptypeW == 'coldens' and not iseltW:
         if ionW in ['h1ssh', 'hmolssh', 'hneutralssh'] and not (sylviasshtables or bensgadget2tables):
             qW, multipafterW = Nion_calc_ssh(vardict_WQ, excludeSFRW, habW, ionW, last=True, updatesel=True, misc=misc)
@@ -4126,7 +4130,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         readbasic(vardict_WQ, quantityQ, excludeSFRQ, last=True)
         qQ  = vardict_WQ.particle[quantityQ]
         multipafterQ = vardict_WQ.CGSconv[quantityQ]
-
+        
     elif ptypeQ == 'coldens' and not iseltQ:
         if ionQ in ['h1ssh', 'hmolssh', 'hneutralssh'] and not (sylviasshtables or bensgadget2tables):
             qQ, multipafterQ = Nion_calc_ssh(vardict_WQ, excludeSFRQ, habQ, ionQ, last=True, updatesel=False, misc=misc)

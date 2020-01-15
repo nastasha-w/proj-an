@@ -49,6 +49,9 @@ class Simfile:
     for non-EAGLE outputs
     if region handling is not included, Vardict and the selections should be given a case
     or option to handle that, rather than using consecutive selections on each array
+    
+    DM particle mass is only read in in Eagle for now, in case the units are 
+    different in other gagdet variants
     '''
     def readarray_eagle(self,name,region=None,rawunits=False):
         arr = self.readfile.read_data_array(name, gadgetunits=rawunits, suppress=False,region=region)
@@ -93,7 +96,7 @@ class Simfile:
             self.boxsize = self.readfile.boxsize
             self.h = self.readfile.h
             self.a = self.readfile.a
-            self.z = 1. / self.a - 1.
+            self.z = 1. / self.a - 1. # rounded off in read_eagle_files for some reason...
             # omegam and omegalambda are not retrieved by read_eagle, but are needed to get the hubble parameter H(z)
             # try cases are extracted from read_eagle files and read_bahamas_files
             self.filenamebase = self.readfile.fname
@@ -104,6 +107,9 @@ class Simfile:
             self.omegam = self.hdf5file['Header'].attrs['Omega0']
             self.omegalambda = self.hdf5file['Header'].attrs['OmegaLambda']
             self.omegab = self.hdf5file['Header'].attrs['OmegaBaryon']
+            self.particlemass_DM_g = np.array(self.hdf5file['Header'].attrs['MassTable'])[1] * \
+                                      self.hdf5file['Units'].attrs['UnitMass_in_g'] * \
+                                      self.h**-1 # checked units with Matthieu 
             self.hdf5file.close()
 
             self.region_supported = True

@@ -286,7 +286,7 @@ def pipeline_getsavehist(filmapname=defaultmapname, colmapset=None, npix_filmap=
         fo.create_dataset('histogram_fil', data=data['outhist_in'])
         
 
-def plotcddf_filpart(histname='o7_L100_snap28_filres'):
+def plotcddf_filpart(histname='o7_L100_snap28_filres', comparegeq=None):
     if histname == 'o7_L100_snap28_filres':
         fn = 'histogram_filaments_coldens_o7_L0100N1504_28_test3.4_PtAb_C2Sm_4096pix_0.390625slice_zcen-all_z-projection_T4EOS_filament_map_v1.hdf5'
         xlabel = r'$\log_{10} \, \mathrm{N}(\mathrm{O\,VII}) \; [\mathrm{cm}^{-2}]$'
@@ -362,3 +362,28 @@ def plotcddf_filpart(histname='o7_L100_snap28_filres'):
     
     plt.savefig(imgname, format='pdf', bbox_inches='tight')
     
+    if comparegeq is not None:
+        dztot = mc.getdz(cosmopars['z'], boxsize, cosmopars=cosmopars) * n2pix_map
+        idx = np.argmin(np.abs(edges - comparegeq))
+        limval = edges[idx]
+        cumul_all = np.sum(histogram_all[idx:]) / dztot # index of left edge of cell
+        cumul_fil = np.sum(histogram_fil[idx:]) / dztot
+        print(f'above log10 N / cm^-2 = {limval:.2f}, absorbers/dz = {cumul_all} for all absorbers and {cumul_fil} for the filaments')
+        
+        for label in alsoplot:
+            cens = alsoplot[label]['x']
+            dn_dlogNdX = alsoplot[label]['y']
+            
+            diffs = np.diff(cens)
+            diffs = np.append([diffs[0]], diffs)
+            edges = cens - 0.5 * diffs
+            edges = np.append(edges, edges[-1] + diffs[-1])
+            
+            dlogN = diffs
+            dX_over_dz = mc.dXcddf_to_dzcddf_factor(cosmopars['z'], cosmopars=cosmopars)
+            histogram = dn_dlogNdX * dlogN * dX_over_dz
+            
+            idx = np.argmin(np.abs(edges - comparegeq))
+            limval = edges[idx]
+            cumul = np.sum(histogram[idx:])
+            print(f'above log10 N / cm^-2 = {limval:.2f}, absorbers/dz = {cumul} for {label}')
