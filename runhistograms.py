@@ -2462,7 +2462,7 @@ if jobind in range(20086, 20092): # quasar
 
 # metallicity profiles: Mass, Volume, ion-weighted 
 elif jobind in range(20092, 20104):
-    ind = [0, 3, 6, 7, 1, 4, 8, 9, 2, 5, 10, 11][jobind - 20092] # reshuffle to avoid multiple processes working on the same file
+    ind = [0, 3, 6, 7, 1, 4, 8, 9, 2, 5, 10, 11][jobind - 20092] # reshuffle to avoid multiple processes working on the same file (same weight -> same hdf5)
     weighttypes = ['Mass', 'Mass', 'Mass', 'Volume', 'Volume', 'Volume', 'o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
     axdcts = ['Zprof-oxygen', 'Zprof-neon', 'Zprof-iron'] * 2 + ['Zprof'] * 6
     p3g.genhists(samplename=None, rbinu='R200c', idsel=None, weighttype=weighttypes[ind],\
@@ -2477,9 +2477,12 @@ elif jobind in range(20104, 20116):
               combmethod='addnormed-R200c', histtype=histtypes[ind])
     
 ### get 3d profiles
-elif jobind in range(20116, 20120):
-    weighttype = ['gas', 'stars', 'BHs', 'DM'][jobind - 20116]
+elif jobind in range(20116, 20126):
+    weighttype = ['gas', 'stars', 'BHs', 'DM',\
+                  'stars-oxygen', 'stars-neon', 'stars-iron',\
+                  'gas-oxygen', 'gas-neon', 'gas-iron'][jobind - 20116]
     p3g.genhists(samplename=None, rbinu='R200c', idsel=None, weighttype=weighttype, logM200min=11.0)
+    
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################
