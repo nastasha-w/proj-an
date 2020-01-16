@@ -2481,7 +2481,8 @@ elif jobind in range(20116, 20126):
     weighttype = ['gas', 'stars', 'BHs', 'DM',\
                   'stars-oxygen', 'stars-neon', 'stars-iron',\
                   'gas-oxygen', 'gas-neon', 'gas-iron'][jobind - 20116]
-    p3g.genhists(samplename=None, rbinu='R200c', idsel=None, weighttype=weighttype, logM200min=11.0)
+    p3g.genhists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000', rbinu='R200c', idsel=None,\
+                          axdct='rprof', weighttype=weighttype, logM200min=11.0)
     
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
