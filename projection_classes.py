@@ -194,7 +194,16 @@ class Simfile:
 
         else:
             raise ValueError('Simulation %s is not supported.'%simulation)
-
+    
+    def get_cosmopars(self):
+        return {'a': self.a,\
+                'z': self.z,\
+                'h': self.h,\
+                'boxsize': self.boxsize,\
+                'omegalambda': self.omegalambda,\
+                'omegab': self.omegab,\
+                'omegam': self.omegam,\
+                }
 class Sel:
     '''
     an array mask for 1D arrays (selections):

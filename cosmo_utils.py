@@ -411,7 +411,81 @@ def Tvir(m200c, cosmopars='eagle', mu=0.59, z=None):
         z = cosmopars['z']
     return 4.1e5 * (mu/0.59) * (m200c/(1e12/h))**(2./3.) * (1.+z)
 
+def Teos_eagle(rho):
+    '''
+    rho = density (g / cm^-3)
+    '''
+    X = 0.752 # (primodial also used in code, but for T <-> entropy)
 
+    nstar = 0.1 # cm^-3
+    Tstar = 8.0e3 # K
+    gamma_eos = 4. / 3.
+    rhostar = nstar * c.atomw_H * c.u / X
+    
+    Teos = Tstar * (rho / rhostar)**(gamma_eos - 1.)
+    return Teos
+        
+def hasSFR_eagle(rho, T, Z, cosmopars):
+    '''
+    rho = density (g / cm^-3)
+    Z = metallcitity (mass fraction)
+    T = temperature (K) !! temperature including EOS, not imposed 10^4 K !!
+    
+    Eagle paper (Schaye et al. 2015), section 4.3
+    
+    seems to mostly match recorded SFR values when using particle Z values
+    '''
+    X = 0.752
+    nH = X * rho / (c.atomw_H * c.u)
+
+    nHmin = 0.1 * (Z / 0.002)**-0.64
+    nHmin = np.minimum(10., nHmin)
+    nHmin = np.maximum(nHmin, 57.7 * rhocrit(cosmopars['z'], cosmopars=cosmopars) * cosmopars['omegab']) 
+    
+    Tmax = 10**0.5 * Teos_eagle(rho) # 0.5 dex above EOS
+    
+    hassfr = np.logical_and(nH >= nHmin, T <= Tmax)
+    return hassfr 
+    
+def SFR_eagle(pm, T, rho, Z, cosmopars):
+    '''
+    !! Doesn't work very well. Possibly has bugs/errors !!
+    pm = particle mass array (g)
+    T = temperature (K) !! temperature including EOS, not imposed 10^4 K !!
+    rho = density (g / cm^-3)
+    
+    Eagle paper (Schaye et al. 2015), section 4.3
+    
+    values seem systematically somewhat below recorded SFR, but differences
+    exist both ways
+    '''
+    X = 0.752
+    #mu_hot = 0.59 # about right for ionised (hot) gas, primordial
+    mu_neutral = (X + (1. - X) * c.atomw_H / c.atomw_He)**-1 # probaly appropriate for cool gas; used for EOS pressure floor entropy conversion
+    gamma = 5. / 3.
+    f_g = 1.
+    A = 1.515e-4 * c.solar_mass / c.sec_per_year / (c.cm_per_mpc * 1e-3)**2
+    nlo = 1.4
+    nhi = 2.
+    nHpiv = 1e3
+    
+    nH = X * rho / (c.atomw_H * c.u)
+    # pressure would probably be the pressure-entropy SPH pressure durin the run, but that is not easily available here
+    # P = n kb T (ideal gas law), n = rho / (mu * mH)
+    P = c.boltzmann * T * rho / (mu_neutral * c.atomw_H * c.u)
+    
+    # SFR = m_g * A * (M_sun / pc^2)^n * (gamma / G * f_g * P) * (n - 1) / 2
+            # gamma = 5/3, G = newton constant, f_g = 1 (gas fraction), P = total pressure
+            # A = 1.515 × 10−4 M⊙ yr−1 kpc−2, n = 1.4 (n = 2 at nH > 10^3 cm^-3)
+    SFR = pm * A * (c.solar_mass / (c.cm_per_mpc * 1e-6)**2)**(-1. * nlo) * (gamma / c.gravity * f_g * P)**(0.5 * nlo - 0.5)
+    SFR = np.array(SFR)
+    hisel = nH > nHpiv
+    SFR_hi = pm * A * (c.solar_mass / (c.cm_per_mpc * 1e-6)**2)**(-1. * nhi) * (gamma / c.gravity * f_g * P)**(0.5 * nhi - 0.5)
+    SFR[hisel] = SFR_hi[hisel]
+    
+    hassfr = hasSFR_eagle(rho, T, Z, cosmopars)
+    SFR[np.logical_not(hassfr)] = 0.
+    return SFR[()] # return a single value is floats were input, otherwise the array
 
 # John Helly's routine, via Peter
 def match(arr1, arr2, arr2_sorted=False, arr2_index=None):

@@ -2475,6 +2475,11 @@ elif jobind in range(20104, 20116):
     p3g.combhists(samplename=None, rbinu='R200c', idsel=None, weighttype=weighttypes[ind],\
               binby=('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),\
               combmethod='addnormed-R200c', histtype=histtypes[ind])
+    
+### get 3d profiles
+elif jobind in range(20116, 20120):
+    weighttype = ['gas', 'stars', 'BHs', 'DM'][jobind - 20116]
+    p3g.genhists(samplename=None, rbinu='R200c', idsel=None, weighttype=weighttype, logM200min=11.0)
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################

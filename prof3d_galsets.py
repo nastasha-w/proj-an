@@ -29,6 +29,7 @@ samples = {'L0100N1504_27_Mh0p5dex_1000': sh.L0100N1504_27_Mh0p5dex_1000,\
 weighttypes = {'Mass': {'ptype': 'basic', 'quantity': 'Mass'},\
                'Volume': {'ptype': 'basic', 'quantity': 'propvol'},\
                'gas':   {'ptype': 'basic', 'quantity': 'Mass', 'parttype': '0'},\
+               'ISM':   {'ptype': 'basic', 'quantity': 'Mass', 'parttype': '0'},\
                'stars': {'ptype': 'basic', 'quantity': 'Mass', 'parttype': '4'},\
                'BHs':   {'ptype': 'basic', 'quantity': 'Mass', 'parttype': '5'},\
                'DM':    {'ptype': 'basic', 'quantity': 'Mass', 'parttype': '1'},\
@@ -37,7 +38,8 @@ weighttypes.update({ion: {'ptype': 'Nion', 'ion': ion} for ion in\
                     ['o1', 'o2', 'o3', 'o4', 'o5', 'o6', 'o7', 'o8', 'oxygen',\
                      'ne8', 'ne9', 'neon', 'fe17', 'iron', 'hneutralssh']}) 
 for ion in ['oxygen', 'neon', 'iron']:
-    weighttypes.update({'gas-%s'%{ion}: {'ptype': 'Nion', 'ionW': ion, 'parttype': '0'},\
+    weighttypes.update({'ISM-%s'%{ion}: {'ptype': 'Nion', 'ionW': ion, 'parttype': '0'},\
+                        'gas-%s'%{ion}: {'ptype': 'Nion', 'ionW': ion, 'parttype': '0'},\
                         'stars-%s'%{ion}: {'ptype': 'Nion', 'ionW': ion, 'parttype': '4'},\
                         })
 
@@ -48,6 +50,8 @@ def files(samplen, weighttype, histtype=None):
     if histtype is None or histtype == 'rprof_rho-T-nion':
         return tdir + 'filenames_%s_%s.txt'%(samplen, weighttype)
     elif histtype == 'ionmass':
+        return tdir + 'filenames_%s_%s_ionmass.txt'%(samplen, weighttype)
+    elif histtype == 'rprof':
         return tdir + 'filenames_%s_%s_ionmass.txt'%(samplen, weighttype)
     elif histtype.startswith('Zprof'):
         return tdir + 'filenames_%s_%s_%s.txt'%(samplen, weighttype, histtype)
@@ -506,8 +510,20 @@ def genhists_massdist(samplename=None, rbinu='pkpc', idsel=None,\
     if axdct == 'rprof':
         axesdct = [{'ptype': 'coords', 'quantity': 'r3D'},\
                    ]
-        nonrbins = [0.1] * (len(axesdct) - 1)
+        nonrbins = []
+        if weighttype.startswith('gas'):
+            # gas particle min. SFR:
+            # min. gas density = 57.7 * rho_mean (cosmic mean, using rho_matter * omegab to e safe) = 7.376116060910138e-30
+            # SFR = m_g * A * (M_sun / pc^2)^n * (gamma / G * f_g * P) * (n - 1) / 2
+            # gamma = 5/3, G = newton constant, f_g = 1 (gas fraction), P = total pressure
+            # A = 1.515 × 10−4 M⊙ yr−1 kpc−2, n = 1.4 (n = 2 at nH > 10^3 cm^-3)
+            
+            axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
+            # minimum float32 value -> cgs units; much smaller than any SFR in the 12 Mpc box
+            minval = 2**-149 * c.solar_mass / c.sec_per_year 
+            nonrbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
         name_append = '_%s_snapdata'%rbinu
+            
     
         
     with open(files(samplename, weighttype, histtype=axdct), 'w') as fdoc:
@@ -532,7 +548,7 @@ def genhists_massdist(samplename=None, rbinu='pkpc', idsel=None,\
             L_x, L_y, L_z = (2. * rbins[-1] / c.cm_per_mpc / cosmopars['a'],) * 3
             
             axbins =  [rbins] + nonrbins
-            logax = [False] + [True] * (len(axesdct) - 1)
+            logax = [False] + [False] * (len(axesdct) - 1)
             
             args = (weighttypes[weighttype]['ptype'], simnum, snapnum, var, axesdct,)
             kwargs = {'simulation': 'eagle', 'excludeSFR': 'T4', 'abunds': 'Pt',\
