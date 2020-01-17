@@ -2564,19 +2564,18 @@ if jobind in range(20136, 20139): # cosma
                   }
     zfills = [str(i) for i in np.arange(16) / 16. * 100. + 100. / 32.]
     
-    for hmkey in hmfills:
-        print('Trying halo set %s'%(hmkey))
-        galset = galaxyids[hmkey]
-        filen_in = ol.ndir + fnbase_ions[ion]
-        print('Processing %s'%filen_in)
-        selection = [('galaxyid', np.array(galset))]
-        outname = ol.pdir + 'rdist_%s_%islice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filen_in.split('/')[-1][:-5])%('-all'), numsl) # store here for fast access
-        crd.rdists_sl_from_selection(filen_in, zfills, L_x, npix_x,\
-                         rmin_r200c, rmax_r200c,\
-                         catname,\
-                         selection, np.inf, outname=outname,\
-                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
-                         axis='z', velspace=False, offset_los=0., stamps=False)
+    
+    galset = np.array([gid for key in galaxyids for gid in galaxyids[key]])
+    filen_in = ol.ndir + fnbase_ions[ion]
+    print('Processing %s'%filen_in)
+    selection = [('galaxyid', np.array(galset))]
+    outname = ol.pdir + 'rdist_%s_%islice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filen_in.split('/')[-1][:-5])%('-all'), numsl) # store here for fast access
+    crd.rdists_sl_from_selection(filen_in, zfills, L_x, npix_x,\
+                     rmin_r200c, rmax_r200c,\
+                     catname,\
+                     selection, np.inf, outname=outname,\
+                     numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                     axis='z', velspace=False, offset_los=0., stamps=False)
         
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
