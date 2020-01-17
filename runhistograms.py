@@ -2558,24 +2558,16 @@ if jobind in range(20136, 20139): # cosma
     mindist_pkpc = 100.
     numsl = 1
     
-    hmfills = {'geq11.0_le11.5': '_halosel_Mhalo_11.0<=log200c<11.5_allinR200c_endhalosel',\
-               'geq11.5_le12.0': '_halosel_Mhalo_11.5<=log200c<12.0_allinR200c_endhalosel',\
-               'geq12.0_le12.5': '_halosel_Mhalo_12.0<=log200c<12.5_allinR200c_endhalosel',\
-               'geq12.5_le13.0': '_halosel_Mhalo_12.5<=log200c<13.0_allinR200c_endhalosel',\
-               'geq13.0_le13.5': '_halosel_Mhalo_13.0<=log200c<13.5_allinR200c_endhalosel',\
-               'geq13.5_le14.0': '_halosel_Mhalo_13.5<=log200c<14.0_allinR200c_endhalosel',\
-               'geq14.0': '_halosel_Mhalo_14.0<=log200c_allinR200c_endhalosel',\
-               }
-    fnbase_ions = {'o7':   'coldens_o7_L0100N1504_23_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.npz',\
-                   'o8':   'coldens_o8_L0100N1504_23_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.npz',\
-                   'ne8':  'coldens_ne8_L0100N1504_23_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.hdf5',\
+    fnbase_ions = {'o7':   'coldens_o7_L0100N1504_23_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                   'o8':   'coldens_o8_L0100N1504_23_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                   'ne8':  'coldens_ne8_L0100N1504_23_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.hdf5',\
                   }
     zfills = [str(i) for i in np.arange(16) / 16. * 100. + 100. / 32.]
     
     for hmkey in hmfills:
         print('Trying halo set %s'%(hmkey))
         galset = galaxyids[hmkey]
-        filen_in = ol.ndir + fnbase_ions[ion]%('%s', hmfills[hmkey])
+        filen_in = ol.ndir + fnbase_ions[ion]
         print('Processing %s'%filen_in)
         selection = [('galaxyid', np.array(galset))]
         outname = ol.pdir + 'rdist_%s_%islice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filen_in.split('/')[-1][:-5])%('-all'), numsl) # store here for fast access
