@@ -111,7 +111,7 @@ def makehist(arrdict,**kwargs):
     return outhist, edges        
 
 
-def makehist_fromnpz(*filenames,**kwargs): 
+def makehist_fromnpz(*filenames, **kwargs): 
     # number of filenames is unknown beforehand (corresponds to number of dimensions in final histogram)
     '''
     kwargs are passed on to makehist -> histogramdd, 

@@ -2460,6 +2460,7 @@ if jobind in range(20086, 20092): # quasar
                          numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
                          axis='z', velspace=False, offset_los=0., stamps=False)
 
+
 # metallicity profiles: Mass, Volume, ion-weighted 
 elif jobind in range(20092, 20104):
     ind = [0, 3, 6, 7, 1, 4, 8, 9, 2, 5, 10, 11][jobind - 20092] # reshuffle to avoid multiple processes working on the same file (same weight -> same hdf5)
@@ -2483,7 +2484,108 @@ elif jobind in range(20116, 20126):
                   'gas-oxygen', 'gas-neon', 'gas-iron'][jobind - 20116]
     p3g.genhists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000', rbinu='R200c', idsel=None,\
                           axdct='rprof', weighttype=weighttype, logM200min=11.0)
+
+### overall mass, Z histograms in the big box
+elif jobind in range(20126, 20136):
+    weighttype = ['gas', 'stars', 'BHs', 'DM',\
+                  'stars-oxygen', 'stars-neon', 'stars-iron',\
+                  'gas-oxygen', 'gas-neon', 'gas-iron'][jobind - 20126]
     
+    simnum = 'L0100N1504'
+    snapnum = 27
+    var = 'REFERENCE'
+    wts =     {'gas':   {'ptype': 'basic', 'quantity': 'Mass', 'parttype': '0'},\
+               'stars': {'ptype': 'basic', 'quantity': 'Mass', 'parttype': '4'},\
+               'BHs':   {'ptype': 'basic', 'quantity': 'Mass', 'parttype': '5'},\
+               'DM':    {'ptype': 'basic', 'quantity': 'Mass', 'parttype': '1'},\
+               }
+    for ion in ['oxygen', 'neon', 'iron']:
+        wts.update({'gas-%s'%{ion}: {'ptype': 'Nion', 'ionW': ion, 'parttype': '0'},\
+                    'stars-%s'%{ion}: {'ptype': 'Nion', 'ionW': ion, 'parttype': '4'},\
+                    })
+    
+    axesdct = [{'ptype': 'halo', 'quantity': 'Mass'},\
+               ]
+    mhbins = [np.array([-np.inf, 0.0, 9.0, 9.5, 10., 10.5, 11., 11.5, 12., 12.5, 13., 13.5, 14., 14.5, 15., np.inf]) + np.log10(c.solar_mass)]
+    nonmhbins = []
+    if weighttype.startswith('gas'):
+        # gas particle min. SFR:
+        # min. gas density = 57.7 * rho_mean (cosmic mean, using rho_matter * omegab to e safe) = 7.376116060910138e-30
+        # SFR = m_g * A * (M_sun / pc^2)^n * (gamma / G * f_g * P) * (n - 1) / 2
+        # gamma = 5/3, G = newton constant, f_g = 1 (gas fraction), P = total pressure
+        # A = 1.515 × 10−4 M⊙ yr−1 kpc−2, n = 1.4 (n = 2 at nH > 10^3 cm^-3)
+        
+        axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
+        # minimum float32 value -> cgs units; much smaller than any SFR in the 12 Mpc box
+        minval = 2**-149 * c.solar_mass / c.sec_per_year 
+        nonmhbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
+        
+        axesdct.append({'ptype': 'basic', 'quantity': 'Temperature', 'excludeSFR': False})
+        Tbins = np.array([-np.inf, 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8., 8.5, 9., np.inf])
+        nonmhbins.append(Tbins)
+        logax = [True, False, True]
+    else:
+        logax = [True]
+        
+    axbins = mhbins + nonmhbins
+    wt = wts[weighttype]
+    kwargs = {'excludeSFR': False, 'abunds': 'Pt', 'ion': None,\
+              'axbins': axbins,\
+              'sylviasshtables': False, 'bensgadget2tables': False,\
+              'simulation': 'eagle',\
+              'allinR200c': True, 'mdef':'200c',\
+              'L_x': None, 'L_y': None, 'L_z': None, 'centre': None,\
+              'Ls_in_Mpc': True,\
+              'misc': None,\
+              'name_append': None,\
+              'logax': logax, 'loghist': False}
+    kwargs_other = wt.copy()
+    del kwargs_other['ptype']
+    kwargs.update(kwargs_other)
+    m3.makehistograms_perparticle(wt['ptype'], simnum, snapnum, var, axesdct,
+                              **kwargs)
+    
+
+if jobind in range(20136, 20139): # cosma
+    ion = ['o7', 'o8', 'ne8'][jobind - 20136]
+    print('Attempting FoF radial profiles for %s'%ion)
+    galaxyids = sh.L0100N1504_23_Mh0p5dex_7000.galids()
+    L_x = 100.
+    npix_x = 32000
+    rmin_r200c = 0.
+    rmax_r200c = 3.
+    catname = ol.pdir + 'catalogue_RefL0100N1504_snap23_aperture30.hdf5'
+    mindist_pkpc = 100.
+    numsl = 1
+    
+    hmfills = {'geq11.0_le11.5': '_halosel_Mhalo_11.0<=log200c<11.5_allinR200c_endhalosel',\
+               'geq11.5_le12.0': '_halosel_Mhalo_11.5<=log200c<12.0_allinR200c_endhalosel',\
+               'geq12.0_le12.5': '_halosel_Mhalo_12.0<=log200c<12.5_allinR200c_endhalosel',\
+               'geq12.5_le13.0': '_halosel_Mhalo_12.5<=log200c<13.0_allinR200c_endhalosel',\
+               'geq13.0_le13.5': '_halosel_Mhalo_13.0<=log200c<13.5_allinR200c_endhalosel',\
+               'geq13.5_le14.0': '_halosel_Mhalo_13.5<=log200c<14.0_allinR200c_endhalosel',\
+               'geq14.0': '_halosel_Mhalo_14.0<=log200c_allinR200c_endhalosel',\
+               }
+    fnbase_ions = {'o7':   'coldens_o7_L0100N1504_23_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.npz',\
+                   'o8':   'coldens_o8_L0100N1504_23_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.npz',\
+                   'ne8':  'coldens_ne8_L0100N1504_23_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS%s.hdf5',\
+                  }
+    zfills = [str(i) for i in np.arange(16) / 16. * 100. + 100. / 32.]
+    
+    for hmkey in hmfills:
+        print('Trying halo set %s'%(hmkey))
+        galset = galaxyids[hmkey]
+        filen_in = ol.ndir + fnbase_ions[ion]%('%s', hmfills[hmkey])
+        print('Processing %s'%filen_in)
+        selection = [('galaxyid', np.array(galset))]
+        outname = ol.pdir + 'rdist_%s_%islice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filen_in.split('/')[-1][:-5])%('-all'), numsl) # store here for fast access
+        crd.rdists_sl_from_selection(filen_in, zfills, L_x, npix_x,\
+                         rmin_r200c, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=False)
+        
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################
