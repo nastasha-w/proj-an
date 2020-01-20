@@ -3178,7 +3178,7 @@ if jobind in range(30029, 30032): # cosma
         rqfile = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/' + 'rdist_%s_%islice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filen_in.split('/')[-1][:-5])%('-all'), numsl) # store here for fast access
         
         print('Starting %s, R200c'%rqfile)
-        crd.get_radprof(rqfile, halocat, rbins_r200c, yvals,\
+        crd.get_radprof(rqfile, catname, rbins_r200c, yvals,\
                     xunit='R200c', ytype='perc',\
                     galids=galset, combinedprofile=True,\
                     separateprofiles=False,\

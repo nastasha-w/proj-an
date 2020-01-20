@@ -317,7 +317,7 @@ def makehist_masked_toh5py(*filenames, **kwargs):
                None
                (if 'None' is included in the list, no mask is applied)
                or multiple fills, mask files are combined by list index
-    masknames: name for each mask -- matched by list index to makefiles at each
+    masknames: name for each mask -- matched by list index to maskfiles at each
                fill
                used in the hdf5 file for naming if fills is not None
     includeinf:include all values in histogram; extend bin edges to ensure that
