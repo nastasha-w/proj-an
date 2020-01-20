@@ -37,8 +37,8 @@ weighttypes.update({ion: {'ptype': 'Nion', 'ion': ion} for ion in\
                     ['o1', 'o2', 'o3', 'o4', 'o5', 'o6', 'o7', 'o8', 'oxygen',\
                      'ne8', 'ne9', 'neon', 'fe17', 'iron', 'hneutralssh']}) 
 for ion in ['oxygen', 'neon', 'iron']:
-    weighttypes.update({'gas-%s'%{ion}: {'ptype': 'Nion', 'ionW': ion, 'parttype': '0'},\
-                        'stars-%s'%{ion}: {'ptype': 'Nion', 'ionW': ion, 'parttype': '4'},\
+    weighttypes.update({'gas-%s'%(ion): {'ptype': 'Nion', 'ion': ion, 'parttype': '0'},\
+                        'stars-%s'%(ion): {'ptype': 'Nion', 'ion': ion, 'parttype': '4'},\
                         })
 
 def dataname(samplen):
@@ -50,7 +50,7 @@ def files(samplen, weighttype, histtype=None):
     elif histtype == 'ionmass':
         return tdir + 'filenames_%s_%s_ionmass.txt'%(samplen, weighttype)
     elif histtype == 'rprof':
-        return tdir + 'filenames_%s_%s_ionmass.txt'%(samplen, weighttype)
+        return tdir + 'filenames_%s_%s_rprof.txt'%(samplen, weighttype)
     elif histtype.startswith('Zprof'):
         return tdir + 'filenames_%s_%s_%s.txt'%(samplen, weighttype, histtype)
     

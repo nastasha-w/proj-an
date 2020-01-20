@@ -3138,3 +3138,49 @@ if jobind in range(30023, 30029): # cosma
                     separateprofiles=False,\
                     rpfilename=None, galsettag=hmkey)
         print('Finished %s, R200c\n'%rqfile)
+        
+
+if jobind in range(30029, 30032): # cosma
+    ion = ['o7', 'o8', 'ne8'][jobind - 30029]
+    print('Attempting FoF radial profiles for %s'%ion)
+    galaxyids = sh.L0100N1504_23_Mh0p5dex_7000.galids()
+    L_x = 100.
+    npix_x = 32000
+    catname = ol.pdir + 'catalogue_RefL0100N1504_snap23_aperture30.hdf5'
+    mindist_pkpc = 100.
+    numsl = 1
+    
+    fnbase_ions = {'o7':   'coldens_o7_L0100N1504_23_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                   'o8':   'coldens_o8_L0100N1504_23_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                   'ne8':  'coldens_ne8_L0100N1504_23_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.hdf5',\
+                  }
+    zfills = [str(i) for i in np.arange(16) / 16. * 100. + 100. / 32.]
+    
+    
+    yvals = [1., 5., 10., 25., 50., 75., 90., 95., 99.]
+    #rbins_R200c = np.arange(0., 2.55, 0.1)
+    rbins_pkpc = np.array([0., 3., 5., 7., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 120., 140., 160., 180., 200., 225., 250., 275., 300., 325., 350., 375., 400., 425., 450., 475., 500.])
+    rbins_r200c = np.arange(0., 2.51, 0.05)
+     
+    hmfills = {'geq11.0_le11.5': '_halosel_Mhalo_11.0<=log200c<11.5_allinR200c_endhalosel',\
+               'geq11.5_le12.0': '_halosel_Mhalo_11.5<=log200c<12.0_allinR200c_endhalosel',\
+               'geq12.0_le12.5': '_halosel_Mhalo_12.0<=log200c<12.5_allinR200c_endhalosel',\
+               'geq12.5_le13.0': '_halosel_Mhalo_12.5<=log200c<13.0_allinR200c_endhalosel',\
+               'geq13.0_le13.5': '_halosel_Mhalo_13.0<=log200c<13.5_allinR200c_endhalosel',\
+               'geq13.5_le14.0': '_halosel_Mhalo_13.5<=log200c<14.0_allinR200c_endhalosel',\
+               'geq14.0': '_halosel_Mhalo_14.0<=log200c_allinR200c_endhalosel',\
+               }
+    
+    for hmkey in hmfills:
+        print('Trying halo set %s'%(hmkey))
+        galset = galaxyids[hmkey]
+        filen_in = ol.ndir + fnbase_ions[ion]
+        rqfile = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/' + 'rdist_%s_%islice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals.hdf5'%((filen_in.split('/')[-1][:-5])%('-all'), numsl) # store here for fast access
+        
+        print('Starting %s, R200c'%rqfile)
+        crd.get_radprof(rqfile, halocat, rbins_r200c, yvals,\
+                    xunit='R200c', ytype='perc',\
+                    galids=galset, combinedprofile=True,\
+                    separateprofiles=False,\
+                    rpfilename=None, galsettag=hmkey)
+        print('Finished %s, R200c\n'%rqfile)
