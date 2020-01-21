@@ -76,8 +76,10 @@ def getcolmapnames(mapset=None):
         ptypeW = 'coldens'
         kwargs = {'ionW': 'o7',\
                   'abundsW': 'Pt',\
-                  'ptypeQ': None,\
                   'excludeSFRW': 'T4',\
+                  'ptypeQ': 'basic',\
+                  'quantityQ': 'Temperature',\
+                  'excludeSFRQ': 'T4',\
                   'parttype': '0',\
                   'var': 'REFERENCE',\
                   'axis': 'z',\
@@ -126,9 +128,10 @@ def getcolmapnames(mapset=None):
         
     argss = [(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, ptypeW) for centre in centres]
     with HiddenPrints(): 
-        names = [m3.make_map(*args, nameonly=True, **kwargs)[0] for args in argss]
+        names = [m3.make_map(*args, nameonly=True, **kwargs) for args in argss]
     
-    namex = np.array([os.path.isfile(name) for name in names])
+    namex = np.array([os.path.isfile(name[0]) if name[1] is None else \
+                      os.path.isfile(name[0]) and os.path.isfile(name[1]) for name in names])
     if not np.all(namex):
         print('Failed to find the following files:\n' + '\n\t'.join(list(np.array(names)[np.logical_not(namex)])))
         raise RuntimeError('Some or all of the needed column density map files do no exist')
@@ -149,7 +152,10 @@ def compatcheck(colmapnames, filmapname=defaultmapname):
                 return False
     return True
 
-def getmatchedhist(filmapname=defaultmapname, colmapset=None, npix_filmap=256,\
+
+def getmatchedhist(filmapname=defaultmapname, colmapset=None, 
+                   logtselmaps=None, logtsel=None,\
+                   npix_filmap=256,\
                    bins=None, show_filmaps=False):
     '''
     assumes slice 0 starts at coordinate 0 along the los axis
@@ -242,7 +248,7 @@ def getmatchedhist(filmapname=defaultmapname, colmapset=None, npix_filmap=256,\
            'cosmopars': cosmopars,\
            }
     return out
-            
+         
 
 def pipeline_getsavehist(filmapname=defaultmapname, colmapset=None, npix_filmap=256,\
                    bins=None, show_filmaps=False):
@@ -285,6 +291,109 @@ def pipeline_getsavehist(filmapname=defaultmapname, colmapset=None, npix_filmap=
         fo.create_dataset('histogram_all', data=data['outhist_all'])
         fo.create_dataset('histogram_fil', data=data['outhist_in'])
         
+
+def addslices_wsel(filmapname=defaultmapname, colmapset='o7_L100_snap28_filres', 
+                   logtsel=None, filmapsel=False,\
+                   npix_filmap=256,\
+                   numtoadd=64):
+    '''
+    adds up numtoadd slices from filmapname to form new, thicker slices.
+    logtsel: if not None, subslices are only added to the total in each pixel 
+             if the ion-weighted temperature is between the values 
+             logtsel = (min, max)
+    filmapsel: if True, subslices are only added to the total in each pixel 
+             if the filament map vlaue there is True
+             
+    '''
+    
+    colmapnames = getcolmapnames(mapset=colmapset)
+    filmapdata = getfilmapdata(mapname=filmapname)
+    check = compatcheck(colmapnames, filmapname=filmapname)
+    if not check:
+        raise RuntimeError('Filament map and column denisity map redshift and/or box size do not match')
+    
+    if filmapsel: 
+        # get 3D mask at filament map resolution
+        filpix = getfilmappix(filmapdata, mapname=filmapname, npix=npix_filmap, check=True)
+        mask_all = np.zeros((npix_filmap,) * 3, dtype=bool)
+        mask_all[tuple(filpix.T)] = True
+    
+    # get grid size data and los axis
+    _nameex = colmapnames[0]
+    with h5py.File(_nameex) as _f:
+        shape = _f['map'].shape
+        saxis = _f['Header/inputpars'].attrs['axis'].decode()
+        if saxis == 'x':
+            axis = 0
+        elif saxis == 'y':
+            axis = 1
+        elif saxis == 'z':
+            axis = 2
+        else:
+            raise RuntimeError('Column density map did not have projection axis x, y, or z, but {saxis}')
+    if shape[0] % npix_filmap != 0 or shape[1] % npix_filmap != 0:
+        raise NotImplementedError('As written, addslices_wsel only deals with column density maps with an integer mutliple of the filament map pixels')
+    
+    # loop over column density maps and get histograms
+    
+    for name in colmapnames:
+        with h5py.File(name, 'r') as _f:
+            # determine the los position of the slice and extract the corresponding 2d mask
+            if bool(_f['Header/inputpars'].attrs['LsinMpc']):
+                conv = 1.
+            else:
+                conv = 1. / _f['Header/inputpars/cosmopars'].attrs['h']
+            loscen = np.array(_f['Header/inputpars'].attrs['centre'])[axis] * conv
+            #size = _f['Header/inputpars/cosmopars'].attrs['boxsize'] / _f['Header/inputpars/cosmopars'].attrs['h']
+            slicesize =  _f['Header/inputpars'].attrs[f'L_{saxis}'] * conv
+            cosmopars = {key: val for key, val in _f['Header/inputpars/cosmopars'].attrs.items()}
+            lospos = int(loscen / slicesize)
+            sel = [slice(None, None, None)] * 3
+            sel[axis] = lospos
+            slice_mask_lo = mask_all[tuple(sel)]
+        
+            
+            # expand the mask to the col. map resolution (tested)
+            slice_mask = np.zeros((npix_filmap, shape[0] // npix_filmap, npix_filmap, shape[1] // npix_filmap), dtype=bool)
+            sel_lo = np.where(slice_mask_lo)
+            slice_mask[sel_lo[0], :, sel_lo[1], :] = True
+            slice_mask = slice_mask.reshape(shape)
+            
+            if show_filmaps and lospos % 20 == 0: # I might want to check a few of these, but not 256
+                plt.imshow(slice_mask.T, origin='lower', interpolation='nearest', cmap='gist_gray')
+                plt.show()
+            
+            colmap = np.array(_f['map'])
+            
+            if outhist_all is None:
+                outhist_all, _bins = np.histogram(colmap.flatten(), bins=bins)
+            else:
+                _hist, _bins = np.histogram(colmap.flatten(), bins=bins)
+                outhist_all += _hist
+            if not np.all(_bins == bins):
+                raise RuntimeError(f'In/out bins mismatch: {bins}, {_bins}')
+            if outhist_in is None:
+                outhist_in, _bins = np.histogram((colmap[slice_mask]).flatten(), bins=bins)
+            else:
+                _hist, _bins = np.histogram((colmap[slice_mask]), bins=bins)
+                outhist_in += _hist
+            if not np.all(_bins == bins):
+                raise RuntimeError(f'In/out bins mismatch: {bins}, {_bins}')
+            
+    out = {'outhist_in': outhist_in,\
+           'outhist_all': outhist_all,\
+           'bins': bins,\
+           'colmapnames': colmapnames,\
+           'filmapname': filmapname,\
+           'filmapdata': filmapdata,\
+           'axname': saxis,\
+           'cosmopars': cosmopars,\
+           }
+    return out
+
+###############################################################################
+################################# plots #######################################
+###############################################################################
 
 def plotcddf_filpart(histname='o7_L100_snap28_filres', comparegeq=None):
     if histname == 'o7_L100_snap28_filres':
@@ -387,3 +496,72 @@ def plotcddf_filpart(histname='o7_L100_snap28_filres', comparegeq=None):
             limval = edges[idx]
             cumul = np.sum(histogram[idx:])
             print(f'above log10 N / cm^-2 = {limval:.2f}, absorbers/dz = {cumul} for {label}')
+            
+def ploto7maps():
+    colfile = '/net/quasar/data2/wijers/temp/coldens_o7_L0100N1504_28_test3.4_PtAb_C2Sm_1600pix_5.0slice_xcen72.5_x-projection_T4EOS.hdf5'
+    tfile = '/net/quasar/data2/wijers/temp/Temperature_T4EOS_coldens_o7_PtAb_T4EOS_L0100N1504_28_test3.4_C2Sm_1600pix_5.0slice_xcen72.5_x-projection.hdf5'
+    
+    outdir = '/net/luttero/data2/filament_maps_toni/'
+    fontsize = 12 
+    
+    with h5py.File(colfile, 'r') as cf, h5py.File(tfile, 'r') as tf:
+        
+        plt.figure(figsize=(5.5, 5.))
+        colimg = np.array(cf['map'])
+        cmap = 'cubehelix'
+        mappars = cf['Header/inputpars'].attrs
+        cen = np.array(mappars['centre'])
+        Ls  = np.array([mappars['L_x'], mappars['L_y'], mappars['L_z']])
+        saxis = mappars['axis'].decode()
+        if saxis == 'x':
+            xax = 1
+            yax = 2
+            zax = 0
+        elif saxis == 'y':
+            xax = 2
+            yax = 0
+            zax = 1
+        elif saxis == 'z':
+            xax = 0
+            yax = 1
+            zax = 2
+            
+        minc = 15.    
+        colimg[colimg < minc] = -np.inf
+        corners = (cen[xax] - 0.5 * Ls[xax], cen[xax] + 0.5 * Ls[xax],\
+                   cen[yax] - 0.5 * Ls[yax], cen[yax] + 0.5 * Ls[yax])
+        img = plt.imshow(colimg, origin='lower', interpolation='nearest', 
+                         extent=corners, cmap=cmap, vmin=minc)
+        cbar = plt.colorbar(img)
+        cbar.set_label(r'$\log_{10} \, \mathrm{N}(\mathrm{O\,VII}) \; [\mathrm{cm}^{-2}]$',\
+                       fontsize=fontsize)
+        plt.savefig(outdir + 'image_o7_column_densities.pdf', bbox_inches='tight', format='pdf')
+        
+        plt.figure(figsize=(5.5, 5.))
+        colimg = np.array(tf['map'])
+        cmap = 'plasma'
+        mappars = cf['Header/inputpars'].attrs
+        cen = np.array(mappars['centre'])
+        Ls  = np.array([mappars['L_x'], mappars['L_y'], mappars['L_z']])
+        saxis = mappars['axis'].decode()
+        if saxis == 'x':
+            xax = 1
+            yax = 2
+            zax = 0
+        elif saxis == 'y':
+            xax = 2
+            yax = 0
+            zax = 1
+        elif saxis == 'z':
+            xax = 0
+            yax = 1
+            zax = 2
+        corners = (cen[xax] - 0.5 * Ls[xax], cen[xax] + 0.5 * Ls[xax],\
+                   cen[yax] - 0.5 * Ls[yax], cen[yax] + 0.5 * Ls[yax])
+        img = plt.imshow(colimg, origin='lower', interpolation='nearest', 
+                         extent=corners, cmap=cmap)
+        cbar = plt.colorbar(img)
+        cbar.set_label(r'$\log_{10} \, \mathrm{T}(\mathrm{O\,VII}) \; [\mathrm{K}]$',\
+                       fontsize=fontsize)
+        plt.savefig(outdir + 'image_o7-w-temperatures.pdf', bbox_inches='tight', format='pdf')
+        

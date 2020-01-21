@@ -53,14 +53,14 @@ class Simfile:
     DM particle mass is only read in in Eagle for now, in case the units are 
     different in other gagdet variants
     '''
-    def readarray_eagle(self,name,region=None,rawunits=False):
+    def readarray_eagle(self, name, region=None, rawunits=False):
         arr = self.readfile.read_data_array(name, gadgetunits=rawunits, suppress=False,region=region)
         self.a_scaling = self.readfile.a_scaling
         self.h_scaling = self.readfile.h_scaling
         self.CGSconversion = self.readfile.CGSconversion
         self.CGSconvtot = self.a**self.a_scaling * self.h**self.h_scaling * self.CGSconversion
         return arr
-    def readarray_bahamas(self,name,region=None,rawunits=False): #region is useless here
+    def readarray_bahamas(self, name, region=None, rawunits=False): #region is useless here
         if region is not None:
             print('Warning (readarray_bahamas): region selection will not have any effect')
         arr = self.readfile.read_var(name, gadgetunits=rawunits, verbose=True)

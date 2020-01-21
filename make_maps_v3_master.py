@@ -405,7 +405,7 @@ def findiontables(ion,z):
 
     return balance, logTK, lognHcm3
 
-def find_ionbal(z,ion,dct_nH_T):
+def find_ionbal(z, ion, dct_nH_T):
 
     # compared to the line emission files, the order of the nH, T indices in the balance tables is switched
     lognH = dct_nH_T['lognH']
@@ -3821,8 +3821,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     --------
     default:    2D array of projected emission
     optional:   .npz file containing the 2D array (naming is automatic)
-    nameonly:   name of the npz file you would get from the saveres output
-                with the same parameters
+    nameonly:   name of the file you would get from the saveres output with the 
+                same parameters
     hdf5:       save output to an hdf5 file instead of .npz (also documents
                 input parameters)
     modify make_maps_opts_locs for locations of interpolation files (c),

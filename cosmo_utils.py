@@ -9,11 +9,12 @@ loaded without the entire read_Eagle machinery
 """
 
 import numpy as np
-import make_maps_opts_locs as ol # needed for some ion data
-import eagle_constants_and_units as c
 import ctypes as ct
 import h5py
 import numbers as num # for instance checking
+
+import make_maps_opts_locs as ol # needed for some ion data
+import eagle_constants_and_units as c
 
 def findemtables(element,zcalc):
     
