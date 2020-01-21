@@ -11,6 +11,7 @@ import numpy as np
 import h5py
 import os, sys
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 import make_maps_v3_master as m3
 import makecddfs as mc
@@ -422,16 +423,18 @@ def plotcddf_filpart(histname='o7_L100_snap28_filres', comparegeq=None):
                 print('The number of histograms does not match expectations from pixel size and slice thicknesss')
         else:
             print(f'The total histogram contains {np.sum(histogram_all) / numcounts_target} of the input pixels')
-        print(f'The filaments contain {np.sum(histogram_fil) / np.sum(histogram_all)} of the counted pixels')
+        print(f'The filaments contain {np.sum(histogram_fil) / np.sum(histogram_all)} of the counted pixels,')
         dXtot = mc.getdX(cosmopars['z'], boxsize, cosmopars=cosmopars) * n2pix_map
     
-    dlogN = np.diff(edges)
     if edges[0] == -np.inf:
         edges[0] = 2. * edges[1] - edges[2]
     if edges[-1] == np.inf:
         edges[-1] = 2 * edges[-2] - edges[-3]
+    dlogN = np.diff(edges)
     cens = edges[:-1] + 0.5 * dlogN
-    
+    print(f'and about {np.sum(histogram_fil * 10**cens) / np.sum(histogram_all * 10**cens)} of the O VII.')
+    if comparegeq is not None:
+        print(f'{np.sum(histogram_fil[edges[:-1] >= comparegeq]) / np.sum(histogram_fil)} of the filament volume is at column densities > {comparegeq}')
     # get 6.25 cMpc cddfs for comparison
     alsoplot = {}
     if histname == 'o7_L100_snap28_filres':
@@ -496,19 +499,86 @@ def plotcddf_filpart(histname='o7_L100_snap28_filres', comparegeq=None):
             limval = edges[idx]
             cumul = np.sum(histogram[idx:])
             print(f'above log10 N / cm^-2 = {limval:.2f}, absorbers/dz = {cumul} for {label}')
+
+def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=-1):
+    if n == -1:
+        n = cmap.N
+    new_cmap = mpl.colors.LinearSegmentedColormap.from_list(
+         'trunc({name},{a:.2f},{b:.2f})'.format(name=cmap.name, a=minval, b=maxval),
+         cmap(np.linspace(minval, maxval, n)))
+    return new_cmap
+
+def paste_cmaps(cmaplist, edges, trunclist=None):
+    if trunclist is None:
+        trunclist = [(0., 1.)] * len(cmaplist)
+    # cobble together a color map
+    nsample = 256
+    cmaps = [mpl.cm.get_cmap(cmap) for cmap in cmaplist]
+    # the parts of each color bar to use
+    cmaps = [truncate_colormap(cmaps[i], minval=trunclist[i][0], maxval=trunclist[i][1]) \
+                               for i in range(len(cmaplist))]
+    # the parts of the 0., 1. range to map each color bar to
+    vmin = edges[0]
+    vmax = edges[-1]
+    ivran = 1. / (vmax - vmin)
+    ranges_mapto = [np.linspace((edges[i] - vmin) * ivran,\
+                                (edges[i + 1] - vmin) * ivran,\
+                                nsample) for i in range(len(cmaplist))] 
+    range_mapfrom = np.linspace(0., 1., nsample)
+    maplist = [(ranges_mapto[ci][i], cmaps[ci](range_mapfrom[i])) for ci in range(len(cmaplist)) for i in range(nsample)]
+    cmap = mpl.colors.LinearSegmentedColormap.from_list(
+         'custom', maplist)
+    cmap.set_under(cmap(0.))
+    cmap.set_over(cmap(1.))
+    return cmap
+
+def ploto7maps(mapset='5Mpc-72.5', toplot='o7'):
+    if mapset.startswith('5Mpc'):
+        xcen = mapset.split('-')[1]
+        colfile = f'/net/quasar/data2/wijers/temp/coldens_o7_L0100N1504_28_test3.4_PtAb_C2Sm_1600pix_5.0slice_xcen{xcen}_x-projection_T4EOS.hdf5'
+        tfile = f'/net/quasar/data2/wijers/temp/Temperature_T4EOS_coldens_o7_PtAb_T4EOS_L0100N1504_28_test3.4_C2Sm_1600pix_5.0slice_xcen{xcen}_x-projection.hdf5'
+        
+        eltfile = None
+        elttfile = None
             
-def ploto7maps():
-    colfile = '/net/quasar/data2/wijers/temp/coldens_o7_L0100N1504_28_test3.4_PtAb_C2Sm_1600pix_5.0slice_xcen72.5_x-projection_T4EOS.hdf5'
-    tfile = '/net/quasar/data2/wijers/temp/Temperature_T4EOS_coldens_o7_PtAb_T4EOS_L0100N1504_28_test3.4_C2Sm_1600pix_5.0slice_xcen72.5_x-projection.hdf5'
+    elif mapset.startswith('6.25Mpc'):
+        xcen = mapset.split('-')[1]
+        colfile = f'/net/quasar/data2/wijers/temp/coldens_o7_L0100N1504_28_test3.4_PtAb_C2Sm_1600pix_6.25slice_xcen{xcen}_x-projection_T4EOS.hdf5'
+        tfile = f'/net/quasar/data2/wijers/temp/Temperature_T4EOS_coldens_o7_PtAb_T4EOS_L0100N1504_28_test3.4_C2Sm_1600pix_6.25slice_xcen{xcen}_x-projection.hdf5'
+        
+        eltfile = f'/net/quasar/data2/wijers/temp/coldens_oxygen_L0100N1504_28_test3.4_PtAb_C2Sm_1600pix_6.25slice_xcen{xcen}_x-projection_T4EOS.hdf5'
+        elttfile = f'/net/quasar/data2/wijers/temp/Temperature_T4EOS_coldens_oxygen_PtAb_T4EOS_L0100N1504_28_test3.4_C2Sm_1600pix_6.25slice_xcen{xcen}_x-projection.hdf5'
     
+    elif mapset.startswith('20Mpc'):
+        xcen = mapset.split('-')[1]
+        colfile = f'/net/quasar/data2/wijers/temp/coldens_o7_L0100N1504_28_test3.4_PtAb_C2Sm_1600pix_20.0slice_xcen{xcen}_x-projection_T4EOS.hdf5'
+        tfile = f'/net/quasar/data2/wijers/temp/Temperature_T4EOS_coldens_o7_PtAb_T4EOS_L0100N1504_28_test3.4_C2Sm_1600pix_20.0slice_xcen{xcen}_x-projection.hdf5'
+        
+        eltfile = f'/net/quasar/data2/wijers/temp/coldens_oxygen_L0100N1504_28_test3.4_PtAb_C2Sm_1600pix_20.0slice_xcen{xcen}_x-projection_T4EOS.hdf5'
+        elttfile = f'/net/quasar/data2/wijers/temp/Temperature_T4EOS_coldens_oxygen_PtAb_T4EOS_L0100N1504_28_test3.4_C2Sm_1600pix_20.0slice_xcen{xcen}_x-projection.hdf5'
+        
     outdir = '/net/luttero/data2/filament_maps_toni/'
     fontsize = 12 
     
-    with h5py.File(colfile, 'r') as cf, h5py.File(tfile, 'r') as tf:
+    if toplot == 'o7':
+        plotfile = colfile
+        clabel = r'$\log_{10} \, \mathrm{N}(\mathrm{O\,VII}) \; [\mathrm{cm}^{-2}]$'
+    elif toplot == 'T-o7':
+        plotfile = tfile
+        clabel = r'$\log_{10} \, \mathrm{T}(\mathrm{O\,VII}) \; [\mathrm{cm}^{-2}]$'
+    elif toplot == 'oxygen':
+        plotfile = eltfile
+        clabel = r'$\log_{10} \, \mathrm{N}(\mathrm{O}) \; [\mathrm{cm}^{-2}]$'
+    elif toplot == 'T-oxygen':
+        plotfile = elttfile
+        clabel = r'$\log_{10} \, \mathrm{T}(\mathrm{O}) \; [\mathrm{cm}^{-2}]$'
+      
+    imgname = f'image_{toplot}_{mapset}.pdf'
+    
+    with h5py.File(plotfile, 'r') as cf:
         
         plt.figure(figsize=(5.5, 5.))
         colimg = np.array(cf['map'])
-        cmap = 'cubehelix'
         mappars = cf['Header/inputpars'].attrs
         cen = np.array(mappars['centre'])
         Ls  = np.array([mappars['L_x'], mappars['L_y'], mappars['L_z']])
@@ -525,43 +595,34 @@ def ploto7maps():
             xax = 0
             yax = 1
             zax = 2
-            
-        minc = 15.    
-        colimg[colimg < minc] = -np.inf
-        corners = (cen[xax] - 0.5 * Ls[xax], cen[xax] + 0.5 * Ls[xax],\
-                   cen[yax] - 0.5 * Ls[yax], cen[yax] + 0.5 * Ls[yax])
-        img = plt.imshow(colimg, origin='lower', interpolation='nearest', 
-                         extent=corners, cmap=cmap, vmin=minc)
-        cbar = plt.colorbar(img)
-        cbar.set_label(r'$\log_{10} \, \mathrm{N}(\mathrm{O\,VII}) \; [\mathrm{cm}^{-2}]$',\
-                       fontsize=fontsize)
-        plt.savefig(outdir + 'image_o7_column_densities.pdf', bbox_inches='tight', format='pdf')
         
-        plt.figure(figsize=(5.5, 5.))
-        colimg = np.array(tf['map'])
-        cmap = 'plasma'
-        mappars = cf['Header/inputpars'].attrs
-        cen = np.array(mappars['centre'])
-        Ls  = np.array([mappars['L_x'], mappars['L_y'], mappars['L_z']])
-        saxis = mappars['axis'].decode()
-        if saxis == 'x':
-            xax = 1
-            yax = 2
-            zax = 0
-        elif saxis == 'y':
-            xax = 2
-            yax = 0
-            zax = 1
-        elif saxis == 'z':
-            xax = 0
-            yax = 1
-            zax = 2
+        # color bar:
+        if toplot == 'o7':
+            cedges = [14., 15., 16.5]
+            minc = 14.
+            cmaps = ['gist_yarg', 'viridis']
+        elif toplot == 'T-o7':
+            cedges = [2.5, 5.5, 7., 8.5]
+            minc = None
+            cmaps = ['Blues', 'plasma', 'Reds_r']
+        elif toplot == 'oxygen':
+            cedges = [12., 15., 17.5]
+            minc = 12.
+            cmaps = ['gist_yarg', 'viridis']
+        elif toplot == 'T-oxygen':
+            cedges = [2.5, 5.5, 7., 8.5]
+            minc = None
+            cmaps = ['Blues', 'plasma', 'Reds_r']
+        cmap = paste_cmaps(cmaps, cedges, trunclist=None)
+        if minc is not None:    
+            colimg[colimg < minc] = -np.inf
         corners = (cen[xax] - 0.5 * Ls[xax], cen[xax] + 0.5 * Ls[xax],\
                    cen[yax] - 0.5 * Ls[yax], cen[yax] + 0.5 * Ls[yax])
         img = plt.imshow(colimg, origin='lower', interpolation='nearest', 
-                         extent=corners, cmap=cmap)
+                         extent=corners, cmap=cmap, vmin=cedges[0], vmax=cedges[-1])
         cbar = plt.colorbar(img)
-        cbar.set_label(r'$\log_{10} \, \mathrm{T}(\mathrm{O\,VII}) \; [\mathrm{K}]$',\
+        cbar.set_label(clabel,\
                        fontsize=fontsize)
-        plt.savefig(outdir + 'image_o7-w-temperatures.pdf', bbox_inches='tight', format='pdf')
+        plt.savefig(outdir + imgname, bbox_inches='tight', format='pdf')
+        
         
