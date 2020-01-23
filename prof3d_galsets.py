@@ -528,7 +528,7 @@ def genhists_massdist(samplename=None, rbinu='pkpc', idsel=None,\
         else:
             logax = [False]
         
-        name_append = '_%s_snapdata'%rbinu
+        name_append = '_%s_snapdata_CorrPartType'%rbinu
             
     
         
@@ -993,3 +993,191 @@ def addhalomasses_hists_ionfrac(samplename='L0100N1504_27_Mh0p5dex_1000',\
         galaxyids_if = np.array(fn['galaxyids'])
         m200c = np.array(galdata_all['M200c_Msun'][galaxyids_if])
         fn.create_dataset('M200c_Msun', data=m200c)
+        
+def extracthists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
+              addedges=(0.0, 1.)):    
+    '''
+    generate the histograms for a given sample
+    rbinu: used fixed bins in pkpc or in R200c (relevant for stacking)
+    
+    idsel: project only a subset of galaxies according to the given list
+           useful for testing on a few galaxies
+           ! do not run in  parallel: different processes will try to write to
+           the same list of output files
+    
+    binby: column, edges tuple
+           which halos to combine into one histogram
+    combmethod: how to combine. options are: 
+           - 'add': just add all the histograms together
+           - 'addnormed-R200c': add histograms normalized by the sum of weights
+              within R200c (only if rbinu is 'R200c')
+           - 'addnormed-M200c': add histograms normalized by M200c 
+             (only equivalent to the previous if it's a Mass-weighted 
+             histogram)
+           - 'addnormed-all': add histograms normalized by the sum of the 
+             histogram to the outermost radial bin
+    '''
+    
+    rbinu='R200c'
+    outname = ol.pdir + 'massdist-baryoncomp_halos_%s_%s-%s-%s_PtAb.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)
+    weighttypes_ion = {'Mass': ['gas', 'stars', 'BHs', 'DM']} 
+    weighttypes_ion.update({elt: ['gas-%s'%(elt), 'stars-%s'%(elt)] for elt in ['oxygen', 'neon', 'iron']})
+    gas_tlims_add = [-np.inf, 5., 5.5, 7., np.inf]
+    histtype = 'rprof'
+    
+    if samplename is None:
+        samplename = defaults['sample']
+    fdata = dataname(samplename)
+    weights_all = [weight for key in weighttypes_ion for weight in weighttypes_ion[key]]
+    fnames_wt = {weight: files(samplename, weight, histtype=histtype) for weight in weights_all}
+    
+    with open(fdata, 'r') as fi:
+        # scan for halo catalogue (only metadata needed for this)
+        headlen = 0
+        halocat = None
+        while True:
+            line = fi.readline()
+            if line == '':
+                if halocat is None:
+                    raise RuntimeError('Reached the end of %s without finding the halo catalogue name'%(fdata))
+                else:
+                    break
+            elif line.startswith('halocat'):
+                halocat = line.split(':')[1]
+                halocat = halocat.strip()
+                headlen += 1
+            elif ':' in line or line == '\n':
+                headlen += 1
+    
+    with h5py.File(halocat, 'r') as hc:
+        hed = hc['Header']
+        cosmopars = {key: item for key, item in hed['cosmopars'].attrs.items()}
+        #simnum = hed.attrs['simnum']
+        #snapnum = hed.attrs['snapnum']
+        #var = hed.attrs['var']
+        #ap = hed.attrs['subhalo_aperture_size_Mstar_Mbh_SFR_pkpc']
+    
+    galdata_all = pd.read_csv(fdata, header=headlen, sep='\t', index_col='galaxyid')
+    galnames_all = {weight: pd.read_csv(fnames_wt[weight], header=0, sep='\t', index_col='galaxyid') for weight in weights_all}
+
+    galids = np.array(galnames_all[weighttypes_ion['Mass'][0]].index) # galdata may also include non-selected haloes; galnames galaxyids should match
+        
+    # axis data attributes that are allowed to differ between summed histograms
+    neqlist = ['number of particles',\
+               'number of particles > max value',\
+               'number of particles < min value',\
+               'number of particles with finite values']
+
+    # temperature and SF/nonSF gas subset labels
+    tlbl = ['T-%s-%s'%(gas_tlims_add[i], gas_tlims_add[i + 1]) for i in range(len(gas_tlims_add) - 1)]
+    slbl = ['SF', 'nonSF']
+    
+    with h5py.File(outname, 'a') as fo:
+        csp = fo.create_group('Header/cosmopars')
+        for key in cosmopars:
+            csp.attrs.create(key, cosmopars[key])
+        fo.create_dataset('galaxyids', data=galids)
+        m200c = np.array(galdata_all['M200c_Msun'][galids])
+        fo.create_dataset('M200c_Msun', data=m200c)
+        
+        for wtkey in weighttypes_ion:  
+            wtlist = weighttypes_ion[wtkey]
+            storeorder = wtlist.copy() 
+            for weight in wtlist:
+                if 'gas' in weight:
+                    storeorder += ['_'.join([weight, sl, tl]) for sl in slbl for tl in tlbl]
+            storeorder.sort()
+            savelist = np.ones((len(galids), len(storeorder)), dtype=np.float) * np.NaN
+            for gind in range(len(galids)):
+                galid = galids[gind]
+                
+                tempsum = {}
+                for wt in wtlist:
+                    # retrieve data from this histogram for checks
+                    try:
+                        igrpn_temp = galnames_all[wt].at[galid, 'groupname']   
+                        ifilen_temp = galnames_all[wt].at[galid, 'filename']   
+                    except ValueError as err:
+                        print('GalaxyID %s, wtkey %s, '%(galid, wtkey))
+                        raise err
+                        
+                    with h5py.File(ifilen_temp, 'r') as fit:
+                        igrp_t = fit[igrpn_temp]
+                        hist_t = np.array(igrp_t['histogram'])
+        
+                        if bool(igrp_t['histogram'].attrs['log']):
+                            hist_t = 10**hist_t
+                        #wtsum_t = igrp_t['histogram'].attrs['sum of wehisttype == 'rprof'ights'] # includes stuff outside the maximum radial bin
+                        edges_t = [np.array(igrp_t['binedges/Axis%i'%i]) for i in range(len(hist_t.shape))]
+                        edgekeys_t = list(igrp_t.keys())
+                        edgekeys_t.remove('histogram')
+                        edgekeys_t.remove('binedges')
+                        edgedata_t = {}
+                        for ekey in edgekeys_t: 
+                            edgedata_t[ekey] =  {akey: item for akey, item in igrp_t[ekey].attrs.items()}
+                            for akey in neqlist:
+                                del edgedata_t[ekey][akey]
+                    try:
+                        rax = edgedata_t['3Dradius']['histogram axis']
+                    except KeyError:
+                        raise KeyError('Could not retrieve 3D radius histogram axis for galaxy %i, file %s'%(galid, ifilen_temp))
+                            
+                    if rbinu == 'R200c':                    
+                        R200c = galdata_all.at[galid, 'R200c_cMpc']
+                        R200c *= c.cm_per_mpc * cosmopars['a']              
+                        edges_t[rax] *= (1. / R200c)
+                    
+                    try:
+                        ind1 = np.where(np.isclose(edges_t[rax], addedges[0]))[0][0]
+                    except IndexError:
+                        raise RuntimeError('Could not find a histogram edge matching %f for galaxy %i, ion %s'%(addedges[0], galid, ion))
+                    try:
+                        ind2 = np.where(np.isclose(edges_t[rax], addedges[1]))[0][0]
+                    except IndexError:
+                        raise RuntimeError('Could not find a histogram edge matching %f for galaxy %i, ion %s'%(addedges[1], galid, ion))
+                    
+                    if 'gas' in wt: # extra splits on SF/non-SF and gas temperature
+                        try:
+                            tax = edgedata_t['Temperature_wiEOS']['histogram axis']
+                        except KeyError:
+                            raise KeyError('Could not retrieve Temperature histogram axis for galaxy %i, file %s'%(galid, ifilen_temp))
+                        tinds = np.where(np.isclose(edges_t[tax][:, np.newaxis], np.array(gas_tlims_add)[np.newaxis, :]))[0]
+                                              
+                        try:
+                            sax = edgedata_t['StarFormationRate_T4EOS']['histogram axis']
+                        except KeyError:
+                            raise KeyError('Could not retrieve StarFormationRate histogram axis for galaxy %i, file %s'%(galid, ifilen_temp))
+                        sinds = np.where(np.isclose(edges_t[sax], [-np.inf, 0., np.inf]))[0] # middle value is minimally > 0., but within isclose range
+                                              
+                        addsel_base = [slice(None, None, None)] * len(edges_t)
+                        addsel_base[rax] = slice(ind1, ind2, None) # left edge ind1 -> start from in ind1, right edge ind2 -> stop after bin ind2 - 1
+                        for ti in range(len(tlbl)):
+                            t1 = tinds[ti]
+                            t2 = tinds[ti + 1]
+                            tl = tlbl[ti]
+                            for si in range(len(slbl)):
+                                s1 = sinds[si]
+                                s2 = sinds[si + 1]
+                                sl = slbl[si]
+                                addsel = addsel_base.copy()
+                                addsel[tax] = slice(t1, t2, None)
+                                addsel[sax] = slice(s1, s2, None)
+                                storekey = '_'.join([wt, sl, tl])
+                                tempsum[storekey] = np.sum(hist_t[tuple(addsel)])
+                        
+                    # also store total gas for conistency checks etc.
+                    addsel = [slice(None, None, None)] * len(edges_t)
+                    addsel[rax] = slice(ind1, ind2, None) # left edge ind1 -> start from in ind1, right edge ind2 -> stop after bin ind2 - 1
+                    tempsum[wt] = np.sum(hist_t[tuple(addsel)])
+                    
+                # store the data
+                wtsums_galid = np.array([tempsum[wt] for wt in storeorder])
+                savelist[gind, :] = wtsums_galid
+                
+            # don't forget the list of galids (galids_bin, and edgedata)
+            #print(hists)
+            egrp = fo.create_group('massdist_%s'%(wtkey))
+            egrp.attrs.create('categories', np.array([np.string_(wt) for wt in storeorder]))
+            egrp.create_dataset('mass', data=savelist)
+            egrp['mass'].attrs.create('info', np.string_('total mass in each component in the given radial range'))
+            egrp['mass'].attrs.create('units', np.string_('g'))

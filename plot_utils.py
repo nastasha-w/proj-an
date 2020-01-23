@@ -467,4 +467,35 @@ def add_2dhist_contours(ax, bins, edges, toplotaxes,\
         contours.collections[0].set_label(legendlabel)
     if histlegend:
         ax.legend(loc='lower right',title=r'$f_{\mathrm{O VII}}, f_H=0.752$')
-        
+    
+def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=-1):
+    if n == -1:
+        n = cmap.N
+    new_cmap = mpl.colors.LinearSegmentedColormap.from_list(
+         'trunc({name},{a:.2f},{b:.2f})'.format(name=cmap.name, a=minval, b=maxval),
+         cmap(np.linspace(minval, maxval, n)))
+    return new_cmap    
+
+def paste_cmaps(cmaplist, edges, trunclist=None):
+    if trunclist is None:
+        trunclist = [(0., 1.)] * len(cmaplist)
+    # cobble together a color map
+    nsample = 256
+    cmaps = [mpl.cm.get_cmap(cmap) for cmap in cmaplist]
+    # the parts of each color bar to use
+    cmaps = [truncate_colormap(cmaps[i], minval=trunclist[i][0], maxval=trunclist[i][1]) \
+                               for i in range(len(cmaplist))]
+    # the parts of the 0., 1. range to map each color bar to
+    vmin = edges[0]
+    vmax = edges[-1]
+    ivran = 1. / (vmax - vmin)
+    ranges_mapto = [np.linspace((edges[i] - vmin) * ivran,\
+                                (edges[i + 1] - vmin) * ivran,\
+                                nsample) for i in range(len(cmaplist))] 
+    range_mapfrom = np.linspace(0., 1., nsample)
+    maplist = [(ranges_mapto[ci][i], cmaps[ci](range_mapfrom[i])) for ci in range(len(cmaplist)) for i in range(nsample)]
+    cmap = mpl.colors.LinearSegmentedColormap.from_list(
+         'custom', maplist)
+    cmap.set_under(cmap(0.))
+    cmap.set_over(cmap(1.))
+    return cmap

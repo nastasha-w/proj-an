@@ -4616,7 +4616,7 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
             iontableind = '_iontab-bensgagdet2'
         
     if ptype in ['Nion', 'Niondens', 'Lumninosity', 'Lumdens']:
-        resfile = ol.ndir + 'particlehist_%s_%s%s_%s_%s_test%s_%s' %(ptype, ion, iontableind, ssimnum, snapnum, str(version), sabunds) + boxstring + SFRind
+        resfile = ol.ndir + 'particlehist_%s_%s%s%s_%s_%s_test%s_%s' %(ptype, ion, sparttype, iontableind, ssimnum, snapnum, str(version), sabunds) + boxstring + SFRind
     elif ptype == 'basic':
         resfile = ol.ndir + 'particlehist_%s%s_%s_%s_test%s' %(squantity, sparttype, ssimnum, snapnum, str(version)) + boxstring + SFRind
     elif ptype in ['halo', 'coords']:
@@ -4653,6 +4653,11 @@ def namehistogram_perparticle_axis(dct):
         SFRind = '_onlyEOS'
 
     if ptype in ['Luminosity', 'Lumdens', 'Nion', 'Niondens']:
+        parttype = dct['parttype']
+        if parttype != '0':
+            sparttype = '_PartType%s'%parttype
+        else:
+            sparttype = ''
         abunds = dct['abunds']
         if abunds[0] not in ['Sm','Pt']:
             sabunds = '%smassfracAb'%str(abunds[0])
@@ -4667,7 +4672,7 @@ def namehistogram_perparticle_axis(dct):
             stables = '_iontab-sylviasHM12shh'
         elif dct['bensgadget2tables']:
             stables = '_iontab-bensgagdet2'
-        axname = '%s_%s_%s%s' %(ptype, dct['ion'], sabunds, stables) + SFRind
+        axname = '%s_%s%s_%s%s' %(ptype, dct['ion'], sparttype, sabunds, stables) + SFRind
 
     elif ptype == 'basic':
         parttype = dct['parttype']
