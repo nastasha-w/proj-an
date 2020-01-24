@@ -3567,7 +3567,7 @@ def plot_masscontr_firstlook(addedges=(0.0, 1.), var='Mass'):
 
     ax.set_yscale('log')
     if var == 'Mass':
-        ax.set_ylim(1e-5, 0.2)
+        ax.set_ylim(1e-4, 0.2)
     else:
         ax.set_ylim(2e-3, 1.)
     #if 'DM' in catcol:
@@ -3578,7 +3578,7 @@ def plot_masscontr_firstlook(addedges=(0.0, 1.), var='Mass'):
         ax.axhline(fb, linewidth=lw, linestyle='dashed', color=colors['DM'], label=r'$\Omega_{\mathrm{b}} \,/\, \Omega_{\mathrm{m}}$')
         
     for label in massdata:
-        if label in ['DM', 'total', 'gas-subsum', 'gas', r'CGM $<5.5$', r'CGM $> 7$']:
+        if label in ['DM', 'total', 'gas-subsum', 'gas', r'CGM $<5.5$', r'CGM $> 7$', 'BHs']:
             continue
         _massdata = massdata[label] / massdata['total']
         _color = colors[label]
@@ -5903,7 +5903,7 @@ def plot_radprof_talkversion(ion='o6', fontsize=16, fmt='pdf', num=0):
     imgname = mdir + imgname
     
     if ytype=='perc' and 50.0 not in yvals_toplot:
-        imgname = imgname[:-4] + '_yvals-%s'%('-'.join([str(val) for val in yvals_toplot])) + f'.{fmt}'
+        imgname = imgname[:-4] + '_yvals-%s'%('-'.join([str(val) for val in yvals_toplot])) + '.{}'.format(fmt)
         
     if isinstance(ions, str):
         ions = [ions]
@@ -7631,7 +7631,7 @@ def plot3Dprof_ionw(minrshow=0.05, ions=('o6', 'o7', 'o8'), axnl=('rho', 'T', 'Z
                             elt = ol.elements_ion[ion]
                         else:
                             elt = 'oxygen' #default
-                        _axn = f'Z_{elt}'
+                        _axn = 'Z_{}'.format(elt)
                     else:
                         _axn = axn
                     if ion in ol.elements_ion.keys():
