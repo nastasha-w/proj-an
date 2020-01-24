@@ -95,6 +95,13 @@ version = 3.4 # matches corresponding make_maps version
 # note that these variables do not always mean exactly the same thing:
 # for example lognH  will e.g. depend on the hydrogen number density used.
 # Take this into account in wishlist generation and calculation order.
+#
+# To modify make_maps:
+# add new options to: - function argumnets/kwargs
+#                     - input checks
+#                     - output naming
+#                     - function calls / use in make_maps body
+#                     - output saving (hdf5)
 ###############################################################################
 ###############################################################################
 
@@ -1637,13 +1644,87 @@ def translate(old_dct, old_nm, centre, boxsize, periodic):
     old_dct[old_nm] = old_dct[old_nm].astype(np.float32)
     return None
 
+def namehistogram_perparticle_axis(dct):
+    '''
+    dct should contain all the axesdct entires (with defaults included)
+    '''
+    ptype = dct['ptype']
+    excludeSFR = dct['excludeSFR']
+    if 'misc' in dct.keys():
+        misc = dct['misc']
+    else:
+        misc = None
+
+    if excludeSFR == True:
+        SFRind = '_noEOS'
+    elif excludeSFR == False:
+        SFRind = '_wiEOS'
+    elif excludeSFR == 'T4':
+        SFRind = '_T4EOS'
+    elif excludeSFR == 'from':
+        SFRind = '_fromSFR'
+    elif excludeSFR == 'only':
+        SFRind = '_onlyEOS'
+
+    if ptype in ['Luminosity', 'Lumdens', 'Nion', 'Niondens']:
+        parttype = dct['parttype']
+        if parttype != '0':
+            sparttype = '_PartType%s'%parttype
+        else:
+            sparttype = ''
+        abunds = dct['abunds']
+        if abunds[0] not in ['Sm','Pt']:
+            sabunds = '%smassfracAb'%str(abunds[0])
+        else:
+            sabunds = abunds[0] + 'Ab'
+        if isinstance(abunds[1], num.Number):
+            sabunds = sabunds + '-%smassfracHAb'%str(abunds[1])
+        elif abunds[1] != abunds[0]:
+            sabunds = sabunds + '-%smassfracHAb'%abunds[1]
+        stables = ''
+        if dct['sylviasshtables']:
+            stables = '_iontab-sylviasHM12shh'
+        elif dct['bensgadget2tables']:
+            stables = '_iontab-bensgagdet2'
+        axname = '%s_%s%s_%s%s' %(ptype, dct['ion'], sparttype, sabunds, stables) + SFRind
+
+    elif ptype == 'basic':
+        parttype = dct['parttype']
+        if parttype != '0':
+            sparttype = '_PartType%s'%parttype
+        else:
+            sparttype = ''
+        squantity = dct['quantity']
+        squantity = squantity.replace('/','-')
+        axname = '%s%s'%(squantity, sparttype) + SFRind
+
+    elif ptype == 'halo':
+        if dct['quantity'] == 'Mass':
+            if dct['allinR200c']: 
+                inclind = '_allinR200c'
+            else:
+                inclind = '_FoFonly'
+            axname = 'M%s_halo'%(dct['mdef']) + inclind
+        elif dct['quantity'] == 'subcat':
+            axname = 'subhalo_category'
+            
+    elif ptype == 'coords':
+        if dct['quantity'] == 'r3D':
+            axname = '3Dradius'
+
+    if misc is not None:
+        miscind = '_'+'_'.join(['%s-%s'%(key, misc[key]) for key in misc.keys()])
+        axname = axname + miscind
+
+    return axname
 
 
 def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,\
                npix_x, L_x, L_y, L_z, centre, BoxSize, hconst,\
                excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,\
                axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, quantityW, quantityQ,\
-               simulation, LsinMpc, halosel, kwargs_halosel, misc, hdf5):
+               simulation, LsinMpc,\
+               halosel, kwargs_halosel, select, selectlabel, misc, hdf5):
     # some messiness is hard to avoid, but it's contained
     # Ls and centre have not been converted to Mpc when this function is called
 
@@ -1784,14 +1865,25 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,\
                 halostr = '_halosel-%s-endhalosel'%kwargs_halosel['label']
     else:
         halostr = ''
-        
+    
+    # particle property selections
+    if select is None or len(select) == 0:
+        selectlabel = ''
+    elif selectlabel is None:
+        selectlabel = 'psel_%s_endpsel'
+        labels = ['%s-%s-%s'%(namehistogram_perparticle_axis(sel[0]), sel[1], sel[2]) for sel in select]
+        selectlabel = selectlabel%('_'.join(labels))
+    else:
+        if selectlabel[0] != '_':
+            selectlabel = '_' + selectlabel
+                 
     # putting it together: ptypeQ = None is set to get resfile for W
     if ptypeQ is None: #output outputW name
         if ptypeW == 'coldens' or ptypeW == 'emission':
-            resfile = ol.ndir + '%s_%s%s_%s_%s_test%s_%s_%sSm_%spix_%sslice' %(ptypeW,ionW,iontableindW,ssimnum,snapnum,str(version),sabundsW,kernel,str(npix_x),sLp) + zcen + xypos + axind + SFRindW + halostr + vind
+            resfile = ol.ndir + '%s_%s%s_%s_%s_test%s_%s_%sSm_%spix_%sslice' %(ptypeW,ionW,iontableindW,ssimnum,snapnum,str(version),sabundsW,kernel,str(npix_x),sLp) + zcen + xypos + axind + SFRindW + halostr + selectlabel + vind
 
         elif ptypeW == 'basic':
-            resfile = ol.ndir + '%s%s_%s_%s_test%s_%sSm_%spix_%sslice' %(squantityW,sparttype,ssimnum,snapnum,str(version),kernel,str(npix_x),sLp) + zcen + xypos + axind + SFRindW + halostr + vind
+            resfile = ol.ndir + '%s%s_%s_%s_test%s_%sSm_%spix_%sslice' %(squantityW,sparttype,ssimnum,snapnum,str(version),kernel,str(npix_x),sLp) + zcen + xypos + axind + SFRindW + halostr + selectlabel + vind
 
     if ptypeQ is not None: # naming for quantityQ output
         if ptypeQ == 'basic':
@@ -1803,7 +1895,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,\
         else:
             squantityW = '%s_%s_%s%s'%(ptypeW,ionW,sabundsW, iontableindW) + SFRindW
 
-        resfile = ol.ndir + '%s_%s%s_%s_%s_test%s_%sSm_%spix_%sslice' %(squantityQ,squantityW,sparttype,ssimnum,snapnum,str(version),kernel,str(npix_x),sLp) + zcen + xypos + axind + halostr + vind
+        resfile = ol.ndir + '%s_%s%s_%s_%s_test%s_%sSm_%spix_%sslice' %(squantityQ, squantityW, sparttype, ssimnum, snapnum, str(version), kernel, str(npix_x), sLp) + zcen + xypos + axind + halostr + selectlabel + vind
 
 
     #if misc is not None:
@@ -1822,12 +1914,207 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,\
         resfile = resfile + '.hdf5'
     #resfile = resfile + misctail
     if ptypeQ == None:
-        print('saving W result to: '+resfile+'\n')
+        print('will save W result to: '+resfile+'\n')
     else:
-        print('saving Q result to: '+resfile+'\n')
+        print('will save Q result to: '+resfile+'\n')
     return resfile
 
 
+def check_particlequantity(dct, dct_defaults, parttype, simulation):
+    '''
+    dct: ptype, excludeSFR, abunds, ion, parttype, quantity, misc
+    dct_defaults: same entries, use to set defaults in dct
+    '''
+    # largest int used : 47
+    if 'ptype' in dct:
+        ptype = dct['ptype']
+    else:
+        raise ValueError('in check_particlequantity: each quantity dict must have "ptype" specified')
+    if 'excludeSFR' in dct:
+        excludeSFR = dct['excludeSFR']
+    elif 'excludeSFR' in dct_defaults:
+        excludeSFR = dct_defaults['excludeSFR']
+        dct['excludeSFR'] = excludeSFR
+    
+    if ptype not in ['Nion', 'Niondens', 'Luminosity', 'Lumdens', 'basic', 'halo', 'coords']:
+        print('ptype should be one of Nion, Niondens, Luminosity, Lumdens, basic, halo, coords (str).\n')
+        return 3
+    elif ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
+        if 'ion' not in dct.keys():
+            print('For ptype %s, an ion must be specified'%(ptype))
+            return 37
+        else:
+            ion = dct['ion']
+        if 'abunds' in dct.keys():
+            abunds = dct['abunds']
+        elif 'abunds' in dct_defaults.keys():
+            abunds = dct_defaults['abunds']
+        else:
+            abunds = None
+        if ion in ol.elements_ion.keys():
+            iselt = False
+            parttype = '0'
+        elif ion in ol.elements and ptype in ['Nion', 'Niondens']:
+            iselt = True
+            if parttype not in ['0', '4', 0, 4]:
+                print('Element masses are only available for gas and stars')
+                return 47
+            else:
+                parttype = str(parttype)
+        else:
+            print('%s is an invalid ion option for ptype %s\n'%(ion,ptype))
+            return 8
+        if not isinstance(abunds, (list, tuple, np.ndarray)):
+            abunds = [abunds, 'auto']
+        else:
+            abunds = list(abunds) # tuple element assigment is not allowed, sometimes needed
+        if abunds[0] not in ['Sm','Pt','auto']:
+            if not isinstance(abunds[0], num.Number):
+                print('Abundances must be either smoothed ("Sm") or particle ("Pt") abundances, automatic ("auto"), or a solar units abundance (float)')
+                return 4
+            elif iselt:
+                abunds[0] = abunds[0] * ol.solar_abunds_ea[ion]
+            else:
+                abunds[0] = abunds[0] * ol.solar_abunds_ea[ol.elements_ion[ion]]
+        elif abunds[0] == 'auto':
+            if ptype in ['Luminosity', 'Lumdens']:
+                abunds[0] = 'Sm'
+            else:
+                abunds[0] = 'Pt'
+        if abunds[1] not in ['Sm','Pt','auto']:
+            if not isinstance(abunds[1], num.Number):
+                print('Abundances must be either smoothed ("Sm") or particle ("Pt") abundances, automatic ("auto"), or a solar units abundance (float)')
+                return 30
+        elif abunds[1] == 'auto':
+            if isinstance(abunds[0], num.Number):
+                abunds[1] = 0.752 # if element abundance is fixed, use primordial hydrogen abundance
+            else:
+                abunds[1] = abunds[0]
+        dct['abunds'] = tuple(abunds)
+        abunds = tuple(abunds)
+        
+        
+    else: # ptype == basic or halo
+        if 'quantity' not in dct.keys():
+            print('For ptypes basic, halo, coords, quantity must be specified.\n')
+            return 5
+        quantity = dct['quantity']
+        if not isinstance(quantity, str):
+            print('quantity must be a string.\n')
+            return 6
+        if ptype == 'halo':
+            if quantity not in ['Mass', 'subcat']:
+                print('For ptype halo, the options are Mass and subcat')
+                return 38
+        elif ptype == 'coords':
+            if quantity not in ['r3D']:
+                print('For ptype coords, the option is r3D')
+                return 41
+        if parttype not in ['0','1','4','5']: # parttype only matters if it is used
+            if parttype in [0, 1, 4, 5]:
+                parttype = str(parttype)
+            else:
+                print('parttype should be "0", "1", "4", or "5" (str).\n')
+                return 16
+
+
+    if excludeSFR not in [True, False, 'T4', 'only']:
+        if excludeSFR != 'from':
+            print('Invalid option for excludeSFR: %s'%excludeSFR)
+            return 17
+        elif not (ptype in ['Luminosity', 'Lumdens'] and ion == 'halpha'):
+            excludeSFR = 'only'
+            print('Unless calculation is for halpha emission, fromSFR will default to onlySFR.\n')
+    if 'excludeSFR' in dct_defaults.keys():
+        excludeSFR_def = dct_defaults['excludeSFR']
+        if (excludeSFR in [False,' T4']) and (excludeSFR_def not in [False, 'T4']):
+            print('ExcludeSFR options %s and %s are not compatible'%(excludeSFR, excludeSFR_def))
+            return 18
+        elif excludeSFR in ['from', 'only'] and excludeSFR_def not in ['from', 'only']:
+            print('ExcludeSFR options %s and %s are not compatible'%(excludeSFR,excludeSFR_def))
+            return 19
+        elif excludeSFR != excludeSFR_def and excludeSFR == True:
+            print('ExcludeSFR options %s and %s are not compatible'%(excludeSFR, excludeSFR_def))
+            return 20
+
+    if parttype != '0': #EOS is only relevant for parttype 0 (gas)
+        excludeSFR = False
+    dct['excludeSFR'] = excludeSFR
+
+    if 'misc' in dct.keys(): # if if if : if we want to use chemical abundances from Ben' Oppenheimer's recal variations
+        misc = dct['misc']
+        if misc is not None:
+            if 'usechemabundtables' in misc:
+                if misc['usechemabundtables'] == 'BenOpp1':
+                    if simulation != 'eagle-ioneq':
+                        print('chemical abundance tables are only avaiable for the eagle-ioneq simulation')
+                        return 34
+                    if ptype in ['Nion', 'Niondens']:
+                        if 'Sm' in abunds:
+                            print('chemical abundance tables are only for particle abundances')
+                            return 34
+                        elif abunds in ['auto', None]:
+                            abunds = 'Pt'
+            if ptype in ['Nion', 'Niondens'] and ion in ['h1ssh', 'hmolssh' 'hneutralssh']:
+                if 'UVB' in misc:
+                    if misc['UVB'] not in cfh.phototables.keys():
+                        print('Invalid option for misc -> UVB')
+                        return 35
+                if 'useLSR' in misc:
+                    if not isinstance(misc['useLSR'], bool):
+                        print('misc -> useLSR should be a boolean')
+                        return 36
+                    
+    if 'mdef' not in dct:
+        dct['mdef'] = dct_defaults['mdef']
+    if 'allinR200c' not in dct:
+        dct['allinR200c'] = dct_defaults['allinR200c']
+        
+    if not (dct['mdef'] == 'group' or (dct['mdef'][-1] in ['c', 'm'] and dct['mdef'][:-1] in ['200', '500', '2500'])):
+        print('mdef option %s is invalid'%(dct['mdef']))
+        return 39
+        
+    if not isinstance(dct['allinR200c'], bool):
+        print('allinR200c should be True or False')
+        return 40
+    # table set checks
+    if ptype in ['Nion', 'Niondens']:
+        if 'sylviasshtables' in dct.keys():
+            sylviasshtables = dct['sylviasshtables']
+        else:
+            sylviasshtables = dct_defaults['sylviasshtables']
+        if 'bensgadget2tables' in dct.keys():
+            bensgadget2tables = dct['bensgadget2tables']
+        else:
+            bensgadget2tables = dct_defaults['bensgadget2tables']
+        if not isinstance(sylviasshtables, bool):
+            print('sylviasshtables should be True or False')
+            return 42
+        if not isinstance(bensgadget2tables, bool):
+            print('bensgadget2tables should be True or False')
+            return 43
+        if sylviasshtables and bensgadget2tables:
+            print('only one table set of sylviasshtables and bensgadget2tables can be used')
+            return 44
+        if sylviasshtables and ion == 'hneutralssh':
+            print("Neutral hydrogen is not currenty available from Sylvia's tables")
+            return 45
+        if bensgadget2tables and ion not in ol.ion_list_bensgadget2tables:
+            print("%s is not available from Ben's gadget 2 tables"%(ion))
+            return 46
+        dct['sylviasshtables'] = sylviasshtables
+        dct['bensgadget2tables'] = bensgadget2tables
+    else:
+        dct['sylviasshtables'] = False
+        dct['bensgadget2tables'] = False
+                
+    dct['parttype'] = parttype
+    
+    # make sure there is something to check for dct keys (might be None or useless)
+    for key in dct_defaults.keys():
+        if key not in dct.keys():
+            dct[key] = dct_defaults[key]
+    return dct, parttype
 
 def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          ptypeW,\
@@ -1839,14 +2126,15 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc,\
-         select, misc, ompproj, numslices, halosel, kwargs_halosel, hdf5, override_simdatapath):
+         select, selectlabel, misc, ompproj, numslices,\
+         halosel, kwargs_halosel, hdf5, override_simdatapath):
 
     '''
     Checks the input to make_map();
     This is not an exhaustive check; it does handle the default/auto options
     return numbers are not ordered; just search <return ##>
     '''
-    # max used number: 48
+    # max used number: 55
 
     # basic type and valid option checks
     if not isinstance(var, str):
@@ -2051,7 +2339,6 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                     elif abundsQ in ['auto', None]:
                         abundsQ = 'Pt'
 
-
     iseltQ, iseltW = (False, False)
 
     if ptypeW not in ['emission', 'coldens', 'basic']:
@@ -2099,9 +2386,6 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         elif not isinstance(quantityW, str):
             print('quantityW must be a string.\n')
             return 6
-
-
-
 
     if ptypeQ not in ['emission', 'coldens', 'basic', None]:
         print('ptypeQ should be one of emission, coldens, basic (str), or None.\n')
@@ -2184,6 +2468,61 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     if parttype != '0': #EOS is only relevant for parttype 0 (gas)
         excludeSFRW = False
         excludeSFRQ = False
+        
+    if select is not None:
+        if selectlabel is not None:
+            try:
+                selectlabel + 'teststring'
+            except TypeError:
+                print('selectlabel must be a string; was:')
+                print(selectlabel)
+                return 54
+        # second choice: Q choices, 1st choice: W choices 
+        dct_defaults = {'ptype': ptypeQ, 'ion': ionQ, 'abunds': abundsQ,\
+                        'excludeSFR': excludeSFRQ, 'parttype': parttype,\
+                        'quantity': quantityQ, 'misc': misc}
+        dct_W = {'ptype': ptypeW, 'ion': ionW, 'abunds': abundsW,\
+                 'excludeSFR': excludeSFRW, 'parttype': parttype,\
+                 'quantity': quantityW, 'misc': misc}
+        # Q defaults overwritten with non-None W values
+        for key in dct_W:
+            if dct_W[key] is None:
+                del dct_W[key]
+        dct_defaults.update(dct_W)
+        if not hasattr(select, '__len__'):
+            print('select must be None or a list of tuples; was:')
+            print(select)
+            return 49
+        for si in range(len(select)):
+            _sel = select[si]
+            if not hasattr(_sel, '__len__'):
+                print('select must be None or a list of tuples; an entry was:')
+                print(_sel)
+                return 50
+            if len(_sel) != 3:
+                print('select must be None or a list of tuples\neach  tuple must be of the form (dict, None/value, None/value) an entry was:')
+                print(_sel)
+                return 51
+            if not (isinstance(_sel[1], num.Number) and isinstance(_sel[2], num.Number)):
+                print('select must be None or a list of tuples\neach  tuple must be of the form (dict, None/value, None/value) an entry was:')
+                print(_sel)
+                return 52
+            _dct = _sel[0]
+            _partc = check_particlequantity(_dct, dct_defaults, parttype, simulation)
+            if isinstance(_partc, int):
+                print('Issue with select entry %s:'%_sel)
+                print('check_particlequantity returned error code %s'%(_partc))
+                return 53
+            
+            #set _sel dict to partc[0]
+            _outdct = _partc[0]
+            _outsel = list(_sel)
+            _outsel[0] = _outdct
+            select[si] = tuple(_outsel)
+            
+        if np.any([sel[0] == 'r3D' for sel in select]) and periodic:
+            print('r3D radial distance selection only works with non-periodic coordinate selection due to centering issues')
+            return 55
 
     # if nothing has gone wrong, return all input, since setting quantities in functions doesn't work on global variables
     return 0, iseltW, iseltQ, simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
@@ -2196,7 +2535,10 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
-         halosel, kwargs_halosel, hdf5, override_simdatapath
+         select, selectlabel, halosel, kwargs_halosel,\
+         hdf5, override_simdatapath
+
+
 
 
 
@@ -3503,7 +3845,7 @@ def saveattr(grp, name, val):
         grp.attrs.create(name, np.string_(val))
     elif hasattr(val, '__len__'):
         valt = np.array(val)
-        if np.any([isstr(x) for x in valt.flatten()]): # store all values as strings in any value is a string
+        if np.any([isstr(x) for x in valt.flatten()]): # store all values as strings if any value is a string
             valt = valt.astype(np.string_)
         grp.attrs.create(name, valt)
     elif val is None:
@@ -3607,7 +3949,126 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,\
         ds_map = fh.create_dataset('map', data=projmap)
         ds_map.attrs.create('max', maxval)
         ds_map.attrs.create('minfinite', minval)
+ 
+def get3ddist(vardict, cen, last=True, trustcoords=False):
+    '''
+    trustcoords: trust 'Coordinates' entry in vardict to be in cMpc units and
+                 CGSconv to reflect that
+    '''
+    if not trustcoords: 
+        vardict.delif('Coordinates', last=True)
+    if 'Coordinates' not in vardict.particle:
+        vardict.readif('Coordinates', rawunits=True)
+        vardict.particle['Coordinates'] *= (1. / vardict.simfile.h)
+        vardict.CGSconv['Coordinates'] *= vardict.simfile.h
         
+    if not np.all(cen == 0.): # translation step will often have been made before in region selection -> no need to repeat
+        translate(vardict.particle, 'Coordinates', cen, np.array((vardict.simfile.boxsize / vardict.simfile.h,) *3), False) # non-periodic -> centered on cen
+    radii = np.sqrt(np.sum(vardict.particle['Coordinates']**2, axis=1))
+    vardict.add_part('r3D', radii)
+    vardict.CGSconv['r3D'] = vardict.CGSconv['Coordinates']
+    vardict.delif('Coordinates', last=last)
+    
+def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity,\
+                    sylviasshtables=False, bensgadget2tables=False,\
+                    last=True, updatesel=False, misc=None, mdef='200c', allinR200c=True):
+    '''
+    just copied bits from make_map
+    '''
+            
+    iselt = False
+    if ion in ol.elements and ptype in ['Nion', 'Niondens']:
+        iselt = True
+    if ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
+        eltab, hab = get_eltab_names(abunds, iselt, ion)
+
+    if excludeSFR in ['from', 'only']: # only select EOS particles; difference in only in the emission calculation
+        vardict.readif('OnEquationOfState', rawunits=True)
+        eossel = pc.Sel({'arr': vardict.particle['OnEquationOfState'] > 0.})
+        vardict.delif('OnEquationOfState')
+        vardict.update(eossel) #should significantly reduce memory impact of coordinate storage
+        del eossel
+
+    elif excludeSFR == True: # only select non-EOS particles
+        vardict.readif('OnEquationOfState',rawunits =True)
+        eossel = pc.Sel({'arr': vardict.particle['OnEquationOfState'] <= 0.})
+        vardict.delif('OnEquationOfState')
+        vardict.update(eossel) #will have less impact on coordinate storage
+        del eossel
+    # False and T4 require no up-front or general particle selection, just one instance in the temperature read-in
+
+    last = last
+    if ptype == 'basic':
+        readbasic(vardict, quantity, excludeSFR, last=last)
+        q = vardict.particle[quantity]
+        multipafter =  vardict.CGSconv[quantity]
+    
+    elif ptype == 'halo':
+        if quantity == 'Mass':
+            gethalomass(vardict, mdef=mdef, allinR200c=allinR200c)
+            q = vardict.particle['halomass']
+            multipafter = vardict.CGSconv['halomass']
+            vardict.delif('halomass', last=last)
+        elif quantity == 'subcat':
+            getsubhaloclass(vardict)
+            q = vardict.particle['subhalocat']
+            vardict.delif('subhalocat', last=last)
+            multipafter = 1.
+
+    elif ptype in ['Nion', 'Niondens'] and not iselt:
+        if ion in ['h1ssh', 'hmolssh', 'hneutralssh'] and not (sylviasshtables or bensgadget2tables):
+            q, multipafter = Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=last, updatesel=updatesel, misc=misc)
+            if ptype == 'Niondens':
+                readbasic(vardict, 'ipropvol', excludeSFR, last=last)
+                q *= vardict.particle['ipropvol'] 
+                multipafter *= vardict.CGSconv['ipropvol']
+        else:
+            q, multipafter = Nion_calc(vardict, excludeSFR, eltab, hab, ion, last=last,\
+                                       sylviasshtables=sylviasshtables, bensgadget2tables=bensgadget2tables,\
+                                       updatesel=updatesel, misc=misc)
+            if ptype == 'Niondens':
+                readbasic(vardict, 'ipropvol', excludeSFR, last=last)
+                q *= vardict.particle['ipropvol'] 
+                multipafter *= vardict.CGSconv['ipropvol']
+    elif ptype in ['Nion', 'Niondens'] and iselt:
+        q, multipafter = Nelt_calc(vardict, excludeSFR, eltab, ion, last=last, updatesel=updatesel)
+        if ptype == 'Niondens':
+            readbasic(vardict, 'ipropvol', excludeSFR, last=last)
+            q *= vardict.particle['ipropvol'] 
+            multipafter *= vardict.CGSconv['ipropvol']
+    elif ptype in ['Luminosity', 'Lumdens'] and excludeSFR != 'from':
+        q, multipafter = luminosity_calc(vardict, excludeSFR, eltab, hab, ion, last=last, updatesel=updatesel)
+        if ptype == 'Lumdens':
+            readbasic(vardict, 'ipropvol', excludeSFR, last=last)
+            q *= vardict.particle['ipropvol'] 
+            multipafter *= vardict.CGSconv['ipropvol']
+    elif ptype in ['Luminosity', 'Lumdens'] and excludeSFR == 'from':
+        if ion == 'halpha':
+            q, multipafter = luminosity_calc_halpha_fromSFR(vardict, excludeSFR, last=last, updatesel=updatesel)
+            if ptype == 'Lumdens':
+                readbasic(vardict, 'ipropvol', excludeSFR, last=last)
+                q *= vardict.particle['ipropvol'] 
+                multipafter *= vardict.CGSconv['ipropvol']
+        else:
+            raise ValueError('Invalid option excludeSFR=from for ion other than halpha')
+    
+    elif ptype == 'coords':
+        if quantity == 'r3D':
+            # coordinates should have been centred in region selection, in cMpc units
+            get3ddist(vardict, np.array([0., 0., 0.]), last=last, trustcoords=True)
+            q = vardict.particle['r3D']
+            multipafter = vardict.CGSconv['r3D']
+        else:
+            raise ValueError('Invalid quantity option %s for ptype %s'%(quantity, ptype))
+    else:
+        raise ValueError('Invalid ptype option %s'%(ptype))
+        return None
+    
+    if 'ipropvol' in vardict.particle.keys():
+        vardict.delif('ipropvol', last=last)
+        
+    return q, multipafter
+       
 ##########################################################################################
 
 def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
@@ -3620,7 +4081,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          var='auto', axis='z',log=True, velcut=False,\
          periodic=True, kernel='C2', saveres=False,\
          simulation='eagle', LsinMpc=None,\
-         select=None, misc=None, halosel=None, kwargs_halosel=None,\
+         select=None, selectlabel=None, halosel=None, kwargs_halosel=None,\
+         misc=None,\
          ompproj=False, nameonly=False, numslices=None, hdf5=False,\
          override_simdatapath=None):
 
@@ -3711,7 +4173,38 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                   save the exact selection used
                   otherwise, the exact parameter documentation relies on 
                   external files/notes
-                
+    select:    select particles to project based on particle's own properties
+               (does not require halo information)
+               list of tuples: (<thing to select>, <min. val.>, <max. val.>)
+               min, and max. values can be None (-> no lower/upper limit) and
+               must be in (non-log) CGS units 
+               <thing to select>: dictionary specifying the thing to compare to
+               for the meanings, see 'quantities to project'
+               ptype
+               excludeSFR
+               abunds:    'Pt', 'Sm', or a number (fixed fraction of solar Z)
+               ion 
+               quantity
+               sylviasshtables 
+               bensgadget2tables
+               misc       
+               excludeSFR, abunds, sylviasshtables, bensgadget2tables, misc
+               are set to the W values, and otherwise the Q values as defaults;
+               values for excludeSFR must be compatible with those choices
+               differences with below:
+               - instead of 'coldens' and 'emission', 
+                 the ion/emission types are 'Nion' and 'Luminosity' (for total 
+                 number of ions or luminosity of the particle)
+                 or 'Niondens' and 'Lumdens' (for the volumn density of 
+                 emission or ions)
+               - ptype 'coords' is an option,
+                 with quantity 'r3D': the 3D radial distance to centre (must be 
+                 specified)
+               each tuple is assumed to be an independent selection, i.e. the
+               different selection criteria should all be satisfied
+    selectlabel: str, or (default) None
+               overwrites autoname selection string (useful if this would be
+               long or complicated)
     The chosen region is assumed to be a continuous block. 
 
     -----------------
@@ -3864,7 +4357,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc,\
-         select, misc, ompproj, numslices, halosel, kwargs_halosel, hdf5, override_simdatapath)
+         select, selectlabel, misc, ompproj, numslices,\
+         halosel, kwargs_halosel, hdf5, override_simdatapath)
     if isinstance(res, int):
         raise ValueError("inputcheck returned error code %i"%res)
 
@@ -3878,7 +4372,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
-         halosel, kwargs_halosel, hdf5, override_simdatapath = res[1:]
+         select, selectlabel, halosel, kwargs_halosel,\
+         hdf5, override_simdatapath = res[1:]
 
     print('Processed input:')
     print((':\t%s\t'.join(['simnum', 'snapnum', 'simulation', 'var', 'parttype', '']))\
@@ -3897,6 +4392,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                           %(log,   sylviasshtables,   bensgadget2tables,  saveres,   ompproj,   hdf5))
     print((':\t%s\t'.join(['halosel', 'kwargs_halosel', '']))\
                           %(halosel,  kwargs_halosel))
+    print((':\t%s\t'.join(['selectlabel', 'select', '']))\
+                          %(selectlabel,   select))
     print((':\t%s\t'.join(['override_simdatapath', '']))\
                           %(override_simdatapath))
     print('misc:\t%s'%misc)
@@ -3906,6 +4403,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
 
 
     ##### Wishlist generation: preventing doing calculations twice
+    ## not applied to arrays needed for select: these are always deleted 
+    ## after use 
 
     wishlist = ['coords_cMpc-vel']
     if ptypeQ != None:
@@ -3995,13 +4494,15 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                          npix_x, L_x, L_y, L_z, centre, simfile.boxsize, simfile.h,\
                          excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,\
                          axis, var, abundsW, ionW, parttype, None, abundsQ, ionQ, quantityW, quantityQ,\
-                         simulation, LsinMpc, halosel, kwargs_halosel, misc, hdf5)
+                         simulation, LsinMpc, halosel, kwargs_halosel, select, selectlabel,\
+                         misc, hdf5)
     if ptypeQ !=None:
         resfile2 = nameoutput(vardict_temp, ptypeW, simnum, snapnum, version, kernel,\
                               npix_x, L_x, L_y, L_z, centre, simfile.boxsize, simfile.h,\
                               excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,\
                               axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, quantityW, quantityQ,\
-                              simulation, LsinMpc, halosel, kwargs_halosel, misc, hdf5)
+                              simulation, LsinMpc, halosel, kwargs_halosel, select, selectlabel,\
+                              misc, hdf5)
     del vardict_temp
     # just get the file name for a set of parameters
     if nameonly:
@@ -4518,25 +5019,6 @@ def getsubhaloclass(vardict):
     vardict.particle['subhalocat'][vardict.particle['SubGroupNumber'] == 2**30] = 2.5
     vardict.delif('SubGroupNumber', last=True) 
 
-def get3ddist(vardict, cen, last=True, trustcoords=False):
-    '''
-    trustcoords: trust 'Coordinates' entry in vardict to be in cMpc units and
-                 CGSconv to reflect that
-    '''
-    if not trustcoords: 
-        vardict.delif('Coordinates', last=True)
-    if 'Coordinates' not in vardict.particle:
-        vardict.readif('Coordinates', rawunits=True)
-        vardict.particle['Coordinates'] *= (1. / vardict.simfile.h)
-        vardict.CGSconv['Coordinates'] *= vardict.simfile.h
-        
-    if not np.all(cen == 0.): # translation step will often have been made before in region selection -> no need to repeat
-        translate(vardict.particle, 'Coordinates', cen, np.array((vardict.simfile.boxsize / vardict.simfile.h,) *3), False) # non-periodic -> centered on cen
-    radii = np.sqrt(np.sum(vardict.particle['Coordinates']**2, axis=1))
-    vardict.add_part('r3D', radii)
-    vardict.CGSconv['r3D'] = vardict.CGSconv['Coordinates']
-    vardict.delif('Coordinates', last=last)
-
 
 def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
                               L_x, L_y, L_z, centre, LsinMpc, BoxSize, hconst, excludeSFR,\
@@ -4630,275 +5112,9 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
     print('saving result to: '+resfile+'\n')
     return resfile
 
-def namehistogram_perparticle_axis(dct):
-    '''
-    dct should contain all the axesdct entires (with defaults included)
-    '''
-    ptype = dct['ptype']
-    excludeSFR = dct['excludeSFR']
-    if 'misc' in dct.keys():
-        misc = dct['misc']
-    else:
-        misc = None
-
-    if excludeSFR == True:
-        SFRind = '_noEOS'
-    elif excludeSFR == False:
-        SFRind = '_wiEOS'
-    elif excludeSFR == 'T4':
-        SFRind = '_T4EOS'
-    elif excludeSFR == 'from':
-        SFRind = '_fromSFR'
-    elif excludeSFR == 'only':
-        SFRind = '_onlyEOS'
-
-    if ptype in ['Luminosity', 'Lumdens', 'Nion', 'Niondens']:
-        parttype = dct['parttype']
-        if parttype != '0':
-            sparttype = '_PartType%s'%parttype
-        else:
-            sparttype = ''
-        abunds = dct['abunds']
-        if abunds[0] not in ['Sm','Pt']:
-            sabunds = '%smassfracAb'%str(abunds[0])
-        else:
-            sabunds = abunds[0] + 'Ab'
-        if isinstance(abunds[1], num.Number):
-            sabunds = sabunds + '-%smassfracHAb'%str(abunds[1])
-        elif abunds[1] != abunds[0]:
-            sabunds = sabunds + '-%smassfracHAb'%abunds[1]
-        stables = ''
-        if dct['sylviasshtables']:
-            stables = '_iontab-sylviasHM12shh'
-        elif dct['bensgadget2tables']:
-            stables = '_iontab-bensgagdet2'
-        axname = '%s_%s%s_%s%s' %(ptype, dct['ion'], sparttype, sabunds, stables) + SFRind
-
-    elif ptype == 'basic':
-        parttype = dct['parttype']
-        if parttype != '0':
-            sparttype = '_PartType%s'%parttype
-        else:
-            sparttype = ''
-        squantity = dct['quantity']
-        squantity = squantity.replace('/','-')
-        axname = '%s%s'%(squantity, sparttype) + SFRind
-
-    elif ptype == 'halo':
-        if dct['quantity'] == 'Mass':
-            if dct['allinR200c']: 
-                inclind = '_allinR200c'
-            else:
-                inclind = '_FoFonly'
-            axname = 'M%s_halo'%(dct['mdef']) + inclind
-        elif dct['quantity'] == 'subcat':
-            axname = 'subhalo_category'
-            
-    elif ptype == 'coords':
-        if dct['quantity'] == 'r3D':
-            axname = '3Dradius'
-
-    if misc is not None:
-        miscind = '_'+'_'.join(['%s-%s'%(key, misc[key]) for key in misc.keys()])
-        axname = axname + miscind
-
-    return axname
-
-def check_particlequantity(dct, dct_defaults, parttype, simulation):
-    '''
-    dct: ptype, excludeSFR, abunds, ion, parttype, quantity, misc
-    dct_defaults: same entries, use to set defaults in dct
-    '''
-    # largest int used : 47
-    if 'ptype' in dct:
-        ptype = dct['ptype']
-    else:
-        raise ValueError('in check_particlequantity: each quantity dict must have "ptype" specified')
-    if 'excludeSFR' in dct:
-        excludeSFR = dct['excludeSFR']
-    elif 'excludeSFR' in dct_defaults:
-        excludeSFR = dct_defaults['excludeSFR']
-        dct['excludeSFR'] = excludeSFR
-    
-    if ptype not in ['Nion', 'Niondens', 'Luminosity', 'Lumdens', 'basic', 'halo', 'coords']:
-        print('ptype should be one of Nion, Niondens, Luminosity, Lumdens, basic, halo, coords (str).\n')
-        return 3
-    elif ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
-        if 'ion' not in dct.keys():
-            print('For ptype %s, an ion must be specified'%(ptype))
-            return 37
-        else:
-            ion = dct['ion']
-        if 'abunds' in dct.keys():
-            abunds = dct['abunds']
-        elif 'abunds' in dct_defaults.keys():
-            abunds = dct_defaults['abunds']
-        else:
-            abunds = None
-        if ion in ol.elements_ion.keys():
-            iselt = False
-            parttype = '0'
-        elif ion in ol.elements and ptype in ['Nion', 'Niondens']:
-            iselt = True
-            if parttype not in ['0', '4', 0, 4]:
-                print('Element masses are only available for gas and stars')
-                return 47
-            else:
-                parttype = str(parttype)
-        else:
-            print('%s is an invalid ion option for ptype %s\n'%(ion,ptype))
-            return 8
-        if not isinstance(abunds, (list, tuple, np.ndarray)):
-            abunds = [abunds, 'auto']
-        else:
-            abunds = list(abunds) # tuple element assigment is not allowed, sometimes needed
-        if abunds[0] not in ['Sm','Pt','auto']:
-            if not isinstance(abunds[0], num.Number):
-                print('Abundances must be either smoothed ("Sm") or particle ("Pt") abundances, automatic ("auto"), or a solar units abundance (float)')
-                return 4
-            elif iselt:
-                abunds[0] = abunds[0] * ol.solar_abunds_ea[ion]
-            else:
-                abunds[0] = abunds[0] * ol.solar_abunds_ea[ol.elements_ion[ion]]
-        elif abunds[0] == 'auto':
-            if ptype in ['Luminosity', 'Lumdens']:
-                abunds[0] = 'Sm'
-            else:
-                abunds[0] = 'Pt'
-        if abunds[1] not in ['Sm','Pt','auto']:
-            if not isinstance(abunds[1], num.Number):
-                print('Abundances must be either smoothed ("Sm") or particle ("Pt") abundances, automatic ("auto"), or a solar units abundance (float)')
-                return 30
-        elif abunds[1] == 'auto':
-            if isinstance(abunds[0], num.Number):
-                abunds[1] = 0.752 # if element abundance is fixed, use primordial hydrogen abundance
-            else:
-                abunds[1] = abunds[0]
-        dct['abunds'] = tuple(abunds)
-        abunds = tuple(abunds)
-        
-        
-    else: # ptype == basic or halo
-        if 'quantity' not in dct.keys():
-            print('For ptypes basic, halo, coords, quantity must be specified.\n')
-            return 5
-        quantity = dct['quantity']
-        if not isinstance(quantity, str):
-            print('quantity must be a string.\n')
-            return 6
-        if ptype == 'halo':
-            if quantity not in ['Mass', 'subcat']:
-                print('For ptype halo, the options are Mass and subcat')
-                return 38
-        elif ptype == 'coords':
-            if quantity not in ['r3D']:
-                print('For ptype coords, the option is r3D')
-                return 41
-        if parttype not in ['0','1','4','5']: # parttype only matters if it is used
-            if parttype in [0, 1, 4, 5]:
-                parttype = str(parttype)
-            else:
-                print('parttype should be "0", "1", "4", or "5" (str).\n')
-                return 16
 
 
-    if excludeSFR not in [True, False, 'T4', 'only']:
-        if excludeSFR != 'from':
-            print('Invalid option for excludeSFR: %s'%excludeSFR)
-            return 17
-        elif not (ptype in ['Luminosity', 'Lumdens'] and ion == 'halpha'):
-            excludeSFR = 'only'
-            print('Unless calculation is for halpha emission, fromSFR will default to onlySFR.\n')
-    if 'excludeSFR' in dct_defaults.keys():
-        excludeSFR_def = dct_defaults['excludeSFR']
-        if (excludeSFR in [False,' T4']) and (excludeSFR_def not in [False, 'T4']):
-            print('ExcludeSFR options %s and %s are not compatible'%(excludeSFR, excludeSFR_def))
-            return 18
-        elif excludeSFR in ['from', 'only'] and excludeSFR_def not in ['from', 'only']:
-            print('ExcludeSFR options %s and %s are not compatible'%(excludeSFR,excludeSFR_def))
-            return 19
-        elif excludeSFR != excludeSFR_def and excludeSFR == True:
-            print('ExcludeSFR options %s and %s are not compatible'%(excludeSFR, excludeSFR_def))
-            return 20
 
-    if parttype != '0': #EOS is only relevant for parttype 0 (gas)
-        excludeSFR = False
-    dct['excludeSFR'] = excludeSFR
-
-    if 'misc' in dct.keys(): # if if if : if we want to use chemical abundances from Ben' Oppenheimer's recal variations
-        misc = dct['misc']
-        if misc is not None:
-            if 'usechemabundtables' in misc:
-                if misc['usechemabundtables'] == 'BenOpp1':
-                    if simulation != 'eagle-ioneq':
-                        print('chemical abundance tables are only avaiable for the eagle-ioneq simulation')
-                        return 34
-                    if ptype in ['Nion', 'Niondens']:
-                        if 'Sm' in abunds:
-                            print('chemical abundance tables are only for particle abundances')
-                            return 34
-                        elif abunds in ['auto', None]:
-                            abunds = 'Pt'
-            if ptype in ['Nion', 'Niondens'] and ion in ['h1ssh', 'hmolssh' 'hneutralssh']:
-                if 'UVB' in misc:
-                    if misc['UVB'] not in cfh.phototables.keys():
-                        print('Invalid option for misc -> UVB')
-                        return 35
-                if 'useLSR' in misc:
-                    if not isinstance(misc['useLSR'], bool):
-                        print('misc -> useLSR should be a boolean')
-                        return 36
-                    
-    if 'mdef' not in dct:
-        dct['mdef'] = dct_defaults['mdef']
-    if 'allinR200c' not in dct:
-        dct['allinR200c'] = dct_defaults['allinR200c']
-        
-    if not (dct['mdef'] == 'group' or (dct['mdef'][-1] in ['c', 'm'] and dct['mdef'][:-1] in ['200', '500', '2500'])):
-        print('mdef option %s is invalid'%(dct['mdef']))
-        return 39
-        
-    if not isinstance(dct['allinR200c'], bool):
-        print('allinR200c should be True or False')
-        return 40
-    # table set checks
-    if ptype in ['Nion', 'Niondens']:
-        if 'sylviasshtables' in dct.keys():
-            sylviasshtables = dct['sylviasshtables']
-        else:
-            sylviasshtables = dct_defaults['sylviasshtables']
-        if 'bensgadget2tables' in dct.keys():
-            bensgadget2tables = dct['bensgadget2tables']
-        else:
-            bensgadget2tables = dct_defaults['bensgadget2tables']
-        if not isinstance(sylviasshtables, bool):
-            print('sylviasshtables should be True or False')
-            return 42
-        if not isinstance(bensgadget2tables, bool):
-            print('bensgadget2tables should be True or False')
-            return 43
-        if sylviasshtables and bensgadget2tables:
-            print('only one table set of sylviasshtables and bensgadget2tables can be used')
-            return 44
-        if sylviasshtables and ion == 'hneutralssh':
-            print("Neutral hydrogen is not currenty available from Sylvia's tables")
-            return 45
-        if bensgadget2tables and ion not in ol.ion_list_bensgadget2tables:
-            print("%s is not available from Ben's gadget 2 tables"%(ion))
-            return 46
-        dct['sylviasshtables'] = sylviasshtables
-        dct['bensgadget2tables'] = bensgadget2tables
-    else:
-        dct['sylviasshtables'] = False
-        dct['bensgadget2tables'] = False
-                
-    dct['parttype'] = parttype
-    
-    # make sure there is something to check for dct keys (might be None or useless)
-    for key in dct_defaults.keys():
-        if key not in dct.keys():
-            dct[key] = dct_defaults[key]
-    return dct, parttype
 
 def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
                               L_x, L_y, L_z, centre, LsinMpc,\
@@ -5008,110 +5224,6 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
                               axesdct, axbins, dct_defaults['allinR200c'], dct_defaults['mdef'],\
                               dct_defaults['sylviasshtables'], dct_defaults['bensgadget2tables'],\
                               misc
-
-
-
-
-def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity,\
-                    sylviasshtables=False, bensgadget2tables=False,\
-                    last=True, updatesel=False, misc=None, mdef='200c', allinR200c=True):
-    '''
-    just copied bits from make_map
-    '''
-            
-    iselt = False
-    if ion in ol.elements and ptype in ['Nion', 'Niondens']:
-        iselt = True
-    if ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
-        eltab, hab = get_eltab_names(abunds, iselt, ion)
-
-    if excludeSFR in ['from', 'only']: # only select EOS particles; difference in only in the emission calculation
-        vardict.readif('OnEquationOfState', rawunits=True)
-        eossel = pc.Sel({'arr': vardict.particle['OnEquationOfState'] > 0.})
-        vardict.delif('OnEquationOfState')
-        vardict.update(eossel) #should significantly reduce memory impact of coordinate storage
-        del eossel
-
-    elif excludeSFR == True: # only select non-EOS particles
-        vardict.readif('OnEquationOfState',rawunits =True)
-        eossel = pc.Sel({'arr': vardict.particle['OnEquationOfState'] <= 0.})
-        vardict.delif('OnEquationOfState')
-        vardict.update(eossel) #will have less impact on coordinate storage
-        del eossel
-    # False and T4 require no up-front or general particle selection, just one instance in the temperature read-in
-
-    last = last
-    if ptype == 'basic':
-        readbasic(vardict, quantity, excludeSFR, last=last)
-        q = vardict.particle[quantity]
-        multipafter =  vardict.CGSconv[quantity]
-    
-    elif ptype == 'halo':
-        if quantity == 'Mass':
-            gethalomass(vardict, mdef=mdef, allinR200c=allinR200c)
-            q = vardict.particle['halomass']
-            multipafter = vardict.CGSconv['halomass']
-            vardict.delif('halomass', last=last)
-        elif quantity == 'subcat':
-            getsubhaloclass(vardict)
-            q = vardict.particle['subhalocat']
-            vardict.delif('subhalocat', last=last)
-            multipafter = 1.
-
-    elif ptype in ['Nion', 'Niondens'] and not iselt:
-        if ion in ['h1ssh', 'hmolssh', 'hneutralssh'] and not (sylviasshtables or bensgadget2tables):
-            q, multipafter = Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=last, updatesel=updatesel, misc=misc)
-            if ptype == 'Niondens':
-                readbasic(vardict, 'ipropvol', excludeSFR, last=last)
-                q *= vardict.particle['ipropvol'] 
-                multipafter *= vardict.CGSconv['ipropvol']
-        else:
-            q, multipafter = Nion_calc(vardict, excludeSFR, eltab, hab, ion, last=last,\
-                                       sylviasshtables=sylviasshtables, bensgadget2tables=bensgadget2tables,\
-                                       updatesel=updatesel, misc=misc)
-            if ptype == 'Niondens':
-                readbasic(vardict, 'ipropvol', excludeSFR, last=last)
-                q *= vardict.particle['ipropvol'] 
-                multipafter *= vardict.CGSconv['ipropvol']
-    elif ptype in ['Nion', 'Niondens'] and iselt:
-        q, multipafter = Nelt_calc(vardict, excludeSFR, eltab, ion, last=last, updatesel=updatesel)
-        if ptype == 'Niondens':
-            readbasic(vardict, 'ipropvol', excludeSFR, last=last)
-            q *= vardict.particle['ipropvol'] 
-            multipafter *= vardict.CGSconv['ipropvol']
-    elif ptype in ['Luminosity', 'Lumdens'] and excludeSFR != 'from':
-        q, multipafter = luminosity_calc(vardict, excludeSFR, eltab, hab, ion, last=last, updatesel=updatesel)
-        if ptype == 'Lumdens':
-            readbasic(vardict, 'ipropvol', excludeSFR, last=last)
-            q *= vardict.particle['ipropvol'] 
-            multipafter *= vardict.CGSconv['ipropvol']
-    elif ptype in ['Luminosity', 'Lumdens'] and excludeSFR == 'from':
-        if ion == 'halpha':
-            q, multipafter = luminosity_calc_halpha_fromSFR(vardict, excludeSFR, last=last, updatesel=updatesel)
-            if ptype == 'Lumdens':
-                readbasic(vardict, 'ipropvol', excludeSFR, last=last)
-                q *= vardict.particle['ipropvol'] 
-                multipafter *= vardict.CGSconv['ipropvol']
-        else:
-            raise ValueError('Invalid option excludeSFR=from for ion other than halpha')
-    
-    elif ptype == 'coords':
-        if quantity == 'r3D':
-            # coordinates should have been centred in region selection, in cMpc units
-            get3ddist(vardict, np.array([0., 0., 0.]), last=last, trustcoords=True)
-            q = vardict.particle['r3D']
-            multipafter = vardict.CGSconv['r3D']
-        else:
-            raise ValueError('Invalid quantity option %s for ptype %s'%(quantity, ptype))
-    else:
-        raise ValueError('Invalid ptype option %s'%(ptype))
-        return None
-    
-    if 'ipropvol' in vardict.particle.keys():
-        vardict.delif('ipropvol', last=last)
-        
-    return q, multipafter
-
 
 
 def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
