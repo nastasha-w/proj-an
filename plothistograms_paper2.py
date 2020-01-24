@@ -3460,6 +3460,146 @@ def plot_ionfracs_firstlook(addedges=(0.1, 1.), var='focus'):
     lax.axis('off')
     
     plt.savefig(outname, format='pdf', box_inches='tight')
+    
+    
+def plot_masscontr_firstlook(addedges=(0.0, 1.), var='Mass'):
+    '''
+    var: 'Mass' for total mass
+         'oxygen', 'neon', or 'iron' for metal mass
+    '''
+    fontsize = 12
+    
+    filename_in = ol.pdir + 'massdist-baryoncomp_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb.hdf5'%(str(addedges[0]), str(addedges[1]))
+    outname = '/net/luttero/data2/imgs/CGM/3dprof/' + 'masscontr_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb_%s.pdf'%(str(addedges[0]), str(addedges[1]), var)
+    m200cbins = np.array(list(np.arange(11., 13.05, 0.1)) + [13.25, 13.5, 13.75, 14.0, 14.6])
+    percentiles = [10., 50., 90.]
+    alpha = 0.3
+    lw = 2
+    xlabel = r'$\log_{10} \, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'
+    ylabel = r'mass fraction'
+    
+    if var == 'Mass':
+        groupname = 'massdist_Mass'
+        catcol = {'BHs': ['BHs'],\
+                  'DM': ['DM'],\
+                  'gas': ['gas'],\
+                  'stars': ['stars'],\
+                  'ISM': ['gas_SF_T--inf-5.0', 'gas_SF_T-5.0-5.5',\
+                          'gas_SF_T-5.5-7.0', 'gas_SF_T-7.0-inf'],\
+                  r'CGM $<5.5$': ['gas_nonSF_T--inf-5.0', 'gas_nonSF_T-5.0-5.5'],\
+                  r'CGM $5.5 \endash 7$': ['gas_nonSF_T-5.5-7.0'],\
+                  r'CGM $> 7$': ['gas_nonSF_T-7.0-inf']}
+        addcol = {'total': ['BHs', 'gas', 'stars', 'DM'],\
+                  'CGM': [r'CGM $<5.5$', r'CGM $5.5 \endash 7$', r'CGM $> 7$'],\
+                  'baryons': ['BHs', 'gas', 'stars'],\
+                  'gas-subsum': ['ISM', r'CGM $<5.5$', r'CGM $5.5 \endash 7$', r'CGM $> 7$']}
+    else:
+        groupname = 'massdist_%s'%(var)
+        catcol = {'gas': ['gas-%s'%(var)],\
+                  'stars': ['stars-%s'%(var)],\
+                  'ISM': ['gas-%s_SF_T--inf-5.0'%(var), 'gas-%s_SF_T-5.0-5.5'%(var),\
+                          'gas-%s_SF_T-5.5-7.0'%(var), 'gas-%s_SF_T-7.0-inf'%(var)],\
+                  r'CGM $<5.5$': ['gas-%s_nonSF_T--inf-5.0'%(var), 'gas-%s_nonSF_T-5.0-5.5'%(var)],\
+                  r'CGM $5.5 \endash 7$': ['gas-%s_nonSF_T-5.5-7.0'%(var)],\
+                  r'CGM $> 7$': ['gas-%s_nonSF_T-7.0-inf'%(var)]}
+        addcol = {'total': ['gas', 'stars'],\
+                  'CGM': [r'CGM $<5.5$', r'CGM $5.5 \endash 7$', r'CGM $> 7$'],\
+                  'gas-subsum': ['ISM', r'CGM $<5.5$', r'CGM $5.5 \endash 7$', r'CGM $> 7$']}
+        
+    with h5py.File(filename_in, 'r') as fd:
+        cosmopars = {key: item for key, item in fd['Header/cosmopars'].attrs.items()}
+        m200cvals = np.log10(np.array(fd['M200c_Msun']))
+        grp = fd[groupname]
+        arr_all = np.array(grp['mass'])
+        collabels = list(grp.attrs['categories'])
+        collabels = np.array([lab.decode() for lab in collabels])
+        catind = {key: np.array([np.where(collabels == subn)[0][0] for subn in catcol[key]]) \
+                       for key in catcol}
+        massdata = {key: np.sum(arr_all[:, catind[key]], axis=1) for key in catcol}
+        _sumdata = {key: np.sum([massdata[subkey] for subkey in addcol[key]], axis=0) for key in addcol}
+        massdata.update(_sumdata)
+        # check
+        if not np.all(np.isclose(massdata['gas'], massdata['gas-subsum'])):
+            raise RuntimeError('The gas subcategory masses do not add up to the total gas mass for all halos')
+        
+        #basesel = np.all(np.array([np.isfinite(iondata[ion]) for ion in iondata]), axis=0) # issues from a low-mass halo: probably a very small metal-free system
+        #m200cvals = m200cvals[basesel]
+        #for ion in iondata:
+        #    iondata[ion] = iondata[ion][basesel]
+        
+    bininds = np.digitize(m200cvals, m200cbins)
+    bincens = m200cbins[:-1] + 0.5 * np.diff(m200cbins)
+    #bincens[-1] = np.median(m200cvals[bininds == len(m200cbins) - 1])
+    #print(bincens)
+    #T200cvals = T200c_hot(10**bincens, cosmopars)
+    
+    fig = plt.figure(figsize=(5.5, 6.))
+    grid = grid = gsp.GridSpec(ncols=1, nrows=2, hspace=0.0, wspace=0.1, height_ratios=[4., 2.])
+    ax  = fig.add_subplot(grid[0, 0])
+    #ax2 = fig.add_subplot(grid[0, 0])
+    lax = fig.add_subplot(grid[1, 0])
+    
+    colors = {'BHs': 'black',\
+              'DM':  'gray',\
+              'gas': 'C1',\
+              'stars': 'C8',\
+              'ISM': 'C3',\
+              'CGM': 'C0',\
+              'baryons': 'gray',\
+              r'CGM $<5.5$': 'C9',\
+              r'CGM $5.5 \endash 7$': 'C4',\
+              r'CGM $> 7$': 'C6'}
+    linestyles = {'BHs': 'solid',\
+              'DM':  'solid',\
+              'gas': 'solid',\
+              'stars': 'solid',\
+              'baryons': 'solid',\
+              'BHs': 'solid',\
+              'ISM': 'solid',\
+              'CGM': 'solid',\
+              r'CGM $<5.5$': 'dotted',\
+              r'CGM $5.5 \endash 7$': 'solid',\
+              r'CGM $> 7$': 'dotted'}
+    
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    setticks(ax, fontsize=fontsize) 
+
+    ax.set_yscale('log')
+    if var == 'Mass':
+        ax.set_ylim(1e-5, 0.2)
+    else:
+        ax.set_ylim(2e-3, 1.)
+    #if 'DM' in catcol:
+    #    fdm = 1. - cosmopars['omegab'] / cosmopars['omegam']
+    #    ax.axhline(fdm, linewidth=lw, color=colors['DM'], label=r'$1 - \Omega_{\mathrm{b}} \,/\, \Omega_{\mathrm{m}}$')
+    if var == 'Mass':
+        fb = cosmopars['omegab'] / cosmopars['omegam']
+        ax.axhline(fb, linewidth=lw, linestyle='dashed', color=colors['DM'], label=r'$\Omega_{\mathrm{b}} \,/\, \Omega_{\mathrm{m}}$')
+        
+    for label in massdata:
+        if label in ['DM', 'total', 'gas-subsum', 'gas', r'CGM $<5.5$', r'CGM $> 7$']:
+            continue
+        _massdata = massdata[label] / massdata['total']
+        _color = colors[label]
+        
+        percvals = np.array([np.percentile(_massdata[bininds == i], percentiles) for i in range(1, len(m200cbins))]).T
+        ax.plot(bincens, percvals[1], label=label, color=_color, linewidth=lw, linestyle=linestyles[label])
+        if label not in ['baryons', r'CGM $5.5 \endash 7$']:
+            ax.fill_between(bincens, percvals[0], percvals[2], color=_color, alpha=alpha)
+    
+    handles, lables = ax.get_legend_handles_labels()
+    
+
+    legelts = [mpatch.Patch(facecolor='tan', alpha=alpha, label='%.1f %%'%(percentiles[2] - percentiles[0]))] + \
+              [mlines.Line2D([], [], color='tan', label='median')]
+
+    lax.legend(handles=handles + legelts, ncol=3, fontsize=fontsize, bbox_to_anchor=(0.5, 0.6), loc='upper center')
+    lax.axis('off')
+    
+    plt.savefig(outname, format='pdf', box_inches='tight')
+    
+    
 ###############################################################################
 #                  nice plots for the paper: simplified                       #
 ###############################################################################

@@ -1070,7 +1070,7 @@ def extracthists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
 
     # temperature and SF/nonSF gas subset labels
     tlbl = ['T-%s-%s'%(gas_tlims_add[i], gas_tlims_add[i + 1]) for i in range(len(gas_tlims_add) - 1)]
-    slbl = ['SF', 'nonSF']
+    slbl = ['nonSF', 'SF']
     
     with h5py.File(outname, 'a') as fo:
         csp = fo.create_group('Header/cosmopars')
