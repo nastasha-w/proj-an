@@ -97,7 +97,7 @@ version = 3.4 # matches corresponding make_maps version
 # Take this into account in wishlist generation and calculation order.
 #
 # To modify make_maps:
-# add new options to: - function argumnets/kwargs
+# add new options to: - function arguments/kwargs, docstring
 #                     - input checks
 #                     - output naming
 #                     - function calls / use in make_maps body
@@ -1870,7 +1870,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,\
     if select is None or len(select) == 0:
         selectlabel = ''
     elif selectlabel is None:
-        selectlabel = 'psel_%s_endpsel'
+        selectlabel = '_psel_%s_endpsel'
         labels = ['%s-%s-%s'%(namehistogram_perparticle_axis(sel[0]), sel[1], sel[2]) for sel in select]
         selectlabel = selectlabel%('_'.join(labels))
     else:
@@ -2485,7 +2485,18 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                  'excludeSFR': excludeSFRW, 'parttype': parttype,\
                  'quantity': quantityW, 'misc': misc}
         # Q defaults overwritten with non-None W values
-        for key in dct_W:
+        keyvals = list(dct_W.keys())
+        if 'allinR200c' in kwargs_halosel:
+            dct_defaults.update({'allinR200c': kwargs_halosel['allinR200c']})
+        else:
+            dct_defaults['allinR200c'] = True
+        if 'mdef' in kwargs_halosel:
+            dct_defaults.update({'mdef': kwargs_halosel['mdef']})
+        else:
+            dct_defaults['mdef'] = '200c'
+        dct_defaults['sylviasshtables'] = sylviasshtables
+        dct_defaults['bensgadget2tables'] = bensgadget2tables
+        for key in keyvals:
             if dct_W[key] is None:
                 del dct_W[key]
         dct_defaults.update(dct_W)
@@ -2493,6 +2504,8 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
             print('select must be None or a list of tuples; was:')
             print(select)
             return 49
+        emptysels = []
+        select = list(select)
         for si in range(len(select)):
             _sel = select[si]
             if not hasattr(_sel, '__len__'):
@@ -2503,14 +2516,20 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                 print('select must be None or a list of tuples\neach  tuple must be of the form (dict, None/value, None/value) an entry was:')
                 print(_sel)
                 return 51
-            if not (isinstance(_sel[1], num.Number) and isinstance(_sel[2], num.Number)):
+            if not (isinstance(_sel[0], dict) and \
+                    (isinstance(_sel[1], num.Number) or _sel[1] is None) and \
+                    (isinstance(_sel[2], num.Number) or _sel[2] is None)):
                 print('select must be None or a list of tuples\neach  tuple must be of the form (dict, None/value, None/value) an entry was:')
                 print(_sel)
                 return 52
+            if _sel[1] is None and _sel[2] is None:
+                emptysels.append(si)
+                continue
+            
             _dct = _sel[0]
             _partc = check_particlequantity(_dct, dct_defaults, parttype, simulation)
             if isinstance(_partc, int):
-                print('Issue with select entry %s:'%_sel)
+                print('Issue with select entry:' + str(_sel))
                 print('check_particlequantity returned error code %s'%(_partc))
                 return 53
             
@@ -2519,11 +2538,15 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
             _outsel = list(_sel)
             _outsel[0] = _outdct
             select[si] = tuple(_outsel)
-            
-        if np.any([sel[0] == 'r3D' for sel in select]) and periodic:
+        # descending order iteration so later index positions don't change as earlier ones are deleted
+        emptysels = np.sort(emptysels)[::-1]
+        for si in emptysels:
+            del select[si]
+        if np.any([sel[0]['quantity'] == 'r3D' for sel in select]) and periodic:
             print('r3D radial distance selection only works with non-periodic coordinate selection due to centering issues')
             return 55
-
+        if select == []:
+            select = None
     # if nothing has gone wrong, return all input, since setting quantities in functions doesn't work on global variables
     return 0, iseltW, iseltQ, simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          ptypeW,\
@@ -2714,9 +2737,9 @@ def ppp_selselect_coordsadd(vardict, centre, Ls, periodic, Axis1, Axis2, Axis3, 
             sel.comb({'arr': -1*margin <= vardict.particle['coords_cMpc-vel'][:,axind]})
             sel.comb({'arr':    margin >  vardict.particle['coords_cMpc-vel'][:,axind]})
 
-    vardict.add_box('box3',box3)
-    vardict.add_box('centre',centre)
-    vardict.add_box('Ls',Ls)
+    vardict.add_box('box3', box3)
+    vardict.add_box('centre', centre)
+    vardict.add_box('Ls', Ls)
     vardict.delif('coords_cMpc-vel',last=not keepcoords)
     vardict.update(sel)
 
@@ -3864,7 +3887,8 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,\
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
-         halosel, kwargs_halosel, cosmopars, override_simdatapath, groupnums):
+         halosel, kwargs_halosel, select, selectlabel,\
+         cosmopars, override_simdatapath, groupnums):
     '''
     save projmap, minval, maxval with npzname and the processed input 
     parameters
@@ -3914,6 +3938,7 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,\
         saveattr(hed, 'phi', phi)
         saveattr(hed, 'psi', psi)
         saveattr(hed, 'override_simdatapath', override_simdatapath)
+        saveattr(hed, 'selectlabel', selectlabel)
         
         saveattr(hed, 'cosmopars', cosmopars)
         
@@ -3935,6 +3960,21 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,\
                         saveattr(sgrp, 'tuple_index_%i'%tuple_index, val)
                 selection_element_counter += 1
             hsel.create_dataset('groupnums', data=groupnums)
+        
+        psel = hed.create_group('particlesel')
+        if select is None:
+            saveattr(psel, 'any_selection', False)
+        else:
+            saveattr(psel, 'any_selection', True)
+            selection_element_counter = 0
+            for selection_element in select:
+                sgrp = hsel.create_group('tuple_%i'%selection_element_counter)
+                for key in selection_element[0]:
+                    saveattr(sgrp, key, val[key])
+                saveattr(sgrp, 'minimum value', selection_element[1])
+                saveattr(sgrp, 'maximum value', selection_element[2])
+                selection_element_counter += 1
+
         
         mgrp = hed.create_group('misc')
         if misc is None:
@@ -4202,6 +4242,10 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                  specified)
                each tuple is assumed to be an independent selection, i.e. the
                different selection criteria should all be satisfied
+               
+               note: file naming does include select options, but the order 
+               there simply corresponds to the input order, so equivalent 
+               selections do not always result oin the same file name
     selectlabel: str, or (default) None
                overwrites autoname selection string (useful if this would be
                long or complicated)
@@ -4574,6 +4618,24 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     # apply halo selection after the more read-in efficient region selection
     if halosel is not None:
         groupnums = selecthaloparticles(vardict_WQ, halosel, nameonly=False, last=False, **kwargs_halosel) 
+    # apply particle property selection:
+    if select is not None:
+        psel = pc.Sel()
+        for seltuple in select:
+            _dct = seltuple[0]
+            values, tocgs = getparticledata(vardict_WQ, _dct['ptype'],\
+                                            _dct['excludeSFR'], _dct['abunds'],\
+                                            _dct['ion'], _dct['quantity'],\
+                                            sylviasshtables=_dct['sylviasshtables'],\
+                                            bensgadget2tables=_dct['bensgadget2tables'],\
+                                            misc=_dct['misc'], mdef=_dct['mdef'],\
+                                            allinR200c=_dct['allinR200c'],\
+                                            last=True, updatesel=False)
+            
+            if select[1] is not None:
+                psel.comb({'arr': values >= seltuple[1] / tocgs}) 
+            if select[2] is not None:
+                psel.comb({'arr': values <  seltuple[2] / tocgs}) 
     
     # excludeSFR handling: use np.logical_not on selection array
     # this is needed for all calculations, so might as well do it here
@@ -4730,7 +4792,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                  var, axis, log, velcut,\
                                  periodic, kernel, saveres,\
                                  simulation, LsinMpc, misc, ompproj, numslices,\
-                                 halosel, kwargs_halosel, cosmopars, override_simdatapath, None)
+                                 halosel, kwargs_halosel, select, selectlabel,\
+                                 cosmopars, override_simdatapath, None)
                 else:
                     np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW)
             else:
@@ -4747,7 +4810,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                  var, axis, log, velcut,\
                                  periodic, kernel, saveres,\
                                  simulation, LsinMpc, misc, ompproj, numslices,\
-                                 halosel, kwargs_halosel, cosmopars, override_simdatapath, groupnums)
+                                 halosel, kwargs_halosel, select, selectlabel,\
+                                 cosmopars, override_simdatapath, groupnums)
                 else:
                     np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW, groupnums=groupnums)
             del resW
@@ -4771,7 +4835,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      var, axis, log, velcut,\
                                      periodic, kernel, saveres,\
                                      simulation, LsinMpc, misc, ompproj, numslices,\
-                                     halosel, kwargs_halosel, cosmopars, override_simdatapath, None)
+                                     halosel, kwargs_halosel, select, selectlabel,\
+                                     cosmopars, override_simdatapath, None)
                     else:
                         np.savez(resfile2, arr_0=resQ, minfinite=minQ, max=maxQ)
                 else:
@@ -4787,7 +4852,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      var, axis, log, velcut,\
                                      periodic, kernel, saveres,\
                                      simulation, LsinMpc, misc, ompproj, numslices,\
-                                     halosel, kwargs_halosel, cosmopars, override_simdatapath, groupnums)
+                                     halosel, kwargs_halosel, select, selectlabel,\
+                                     cosmopars, override_simdatapath, groupnums)
                     else:
                         np.savez(resfile2, arr_0=resQ, minfinite=minQ, max=maxQ, groupnums=groupnums)
                 del resQ
@@ -4879,7 +4945,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      var, axis, log, velcut,\
                                      periodic, kernel, saveres,\
                                      simulation, LsinMpc, misc, ompproj, numslices,\
-                                     halosel, kwargs_halosel, cosmopars, override_simdatapath, None)
+                                     halosel, kwargs_halosel, select, selectlabel,\
+                                     cosmopars, override_simdatapath, None)
                     else:
                         np.savez(subresfile, arr_0=resW, minfinite=minW, max=maxW)
                 else:
@@ -4895,7 +4962,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      var, axis, log, velcut,\
                                      periodic, kernel, saveres,\
                                      simulation, LsinMpc, misc, ompproj, numslices,\
-                                     halosel, kwargs_halosel, cosmopars, override_simdatapath, groupnums)
+                                     halosel, kwargs_halosel, select, selectlabel,\
+                                     cosmopars, override_simdatapath, groupnums)
                     else:
                         np.savez(subresfile, arr_0=resW, minfinite=minW, max=maxW, groupnums=groupnums)
                 del resW
@@ -4919,7 +4987,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                          var, axis, log, velcut,\
                                          periodic, kernel, saveres,\
                                          simulation, LsinMpc, misc, ompproj, numslices,\
-                                         halosel, kwargs_halosel, cosmopars, override_simdatapath, None)
+                                         halosel, kwargs_halosel, select, selectlabel,\
+                                         cosmopars, override_simdatapath, None)
                         else:
                             np.savez(subresfile2, arr_0=resQ, minfinite=minQ, max=maxQ)
                     else:
@@ -4935,7 +5004,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                          var, axis, log, velcut,\
                                          periodic, kernel, saveres,\
                                          simulation, LsinMpc, misc, ompproj, numslices,\
-                                         halosel, kwargs_halosel, cosmopars, override_simdatapath, groupnums)
+                                         halosel, kwargs_halosel, select, selectlabel,\
+                                         cosmopars, override_simdatapath, groupnums)
                         else:
                             np.savez(subresfile2, arr_0=resQ, minfinite=minQ, max=maxQ, groupnums=groupnums)
                     del resQ

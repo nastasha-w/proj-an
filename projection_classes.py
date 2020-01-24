@@ -242,7 +242,9 @@ class Sel:
         return 'Sel(%s, seldef=%s)'%(str(self.val),str(self.seldef))
 
     def comb(self,arr,key=None): # for combining two selections of the same length into the first
-
+        '''
+        combine two selections (empty or same length) 
+        '''
         if isinstance(arr,Sel):
             if arr.seldef and self.seldef: # if arr is a non-default Sel instance, just use the array value
                 self.val &= arr.val
@@ -302,7 +304,9 @@ class Sel:
     #            else:
     #               self.val = arr
     #            self.seldef = True
-
+        '''
+        make a subselection arr of Sel (either may be empty)
+        '''
         if isinstance(arr,Sel):
             if arr.seldef and self.seldef: # if arr is a non-default Sel instance, just use the array value
                 self.val[self.val] = arr.val
