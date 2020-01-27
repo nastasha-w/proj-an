@@ -7,6 +7,7 @@ Created on Mon Nov  6 16:32:05 2017
 import numpy as np
 import h5py
 import pandas as pd
+from importlib import reload
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -1620,4 +1621,52 @@ def plot_testhaloonly(filename_halos='testselection.txt'):
         addlabels(plotaxes)
         
         plt.savefig(figname, format='pdf')
-        
+
+
+def runtests_particleselection():
+    # fixed region etc.: that part should work. small region and res. for speed
+    simnum = 'L0012N1088'
+    snapnum = 28
+    centre = [6.25, 6.25, 3.125]
+    L_x = 12.5
+    L_y = 12.5
+    L_z = 12.5
+    npix_x = 400
+    npix_y = 400
+    
+    # put the test files away from the science stuff
+    m3.ol.ndir = '/net/luttero/data1/line_em_abs/v3_master_tests/particle_selection/'
+    
+    # test for: 
+    # - selections adding up to total when complementary
+    # - correct selection: weighted values are all in the selected range
+    # - non-interference: different 'T4' options in projection make a 
+    #   difference in the resulting projection (no ompproj here: differences 
+    #   will be small so do an extact comparison) 
+    # - two selections maintain adding up and averages criteria
+    
+    selects = {'T': {'ptype': 'basic', 'quantity': 'Temperature', 'excludeSFR': 'T4'},\
+               'rho': {'ptype': 'basic', 'quantity': 'Density', 'excludeSFR': False},\
+               }
+    kwargs_maps = {'Mass-T': {'ptypeW': 'basic', 'quantityW': 'Mass', 'excludeSFRW': 'T4',\
+                              'ptypeQ': 'basic', 'quantityQ': 'Temperature', 'excludeSFRW': 'T4'},\
+                   'Mass-Tsf': {'ptypeW': 'basic', 'quantityW': 'Mass', 'excludeSFRW': False,\
+                              'ptypeQ': 'basic', 'quantityQ': 'Temperature', 'excludeSFRW': False},\
+                   'Mass-rho': {'ptypeW': 'basic', 'quantityW': 'Mass', 'excludeSFRW': 'T4',\
+                                'ptypeQ': 'basic', 'quantityQ': 'Density', 'excludeSFRW': 'T4'},\
+                   }
+    kwargs_defaults = {'hdf5': True, 'ompproj': False, 'saveres': True}
+    m3.make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
+         ptypeW,\
+         ionW=None, abundsW='auto', quantityW=None,\
+         ionQ=None, abundsQ='auto', quantityQ=None, ptypeQ=None,\
+         excludeSFRW=False, excludeSFRQ=False, parttype='0',\
+         theta=0.0, phi=0.0, psi=0.0, \
+         sylviasshtables=False, bensgadget2tables=False,\
+         var='auto', axis='z',log=True, velcut=False,\
+         periodic=True, kernel='C2', saveres=False,\
+         simulation='eagle', LsinMpc=None,\
+         select=None, selectlabel=None, halosel=None, kwargs_halosel=None,\
+         misc=None,\
+         ompproj=False, nameonly=False, numslices=None, hdf5=False,\
+         override_simdatapath=None)
