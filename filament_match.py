@@ -500,6 +500,105 @@ def plotcddf_filpart(histname='o7_L100_snap28_filres', comparegeq=None):
             cumul = np.sum(histogram[idx:])
             print(f'above log10 N / cm^-2 = {limval:.2f}, absorbers/dz = {cumul} for {label}')
 
+def plotcddf_filpart_testcddfs(histname='o7_L100_snap28_filres'):
+    if histname == 'o7_L100_snap28_filres':
+        fn = 'histogram_filaments_coldens_o7_L0100N1504_28_test3.4_PtAb_C2Sm_4096pix_0.390625slice_zcen-all_z-projection_T4EOS_filament_map_v1.hdf5'
+        xlabel = r'$\log_{10} \, \mathrm{N}(\mathrm{O\,VII}) \; [\mathrm{cm}^{-2}]$'
+    ylabel = r'$\log_{10} \; \partial^2 n \,/\, \partial \log_{10} \mathrm{N} \, \partial X$'
+    # retrieve filament map data
+    with h5py.File(filmapdir + fn, 'r') as fi:
+        histogram_all = np.array(fi['histogram_all'])
+        histogram_fil = np.array(fi['histogram_fil'])
+        edges = np.array(fi['edges'])
+        
+        input_files = np.array(fi['colmapset'])
+        input_ex = input_files[0].decode()
+        with h5py.File(input_ex, 'r') as fm:
+            cosmopars = {key: val for key, val in fm['Header/inputpars/cosmopars'].attrs.items()}
+            n2pix_map = fm['Header/inputpars'].attrs['npix_x'] * fm['Header/inputpars'].attrs['npix_y']
+            axname = fm['Header/inputpars'].attrs['axis'].decode()
+            slice_length = fm['Header/inputpars'].attrs[f'L_{axname}']
+            if not bool(fm['Header/inputpars'].attrs[f'LsinMpc']):
+                slice_length /= cosmopars['h']
+            boxsize = cosmopars['boxsize'] / cosmopars['h']
+        numcounts_target = int(boxsize / slice_length + 0.5) * n2pix_map
+        if edges[0] == -np.inf:
+            if numcounts_target != np.sum(histogram_all):
+                print('The number of histograms does not match expectations from pixel size and slice thicknesss')
+        else:
+            print(f'The total histogram contains {np.sum(histogram_all) / numcounts_target} of the input pixels')
+        print(f'The filaments contain {np.sum(histogram_fil) / np.sum(histogram_all)} of the counted pixels,')
+        dXtot = mc.getdX(cosmopars['z'], boxsize, cosmopars=cosmopars) * n2pix_map
+    
+    if edges[0] == -np.inf:
+        edges[0] = 2. * edges[1] - edges[2]
+    if edges[-1] == np.inf:
+        edges[-1] = 2 * edges[-2] - edges[-3]
+    dlogN = np.diff(edges)
+    cens = edges[:-1] + 0.5 * dlogN
+    # get 6.25 cMpc cddfs for comparison
+    alsoplot = {}
+    if histname == 'o7_L100_snap28_filres':
+        defcddfg = 'cddf_coldens_o7_L0100N1504_28_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_16-x-6.250000slices_range-25.0-28.0_1060bins.npz'
+        defcddffile = '/net/luttero/data2/paper1/CDDFs.hdf5'
+        
+        with h5py.File(defcddffile, 'r') as fi:
+            grp = fi[defcddfg]
+            _hist = np.array(grp['dn_absorbers_dNdX'])
+            _edges = np.array(grp['left_edges'])
+            _diff = np.diff(_edges)
+            _diff = np.append(_diff, _diff[-1])
+            _cens = _edges + 0.5 * _diff
+            _dN_over_dlogN = np.log(10.) * 10**(_cens) # like in makecddfs calculations
+            _histogram = _hist * _dN_over_dlogN
+        alsoplot['all, 6.25 cMpc, high-res'] = {'x': _cens, 'y': _histogram}
+
+    #imgname = filmapdir + histname + '.pdf'
+    fig = plt.figure(figsize=(5.5, 5.))
+    ax = fig.add_subplot(1, 1, 1)
+    
+    fontsize = 12
+    linewidth = 2
+    ax.set_xlim(12., 16.5)
+    ax.set_ylim(-3.5, 2.7)
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    ax.tick_params(which='both', direction='in', top=True, right=True, labelsize=fontsize - 1.)
+    ax.minorticks_on()
+    
+    ax.plot(cens, np.log10(histogram_all / dXtot / dlogN), linewidth=linewidth, linestyle='solid', label=f'all, {slice_length:.2f} cMpc')
+    ax.plot(cens, np.log10(histogram_fil / dXtot / dlogN), linewidth=linewidth, linestyle='dashed', label=f'filaments, {slice_length:.2f} cMpc')
+    for key in alsoplot:
+        ax.plot(alsoplot[key]['x'], np.log10(alsoplot[key]['y']), linewidth=linewidth, linestyle='dashed', label=key)
+  
+    testfiles = ['/net/luttero/data2/proc/cddf_coldens_o7_L0100N1504_28_test3.4_PtAb_C2Sm_4096pix_0.390625slice_zcen-all_z-projection_T4EOSadd-1_offset-0_resreduce-1.hdf5',\
+                 '/net/luttero/data2/proc/cddf_coldens_o7_L0100N1504_28_test3.4_PtAb_C2Sm_4096pix_0.390625slice_zcen-all_z-projection_T4EOSadd-16_offset-0_resreduce-1.hdf5',\
+                 '/net/luttero/data2/proc/cddf_coldens_o7_L0100N1504_28_test3.4_PtAb_C2Sm_4096pix_0.390625slice_zcen-all_z-projection_T4EOSadd-16_offset-8_resreduce-1.hdf5',\
+                 '/net/luttero/data2/proc/cddf_coldens_o7_L0100N1504_28_test3.4_PtAb_C2Sm_4096pix_0.390625slice_zcen-all_z-projection_T4EOSadd-16_offset-0_resreduce-2.hdf5',\
+                 '/net/luttero/data2/proc/cddf_coldens_o7_L0100N1504_28_test3.4_PtAb_C2Sm_4096pix_0.390625slice_zcen-all_z-projection_T4EOSadd-1_offset-8_resreduce-2.hdf5',\
+                 ]
+    for filen in testfiles:
+        with h5py.File(filen, 'r') as fi:
+            hist = np.array(fi['histogram'])
+            edges = np.array(fi['edges'])
+            dX = fi['Header'].attrs['dX']
+            add = fi['Header'].attrs['added_slices']
+            res = fi['Header'].attrs['resreduce']
+            off = fi['Header'].attrs['offset_slice_addition']
+            if edges[0] == -np.inf:
+                edges[0] = 2. * edges[1] - edges[2]
+            if edges[-1] == np.inf:
+                edges[-1] = 2 * edges[-2] - edges[-3]
+            dlogN = np.diff(edges)
+            cens = edges[:-1] + 0.5 * dlogN
+            ax.plot(cens, np.log10(hist / dlogN / dX), linewidth=linewidth, linestyle='dotted', label='add {}, res {}, off {}'.format(add, res, off))
+            
+    ax.legend(fontsize=fontsize, loc='lower left')
+    
+    #plt.savefig(imgname, format='pdf', bbox_inches='tight')
+    
+
+            
 def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=-1):
     if n == -1:
         n = cmap.N

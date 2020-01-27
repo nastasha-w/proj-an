@@ -557,8 +557,8 @@ def getdX(redshift,L_z,cosmopars=None):
         hpar = cosmopars['h']
     else:     
         hpar = c.hubbleparam
-    dz = csu.Hubble(redshift,cosmopars=cosmopars)/c.c * L_z * c.cm_per_mpc
-    dX = dz * (1+redshift)**2*c.hubble*hpar/csu.Hubble(redshift,cosmopars=cosmopars) 
+    dz = Hubble(redshift, cosmopars=cosmopars) / c.c * L_z * c.cm_per_mpc
+    dX = dz * (1+redshift)**2 * c.hubble * hpar / Hubble(redshift, cosmopars=cosmopars) 
     return dX
 
 
@@ -567,5 +567,5 @@ def getdz(redshift,L_z,cosmopars=None):
     # assumed in single-snapshot projection anyway 
     if cosmopars is not None:
         redshift = cosmopars['z']
-    dz = csu.Hubble(redshift,cosmopars=cosmopars)/c.c * L_z * c.cm_per_mpc
+    dz = Hubble(redshift, cosmopars=cosmopars) / c.c * L_z * c.cm_per_mpc
     return dz

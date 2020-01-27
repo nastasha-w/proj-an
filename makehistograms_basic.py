@@ -586,10 +586,15 @@ def makehist_cddf_sliceadd(filebase, fills=None, add=1, addoffset=0,\
         if fills is None:
             outname = ol.pdir + 'cddf_' + filebase_nodir
         else:
-            outname = ol.pdir + 'cddf_' + filebase_nodir%('-all')
+            outname = ol.pdir + 'cddf_' + filebase_nodir.format('-all')
+        if outname[-5:] == '.hdf5':
+            outname = outname[:-5]
+        outname = outname + '_add-%i_offset-%i_resreduce-%i'%(add, addoffset, resreduce)
     elif '/' not in outname:
         outname = ol.pdir + outname
-    
+    if outname[-5:] != '.hdf5':
+        outname = outname + '.hdf5'
+    print('Will save file: {}'.format(outname))
     if fills is None:
         files = np.array([filebase])
         add = 1
@@ -605,7 +610,7 @@ def makehist_cddf_sliceadd(filebase, fills=None, add=1, addoffset=0,\
     if len(files) % add != 0:
         raise ValueError('add ({}) must divide the number of slices ({})'.format(add, len(files)))
     if add == 1:
-        filesets = [files]
+        filesets = np.array(files)[:, np.newaxis]
     else:
         filesets = files.reshape(len(files) // add, add)
     
@@ -645,7 +650,7 @@ def makehist_cddf_sliceadd(filebase, fills=None, add=1, addoffset=0,\
                             raise ValueError('cosmopars in file {} do not match previously found values'.format(filen))
 
                     arr = np.array(ft['map'])
-                    log = bool(ft['Header/inputpars'].attrs('log'))
+                    log = bool(ft['Header/inputpars'].attrs['log'])
                     if log:
                         arr = 10**arr
                     if resreduce != 1:
@@ -659,7 +664,7 @@ def makehist_cddf_sliceadd(filebase, fills=None, add=1, addoffset=0,\
             # thick slice addition loop done; get histogram of added slices
             if log:
                 arr_adder = np.log10(arr_adder)
-            subhist, edges = np.histogramdd([arr_adder], bins=[bins])
+            subhist, edges = np.histogramdd([arr_adder.flatten()], bins=[bins])
             edges = edges[0]
             if not np.all(edges == bins):
                 raise RuntimeError('Input bins do not match output histogram edges')
@@ -670,7 +675,7 @@ def makehist_cddf_sliceadd(filebase, fills=None, add=1, addoffset=0,\
         # histogramming loop over thick slices done
         fo.create_dataset('edges', data=edges)
         fo.create_dataset('histogram', data=histogram)
-        csm = hed.create_group(cosmopars)
+        csm = hed.create_group('cosmopars')
         for key in cosmopars:
             csm.attrs.create(key, cosmopars[key])
         dX = cu.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars)

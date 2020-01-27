@@ -1785,7 +1785,20 @@ if jobind == 10032:
     mc.getcddf_npztonpz('coldens_o7_L0100N1504_26_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz', fills100, numbins=1060)
 elif jobind == 10033:
     mc.getcddf_npztonpz('coldens_o8_L0100N1504_26_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz', fills100, numbins=1060)
-    
+
+# new makehistograms test
+elif jobind == 10034:
+    fills = [str(i) for i in (np.arange(256) + 0.5) * 100./256.]
+    filebase = 'coldens_o7_L0100N1504_28_test3.4_PtAb_C2Sm_4096pix_0.390625slice_zcen{}_z-projection_T4EOS.hdf5'
+    add = [1, 16, 16, 16, 1]
+    addoffset = [0, 0, 8, 0, 8]
+    resreduce = [1, 1, 1, 2, 2]
+    bins = np.arange(-28., 25.01, 0.05)
+    for i in range(len(add)):
+        print('\n index %i \n'%i)
+        mh.makehist_cddf_sliceadd(filebase, fills=fills, add=add[i],\
+                                  addoffset=addoffset[i], resreduce=resreduce[i],\
+                                  bins=bins, includeinf=True)
 
 ############################################
 ############ radial profiles ###############
