@@ -488,6 +488,8 @@ def SFR_eagle(pm, T, rho, Z, cosmopars):
     SFR[np.logical_not(hassfr)] = 0.
     return SFR[()] # return a single value is floats were input, otherwise the array
 
+
+
 # John Helly's routine, via Peter
 def match(arr1, arr2, arr2_sorted=False, arr2_index=None):
     """
@@ -546,3 +548,24 @@ def match(arr1, arr2, arr2_sorted=False, arr2_index=None):
     ptr = np.where(ptr>= 0, ind[ptr], -1)
     
     return ptr
+
+def getdX(redshift,L_z,cosmopars=None):
+    # assuming L_z is smaller than the distance over which H varies significantly; 
+    # assumed in single-snapshot projection anyway 
+    if cosmopars is not None:
+        redshift = cosmopars['z']
+        hpar = cosmopars['h']
+    else:     
+        hpar = c.hubbleparam
+    dz = csu.Hubble(redshift,cosmopars=cosmopars)/c.c * L_z * c.cm_per_mpc
+    dX = dz * (1+redshift)**2*c.hubble*hpar/csu.Hubble(redshift,cosmopars=cosmopars) 
+    return dX
+
+
+def getdz(redshift,L_z,cosmopars=None):
+    # assuming L_z is smaller than the distance over which H varies significantly; 
+    # assumed in single-snapshot projection anyway 
+    if cosmopars is not None:
+        redshift = cosmopars['z']
+    dz = csu.Hubble(redshift,cosmopars=cosmopars)/c.c * L_z * c.cm_per_mpc
+    return dz

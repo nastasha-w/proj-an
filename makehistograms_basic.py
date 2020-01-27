@@ -11,17 +11,33 @@ that comes with, except for cases where ion balances are calculated explicitly)
 
 import numpy as np
 import h5py
+
 import make_maps_opts_locs as ol
+import cosmo_utils as cu
 
 ndir = ol.ndir
 mdir = '/net/luttero/data2/imgs/eagle_vs_bahamas_illustris/' # luttero location
 pdir = ol.pdir
 
-def makehist(arrdict,**kwargs):
+def makehist(arrdict, **kwargs):
     '''
-    pretty thin wrapper for histogramdd; just flattens images and applies isfinite mask
-    arrdict is a dictionary with a list of array npz files for each key; load only as needed! 
+    pretty thin wrapper for histogramdd; just flattens images and applies 
+    isfinite mask (if includeinf is False)
+    arrdict is a dictionary with a list of array npz or hdf5 files for each 
+    key; load only as needed! 
     (loops over keys and adds up the results if there are multiple keys)
+    
+    kwargs: 
+    'bins': list of integers (number of bins) or arrays of histogram bins to 
+            use; a single integer is assumed to apply to all bins 
+            if list: assumed to be a list if bins values for each histogram 
+            axis; int/array then applies per axis
+    'range': NOT IMPLEMENTED 
+             range of values (min/max) to count in the histogram
+    'weights': histogram weights to use; default is to just do a pixel count
+    'sel':  mask to apply to all the arrays before histogramming
+    others are passed to histogramdd directly
+    
     '''
     
 
@@ -32,14 +48,13 @@ def makehist(arrdict,**kwargs):
             # if we want to add them -> get min and max
             kwargs.update({'bins': 50}) # set number of bins to a default (histogramdd default is 10)
             setrange = True
-        elif isinstance(kwargs['bins'],int): # only number of bins is set
+        elif isinstance(kwargs['bins'], int): # only number of bins is set
             setrange = True
         else: # bins must be a sequence
-            setrange = [isinstance(binset,int) for binset in kwargs['bins']]
+            setrange = [isinstance(binset, int) for binset in kwargs['bins']]
 
         if np.any(np.array(setrange)):
-            print('For multiple arrays to histogram together, a range or bin edges must be specified')
-            return None
+            raise ValueError('For multiple arrays to histogram together, a range or bin edges must be specified')
            
         first = True
         for key in arrdict.keys():
@@ -72,14 +87,16 @@ def makehist(arrdict,**kwargs):
         else:
             sel = kwargss['sel']
             del kwargss['sel']
-        
-        inarrs = [arr['arr_0'][sel] for arr in arrdict[arrdict.keys()[0]]] # extract arrays, load
+         # extract arrays, load (should work for open npz or hdf5 files. Yay python!)
+        inarrs = [arr['arr_0'][sel] if 'arr_0' in arr.keys() else\
+                  arr['map'][sel] \
+                  for arr in arrdict[arrdict.keys()[0]]]
         #print(inarrs)
         if kwargss['includeinf']:
             allfinite = slice(None, None, None)
             print('Doing key %s'%(arrdict.keys()[0]))
         else:
-            allfinite = np.all(np.array([np.isfinite(inarrs[ind]) for ind in range(len(inarrs))]),axis=0) # check where all arrays are finite 
+            allfinite = np.all(np.array([np.isfinite(inarrs[ind]) for ind in range(len(inarrs))]), axis=0) # check where all arrays are finite 
             print('For key %s, %i values were excluded for being non-finite.'%(arrdict.keys()[0],np.prod(allfinite.shape)-np.sum(allfinite)))
         del kwargss['includeinf']
         inarrs = [(inarr[allfinite]).flatten() for inarr in inarrs] # exclude non-finite values and flatten arrays  
@@ -88,7 +105,7 @@ def makehist(arrdict,**kwargs):
             sublen =  32000**2 * 4 // len(inarrs) 
             numsub =  (len(inarrs[0]) - 1) // sublen + 1
             if numsub * sublen < len(inarrs[0]):
-                raise RuntimeError('A bug in the array looping for histograms would cuase only part of the input arrays to be used')
+                raise RuntimeError('A bug in the array looping for histograms would cause only part of the input arrays to be used')
             for subi in range(numsub):
                 subsel = slice(sublen * subi, sublen * (subi + 1))
                 if 'weights' in kwargss.keys():
@@ -117,7 +134,7 @@ def makehist_fromnpz(*filenames, **kwargs):
     kwargs are passed on to makehist -> histogramdd, 
     except that weight arrays can be specified by file 
     (use fills as dict keys to match main dict)
-    and except fills=None,save=None,dimlabels = None defaults
+    and except fills=None, save=None, dimlabels=None defaults
     '''
     filenames = list(filenames)
     for ind in range(len(filenames)):
@@ -532,6 +549,140 @@ def makehist_masked_toh5py(*filenames, **kwargs):
 # For key 233.333333333, 0 values were excluded for being non-finite.
 # For key 100.0, 0 values were excluded for being non-finite.
 
+
+def makehist_cddf_sliceadd(filebase, fills=None, add=1, addoffset=0,\
+                           resreduce=1,\
+                           bins=None, includeinf=True,\
+                           outname=None):
+    '''
+    1D histogram from files filebase, fills
+    works on hdf5 make_maps outputs, not the old npz format
+    
+    filebase.format(fill) for fill in fills are the files use here
+    files can be hdf5 of npz
+    add:      add this many slices together and treat as a single slice
+              fills must be floats or convertible to floats for this, and are
+              assumed to be slice centers, so that the adding produced thicker,
+              consecutive box slices
+    addoffset:determines which files are grouped together in thicker slices; 
+              addition starts at this index (taken modulo add for convient 
+              equivalence comparisons)
+    resreduce: reduce the resolution of the array by a factor resreduce along
+              each axis by averaging array values (takes 10**array first for
+              log values)
+    bins:     which bins to use: array or convertible to one
+    includeinf: include -inf, inf bin edges to make sure all data is accounted 
+              for
+    
+    output:
+    hdf5 file with the histogram, bins, and dX and dz values for the cddfs
+    '''
+    
+    filebase_nodir = filebase.split('/')[-1]
+    if filebase_nodir == filebase:
+        filebase = ol.ndir + filebase
+    
+    if outname is None:
+        if fills is None:
+            outname = ol.pdir + 'cddf_' + filebase_nodir
+        else:
+            outname = ol.pdir + 'cddf_' + filebase_nodir%('-all')
+    elif '/' not in outname:
+        outname = ol.pdir + outname
+    
+    if fills is None:
+        files = np.array([filebase])
+        add = 1
+        addoffset = 0
+    else:
+        fills = np.array(fills)
+        sortkeys = np.argsort([float(fill) for fill in fills])
+        fills = fills[sortkeys]
+        files = [filebase.format(fill) for fill in fills]
+        addoffset %= add
+        files = np.roll(files, len(files) - addoffset)
+        
+    if len(files) % add != 0:
+        raise ValueError('add ({}) must divide the number of slices ({})'.format(add, len(files)))
+    if add == 1:
+        filesets = [files]
+    else:
+        filesets = files.reshape(len(files) // add, add)
+    
+    if bins is None:
+        raise ValueError('bins should be specified')
+    if includeinf:
+        if bins[0] != -np.inf:
+            bins = np.array([-np.inf] + list(bins))
+        if bins[-1] != np.inf:
+            bins = np.array(list(bins) + [np.inf])
+    
+    # loop over files: read in and process
+    with h5py.File(outname, 'w') as fo:
+        hed = fo.create_group('Header')
+        hed.create_dataset('filenames_in', data=files.astype(np.string_))
+        hed.attrs.create('added_slices', add)
+        hed.attrs.create('offset_slice_addition', addoffset)
+        hed.attrs.create('resreduce', resreduce)
+        
+        histogram = None
+        cosmopars = None
+        for fsi in range(len(filesets)):
+            fileset = filesets[fsi]
+            
+            subgrp = hed.create_group('slice_%i'%fsi)
+            arr_adder = None
+            for filen in fileset:
+                with h5py.File(filen, 'r') as ft:
+                    sname = filen.split('/')[-1]
+                    ft.copy(ft['Header'], subgrp, name=sname)
+                    
+                    cosmopars_temp = {key: item for key, item in ft['Header/inputpars/cosmopars'].attrs.items()}
+                    if cosmopars is None:
+                        cosmopars = cosmopars_temp
+                    else:
+                        if cosmopars != cosmopars_temp:
+                            raise ValueError('cosmopars in file {} do not match previously found values'.format(filen))
+
+                    arr = np.array(ft['map'])
+                    log = bool(ft['Header/inputpars'].attrs('log'))
+                    if log:
+                        arr = 10**arr
+                    if resreduce != 1:
+                        if not (arr.shape[0] % resreduce == 0 and arr.shape[1] % resreduce == 0):
+                            raise ValueError('resreduce ({}) should divide the shape dimensions of the map ({} for file {})'.format(resreduce, arr.shape, filen))
+                        arr = np.average(arr.reshape(arr.shape[0] // resreduce, resreduce, arr.shape[1] // resreduce, resreduce), axis=(1, 3))
+                    if arr_adder is None:
+                        arr_adder = arr
+                    else:
+                        arr_adder += arr
+            # thick slice addition loop done; get histogram of added slices
+            if log:
+                arr_adder = np.log10(arr_adder)
+            subhist, edges = np.histogramdd([arr_adder], bins=[bins])
+            edges = edges[0]
+            if not np.all(edges == bins):
+                raise RuntimeError('Input bins do not match output histogram edges')
+            if histogram is None:
+                histogram = subhist
+            else:
+                histogram += subhist
+        # histogramming loop over thick slices done
+        fo.create_dataset('edges', data=edges)
+        fo.create_dataset('histogram', data=histogram)
+        csm = hed.create_group(cosmopars)
+        for key in cosmopars:
+            csm.attrs.create(key, cosmopars[key])
+        dX = cu.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars)
+        dz = cu.getdz(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars)
+        dX *= np.prod(arr_adder.shape)
+        dz *= np.prod(arr_adder.shape)
+        hed.attrs.create('dX', dX)
+        hed.attrs.create('dz', dz)
+                            
+    
+        
+    
 
 def makehistograms_ionbals(kind = 'diff'):
     '''
