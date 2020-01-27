@@ -1806,7 +1806,7 @@ elif jobind in range(10035, 10035 + 14):
     add = [1, 2, 4, 8, 2, 2, 2]
     res = [1, 1, 1, 1, 2, 4, 8]
     
-    ioni = (jobind - 10035) // len(ions)
+    ioni = (jobind - 10035) // len(add)
     addi = jobind - 10035 - ioni * len(add)
     
     ion = ions[ioni] 
@@ -1829,8 +1829,8 @@ elif jobind in range(10049, 10057):
     fills_25 = [str(i) for i in (np.arange(4) + 0.5) * 25. / 4.]
     fills_50 = [str(i) for i in (np.arange(8) + 0.5) * 50. / 8.]
     
-    ioni = (jobind - 10035) // len(ions)
-    basi = jobind - 10035 - ioni * len(bases)
+    ioni = (jobind - 10049) // len(bases)
+    basi = jobind - 10049 - ioni * len(bases)
 
     ion = ions[ioni] 
     filebase = (bases[basi]).format(ion)
