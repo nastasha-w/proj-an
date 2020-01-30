@@ -667,7 +667,7 @@ def makehist_cddf_sliceadd(filebase, fills=None, add=1, addoffset=0,\
             subhist, edges = np.histogramdd([arr_adder.flatten()], bins=[bins])
             edges = edges[0]
             if not np.all(edges == bins):
-                raise RuntimeError('Input bins do not match output histogram edges')
+                raise RuntimeError('Input bins do not match output histogram edges:\nedges: {}\nbins: {}'.format(edges, bins))
             if histogram is None:
                 histogram = subhist
             else:

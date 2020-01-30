@@ -3600,6 +3600,48 @@ def plot_masscontr_firstlook(addedges=(0.0, 1.), var='Mass'):
     plt.savefig(outname, format='pdf', box_inches='tight')
     
     
+def plot_conv_cddfs(ion='ne9', comp='pixres', rel=True):
+    '''
+    ion: 'ne9' or 'fe17'
+    comp: 'pixres', 'slices', 'boxres', 'boxsize'
+    rel: True/False: plot relative to default
+    '''    
+    datadir = ol.pdir
+    outdir = '/net/luttero/data2/imgs/cddfs_nice/'
+    if rel:
+        srel = 'rel'
+    else:
+        srel = 'abs'
+    imgname = outdir + 'cddf_conv_test_{}_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_z-projection_T4EOS_{}.pdf'.format(ion, comp, srel)
+    
+    if comp == 'pixres':
+        title = 'pixel size'
+        basefile = {'3.125 ckpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-2_offset-0_resreduce-1.hdf5'.format(ion)}
+        compfiles = {'6.25 ckpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-2_offset-0_resreduce-2.hdf5'.format(ion),\
+                     '12.5 ckpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-2_offset-0_resreduce-4.hdf5'.format(ion),\
+                     '25 ckpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-2_offset-0_resreduce-8.hdf5'.format(ion),\
+                     }
+    elif comp == 'slices':
+        title = 'slice thickness'
+        basefile = {'6.25 cMpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-2_offset-0_resreduce-1.hdf5'.format(ion)}
+        compfiles = {'3.125 cMpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion),\
+                     '12.5 cMpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-4_offset-0_resreduce-1.hdf5'.format(ion),\
+                     '25 cMpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-8_offset-0_resreduce-1.hdf5'.format(ion),\
+                     }
+    elif comp == 'boxsize':
+        title = 'box size'
+        basefile = {'L100N1504': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-2_offset-0_resreduce-1.hdf5'.format(ion)}
+        compfiles = {'L050N0752': 'cddf_coldens_{}_L0050N0752_27_test3.4_PtAb_C2Sm_16000pix_6.25slice_zcen21.875_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion),\
+                     'L025N0376': 'cddf_coldens_{}_L0025N0376_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen15.625_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion),\
+                     }
+    elif comp == 'boxres':
+        title = 'sim. resolution'
+        basefile = {'L025N0376-Ref': 'cddf_coldens_{}_L0025N0376_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen15.625_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion)}
+        compfiles = {'L025N0752-Ref': 'cddf_coldens_{}_L0025N0752_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen15.625_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion),\
+                     'L025N0752-Recal': 'cddf_coldens_{}_L0025N0752RECALIBRATED_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen15.625_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion),\
+                     }
+    
+    
 ###############################################################################
 #                  nice plots for the paper: simplified                       #
 ###############################################################################
