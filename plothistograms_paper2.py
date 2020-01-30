@@ -3618,33 +3618,37 @@ def plot_conv_cddfs(ion='ne9', comp='pixres', rel=True):
     
     if comp == 'pixres':
         title = 'pixel size'
-        basefile = {'3.125 ckpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-2_offset-0_resreduce-1.hdf5'.format(ion)}
-        compfiles = {'6.25 ckpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-2_offset-0_resreduce-2.hdf5'.format(ion),\
-                     '12.5 ckpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-2_offset-0_resreduce-4.hdf5'.format(ion),\
-                     '25 ckpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-2_offset-0_resreduce-8.hdf5'.format(ion),\
+        basefile = {'3.125 ckpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen-all_z-projection_T4EOS_add-2_offset-0_resreduce-1.hdf5'.format(ion)}
+        compfiles = {'6.25 ckpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen-all_z-projection_T4EOS_add-2_offset-0_resreduce-2.hdf5'.format(ion),\
+                     '12.5 ckpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen-all_z-projection_T4EOS_add-2_offset-0_resreduce-4.hdf5'.format(ion),\
+                     '25 ckpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen-all_z-projection_T4EOS_add-2_offset-0_resreduce-8.hdf5'.format(ion),\
                      }
+        yrel = (0.1, 1.5)
     elif comp == 'slices':
         title = 'slice thickness'
-        basefile = {'6.25 cMpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-2_offset-0_resreduce-1.hdf5'.format(ion)}
-        compfiles = {'3.125 cMpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion),\
-                     '12.5 cMpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-4_offset-0_resreduce-1.hdf5'.format(ion),\
-                     '25 cMpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-8_offset-0_resreduce-1.hdf5'.format(ion),\
+        basefile = {'6.25 cMpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen-all_z-projection_T4EOS_add-2_offset-0_resreduce-1.hdf5'.format(ion)}
+        compfiles = {'3.125 cMpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen-all_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion),\
+                     '12.5 cMpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen-all_z-projection_T4EOS_add-4_offset-0_resreduce-1.hdf5'.format(ion),\
+                     '25 cMpc': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen-all_z-projection_T4EOS_add-8_offset-0_resreduce-1.hdf5'.format(ion),\
                      }
+        yrel = (0.5, 2.)
     elif comp == 'boxsize':
         title = 'box size'
-        basefile = {'L100N1504': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS_add-2_offset-0_resreduce-1.hdf5'.format(ion)}
-        compfiles = {'L050N0752': 'cddf_coldens_{}_L0050N0752_27_test3.4_PtAb_C2Sm_16000pix_6.25slice_zcen21.875_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion),\
-                     'L025N0376': 'cddf_coldens_{}_L0025N0376_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen15.625_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion),\
+        basefile = {'L100N1504': 'cddf_coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen-all_z-projection_T4EOS_add-2_offset-0_resreduce-1.hdf5'.format(ion)}
+        compfiles = {'L050N0752': 'cddf_coldens_{}_L0050N0752_27_test3.4_PtAb_C2Sm_16000pix_6.25slice_zcen-all_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion),\
+                     'L025N0376': 'cddf_coldens_{}_L0025N0376_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen-all_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion),\
                      }
+        yrel = (0.05, 20.)
     elif comp == 'boxres':
         title = 'sim. resolution'
-        basefile = {'L025N0376-Ref': 'cddf_coldens_{}_L0025N0376_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen15.625_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion)}
-        compfiles = {'L025N0752-Ref': 'cddf_coldens_{}_L0025N0752_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen15.625_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion),\
-                     'L025N0752-Recal': 'cddf_coldens_{}_L0025N0752RECALIBRATED_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen15.625_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion),\
+        basefile = {'L025N0376-Ref': 'cddf_coldens_{}_L0025N0376_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen-all_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion)}
+        compfiles = {'L025N0752-Ref': 'cddf_coldens_{}_L0025N0752_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen-all_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion),\
+                     'L025N0752-Recal': 'cddf_coldens_{}_L0025N0752RECALIBRATED_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen-all_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion),\
                      }
+        yrel = (0.05, 30.)
     basekey = list(basefile.keys())[0]
     if rel:
-        ylabel = r'$\left(\mathrm{d}n(\mathrm{N}) \,/\, \mathrm{d}X \right) \,/\,${}'.format(basekey)
+        ylabel = r'$\left(\partial n(\mathrm{N}) \,/\, \partial X \right) \,/\,$' + basekey
     else:
         ylabel = r'$\partial^2n \,/\, \partial \log_{10} \mathrm{N} \, \partial X$'
         
@@ -3655,40 +3659,50 @@ def plot_conv_cddfs(ion='ne9', comp='pixres', rel=True):
     ax = fig.add_subplot(1, 1, 1)
     fontsize = 12
     
-    ax.set_xlabel(r'$\log_{10} \, \mathrm{N}(\mathrm{{{}}}) \; [\mathrm{cm}^{-2}]$'.format(ild.getnicename(ion, mathmode=True)), fontsize=fontsize)
+    ax.set_xlabel('$\\log_{{10}} \\, \\mathrm{{N}}(\mathrm{{{}}}) \; [\\mathrm{{cm}}^{{-2}}]$'.format(ild.getnicename(ion, mathmode=True)), fontsize=fontsize)
     ax.set_ylabel(ylabel, fontsize=fontsize)
     ax.set_yscale('log')
     ax.tick_params(which='both', direction='in', right=True, top=True, labelsize=fontsize - 1.)
     ax.minorticks_on()
+    ax.set_xlim(12., 17.)
+    if rel:
+        ax.set_ylim(*yrel)
+    else:
+        ax.set_ylim(1e-6, 2e2)
     
     compfiles.update(basefile)
     plotlines = {}
     for key in compfiles:
-        with h5py.File(compfiles[key]) as fi:
-            hist = np.array(fi[kw_hist])
-            edges = np.array(fi[kw_edge])
-            if edges[0] == -np.inf:
-                edges[0] = 2. * edges[1] - edges[2]
-            if edges[-1] == np.inf:
-                edges[-1] = 2. * edges[-2] - edges[-3]
-            diff = np.diff(edges)
-            dX = fi['Header'].attrs['dX']
-            
-            cens = edges[:-1] + 0.5 * diff
-            vals = hist / diff / dX
-            
-            plotlines[key] = {'x': cens, 'y': vals}
-    
-    for key in compfiles:
+        with h5py.File(datadir + compfiles[key], 'r') as fi:
+            try:
+                hist = np.array(fi[kw_hist])
+                edges = np.array(fi[kw_edge])
+                if edges[0] == -np.inf:
+                    edges[0] = 2. * edges[1] - edges[2]
+                if edges[-1] == np.inf:
+                    edges[-1] = 2. * edges[-2] - edges[-3]
+                diff = np.diff(edges)
+                dX = fi['Header'].attrs['dX']
+                
+                cens = edges[:-1] + 0.5 * diff
+                vals = hist / diff / dX
+                
+                plotlines[key] = {'x': cens, 'y': vals}
+            except KeyError as err:
+                print('Error arose for file {}'.format(compfiles[key]))
+                raise err
+    keys = sorted(list(compfiles.keys()), key=lambda st: st.split(' ')[0])
+    for key in keys:
         xv = plotlines[key]['x']
-        yv = plotlines[key]['y']
+        yv = np.copy(plotlines[key]['y'])
         if rel:
-            yv /= plotlines[basekey]['y']
+            yv = yv / plotlines[basekey]['y']
         ax.plot(xv, yv, linewidth=2, label=key)
     
     ax.legend(fontsize=fontsize, loc='lower left')
     ax.text(0.98, 0.98, ild.getnicename(ion, mathmode=False), fontsize=fontsize,\
-            horizontalalignment='right', verticalalignment='top')
+            horizontalalignment='right', verticalalignment='top',
+            transform=ax.transAxes)
     
     plt.savefig(imgname, format='pdf', box_inches='tight')
         
