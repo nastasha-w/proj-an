@@ -3610,8 +3610,10 @@ def plot_conv_cddfs(ion='ne9', comp='pixres', rel=True):
     outdir = '/net/luttero/data2/imgs/cddfs_nice/'
     if rel:
         srel = 'rel'
+        ylabel = r'$\left(\mathrm{d}n(\mathrm{N}) \,/\, \mathrm{d}X \right) \,/\,${}'
     else:
         srel = 'abs'
+        r'$\partial^2n \,/\, \partial \log_{10} \mathrm{N} \, \partial X$'
     imgname = outdir + 'cddf_conv_test_{}_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_z-projection_T4EOS_{}.pdf'.format(ion, comp, srel)
     
     if comp == 'pixres':
@@ -3640,8 +3642,56 @@ def plot_conv_cddfs(ion='ne9', comp='pixres', rel=True):
         compfiles = {'L025N0752-Ref': 'cddf_coldens_{}_L0025N0752_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen15.625_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion),\
                      'L025N0752-Recal': 'cddf_coldens_{}_L0025N0752RECALIBRATED_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen15.625_z-projection_T4EOS_add-1_offset-0_resreduce-1.hdf5'.format(ion),\
                      }
+    basekey = list(basefile.keys())[0]
+    if rel:
+        ylabel = r'$\left(\mathrm{d}n(\mathrm{N}) \,/\, \mathrm{d}X \right) \,/\,${}'.format(basekey)
+    else:
+        ylabel = r'$\partial^2n \,/\, \partial \log_{10} \mathrm{N} \, \partial X$'
+        
+    kw_hist = 'histogram'
+    kw_edge = 'edges'
     
+    fig = plt.figure(figsize=(5.5, 5))
+    ax = fig.add_subplot(1, 1, 1)
+    fontsize = 12
     
+    ax.set_xlabel(r'$\log_{10} \, \mathrm{N}(\mathrm{{{}}}) \; [\mathrm{cm}^{-2}]$'.format(ild.getnicename(ion, mathmode=True)), fontsize=fontsize)
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    ax.set_yscale('log')
+    ax.tick_params(which='both', direction='in', right=True, top=True, labelsize=fontsize - 1.)
+    ax.minorticks_on()
+    
+    compfiles.update(basefile)
+    plotlines = {}
+    for key in compfiles:
+        with h5py.File(compfiles[key]) as fi:
+            hist = np.array(fi[kw_hist])
+            edges = np.array(fi[kw_edge])
+            if edges[0] == -np.inf:
+                edges[0] = 2. * edges[1] - edges[2]
+            if edges[-1] == np.inf:
+                edges[-1] = 2. * edges[-2] - edges[-3]
+            diff = np.diff(edges)
+            dX = fi['Header'].attrs['dX']
+            
+            cens = edges[:-1] + 0.5 * diff
+            vals = hist / diff / dX
+            
+            plotlines[key] = {'x': cens, 'y': vals}
+    
+    for key in compfiles:
+        xv = plotlines[key]['x']
+        yv = plotlines[key]['y']
+        if rel:
+            yv /= plotlines[basekey]['y']
+        ax.plot(xv, yv, linewidth=2, label=key)
+    
+    ax.legend(fontsize=fontsize, loc='lower left')
+    ax.text(0.98, 0.98, ild.getnicename(ion, mathmode=False), fontsize=fontsize,\
+            horizontalalignment='right', verticalalignment='top')
+    
+    plt.savefig(imgname, format='pdf', box_inches='tight')
+        
 ###############################################################################
 #                  nice plots for the paper: simplified                       #
 ###############################################################################

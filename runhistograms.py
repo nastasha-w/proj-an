@@ -1810,7 +1810,7 @@ elif jobind in range(10035, 10035 + 14):
     addi = jobind - 10035 - ioni * len(add)
     
     ion = ions[ioni] 
-    filebase_100 = 'coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen10.9375_z-projection_T4EOS.hdf5'.format(ion)
+    filebase_100 = 'coldens_{}_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_3.125slice_zcen{}_z-projection_T4EOS.hdf5'.format(ion, '{}')
     fills_100 =  [str(i) for i in (np.arange(32) + 0.5) * 100./32.]  
     bins = np.arange(-28., 25.01, 0.05)
     
@@ -1821,10 +1821,10 @@ elif jobind in range(10035, 10035 + 14):
 elif jobind in range(10049, 10057):
     ions = ['fe17', 'ne9']
     
-    bases = ['coldens_{}_L0025N0376_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen15.625_z-projection_T4EOS.hdf5',\
-             'coldens_{}_L0025N0752_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen15.625_z-projection_T4EOS.hdf5',\
-             'coldens_{}_L0025N0752RECALIBRATED_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen15.625_z-projection_T4EOS.hdf5',\
-             'coldens_{}_L0050N0752_27_test3.4_PtAb_C2Sm_16000pix_6.25slice_zcen21.875_z-projection_T4EOS.hdf5',\
+    bases = ['coldens_{}_L0025N0376_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen{}_z-projection_T4EOS.hdf5',\
+             'coldens_{}_L0025N0752_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen{}_z-projection_T4EOS.hdf5',\
+             'coldens_{}_L0025N0752RECALIBRATED_27_test3.4_PtAb_C2Sm_8000pix_6.25slice_zcen{}_z-projection_T4EOS.hdf5',\
+             'coldens_{}_L0050N0752_27_test3.4_PtAb_C2Sm_16000pix_6.25slice_zcen{}_z-projection_T4EOS.hdf5',\
              ]
     fills_25 = [str(i) for i in (np.arange(4) + 0.5) * 25. / 4.]
     fills_50 = [str(i) for i in (np.arange(8) + 0.5) * 50. / 8.]
@@ -1833,7 +1833,7 @@ elif jobind in range(10049, 10057):
     basi = jobind - 10049 - ioni * len(bases)
 
     ion = ions[ioni] 
-    filebase = (bases[basi]).format(ion)
+    filebase = (bases[basi]).format(ion, '{}')
     fills = fills_25 if 'L0025' in filebase else fills_50 
     bins = np.arange(-28., 25.01, 0.05)
     
