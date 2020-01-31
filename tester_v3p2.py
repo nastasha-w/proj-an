@@ -8,6 +8,7 @@ import numpy as np
 import h5py
 import pandas as pd
 from importlib import reload
+import os
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -1622,8 +1623,17 @@ def plot_testhaloonly(filename_halos='testselection.txt'):
         
         plt.savefig(figname, format='pdf')
 
+def getlogmap(filen):
+    with h5py.File(filen, 'r') as f:
+        _map = np.array(f['map'])
+        if not bool(f['Header/inputpars'].attrs('log')):
+            _map = np.log10(_map)
+    return _map
 
-def runtests_particleselection():
+def runproj_tests_particleselection(test='add-1', makeplot=True):
+    '''
+    test: 'add-1', 'avrange', 'kw-handle', 'multiple'
+    '''
     # fixed region etc.: that part should work. small region and res. for speed
     simnum = 'L0012N1088'
     snapnum = 28
@@ -1635,7 +1645,8 @@ def runtests_particleselection():
     npix_y = 400
     
     # put the test files away from the science stuff
-    m3.ol.ndir = '/net/luttero/data1/line_em_abs/v3_master_tests/particle_selection/'
+    testdir = '/net/luttero/data1/line_em_abs/v3_master_tests/particle_selection/'
+    m3.ol.ndir = testdir 
     
     # test for: 
     # - selections adding up to total when complementary
@@ -1650,23 +1661,67 @@ def runtests_particleselection():
                }
     kwargs_maps = {'Mass-T': {'ptypeW': 'basic', 'quantityW': 'Mass', 'excludeSFRW': 'T4',\
                               'ptypeQ': 'basic', 'quantityQ': 'Temperature', 'excludeSFRW': 'T4'},\
-                   'Mass-Tsf': {'ptypeW': 'basic', 'quantityW': 'Mass', 'excludeSFRW': False,\
+                   'Mass-Traw': {'ptypeW': 'basic', 'quantityW': 'Mass', 'excludeSFRW': False,\
                               'ptypeQ': 'basic', 'quantityQ': 'Temperature', 'excludeSFRW': False},\
                    'Mass-rho': {'ptypeW': 'basic', 'quantityW': 'Mass', 'excludeSFRW': 'T4',\
                                 'ptypeQ': 'basic', 'quantityQ': 'Density', 'excludeSFRW': 'T4'},\
                    }
-    kwargs_defaults = {'hdf5': True, 'ompproj': False, 'saveres': True}
-    m3.make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-         ptypeW,\
-         ionW=None, abundsW='auto', quantityW=None,\
-         ionQ=None, abundsQ='auto', quantityQ=None, ptypeQ=None,\
-         excludeSFRW=False, excludeSFRQ=False, parttype='0',\
-         theta=0.0, phi=0.0, psi=0.0, \
-         sylviasshtables=False, bensgadget2tables=False,\
-         var='auto', axis='z',log=True, velcut=False,\
-         periodic=True, kernel='C2', saveres=False,\
-         simulation='eagle', LsinMpc=None,\
-         select=None, selectlabel=None, halosel=None, kwargs_halosel=None,\
-         misc=None,\
-         ompproj=False, nameonly=False, numslices=None, hdf5=False,\
-         override_simdatapath=None)
+    selvals_T = [(None, 10**4.5), (10*4.5, 10**5.5), (10**5.5, None)]
+    selvals_rho = [(None, 10**-28), (10*-28, None)]
+    kwargs_defaults = {'hdf5': True, 'ompproj': False, 'saveres': True, 'periodic': True}
+    
+    if test in ['add-1', 'avrange']:
+        kwargslist = [kwargs_maps['Mass-T']] * 4
+        sellist = [None] + [[(selects['T'],) + vals] for vals in selvals_T]
+    
+    elif test in ['kw-handle']:
+        kwargslist = [kwargs_maps['Mass-T'], kwargs_maps['Mass-Traw']]
+        sellist = [[(selects['T'],) + selvals_T[0]]] * 2
+    
+    elif test in ['multiple']:
+        kwargslist = [kwargs_maps['Mass-T']] * 7 + [kwargs_maps['Mass-rho']] * 7
+        sellist = ( [None] +\
+                   [[(selects['T'],) + Tvals, (selvals_rho,) + rhovals] \
+                    for Tvals in selvals_T for rhovals in selvals_rho] ) * 2
+
+    outnames = []
+    argslist = [(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, dct['ptypeW']) for dct in kwargslist]
+    for ind in range(len(kwargslist)):
+        kwargs = kwargslist[ind].copy()
+        del kwargs['ptypeW']
+        args = argslist[ind]
+        select = sellist[ind]
+        kwargs.update(kwargs_defaults)
+
+        name = m3.make_map(*args, nameonly=True, select=select, **kwargs)
+        if not (os.path.isfile(name[0]) and os.path.isfile(name[1])):
+            m3.make_map(*args, nameonly=False, select=select, **kwargs)
+        outnames += list(name)
+        
+    if not makeplot:
+        return outnames
+    
+    if test == 'add-1':
+        targetfile_tot = outnames[0]
+        targetfile_av  = outnames[1]
+        wtfiles = [outnames[i] for i in [2, 4, 6]]
+        avfiles = [outnames[i] for i in [3, 5, 7]]
+        
+        map_tot = getlogmap(targetfile_tot)
+        map_av  = getlogmap(targetfile_av)
+        
+        wtmaps = [10**getlogmap(filen) for filen in wtfiles]
+        avmaps = [10**getlogmap(filen) for filen in avfiles]
+        
+        wtsum = np.log10(np.sum(wtmaps, axis=0))
+        avsum = np.log10(np.sum(wtmaps * avmaps, axis=0) / wtsum)
+        
+        compareplot(wtsum, map_tot, fontsize=12, clabel=r'$\log_{10}\Sigma(\mathrm{gas})$',\
+                    name =testdir + 'test_masscolumn_compareplot_add-1.pdf', diffmax=None)
+        compareplot(avsum, map_av, fontsize=12, clabel=r'$\log_{10}T(\mathrm{gas})$',\
+                    name =testdir + 'test_mass-weighted-temperature_compareplot_add-1.pdf', diffmax=None)
+        
+        comparehist(wtsum, map_tot, fontsize=12, clabel=r'$\log_{10}\Sigma(\mathrm{gas})$',\
+                     name =testdir + 'test_masscolumn_comparehist_add-1.pdf', diffmax=None)
+        compareplot(avsum, map_av, fontsize=12, clabel=r'$\log_{10}T(\mathrm{gas})$',\
+                    name =testdir + 'test_mass-weighted-temperature_comparehist_add-1.pdf', diffmax=None)
