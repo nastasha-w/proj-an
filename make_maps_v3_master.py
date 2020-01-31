@@ -3968,9 +3968,9 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,\
             saveattr(psel, 'any_selection', True)
             selection_element_counter = 0
             for selection_element in select:
-                sgrp = hsel.create_group('tuple_%i'%selection_element_counter)
+                sgrp = psel.create_group('tuple_%i'%selection_element_counter)
                 for key in selection_element[0]:
-                    saveattr(sgrp, key, val[key])
+                    saveattr(sgrp, key, selection_element[0][key])
                 saveattr(sgrp, 'minimum value', selection_element[1])
                 saveattr(sgrp, 'maximum value', selection_element[2])
                 selection_element_counter += 1
@@ -4632,9 +4632,9 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                             allinR200c=_dct['allinR200c'],\
                                             last=True, updatesel=False)
             
-            if select[1] is not None:
+            if seltuple[1] is not None:
                 psel.comb({'arr': values >= seltuple[1] / tocgs}) 
-            if select[2] is not None:
+            if seltuple[2] is not None:
                 psel.comb({'arr': values <  seltuple[2] / tocgs}) 
     
     # excludeSFR handling: use np.logical_not on selection array

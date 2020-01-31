@@ -7,8 +7,12 @@ Created on Mon Nov  6 16:32:05 2017
 import numpy as np
 import h5py
 import pandas as pd
-from importlib import reload
 import os
+# python3
+try:
+    from importlib import reload
+except ImportError:
+    pass
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -97,21 +101,21 @@ def imgplot(arr1,fontsize=12,clabel = '',name = dd_new + 'test.png', title = 'te
     
     plt.savefig(name,format = 'png')
     
-def compareplot(arr1,arr2,fontsize=12,clabel = '',name = dd_new + 'test.pdf',diffmax = None):
+def compareplot(arr1, arr2, fontsize=12, clabel = '', name=dd_new + 'test.pdf', diffmax=None):
     Vmin = -10. #min(np.min(arr1[np.isfinite(arr1)]),np.min(arr2[np.isfinite(arr2)]))
-    Vmax = max(np.max(arr1[np.isfinite(arr1)]),np.max(arr2[np.isfinite(arr2)]))
-    diff = arr1-arr2
+    Vmax = max(np.max(arr1[np.isfinite(arr1)]), np.max(arr2[np.isfinite(arr2)]))
+    diff = arr1 - arr2
     if diffmax is not None:
         maxdiff = diffmax
     else:    
         maxdiff = np.max(np.abs(diff)[np.isfinite(np.abs(diff))])
     
-    fig, ((ax1,ax2),(ax3,ax4)) = plt.subplots(nrows=2,ncols=2,sharex=False,sharey=False)
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=False, sharey=False)
     fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=None)
 
     ax1.tick_params(labelsize=fontsize)
     ax1.patch.set_facecolor(cm.get_cmap('viridis')(0.))
-    img = ax1.imshow(arr1.T,origin='lower', cmap=cm.get_cmap('viridis'), vmin = Vmin, vmax=Vmax,interpolation='nearest') 
+    img = ax1.imshow(arr1.T,origin='lower', cmap=cm.get_cmap('viridis'), vmin=Vmin, vmax=Vmax,interpolation='nearest') 
     ax1.set_title('test run',fontsize=fontsize)
     div = axgrid.make_axes_locatable(ax1)
     cax1 = div.append_axes("right",size="5%",pad=0.1)
@@ -122,7 +126,8 @@ def compareplot(arr1,arr2,fontsize=12,clabel = '',name = dd_new + 'test.pdf',dif
 
     ax2.tick_params(labelsize=fontsize)
     ax2.patch.set_facecolor(cm.get_cmap('viridis')(0.))
-    img = ax2.imshow(arr2.T,origin='lower', cmap=cm.get_cmap('viridis'), vmin = Vmin, vmax=Vmax,interpolation='nearest') 
+    img = ax2.imshow(arr2.T,origin='lower', cmap=cm.get_cmap('viridis'),\
+                     vmin=Vmin, vmax=Vmax, interpolation='nearest') 
     ax2.set_title('check run',fontsize=fontsize)
     div = axgrid.make_axes_locatable(ax2)
     cax2 = div.append_axes("right",size="5%",pad=0.1)
@@ -133,7 +138,8 @@ def compareplot(arr1,arr2,fontsize=12,clabel = '',name = dd_new + 'test.pdf',dif
 
     ax3.tick_params(labelsize=fontsize)
     ax3.patch.set_facecolor('black')
-    img = ax3.imshow((diff).T,origin='lower', cmap=cm.get_cmap('RdBu'), vmin = -maxdiff, vmax=maxdiff,interpolation='nearest') 
+    img = ax3.imshow((diff).T, origin='lower', cmap=cm.get_cmap('RdBu'),\
+                     vmin=-maxdiff, vmax=maxdiff, interpolation='nearest') 
     ax3.set_title('test - check',fontsize=fontsize)
     div = axgrid.make_axes_locatable(ax3)
     cax3 = div.append_axes("right",size="5%",pad=0.1)
@@ -143,7 +149,7 @@ def compareplot(arr1,arr2,fontsize=12,clabel = '',name = dd_new + 'test.pdf',dif
     cbar3.ax.tick_params(labelsize=fontsize)
     
     ax4.set_title('test - check')
-    ax4.hist(np.ndarray.flatten(diff[np.isfinite(diff)]),log=True,bins=50)
+    ax4.hist(np.ndarray.flatten(diff[np.isfinite(diff)]),log=True, bins=50)
     ax4.set_ylabel('number of pixels', fontsize = fontsize)
     ax4.set_xlabel(r'$\Delta$' +clabel, fontsize=fontsize)
 
@@ -1626,7 +1632,7 @@ def plot_testhaloonly(filename_halos='testselection.txt'):
 def getlogmap(filen):
     with h5py.File(filen, 'r') as f:
         _map = np.array(f['map'])
-        if not bool(f['Header/inputpars'].attrs('log')):
+        if not bool(f['Header/inputpars'].attrs['log']):
             _map = np.log10(_map)
     return _map
 
@@ -1635,7 +1641,7 @@ def runproj_tests_particleselection(test='add-1', makeplot=True):
     test: 'add-1', 'avrange', 'kw-handle', 'multiple'
     '''
     # fixed region etc.: that part should work. small region and res. for speed
-    simnum = 'L0012N1088'
+    simnum = 'L0012N0188'
     snapnum = 28
     centre = [6.25, 6.25, 3.125]
     L_x = 12.5
@@ -1666,7 +1672,7 @@ def runproj_tests_particleselection(test='add-1', makeplot=True):
                    'Mass-rho': {'ptypeW': 'basic', 'quantityW': 'Mass', 'excludeSFRW': 'T4',\
                                 'ptypeQ': 'basic', 'quantityQ': 'Density', 'excludeSFRW': 'T4'},\
                    }
-    selvals_T = [(None, 10**4.5), (10*4.5, 10**5.5), (10**5.5, None)]
+    selvals_T = [(None, 10**4.5), (10**4.5, 10**5.5), (10**5.5, None)]
     selvals_rho = [(None, 10**-28), (10*-28, None)]
     kwargs_defaults = {'hdf5': True, 'ompproj': False, 'saveres': True, 'periodic': True}
     
@@ -1710,11 +1716,15 @@ def runproj_tests_particleselection(test='add-1', makeplot=True):
         map_tot = getlogmap(targetfile_tot)
         map_av  = getlogmap(targetfile_av)
         
-        wtmaps = [10**getlogmap(filen) for filen in wtfiles]
-        avmaps = [10**getlogmap(filen) for filen in avfiles]
+        wtmaps = np.array([10**getlogmap(filen) for filen in wtfiles])
+        avmaps = np.array([10**getlogmap(filen) for filen in avfiles])
         
+        #return map_tot, map_av, wtmaps, avmaps
         wtsum = np.log10(np.sum(wtmaps, axis=0))
-        avsum = np.log10(np.sum(wtmaps * avmaps, axis=0) / wtsum)
+        avsum = np.log10(np.sum(wtmaps * avmaps, axis=0) / 10**wtsum)
+        
+        #print(np.allclose(map_tot, wtsum))
+        #print(np.allclose(map_av, avsum))
         
         compareplot(wtsum, map_tot, fontsize=12, clabel=r'$\log_{10}\Sigma(\mathrm{gas})$',\
                     name =testdir + 'test_masscolumn_compareplot_add-1.pdf', diffmax=None)
@@ -1723,5 +1733,5 @@ def runproj_tests_particleselection(test='add-1', makeplot=True):
         
         comparehist(wtsum, map_tot, fontsize=12, clabel=r'$\log_{10}\Sigma(\mathrm{gas})$',\
                      name =testdir + 'test_masscolumn_comparehist_add-1.pdf', diffmax=None)
-        compareplot(avsum, map_av, fontsize=12, clabel=r'$\log_{10}T(\mathrm{gas})$',\
+        comparehist(avsum, map_av, fontsize=12, clabel=r'$\log_{10}T(\mathrm{gas})$',\
                     name =testdir + 'test_mass-weighted-temperature_comparehist_add-1.pdf', diffmax=None)
