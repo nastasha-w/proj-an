@@ -462,7 +462,7 @@ class Vardict:
         '''
         #self.reportmemuse()
         if not isinstance(selname, Sel) and not isinstance(selname, dict):
-            selname = Sel({'arr': selname},'arr') # if input is a numpy array, don't do a second copy for comb/refine calls
+            selname = Sel({'arr': selname}, 'arr') # if input is a numpy array, don't do a second copy for comb/refine calls
         if selname.seldef and self.readsel.seldef:
             if selname.val.shape == self.readsel.val.shape:
                 self.tempsel = selname.val[self.readsel.val]

@@ -4636,7 +4636,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                 psel.comb({'arr': values >= seltuple[1] / tocgs}) 
             if seltuple[2] is not None:
                 psel.comb({'arr': values <  seltuple[2] / tocgs}) 
-    
+        vardict_WQ.update(psel)
+        
     # excludeSFR handling: use np.logical_not on selection array
     # this is needed for all calculations, so might as well do it here
     # only remaining checks on excludeSFR are for 'T4' and 'from'

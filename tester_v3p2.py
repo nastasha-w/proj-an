@@ -102,8 +102,9 @@ def imgplot(arr1,fontsize=12,clabel = '',name = dd_new + 'test.png', title = 'te
     plt.savefig(name,format = 'png')
     
 def compareplot(arr1, arr2, fontsize=12, clabel = '', name=dd_new + 'test.pdf', diffmax=None):
-    Vmin = -10. #min(np.min(arr1[np.isfinite(arr1)]),np.min(arr2[np.isfinite(arr2)]))
+    Vmin = min(np.min(arr1[np.isfinite(arr1)]),np.min(arr2[np.isfinite(arr2)]))
     Vmax = max(np.max(arr1[np.isfinite(arr1)]), np.max(arr2[np.isfinite(arr2)]))
+    Vmin = max(Vmin - 10., Vmin)
     diff = arr1 - arr2
     if diffmax is not None:
         maxdiff = diffmax
@@ -115,7 +116,8 @@ def compareplot(arr1, arr2, fontsize=12, clabel = '', name=dd_new + 'test.pdf', 
 
     ax1.tick_params(labelsize=fontsize)
     ax1.patch.set_facecolor(cm.get_cmap('viridis')(0.))
-    img = ax1.imshow(arr1.T,origin='lower', cmap=cm.get_cmap('viridis'), vmin=Vmin, vmax=Vmax,interpolation='nearest') 
+    img = ax1.imshow(arr1.T,origin='lower', cmap=cm.get_cmap('viridis'),\
+                     vmin=Vmin, vmax=Vmax,interpolation='nearest') 
     ax1.set_title('test run',fontsize=fontsize)
     div = axgrid.make_axes_locatable(ax1)
     cax1 = div.append_axes("right",size="5%",pad=0.1)
@@ -1716,12 +1718,15 @@ def runproj_tests_particleselection(test='add-1', makeplot=True):
         map_tot = getlogmap(targetfile_tot)
         map_av  = getlogmap(targetfile_av)
         
-        wtmaps = np.array([10**getlogmap(filen) for filen in wtfiles])
-        avmaps = np.array([10**getlogmap(filen) for filen in avfiles])
+        wtmaps = np.array([getlogmap(filen) for filen in wtfiles])
+        avmaps = np.array([getlogmap(filen) for filen in avfiles])
         
         #return map_tot, map_av, wtmaps, avmaps
-        wtsum = np.log10(np.sum(wtmaps, axis=0))
-        avsum = np.log10(np.sum(wtmaps * avmaps, axis=0) / 10**wtsum)
+        
+        avsum = np.sum(10**(wtmaps + avmaps), axis=0) 
+        wtsum = np.sum(10**wtmaps, axis=0)
+        avsum = np.log10(avsum / wtsum)
+        wtsum = np.log10(wtsum)
         
         #print(np.allclose(map_tot, wtsum))
         #print(np.allclose(map_av, avsum))
