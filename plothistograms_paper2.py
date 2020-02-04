@@ -118,6 +118,9 @@ def T200c_hot(M200c, cosmopars):
     return (mu * c.protonmass) / (3. * c.boltzmann) * c.gravity * _M200c / R200c
 
 def R200c_pkpc(M200c, cosmopars):
+    '''
+    M200c: solar masses
+    '''
     M200c *= c.solar_mass # to cgs
     rhoc = (3. / (8. * np.pi * c.gravity) * cu.Hubble(cosmopars['z'], cosmopars=cosmopars)**2) # Hubble(z) will assume an EAGLE cosmology
     R200c = (M200c / (200. * rhoc))**(1./3.)
@@ -799,7 +802,7 @@ def plot_Tvir_ions(snap=27, _ioncolors=ioncolors):
     handles = [mlines.Line2D([], [], label=ild.getnicename(ion, mathmode=False), color=ioncolors[ion]) for ion in allions]
     ax.legend(handles=handles, fontsize=fontsize, ncol=3, bbox_to_anchor=(0.0, 1.0), loc='upper left', frameon=False)
 
-    plt.savefig(mdir + 'ionbals_snap27_HM01_ionizedmu_inclhneutralssh.pdf', format='pdf', bbox_inches='tight')
+    plt.savefig(mdir + 'ionbals_snap{}_HM01_ionizedmu_inclhneutralssh.pdf'.format(snap), format='pdf', bbox_inches='tight')
 
 
 
@@ -3911,7 +3914,12 @@ def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors):
         logrhob = logrhob_av_ea_27
         logrhoc = logrhoc_ea_27
         #print(logrhob, logrhoc)
-    
+    elif snap == 23:
+        cosmopars = cosmopars_ea_27
+        cosmopars['a'] = 0.665288  # eagle wiki
+        cosmopars['z'] = 1. / cosmopars['a'] - 1. 
+        logrhob = np.log10( 3. / (8. * np.pi * c.gravity) * c.hubble**2 * cosmopars['h']**2 * cosmopars['omegab'] / cosmopars['a']**3 )
+        
     ions = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'] #, 'he2'
     ioncolors = _ioncolors.copy()
     
@@ -4012,7 +4020,7 @@ def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors):
         handles = [mlines.Line2D([], [], label=ild.getnicename(ion, mathmode=False), color=ioncolors[ion]) for ion in axions[axi]]
         ax.legend(handles=handles, fontsize=fontsize, ncol=3, bbox_to_anchor=(0.0, 1.0), loc='upper left', frameon=False)
 
-    plt.savefig(mdir + 'ionbals_snap27_HM01_ionizedmu.pdf', format='pdf', bbox_inches='tight')
+    plt.savefig(mdir + 'ionbals_snap{}_HM01_ionizedmu.pdf'.format(snap), format='pdf', bbox_inches='tight')
     
 def plot_Tvir_ions_nice_talkversion(snap=27, _ioncolors=ioncolors, num=0):
     '''
@@ -4141,10 +4149,7 @@ def plot_Tvir_ions_nice_talkversion(snap=27, _ioncolors=ioncolors, num=0):
 ## CDDFsplits: using Fof-only projections instead of masks
 def plotcddfsplits_fof(relative=False):
     '''
-    Note: all haloes line with masks (brown dashed) is for all haloes with 
-          M200c > 10^9 Msun, while the solid line is for all FoF+200c gas at 
-          any M200c
-    appedix plot 
+    paper plot: FoF-only projections vs. all gas
     '''
     ions = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'] #, 'hneutralssh'
     
@@ -4459,7 +4464,7 @@ def plotcddfsplits_fof(relative=False):
         # all halo gas CDDF
         bins = dct_fofcddf[ion]['none']['bins']
         plotx = bins[:-1] + 0.5 * np.diff(bins)
-        ax.plot(plotx, np.log10(dct_fofcddf[ion]['none']['none']['cddf'] / divby), color=colors['allhalos'], linestyle='solid', alpha=alpha, path_effects=patheff, linewidth=linewidth)
+        ax.plot(plotx, np.log10(dct_fofcddf[ion]['none']['none']['cddf'] / divby), color=colors['allhalos'], linestyle='dashed', alpha=alpha, path_effects=patheff, linewidth=linewidth)
 
         text = r'$\mathrm{%s}$'%(ild.getnicename(ion, mathmode=True))
         if relative:
@@ -4482,8 +4487,8 @@ def plotcddfsplits_fof(relative=False):
     #lax.legend(lcs, [legendnames_techvars[var] for var in techvars], handler_map={type(lc): HandlerDashedLines()}) #handlelength=2.5, handleheight=3
     #handles_ax1, labels_ax1 = axes[0].get_legend_handles_labels()
     sumhandles = [#mlines.Line2D([], [], color=colors['none'], linestyle='solid', label='FoF no mask', linewidth=2.),\
-                  mlines.Line2D([], [], color=colors['total'], linestyle='solid', label='total', linewidth=2.),\
-                  mlines.Line2D([], [], color=colors['allhalos'], linestyle='solid', label=r'all FoF+200c gas', linewidth=2.),\
+                  mlines.Line2D([], [], color=colors['total'], linestyle='solid', label='all gas', linewidth=2.),\
+                  mlines.Line2D([], [], color=colors['allhalos'], linestyle='dashed', label=r'all halo gas', linewidth=2.),\
                   ]
     sumlabels = ['all gas', r'all halo gas']
     lax.legend(lcs + sumhandles, ['halo gas'] + sumlabels, handler_map={type(lc): HandlerDashedLines()}, fontsize=fontsize, ncol=ncol_legend, loc='lower center', bbox_to_anchor=(0.5, 0.))
@@ -5471,6 +5476,15 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
     ytype='perc'
     yvals_toplot=[10., 50., 90.]
     highlightcrit={'techvars': [0]} 
+    plotcrit = {0: None,\
+                7: {'o6':   {'Mmin': [11., 12.,  14.]},\
+                    'o7':   {'Mmin': [11., 12.5, 14.]},\
+                    'o8':   {'Mmin': [11., 13.,  14.]},\
+                    'ne8':  {'Mmin': [11., 12.,  14.]},\
+                    'ne9':  {'Mmin': [11., 13.,  14.]},\
+                    'fe17': {'Mmin': [11., 13.,  14.]},\
+                    },\
+                }
     printnumgals=False
     
     mdir = '/net/luttero/data2/imgs/CGM/radprof/'
@@ -5901,6 +5915,12 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
                     continue
                 plotx = plotx[:-1] + 0.5 * np.diff(plotx)
 
+                if plotcrit[var] is not None:
+                    mlist = plotcrit[var][ion]['Mmin']
+                    match = np.min(np.abs(masslabels_all[tag][0] - np.array(mlist)[:, np.newaxis])) <= 0.01
+                    if not match:
+                        continue
+                    
                 if highlightcrit is not None: #highlightcrit={'techvars': [0], 'Mmin': [10.0, 12.0, 14.0]}
                     matched = True
                     _highlightcrit = highlightcrit
@@ -7380,10 +7400,18 @@ def plot_NEW():
     plt.savefig('/net/luttero/data2/specwizard_data/sample3-6_specwizard-NEW_wbparfit_fullsample.pdf', format='pdf', bbox_inches='tight')
     #return outdata
 
-def savedata_plotform_3dhists(minrshow=0.05):
+def savedata_plotform_3dhists(minrshow=0.05, minrshow_kpc=None):
+    '''
+    minrshow: minimum radius in R200c units
+    minrshow_kpc: additional criterion: minimum units in kpc, calculated from
+                  R200c at the halfway mass for the mass bin
+    '''
     weighttypes = ['Mass', 'Volume', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']
     outdir = '/net/luttero/data2/imgs/CGM/3dprof/'
-    outfile = 'hists3d_forplot_to2d-1dversions_minr-%s.hdf5'%(minrshow)
+    minrstr = str(minrshow)
+    if minrshow_kpc is not None:
+        minrstr += '-and-{}-kpc'.format(minrshow_kpc)
+    outfile = 'hists3d_forplot_to2d-1dversions_minr-%s.hdf5'%(minrstr)
     
     hists_main = {}
     edges_main = {}
@@ -7445,7 +7473,12 @@ def savedata_plotform_3dhists(minrshow=0.05):
                 
                 for mi in range(len(sgrpns)):
                     mkey = massbins[mi][0]
-                    
+                    if minrshow_kpc is not None:
+                        _minr_massbin = np.log10(minrshow_kpc / R200c_pkpc(10**mkey, cosmopars_ea_27))
+                    else:
+                        _minr_massbin = -np.inf
+                    _minr_massbin = max(_minr_massbin, lminrshow)
+                    print('Using minimum radius {minr} * R200c for mass bin {minm}-{maxm}'.format(minr=_minr_massbin, minm=mkey, maxm=massbins[mi][1]))
                     grp_t = grp[sgrpns[mi]]
                     hist = np.array(grp_t['histogram'])
                     if bool(grp_t['histogram'].attrs['log']):
@@ -7517,9 +7550,9 @@ def savedata_plotform_3dhists(minrshow=0.05):
                         
                         # sum everything up to minrshow (keep 1 column < minrshow)
                         try:
-                            rminind = np.where(np.isclose(edges_r, lminrshow))[0][0]
+                            rminind = np.where(np.isclose(edges_r, _minr_massbin))[0][0]
                         except IndexError:
-                            rminind = np.argmax(lminrshow < edges_r)
+                            rminind = np.argmax(_minr_massbin < edges_r)
                         sl_sum = slice(0, rminind, None)
                         sl_new = slice(rminind - 1, None, None)
                         firstcol = np.sum(hist_t[sl_sum, :], axis=0)
@@ -7653,17 +7686,18 @@ def plot3Dprof_niceversion(variation, minrshow=0.05, Mhrange=(12., 12.5), weight
         if variation == 'cumul':
             outname = outdir + 'cumul_radprofs_L0100N1504_27_Mh0p5dex_1000.pdf'
             
-            figsize = (11., 6.) # full-page figure
-            nmasses = len(masskeys)
+            figsize = (11., 3.) # full-page figure
             masskeys.sort()
+            masskeys = masskeys[1::2]
+            nmasses = len(masskeys)
             
-            xlim = (np.log10(minrshow), np.log10(4.2)) # don't care too  uch about the inner details, extracted out to 4 * R200c
+            xlim = (np.log10(minrshow), np.log10(4.2)) # don't care too much about the inner details, extracted out to 4 * R200c
             ylim = (-3.9, 2.1)
     
-            if nmasses != 7:
-                raise RuntimeError('Cumulative profile plot is set up for 7 mass bins; found %i'%nmasses)
+            if nmasses != 3:
+                raise RuntimeError('Cumulative profile plot is set up for 3 mass bins; found %i'%nmasses)
             ncols = 4
-            nrows = 2
+            nrows = 1
             
             fig = plt.figure(figsize=figsize)
             grid = gsp.GridSpec(nrows=nrows, ncols=ncols, hspace=0.0, wspace=0.0, width_ratios=[1.] * ncols, height_ratios=[1.] * nrows )
@@ -7701,7 +7735,7 @@ def plot3Dprof_niceversion(variation, minrshow=0.05, Mhrange=(12., 12.5), weight
                 if labelx:
                     ax.set_xlabel(r'$\log_{10} \, \mathrm{r} \, / \, \mathrm{R}_{\mathrm{200c}}$', fontsize=fontsize)
                 if labely:
-                    ax.set_ylabel(r'$\log_{10} \, \mathrm{ions}(<r) \, / \, \mathrm{ions}(< \mathrm{R}_{\mathrm{200c}})$', fontsize=fontsize)
+                    ax.set_ylabel(r'$\log_{10} \, \mathrm{q}(<r) \, / \, \mathrm{q}(< \mathrm{R}_{\mathrm{200c}})$', fontsize=fontsize)
                 
                 # plot the data
                 yq = 'weight'
@@ -7905,7 +7939,7 @@ def plot3Dprof_niceversion(variation, minrshow=0.05, Mhrange=(12., 12.5), weight
                 
             plt.savefig(outname, format='pdf', box_inches='tight')
 
-def plot3Dprof_haloprop(minrshow=0.05, Zshow='oxygen'):
+def plot3Dprof_haloprop(minrshow=0.05, minrshow_kpc=15., Zshow='oxygen'):
     '''
     mass- and Volume-weighted rho, T, Z profiles for different halo masses
     in R200c units, stacked weighting each halo by 1 / weight in R200c
@@ -7916,6 +7950,7 @@ def plot3Dprof_haloprop(minrshow=0.05, Zshow='oxygen'):
     weighttypes = ['Mass', 'Volume']
     elts_Z = [Zshow] #['oxygen', 'neon', 'iron']
     solarZ = ol.solar_abunds_ea
+    massslice = slice(None, None, 2)
         
     fontsize = 12
     #cmap = truncate_colormap(cm.get_cmap('gist_yarg'), minval=0.0, maxval=0.7, n=-1)
@@ -7953,21 +7988,56 @@ def plot3Dprof_haloprop(minrshow=0.05, Zshow='oxygen'):
                 }
     clabel = r'$\log_{10} \, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\mathrm{200c}}]$'
     
-    saveddata = outdir + 'hists3d_forplot_to2d-1dversions_minr-%s.hdf5'%(minrshow)
+    minrstr = str(minrshow)
+    if minrshow_kpc is not None:
+        minrstr += '-and-{}-kpc'.format(minrshow_kpc)
+    saveddata = outdir + 'hists3d_forplot_to2d-1dversions_minr-%s.hdf5'%(minrstr)
     if not os.path.isfile(saveddata):
-        savedata_plotform_3dhists(minrshow=minrshow)
+        savedata_plotform_3dhists(minrshow=minrshow, minrshow_kpc=minrshow_kpc)
                 
     linewidth = 1.5
     patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"), mppe.Stroke(linewidth=linewidth, foreground="w"), mppe.Normal()]
     patheff_thick = [mppe.Stroke(linewidth=linewidth + 1., foreground="black"), mppe.Stroke(linewidth=linewidth + 1., foreground="w"), mppe.Normal()]
     
     fig = plt.figure(figsize=(10., 3.5))
-    grid = gsp.GridSpec(nrows=1, ncols=4, hspace=0.2, wspace=0.2, width_ratios=[1.] * 3 + [0.2], height_ratios=[1.])
-    axes = np.array([fig.add_subplot(grid[0, i]) for i in range(3)])
+    grid = gsp.GridSpec(nrows=1, ncols=6, hspace=0.0, wspace=0.0,\
+                        width_ratios=[1., 0.3, 1., 0.3, 1., 0.25],\
+                        bottom=0.15, left=0.05)
+    axes = np.array([fig.add_subplot(grid[0, 2*i]) for i in range(3)])
     #lax = fig.add_subplot(grid[1, :2])
-    cax = fig.add_subplot(grid[0, 3])
-    cbar, colordct = add_cbar_mass(cax, cmapname='rainbow', massedges=mass_edges_standard,\
-                                   orientation='vertical', clabel=clabel, fontsize=fontsize, aspect=8.)
+    cax = fig.add_subplot(grid[0, 5])
+    
+    # set up color bar (sepearte to leave white spaces for unused bins)
+    massedges = np.array([11., 11.5, 12., 12.5, 13., 13.5, 14.])
+    cmapname = 'rainbow'
+    
+    clist = cm.get_cmap(cmapname, len(massedges))(np.linspace(0.,  1., len(massedges)))
+    clist[1::2] = np.array([1., 1., 1., 1.])
+    keys = sorted(massedges)
+    colordct = {keys[i]: clist[i] for i in range(len(keys))}
+    #del _masks
+    
+    #print(clist)
+    cmap = mpl.colors.ListedColormap(clist[:-1])
+    cmap.set_over(clist[-1])
+    norm = mpl.colors.BoundaryNorm(massedges, cmap.N)
+    cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,\
+                                norm=norm,\
+                                boundaries=np.append(massedges, np.array(massedges[-1] + 1.)),\
+                                ticks=massedges,\
+                                spacing='proportional', extend='max',\
+                                orientation='vertical')
+    # to use 'extend', you must
+    # specify two extra boundaries:
+    # boundaries=[0] + bounds + [13],
+    # extend='both',
+    # ticks=bounds,  # optional
+    cbar.set_label(clabel, fontsize=fontsize)
+    cax.tick_params(labelsize=fontsize - 1)
+    cax.set_aspect(8.)
+    
+    #cbar, colordct = add_cbar_mass(cax, cmapname='rainbow', massedges=mass_edges_standard,\
+    #                               orientation='vertical', clabel=clabel, fontsize=fontsize, aspect=8.)
     axplot = {'T': 0,\
               'rho': 1,\
               'Z_oxygen': 2,\
@@ -7978,17 +8048,21 @@ def plot3Dprof_haloprop(minrshow=0.05, Zshow='oxygen'):
     with h5py.File(saveddata, 'r') as df:
         masskeys = [_str.decode() for _str in np.array(df['mass_keys'])]
         massbins = np.array(df['mass_bins'])
+        # use every other mass bin for legibility
+        massbins = sorted(massbins, key=lambda x: x[0])
+        massbins = massbins[massslice]
         
         for key in axplot.keys():
             axi = axplot[key]
             ax = axes[axi]
             setticks(ax, top=True, left=True, labelleft=True, labelbottom=True, fontsize=fontsize)
             #ax.set_ylabel(axlabels[key.split('_')[0]], fontsize=fontsize)
-            ax.text(0.98, 0.98, axlabels[key.split('_')[0]], fontsize=fontsize,\
-                    transform=ax.transAxes, verticalalignment='top', horizontalalignment='right')
+            #ax.text(0.98, 0.98, axlabels[key.split('_')[0]], fontsize=fontsize,\
+            #        transform=ax.transAxes, verticalalignment='top', horizontalalignment='right')
             
             ax.set_xlabel(r'$\log_{10} \, \mathrm{r} \, /\, \mathrm{R}_{\mathrm{200c}}$', fontsize=fontsize)
-        
+            ax.set_ylabel(axlabels[key.split('_')[0]], fontsize=fontsize)
+            
         for Mhrange in massbins:
             mind = np.where(np.isclose([float(_mk) for _mk in masskeys], Mhrange[0]))[0][0]
             mkey = masskeys[mind]
@@ -8009,6 +8083,7 @@ def plot3Dprof_haloprop(minrshow=0.05, Zshow='oxygen'):
                     _hist = hists_rmin[ion][axn]
                     _e0 = edges0_rmin[ion][axn]
                     _e0 = _e0[:-1] + 0.5 * np.diff(_e0) 
+                    _e0[0] = 2. * _e0[1] - _e0[2] # was already adjusted; no need to extend the plot too far to low r
                     _e1 = edges1_rmin[ion][axn]
                     perclines = pu.percentiles_from_histogram(_hist, _e1, axis=1, percentiles=np.array(percentiles) / 100.)
                     if axn.startswith('Z_'):
@@ -8016,10 +8091,21 @@ def plot3Dprof_haloprop(minrshow=0.05, Zshow='oxygen'):
                     axes[axplot[axn]].plot(_e0, perclines[0], color=color,\
                         alpha=alpha, linestyle=linestyles[ion],\
                         linewidth=linewidth, path_effects=patheff)
-        
-    medges = masskeys
+    
+    masskeys = sorted(masskeys, key=lambda x: float(x))
+    medges = masskeys[massslice]
+    #print(masskeys)
+    #print(medges)
     for ed in medges:
-        axes[axplot['T']].axhline(np.log10(T200c_hot(10**float(ed), cosmopars)),\
+        ind = np.where([ed == mkey for mkey in masskeys])[0][0]
+        tval1 = np.log10(T200c_hot(10**float(ed), cosmopars))
+        axes[axplot['T']].axhline(tval1,\
+                                  color=colordct[float(ed)], zorder=-1,\
+                                  linestyle='dotted')
+        if ind + 1 < len(masskeys):
+            ed2 = masskeys[ind + 1]
+            tval2 = np.log10(T200c_hot(10**float(ed2), cosmopars))
+            axes[axplot['T']].axhline(tval2,\
                                   color=colordct[float(ed)], zorder=-1,\
                                   linestyle='dotted')
     
