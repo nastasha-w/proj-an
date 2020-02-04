@@ -5232,7 +5232,7 @@ def plotcddfs_fofvsmask(ion, relative=False):
 
 
 
-def plotfracs_by_halo(ions=['Mass', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'], fmt='pdf'):
+def plotfracs_by_halo(ions=['Mass', 'oxygen', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'], fmt='pdf'):
     '''
     first: group mass bins by halo mass or subhalo catgory first
     '''
@@ -5256,6 +5256,9 @@ def plotfracs_by_halo(ions=['Mass', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'], fmt
     omega_to_g_L100_27 = 2.0961773946142324e+50
     #Particle abundances, SF gas at 10^4 K
     Omega_gas = 0.056292501227365246
+    Omega_oxygen_gas = 3.494829254263584e-05
+    Omega_neon_gas   = 4.802734584639758e-06
+    Omega_iron_gas   = 5.074204751697753e-06
     Omega_o6_gas   = 2.543315324105566e-07
     Omega_o7_gas   = 6.2585354699292046e-06
     Omega_o8_gas   = 7.598227615977929e-06
@@ -5271,10 +5274,15 @@ def plotfracs_by_halo(ions=['Mass', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'], fmt
                    'ne9': Omega_ne9_gas,\
                    'fe17': Omega_fe17_gas,\
                    'hneutralssh': Omega_hneutralssh_gas,\
+                   'oxygen': Omega_oxygen_gas,\
+                   'iron': Omega_iron_gas,\
+                   'neon': Omega_neon_gas,\
                    'Mass': Omega_gas}
     
     total_nions = {ion: total_nions[ion] * omega_to_g_L100_27 / (ionh.atomw[string.capwords(ol.elements_ion[ion])] * c.u) \
                         if ion in ol.elements_ion else \
+                        total_nions[ion] * omega_to_g_L100_27 / (ionh.atomw[string.capwords(ion)] * c.u) \
+                        if string.capwords(ion) in ionh.atomw else
                         total_nions[ion] * omega_to_g_L100_27 \
                    for ion in total_nions     
                    }
@@ -5285,6 +5293,9 @@ def plotfracs_by_halo(ions=['Mass', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'], fmt
         if ion == 'Mass':
             datafile_base = 'particlehist_%s_L0100N1504_27_test3.4_T4EOS.hdf5'
             datafile = datafile_dir + datafile_base%(ion)
+        elif ion in ol.elements_ion:
+            datafile_base = 'particlehist_%s_L0100N1504_27_test3.4_PtAb_T4EOS.hdf5'
+            datafile = datafile_dir + datafile_base%('Nion_%s'%ion)
         else:
             datafile_base = 'particlehist_%s_L0100N1504_27_test3.4_PtAb_T4EOS.hdf5'
             datafile = datafile_dir + datafile_base%('Nion_%s'%ion)
@@ -5296,29 +5307,46 @@ def plotfracs_by_halo(ions=['Mass', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'], fmt
     for ion in ions:
         datafile = datafile_dct[ion]
         with h5py.File(datafile, 'r') as fi:
-            groupname = 'Temperature_T4EOS_Density_T4EOS_M200c_halo_allinR200c_subhalo_category'
-            tname = 'Temperature_T4EOS'
-            dname = 'Density_T4EOS'
-            sname = 'subhalo_category'
-            hname = 'M200c_halo_allinR200c'
-            
-            mgrp = fi[groupname]       
-            tax = mgrp[tname].attrs['histogram axis']
-            #tbins = np.array(mgrp['%s/bins'%(tname)])
-            dax = mgrp[dname].attrs['histogram axis']
-            #dbins = np.array(mgrp['%s/bins'%(dname)]) + np.log10(rho_to_nh)      
-            sax = mgrp[sname].attrs['histogram axis']
-            sbins = np.array(mgrp['%s/bins'%(sname)])
-            hax = mgrp[hname].attrs['histogram axis']
-            hbins = np.array(mgrp['%s/bins'%(hname)])
-            
-            hist = np.array(mgrp['histogram'])
-            if mgrp['histogram'].attrs['log']:
-                hist = 10**hist
-            hist = np.sum(hist, axis=(dax, tax, sax))
-            total_in = mgrp['histogram'].attrs['sum of weights']
-            # print('Histogramming recovered %f of input weights'%(np.sum(hist) / total_in))
-            
+            try: # Mass, ion species histograms
+                groupname = 'Temperature_T4EOS_Density_T4EOS_M200c_halo_allinR200c_subhalo_category'
+                tname = 'Temperature_T4EOS'
+                dname = 'Density_T4EOS'
+                sname = 'subhalo_category'
+                hname = 'M200c_halo_allinR200c'
+                
+                mgrp = fi[groupname]       
+                tax = mgrp[tname].attrs['histogram axis']
+                #tbins = np.array(mgrp['%s/bins'%(tname)])
+                dax = mgrp[dname].attrs['histogram axis']
+                #dbins = np.array(mgrp['%s/bins'%(dname)]) + np.log10(rho_to_nh)      
+                sax = mgrp[sname].attrs['histogram axis']
+                sbins = np.array(mgrp['%s/bins'%(sname)])
+                hax = mgrp[hname].attrs['histogram axis']
+                hbins = np.array(mgrp['%s/bins'%(hname)])
+                
+                hist = np.array(mgrp['histogram'])
+                if mgrp['histogram'].attrs['log']:
+                    hist = 10**hist
+                hist = np.sum(hist, axis=(dax, tax, sax))
+                total_in = mgrp['histogram'].attrs['sum of weights']
+                # print('Histogramming recovered %f of input weights'%(np.sum(hist) / total_in))
+            except KeyError: # element histograms
+                groupname = 'M200c_halo_allinR200c_subhalo_category'
+                sname = 'subhalo_category'
+                hname = 'M200c_halo_allinR200c'
+                
+                mgrp = fi[groupname]         
+                sax = mgrp[sname].attrs['histogram axis']
+                sbins = np.array(mgrp['%s/bins'%(sname)])
+                hax = mgrp[hname].attrs['histogram axis']
+                hbins = np.array(mgrp['%s/bins'%(hname)])
+                
+                hist = np.array(mgrp['histogram'])
+                if mgrp['histogram'].attrs['log']:
+                    hist = 10**hist
+                hist = np.sum(hist, axis=(sax,))
+                total_in = mgrp['histogram'].attrs['sum of weights']
+                
             #cosmopars = {key: item for key, item in fi['Header/cosmopars'].attrs.items()}
             total_allpart = total_nions[ion]
             print('Particle data / total for %s: %s'%(ion, total_in / total_allpart))
@@ -5328,7 +5356,7 @@ def plotfracs_by_halo(ions=['Mass', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'], fmt
             
     clabel = r'$\log_{10} \, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'        
     ylabel = 'fraction'
-    xlabels = [r'$\mathrm{%s}$'%(ild.getnicename(ion, mathmode=True)) if ion != 'Mass' else ion for ion in ions] 
+    xlabels = [r'$\mathrm{%s}$'%(ild.getnicename(ion, mathmode=True)) if ion in ol.elements_ion else ion for ion in ions] 
     #slabels = ['cen.', 'sat.', 'unb.']
     #alphas = {'cen.': 1.0, 'sat.': 0.4, 'unb.': 0.7}
     

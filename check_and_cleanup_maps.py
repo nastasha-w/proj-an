@@ -116,7 +116,8 @@ def remove_mapfiles(faillist, errcats='all'):
         errcats = faillist.keys()
     for cat in errcats:
         for filen in faillist[cat]:
-            os.command('rm {}'.format(filen))
+            fstring = '"{}"'.format(filen) # some file names have special characters in them
+            os.system('rm {}'.format(fstring))
 
 if __name__ == '__main__':
     kwargs = parse_commandline()
