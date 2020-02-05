@@ -18,7 +18,7 @@ from mpl_toolkits.mplot3d import axes3d
 ####### set up the python object to read in 
 file_type = 'snap'  # snaphot containing all the particles in the simulation
 snapnum = 28        # snapshot number (28 means redshift=0)
-gadgetunits = True  # get the data in th units used in the simulation 
+gadgetunits = True  # get the data in the units used in the simulation 
                     # (Eagle is based on a code called Gadget3)
 suppress = False    # don't suppress printing data on what the code is doing
 simulation = 'L0012N0188' # small simulation box: less data, runs faster
@@ -28,7 +28,7 @@ region = None       # you can use this to specify the corners of a region to
                     # get the data for, if you only want to look at part of the 
                     # simulation (units: comoving Mpc / h)
                     
-# string formatting: fill something in in a pytohn string
+# string formatting: fill something in in a python string
 simdir = '/disks/eagle/{sim}/{var}'.format(sim=simulation,\
                                            var=physics_variation)
 
@@ -66,7 +66,7 @@ toCGS_coord = read.a**a_sc_coord * read.h**h_sc_coord * CGS_c_coord
 
 # array *= other_array or value: multiply all the values in array
 # somewhat faster than array = array * other_array or value
-gascoords *= toCGS_coord / 3.085678e24 # convert units to Mpc (physical
+gascoords *= toCGS_coord / 3.085678e24 # convert units to Mpc (physical)
 # array.shape = (number of particles, 3) 
 
 

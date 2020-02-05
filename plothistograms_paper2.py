@@ -8451,7 +8451,8 @@ def plot3Dprof_ionw(minrshow=0.05, ions=('o6', 'o7', 'o8'), axnl=('rho', 'T', 'Z
 def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
     '''
     var:  main (just the Mstar bins) or appendix (lots more info)
-    
+    main paper: main-fcov-break for covering fractions at the CDDF break
+                main-fcov-obs   for covering fractions at obs. limits     
     appendix:
         - Mhalo plots (mvir -> pkpc)
         - Mhalo subsample of Mstar (mvir -> pkpc)
@@ -8475,6 +8476,28 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
                         'o8':   [16.0, 15.7],\
                         'fe17': [15.0, 14.9]}
         printnumgals=False
+    elif var == 'main-fcov-break':
+        techvars_touse = [3]
+        highlightcrit = None
+        ytype='fcov'
+        yvals_toplot = {'o6':   [14.3],\
+                        'ne8':  [13.7],\
+                        'o7':   [16.0],\
+                        'ne9':  [15.3],\
+                        'o8':   [16.0],\
+                        'fe17': [15.0]}
+        printnumgals=False
+    elif var == 'main-fcov-obs':
+        techvars_touse = [3]
+        highlightcrit = None
+        ytype='fcov'
+        yvals_toplot = {'o6':   [13.5],\
+                        'ne8':  [13.5],\
+                        'o7':   [15.5],\
+                        'ne9':  [15.5],\
+                        'o8':   [15.7],\
+                        'fe17': [14.9]}
+        printnumgals=False
     elif var == 'appendix':
         techvars_touse = range(4)
         highlightcrit = {'techvars': []} # busy enough
@@ -8486,7 +8509,7 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
     if ions is None:
         ions = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']
     
-    imgname = 'radprof_bystellarmass_%s_L0100N1504_27_PtAb_C2Sm_32000pix_T4EOS_6.25slice_zcen-all_techvars-%s_%s.pdf'%('-'.join(sorted(ions)), '-'.join(sorted([str(var) for var in techvars_touse])), ytype)
+    imgname = 'radprof_bystellarmass_%s_L0100N1504_27_PtAb_C2Sm_32000pix_T4EOS_6.25slice_zcen-all_%s_techvars-%s_%s.pdf'%('-'.join(sorted(ions)), var, '-'.join(sorted([str(tvar) for tvar in techvars_touse])), ytype)
     imgname = mdir + imgname        
     if (ytype=='perc' and 50.0 not in yvals_toplot):
         imgname = imgname[:-4] + '_yvals-%s'%('-'.join([str(val) for val in yvals_toplot])) + '.pdf'
@@ -8858,7 +8881,7 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
         if ytype == 'perc':
             ax.text(0.95, 0.95, ild.getnicename(ion, mathmode=False), horizontalalignment='right', verticalalignment='top', fontsize=fontsize, transform=ax.transAxes)
         else:
-            ax.text(0.95, 0.85, ild.getnicename(ion, mathmode=False), horizontalalignment='right', verticalalignment='top', fontsize=fontsize - 1, transform=ax.transAxes)
+            ax.text(0.05, 0.95, ild.getnicename(ion, mathmode=False), horizontalalignment='left', verticalalignment='top', fontsize=fontsize, transform=ax.transAxes)
         #hatchind = 0
         for vi in range(len(techvars_touse)):
             tags = techvars[techvars_touse[vi]]['setnames']
@@ -8952,16 +8975,22 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
             alpha = np.average([alphas[var] for var in techvars_touse])
             patheff = [] #[mppe.Stroke(linewidth=linewidths[var] + 0.5, foreground="b"), mppe.Stroke(linewidth=linewidths[var], foreground="w"), mppe.Normal()]
             color = 'gray'
-            legend_handles = [mlines.Line2D([], [], linewidth=linewidth,\
-                                            alpha=alpha, color=color,\
-                                            path_effects=patheff,\
-                                            label='%.1f'%yvals_toplot_temp[yi],\
-                                            linestyle=linestyles_fcov[yi]) \
-                              for yi in range(len(yvals_toplot_temp))]
-            ax.legend(handles=legend_handles, fontsize=fontsize - 1,\
-                      loc='upper right', bbox_to_anchor=(1.02, 1.02),\
-                      columnspacing=1.2, handletextpad=0.5,\
-                      frameon=False, ncol=2)
+            if len(yvals_toplot_temp) > 1:
+                legend_handles = [mlines.Line2D([], [], linewidth=linewidth,\
+                                                alpha=alpha, color=color,\
+                                                path_effects=patheff,\
+                                                label='%.1f'%yvals_toplot_temp[yi],\
+                                                linestyle=linestyles_fcov[yi]) \
+                                  for yi in range(len(yvals_toplot_temp))]
+                ax.legend(handles=legend_handles, fontsize=fontsize - 1,\
+                          loc='upper right', bbox_to_anchor=(1.02, 1.02),\
+                          columnspacing=1.2, handletextpad=0.5,\
+                          frameon=False, ncol=2)
+            else:
+                panellabel = '$ > %.1f$'%yvals_toplot_temp[yi]
+                ax.text(0.95, 0.95, panellabel, fontsize=fontsize, \
+                        verticalalignment='top', horizontalalignment='right',\
+                        transform=ax.transAxes)
     #lax.axis('off')
         ax.set_xscale('log')
     
