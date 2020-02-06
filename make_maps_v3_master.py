@@ -2572,8 +2572,18 @@ def selecthaloparticles(vardict, halosel, nameonly=False, last=True, **kwargs):
         else:
             hind = '_FOF'
         return name1 + hind + satind + name2
-    
-    vardict.readif('GroupNumber', rawunits=True)
+    ## debug:
+    try:
+        vardict.readif('GroupNumber', rawunits=True)
+    except IOError as err:
+        print('The mysterious error has arisen; status data:')
+        print('trying to read data from: %s'%(vardict.simfile.readfile))
+        print('vardict status: read in %s'%(', '.join([key for key in vardict.particle])))
+        if len(vardict.particle) == 0:
+            # try if it's a general file problem:
+            vardict.readif('Mass', rawunits=True)
+        raise err
+        
     if allinR200c:
         vardict.particle['GroupNumber'] = np.abs(vardict.particle['GroupNumber']) # GroupNumber < 0: within R200 of halo |GroupNumber|, but not in FOF group
     if exclsatellites:

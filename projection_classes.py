@@ -124,7 +124,10 @@ class Simfile:
             else:
                 raise ValueError('var option %s is not valid for eagle-ioneq'%var)
             print('EAGLE ioneq simulation: %s, %s, %s, %s'%(simdir, file_type, snapnum, ioneq_str))
-            self.readfile = refn.Gadget(simdir, file_type, snapnum, gadgetunits=True, suppress=False, sim = 'EAGLE-IONEQ', ioneq_str=ioneq_str, add_data_dir = False)
+            self.readfile = refn.Gadget(simdir, file_type, snapnum,\
+                                        gadgetunits=True, suppress=False,\
+                                        sim='EAGLE-IONEQ', ioneq_str=ioneq_str,\
+                                        add_data_dir = False)
             # pass down readfile properties for reference
             self.boxsize = self.readfile.boxsize
             self.h = self.readfile.h
@@ -147,7 +150,9 @@ class Simfile:
 
         elif simulation == 'bahamas':
             simdir = ol.simdir_bahamas%simnum
-            self.readfile = bhm.Gadget(simdir, file_type, snapnum, gadgetunits=True, verbose=True,sim = 'BAHAMAS')
+            self.readfile = bhm.Gadget(simdir, file_type, snapnum,\
+                                       gadgetunits=True, verbose=True,\
+                                       sim='BAHAMAS')
             self.boxsize = self.readfile.boxsize
             self.h = self.readfile.h
             self.a = self.readfile.a
@@ -169,7 +174,9 @@ class Simfile:
         elif simulation == 'c-eagle-hydrangea':
             # here, var is interpreted as the halo number (formatting taken care of, just input an integer)
             simdir = ol.simdir_ceaglehydrangea%(simnum)
-            self.readfile = rce.Gadget(simdir, file_type, snapnum, sim='C-EAGLE', gadgetunits=True, suppress=False)
+            self.readfile = rce.Gadget(simdir, file_type, snapnum,\
+                                       sim='C-EAGLE', gadgetunits=True,\
+                                       suppress=False)
             # pass down readfile properties for reference
             self.boxsize = self.readfile.boxsize
             self.h = self.readfile.h
@@ -179,9 +186,9 @@ class Simfile:
             # try cases are extracted from read_eagle files and read_bahamas_files
             self.filenamebase = self.readfile.filename
             try:
-                self.hdf5file = h5py.File( self.filenamebase+"0.hdf5", 'r' )
+                self.hdf5file = h5py.File(self.filenamebase+"0.hdf5", 'r' )
             except:
-                self.hdf5file = h5py.File( self.filenamebase+"hdf5", 'r' )
+                self.hdf5file = h5py.File(self.filenamebase+"hdf5", 'r' )
             self.omegam = self.hdf5file['Header'].attrs['Omega0']
             self.omegalambda = self.hdf5file['Header'].attrs['OmegaLambda']
             self.omegab = self.hdf5file['Header'].attrs['OmegaBaryon']
