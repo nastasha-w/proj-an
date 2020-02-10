@@ -9020,3 +9020,351 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
     #ax1.text(0.02, 0.05, r'absorbers close to galaxies at $z=0.37$', horizontalalignment='left', verticalalignment='bottom', transform=ax1.transAxes, fontsize=fontsize)
     
     plt.savefig(imgname, format='pdf', bbox_inches='tight')
+    
+
+def getcovfrac_total_halo(ion, minr_pkpc, maxr_r200c):
+    '''
+    for an ion, get the fraction of the total halo covering fraction (<maxr) 
+    and the total cddf contribution (< minr, <maxr) for absorber above the 
+    cddf break, assuming no halo overlaps 
+    '''
+    fcovset = 'break'
+    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
+    
+    halocat='/net/luttero/data2/proc/catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    # rounded1 set used in the paper
+    mstarbins = np.array([   -np.inf,  7.1,  7.9,  8.7,  9.7, 10.3, 10.8, 11.1, 11.3, 11.5, 11.7], dtype=np.float32)
+    m200cbins = np.array([-np.inf, 10., 10.5, 11., 11.5, 12., 12.5, 13., 13.5, 14.0, 14.6])
+    with h5py.File(halocat, 'r') as cat:
+        m200c = np.log10(np.array(cat['M200c_Msun']))
+        mstar = np.log10(np.array(cat['Mstar_Msun']))
+    
+    #m200cbins = np.array(m200cbins)
+    #expand = (np.floor(np.min(m200c) / binround) * binround, np.ceil(np.max(m200c) / binround) * binround)
+    #m200cbins = np.append(expand[0], m200cbins)
+    #m200cbins = np.append(m200cbins, expand[1])
+    
+
+    if fcovset == 'break':
+        techvars_touse = [3]
+        ytype='fcov'
+        yvals_toplot = {'o6':   [14.3],\
+                        'ne8':  [13.7],\
+                        'o7':   [16.0],\
+                        'ne9':  [15.3],\
+                        'o8':   [16.0],\
+                        'fe17': [15.0]}
+    elif fcovset == 'obs':
+        techvars_touse = [3]
+        ytype='fcov'
+        yvals_toplot = {'o6':   [13.5],\
+                        'ne8':  [13.5],\
+                        'o7':   [15.5],\
+                        'ne9':  [15.5],\
+                        'o8':   [15.7],\
+                        'fe17': [14.9]}
+
+    cosmopars = cosmopars_ea_27
+    # up to 2.5 Rvir / 500 pkpc
+
+    ion_filedct_Mstar = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
+                         'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
+                         'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
+                         'o8':   'rdist_coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
+                         'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
+                         'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
+                         #'hneutralssh': 'rdist_coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                         }
+
+    # define used mass ranges
+    Mh_edges = np.array([11., 11.5, 12., 12.5, 13., 13.5, 14.]) # 9., 9.5, 10., 10.5
+    Mh_mins = list(Mh_edges)
+    Mh_maxs = list(Mh_edges[1:]) + [None]
+    Mh_sels = [('M200c_Msun', 10**Mh_mins[i], 10**Mh_maxs[i]) if Mh_maxs[i] is not None else\
+               ('M200c_Msun', 10**Mh_mins[i], np.inf)\
+               for i in range(len(Mh_mins))]
+    Mh_names =['logM200c_Msun_geq%s_le%s'%(Mh_mins[i], Mh_maxs[i]) if Mh_maxs[i] is not None else\
+               'logM200c_Msun_geq%s'%(Mh_mins[i])\
+               for i in range(len(Mh_mins))]
+    galsetnames_hmassonly = {name: sel for name, sel in zip(Mh_names, Mh_sels)}
+    
+    Ms_edges = np.array([8.7, 9.7, 10.3, 10.8, 11.1, 11.3, 11.5, 11.7])
+    Ms_mins = list(Ms_edges[:-1])
+    Ms_maxs = list(Ms_edges[1:]) 
+    Ms_base = ['geq%.1f_le%.1f'%(smin, smax) for smin, smax in zip(Ms_mins, Ms_maxs)]
+    Ms_names = ['logMstar_Msun_1000_geq%.1f_le%.1f'%(smin, smax) for smin, smax in zip(Ms_mins, Ms_maxs)]
+    Ms_sels = [('logMstar_Msun', Ms_mins[i], Ms_maxs[i]) if Ms_maxs[i] is not None else\
+               ('logMstar_Msun', Ms_mins[i], np.inf)\
+               for i in range(len(Ms_mins))]
+    galsetnames_smass = {name: sel for name, sel in zip(Ms_names, Ms_sels)}
+    
+    matchvals_Mstar_Mhalo = {'geq8.7_le9.7':   (11.0, 11.5),\
+                             'geq9.7_le10.3':  (11.5, 12.0),\
+                             'geq10.3_le10.8': (12.0, 12.5),\
+                             'geq10.8_le11.1': (12.5, 13.0),\
+                             'geq11.1_le11.3': (13.0, 13.5),\
+                             'geq11.3_le11.5': (13.5, 14.0),\
+                             'geq11.5_le11.7': (14.0, 14.6),\
+                             }
+    Ms_hmatch_names = ['logMstar_Msun_1000_%s_M200c-%.1f-%.1f-sub'%(key, matchvals_Mstar_Mhalo[key][0], matchvals_Mstar_Mhalo[key][1]) for key in Ms_base]
+    galsetnames_smass_hmatch = {name: sel for name, sel in zip(Ms_hmatch_names, Ms_sels)}
+    
+    # to put R200c-binned values into pkpc plots
+    R200c_toassume_vals = [11.25, 11.75, 12.25, 12.75, 13.25, 13.75, 14.25]    
+    R200c_toassume = {name: val for name, val in zip(Ms_hmatch_names, R200c_toassume_vals)}
+    R200c_toassume.update({name: val for name, val in zip(Mh_names, R200c_toassume_vals)})
+    
+    techvars = {3: {'filenames': ion_filedct_Mstar, 'setnames': Ms_names, 'setfills': None, 'units': 'pkpc'},\
+                }
+    
+    if isinstance(yvals_toplot, dict):
+        readpaths = {tv: {ion: {val: '%s_bins/binset_0/%s_%s'%(techvars[tv]['units'], ytype, val) for val in yvals_toplot[ion]} for ion in ions} for tv in techvars}
+    else:
+        readpaths = {tv: {ion: {val: '%s_bins/binset_0/%s_%s'%(techvars[tv]['units'], ytype, val) for val in yvals_toplot} for ion in ions} for tv in techvars}
+    readpath_bins = {tv: '/'.join((readpaths[tv][ions[0]][yvals_toplot[ions[0]][0]]).split('/')[:-1]) + '/bin_edges' for tv in techvars}
+    print(readpaths)
+
+    
+    yvals = {}
+    #cosmopars = {}
+    #fcovs = {}
+    #dXtot = {}
+    #dztot = {}
+    #dXtotdlogN = {}
+    bins = {}
+    numgals = {}
+    
+    for var in techvars_touse:
+        yvals[var] = {}
+        #cosmopars[var] = {}
+        #fcovs[var] = {}
+        #dXtot[var] = {}
+        #dztot[var] = {}
+        #dXtotdlogN[var] = {}
+        bins[var] = {}
+        numgals[var] = {}
+        for ion in ions:
+            print('Reading in data for ion %s'%ion)
+            filename = techvars[var]['filenames'][ion]
+            goaltags = techvars[var]['setnames']
+            setfills = techvars[var]['setfills']
+            
+            #_units   = techvars[var]['units']
+            if ion not in filename:
+                raise RuntimeError('File %s attributed to ion %s, mismatch'%(filename, ion))
+            
+            if setfills is None:
+                with h5py.File(ol.pdir + 'radprof/' + filename, 'r') as fi:
+                    bins[var][ion] = {}
+                    yvals[var][ion] = {}
+                    numgals[var][ion] = {}
+                    galsets = fi.keys()
+                    tags = {} 
+                    for galset in galsets:
+                        ex = True
+                        for val in readpaths[var][ion].keys():
+                            try:
+                                temp = np.array(fi[galset + '/' + readpaths[var][ion][val]])
+                            except KeyError:
+                                ex = False
+                                break
+                        
+                        if ex:
+                            tags[fi[galset].attrs['seltag'].decode()] = galset
+                        
+                    tags_toread = set(goaltags) &  set(tags.keys())
+                    tags_unread = set(goaltags) - set(tags.keys())
+                    #print(goaltags)
+                    #print(tags.keys())
+                    if len(tags_unread) > 0:
+                        print('For file %s, missed the following tags:\n\t%s'%(filename, tags_unread))
+                    
+                    for tag in tags_toread:
+                        _bins = np.array(fi[tags[tag] + '/' + readpath_bins[var]])
+                        # handle +- infinity edges for plotting; should be outside the plot range anyway
+                        if _bins[0] == -np.inf:
+                            _bins[0] = -100.
+                        if _bins[-1] == np.inf:
+                            _bins[-1] = 100.
+                        bins[var][ion][tag] = _bins
+                        
+                        # extract number of pixels from the input filename, using naming system of make_maps
+                        
+                        yvals[var][ion][tag] = {val: np.array(fi['%s/%s'%(tags[tag], readpaths[var][ion][val])]) for val in readpaths[var][ion].keys()}
+                        numgals[var][ion][tag] = len(np.array(fi['%s/galaxyid'%(tags[tag])]))
+            else:
+                bins[var][ion] = {}
+                yvals[var][ion] = {}
+                numgals[var][ion] = {}
+                for tag in goaltags:
+                    fill = setfills[tag]                    
+                    #print('Using %s, %s, %s'%(var, ion, tag))
+                    fn_temp = ol.pdir + 'radprof/' + filename%(fill)
+                    #print('For ion %s, tag %s, trying file %s'%(ion, tag, fn_temp))
+                    with h5py.File(fn_temp, 'r') as fi:                       
+                        galsets = fi.keys()
+                        tags = {} 
+                        for galset in galsets:
+                            ex = True
+                            for val in readpaths[var][ion].keys():
+                                try:
+                                    np.array(fi[galset + '/' + readpaths[var][ion][val]])
+                                except KeyError:
+                                    ex = False
+                                    break
+                            
+                            if ex:
+                                tags[fi[galset].attrs['seltag']] = galset
+                            
+                        #tags_toread = {tag} &  set(tags.keys())
+                        tags_unread = {tag} - set(tags.keys())
+                        #print(goaltags)
+                        #print(tags.keys())
+                        if len(tags_unread) > 0:
+                            print('For file %s, missed the following tags:\n\t%s'%(filename, tags_unread))
+                        
+                        #for tag in tags_toread:
+                        _bins = np.array(fi[tags[tag] + '/' + readpath_bins])
+                        # handle +- infinity edges for plotting; should be outside the plot range anyway
+                        if _bins[0] == -np.inf:
+                            _bins[0] = -100.
+                        if _bins[-1] == np.inf:
+                            _bins[-1] = 100.
+                        bins[var][ion][tag] = _bins
+                        
+                        # extract number of pixels from the input filename, using naming system of make_maps
+                        
+                        yvals[var][ion][tag] = {val: np.array(fi['%s/%s'%(tags[tag], readpaths[var][ion][val])]) for val in readpaths[var][ion].keys()}
+                        numgals[var][ion][tag] = len(np.array(fi['%s/galaxyid'%(tags[tag])]))
+
+    npix_rminmax = {}
+    # size of one pixel
+    pixsize = 3.125 * cosmopars['a']
+    for ionind in range(len(ions)):   
+        npix_rminmax[ion] = {}
+        ion = ions[ionind]
+
+        #hatchind = 0
+        vi = 3
+        tags = techvars[techvars_touse[vi]]['setnames']
+        # example tag 'logMstar_Msun_1000_geq%.1f_le%.1f'
+        tags = sorted(tags, key=lambda x: float(x.split('_')[3][3:]))
+        var = techvars_touse[vi]
+        for ti in range(len(tags)): # mass bins
+            tag = tags[ti]
+            npix_rminmax[ion][tag] = {}         
+            try:
+                rvals = bins[var][ion][tag]
+            except KeyError: # dataset not read in
+                print('Could not find techvars %i, ion %s, tag %s'%(var, ion, tag))
+                continue
+            basesize = R200c_pkpc(10**R200c_toassume[tag], cosmopars)
+            maxr_pkpc = maxr_r200c * basesize
+            fcovs = yvals_toplot[ion]
+            
+            npix_r = fcovs * np.pi * (rvals[1:]**2 - rvals[:-1]**2 ) / pixsize**2 # fraction * annulus surface area / pixel size            
+            npix_inrmin = pu.linterpsolve(rvals[1:], npix_r, minr_pkpc)
+            npix_inrmax = pu.linterpsolve(rvals[1:], npix_r, maxr_pkpc)
+            
+            npix_rminmax[ion][tag].update({'maxr_pkpc': maxr_pkpc,\
+                        'npix_perhalo_inrmin': npix_inrmin,\
+                        'npix_perhalo_inrmax': npix_inrmax})       
+    
+    ##### read in total cddfs
+    ion_filedct_excl_1R200c_cenpos = {'fe17': ol.pdir + 'cddf_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'ne9':  ol.pdir + 'cddf_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'ne8':  ol.pdir + 'cddf_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o8':   ol.pdir + 'cddf_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o7':   ol.pdir + 'cddf_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o6':   ol.pdir + 'cddf_coldens_o6_L0100N1504_27_test3.3_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'hneutralssh': ol.pdir + 'cddf_coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5'}
+    
+    techvars = {0: ion_filedct_excl_1R200c_cenpos}
+    
+    masknames1 = ['nomask']
+    masknames = masknames1 #{0: {ion: masknames1 for ion in ions}}
+
+    hists = {}
+    cosmopars = {}
+    dXtot = {}
+    dztot = {}
+    dXtotdlogN = {}
+    bins = {}
+    
+    for var in techvars:
+        hists[var] = {}
+        cosmopars[var] = {}
+        dXtot[var] = {}
+        dztot[var] = {}
+        dXtotdlogN[var] = {}
+        bins[var] = {}
+        for ion in ions:
+            print('Reading in data for ion %s'%ion)
+            filename = techvars[var][ion]
+            with h5py.File(filename, 'r') as fi:
+                _bins = np.array(fi['bins/axis_0'])
+                # handle +- infinity edges for plotting; should be outside the plot range anyway
+                if _bins[0] == -np.inf:
+                    _bins[0] = -100.
+                if _bins[-1] == np.inf:
+                    _bins[-1] = 100.
+                bins[var][ion] = _bins
+                
+                # extract number of pixels from the input filename, using naming system of make_maps
+                inname = np.array(fi['input_filenames'])[0]
+                inname = inname.split('/')[-1] # throw out directory path
+                parts = inname.split('_')
+        
+                numpix_1sl = set(part if 'pix' in part else None for part in parts) # find the part of the name needed: '...pix'
+                numpix_1sl.remove(None)
+                numpix_1sl = int(list(numpix_1sl)[0][:-3])
+                print('Using %i pixels per side for the sample size'%numpix_1sl) # needed for the total path length
+                
+                ionind = 1 + np.where(np.array([part == 'coldens' for part in parts]))[0][0]
+                ion = parts[ionind]
+                
+                masks = masknames
+        
+                hists[var][ion] = {mask: np.array(fi['%s/hist'%mask]) for mask in masks}
+                
+                examplemaskdir = fi['masks'].keys()[0]
+                examplemask = fi['masks/%s'%(examplemaskdir)].keys()[0]
+                cosmopars[var][ion] = {key: item for (key, item) in fi['masks/%s/%s/Header/cosmopars/'%(examplemaskdir, examplemask)].attrs.items()}
+                dXtot[var][ion] = mc.getdX(cosmopars[var][ion]['z'], cosmopars[var][ion]['boxsize'] / cosmopars[var][ion]['h'], cosmopars=cosmopars[var][ion]) * float(numpix_1sl**2)
+                dztot[var][ion] = mc.getdz(cosmopars[var][ion]['z'], cosmopars[var][ion]['boxsize'] / cosmopars[var][ion]['h'], cosmopars=cosmopars[var][ion]) * float(numpix_1sl**2)
+                dXtotdlogN[var][ion] = dXtot[var][ion] * np.diff(bins[var][ion])
+
+        assert checksubdct_equal(cosmopars[var])
+    
+    npix_overlim_all = {}
+    var_tot = 0
+    for ion in ions:
+        lim = yvals_toplot[ion]
+        edges = bins[var_tot][ion]
+        counts = hists[var_tot][ion]
+        cumulcounts = np.cumsum(counts[::-1])[::-1]
+        npix_overlim_all[ion] = pu.linterpsolve(edges[:-1], cumulcounts, lim)
+        
+    
+    for ion in ions:
+        tags = list(npix_rminmax[ion].keys())
+        minmaxv = np.array([[float(x.split('_')[3][3:]), float(x.split('_')[4][2:])] for x in tags])
+        _ind = np.argsort(minmaxv[:, 0])
+        tags = tags[_ind]
+        minmaxv = minmaxv[_ind, :]
+        
+        print('For ion {ion}, absorbers > {val}'.format(ion=ion, val=yvals_toplot[ion]))
+        for ti in range(len(tags)):
+            Mmin, Mmax = minmaxv[ti]
+            tag = tags[ti]
+            numgals = np.sum(np.logical_and(mstar >= Mmin, mstar < Mmax))
+            
+            inmin_over_inmax = npix_rminmax[ion][tag]['npix_perhalo_inrmin'] /\
+                               npix_rminmax[ion][tag]['npix_perhalo_inrmax']
+            inmax_over_total = npix_rminmax[ion][tag]['npix_perhalo_inrmax'] \
+                               * numgals / npix_overlim_all[ion]
+            rmax = npix_rminmax[ion][tag]['maxr_pkpc']
+            
+            print('In Mstar range {Mmin:4.1f}-{Mmax:4.1f}:'.format(Mmin=Mmin, Mmax=Mmax))
+            print('    < {rmin:6.3f} pkpc / < {rmax:6.3f} pkpc: {corefrac}'.format(rmin=minr_pkpc, rmax=rmax, corefrac=inmin_over_inmax))
+            print('    < {rmax:6.3f} pkpc / total: {halofrac}'.format(rmax=rmax, halofrac=inmax_over_total))
