@@ -1330,7 +1330,7 @@ def gethalomask_fromhalocat(halocat, xpix, ypix=None,\
                                     'X', 'Y', 'Z', : position space edges 
                                     select on position [1, 2] range, using [3] 
                                     times R200c as a margin (units cMpc)
-                                    'VX', 'VY', VZ': velocity space edges
+                                    'VX', 'VY', VZ': velocity space edgesstderr.runhistograms_30033-30038-1725153.33
                                     select on position [1, 2] range
                                     (units rest-frame km/s)
     '''                             
@@ -1738,6 +1738,7 @@ def get_radprof(rqfilenames, halocat, rbins, yvals,\
         rpfilename = rqfilename[:-5] if rqfilename[-5:] == '.hdf5' else rqfilename
         rpfilename = rpfilename + '_stored_profiles.hdf5'
     if '/' not in rpfilename:
+        rdir = ol.pdir + 'radprof/'
         rpfilename = rdir + rpfilename
     
     rqfilenames = [pdir + fn if '/' not in fn else fn for fn in rqfilenames]
