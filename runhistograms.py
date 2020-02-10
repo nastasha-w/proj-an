@@ -3275,7 +3275,7 @@ if jobind in range(30033, 30039): # cosma
     p99_radii_mstarbins = {key: np.percentile(radii_mstarbins[key], 99.) for key in radii_mstarbins} # don't use the maxima since those are determined by outliers
     maxrad_all = rmax_r200c * np.max([p99_radii_mstarbins[key] for key in p99_radii_mstarbins])
     
-    halomasses_mstarbins = {key: np.array([m200cvals[galids == galid][0]for galid in galids_dct[key]]) for key in galids_dct}
+    halomasses_mstarbins = {key: np.array([m200cvals[galids == galid][0] for galid in galids_dct[key]]) for key in galids_dct}
     subsamples_halocore = {key: galids_dct[key][np.logical_and(halomasses_mstarbins[key] >= matchvals_Mstar_Mhalo[key][0],\
                                                                halomasses_mstarbins[key] <  matchvals_Mstar_Mhalo[key][1])]\
                            for key in galids_dct}
