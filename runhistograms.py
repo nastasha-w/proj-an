@@ -3238,3 +3238,121 @@ if jobind in range(30029, 30032): # cosma
                     separateprofiles=False,\
                     rpfilename=None, galsettag=hmkey)
         print('Finished %s, R200c\n'%rqfile)
+
+# stellar mass bin selections; a bit complicated due to different subsamples            
+if jobind in range(30033, 30039): # cosma
+    ## for each ion and stellar mass bin, a number of sets:
+    # percentiles for the whole stellar mass bin
+    # covering fractions for the whole stellar mass bin -> TODO: get the interesting values
+    # percentiles for the stellar mass bin using the core halo mass bin subsample
+    # percentiles for the stellar mass bin using the core halo mass bin subsample in R200c units
+    
+    ion = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'][jobind - 30033]
+    numsl = 1
+    
+    rmin_r200c = 0.
+    rmax_r200c = 3.
+    
+    halocat = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    with h5py.File(halocat, 'r') as cat:
+        r200cvals = np.array(cat['R200c_pkpc'])
+        m200cvals = np.log10(np.array(cat['M200c_Msun']))
+        galids = np.array(cat['galaxyid'])
+        cosmopars = {key: item for key, item in cat['Header/cosmopars'].attrs.items()}
+        
+    # select 1000 halos randomly in  0.5 dex Mstar bins (trying to do everything just gives memory errors)
+    galids_dct = sh.L0100N1504_27_Mstar_Mhbinmatch_1000.galids() 
+    matchvals_Mstar_Mhalo = {'geq8.7_le9.7':   (11.0, 11.5),\
+                             'geq9.7_le10.3':  (11.5, 12.0),\
+                             'geq10.3_le10.8': (12.0, 12.5),\
+                             'geq10.8_le11.1': (12.5, 13.0),\
+                             'geq11.1_le11.3': (13.0, 13.5),\
+                             'geq11.3_le11.5': (13.5, 14.0),\
+                             'geq11.5_le11.7': (14.0, 14.6),\
+                             }
+     # set minimum distance based on virial radius of halo mass bin
+    radii_mstarbins = {key: [r200cvals[galids == galid] for galid in galids_dct[key]] for key in galids_dct}
+    p99_radii_mstarbins = {key: np.percentile(radii_mstarbins[key], 99.) for key in radii_mstarbins} # don't use the maxima since those are determined by outliers
+    maxrad_all = rmax_r200c * np.max([p99_radii_mstarbins[key] for key in p99_radii_mstarbins])
+    
+    halomasses_mstarbins = {key: np.array([m200cvals[galids == galid][0]for galid in galids_dct[key]]) for key in galids_dct}
+    subsamples_halocore = {key: galids_dct[key][np.logical_and(halomasses_mstarbins[key] >= matchvals_Mstar_Mhalo[key][0],\
+                                                               halomasses_mstarbins[key] <  matchvals_Mstar_Mhalo[key][1])]\
+                           for key in galids_dct}
+    
+    filenames_proj = {'o6': ol.ndir + 'coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                      'o7': ol.ndir + 'coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                      'o8': ol.ndir + 'coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                      'fe17': ol.ndir + 'coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                      'ne8': ol.ndir + 'coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen%s_T4SFR.npz',\
+                      'ne9': ol.ndir + 'coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                      }
+    filename_proj = filenames_proj[ion]
+    rqfile = 'rdist_%s_%islice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals.hdf5'%((filename_proj.split('/')[-1][:-4])%('-all'), numsl)
+    rpfilen = rqfile[:-5] + '_fullrdist_stored_profiles.hdf5'
+    
+    yvals_perc = [1., 5., 10., 25., 50., 75., 90., 95., 99.]
+
+    rbins_pkpc = np.array([0., 3., 5., 7., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 120., 140., 160., 180.] + list(np.arange(200., maxrad_all, 25.)))
+    rbins_r200c = np.arange(0., rmax_r200c + 0.01, 0.05)
+    
+    # 4 mA (~ Arcus), Athena 0.18 eV, CDDF break pos.
+    fcovs_ion = {'o6':   np.array([12.5, 13.0, 13.5, 14.0, 14.3, 14.5]),\
+                 'o7':   np.array([14.5, 15.0, 15.1, 15.5, 16.0]),\
+                 'o8':   np.array([14.5, 15.0, 15.5, 15.7, 16.0]),\
+                 'ne8':  np.array([12.5, 13.0, 13.5, 13.7, 14.0, 14.5]),\
+                 'ne9':  np.array([14.5, 15.0, 15.3, 15.5, 15.6]),\
+                 'fe17': np.array([13.5, 14.0, 14.5, 14.9, 15.0]),\
+                 }
+    
+    # galids selection from galaxyselector (halo masses in 0.5 dex)
+    selcombs_full_sample = {'logMstar_Msun_1000_%s'%key: galids_dct[key] for key in galids_dct.keys()}
+    gkeys = galids_dct.keys() # set up beforehand to match orders in lists
+    selcombs_Mhalo_core_sample = {'logMstar_Msun_1000_%s_M200c-%.1f-%.1f-sub'%(key, matchvals_Mstar_Mhalo[key][0], matchvals_Mstar_Mhalo[key][1]): \
+                                  subsamples_halocore[key] for key in galids_dct.keys()}
+    selcombs_all = selcombs_full_sample.copy()
+    selcombs_all.update(selcombs_Mhalo_core_sample)
+    
+    for skey in selcombs_all:
+        gkey = gkeys[np.where([_key in skey for _key in gkeys])[0][0]]
+        iscoresample = skey.endswith('-sub')
+        
+        galids = selcombs_all[skey]
+        
+        maxallstored = rmax_r200c * p99_radii_mstarbins[gkey]
+        _rbins_pkpc = rbins_pkpc[np.where(rbins_pkpc <= maxallstored)]
+        if _rbins_pkpc[-1] < maxallstored:
+            _rbins_pkpc = np.append(_rbins_pkpc, maxallstored)
+        
+        if iscoresample:
+            print('Starting %s, core subsample, R200c'%rqfile)
+            crd.get_radprof(rqfile, halocat, rbins_r200c, yvals_perc,\
+                        xunit='R200c', ytype='perc',\
+                        galids=galids, combinedprofile=True,\
+                        separateprofiles=False,\
+                        rpfilename=rpfilen, galsettag=skey)
+            print('Finished %s, core subsample, R200c\n'%rqfile)
+            
+            print('Starting %s, core subsample, R200c'%rqfile)
+            crd.get_radprof(rqfile, halocat, _rbins_pkpc, yvals_perc,\
+                        xunit='pkpc', ytype='perc',\
+                        galids=galids, combinedprofile=True,\
+                        separateprofiles=False,\
+                        rpfilename=rpfilen, galsettag=skey)
+            print('Finished %s, core subsample, R200c\n'%rqfile)
+            
+        print('Starting %s, full sample, pkpc'%rqfile)
+        crd.get_radprof(rqfile, halocat, _rbins_pkpc, yvals_perc,\
+                    xunit='pkpc', ytype='perc',\
+                    galids=galids, combinedprofile=True,\
+                    separateprofiles=False,\
+                    rpfilename=rpfilen, galsettag=skey)
+        print('Finished %s, full sample, pkpc\n'%rqfile)
+        
+        print('Starting %s, full sample, pkpc, fcovs'%rqfile)
+        crd.get_radprof(rqfile, halocat, _rbins_pkpc, fcovs_ion[ion],\
+                    xunit='pkpc', ytype='fcov',\
+                    galids=galids, combinedprofile=True,\
+                    separateprofiles=False,\
+                    rpfilename=rpfilen, galsettag=skey)
+        print('Finished %s, full sample, pkpc, fcovs\n'%rqfile)

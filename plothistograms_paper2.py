@@ -9022,7 +9022,7 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
     plt.savefig(imgname, format='pdf', bbox_inches='tight')
     
 
-def getcovfrac_total_halo(ion, minr_pkpc, maxr_r200c):
+def getcovfrac_total_halo(minr_pkpc, maxr_r200c):
     '''
     for an ion, get the fraction of the total halo covering fraction (<maxr) 
     and the total cddf contribution (< minr, <maxr) for absorber above the 
@@ -9241,26 +9241,27 @@ def getcovfrac_total_halo(ion, minr_pkpc, maxr_r200c):
     # size of one pixel
     pixsize = 3.125 * cosmopars['a']
     for ionind in range(len(ions)):   
-        npix_rminmax[ion] = {}
         ion = ions[ionind]
-
-        #hatchind = 0
-        vi = 3
-        tags = techvars[techvars_touse[vi]]['setnames']
+        var = techvars_touse[0]
+        tags = techvars[var]['setnames']
         # example tag 'logMstar_Msun_1000_geq%.1f_le%.1f'
         tags = sorted(tags, key=lambda x: float(x.split('_')[3][3:]))
-        var = techvars_touse[vi]
+        print(tags)
+        npix_rminmax[ion] = {}
+        
         for ti in range(len(tags)): # mass bins
+            print(tag)
             tag = tags[ti]
             npix_rminmax[ion][tag] = {}         
             try:
-                rvals = bins[var][ion][tag]
+                rvals = np.array(bins[var][ion][tag])
             except KeyError: # dataset not read in
                 print('Could not find techvars %i, ion %s, tag %s'%(var, ion, tag))
                 continue
-            basesize = R200c_pkpc(10**R200c_toassume[tag], cosmopars)
+            rtag = '_'.join(tag.split('_')[-2:])
+            basesize = R200c_pkpc(10**(matchvals_Mstar_Mhalo[rtag][0] + 0.25), cosmopars)
             maxr_pkpc = maxr_r200c * basesize
-            fcovs = yvals_toplot[ion]
+            fcovs = np.array(yvals[var][ion][tag][yvals_toplot[ion][0]])
             
             npix_r = fcovs * np.pi * (rvals[1:]**2 - rvals[:-1]**2 ) / pixsize**2 # fraction * annulus surface area / pixel size            
             npix_inrmin = pu.linterpsolve(rvals[1:], npix_r, minr_pkpc)
@@ -9341,7 +9342,7 @@ def getcovfrac_total_halo(ion, minr_pkpc, maxr_r200c):
     for ion in ions:
         lim = yvals_toplot[ion]
         edges = bins[var_tot][ion]
-        counts = hists[var_tot][ion]
+        counts = hists[var_tot][ion]['nomask']
         cumulcounts = np.cumsum(counts[::-1])[::-1]
         npix_overlim_all[ion] = pu.linterpsolve(edges[:-1], cumulcounts, lim)
         
@@ -9350,7 +9351,7 @@ def getcovfrac_total_halo(ion, minr_pkpc, maxr_r200c):
         tags = list(npix_rminmax[ion].keys())
         minmaxv = np.array([[float(x.split('_')[3][3:]), float(x.split('_')[4][2:])] for x in tags])
         _ind = np.argsort(minmaxv[:, 0])
-        tags = tags[_ind]
+        tags = np.array(tags)[_ind]
         minmaxv = minmaxv[_ind, :]
         
         print('For ion {ion}, absorbers > {val}'.format(ion=ion, val=yvals_toplot[ion]))
