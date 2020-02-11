@@ -8459,6 +8459,7 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
         - Mhalo subsample of Mstar (pkpc stacked)
         - Mstar sample (pkpc stacked)
     '''
+    xlim = None
     if var == 'main':
         techvars_touse = [3]
         highlightcrit = {'techvars': [3]} 
@@ -8487,6 +8488,7 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
                         'o8':   [16.0],\
                         'fe17': [15.0]}
         printnumgals=False
+        xlim = (1., 1.5e3)
     elif var == 'main-fcov-obs':
         techvars_touse = [3]
         highlightcrit = None
@@ -8549,12 +8551,12 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
                          #'hneutralssh': 'rdist_coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
                          }
     
-    ion_filedct_Mstar = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
-                         'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
-                         'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
-                         'o8':   'rdist_coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
-                         'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
-                         'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
+    ion_filedct_Mstar = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o8':   'rdist_coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
                          #'hneutralssh': 'rdist_coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
                          }
 
@@ -8628,13 +8630,18 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
     
     if isinstance(yvals_toplot, dict):
         readpaths = {tv: {ion: {val: '%s_bins/binset_0/%s_%s'%(techvars[tv]['units'], ytype, val) for val in yvals_toplot[ion]} for ion in ions} for tv in techvars}
+        readpath_bins = {tv: '/'.join((readpaths[tv][ions[0]][yvals_toplot[ions[0]][0]]).split('/')[:-1]) + '/bin_edges' for tv in techvars}
     else:
         readpaths = {tv: {ion: {val: '%s_bins/binset_0/%s_%s'%(techvars[tv]['units'], ytype, val) for val in yvals_toplot} for ion in ions} for tv in techvars}
-    readpath_bins = {tv: '/'.join((readpaths[tv][ions[0]][yvals_toplot[ions[0]][0]]).split('/')[:-1]) + '/bin_edges' for tv in techvars}
+        readpath_bins = {tv: '/'.join((readpaths[tv][ions[0]][yvals_toplot[0]]).split('/')[:-1]) + '/bin_edges' for tv in techvars}
+        
     print(readpaths)
     panelwidth = 2.5
     panelheight = 2.
-    legheight = 1.3
+    if len(techvars_touse) > 1:
+        legheight = 1.3
+    else:
+        legheight = 0.0
     cwidth = 0.6
     if ytype == 'perc':
         wspace = 0.2
@@ -8644,7 +8651,9 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
     figwidth = numcols * panelwidth + cwidth + wspace * numcols
     figheight = numcols * panelheight + legheight
     fig = plt.figure(figsize=(figwidth, figheight))
-    grid = gsp.GridSpec(numrows + 1, numcols + 1, hspace=0.0, wspace=wspace, width_ratios=[panelwidth] * numcols + [cwidth], height_ratios=[panelheight] * numrows + [legheight])
+    grid = gsp.GridSpec(numrows + 1, numcols + 1, hspace=0.0, wspace=wspace,\
+                        width_ratios=[panelwidth] * numcols + [cwidth],\
+                        height_ratios=[panelheight] * numrows + [legheight])
     axes = [fig.add_subplot(grid[i // numcols, i % numcols]) for i in range(len(ions))]
     cax  = fig.add_subplot(grid[:numrows, numcols])
     if len(techvars_touse) > 1:
@@ -8843,6 +8852,10 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
         yi = ionind // numcols
         ion = ions[ionind]
         ax = axes[ionind]
+        if isinstance(yvals_toplot, dict):
+            _yvals_toplot = yvals_toplot[ion]
+        else:
+            _yvals_toplot = yvals_toplot
 
         if ytype == 'perc':
             if ion[0] == 'h':
@@ -8865,6 +8878,9 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
         elif ytype == 'fcov':
             ax.set_ylim(10**-1.95, 10**0.3)
             ax.set_yscale('log')
+        
+        if xlim is not None:
+            ax.set_xlim(*xlim)
         
         labelx = (yi == numrows - 1 or (yi == numrows - 2 and (yi + 1) * numcols + xi > len(ions) - 1)) # bottom plot in column
         labely = xi == 0
@@ -8917,11 +8933,11 @@ def plot_radprof_mstar(ions=None, var='main', fontsize=fontsize):
                     if 'Mmin' in highlightcrit.keys():
                         matched &= np.min(np.abs(masslabels_all[tag][0] - np.array(_highlightcrit['Mmin']))) <= 0.01
                     if matched:
-                        yvals_toplot_temp = yvals_toplot[ion]
+                        yvals_toplot_temp = _yvals_toplot
                     else:
-                        yvals_toplot_temp = [yvals_toplot[ion][0]] if len(yvals_toplot[ion]) == 1 else [yvals_toplot[ion][1]]
+                        yvals_toplot_temp = [_yvals_toplot[0]] if len(_yvals_toplot) == 1 else [_yvals_toplot[1]]
                 else:
-                    yvals_toplot_temp = yvals_toplot[ion]
+                    yvals_toplot_temp = _yvals_toplot
                 
                 
                 if ytype == 'perc':
@@ -9067,12 +9083,12 @@ def getcovfrac_total_halo(minr_pkpc, maxr_r200c):
     cosmopars = cosmopars_ea_27
     # up to 2.5 Rvir / 500 pkpc
 
-    ion_filedct_Mstar = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
-                         'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
-                         'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
-                         'o8':   'rdist_coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
-                         'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
-                         'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_stored_profiles.hdf5',\
+    ion_filedct_Mstar = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o8':   'rdist_coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
                          #'hneutralssh': 'rdist_coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
                          }
 

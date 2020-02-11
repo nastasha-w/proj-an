@@ -10,6 +10,8 @@ Contains a number of general utility functions for making plots
 import numpy as np
 import matplotlib as mpl
 import mpl_toolkits.axes_grid1 as axgrid
+import matplotlib.lines as mlines
+import matplotlib.legend_handler as mlh
 
 # defaults
 fontsize = 12
@@ -499,3 +501,46 @@ def paste_cmaps(cmaplist, edges, trunclist=None):
     cmap.set_under(cmap(0.))
     cmap.set_over(cmap(1.))
     return cmap
+
+
+class HandlerDashedLines(mlh.HandlerLineCollection):
+    """
+    Custom Handler for LineCollection instances.
+    """
+    def create_artists(self, legend, orig_handle,
+                       xdescent, ydescent, width, height, fontsize, trans):
+        # figure out how many lines there are
+        numlines = len(orig_handle.get_segments())
+        xdata, xdata_marker = self.get_xdata(legend, xdescent, ydescent,
+                                             width, height, fontsize)
+        leglines = []
+        # divide the vertical space where the lines will go
+        # into equal parts based on the number of lines
+        ydata = ((height) / (numlines + 1)) * np.ones(xdata.shape, float)
+        # for each line, create the line at the proper location
+        # and set the dash pattern
+        for i in range(numlines):
+            legline = mlines.Line2D(xdata, ydata * (numlines - i) - ydescent)
+            self.update_prop(legline, orig_handle, legend)
+            # set color, dash pattern, and linewidth to that
+            # of the lines in linecollection
+            try:
+                color = orig_handle.get_colors()[i]
+            except IndexError:
+                color = orig_handle.get_colors()[0]
+            try:
+                dashes = orig_handle.get_dashes()[i]
+            except IndexError:
+                dashes = orig_handle.get_dashes()[0]
+            try:
+                lw = orig_handle.get_linewidths()[i]
+            except IndexError:
+                lw = orig_handle.get_linewidths()[0]
+            if dashes[0] is not None:
+                # seem to come out twice the input size when using dashes[1] -> fix
+                legline.set_dashes([_d *0.5 for _d in dashes[1]])
+            legline.set_color(color)
+            legline.set_transform(trans)
+            legline.set_linewidth(lw)
+            leglines.append(legline)
+        return leglines
