@@ -9254,19 +9254,19 @@ def getcovfrac_total_halo(minr_pkpc, maxr_r200c):
                         numgals[var][ion][tag] = len(np.array(fi['%s/galaxyid'%(tags[tag])]))
 
     npix_rminmax = {}
-    # size of one pixel
-    pixsize = 3.125 * cosmopars['a']
+    # size of one pixel (pkpc)
+    pixsize = (100. / 32000.) * 1e3 * cosmopars['a']
     for ionind in range(len(ions)):   
         ion = ions[ionind]
         var = techvars_touse[0]
         tags = techvars[var]['setnames']
         # example tag 'logMstar_Msun_1000_geq%.1f_le%.1f'
         tags = sorted(tags, key=lambda x: float(x.split('_')[3][3:]))
-        print(tags)
+        #print(tags)
         npix_rminmax[ion] = {}
         
         for ti in range(len(tags)): # mass bins
-            print(tag)
+            #print(tag)
             tag = tags[ti]
             npix_rminmax[ion][tag] = {}         
             try:
@@ -9279,9 +9279,10 @@ def getcovfrac_total_halo(minr_pkpc, maxr_r200c):
             maxr_pkpc = maxr_r200c * basesize
             fcovs = np.array(yvals[var][ion][tag][yvals_toplot[ion][0]])
             
-            npix_r = fcovs * np.pi * (rvals[1:]**2 - rvals[:-1]**2 ) / pixsize**2 # fraction * annulus surface area / pixel size            
-            npix_inrmin = pu.linterpsolve(rvals[1:], npix_r, minr_pkpc)
-            npix_inrmax = pu.linterpsolve(rvals[1:], npix_r, maxr_pkpc)
+            npix_r = fcovs * np.pi * (rvals[1:]**2 - rvals[:-1]**2 ) / pixsize**2 # fraction * annulus surface area / pixel size    
+            npix_inr = np.cumsum(npix_r)
+            npix_inrmin = pu.linterpsolve(rvals[1:], npix_inr, minr_pkpc)
+            npix_inrmax = pu.linterpsolve(rvals[1:], npix_inr, maxr_pkpc)
             
             npix_rminmax[ion][tag].update({'maxr_pkpc': maxr_pkpc,\
                         'npix_perhalo_inrmin': npix_inrmin,\
@@ -9343,6 +9344,7 @@ def getcovfrac_total_halo(minr_pkpc, maxr_r200c):
                 masks = masknames
         
                 hists[var][ion] = {mask: np.array(fi['%s/hist'%mask]) for mask in masks}
+                #print('ion %s: sum = %f'%(ion, np.sum(hists[var][ion]['nomask'])))
                 
                 examplemaskdir = fi['masks'].keys()[0]
                 examplemask = fi['masks/%s'%(examplemaskdir)].keys()[0]
@@ -9355,22 +9357,26 @@ def getcovfrac_total_halo(minr_pkpc, maxr_r200c):
     
     npix_overlim_all = {}
     var_tot = 0
+    totpix = 16 * 32000**2 # checked hist sum
     for ion in ions:
-        lim = yvals_toplot[ion]
+        lim = yvals_toplot[ion][0]
         edges = bins[var_tot][ion]
         counts = hists[var_tot][ion]['nomask']
         cumulcounts = np.cumsum(counts[::-1])[::-1]
         npix_overlim_all[ion] = pu.linterpsolve(edges[:-1], cumulcounts, lim)
-        
+        print('{ion} fcov total: {fcov}'.format(ion=ion, fcov=npix_overlim_all[ion] / totpix))
+    print('\n')
     
+    overview = {}
     for ion in ions:
         tags = list(npix_rminmax[ion].keys())
         minmaxv = np.array([[float(x.split('_')[3][3:]), float(x.split('_')[4][2:])] for x in tags])
         _ind = np.argsort(minmaxv[:, 0])
         tags = np.array(tags)[_ind]
         minmaxv = minmaxv[_ind, :]
+        overview[ion] = {'limval': yvals_toplot[ion][0]}
         
-        print('For ion {ion}, absorbers > {val}'.format(ion=ion, val=yvals_toplot[ion]))
+        #print('For ion {ion}, absorbers > {val}'.format(ion=ion, val=yvals_toplot[ion]))
         for ti in range(len(tags)):
             Mmin, Mmax = minmaxv[ti]
             tag = tags[ti]
@@ -9382,6 +9388,44 @@ def getcovfrac_total_halo(minr_pkpc, maxr_r200c):
                                * numgals / npix_overlim_all[ion]
             rmax = npix_rminmax[ion][tag]['maxr_pkpc']
             
-            print('In Mstar range {Mmin:4.1f}-{Mmax:4.1f}:'.format(Mmin=Mmin, Mmax=Mmax))
-            print('    < {rmin:6.3f} pkpc / < {rmax:6.3f} pkpc: {corefrac}'.format(rmin=minr_pkpc, rmax=rmax, corefrac=inmin_over_inmax))
-            print('    < {rmax:6.3f} pkpc / total: {halofrac}'.format(rmax=rmax, halofrac=inmax_over_total))
+            overview[ion][Mmin] = {'Mmin': Mmin, 'Mmax': Mmax, 'rmax': rmax,\
+                                   'inmin_over_inmax': inmin_over_inmax,\
+                                   'inmax_over_total': inmax_over_total}
+            #print('In Mstar range {Mmin:4.1f}-{Mmax:4.1f}:'.format(Mmin=Mmin, Mmax=Mmax))
+            #print('    < {rmin:6.3f} pkpc / < {rmax:6.3f} pkpc: {corefrac}'.format(rmin=minr_pkpc, rmax=rmax, corefrac=inmin_over_inmax))
+            #print('    < {rmax:6.3f} pkpc / total: {halofrac}'.format(rmax=rmax, halofrac=inmax_over_total))
+            #print('{num} galaxies'.format(num=numgals))
+        #print('\n')
+    #print([set(overview[ion].keys()) == set(overview[ions[0]].keys()) for ion in ions])
+    
+    ### print overview table
+    print('For an inner radius of {minr} pkpc'.format(minr=minr_pkpc))
+    print('Core contribution / total halo')
+    topstr = '$\\mathrm{{M}}_{{\\star}}$' +\
+             ' & $\\mathrm{{r}}_{{\\perp, \\max}}$ &' +\
+             ' & '.join(['{ion}'.format(ion=ild.getnicename(ion)) for ion in ions]) + ' \\\\'
+    topstr2 = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\odot}}$' +\
+              ' & $\\mathrm{{pkpc}}$ &' +\
+              ' & '.join(['$>{yval:.1f}$'.format(yval=yvals_toplot[ion][0]) for ion in ions]) + ' \\\\'
+    fillstr = '{Mmin:.1f}--{Mmax:.1f} & {rmax:.0f} & ' + ' & '.join(['{{{ist}:.4f}}'.format(ist=ion) for ion in ions]) + ' \\\\'
+    totstr = 'total & \t & ' +  ' & '.join(['{{{ist}:.4f}}'.format(ist=ion) for ion in ions]) + ' \\\\'
+    Mvals = list(overview[ions[0]].keys())
+    Mvals.remove('limval')
+    stion = ions[0]
+    print(topstr)
+    print(topstr2)
+    for Mmin in sorted(Mvals):
+        print(fillstr.format(Mmin=overview[stion][Mmin]['Mmin'],\
+                             Mmax=overview[stion][Mmin]['Mmax'],\
+                             rmax=overview[stion][Mmin]['rmax'],\
+                             **{ion: overview[ion][Mmin]['inmin_over_inmax'] for ion in ions}))
+    print('\n')
+    print('Halo contribution / total')
+    print(topstr)
+    print(topstr2)
+    for Mmin in sorted(Mvals):
+        print(fillstr.format(Mmin=overview[stion][Mmin]['Mmin'],\
+                             Mmax=overview[stion][Mmin]['Mmax'],\
+                             rmax=overview[stion][Mmin]['rmax'],\
+                             **{ion: overview[ion][Mmin]['inmax_over_total'] for ion in ions}))
+    print(totstr.format(**{ion: np.sum([overview[ion][Mmin]['inmax_over_total'] for Mmin in Mvals]) for ion in ions}))

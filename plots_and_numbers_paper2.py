@@ -138,7 +138,8 @@ def readin_radprof(infodct, yvals_label_ion,\
                                      {setname: string/string tuple to fill into
                                                 filenames for different sets},\
                          }
-    
+         if using setfills, the fills and filenames should work with 
+         string.format, kwargs
     yvals_label_ion:
         {label: {ion: yvals list}}
         yvals list: list of y values to use: percentile points or minimum 
