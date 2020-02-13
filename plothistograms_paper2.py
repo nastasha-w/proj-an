@@ -9429,3 +9429,237 @@ def getcovfrac_total_halo(minr_pkpc, maxr_r200c):
                              rmax=overview[stion][Mmin]['rmax'],\
                              **{ion: overview[ion][Mmin]['inmax_over_total'] for ion in ions}))
     print(totstr.format(**{ion: np.sum([overview[ion][Mmin]['inmax_over_total'] for Mmin in Mvals]) for ion in ions}))
+    
+
+def get_dNdz_halos(limset='break'):   
+    '''
+    get number of absorbers >N for the different halo sets from masked and
+    FoF-only CDDFs. Threasholds N are set by 
+    limset: 'break' (CDDF break) or 'obs' (estimated observation limits)
+    '''
+
+    if limset == 'break':
+        lims = {'o6':   [14.3],\
+                        'ne8':  [13.7],\
+                        'o7':   [16.0],\
+                        'ne9':  [15.3],\
+                        'o8':   [16.0],\
+                        'fe17': [15.0]}
+    elif limset == 'obs':
+        lims = {'o6':   [13.5],\
+                        'ne8':  [13.5],\
+                        'o7':   [15.5],\
+                        'ne9':  [15.5],\
+                        'o8':   [15.7],\
+                        'fe17': [14.9]}
+
+    ions = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']
+    medges = np.arange(11., 14.1, 0.5) #np.arange(11., 14.1, 0.5)
+    halofills = [''] +\
+            ['Mhalo_%s<=log200c<%s'%(medges[i], medges[i + 1]) if i < len(medges) - 1 else \
+             'Mhalo_%s<=log200c'%medges[i] for i in range(len(medges))]
+    prefilenames_all = {key: ['coldens_%s_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel.hdf5'%(key, '%s', halofill) for halofill in halofills]
+                 for key in ions}   
+    filenames_all = {key: [ol.pdir + 'cddf_' + ((fn.split('/')[-1])%('-all'))[:-5] + '_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5' for fn in prefilenames_all[key]] for key in prefilenames_all.keys()}
+    
+    masses_proj = ['none'] + list(medges)
+    filedct = {ion: {masses_proj[i]: filenames_all[ion][i] for i in range(len(filenames_all[ion]))} for ion in ions} 
+    
+    masknames =  ['nomask',\
+                  #'logM200c_Msun-9.0-9.5',\
+                  #'logM200c_Msun-9.5-10.0',\
+                  #'logM200c_Msun-10.0-10.5',\
+                  #'logM200c_Msun-10.5-11.0',\
+                  'logM200c_Msun-11.0-11.5',\
+                  'logM200c_Msun-11.5-12.0',\
+                  'logM200c_Msun-12.0-12.5',\
+                  'logM200c_Msun-12.5-13.0',\
+                  'logM200c_Msun-13.0-13.5',\
+                  'logM200c_Msun-13.5-14.0',\
+                  'logM200c_Msun-14.0-inf',\
+                  ]
+    maskdct = {masses_proj[i]: masknames[i] for i in range(len(masknames))}
+    
+    ## read in cddfs from halo-only projections
+    dct_fofcddf = {}
+    for ion in ions:
+        dct_fofcddf[ion] = {}
+        # FoF CDDFs: only without masks
+        pmass = 'none'
+        dct_fofcddf[ion] = {}
+        try:
+            with h5py.File(filedct[ion][pmass]) as fi:
+                try:
+                    bins = np.array(fi['bins/axis_0'])
+                except KeyError as err:
+                    print('While trying to load bins in file %s\n:'%(filedct[pmass]))
+                    raise err
+                    
+                dct_fofcddf[ion]['bins'] = bins
+                
+                inname = np.array(fi['input_filenames'])[0]
+                inname = inname.split('/')[-1] # throw out directory path
+                parts = inname.split('_')
+        
+                numpix_1sl = set(part if 'pix' in part else None for part in parts) # find the part of the name needed: '...pix'
+                numpix_1sl.remove(None)
+                numpix_1sl = int(list(numpix_1sl)[0][:-3])
+                print('Using %i pixels per side for the sample size'%numpix_1sl) # needed for the total path length
+                
+                for mmass in masses_proj[1:]:
+                    grp = fi[maskdct[mmass]]
+                    hist = np.array(grp['hist'])
+                    covfrac = grp.attrs['covfrac']
+                    # recover cosmopars:
+                    mask_examples = {key: item for (key, item) in grp.attrs.items()}
+                    del mask_examples['covfrac']
+                    example_key = mask_examples.keys()[0] # 'mask_<slice center>'
+                    example_mask = mask_examples[example_key] # '<dir path><mask file name>'
+                    path = 'masks/%s/%s/Header/cosmopars'%(example_key[5:], example_mask.split('/')[-1])
+                    #print(path)
+                    cosmopars = {key: item for (key, item) in fi[path].attrs.items()}
+                    dXtot = mc.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
+                    #dXtotdlogN = dXtot * np.diff(bins)
+        
+                    dct_fofcddf[ion][mmass] = {'cddf': hist / dXtot, 'covfrac': covfrac}
+                
+                # use cosmopars from the last read mask
+                mmass = 'none'
+                grp = fi[maskdct[mmass]]
+                hist = np.array(grp['hist'])
+                covfrac = grp.attrs['covfrac']
+                # recover cosmopars:
+                dztot = mc.getdz(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
+                #dXtotdlogN = dXtot * np.diff(bins)
+                dct_fofcddf[ion][mmass] = {'cddf': hist / dztot, 'covfrac': covfrac}
+            
+        except IOError as err:
+            print('Failed to read in %s; stated error:'%filedct[pmass])
+            print(err)
+         
+            
+    ## read in split cddfs from total ion projections
+    ion_filedct_excl_1R200c_cenpos = {'fe17': ol.pdir + 'cddf_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'ne9':  ol.pdir + 'cddf_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'ne8':  ol.pdir + 'cddf_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o8':   ol.pdir + 'cddf_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o7':   ol.pdir + 'cddf_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o6':   ol.pdir + 'cddf_coldens_o6_L0100N1504_27_test3.3_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'hneutralssh': ol.pdir + 'cddf_coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5'}
+    
+    dct_maskcddf = {}
+    for ion in ions:
+        file_allproj = ion_filedct_excl_1R200c_cenpos[ion]
+        dct_maskcddf[ion] = {}
+        with h5py.File(file_allproj) as fi:
+            try:
+                bins = np.array(fi['bins/axis_0'])
+            except KeyError as err:
+                print('While trying to load bins in file %s\n:'%(file_allproj))
+                raise err
+                
+            dct_maskcddf[ion]['bins'] = bins
+            
+            inname = np.array(fi['input_filenames'])[0]
+            inname = inname.split('/')[-1] # throw out directory path
+            parts = inname.split('_')
+        
+            numpix_1sl = set(part if 'pix' in part else None for part in parts) # find the part of the name needed: '...pix'
+            numpix_1sl.remove(None)
+            numpix_1sl = int(list(numpix_1sl)[0][:-3])
+            print('Using %i pixels per side for the sample size'%numpix_1sl) # needed for the total path length
+            
+            for mmass in masses_proj[1:]:
+                grp = fi[maskdct[mmass]]
+                hist = np.array(grp['hist'])
+                covfrac = grp.attrs['covfrac']
+                # recover cosmopars:
+                mask_examples = {key: item for (key, item) in grp.attrs.items()}
+                del mask_examples['covfrac']
+                example_key = mask_examples.keys()[0] # 'mask_<slice center>'
+                example_mask = mask_examples[example_key] # '<dir path><mask file name>'
+                path = 'masks/%s/%s/Header/cosmopars'%(example_key[5:], example_mask.split('/')[-1])
+                cosmopars = {key: item for (key, item) in fi[path].attrs.items()}
+                dXtot = mc.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
+                #dXtotdlogN = dXtot * np.diff(bins)
+            
+                dct_maskcddf[ion][mmass] = {'cddf': hist / dXtot, 'covfrac': covfrac}
+            # use cosmopars from the last read mask
+            mmass = 'none'
+            grp = fi[maskdct[mmass]]
+            hist = np.array(grp['hist'])
+            covfrac = grp.attrs['covfrac']
+            # recover cosmopars:
+            dztot = mc.getdz(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
+            #dXtotdlogN = dXtot * np.diff(bins)
+            dct_maskcddf[ion][mmass] = {'cddf': hist / dztot, 'covfrac': covfrac}
+    
+    results = {}
+    for ion in ions:
+       results[ion] = {}
+       bins_mask = dct_maskcddf[ion]['bins']
+       bins_fof  = dct_fofcddf[ion]['bins']
+       
+       for mmass in masses_proj:
+           cumul_fof =  np.cumsum(dct_fofcddf[ion][mmass]['cddf'][::-1])[::-1]
+           cumul_mask = np.cumsum(dct_maskcddf[ion][mmass]['cddf'][::-1])[::-1]
+           
+           val_fof  = pu.linterpsolve(bins_fof[:-1], cumul_fof, lims[ion][0])
+           val_mask = pu.linterpsolve(bins_mask[:-1], cumul_mask, lims[ion][0])
+           fcov_mask = dct_maskcddf[ion][mmass]['covfrac']
+           
+           results[ion][mmass] = {'fof': val_fof,\
+                                 'mask': val_mask,\
+                                 'fcov': fcov_mask}
+    strings_mmass = {'none': 'total'}
+    strings_mmass.update({mmass: '{Mmin:.1f}--{Mmax:.1f}'.format(Mmin=mmass, Mmax=mmass + 0.5) \
+                                 if mmass < 13.9 else \
+                                 '$>{Mmin:.1f}$'.format(Mmin=mmass) \
+                                 for mmass in masses_proj[1:]})
+    
+    ionstr = {ion: '\\ion{{{}}}{{{}}}'.format(ild.getnicename(ion).split(' ')[0], \
+                                              string.lower(ild.getnicename(ion).split(' ')[1])) \
+              for ion in ions}
+    
+    ### print overview table
+    print('FoF-only CDDFs (total = all haloes)')
+    print('dn(>N, halo) / dz')
+    topstr = '$\\mathrm{{M}}_{{200\\mathrm{{c}}}} $ & ' + \
+             ' & '.join(['{ion}'.format(ion=ionstr[ion]) for ion in ions]) + ' \\\\'
+    topstr2 = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\odot}}$ & ' +\
+              ' & '.join(['$>{yval:.1f}$'.format(yval=lims[ion][0]) for ion in ions]) + ' \\\\'
+    fillstr = '{massst} & ' + ' & '.join(['{{{ist}:.3f}}'.format(ist=ion) for ion in ions]) + ' \\\\'
+    #resstr = 'total &  ' +  ' & '.join(['{{{ist}:.4f}}'.format(ist=ion) for ion in ions]) + ' \\\\'
+
+    print(topstr)
+    print(topstr2)
+    print('\\hline')
+    for Mmin in masses_proj:
+        print(fillstr.format(massst=strings_mmass[Mmin],\
+                             **{ion: results[ion][Mmin]['fof'] for ion in ions}))
+    print('\n')
+    print('R200c mask CDDFs (total = all gas)')
+    print(topstr)
+    print(topstr2)
+    print('\\hline')
+    for Mmin in masses_proj:
+        print(fillstr.format(massst=strings_mmass[Mmin],\
+                             **{ion: results[ion][Mmin]['mask'] for ion in ions}))    
+    print('\n')
+    print('R200c mask CDDFs as a fraction of all gas')
+    print(topstr)
+    print(topstr2)
+    print('\\hline')
+    for Mmin in masses_proj[1:]:
+        print(fillstr.format(massst=strings_mmass[Mmin],\
+                             **{ion: results[ion][Mmin]['mask'] / results[ion]['none']['mask'] for ion in ions}))
+    print(fillstr.format(massst='halo total',\
+                             **{ion: np.sum([results[ion][Mmin]['mask'] for Mmin in masses_proj[1:]]) / results[ion]['none']['mask'] for ion in ions}))
+    
+    print('\n')
+    print('FoF all halos / total CDDF')
+    print(topstr)
+    print(topstr2)
+    print('\\hline')
+    print(fillstr.format(massst='all FoF / all gas',\
+                             **{ion: results[ion]['none']['fof'] / results[ion]['none']['mask'] for ion in ions}))
