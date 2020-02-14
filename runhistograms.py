@@ -1881,7 +1881,7 @@ elif jobind in range(10081, 10084):
     outname = 'cddf_' + '.'.join((filebase%('-all')).split('.')[:-1] + ['hdf5'])
     fills_100 =  [str(i) for i in (np.arange(16) + 0.5) * 100./16.]
     bins = np.arange(-28., 25.01, 0.05)
-    mh.makehist_masked_toh5py(filebases[ion], fills=fills_100, bins=bins,\
+    mh.makehist_masked_toh5py(filebases[ion], fills=fills_100, bins=[bins],\
                               includeinf=True, outfilename=outname)
     
 ############################################
