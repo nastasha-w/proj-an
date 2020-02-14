@@ -559,7 +559,6 @@ def makehist_cddf_sliceadd(filebase, fills=None, add=1, addoffset=0,\
     works on hdf5 make_maps outputs, not the old npz format
     
     filebase.format(fill) for fill in fills are the files use here
-    files can be hdf5 of npz
     add:      add this many slices together and treat as a single slice
               fills must be floats or convertible to floats for this, and are
               assumed to be slice centers, so that the adding produced thicker,

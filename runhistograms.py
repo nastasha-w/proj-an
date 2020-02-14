@@ -1840,7 +1840,50 @@ elif jobind in range(10049, 10057):
     mh.makehist_cddf_sliceadd(filebase, fills=fills, add=1,\
                               resreduce=1, includeinf=True,\
                               bins=bins)
+    
+# Leiden; z=0.5 CDDF splits
+elif jobind in range(10057, 10081):
+    jobind -= 10057
+    ions = ['o7', 'o8', 'ne8']
+    halosels = ['',\
+                'Mhalo_11.0<=log200c<11.5',\
+                'Mhalo_11.5<=log200c<12.0',\
+                'Mhalo_12.0<=log200c<12.5',\
+                'Mhalo_12.5<=log200c<13.0',\
+                'Mhalo_13.0<=log200c<13.5',\
+                'Mhalo_13.5<=log200c<14.0',\
+                'Mhalo_14.0<=log200c',\
+                ]
+    ionind = jobind // len(halosels)
+    haloind = jobind - ionind * len(halosels)
+    ion = ions[ionind]
+    halosel = halosels[haloind]    
+    filebase = 'coldens_{ion}_L0100N1504_23_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen{blank}_z-projection_T4EOS_halosel_{halosel}_allinR200c_endhalosel.hdf5'.format(ion=ion, halosel=halosel, blank='{}')
+    
+    fills_100 =  [str(i) for i in (np.arange(16) + 0.5) * 100./16.]
+    bins = np.arange(-28., 25.01, 0.05)
+    
+    mh.makehist_cddf_sliceadd(filebase, fills=fills_100, add=1, addoffset=0,\
+                           resreduce=1,\
+                           bins=bins, includeinf=True,\
+                           outname=None)
 
+# cosma, needs to work on npz: z=0.5 total CDDFs
+elif jobind in range(10081, 10084):
+    ions = ['o7', 'o8', 'ne8']
+    ion = ions[jobind - 10081]
+    
+    filebases = {'o7': 'coldens_o7_L0100N1504_23_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                 'o8': 'coldens_o8_L0100N1504_23_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                 'ne8': 'coldens_ne8_L0100N1504_23_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.hdf5',\
+                 }
+    filebase = filebases[ion]
+    outname = 'cddf_' + '.'.join((filebase%('-all')).split('.')[:-1] + ['hdf5'])
+    fills_100 =  [str(i) for i in (np.arange(16) + 0.5) * 100./16.]
+    bins = np.arange(-28., 25.01, 0.05)
+    mh.makehist_masked_toh5py(filebases[ion], fills=fills_100, bins=bins,\
+                              includeinf=True, outfilename=outname)
+    
 ############################################
 ############ radial profiles ###############
 ############################################
