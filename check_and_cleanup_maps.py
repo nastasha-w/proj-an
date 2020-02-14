@@ -31,7 +31,7 @@ errcats = ['h5py open', 'map missing', 'map shape', 'values', 'attributes']
 def parse_commandline():
     kwargs = {}   
     args = sys.argv
-    args = [arg.decode() for arg in args]
+    #args = [arg.decode() for arg in args]
     
     if '--delete' in args:
         kwargs['delete'] = True
@@ -47,7 +47,7 @@ def parse_commandline():
         # remove end quotes "..."
         if pattern[-1] == '"':
             pattern = pattern[:-1]
-        if pattern[0] != '"':
+        if pattern[0] == '"':
             pattern = pattern[1:]
         kwargs['pattern'] = pattern
     ic = np.where(['--ignorecat' in arg for arg in args])[0]
