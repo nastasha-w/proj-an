@@ -14,7 +14,7 @@ projects
 ## imports
 import numpy as np
 import h5py
-import ctypes as ct
+import os
 
 import comso_utils as cu
 import ion_line_data as ild
@@ -73,9 +73,9 @@ class SpecSet:
         ## set general sightline and box properties
         # positions in gagdet units = 1/h cMpc
         self.positions = np.array([[
-                     self.specfile['Spectrum%i'%specnum].attrs['X-position'],\
-                     self.specfile['Spectrum%i'%specnum].attrs['Y-position']\
-                                   ] for specnum in range(self.numspecs)]) 
+                     self.specfile[specgroup].attrs['X-position'],\
+                     self.specfile[specgroup].attrs['Y-position']\
+                                   ] for specgroup in self.specgroups]) 
         # convert to cMpc
         self.positions *= 1. / self.cosmopars['h']
         self.slicelength = self.cosmopars['boxsize'] / self.cosmopars['h'] #in cMpc
@@ -299,12 +299,63 @@ class SpecSet:
             self.vwindow_coldens[vkey][ion] *= 10**self.coldens[ion]
             self.vwindow_coldens[vkey][ion] = np.log10(self.vwindow_coldens[vkey][ion])
             
-    def save_specdata(self):
-        pass
+    def save_specdata(self, filename):
         '''
+        filename should include the directory
+        
         save N, EW totals and windows, 
-        as well as used ionlines, cosmopars, positions, etc.
+        as well as used ionlines, cosmopars, specwizard file
+        only new vwindow and total values are added
         '''
+        
+        if os.path.isfile(filename):
+            createnew = False
+        else:
+            createnew = True
+        with h5py.File(filename, 'a') as fo:
+            if createnew:
+                hed = fo.create_group('Header')
+                csm = hed.create_group('cosmopars')
+                for key in self.cosmopars:
+                    csm.attrs.create(key, self.cosmopars[key])
+                hed.create_dataset('specgroups', data=self.specgroups.astype(np.string_))
+                hed.attrs.create('filename_specwizard', self.specfile)
+                # used lines
+                inl = hed.create_group('ionlines')
+                for ion in self.ionlines:
+                    sgp = inl.create_group(ion)
+                    for li in range(len(self.ionlines[ion])):
+                        s2grp = sgp.create_group('line_{}'.format(li))
+                        ild.savelinedata(s2grp, self.ionlines[ion][li])
+            
+            if 'coldens_tot' not in fo.keys():
+                grp = fo.create_group('coldens_tot')
+                for ion in self.coldens:
+                    grp.create_dataset(ion, data=self.coldens[ion])
+                grp.attrs.create('info', np.string_('column density [log10 cm^-2] for each ion'))
+            if 'EW_tot' not in fo.keys():
+                grp = fo.create_group('EW_tot')
+                for ion in self.EW:
+                    grp.create_dataset(ion, data=self.EW[ion])
+                grp.attrs.create('info', np.string_('equivalent width [Angstrom, rest-frame] for each ion'))
+            
+            if 'vwindows_maxtau' not in fo.keys():
+                vgp = fo.create_group('vwindows_maxtau')
+                vgp.attrs.create('info', np.string_('column density and EW in rest-frame velocity windows Deltav (+- 0.5 * Deltav) [km/s] around the maximum-optical-depth pixel'))
+            for deltav in self.vwindow_EW:
+                vname = 'Deltav_{v:.3f}'.format(deltav)
+                if vname in vgp.keys(): # already stored
+                    continue
+                svgp = vgp.create_group(vname)
+                svgp.attrs.create('Deltav_rf_kmps', deltav)
+                cvgp = svgp.create_group('coldens')
+                cvgp.attrs.create('info', np.string_('column density [log10 cm^-2] for each ion'))
+                evgp = svgp.create_group('EW')
+                evgp.attrs.create('info', np.string_('equivalent width [Angstrom, rest-frame] for each ion'))
+                
+                for ion in self.vwindow_EW[deltav]:
+                    evgp.create_dataset(ion, data=self.vwindow_EW[deltav][ion])
+                    cvgp.create_dataset(ion, data=self.vwindow_coldens[deltav][ion])
         
     def getnion(self, dions='all'): # ion number density in cm^3 in each pixel: 
         if dions == 'all':
@@ -323,36 +374,36 @@ class SpecSet:
         the appropriate dictionary for the ions <dions> (if applicable)
         '''
         if cat not in self.dataoptions.keys():
-            print('Cat options are %s, not %s. No values retrieved.'%(str(self.dataoptions.keys()),cat))
-            return
+            raise ValueError('Cat options are %s, not %s. No values retrieved.'%(str(self.dataoptions.keys()), cat))
         elif name not in self.dataoptions[cat].keys():
-            print('Name options are %s, not %s. No values retrieved.'%(str(self.dataoptions[cat].keys()),name)) 
-            return
+            raise ValueError('Name options are %s, not %s. No values retrieved.'%(str(self.dataoptions[cat].keys()), name)) 
 
         elif cat == 'posmassw':
             if name == 'nion':
                 self.getnion(dions=dions)
             else:
-                self.posmassw.update({name : np.array([np.array(self.specfile['Spectrum%i/%s'%(specnum,self.dataoptions[cat][name])]) for specnum in range(self.numspecs)])})
+                self.posmassw.update({name : np.array([np.array(self.specfile['{grn}/{dn}'.format(grn=specgroup, dn=self.dataoptions[cat][name])]) \
+                                                       for specgroup in self.specgroups])})
         elif cat == 'ion':
             if name == 'flux': # we have a function for this one
                 self.getspectra_base(dions=dions) 
             elif name == 'logcoldens': # and for this one
                 self.getcoldens(dions=dions)
             else: # name == 'tau'
-                self.tau_base.update({ion: np.array([np.array(self.specfile['Spectrum%i/%s/%s'%(specnum, ion, self.dataoptions[cat][name])]) for specnum in range(self.numspecs)]) for ion in dions})
+                self.tau_base.update({ion: np.array([np.array(self.specfile['{grn}/{ion}/{dn}'.format(grn=specgroup, ion=ion, dn=self.dataoptions[cat][name])]) \
+                                                     for specgroup in self.specgroups]) for ion in dions})
         else:
             if cat == 'posionw':
                 self.basedict = self.posionw
             elif cat == 'veltauw':
                 self.basedict = self.veltauw
             else:
-                print('%s is not a valis cat option. No values retrieved.'%cat)
-                return
+                raise ValueError('{cat} is not a valid cat option. No values retrieved.'.format(cat=cat))
             if name not in self.basedict.keys():
                 self.basedict[name] = {}
             for ion in dions:      
-                self.basedict[name].update({ion : np.array([np.array(self.specfile['Spectrum%i/%s/%s'%(specnum,ion,self.dataoptions[cat][name])]) for specnum in range(self.numspecs)]) for ion in dions})
+                self.basedict[name].update({ion : np.array([np.array(self.specfile['{grn}/{ion}/{dn}'.format(grn=specgroup, ion=ion, dn=self.dataoptions[cat][name])]) \
+                             for specgroup in self.specgroups]) for ion in dions})
             del self.basedict           
 
 

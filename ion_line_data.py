@@ -184,8 +184,8 @@ def savelinedata(openhdf5group, specline):
     saves line data as attributes in openhdf5group
     recursively saves components in a 'linecomponents' subgroup
     '''
-    openhdf5group.attrs.create('linename',       specline.name)
-    openhdf5group.attrs.create('ion',            specline.ion)
+    openhdf5group.attrs.create('linename',       np.string_(specline.name))
+    openhdf5group.attrs.create('ion',            np.string_(specline.ion))
     openhdf5group.attrs.create('wavelength [A]', specline.lambda_angstrom)
     openhdf5group.attrs.create('fosc',           specline.fosc)
     if not specline.single:
@@ -198,8 +198,8 @@ def readlinedata(hdf5group):
     '''
     return a SpecLine object read in from a savelinedata-format hdf5 group 
     '''
-    name    = hdf5group.attrs['linename']
-    ion     = hdf5group.attrs['ion']
+    name    = hdf5group.attrs['linename'].decode()
+    ion     = hdf5group.attrs['ion'].decode()
     wavelen = hdf5group.attrs['wavelength [A]']
     fosc    = hdf5group.attrs['fosc']
     if 'linecomponents' in hdf5group.keys():
