@@ -11,6 +11,7 @@ look for (a)typical environments of absorbers like Ton180 O VII/VIII
 import os
 import numpy as np
 import h5py
+from sklearn.neighbors import NearestNeighbors
 
 import make_maps_opts_locs as ol
 import eagle_constants_and_units as cu
@@ -19,6 +20,8 @@ import cosmo_utils as c
 # put stored files here
 ddir = '/net/quasar/data2/wijers/slcat/'
 mdir = '/net/luttero/data2/jussi_ton180_data/'
+
+n_jobs = int(os.environ['OMP_NUM_THREADS']) # not shared-memory, I think, but a good indicator
 
 ## measured column densities: logN / cm^-2 
 ## sigma: single +- value or (-, +) tuple
@@ -75,6 +78,10 @@ detlim = {'o7': 15.5}
 
 cosmopars_ea_27 = {'a': 0.9085634947881763, 'boxsize': 67.77, 'h': 0.6777, 'omegab': 0.0482519, 'omegalambda': 0.693, 'omegam': 0.307, 'z': 0.10063854175996956}
 
+# galaxies seem to be sort of ok down to this mass in Schaye et al. (2015)
+galsel_default = [('Mstar_Msun', 10**9, None)]
+halosel_default = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30_inclsatellites.hdf5'
+
 def integratehist(counts, edges, vmin, vmax):
     '''
     integrate a histogram between vmin and vmax, assuming a uniform 
@@ -105,7 +112,24 @@ def integratehist(counts, edges, vmin, vmax):
     return np.sum(counts[imin : imax]) + minadd + maxadd
     
 
-# 
+def periodic_duplicate(propdct, targetname, period, margin):
+    '''
+    for a dictionary containing matching arrays, append copies with shifted 
+    array targetname by period for all targetname values within margin of 
+    0 and period. Values are assumed to be between 0 and period 
+    '''
+    dupmin = propdct[targetname] < margin
+    dupmax = propdct[targetname] > period - margin
+    origlen = len(propdct[targetname])
+    
+    for key in propdct:
+        if key == targetname:
+            propdct[key] = np.append(propdct[key], propdct[key][dupmin] + period)
+            propdct[key] = np.append(propdct[key], propdct[key][:origlen][dupmax] - period)
+        else:
+            propdct[key] = np.append(propdct[key], propdct[key][dupmin])
+            propdct[key] = np.append(propdct[key], propdct[key][:origlen][dupmax])
+    
 def countsl(modelname, sigma_min=1, sigma_max=np.inf):
     '''
     from the z=0.1 CDDFs, count the number of sightlines between sigma_min and
@@ -259,7 +283,7 @@ def create_sl_cat():
         
         # loop over files to get the sightline selections, 
         # append N, pos to arrays
-        for zcen in zcens:
+        for zcen in np.sort(zcens):
             _files = {ion: mapfiles[ion].format(zcen=zcen) for ion in ions}
             for ion in ions:
                 fgp[ion].attrs.create(str(zcen), _files[ion])
@@ -278,7 +302,7 @@ def create_sl_cat():
             _xpos_pmpc *= indtopos
             _ypos_pmpc = select[1] + 0.5 
             _ypos_pmpc *= indtopos
-            _zpos_pmpc = np.ones(len(xpos_pmpc), dtype=np.float) * zcen * cosmopars['a']
+            _zpos_pmpc = np.ones(len(_xpos_pmpc), dtype=np.float) * zcen * cosmopars['a']
             
             xpos_pmpc = np.append(xpos_pmpc, _xpos_pmpc)
             ypos_pmpc = np.append(ypos_pmpc, _ypos_pmpc)
@@ -291,5 +315,199 @@ def create_sl_cat():
         fo.create_dataset('zpos_pmpc', data=zpos_pmpc)
         for ion in ions:
             dname = 'coldens_{}'.format(ion)
-            fo.create_dataset(dname, data=zpos_pmpc)
+            fo.create_dataset(dname, data=ionvals[ion])
             fo[dname].attrs.create('units', np.string_('log10 cm^-2'))
+            
+
+def find_galenv(slcat, halocat=halosel_default,\
+                galsel='def', nngb=3, nsl=0.5, dist3d=False):
+    '''
+    given absorbers in slcat, halos/galaxies in halocat, and the halocat 
+    selection galsel, find nearest neighbors for the absorbers
+    
+    galsel: list of array, min/None, max/None tuples
+            array should be the name in the halo catalogue halocat, min/max
+            are the allowed values min <= selected < max
+    nngb:   nearest neighbor number to look for
+    nsl:    margin (units: slice thickness) in which to 
+            consider galaxies for a match. 
+            0.5 -> only in the same slice
+    dist3d: use the 3D distance (assuming zero peculiar velocities and 
+            absorbers at slice centers) to find nearest neighbors
+    '''
+    
+    # load sightline data
+    with h5py.File(slcat, 'r') as fs:
+        cosmopars = {key: val for key, val in fs['Header/cosmopars'].attrs.items()}
+        ions = list(fs['Header/mapfiles'].keys())
+        zcens = np.array(fs['Header/zvals_cMpc'])
+        zcens *= cosmopars['a']
+        slice_pMpc = np.average(np.diff(zcens))
+        zedges = zcens + 0.5 * slice_pMpc
+        zedges = np.append([0], zedges)
+        boxperiod = cosmopars['boxsize'] / cosmopars['h'] * cosmopars['a']
+        
+        coldens = {ion: np.array(fs['coldens_{ion}'.format(ion=ion)]) for ion in ions}
+        xpos = np.array(fs['xpos_pmpc'])
+        ypos = np.array(fs['ypos_pmpc'])
+        zpos = np.array(fs['zpos_pmpc'])
+        
+        absdct = {'xpos_pmpc': xpos,\
+                  'ypos_pmpc': ypos,\
+                  'zpos_pmpc': zpos,\
+                  }
+        absdct.update(coldens) 
+        
+        
+    ## use the fact that the values are sorted by z -> get blocks of the arrays
+    ## to loop over for galxy cross-matching
+    # side = 'left': a[i-1] < v <= a[i]; v is seached values, a input array, i index returned
+    zilims = np.searchsorted(zedges, zpos, side='right')
+    zsels = [slice(zilims[i], zilims[i + 1]) for i in range(len(zcens))]
+    zblocks = {ind: (zedges[ind], zedges[ind + 1], zsels[ind]) for ind in range(len(zcens))}
+    
+    with h5py.File(halocat, 'r') as fh:
+        # get the properties desired for the nearest neighbors, and the 
+        # positions for distances
+        M200c_Msun = np.array(fh['M200c_Msun'])
+        R200c_pkpc = np.array(fh['R200c_pkpc'])
+        Mstar_Msun = np.array(fh['Mstar_Msun'])
+        Xcom_pMpc  = np.array(fh['Xcom_cMpc']) * cosmopars['a']
+        Ycom_pMpc  = np.array(fh['Ycom_cMpc']) * cosmopars['a']
+        Zcom_pMpc  = np.array(fh['Zcom_cMpc']) * cosmopars['a']
+        SubGroupNumber = np.array(fh['SubGroupNumber'])
+        galaxyid   = np.array(fh['galaxyid'])
+        
+        halodct = {'M200c_Msun': M200c_Msun,\
+                   'R200c_pkpc': R200c_pkpc,\
+                   'Mstar_Msun': Mstar_Msun,\
+                   'Xcom_pMpc':  Xcom_pMpc,\
+                   'Ycom_pMpc':  Ycom_pMpc,\
+                   'Zcom_pMpc':  Zcom_pMpc,\
+                   'SubGroupNumber': SubGroupNumber,\
+                   'galaxyid': galaxyid,\
+                   }
+        
+        # make and apply halo/galaxy property selection
+        if galsel is None:
+            gsel = slice(None, None, None)
+        else:
+            gsel = np.ones(len(halodct['galaxyid']), dtype=bool)
+            if galsel == 'def':
+                galsel = galsel_default
+            for tup in galsel:
+                if tup[0] in halodct:
+                    selarr = halodct[tup[0]]
+                else:
+                    selarr = np.array(fh[tup[0]])
+                if tup[1] is not None:
+                    gsel &= selarr >= tup[1]
+                if tup[2] is not None:
+                    gsel &= selarr < tup[2]
+                
+        halodct = {key: halodct[key][selarr] for key in halodct}
+    # metric can be a function that computs the distance between two input
+    # vectors. I'd imagine this might be pretty slow, though, if it's 
+    # looping...
+    # alt: just duplicate galaxies and check that distances < duplication 
+    # range? probably better for a fast solution.    
+    duplication_range_pmpc = 15
+    periodic_duplicate(halodct, 'Xcom_pMpc', boxperiod, duplication_range_pmpc)
+    periodic_duplicate(halodct, 'Ycom_pMpc', boxperiod, duplication_range_pmpc)
+    if dist3d: # if only matching slices, deal with periodicity explicitly there
+        periodic_duplicate(halodct, 'Zcom_pMpc', boxperiod, duplication_range_pmpc)
+    
+    neighpropdct = {key: np.array([]) for key in halodct}
+    neighpropdct.update({'neighbor_dist_pmpc': np.array([])})
+    zselmax_last = 0
+    for bi in sorted(zblocks.keys()): # blocks divide up the absorbers into slice subgroups
+        zmin_abs, zmax_abs, zsel_abs = zblocks[bi] #  zmin, zmax in pMpc
+        zcen = 0.5 * (zmin_abs + zmax_abs)
+        zmin_gal = zcen - nsl * slice_pMpc
+        zmax_gal = zcen + nsl * slice_pMpc
+        if not zsel_abs.start == zselmax_last:
+            raise RuntimeError('The order of the absorber slices is mixed up; neighor arrays will not match absorber arrays')
+        
+        zgals = halodct['Zcom_pMpc']
+        if zmin_gal >= 0 and zmax_gal <= boxperiod:
+            galsel_b = np.logical_and(zmin_gal <= zgals, zmax_gal > zgals)
+        elif zmin_gal < 0 and zmax_gal <= boxperiod:
+            galsel_b = np.logical_or(zmax_gal > zgals, zmin_gal + boxperiod <= zgals)
+        elif zmin_gal >= 0 and zmax_gal > boxperiod:
+            galsel_b = np.logical_or(zmax_gal - boxperiod > zgals, zmin_gal <= zgals)
+        else: # max and min both wrapped around
+            galsel_b = slice(None, None, None)
+        
+        halodct_b = {key: halodct[key][galsel_b] for key in halodct}
+        absdct_b = {key: absdct[key][zsel_abs] for key in absdct} 
+        
+        if dist3d:
+            halopos = np.array([halodct_b['Xcom_pMpc'],\
+                                halodct_b['Ycom_pMpc'],\
+                                halodct_b['Zcom_pMpc']]).T
+            abspos = np.array([absdct_b['xpos_pmpc'],\
+                               absdct_b['ypos_pmpc'],\
+                               absdct_b['zpos_pmpc']]).T
+        else:
+            halopos = np.array([halodct_b['Xcom_pMpc'],\
+                                halodct_b['Ycom_pMpc']]).T
+            abspos = np.array([absdct_b['xpos_pmpc'],\
+                               absdct_b['ypos_pmpc']]).T
+    
+        nnfinder = NearestNeighbors(n_neighbors=nngb, metric='euclidean',\
+                                    n_jobs=n_jobs)    
+        nnfinder.fit(halopos)
+        neigh_dist, neigh_ind = nnfinder.kneighbors(X=abspos,\
+                                                    n_neighbors=nngb,\
+                                                    return_distance=True)
+        neighprops_this = {key: halodct_b[key][neigh_ind] for key in halodct_b}
+        neighprops_this.update({'neighbor_dist_pmpc': neigh_dist})
+        
+        del nnfinder
+        
+        for key in neighpropdct:
+            neighpropdct[key] = np.append(neighpropdct[key], neighprops_this[key])
+        # to make sure the order of the absorber arrays is maintained
+        zselmax_last = zsel_abs.stop
+        
+    ## save the data
+    outfile = slcat.split('/')[-1]
+    outfile = '.'.join(outfile.split('.')[:-1])
+    outfile = ddir + outfile + '_nearest-neighbor-match_nngb-{nngb}_nsl-{nsl}.hdf5'.format(nngb=nngb, nsl=nsl)
+    
+    with h5py.File(outfile, 'a') as fo:
+        prev = fo.keys()
+        if 'Header' not in prev:
+            hed = fo.create_group('Header')
+            csm = hed.create_group('cosmopars')
+            for key in cosmopars:
+                csm.attrs.create(key, cosmopars[key])
+            hed.attrs.create('sightline_catalogue', np.string_(slcat))
+            
+            prev.remove('Header')
+            
+            agp = fo.create_group('absorbers')
+            for key in absdct:
+                agp.create_dataset(key, data=absdct[key])
+                if key[1:] != 'pos':
+                    agp.attrs.create('info', np.string_('column density [log10 cm^-2]'))
+        
+        # store input parameters 
+        numthis = len(prev)
+        grp = fo.create_group('match_{num}'.format(num=numthis))
+        grp.attrs.create('halo_catalogue', np.string_(halocat))
+        grp.attrs.create('number_of_neigbours', nngb)
+        grp.attrs.create('number_of_slices_for_match', nsl)
+        grp.attrs.create('use_3D_distance', dist3d)
+        ggrp = grp.create_group('galaxy_selection')
+        for ti in range(len(galsel)):
+            tup = galsel[ti]
+            sggrp = ggrp.create_subgroup('tuple_{}'.format(ti))
+            sggrp.attrs.create('array', np.string_(tup[0]))
+            _minv = tup[1] if tup[1] is not None else 'None'
+            _maxv = tup[2] if tup[2] is not None else 'None'
+            sggrp.attrs.create('min', _minv)
+            sggrp.attrs.create('max', _maxv)
+        
+        for key in neighpropdct:
+            ggrp.create_dataset(key, data=neighpropdct[key])
