@@ -16,7 +16,7 @@ import numpy as np
 import h5py
 import os
 
-import comso_utils as cu
+import cosmo_utils as cu
 import ion_line_data as ild
 import make_maps_opts_locs as ol
 
@@ -27,6 +27,7 @@ ndir = ol.ndir
 pdir = ol.pdir
 mdir = ol.mdir
 
+# based on resolved/unresolved multiplets, strongest lines
 ion_default_lines = {'o6': (ild.o6major,),\
                      'o7': (ild.o7major,),\
                      'o8': (ild.o8major, ild.o8minor),\
@@ -34,9 +35,10 @@ ion_default_lines = {'o6': (ild.o6major,),\
                      'ne9': (ild.ne9major,),\
                      'fe17': (ild.fe17major,),\
                      }
+
 # extract groups containing spectra
 # spectrum files contained in groups Spectrum<number>
-
+# loading from luttero takes a while on quasar; use local file copy?
 class SpecSet:
     def __init__(self, filename, getall=False, ionlines=ion_default_lines):
         '''
@@ -152,7 +154,7 @@ class SpecSet:
             dions = self.ions
         self.coldens.update({ion: \
                                np.array([ \
-                                 self.specfile['{grpn}/{ion}/LogTotalIonColumnDensity'.format(grpn=specgrp)][()] \
+                                 self.specfile['{grpn}/{ion}/LogTotalIonColumnDensity'.format(ion=ion, grpn=specgrp)][()] \
                                for specgrp in self.specgroups])\
                              for ion in dions})
     

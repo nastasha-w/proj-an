@@ -80,7 +80,7 @@ cosmopars_ea_27 = {'a': 0.9085634947881763, 'boxsize': 67.77, 'h': 0.6777, 'omeg
 
 # galaxies seem to be sort of ok down to this mass in Schaye et al. (2015)
 galsel_default = [('Mstar_Msun', 10**9, None)]
-halosel_default = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30_inclsatellites.hdf5'
+halocat_default = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30_inclsatellites.hdf5'
 
 def integratehist(counts, edges, vmin, vmax):
     '''
@@ -419,7 +419,7 @@ def create_sl_cat():
             fo[dname].attrs.create('units', np.string_('log10 cm^-2'))
             
 
-def find_galenv(slcat, halocat=halosel_default,\
+def find_galenv(slcat, halocat=halocat_default,\
                 galsel='def', nngb=3, nsl=0.5, dist3d=False):
     '''
     given absorbers in slcat, halos/galaxies in halocat, and the halocat 
@@ -612,8 +612,8 @@ def find_galenv(slcat, halocat=halosel_default,\
             tup = galsel[ti]
             sggrp = ggrp.create_group('tuple_{}'.format(ti))
             sggrp.attrs.create('array', np.string_(tup[0]))
-            _minv = tup[1] if tup[1] is not None else 'None'
-            _maxv = tup[2] if tup[2] is not None else 'None'
+            _minv = tup[1] if tup[1] is not None else np.string_('None')
+            _maxv = tup[2] if tup[2] is not None else np.string_('None')
             sggrp.attrs.create('min', _minv)
             sggrp.attrs.create('max', _maxv)
         
