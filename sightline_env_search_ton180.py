@@ -14,8 +14,8 @@ import h5py
 from sklearn.neighbors import NearestNeighbors
 
 import make_maps_opts_locs as ol
-import eagle_constants_and_units as cu
-import cosmo_utils as c
+import eagle_constants_and_units as c
+import cosmo_utils as cu
 
 # put stored files here
 ddir = '/net/quasar/data2/wijers/slcat/'
@@ -218,7 +218,107 @@ def countsl(modelname, sigma_min=1, sigma_max=np.inf):
         out[ion] = tot
     return out        
         
-
+def create_test_sets(testnum=1):
+    outname_slc = mdir + 'slcat_test_{num}.hdf5'.format(num=testnum)
+    outname_hlc = mdir + 'halocat_test_{num}.hdf5'.format(num=testnum)
+    
+    if testnum == 1:
+        simnum = 'L0100N1504'
+        axis = 2
+        snapshot = 27
+        apsize = 30
+        
+        cosmopars = cosmopars_ea_27
+        boxsize_cmpc = cosmopars['boxsize'] / cosmopars['h']
+        boxsize_pmpc = boxsize_cmpc * cosmopars['a']
+        
+        ## sightline catalogue
+        numabs = 20
+        numsl  = 4
+        ions = ['o6', 'o7', 'o8']
+        mincol = 13.
+        maxcol = 16.
+        
+        # imitate slice iteration: z inidices are low to high
+        zi = np.random.randint(numsl, size=numabs)
+        zi = np.sort(zi)
+        zvals_cmpc = (np.arange(numsl) + 0.5) * boxsize_cmpc / float(numsl)
+        coldens = {ion: np.random.uniform(mincol, maxcol, numabs) for ion in ions}
+        pos     = {'{}pos_pmpc'.format(axis): np.random.uniform(0., boxsize_pmpc, numabs) for axis in ['x', 'y']}
+        pos.update({'zpos_pmpc': (zvals_cmpc * cosmopars['a'])[zi]})
+        
+        selection = {ion: mincol for ion in ions}
+        
+        ## halo catalogue (larger set)
+        # halo, stellar masses and R200c should be at least sort of consistent,
+        # for central galaxies
+        # subgroupnumbers are not, really
+        numgal = 1000
+        Mhmin_Msun = 10**10
+        M200c_Msun = 10**np.random.uniform(np.log10(Mhmin_Msun), 15., numgal)
+        R200c_pkpc = cu.R200c_pkpc(M200c_Msun, cosmopars)
+        Mstar_Msun = 0.01 * M200c_Msun * 10**np.random.uniform(-0.2, 0.2)
+        Xcom_cMpc  = np.random.uniform(0., boxsize_cmpc, numgal)
+        Ycom_cMpc  = np.random.uniform(0., boxsize_cmpc, numgal)
+        Zcom_cMpc  = np.random.uniform(0., boxsize_cmpc, numgal)
+        galaxyid   = np.arange(numgal)
+        # generate subgroup numbers
+        satinds = np.unique(np.random.randint(numgal, size=numgal // 2))
+        SubGroupNumber = np.zeros(numgal, dtype=np.int)
+        SubGroupNumber[satinds] = 1
+        SubGroupNumber[M200c_Msun > 10**13] = 0
+        
+        halodct = {'M200c_Msun': M200c_Msun,\
+                   'R200c_pkpc': R200c_pkpc,\
+                   'Mstar_Msun': Mstar_Msun,\
+                   'Xcom_cMpc':  Xcom_cMpc,\
+                   'Ycom_cMpc':  Ycom_cMpc,\
+                   'Zcom_cMpc':  Zcom_cMpc,\
+                   'SubGroupNumber': SubGroupNumber,\
+                   'galaxyid': galaxyid,\
+                   }
+    else:
+        raise ValueError('No options are set up for test {num}'.format(num=testnum))
+    
+    # store mock sightlines in a format like the real ones
+    with h5py.File(outname_slc, 'w') as fs:
+        hed = fs.create_group('Header')
+        # record the simulation we're imitating, but using a dummy var
+        hed.attrs.create('Axis3', axis)
+        hed.attrs.create('simnum', np.string_(simnum))
+        hed.attrs.create('snapshot', snapshot)
+        hed.attrs.create('var', np.string_('dummy'))
+        csm = hed.create_group('cosmopars')
+        for key in cosmopars:
+            csm.attrs.create(key, cosmopars[key])
+        sgp = hed.create_group('selection')
+        fgp = hed.create_group('mapfiles')
+        for ion in ions:
+            sgp.attrs.create(ion, selection[ion])
+            sfgp = fgp.create_group(ion)
+            for zval in zvals_cmpc:
+                sfgp.attrs.create(str(zval), np.string_('None'))
+        hed.create_dataset('zvals_cMpc', data=zvals_cmpc)
+        
+        for ion in coldens:
+            fs.create_dataset('coldens_{ion}'.format(ion=ion), data=coldens[ion])
+        for key in pos:
+            fs.create_dataset(key, data=pos[key])
+    
+    with h5py.File(outname_hlc, 'w') as fh:
+        hed = fh.create_group('Header')
+        # record the simulation we're imitating, but using a dummy var
+        hed.attrs.create('simnum', np.string_(simnum))
+        hed.attrs.create('snapnum', snapshot)
+        hed.attrs.create('var', np.string_('dummy'))
+        hed.attrs.create('Mhalo_min_Msun', Mhmin_Msun)
+        hed.attrs.create('subhalo_aperture_size_Mstar_Mbh_SFR_pkpc', apsize)
+        csm = hed.create_group('cosmopars')
+        for key in cosmopars:
+            csm.attrs.create(key, cosmopars[key])
+        for key in halodct.keys():
+            fh.create_dataset(key, data=halodct[key])
+        
 def create_sl_cat():
     '''
     switch from using maps of all sightlines to location, value catalogues
@@ -341,10 +441,11 @@ def find_galenv(slcat, halocat=halosel_default,\
         cosmopars = {key: val for key, val in fs['Header/cosmopars'].attrs.items()}
         ions = list(fs['Header/mapfiles'].keys())
         zcens = np.array(fs['Header/zvals_cMpc'])
+        zcens = np.sort(zcens)
         zcens *= cosmopars['a']
         slice_pMpc = np.average(np.diff(zcens))
         zedges = zcens + 0.5 * slice_pMpc
-        zedges = np.append([0], zedges)
+        zedges = np.append([0.], zedges)
         boxperiod = cosmopars['boxsize'] / cosmopars['h'] * cosmopars['a']
         
         coldens = {ion: np.array(fs['coldens_{ion}'.format(ion=ion)]) for ion in ions}
@@ -362,9 +463,9 @@ def find_galenv(slcat, halocat=halosel_default,\
     ## use the fact that the values are sorted by z -> get blocks of the arrays
     ## to loop over for galxy cross-matching
     # side = 'left': a[i-1] < v <= a[i]; v is seached values, a input array, i index returned
-    zilims = np.searchsorted(zedges, zpos, side='right')
+    zilims = np.searchsorted(zpos, zedges, side='right')
     zsels = [slice(zilims[i], zilims[i + 1]) for i in range(len(zcens))]
-    zblocks = {ind: (zedges[ind], zedges[ind + 1], zsels[ind]) for ind in range(len(zcens))}
+    zblocks = [(zedges[ind], zedges[ind + 1], zsels[ind]) for ind in range(len(zcens))]
     
     with h5py.File(halocat, 'r') as fh:
         # get the properties desired for the nearest neighbors, and the 
@@ -405,7 +506,7 @@ def find_galenv(slcat, halocat=halosel_default,\
                 if tup[2] is not None:
                     gsel &= selarr < tup[2]
                 
-        halodct = {key: halodct[key][selarr] for key in halodct}
+        halodct = {key: halodct[key][gsel] for key in halodct}
     # metric can be a function that computs the distance between two input
     # vectors. I'd imagine this might be pretty slow, though, if it's 
     # looping...
@@ -417,16 +518,20 @@ def find_galenv(slcat, halocat=halosel_default,\
     if dist3d: # if only matching slices, deal with periodicity explicitly there
         periodic_duplicate(halodct, 'Zcom_pMpc', boxperiod, duplication_range_pmpc)
     
-    neighpropdct = {key: np.array([]) for key in halodct}
-    neighpropdct.update({'neighbor_dist_pmpc': np.array([])})
+    neighpropdct = {key: np.empty(shape=(0, nngb)) for key in halodct}
+    neighpropdct.update({'neighbor_dist_pmpc': np.empty(shape=(0, nngb))})
+    neighpropdct.update({'galaxyid': np.empty(shape=(0, nngb), dtype=np.int),\
+                         'SubGroupNumber': np.empty(shape=(0, nngb), dtype=np.int),\
+                         })
     zselmax_last = 0
-    for bi in sorted(zblocks.keys()): # blocks divide up the absorbers into slice subgroups
+    for bi in range(len(zblocks)): # blocks divide up the absorbers into slice subgroups
         zmin_abs, zmax_abs, zsel_abs = zblocks[bi] #  zmin, zmax in pMpc
         zcen = 0.5 * (zmin_abs + zmax_abs)
         zmin_gal = zcen - nsl * slice_pMpc
         zmax_gal = zcen + nsl * slice_pMpc
         if not zsel_abs.start == zselmax_last:
-            raise RuntimeError('The order of the absorber slices is mixed up; neighor arrays will not match absorber arrays')
+            print('current slice: ({start}, {stop}, {step}); last stop: {last}'.format(start=zsel_abs.start, stop=zsel_abs.stop, step=zsel_abs.step, last=zselmax_last))
+            raise RuntimeError('The order of the absorber slices is mixed up; neighbor arrays will not match absorber arrays')
         
         zgals = halodct['Zcom_pMpc']
         if zmin_gal >= 0 and zmax_gal <= boxperiod:
@@ -460,13 +565,15 @@ def find_galenv(slcat, halocat=halosel_default,\
         neigh_dist, neigh_ind = nnfinder.kneighbors(X=abspos,\
                                                     n_neighbors=nngb,\
                                                     return_distance=True)
+        #print(neigh_dist)
+        #print(neigh_ind)
         neighprops_this = {key: halodct_b[key][neigh_ind] for key in halodct_b}
         neighprops_this.update({'neighbor_dist_pmpc': neigh_dist})
         
         del nnfinder
         
         for key in neighpropdct:
-            neighpropdct[key] = np.append(neighpropdct[key], neighprops_this[key])
+            neighpropdct[key] = np.append(neighpropdct[key], neighprops_this[key], axis=0)
         # to make sure the order of the absorber arrays is maintained
         zselmax_last = zsel_abs.stop
         
@@ -484,25 +591,26 @@ def find_galenv(slcat, halocat=halosel_default,\
                 csm.attrs.create(key, cosmopars[key])
             hed.attrs.create('sightline_catalogue', np.string_(slcat))
             
-            prev.remove('Header')
-            
             agp = fo.create_group('absorbers')
             for key in absdct:
                 agp.create_dataset(key, data=absdct[key])
                 if key[1:] != 'pos':
                     agp.attrs.create('info', np.string_('column density [log10 cm^-2]'))
-        
+        else:
+            prev.remove('Header')
+            prev.remove('absorbers')
+            
         # store input parameters 
         numthis = len(prev)
         grp = fo.create_group('match_{num}'.format(num=numthis))
         grp.attrs.create('halo_catalogue', np.string_(halocat))
-        grp.attrs.create('number_of_neigbours', nngb)
+        grp.attrs.create('number_of_neighbours', nngb)
         grp.attrs.create('number_of_slices_for_match', nsl)
         grp.attrs.create('use_3D_distance', dist3d)
         ggrp = grp.create_group('galaxy_selection')
         for ti in range(len(galsel)):
             tup = galsel[ti]
-            sggrp = ggrp.create_subgroup('tuple_{}'.format(ti))
+            sggrp = ggrp.create_group('tuple_{}'.format(ti))
             sggrp.attrs.create('array', np.string_(tup[0]))
             _minv = tup[1] if tup[1] is not None else 'None'
             _maxv = tup[2] if tup[2] is not None else 'None'
@@ -510,4 +618,129 @@ def find_galenv(slcat, halocat=halosel_default,\
             sggrp.attrs.create('max', _maxv)
         
         for key in neighpropdct:
-            ggrp.create_dataset(key, data=neighpropdct[key])
+            grp.create_dataset(key, data=neighpropdct[key])
+            
+            
+def absenv_test(matchnum=0,\
+                nncat=mdir + 'slcat_test_1_nearest-neighbor-match_nngb-3_nsl-0.5.hdf5'):
+    '''
+    check the match in match_<matchnum> in the neighbor match catalogue nncat 
+    '''
+    
+    ## read in the required input and output data
+    with h5py.File(nncat, 'r') as fn:
+        slcat = fn['Header'].attrs['sightline_catalogue'].decode()
+        cosmopars = {key: val for key, val in fn['Header/cosmopars'].attrs.items()}
+        boxperiod = cosmopars['boxsize'] / cosmopars['h'] * cosmopars['a']
+        
+        abspos_pmpc = np.array([fn['absorbers/xpos_pmpc'],\
+                                fn['absorbers/ypos_pmpc'],\
+                                fn['absorbers/zpos_pmpc'],\
+                                ]).T
+        mgrpn = 'match_{}'.format(matchnum)
+        mgrp = fn[mgrpn]
+        halocat = mgrp.attrs['halo_catalogue'].decode()
+        nngb = mgrp.attrs['number_of_neighbours']
+        matchrad = mgrp.attrs['number_of_slices_for_match']
+        dist3d = bool(mgrp.attrs['use_3D_distance'])
+        
+        galsel = []
+        for tupn in mgrp['galaxy_selection'].keys():
+            arn =  mgrp['galaxy_selection/{}'.format(tupn)].attrs['array'].decode()
+            vmin = mgrp['galaxy_selection/{}'.format(tupn)].attrs['min']
+            vmax = mgrp['galaxy_selection/{}'.format(tupn)].attrs['max']
+            try:
+                vmin = float(vmin)
+            except ValueError:
+                vmin = None
+            try:
+                vmax = float(vmax)
+            except ValueError:
+                vmax = None
+            galsel.append((arn, vmin, vmax))
+        
+        # for the match: check distnaces, and one of the match/listed properties
+        galaxyid_nn = np.array(mgrp['galaxyid'])
+        dists_nn    = np.array(mgrp['neighbor_dist_pmpc'])
+        
+        # check selection
+        selarrs = {_sel[0]: np.array(mgrp[_sel[0]])  for _sel in galsel}    
+        for tup in galsel:
+            arr = selarrs[tup[0]]
+            if tup[1] is not None:
+                if np.any(arr < tup[1]):
+                    print('Selection error: some neighbours had {arn} < {vmin}'.format(arn=tup[0], vmin=tup[1]))
+            if tup[2] is not None:
+                if np.any(arr >= tup[2]):
+                    print('Selection error: some neighbours had {arn} >= {vmax}'.format(arn=tup[0], vmax=tup[2]))
+        del selarrs
+        
+    with h5py.File(halocat, 'r') as hc:
+        galpos_pmpc = np.array([np.array(hc['Xcom_cMpc']),\
+                                np.array(hc['Ycom_cMpc']),\
+                                np.array(hc['Zcom_cMpc']),\
+                                ]).T
+        galpos_pmpc *= cosmopars['a']
+        galaxyid = np.array(hc['galaxyid'])
+        
+        # apply galaxy selection as recorded
+        gsel = np.ones(len(galaxyid), dtype=bool)
+        for tup in galsel:
+            arr = np.array(hc[tup[0]])
+            if tup[1] is not None:
+                gsel &= arr >= tup[1]
+            if tup[2] is not None:
+                gsel &= arr < tup[2]
+        galaxyid = galaxyid[gsel]
+        galpos_pmpc = galpos_pmpc[gsel]
+
+    with h5py.File(slcat, 'r') as fs:
+        zopts_abs = np.array(fs['Header/zvals_cMpc']) * cosmopars['a']
+    
+    ## redo the match; less efficently, more transparently
+    zslice = np.average(np.diff(zopts_abs))
+    
+    relpos = abspos_pmpc[:, np.newaxis, :] - galpos_pmpc[np.newaxis, :, :]
+    # get the right distances for the periodic setup
+    relpos += 0.5 * boxperiod
+    relpos %= boxperiod
+    relpos -= 0.5 * boxperiod
+    if dist3d:
+        dists_check = np.sqrt(np.sum(relpos**2, axis=2))
+    else:
+        dists_check = np.sqrt(np.sum(relpos[:, :, :2]**2, axis=2))
+    # exclude slices out of z range: distances -> infinity
+    znsel = np.abs(relpos[:, :, 2]) > matchrad * zslice
+    dists_check[znsel] = np.inf
+
+    inds_nn_check = np.argsort(dists_check, axis=1)
+    galaxyid_nn_check = galaxyid[inds_nn_check][:, :nngb]
+    
+    ## check the outcomes
+    if np.all(galaxyid_nn_check == galaxyid_nn):
+        print('Galaxy ids matched as expected!')
+    else:
+        print('Some galaxy ids did not match expectations.')
+        print('Main calculation:')
+        print(galaxyid_nn)
+        print('Check:')
+        print(galaxyid_nn_check)
+    
+    allmatch = True
+    for abi in range(dists_check.shape[0]):
+        _dc = dists_check[abi]
+        _as = inds_nn_check[abi]
+        _dc_nn = _dc[_as][:nngb]
+        
+        if np.allclose(dists_nn[abi], _dc_nn):
+            pass
+        else:
+            print('nearest distance mismatch for absorber {}'.format(abi))
+            print('expected from check: {}'.format(_dc_nn))
+            print('got from main calc.: {}'.format(dists_nn[abi]))
+            allmatch = False
+    if allmatch:
+        print('All nearest neighbor distances matched as expected!')
+    else:
+        print('Some nearest neighbor distances did not match as expected.')        
+    

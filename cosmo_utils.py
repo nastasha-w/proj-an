@@ -412,6 +412,16 @@ def Tvir(m200c, cosmopars='eagle', mu=0.59, z=None):
         z = cosmopars['z']
     return 4.1e5 * (mu/0.59) * (m200c/(1e12/h))**(2./3.) * (1.+z)
 
+
+def R200c_pkpc(M200c, cosmopars):
+    '''
+    M200c: solar masses
+    '''
+    M200c *= c.solar_mass # to cgs
+    rhoc = (3. / (8. * np.pi * c.gravity) * Hubble(cosmopars['z'], cosmopars=cosmopars)**2) # Hubble(z) will assume an EAGLE cosmology
+    R200c = (M200c / (200. * rhoc))**(1./3.)
+    return R200c / c.cm_per_mpc * 1e3 
+
 def Teos_eagle(rho):
     '''
     rho = density (g / cm^-3)
