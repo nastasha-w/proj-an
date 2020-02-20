@@ -583,7 +583,7 @@ def find_galenv(slcat, halocat=halocat_default,\
     outfile = ddir + outfile + '_nearest-neighbor-match_nngb-{nngb}_nsl-{nsl}.hdf5'.format(nngb=nngb, nsl=nsl)
     
     with h5py.File(outfile, 'a') as fo:
-        prev = fo.keys()
+        prev = list(fo.keys())
         if 'Header' not in prev:
             hed = fo.create_group('Header')
             csm = hed.create_group('cosmopars')

@@ -16,6 +16,9 @@ import numpy as np
 import h5py
 import os
 
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gsp
+
 import cosmo_utils as cu
 import ion_line_data as ild
 import make_maps_opts_locs as ol
@@ -38,7 +41,8 @@ ion_default_lines = {'o6': (ild.o6major,),\
 
 # extract groups containing spectra
 # spectrum files contained in groups Spectrum<number>
-# loading from luttero takes a while on quasar; use local file copy?
+# loading from luttero takes a while on quasar; 
+# using a local file copy does help, but it's still not fast
 class SpecSet:
     def __init__(self, filename, getall=False, ionlines=ion_default_lines):
         '''
@@ -47,7 +51,7 @@ class SpecSet:
                   instances
         getall:   get total column densities and EWs
         '''
-        if filename[:len(sdir)] == sdir:
+        if filename[:len(sdir)] == sdir or '/' in filename:
             self.filename = filename
         else:
             self.filename = sdir + filename
@@ -140,9 +144,12 @@ class SpecSet:
         self.getEWtot(dions=dions)
         
     def getlinedata_in(self):
-        self.ions_in = np.array(self.specfile['Header'].attrs['Ions'])
-        self.fosc_in = np.array(self.specfile['Header'].attrs['Transitions_Oscillator_Strength'])
-        self.lambda_in = np.array(self.specfile['Header'].attrs['Transitions_Rest_Wavelength'])
+        # header also contains unused lines: only the first listed line is used
+        # for each ion
+        _ions_in = np.array(self.specfile['Header'].attrs['Ions'])
+        self.ions_in, _inds = np.unique(_ions_in, return_index=True) 
+        self.fosc_in = np.array(self.specfile['Header'].attrs['Transitions_Oscillator_Strength'])[_inds]
+        self.lambda_in = np.array(self.specfile['Header'].attrs['Transitions_Rest_Wavelength'])[_inds]
         self.linedata_in = {self.ions_in[i]: {'lambda_rest': self.lambda_in[i],\
                                               'fosc': self.fosc_in[i]}\
                             for i in range(len(self.ions))}
@@ -177,7 +184,7 @@ class SpecSet:
             if ion not in self.tau_base.keys():
                 self.getquantity('tau', 'ion', dions=[ion])
             fosc_in = self.linedata_in[ion]['fosc']
-            lambda_r_in = self.linedata[ion]['lambda_rest'] # Angstrom units
+            lambda_r_in = self.linedata_in[ion]['lambda_rest'] # Angstrom units
             
             fosc_use = np.array([specl.fosc for specl in self.ionlines[ion]])
             lambda_r_use = np.array([specl.lambda_angstrom for specl in self.ionlines[ion]])
@@ -190,17 +197,18 @@ class SpecSet:
             rescalef = (fosc_use * lambda_r_use**2) / \
                        (fosc_in * lambda_r_in**2)
             # rescale, shift copies of tau
-            if not np.allclose(rescalef, 1.):
-                tau = np.copy(self.tau[ion])[:, :, np.newaxis]
-                tau *= rescalef[np.newaxis, np.newaxis, :]
+            if not (np.allclose(rescalef, 1.) and len(rescalef) == 1):
+                tau = np.copy(self.tau_base[ion])[:, :, np.newaxis]
+                tau = tau * rescalef[np.newaxis, np.newaxis, :] # cannot do in place with extra dimension
                 for li in range(len(pixshifts)):
                     shift = pixshifts[li]
                     tau[:, :, li] = np.roll(tau[:, :, li], shift, axis=1)
                 tau = np.sum(tau, axis=2)
-            
+            else:
+                tau = np.copy(self.tau_base[ion])
             # save results
             self.tau.update({ion: tau})
-            self.spectra.update({ion, np.exp(-1 * tau)})
+            self.spectra.update({ion: np.exp(-1 * tau)})
             self.aligned[ion] = False
     
     def alignmaxtau(self, dions='all'):
@@ -249,9 +257,7 @@ class SpecSet:
             
             # EW = \int dlamdba (1-flux) = (Delta lambda) - (Delta lambda)/N * sum_i=1^N F_normalised(i)  
             self.EW[ion] = 1. - np.sum(self.spectra[ion], axis=1) / float(self.spectra[ion].shape[1])
-            self.EW[ion] *= self.deltaredshift * lambda_eff # convert absorbed flux fraction to EW
-            # convert to rest-frame EW
-            self.EW[ion] *= 1. / (self.redshift + 1.)
+            self.EW[ion] *= self.deltaredshift_obs / (self.cosmopars['z'] + 1.) * lambda_eff # convert absorbed flux fraction to rest-frame EW
     
     def getcoldens_EW_vwindow(self, deltav_rest_kmps, dions='all'):    
         '''
@@ -290,10 +296,8 @@ class SpecSet:
             lambda_eff = np.sum(foscs  * lambdas) / np.sum(foscs)
             
             self.vwindow_EW[vkey][ion] = 1. - np.sum(self.spectra[ion][:, vsel], axis=1) / float(numpix)
-            # convert absorbed flux fraction to EW
-            self.vwindow_EW[vkey][ion] *= pathfrac * self.deltaredshift * lambda_eff
-            # convert to rest-frame EW
-            self.vwindow_EW[vkey][ion] *= 1. / (self.redshift + 1.)
+            # convert absorbed flux fraction to rest-frame EW
+            self.vwindow_EW[vkey][ion] *= pathfrac * self.deltaredshift_obs / (self.cosmopars['z'] + 1.) * lambda_eff
             
             # N \propto tau
             self.vwindow_coldens[vkey][ion] = np.sum(self.tau[ion][:, vsel], axis=1) \
@@ -409,3 +413,76 @@ class SpecSet:
             del self.basedict           
 
 
+def plot_NEW(specset, ions, vwindows=None, savename=None):
+
+    alpha = 0.05    
+    
+    xlabel = '$\\log_{{10}}\\, \\mathrm{{N}}_{{\\mathrm{{{ion}}}}} \\; [\\mathrm{{cm}}^{{-2}}]$'
+    ylabel = '$\\mathrm{{EW}}  \; [\\mathrm{{\\AA}}]$'
+    fontsize = 12
+    
+    numions = len(ions)
+    numcols = min(3, numions)
+    numrows = (numions - 1) // numcols + 1
+    
+    panelheight = 3.
+    panelwidth = 3.
+    hspace = 0.3
+    wspace = 0.3
+    figw = panelwidth * numcols + hspace * (numcols - 1)
+    figh = panelheight * numrows + wspace * (numrows - 1)
+    
+    
+    fig = plt.figure(figsize=(figw, figh))
+    grid = gsp.GridSpec(nrows=numrows, ncols=numcols, hspace=hspace,\
+                        wspace=wspace)    
+    axes = [fig.add_subplot(grid[i // numcols, i % numcols]) for i in range(numions)]
+
+    if vwindows is None:
+        dolegend = False
+        vwindows = [None]
+    else:
+        dolegend = True
+            
+    for ii in range(numions):
+        ion = ions[ii]
+        ax = axes[ii]
+        
+        if ii % numcols == 0:
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+        if numions - ii <= numcols:
+            ax.set_xlabel(xlabel, fontsize=fontsize)
+        ax.tick_params(which='both', direction='in', top=True, right=True)
+        ax.minorticks_on()
+        ax.set_yscale('log')
+        
+        ax.text(0.95, 0.05, ild.getnicename(ion), fontsize=fontsize,\
+                horizontalalignment='right', verticalalignment='bottom',\
+                transform=ax.transAxes)
+        
+        minc = np.inf
+        maxc = -np.inf
+        for deltav in vwindows:
+            if deltav is None:
+                lhandle = '{_len:.1f} cMpc'.format(_len=specset.slicelength)
+                coldens = specset.coldens[ion]
+                EW      = specset.EW[ion]
+            else:
+                lhandle = '$\\Delta \\, v = {dv:.1f} \\, \\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}$'.format(dv=deltav)
+                coldens = specset.vwindow_coldens[ion][deltav]
+                EW      = specset.vwindow_EW[ion][deltav]
+            ax.scatter(coldens, EW, label=lhandle, alpha=alpha, s=5)
+            maxc = max(np.max(coldens), maxc)
+            minc = min(np.min(coldens), minc)
+        cvals = 10**np.linspace(minc, maxc, 100)
+        EWvals = ild.lingrowthcurve_inv(cvals, specset.ionlines[ion])
+        ax.plot(np.log10(cvals), EWvals, linestyle='dashed', linewidth=2,\
+                color='black', label='opt. thin')         
+        if dolegend:
+            ax.legend(fontsize=fontsize, loc='upper left',\
+                      bbox_to_anchor=(0.0, 1.0), frameon=False,\
+                      labelsize=fontsize - 1.)
+    
+    if savename is not None:
+        plt.savefig(savename, bbox_inches='tight')
+        

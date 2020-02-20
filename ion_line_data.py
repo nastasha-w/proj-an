@@ -605,6 +605,8 @@ def lingrowthcurve_inv(Nion, ion):
     if isinstance(ion, str):
         lambda_rest = linetable['lambda_angstrom'][ion]
         fosc = linetable['fosc'][ion]
+    elif hasattr(ion, '__len__'): # tuple, list or something
+        return np.sum([lingrowthcurve_inv(Nion, _ion) for _ion in ion], axis=0)
     else:
         try:
             lambda_rest = ion.lambda_angstrom
