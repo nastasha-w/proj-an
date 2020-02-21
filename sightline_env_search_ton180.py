@@ -13,9 +13,13 @@ import numpy as np
 import h5py
 from sklearn.neighbors import NearestNeighbors
 
+import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
+
 import make_maps_opts_locs as ol
 import eagle_constants_and_units as c
 import cosmo_utils as cu
+import ion_line_data as ild
 
 # put stored files here
 ddir = '/net/quasar/data2/wijers/slcat/'
@@ -75,6 +79,12 @@ meas = {'uvp': {'o6': (o6_uv,) + (sigma_o6_uv,) * 2,\
         }
 
 detlim = {'o7': 15.5}
+
+# z: redshift, r: impact parameter (pMpc), mstar: log10 stellar mass [Msun]
+galdata_meas = [{'z': 0.04562, 'r': 0.295, 'mstar': ( 9.5,  0.5, 0.5)},\
+                {'z': 0.04596, 'r': 0.620, 'mstar': (10.1,  0.5, 0.5)},\
+                {'z': 0.04608, 'r': 1.500, 'mstar': (10.95, 0.2, 0.2)},\
+                ]
 
 cosmopars_ea_27 = {'a': 0.9085634947881763, 'boxsize': 67.77, 'h': 0.6777, 'omegab': 0.0482519, 'omegalambda': 0.693, 'omegam': 0.307, 'z': 0.10063854175996956}
 
@@ -744,3 +754,636 @@ def absenv_test(matchnum=0,\
     else:
         print('Some nearest neighbor distances did not match as expected.')        
     
+
+def plot_absenv_hist_v1(nncat, outname,\
+                        matchnum=0, prop='neighbor_dist_pmpc', ionsel=None):
+    '''
+    ionsel: ion column density selection -- {ion: (min, max)} dict
+            column densities in log10 cm^-2
+    prop:   name of the galaxy property to histogram (dataset name in nncat)
+    nncat:  file name for the nearest-neighbor match catalogue
+    matchnum: group in the nncat file to use (match_{matchnum})
+    '''
+    
+    if '/' not in nncat:
+        nncat = '/net/quasar/data2/wijers/slcat/' + nncat
+    
+    with h5py.File(nncat, 'r') as fn:
+        # apply ion selection
+        if ionsel is None:
+            ionselstr = 'N selection: abs. cat.'
+            abssel = slice(None, None, None)
+        else:
+            ionselstr = 'N selection:\n'
+            ions_tosel = sorted(list(ionsel.keys()))
+            ionarr = {ion: np.array(fn['absorbers/{ion}'.format(ion=ion)])\
+                      for ion in ions_tosel}
+            abssel = np.ones(len(ionarr[ions_tosel[0]]), dtype=bool)
+            for ion in ions_tosel:
+                vmin = ionsel[ion][0]
+                vmax = ionsel[ion][1]
+                ionselstr = ionselstr + '{ion}: ${_min:.2f} \\endash {_max:.2f}$\n'.format(ion=ild.getnicename(ion), _min=vmin, _max=vmax)
+                abssel &= vmin <= ionarr[ion]
+                abssel &= vmax >  ionarr[ion]
+        
+        # get nn, galaxy selection data
+        grp = fn['match_{num}/galaxy_selection'.format(num=matchnum)]
+        tups = list(grp.keys())
+        galsels = []
+        for tup in tups:
+            galsels.append((grp[tup].attrs['array'].decode(),\
+                            grp[tup].attrs['min'],\
+                            grp[tup].attrs['max'],\
+                            ))
+        grp = fn['match_{num}'.format(num=matchnum)]
+        dist3d = bool(grp.attrs['use_3D_distance'])
+        zselrad = grp.attrs['number_of_slices_for_match']
+        slcat = fn['Header'].attrs['sightline_catalogue'].decode()
+        
+        proparr = np.array(fn['match_{num}/{prop}'.format(num=matchnum, prop=prop)])[abssel]
+    
+    with h5py.File(slcat, 'r') as fs:
+        zvals_abs = np.array(fs['Header/zvals_cMpc'])
+        zslice = np.average(np.diff(zvals_abs))
+        zstr = '$\pm \Delta$ Z searched: {zrad} cMpc\n'.format(zrad=zselrad * zslice)
+        
+        if ionsel is None:
+            ionselstr = 'N selection:\n'
+            grp = fs['Header/selection']
+            ions  = sorted(list(fs['Header/mapfiles'].keys()))
+            istrs = []
+            for ion in ions:
+                istrs.append('{ion} $ > {_min:.2f}$'.format(ion=ild.getnicename(ion), _min=grp.attrs[ion]))
+            ionselstr = ionselstr + ' or\n'.join(istrs) + '\n'
+    
+                
+    labels = {'neighbor_dist_pmpc': '$\\mathrm{{r}}_{{\\mathrm{{3D}}}} \\; [\\mathrm{pMpc}]$' if dist3d else\
+                                    '$\\mathrm{{r}}_{{\\perp}} \\; [\\mathrm{pMpc}]$',\
+              'M200c_Msun': '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}} \\; [\\mathrm{{M}}_{{\\odot}}]$',\
+              'Mstar_Msun': '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\star}} \\; [\\mathrm{{M}}_{{\\odot}}]$',\
+              }
+    
+    loglist = ['M200c_Msun', 'Mstar_Msun']
+    if prop in loglist:
+        proparr = np.log10(proparr)
+        
+    galselstrs = []
+    for gsel in galsels:
+        _str = labels[gsel[0]]
+        logv = gsel[0] in loglist
+        _min = gsel[1]
+        try:
+            _min = float(_min)
+            if logv:
+                _min = np.log10(_min)
+        except ValueError:
+            _min = None
+        _max = gsel[2]
+        try:
+            _max = float(_max)
+            if logv:
+                _max = np.log10(_max)
+        except ValueError:
+            _max = None
+            
+        if _min is None and _max is None:
+            continue
+        elif _min is None and _max is not None:
+            _str = _str + ' $< {_max:.1f}$'.format(_max=_max)
+        elif _min is not None and _max is None:
+            _str = _str + ' $\geq {_min:.1f}$'.format(_min=_min)
+        else:
+            _str = _str + ' ${_min:.1f}\endash{_max:.1f}$'.format(_min=_min, _max=_max)
+        galselstrs.append(_str)
+    galselstr = 'galaxy selection:\n' + '\n'.join(galselstrs) + '\n'
+    
+    diststr = 'matching on $\\mathrm{{r}}_{{\\mathrm{{3D}}}}$\n' if dist3d else\
+              'matching on $\\mathrm{{r}}_{{\\perp}}$\n'
+    info = galselstr + ionselstr + zstr + diststr
+    
+    pmin = np.min(proparr)
+    pmax = np.max(proparr)
+    histstep = 0.1
+    
+    bmin = np.floor(pmin / histstep) * histstep
+    bmax = np.ceil(pmax / histstep) * histstep
+    edges = np.arange(bmin, bmax + 1.5 * histstep, histstep)
+    hists = []
+    for nn in range(proparr.shape[1]):
+        _hist, _ed = np.histogram(proparr[:, nn], bins=edges)
+        hists.append(_hist)
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    fontsize = 12
+    
+    for nn in range(len(hists)):
+        ax.step(edges[:-1], hists[nn], where='post', label='nb. {nn}'.format(nn=nn + 1))
+    
+    ax.set_yscale('log')
+    ax.set_xlabel(labels[prop], fontsize=fontsize)
+    ax.set_ylabel('counts', fontsize=fontsize)
+    ax.legend(fontsize=fontsize, loc='upper right')
+    ax.text(0.02, 0.02, info, fontsize=fontsize - 1,\
+            horizontalalignment='left', verticalalignment='bottom',\
+            transform=ax.transAxes)
+        
+    plt.savefig(outname, box_inches='tight')
+    
+def save_absenv_hists(nncat, outname,\
+                      matchnum=0, props=['neighbor_dist_pmpc', 'Mstar_Msun']):
+    '''
+    ionsel: ion column density selection -- {ion: (min, max)} dict
+            column densities in log10 cm^-2
+    prop:   name of the galaxy property to histogram (dataset name in nncat)
+    nncat:  file name for the nearest-neighbor match catalogue
+    matchnum: group in the nncat file to use (match_{matchnum})
+    '''
+    
+    if '/' not in nncat:
+        nncat = '/net/quasar/data2/wijers/slcat/' + nncat
+    
+    meas = {'uvp': {'o6': (o6_uv,) + (sigma_o6_uv,) * 2,\
+                },\
+           'cie': {'o6': (o6_cie,) + (sigma_o6_cie,) * 2,\
+                   'o7': (o7_cie,) + (sigma_o7_cie,) * 2,\
+                   'o8': (o8_cie,) + (sigma_o8_cie,) * 2,\
+                   },\
+           'so6': {'o7': (o7_slab_zuv,) + sigma_o7_slab_zuv,\
+                   'o8': (o8_slab_zuv,) + sigma_o8_slab_zuv,\
+                   },\
+           'so7': {'o7': (o7_slab_zx,) + sigma_o7_slab_zx,\
+                   'o8': (o8_slab_zx,) + sigma_o8_slab_zx,\
+                   } ,\
+        }
+    
+    # on/off for each ion subset
+    ionsel_opts = {'o6': {'uvp': (meas['uvp']['o6'][0] - meas['uvp']['o6'][1],\
+                                    np.inf),\
+                          },\
+                   'o7': {'cie': (meas['cie']['o7'][0] - meas['cie']['o7'][1],\
+                                  meas['cie']['o7'][0] + meas['cie']['o7'][2]),\
+                          'suv': (meas['so6']['o7'][0] - meas['so6']['o7'][1],\
+                                  meas['so6']['o7'][0] + meas['so6']['o7'][2]),\
+                          'sxr': (meas['so7']['o7'][0] - meas['so7']['o7'][1],\
+                                  meas['so7']['o7'][0] + meas['so7']['o7'][2]),\
+                          'dlm': (detlim['o7'], np.inf),\
+                          },\
+                    'o8': {'cie': (meas['cie']['o8'][0] - meas['cie']['o8'][1],\
+                                   meas['cie']['o8'][0] + meas['cie']['o8'][2]),\
+                           'suv': (meas['so6']['o8'][0] - meas['so6']['o8'][1],\
+                                   meas['so6']['o8'][0] + meas['so6']['o8'][2]),\
+                           'sxr': (meas['so7']['o8'][0] - meas['so7']['o8'][1],\
+                                   meas['so7']['o8'][0] + meas['so7']['o8'][2]),\
+                          },\
+                  }
+    # senisible combinations to actually use
+    ionsels = {'catsel': None,\
+               'o6uvp': {'o6': ionsel_opts['o6']['uvp']},\
+               'o6uvp-o7dlm': {'o6': ionsel_opts['o6']['uvp'],\
+                               'o7': ionsel_opts['o7']['dlm'],\
+                               },\
+              }
+    ionsels.update({'o6uvp-{ion}{meas}'.format(ion=ion, meas=meas): \
+                    {'o6': ionsel_opts['o6']['uvp'],\
+                     ion: ionsel_opts[ion][meas]} \
+                    for ion in ['o7', 'o8'] for meas in ['cie', 'suv', 'sxr']})
+    ionsels.update({'{ion}{meas}'.format(ion=ion, meas=meas): \
+                    {ion: ionsel_opts[ion][meas]} \
+                    for ion in ['o7', 'o8'] for meas in ['cie', 'suv', 'sxr']})
+    ionsels.update({'o7{meas}-o8{meas}'.format(meas=meas): \
+                    {ion: ionsel_opts[ion][meas] for ion in ['o7', 'o8']} \
+                    for meas in ['cie', 'suv', 'sxr']})
+    ionsels.update({'o6uvp-o7{meas}-o8{meas}'.format(meas=meas): \
+                    {'o6': ionsel_opts['o6']['uvp'],\
+                     'o7': ionsel_opts['o7'][meas],\
+                     'o8': ionsel_opts['o8'][meas],\
+                     } \
+                    for meas in ['cie', 'suv', 'sxr']})
+    ions = list(ionsel_opts.keys())
+    
+    with h5py.File(nncat, 'r') as fn:
+        cosmopars = {key: val for key, val in\
+                     fn['Header/cosmopars'].attrs.items()}
+        # for absorber selection
+        ionarr = {ion: np.array(fn['absorbers/{ion}'.format(ion=ion)])\
+                  for ion in ions}
+        
+        # get nn, galaxy selection data
+        grp = fn['match_{num}/galaxy_selection'.format(num=matchnum)]
+        tups = list(grp.keys())
+        galsels = []
+        for tup in tups:
+            galsels.append((grp[tup].attrs['array'].decode(),\
+                            grp[tup].attrs['min'],\
+                            grp[tup].attrs['max'],\
+                            ))
+        grp = fn['match_{num}'.format(num=matchnum)]
+        dist3d = bool(grp.attrs['use_3D_distance'])
+        zselrad = grp.attrs['number_of_slices_for_match']
+        slcat = fn['Header'].attrs['sightline_catalogue'].decode()
+        
+        proparrs = {prop: np.array(fn['match_{num}/{prop}'.format(num=matchnum, prop=prop)]) \
+                    for prop in props}
+    
+    with h5py.File(slcat, 'r') as fs:
+        zvals_abs = np.array(fs['Header/zvals_cMpc'])
+        zslice = np.average(np.diff(zvals_abs))
+        
+        grp = fs['Header/selection']
+        _ions  = sorted(list(fs['Header/mapfiles'].keys()))
+        slcatsel = {ion: (grp.attrs[ion], np.inf) for ion in _ions}
+
+    loglist = ['M200c_Msun', 'Mstar_Msun']
+    binspace = {'M200c_Msun': 0.1,\
+                'Mstar_Msun': 0.1,\
+                'neighbor_dist_pmpc': 0.01,\
+                }
+    
+    proparrs = {prop: np.log10(proparrs[prop]) if prop in loglist else\
+                      proparrs[prop] \
+                for prop in proparrs}
+    
+    with h5py.File(outname, 'a') as fo:
+        # slcat info
+        if 'Header' not in fo:
+            hed = fo.create_group('Header')
+            hed.attrs.create('nncat', np.string_(nncat))
+            hed.attrs.create('dist3d', dist3d)
+            hed.attrs.create('halfzrad_search_cMpc', zslice * zselrad)
+            hed.attrs.create('slicewidth_cMpc', zslice)
+            csm = hed.create_group('cosmopars')
+            for key in cosmopars.keys():
+                csm.attrs.create(key, cosmopars[key])
+            ggp = hed.create_group('galsel')
+            for tupn in range(len(galsels)):
+                tup = galsels[tupn]
+                sggp = ggp.create_group('tuple_{num}'.format(num=tupn))
+                sggp.attrs.create('array', np.string_(tup[0]))
+                sggp.attrs.create('min', tup[1])
+                sggp.attrs.create('max', tup[2])
+            igp = hed.create_group('ionsel_slcat')
+            for ion in slcatsel:
+                igp.create_dataset(ion, data=np.array(slcatsel[ion]))
+        
+        # iterate over and store selections        
+        for selkey in ionsels:
+            ionsel = ionsels[selkey]
+            
+            if ionsel is None:
+                abssel = slice(None, None, None)
+            else:
+                ions_tosel = sorted(list(ionsel.keys()))
+                abssel = np.ones(len(ionarr[ions_tosel[0]]), dtype=bool)
+                for ion in ions_tosel:
+                    vmin = ionsel[ion][0]
+                    vmax = ionsel[ion][1]
+                    abssel &= vmin <= ionarr[ion]
+                    abssel &= vmax >  ionarr[ion]
+                    
+            for prop in props:
+                mgrn = 'match_{num}/{ionsel}/{prop}'.format(num=matchnum, ionsel=selkey, prop=prop)
+                if mgrn in fo: # already done and stored
+                    continue
+                proparr = proparrs[prop]
+                
+                pmin = np.min(proparr)
+                pmax = np.max(proparr)   
+                histstep = binspace[prop]
+        
+                bmin = np.floor(pmin / histstep) * histstep
+                bmax = np.ceil(pmax / histstep) * histstep
+                edges = np.arange(bmin - histstep, bmax + 1.5 * histstep, histstep)
+                hists = []
+                for nn in range(proparr.shape[1]):
+                    _hist, _ed = np.histogram(proparr[:, nn], bins=edges)
+                    hists.append(_hist)
+                hists = np.array(hists)
+                
+                grp = fo.create_group(mgrn)
+                sgp = grp.create_group('ionsel')
+                if ionsel is not None:
+                    for ion in ionsel:
+                        sgp.create_dataset(ion, data=np.array(ionsel[ion]))
+                dse = grp.create_dataset('edges', data=edges)
+                dse.attrs.create('log', prop in loglist)
+                dsh = grp.create_dataset('hist', data=hists)
+                dsh.attrs.create('info', np.string_('axis 0: neighbor number, axis 1: histogram'))
+
+def est3ddist(galaxy, zcomp=zuv, cosmopars=None):
+    '''
+    galaxy: dict with 'r' (impact parameter, pMpc), 'z' (redshift) entries
+    
+    returns:
+    -------
+    esimated 3d distance using the Hubble flow, in pMpc
+    '''
+    vdiff = (galaxy['z'] - zcomp) / (1. + zcomp) * c.c
+    if cosmopars is None:
+        _csm = None
+    else:
+        _csm = cosmopars.copy()
+        _csm['z'] = zcomp
+        _csm['a'] = 1. / (1. + zcomp)
+    hf = cu.Hubble(zcomp, cosmopars=_csm)
+    rlos = vdiff / hf / c.cm_per_mpc # pMpc units
+    return np.sqrt(rlos**2 + galaxy['r']**2)
+    
+    
+def plot_absenv_hist(toplot='dist2d', ionsel=None,\
+                     ionsel_meas='all', histfile='auto'):
+    '''
+    toplot:      'dist2d', 'dist3d', or 'mstar' -- what to plot
+    ionsel:      which ion column selections to apply
+                 'det':     o6 prior + o7 detection limit
+                 None:      only the sightline catalogue selection
+                 otherwise: ions ('o6', 'o7', 'o8') separated by '-', e.g.
+                            'o6', 'o7-o8', 'o6-o7-o8'
+    ionsel_meas: for o7 and o8, which measurements to use/compare 
+                (list of strings); options are
+                'cie': CIE model fit
+                'suv': slab model at the o6/UV redshift
+                'sxr': slab model at the o7/X-ray redshift
+    '''
+    histfiles = {'2dmatch_sameslice': (ddir + '', 1),\
+                 '2dmatch_2slice': (ddir + '', 0),\
+                 '3dmatch': (ddir + '', 0),\
+                 }
+    maxfracplot = 1e-4
+    mincumulplot = 0.999
+    
+    # axis label, name of the hdf5 groups containing the histograms
+    if toplot == 'dist2d':
+        prop = 'neighbor_dist_pmpc'
+        xlabel = '$\\mathrm{{r}}_{{\\perp}} \\; [\\mathrm{pMpc}]$'
+        if histfile == 'auto':
+            hkey = '2dmatch_sameslice'
+        else:
+            hkey = histfile
+    elif toplot == 'dist3d':
+        prop = 'neighbor_dist_pmpc'
+        xlabel = '$\\mathrm{{r}}_{{\\mathrm{{3D}}}} \\; [\\mathrm{pMpc}]$'
+        hkey = '3dmatch'
+    elif prop == 'mstar':
+        prop = 'Mstar_Msun' 
+        xlabel = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\star}} \\; [\\mathrm{{M}}_{{\\odot}}]$' 
+        if histfile == 'auto':
+            hkey = '2dmatch_sameslice'
+        else:
+            hkey = histfile
+    else:
+        raise ValueError('{} is not a valid toplot option'.format(toplot))
+    histfile = histfiles[hkey] 
+    ylabel = 'fraction of neighbors'
+    
+    
+    # names of the ion selection groups in the histogram files
+    if ionsel == 'o6':
+        ionsels = ['o6uvp']
+    elif ionsel == 'det':
+        ionsels = ['o6uvp-o7dlm']
+    elif ionsel is None:
+        ionsels = ['catsel']
+    else:
+        ions = ionsel.split('-')
+        ions.sort()
+        if ionsel_meas == 'all':
+            ionsel_meas = ['cie', 'suv', 'sxr']
+        ionsel_meas.sort()
+        
+        o6part = 'o6uvp-' if 'o6' in ions else ''
+        _ions = list(np.copy(ions))
+        if 'o6' in _ions:
+            _ions.remove('o6')
+        ionsels = [o6part + '-'.join(['{ion}{meas}'.format(ion=ion, meas=meas)\
+                                      for ion in _ions])\
+                  for meas in ionsel_meas]
+        meastype_ionsel = {ionsels[i]: ionsel_meas[i]\
+                           for i in range(len(ionsel_meas))}
+    print('Using ion selections {ionsels}'.format(ionsels=ionsels))
+    
+    with h5py.File(histfile[0], 'r') as hf:
+        hed = hf['Header']
+        cosmopars = {key: val for key, val in hed['cosmopars'].attrs.items()}
+        
+        dist3d = bool(hed.attrs['dist3d'])
+        if not dist3d == ('3dmatch' in hkey):
+            raise RuntimeError('File {fn} should {nd} distance data, but does not'.format(\
+                             fn=histfile[0], nd=hkey[:2]))
+        zslice = hed.attrs('slicewidth_cMpc')
+        zrad_search = hed.attrs('halfzrad_search_cMpc')
+        galsels = []
+        for tup in hed['galsel'].keys():
+            galsels.append((hed['galsel'][tup].attrs['array'].decode(),\
+                            hed['galsel'][tup].attrs['min'],\
+                            hed['galsel'][tup].attrs['max'],\
+                            ))
+        selstr = {}
+        if 'catsel' in ionsels:
+            grp = hed['ionsel_slcat']
+            _ions = sorted(list(grp.keys))
+            _minmax = {ion: np.array(grp[ion]) for ion in _ions}
+            selstr['catsel'] = ' or '.join(['{ion} $\geq {_min}$'.format(\
+                  ion=ild.genicename(ion), _min=_minmax[ion][0])\
+                  for ion in _ions])
+             
+        histedge = {}
+        for _ionsel in ionsels:
+            mgrn = 'match_{num}/{ionsel}/{prop}'.format(num=histfile[1], ionsel=_ionsel, prop=prop)
+            grp = hf[mgrn]
+            histedge[_ionsel]['hist'] = np.array(grp['hist'])
+            histedge[_ionsel]['edges'] = np.array(grp['edges'])
+            logv = bool(grp['edges'].attrs('log'))
+            
+            if _ionsel != 'catsel':
+                igrp = grp['ionsel']
+                _ions = sorted(list(igrp.attrs.keys()))
+                _minmax = {ion: np.array(igrp[ion]) for ion in _ions}
+                _selstr = []
+                for _ion in _ions:
+                    mm = _minmax[_ion]
+                    stion = ild.getnicename(_ion)
+                    if mm[0] == -np.inf and mm[1] == np.inf:
+                        continue
+                    elif mm[0] == -np.inf:
+                        _selstr.append('{ion}: $< {_max:.2f}$'.format(\
+                                       ion=stion, _max=mm[1]))
+                    elif mm[1] == np.inf:
+                        _selstr.append('{ion}: $\\geq {_min:.2f}$'.format(\
+                                       ion=stion, _min=mm[0]))
+                    else:
+                        _selstr.append('{ion}: ${_min:.2f} \\endash {_max:.2f}$'.format(\
+                                       ion=stion, _min=mm[0], _max=mm[1]))
+                selstr[_ionsel] = ', '.join(_selstr)
+                
+    labels = {'neighbor_dist_pmpc': '$\\mathrm{{r}}_{{\\mathrm{{3D}}}} \\; [\\mathrm{pMpc}]$' if dist3d else\
+                                    '$\\mathrm{{r}}_{{\\perp}} \\; [\\mathrm{pMpc}]$',\
+              'M200c_Msun': '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}} \\; [\\mathrm{{M}}_{{\\odot}}]$',\
+              'Mstar_Msun': '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\star}} \\; [\\mathrm{{M}}_{{\\odot}}]$',\
+              }
+         
+    outname = mdir + 'nnhist_{prop}_{ionsel}_{histfile}.pdf'.format(\
+                             prop=prop, ionsel='_'.join(ionsels),\
+                             histfile=hkey)   
+
+    galselstrs = []
+    for gsel in galsels:
+        _str = labels[gsel[0]]
+        _min = gsel[1]
+        try:
+            _min = float(_min)
+            if logv:
+                _min = np.log10(_min)
+        except ValueError:
+            _min = None
+        _max = gsel[2]
+        try:
+            _max = float(_max)
+            if logv:
+                _max = np.log10(_max)
+        except ValueError:
+            _max = None
+            
+        if _min is None and _max is None:
+            continue
+        elif _min is None and _max is not None:
+            _str = _str + ' $< {_max:.1f}$'.format(_max=_max)
+        elif _min is not None and _max is None:
+            _str = _str + ' $\geq {_min:.1f}$'.format(_min=_min)
+        else:
+            _str = _str + ' ${_min:.1f}\endash{_max:.1f}$'.format(_min=_min, _max=_max)
+        galselstrs.append(_str)
+    galselstr = 'galaxy selection:\n' + '\n'.join(galselstrs) + '\n'
+    
+    ionselstr = '$\\log_{{10}} \\mathrm{{N}} \\; [\\mathrm{{cm}}^{{-2}}]$ selection:\n'
+    ionselstr = ionselstr + '\n'.join(['{ins} ({count}):\n {sel}'.format(\
+                                       ins=_ionsel, sel=selstr[_ionsel],\
+                                       count=np.sum(histedge[_ionsel]['hist'][0], axis=0),\
+                                       )\
+                                       for _ionsel in ionsels]) \
+                + '\n'
+    zradstr = 'neighbor search: $\pm \\Delta z = {dz:.3f}$ cMpc\n'.format(
+               dz=zrad_search)
+    info = galselstr + ionselstr + zradstr
+    if info[-1] == '\n':
+        info = info[:-1]
+    
+    _linestyles = ['solid', 'dashed', 'dotted']
+    ls_ionsel = {ionsels[si]: _linestyles[si] for si in range(len(ionsels))}
+    
+    if '3dmatch' in hkey:
+        galdata_obs = sorted(galdata_meas,\
+                    key=lambda x: est3ddist(x, zcomp=zuv, cosmopars=cosmopars))
+    else:
+        galdata_obs = sorted(galdata_meas, key=lambda x: x['r'])
+    
+    nngb = len(galdata_obs)
+    colors_nn = {i: 'C{i}'.format(i=i%10) for i in range(nngb)}
+    
+    ## set up figure
+    fig = plt.figure(figsize=(5.5, 5.))
+    ax = fig.add_subplot(1, 1, 1)
+    fontsize = 12
+    lw = 2
+    alpha_data = 0.8
+    alpha_err = 0.2
+    
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    ax.set_yscale('log')
+    ax.tick_params(which='both', direction='in', right=True, top=True,\
+                   labelsize=fontsize - 1.)
+    ax.minorticks_on()
+    
+    # plot data, probe data ranges
+    ymax = -np.inf
+    ymin = np.inf
+    xmax = -np.inf
+    xmin = np.inf
+    for _ionsel in ionsels:
+        hists = histedge[_ionsel]['hist'][:nngb]
+        edges =  histedge[_ionsel]['edges']
+        
+        hists /= np.sum(hists, axis=1)[:, np.newaxis]
+        
+        cumul = np.cumsum(hists)
+        ind = np.where(np.all(cumul > mincumulplot, axis=0))[0][0]
+        ind = max(ind, np.where(np.any(hists >= np.max(hists) * maxfracplot, axis=0))[0][-1])
+        
+        xmax = max(xmax, edges[ind + 1])
+        ymax = max(ymax, np.max(hists))
+        ymin = min(ymin, ymax *  mincumulplot,\
+                        np.min(hists[:, ind]))
+        xmin = min(xmin, edges[0])
+        
+        for nn in range(nngb):
+            ax.step(edges[:-1], hists[nn], where='post', color=colors_nn[nn],\
+                    linestyle=ls_ionsel[_ionsel], linewidth=lw)
+    
+    # add measured data:
+    if prop == 'Mstar_Msun':
+        for nn in range(nngb):
+            xv = galdata_obs[nn]['mstar'][0]
+            xvmin = galdata_obs[nn]['mstar'][0] - galdata_obs[nn]['mstar'][1]
+            xvmax = galdata_obs[nn]['mstar'][0] + galdata_obs[nn]['mstar'][2]
+            ax.axvline(xv, color=colors_nn[nn], linewidth=lw, alpha=alpha_data)
+            ax.axvspan(xvmin, xvmax, alpha=alpha_err, color=colors_nn[nn])
+            xmin = min(xmin, xvmin)
+            xmax = max(xmax, xvmax)
+    elif prop == 'neighbor_dist_pmpc':
+        if dist3d:
+            zobs = zuv
+            _csm = cosmopars.copy()
+            _csm['z'] = zobs
+            _csm['a'] = 1. / (1. + zobs)
+            # hubble flow offset within one slice
+            zoff_est = 0.5 * zslice * _csm['a'] * cu.Hubble(zobs, cosmopars=_csm) 
+            for nn in range(nngb):
+                galdata = galdata_obs[nn].copy()
+                xv = est3ddist(galdata, zcomp=zobs, cosmopars=cosmopars)
+                xvbot = galdata['r']
+                galdata['z'] -= zoff_est 
+                xvmin = est3ddist(galdata, zcomp=zobs, cosmopars=cosmopars)
+                galdata['z'] += 2. * zoff_est 
+                xvmax = est3ddist(galdata, zcomp=zobs, cosmopars=cosmopars)
+                
+                ax.axvline(xv, color=colors_nn[nn], linewidth=lw, alpha=alpha_data)
+                ax.axvline(xvbot, color=colors_nn[nn], linewidth=lw, alpha=alpha_data,\
+                           linestyle='dashed')
+                ax.axvspan(xvmin, xvmax, alpha=alpha_err, color=colors_nn[nn])
+                
+                xmin = min(xmin, xvmin)
+                xmax = max(xmax, xvmax)
+                
+        else:
+            for nn in range(nngb):
+                xv = galdata_obs[nn]['r']
+                ax.axvline(xv, color=colors_nn[nn], linewidth=lw, alpha=alpha_data)
+                
+                xmin = min(xmin, xv)
+                xmax = max(xmax, xv)
+    
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
+                
+    if len(ionsels) > 1:
+        handles1 = [mlines.Line2D([], [], color='black',\
+                                  linewdith=lw,\
+                                  linestyle=ls_ionsel[_ionsel],
+                                  label=meastype_ionsel[_ionsel]) 
+                    for _ionsel in ionsels]
+    else:
+        handles1 = []
+    handles2 = [mlines.Line2D([], [], color=colors_nn[nn],\
+                                  linewdith=lw,\
+                                  linestyle='solid',
+                                  label='nb. {nn}'.format(nn=nn)) 
+                    for nn in range(nngb)]
+    ax.legend(handles=handles1 + handles2, fontsize=fontsize - 1.,\
+              loc='upper right', bbox_to_anchor=(1., 1.),\
+              frameon=True)
+    ax.text(0., 0., info, fontsize=fontsize - 1.,\
+            verticalalignment='bottom', horizontalalignment='left',\
+            transform=ax.transAxes)
+    
+    plt.savefig(outname, format='pdf', bbox_inches='tight')

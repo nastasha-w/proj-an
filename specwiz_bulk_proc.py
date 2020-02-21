@@ -233,7 +233,7 @@ class SpecSet:
             for i in range(tau.shape[0]):
                 tau[i, :] = np.roll(tau[i, :], rollargs[i])
             self.tau[ion] = tau
-            self.spectra.update({ion, np.exp(-1 * tau)})
+            self.spectra.update({ion: np.exp(-1 * tau)})
             self.aligned[ion] = True
             
     def getEWtot(self, dions='all'):
@@ -270,9 +270,21 @@ class SpecSet:
         elif isinstance(dions, str): # single ion input as a string in stead of a length-1 iterable
             dions = [dions]
         
+        # make sure the stuff we need exists
+        toalign = []
+        togetcd = []
+        for ion in dions:
+            if not self.aligned[ion]:
+                toalign.append(ion)
+            if ion not in self.coldens:
+                togetcd.append(ion)
+        self.alignmaxtau(dions=toalign)
+        self.getcoldenstot(dions=togetcd)
+        
+        # set up selection ranges
         numpix = int(deltav_rest_kmps / self.velperpix_kmps + 0.5)
         if numpix >= self.numspecpix:
-            print('Velocity interval {vel} is larger than the box size'.format(deltav_rest_kmps))
+            print('Velocity interval {vel} is larger than the box size'.format(vel=deltav_rest_kmps))
             print('using the whole sightline, without repetitions')
             vsel = slice(None, None, None)
             numpix =  self.numspecpix
@@ -282,15 +294,15 @@ class SpecSet:
                          None)
         pathfrac = float(numpix) / float(self.numspecpix)
         
+        # iterate over ions: select region, calculate N, EW
         vkey = deltav_rest_kmps
-        self.vwindow_EW = {vkey: {}}
-        self.vwindow_coldens = {vkey: {}}
-        for ion in dions:
-            if not self.aligned(ion):
-                self.alignmaxtau(dions=[ion])
-            if ion not in self.coldens:
-                self.getcoldenstot(dions=[ion])
-            
+        if not hasattr(self, 'vwindow_EW'):
+            self.vwindow_EW = {vkey: {}}
+            self.vwindow_coldens = {vkey: {}}
+        else:
+            self.vwindow_EW.update({vkey: {}})
+            self.vwindow_coldens.update({vkey: {}})
+        for ion in dions:           
             foscs = np.array([specl.fosc for specl in self.ionlines[ion]])
             lambdas = np.array([specl.lambda_angstrom for specl in self.ionlines[ion]])
             lambda_eff = np.sum(foscs  * lambdas) / np.sum(foscs)
@@ -468,9 +480,9 @@ def plot_NEW(specset, ions, vwindows=None, savename=None):
                 coldens = specset.coldens[ion]
                 EW      = specset.EW[ion]
             else:
-                lhandle = '$\\Delta \\, v = {dv:.1f} \\, \\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}$'.format(dv=deltav)
-                coldens = specset.vwindow_coldens[ion][deltav]
-                EW      = specset.vwindow_EW[ion][deltav]
+                lhandle = '${dv:.1f} \\, \\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}$'.format(dv=deltav)
+                coldens = specset.vwindow_coldens[deltav][ion]
+                EW      = specset.vwindow_EW[deltav][ion]
             ax.scatter(coldens, EW, label=lhandle, alpha=alpha, s=5)
             maxc = max(np.max(coldens), maxc)
             minc = min(np.min(coldens), minc)
@@ -480,9 +492,93 @@ def plot_NEW(specset, ions, vwindows=None, savename=None):
                 color='black', label='opt. thin')         
         if dolegend:
             ax.legend(fontsize=fontsize, loc='upper left',\
-                      bbox_to_anchor=(0.0, 1.0), frameon=False,\
-                      labelsize=fontsize - 1.)
+                      bbox_to_anchor=(0.0, 1.0), frameon=False)
     
     if savename is not None:
         plt.savefig(savename, bbox_inches='tight')
+
+def plot_NEW_fracs(specset, ions, vwindows=None, savename=None):
+    
+    alpha = 0.05    
+    
+    xlabel_c = '$\\log_{{10}}\\, \\mathrm{{N}}(\\mathrm{{{ion}}}) \\; [\\mathrm{{cm}}^{{-2}}]$'
+    xlabel_e = '$\\mathrm{{EW}}(\\mathrm{{{ion}}})  \; [\\mathrm{{\\AA}}]$'
+    ylabel = '$\\Delta v$ / tot.'
+    fontsize = 11
+    
+    numions = len(ions)
+    numcols = min(3, numions)
+    numrows = ((numions - 1) // numcols + 1) * 2
+    
+    panelheight = 1.5
+    panelwidth = 3.
+    hspace = 0.25
+    wspace = 0.2
+    figw = panelwidth * numcols + hspace * (numcols - 1)
+    figh = panelheight * numrows + wspace * (numrows - 1)
+    
+    
+    fig = plt.figure(figsize=(figw, figh))
+    grid = gsp.GridSpec(nrows=numrows, ncols=numcols, hspace=hspace,\
+                        wspace=wspace)    
+    axes = [[fig.add_subplot(grid[2 * (ii // numcols) + ti, ii % numcols]) for ti in range(2)] for ii in range(numions)]
+
+    if vwindows is None:
+        dolegend = False
+        vwindows = [None]
+    else:
+        dolegend = True
+            
+    for ii in range(numions):
+        ion = ions[ii]
+        ax_c = axes[ii][0]
+        ax_e = axes[ii][1]
         
+        if ii % numcols == 0:
+            ax_c.set_ylabel(ylabel, fontsize=fontsize)
+            ax_e.set_ylabel(ylabel, fontsize=fontsize)
+
+        ax_c.text(0.05, 0.95, xlabel_c.format(ion=ild.getnicename(ion, mathmode=True)),\
+                  fontsize=fontsize, transform=ax_c.transAxes,\
+                  horizontalalignment='left', verticalalignment='top')
+        ax_e.text(0.05, 0.95, xlabel_e.format(ion='\\mathrm{{{}}}'.format(ild.getnicename(ion, mathmode=True))),\
+                  fontsize=fontsize, transform=ax_e.transAxes,\
+                  horizontalalignment='left', verticalalignment='top')
+        ax_c.tick_params(which='both', direction='in', top=True, right=True,\
+                         labelsize=fontsize - 1)
+        ax_c.minorticks_on()
+        ax_c.set_yscale('log')
+        ax_e.tick_params(which='both', direction='in', top=True, right=True,\
+                         labelsize=fontsize - 1)
+        ax_e.minorticks_on()
+        ax_e.set_yscale('log')
+        ax_e.set_xscale('log')
+        
+        #ax_e.text(0.95, 0.95, ild.getnicename(ion), fontsize=fontsize,\
+        #          horizontalalignment='right', verticalalignment='top',\
+        #          transform=ax_e.transAxes)
+        
+        base_c = specset.coldens[ion]
+        base_e = specset.EW[ion]
+        for deltav in vwindows:
+            if deltav is None:
+                lhandle = '{_len:.1f} cMpc'.format(_len=specset.slicelength)
+                coldens = specset.coldens[ion]
+                EW      = specset.EW[ion]
+            else:
+                lhandle = '${dv:.1f} \\, \\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}$'.format(dv=deltav)
+                coldens = specset.vwindow_coldens[deltav][ion]
+                EW      = specset.vwindow_EW[deltav][ion]
+            ax_c.scatter(base_c, 10**(coldens - base_c), label=lhandle, alpha=alpha, s=5)
+            ax_e.scatter(base_e, EW / base_e, label=lhandle, alpha=alpha, s=5)
+            
+        ax_c.axhline(1., linestyle='dashed', linewidth=2,\
+                color='black', label=None)  
+        ax_e.axhline(1., linestyle='dashed', linewidth=2,\
+                color='black', label=None) 
+        if dolegend:
+            ax_c.legend(fontsize=fontsize, loc='lower left',\
+                      bbox_to_anchor=(0.0, 0.0), frameon=False)
+    
+    if savename is not None:
+        plt.savefig(savename, bbox_inches='tight')
