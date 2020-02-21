@@ -1045,25 +1045,31 @@ def save_absenv_hists(nncat, outname,\
                 mgrn = 'match_{num}/{ionsel}/{prop}'.format(num=matchnum, ionsel=selkey, prop=prop)
                 if mgrn in fo: # already done and stored
                     continue
-                proparr = proparrs[prop]
-                
-                pmin = np.min(proparr)
-                pmax = np.max(proparr)   
-                histstep = binspace[prop]
-        
-                bmin = np.floor(pmin / histstep) * histstep
-                bmax = np.ceil(pmax / histstep) * histstep
-                edges = np.arange(bmin - histstep, bmax + 1.5 * histstep, histstep)
-                hists = []
-                for nn in range(proparr.shape[1]):
-                    _hist, _ed = np.histogram(proparr[:, nn], bins=edges)
-                    hists.append(_hist)
-                hists = np.array(hists)
+                proparr = proparrs[prop][abssel]
+                if len(proparr) == 0:
+                    edges = np.array([np.NaN, np.NaN])
+                    hists  = np.zeros((proparr.shape[1], 1), dtype=int)                
+                else:
+                    pmin = np.min(proparr)
+                    pmax = np.max(proparr)   
+                    histstep = binspace[prop]
+            
+                    bmin = np.floor(pmin / histstep) * histstep
+                    bmax = np.ceil(pmax / histstep) * histstep
+                    edges = np.arange(bmin - histstep, bmax + 1.5 * histstep, histstep)
+                    hists = []
+                    for nn in range(proparr.shape[1]):
+                        _hist, _ed = np.histogram(proparr[:, nn], bins=edges)
+                        hists.append(_hist)
+                    hists = np.array(hists)
                 
                 grp = fo.create_group(mgrn)
                 sgp = grp.create_group('ionsel')
                 if ionsel is not None:
+                    print(ionsel)
                     for ion in ionsel:
+                        print(ion)
+                        print(np.array(ionsel[ion]))
                         sgp.create_dataset(ion, data=np.array(ionsel[ion]))
                 dse = grp.create_dataset('edges', data=edges)
                 dse.attrs.create('log', prop in loglist)
@@ -1105,9 +1111,9 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
                 'suv': slab model at the o6/UV redshift
                 'sxr': slab model at the o7/X-ray redshift
     '''
-    histfiles = {'2dmatch_sameslice': (ddir + '', 1),\
-                 '2dmatch_2slice': (ddir + '', 0),\
-                 '3dmatch': (ddir + '', 0),\
+    histfiles = {'2dmatch_sameslice': (ddir + 'savedhists_sightlinecat_z-0.1_selection1_nearest-neighbor-match_nngb-5_nsl-0.5.hdf5', 1),\
+                 '2dmatch_2slice': (ddir + 'savedhists_sightlinecat_z-0.1_selection1_nearest-neighbor-match_nngb-5_nsl-1.0.hdf5', 0),\
+                 '3dmatch': (ddir + 'savedhists_sightlinecat_z-0.1_selection1_nearest-neighbor-match_nngb-5_nsl-3.0.hdf5', 0),\
                  }
     maxfracplot = 1e-4
     mincumulplot = 0.999
@@ -1124,7 +1130,7 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
         prop = 'neighbor_dist_pmpc'
         xlabel = '$\\mathrm{{r}}_{{\\mathrm{{3D}}}} \\; [\\mathrm{pMpc}]$'
         hkey = '3dmatch'
-    elif prop == 'mstar':
+    elif toplot == 'mstar':
         prop = 'Mstar_Msun' 
         xlabel = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\star}} \\; [\\mathrm{{M}}_{{\\odot}}]$' 
         if histfile == 'auto':
@@ -1134,7 +1140,7 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
     else:
         raise ValueError('{} is not a valid toplot option'.format(toplot))
     histfile = histfiles[hkey] 
-    ylabel = 'fraction of neighbors'
+    ylabel = 'fraction of absorbers'
     
     
     # names of the ion selection groups in the histogram files
@@ -1165,13 +1171,13 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
     with h5py.File(histfile[0], 'r') as hf:
         hed = hf['Header']
         cosmopars = {key: val for key, val in hed['cosmopars'].attrs.items()}
-        
+        print(list(hed.attrs.keys()))
         dist3d = bool(hed.attrs['dist3d'])
         if not dist3d == ('3dmatch' in hkey):
             raise RuntimeError('File {fn} should {nd} distance data, but does not'.format(\
                              fn=histfile[0], nd=hkey[:2]))
-        zslice = hed.attrs('slicewidth_cMpc')
-        zrad_search = hed.attrs('halfzrad_search_cMpc')
+        zslice = hed.attrs['slicewidth_cMpc']
+        zrad_search = hed.attrs['halfzrad_search_cMpc']
         galsels = []
         for tup in hed['galsel'].keys():
             galsels.append((hed['galsel'][tup].attrs['array'].decode(),\
@@ -1181,23 +1187,25 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
         selstr = {}
         if 'catsel' in ionsels:
             grp = hed['ionsel_slcat']
-            _ions = sorted(list(grp.keys))
+            _ions = sorted(list(grp.keys()))
             _minmax = {ion: np.array(grp[ion]) for ion in _ions}
             selstr['catsel'] = ' or '.join(['{ion} $\geq {_min}$'.format(\
-                  ion=ild.genicename(ion), _min=_minmax[ion][0])\
+                  ion=ild.getnicename(ion), _min=_minmax[ion][0])\
                   for ion in _ions])
              
         histedge = {}
         for _ionsel in ionsels:
             mgrn = 'match_{num}/{ionsel}/{prop}'.format(num=histfile[1], ionsel=_ionsel, prop=prop)
             grp = hf[mgrn]
+            
+            histedge[_ionsel] = {}
             histedge[_ionsel]['hist'] = np.array(grp['hist'])
             histedge[_ionsel]['edges'] = np.array(grp['edges'])
-            logv = bool(grp['edges'].attrs('log'))
+            logv = bool(grp['edges'].attrs['log'])
             
             if _ionsel != 'catsel':
                 igrp = grp['ionsel']
-                _ions = sorted(list(igrp.attrs.keys()))
+                _ions = sorted(list(igrp.keys()))
                 _minmax = {ion: np.array(igrp[ion]) for ion in _ions}
                 _selstr = []
                 for _ion in _ions:
@@ -1230,16 +1238,17 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
     for gsel in galsels:
         _str = labels[gsel[0]]
         _min = gsel[1]
+        takelog = '\\log_{{10}}' in _str
         try:
             _min = float(_min)
-            if logv:
+            if takelog:
                 _min = np.log10(_min)
         except ValueError:
             _min = None
         _max = gsel[2]
         try:
             _max = float(_max)
-            if logv:
+            if takelog:
                 _max = np.log10(_max)
         except ValueError:
             _max = None
@@ -1262,9 +1271,9 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
                                        )\
                                        for _ionsel in ionsels]) \
                 + '\n'
-    zradstr = 'neighbor search: $\pm \\Delta z = {dz:.3f}$ cMpc\n'.format(
+    zradstr = 'neighbor search:\n $\pm \\Delta z = {dz:.3f}$ cMpc\n'.format(
                dz=zrad_search)
-    info = galselstr + ionselstr + zradstr
+    info = ionselstr + galselstr + zradstr
     if info[-1] == '\n':
         info = info[:-1]
     
@@ -1301,19 +1310,18 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
     xmax = -np.inf
     xmin = np.inf
     for _ionsel in ionsels:
-        hists = histedge[_ionsel]['hist'][:nngb]
+        hists = (histedge[_ionsel]['hist'][:nngb]).astype(np.float)
         edges =  histedge[_ionsel]['edges']
         
         hists /= np.sum(hists, axis=1)[:, np.newaxis]
         
-        cumul = np.cumsum(hists)
+        cumul = np.cumsum(hists, axis=1)
         ind = np.where(np.all(cumul > mincumulplot, axis=0))[0][0]
         ind = max(ind, np.where(np.any(hists >= np.max(hists) * maxfracplot, axis=0))[0][-1])
         
         xmax = max(xmax, edges[ind + 1])
         ymax = max(ymax, np.max(hists))
-        ymin = min(ymin, ymax *  mincumulplot,\
-                        np.min(hists[:, ind]))
+        ymin = min(ymin, ymax * maxfracplot) # np.min(hists[:, ind])
         xmin = min(xmin, edges[0])
         
         for nn in range(nngb):
@@ -1363,27 +1371,54 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
                 xmin = min(xmin, xv)
                 xmax = max(xmax, xv)
     
-    ax.set_xlim(xmin, xmax)
-    ax.set_ylim(ymin, ymax)
+    xmar = 0.01 * (xmax - xmin)
+    ymar = 0.01 * np.log10(ymax / ymin)
+    ax.set_xlim(xmin - xmar, xmax + xmar)
+    ax.set_ylim(ymin, ymax * (1. + 10**ymar))
                 
     if len(ionsels) > 1:
         handles1 = [mlines.Line2D([], [], color='black',\
-                                  linewdith=lw,\
+                                  linewidth=lw,\
                                   linestyle=ls_ionsel[_ionsel],
                                   label=meastype_ionsel[_ionsel]) 
                     for _ionsel in ionsels]
     else:
         handles1 = []
     handles2 = [mlines.Line2D([], [], color=colors_nn[nn],\
-                                  linewdith=lw,\
+                                  linewidth=lw,\
                                   linestyle='solid',
-                                  label='nb. {nn}'.format(nn=nn)) 
+                                  label='nb. {nn}'.format(nn=nn + 1)) 
                     for nn in range(nngb)]
+    
+    if prop == 'neighbor_dist_pmpc':
+        legendloc = 'upper right'
+        legendanchor = (1., 0.62 - 0.07 * len(ionsels))
+        legendncol = 1 #if handles1 == [] else 2
+        legendframe = True
+        
+        infov = 'top'
+        infoh = 'right'
+        infox = 0.98
+        infoy = 0.98
+        infobbox = None
+        
+    elif prop == 'Mstar_Msun':
+        legendloc = 'upper right'
+        legendanchor = (0.98, 0.98)
+        legendncol = 1 if handles1 == [] else 2
+        legendframe = True
+        
+        infov = 'bottom'
+        infoh = 'left'
+        infox = 0.02
+        infoy = 0.02
+        infobbox = dict(facecolor=(1., 1., 1., 0.5), edgecolor='gray',\
+                        boxstyle='round')
     ax.legend(handles=handles1 + handles2, fontsize=fontsize - 1.,\
-              loc='upper right', bbox_to_anchor=(1., 1.),\
-              frameon=True)
-    ax.text(0., 0., info, fontsize=fontsize - 1.,\
-            verticalalignment='bottom', horizontalalignment='left',\
-            transform=ax.transAxes)
+              loc=legendloc, bbox_to_anchor=legendanchor, ncol=legendncol,\
+              frameon=legendframe)
+    ax.text(infox, infoy, info, fontsize=fontsize - 1.,\
+            verticalalignment=infov, horizontalalignment=infoh,\
+            transform=ax.transAxes, bbox=infobbox)
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
