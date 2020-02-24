@@ -1009,7 +1009,7 @@ def save_absenv_hists(nncat, outname,\
         if 'Header' not in fo:
             hed = fo.create_group('Header')
             hed.attrs.create('nncat', np.string_(nncat))
-            hed.attrs.create('dist3d', dist3d)
+            #hed.attrs.create('dist3d', dist3d)
             hed.attrs.create('halfzrad_search_cMpc', zslice * zselrad)
             hed.attrs.create('slicewidth_cMpc', zslice)
             csm = hed.create_group('cosmopars')
@@ -1025,7 +1025,9 @@ def save_absenv_hists(nncat, outname,\
             igp = hed.create_group('ionsel_slcat')
             for ion in slcatsel:
                 igp.create_dataset(ion, data=np.array(slcatsel[ion]))
-        
+            grp = fo.create_group('match_{num}'.format(num=matchnum))
+            grp.attrs.create('use_3D_distance', dist3d)
+            
         # iterate over and store selections        
         for selkey in ionsels:
             ionsel = ionsels[selkey]
@@ -1113,7 +1115,7 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
     '''
     histfiles = {'2dmatch_sameslice': (ddir + 'savedhists_sightlinecat_z-0.1_selection1_nearest-neighbor-match_nngb-5_nsl-0.5.hdf5', 1),\
                  '2dmatch_2slice': (ddir + 'savedhists_sightlinecat_z-0.1_selection1_nearest-neighbor-match_nngb-5_nsl-1.0.hdf5', 0),\
-                 '3dmatch': (ddir + 'savedhists_sightlinecat_z-0.1_selection1_nearest-neighbor-match_nngb-5_nsl-3.0.hdf5', 0),\
+                 '3dmatch': (ddir + 'savedhists_sightlinecat_z-0.1_selection1_nearest-neighbor-match_nngb-5_nsl-3.0.hdf5', 1),\
                  }
     maxfracplot = 1e-4
     mincumulplot = 0.999
@@ -1172,7 +1174,9 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
         hed = hf['Header']
         cosmopars = {key: val for key, val in hed['cosmopars'].attrs.items()}
         print(list(hed.attrs.keys()))
-        dist3d = bool(hed.attrs['dist3d'])
+        #dist3d = '3dmatch' in hkey
+        print(hf['match_{num}'.format(num=histfile[1])].attrs.keys())
+        dist3d = bool(hf['match_{num}'.format(num=histfile[1])].attrs['use_3D_distance'])
         if not dist3d == ('3dmatch' in hkey):
             raise RuntimeError('File {fn} should {nd} distance data, but does not'.format(\
                              fn=histfile[0], nd=hkey[:2]))
@@ -1345,20 +1349,30 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
             _csm['z'] = zobs
             _csm['a'] = 1. / (1. + zobs)
             # hubble flow offset within one slice
-            zoff_est = 0.5 * zslice * _csm['a'] * cu.Hubble(zobs, cosmopars=_csm) 
+            zoff_est = 0.5 * zslice * c.cm_per_mpc * _csm['a'] \
+                       * cu.Hubble(zobs, cosmopars=_csm) / c.c \
+                       * (1. + zobs)
             for nn in range(nngb):
                 galdata = galdata_obs[nn].copy()
                 xv = est3ddist(galdata, zcomp=zobs, cosmopars=cosmopars)
+                #z_orig = np.copy(galdata['z'])[()]
                 xvbot = galdata['r']
-                galdata['z'] -= zoff_est 
+                galdata['z'] -= zoff_est
+                z_xmin = np.copy(galdata['z'])[()]
                 xvmin = est3ddist(galdata, zcomp=zobs, cosmopars=cosmopars)
                 galdata['z'] += 2. * zoff_est 
+                z_xmax = np.copy(galdata['z'])[()]
                 xvmax = est3ddist(galdata, zcomp=zobs, cosmopars=cosmopars)
+                if z_xmin <= zobs and zobs <= z_xmax:
+                    _xvmin = xvbot
+                    xvmax = max(xvmin, xvmax)
+                    xvmin = _xvmin
                 
                 ax.axvline(xv, color=colors_nn[nn], linewidth=lw, alpha=alpha_data)
                 ax.axvline(xvbot, color=colors_nn[nn], linewidth=lw, alpha=alpha_data,\
                            linestyle='dashed')
                 ax.axvspan(xvmin, xvmax, alpha=alpha_err, color=colors_nn[nn])
+                #print(xvbot, xvmin, xvmax, xv)
                 
                 xmin = min(xmin, xvmin)
                 xmax = max(xmax, xvmax)

@@ -23,6 +23,8 @@ import cosmo_utils as cu
 import ion_line_data as ild
 import make_maps_opts_locs as ol
 
+import plot_utils as pu
+
 ## defaults
 sdir = ol.sdir
 ldir = '/cosma/home/dp004/dc-wije1/specwizard/Ali_Spec_src/los/'
@@ -337,7 +339,7 @@ class SpecSet:
                 for key in self.cosmopars:
                     csm.attrs.create(key, self.cosmopars[key])
                 hed.create_dataset('specgroups', data=self.specgroups.astype(np.string_))
-                hed.attrs.create('filename_specwizard', self.specfile)
+                hed.attrs.create('filename_specwizard', np.string_(self.specfile))
                 # used lines
                 inl = hed.create_group('ionlines')
                 for ion in self.ionlines:
@@ -357,11 +359,17 @@ class SpecSet:
                     grp.create_dataset(ion, data=self.EW[ion])
                 grp.attrs.create('info', np.string_('equivalent width [Angstrom, rest-frame] for each ion'))
             
+            if not hasattr(self, 'vwindow_EW'):
+                # nothing left to save
+                return
+                
             if 'vwindows_maxtau' not in fo.keys():
                 vgp = fo.create_group('vwindows_maxtau')
                 vgp.attrs.create('info', np.string_('column density and EW in rest-frame velocity windows Deltav (+- 0.5 * Deltav) [km/s] around the maximum-optical-depth pixel'))
+            else:
+                vgp = fo['vwindows_maxtau']
             for deltav in self.vwindow_EW:
-                vname = 'Deltav_{v:.3f}'.format(deltav)
+                vname = 'Deltav_{dv:.3f}'.format(dv=deltav)
                 if vname in vgp.keys(): # already stored
                     continue
                 svgp = vgp.create_group(vname)
@@ -425,9 +433,85 @@ class SpecSet:
             del self.basedict           
 
 
+def combine_sample_NEW(samples=(3, 6)):
+    '''
+    assumes selection for different ions are in different files, 
+    just copies over those subsets
+    
+    adapt for v window N-EW files
+    '''
+    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'] # only o8 doublet is expected to be unresolved -> rest is fine to use single lines
+    if samples[0] == 3:
+        filen0 = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
+        ionselgrpn0 = {'o7': 'file0',\
+                       'o8': 'file1',\
+                       'o6': 'file2',\
+                       }
+    if samples[1] == 6:
+        filen1 = '/net/luttero/data2/specwizard_data/sample6_coldens_EW_subsamples.hdf5'
+        ionselgrpn1 = {'ne8': 'file0',\
+                       'ne9': 'file1',\
+                       'fe17': 'file2',\
+                       }
+    if samples == (3, 6):
+        outfilen = '/net/luttero/data2/specwizard_data/sample3-6_coldens_EW_subsamples.hdf5'
+    
+    with h5py.File(filen0, 'r') as f0,\
+         h5py.File(filen1, 'r') as f1,\
+         h5py.File(outfilen, 'w') as fo:
+        # just copy the datasets for subgroup selections
+        for ion in ionselgrpn0:
+            grpn = '%s_selection'%ion
+            f0.copy(grpn, fo, name=grpn)
+        f0.copy('Header', fo, name='Header_sample%s'%samples[0])
+        for ion in ionselgrpn1:
+            grpn = '%s_selection'%ion
+            f1.copy(grpn, fo, name=grpn)
+        f1.copy('Header', fo, name='Header_sample%s'%samples[1])
+        
+        # combine the full samples: compare integer pixel values -> can just check equality
+        grpn_full = 'full_sample'
+        
+        fn_samplesel0 = f0['Header'].attrs['filename_sample_selection']
+        fn_samplesel1 = f1['Header'].attrs['filename_sample_selection']
+        with h5py.File(fn_samplesel0, 'r') as ft:
+            pixels0 = np.array(ft['Selection/selected_pixels_allions'])
+        with h5py.File(fn_samplesel1, 'r') as ft:
+            pixels1 = np.array(ft['Selection/selected_pixels_allions'])
+        eqgrid = np.all(pixels0[:, np.newaxis, :] == pixels1[np.newaxis, :, :] , axis=2)
+        keep1  = np.logical_not(np.any(eqgrid, axis=0))
+        specnums_1in0part = np.array([np.where(eqgrid[i])[0][0] if np.any(eqgrid[i]) else -1 for i in range(eqgrid.shape[0])])
+        specnums_1in1part = np.where(keep1)[0]
+        specnums_0in0part = np.arange(eqgrid.shape[0])
+        specnums_0in1part = np.array([np.where(eqgrid[:, j])[0][0] if np.any(eqgrid[:, j]) else -1 for j in range(eqgrid.shape[1])])
+        print('Overlap between files: %i sightlines'%(eqgrid.shape[1] - len(specnums_1in1part)))
+        
+        specnums_file0 = np.append(specnums_0in0part, specnums_0in1part[keep1])
+        specnums_file1 = np.append(specnums_1in0part, specnums_1in1part)
+        
+        grp = fo.create_group(grpn_full)
+        grp.create_dataset('specnums_sample%i'%samples[0], data=specnums_file0)
+        grp['specnums_sample%i'%samples[0]].attrs.create('info', np.string_('specnum -1 means the sightline is not present in the file'))
+        grp.create_dataset('specnums_sample%i'%samples[1], data=specnums_file1)
+        grp['specnums_sample%i'%samples[1]].attrs.create('info', np.string_('specnum -1 means the sightline is not present in the file'))
+        
+        for ion in ions:
+            Ns0 = np.array(f0['%s/%s_data/logN_cmm2'%(grpn_full, ion)])
+            EW0 = np.array(f0['%s/%s_data/EWrest_A'%(grpn_full, ion)])
+            Ns1 = np.array(f1['%s/%s_data/logN_cmm2'%(grpn_full, ion)])
+            EW1 = np.array(f1['%s/%s_data/EWrest_A'%(grpn_full, ion)])
+            
+            Ns = np.append(Ns0, Ns1[keep1])
+            EW = np.append(EW0, EW1[keep1])
+            
+            sgrp = grp.create_group('%s_data'%ion)
+            sgrp.create_dataset('logN_cmm2', data=Ns)
+            sgrp.create_dataset('EWrest_A', data=EW)
+
 def plot_NEW(specset, ions, vwindows=None, savename=None):
 
-    alpha = 0.05    
+    alpha = 0.2    
+    percentiles = (10., 50., 90.)
     
     xlabel = '$\\log_{{10}}\\, \\mathrm{{N}}_{{\\mathrm{{{ion}}}}} \\; [\\mathrm{{cm}}^{{-2}}]$'
     ylabel = '$\\mathrm{{EW}}  \; [\\mathrm{{\\AA}}]$'
@@ -474,16 +558,48 @@ def plot_NEW(specset, ions, vwindows=None, savename=None):
         
         minc = np.inf
         maxc = -np.inf
-        for deltav in vwindows:
+        for vi in range(len(vwindows)):
+            deltav = vwindows[vi]
+            color = 'C{}'.format(vi%10)
+            
             if deltav is None:
-                lhandle = '{_len:.1f} cMpc'.format(_len=specset.slicelength)
+                lhandle = '{_len:.0f} cMpc'.format(_len=specset.slicelength)
                 coldens = specset.coldens[ion]
                 EW      = specset.EW[ion]
             else:
-                lhandle = '${dv:.1f} \\, \\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}$'.format(dv=deltav)
+                lhandle = '${dv:.0f} \\, \\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}$'.format(dv=deltav)
                 coldens = specset.vwindow_coldens[deltav][ion]
                 EW      = specset.vwindow_EW[deltav][ion]
-            ax.scatter(coldens, EW, label=lhandle, alpha=alpha, s=5)
+            #ax.scatter(coldens, EW, label=lhandle, alpha=alpha, s=5)
+            cmin = np.min(coldens)
+            cmax = np.max(coldens)
+            cbinsize = 0.1
+            cbmin = np.floor(cmin / cbinsize) * cbinsize
+            cbmax = np.ceil(cmax / cbinsize) * cbinsize
+            cbins = np.arange(cbmin, cbmax + 0.5 * cbinsize, cbinsize)
+            cbincen = np.append(cbins[0] - 0.5 * cbinsize, cbins + 0.5 * cbinsize)
+            cperc, coutliers, cmincount = pu.get_perc_and_points(\
+                        coldens, EW, cbins,\
+                        percentiles=percentiles,\
+                        mincount_x=20,\
+                        getoutliers_y=False, getmincounts_x=True,\
+                        x_extremes_only=True)  
+            
+            numperc = len(percentiles)
+            mcc = slice(cmincount[0], cmincount[-1] + 1, 1)
+            #print(cperc.shape)
+            #print(cbincen.shape)
+            for i in range(numperc // 2):
+                p1 = cperc[:, i][mcc]
+                p2 = cperc[:, numperc - 1 - i][mcc]
+                ax.fill_between(cbincen[mcc], p1, p2,\
+                                  alpha=alpha, color=color)
+            if bool(numperc % 2):
+                i = numperc // 2                
+                m = cperc[:, i][mcc]
+                ax.plot(cbincen[mcc], m, color=color, label=lhandle)
+            ax.scatter(coutliers[0], coutliers[1], color=color, alpha=alpha,\
+                       s=3) 
             maxc = max(np.max(coldens), maxc)
             minc = min(np.min(coldens), minc)
         cvals = 10**np.linspace(minc, maxc, 100)
@@ -491,7 +607,7 @@ def plot_NEW(specset, ions, vwindows=None, savename=None):
         ax.plot(np.log10(cvals), EWvals, linestyle='dashed', linewidth=2,\
                 color='black', label='opt. thin')         
         if dolegend:
-            ax.legend(fontsize=fontsize, loc='upper left',\
+            ax.legend(fontsize=fontsize - 1., loc='upper left',\
                       bbox_to_anchor=(0.0, 1.0), frameon=False)
     
     if savename is not None:
@@ -499,7 +615,8 @@ def plot_NEW(specset, ions, vwindows=None, savename=None):
 
 def plot_NEW_fracs(specset, ions, vwindows=None, savename=None):
     
-    alpha = 0.05    
+    alpha = 0.3    
+    percentiles = (2.5, 10., 50., 90., 97.5)
     
     xlabel_c = '$\\log_{{10}}\\, \\mathrm{{N}}(\\mathrm{{{ion}}}) \\; [\\mathrm{{cm}}^{{-2}}]$'
     xlabel_e = '$\\mathrm{{EW}}(\\mathrm{{{ion}}})  \; [\\mathrm{{\\AA}}]$'
@@ -560,7 +677,10 @@ def plot_NEW_fracs(specset, ions, vwindows=None, savename=None):
         
         base_c = specset.coldens[ion]
         base_e = specset.EW[ion]
-        for deltav in vwindows:
+        for vi in range(len(vwindows)):
+            deltav = vwindows[vi]
+            color = 'C{}'.format(vi%10)
+    
             if deltav is None:
                 lhandle = '{_len:.1f} cMpc'.format(_len=specset.slicelength)
                 coldens = specset.coldens[ion]
@@ -569,16 +689,81 @@ def plot_NEW_fracs(specset, ions, vwindows=None, savename=None):
                 lhandle = '${dv:.1f} \\, \\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}$'.format(dv=deltav)
                 coldens = specset.vwindow_coldens[deltav][ion]
                 EW      = specset.vwindow_EW[deltav][ion]
-            ax_c.scatter(base_c, 10**(coldens - base_c), label=lhandle, alpha=alpha, s=5)
-            ax_e.scatter(base_e, EW / base_e, label=lhandle, alpha=alpha, s=5)
+                
+            cdata =  10**(coldens - base_c)
+            edata = EW / base_e
+            #ax_c.scatter(base_c, 10**(coldens - base_c), label=lhandle, alpha=alpha, s=5)
+            #ax_e.scatter(base_e, EW / base_e, label=lhandle, alpha=alpha, s=5)
+            
+            cmin = np.min(coldens)
+            cmax = np.max(coldens)
+            cbinsize = 0.1
+            cbmin = np.floor(cmin / cbinsize) * cbinsize
+            cbmax = np.ceil(cmax / cbinsize) * cbinsize
+            cbins = np.arange(cbmin, cbmax + 0.5 * cbinsize, cbinsize)
+            cbincen = np.append(cbins[0] - 0.5 * cbinsize, cbins + 0.5 * cbinsize)
+            cperc, coutliers, cmincount = pu.get_perc_and_points(\
+                        coldens, cdata, cbins,\
+                        percentiles=percentiles,\
+                        mincount_x=10,\
+                        getoutliers_y=True, getmincounts_x=True,\
+                        x_extremes_only=True)  
+            
+            EW = np.log10(EW)
+            emin = np.min(EW)
+            emax = np.max(EW)
+            ebinsize = 0.1
+            ebmin = np.floor(emin / ebinsize) * ebinsize
+            ebmax = np.ceil(emax / ebinsize) * ebinsize
+            ebins = np.arange(ebmin, ebmax + 0.5 * ebinsize, ebinsize)
+            ebincen = np.append(ebins[0] - 0.5 * ebinsize, ebins + 0.5 * ebinsize)
+            eperc, eoutliers, emincount = pu.get_perc_and_points(\
+                        EW, edata, ebins,\
+                        percentiles=percentiles,\
+                        mincount_x=10,\
+                        getoutliers_y=True, getmincounts_x=True,\
+                        x_extremes_only=True) 
+            EW = 10**EW
+            ebincen = 10**ebincen
+            
+            numperc = len(percentiles)
+            mcc = slice(cmincount[0], cmincount[-1] + 1, 1)
+            mce = slice(emincount[0], emincount[-1] + 1, 1)
+            #print(cperc.shape)
+            #print(cbincen.shape)
+            for i in range(numperc // 2):
+                p1 = cperc[:, i][mcc]
+                p2 = cperc[:, numperc - 1 - i][mcc]
+                ax_c.fill_between(cbincen[mcc], p1, p2,\
+                                  alpha=alpha, color=color)
+                
+                p1 = eperc[:, i][mce]
+                p2 = eperc[:, numperc - 1 - i][mce]
+                ax_e.fill_between(ebincen[mce], p1, p2,\
+                                  alpha=alpha, color=color)
+            if bool(numperc % 2):
+                i = numperc // 2
+                
+                m = cperc[:, i]
+                ax_c.plot(cbincen, m, color=color)
+                
+                m = eperc[:, i]
+                ax_e.plot(ebincen, m, color=color)
+            
+            ax_c.scatter(coutliers[0], coutliers[1], label=lhandle,\
+                         color=color, s=3, alpha=alpha)
+            ax_e.scatter(10**eoutliers[0], eoutliers[1], label=lhandle,\
+                         color=color, s=3, alpha=alpha)
             
         ax_c.axhline(1., linestyle='dashed', linewidth=2,\
                 color='black', label=None)  
         ax_e.axhline(1., linestyle='dashed', linewidth=2,\
                 color='black', label=None) 
         if dolegend:
-            ax_c.legend(fontsize=fontsize, loc='lower left',\
-                      bbox_to_anchor=(0.0, 0.0), frameon=False)
-    
+            ax_c.legend(fontsize=fontsize - 1, loc='lower right',\
+                      bbox_to_anchor=(1.0, 0.0), frameon=True)
+        fig.suptitle('percentiles: {}'.format(percentiles), fontsize=fontsize)
     if savename is not None:
         plt.savefig(savename, bbox_inches='tight')
+        
+

@@ -544,3 +544,73 @@ class HandlerDashedLines(mlh.HandlerLineCollection):
             legline.set_linewidth(lw)
             leglines.append(legline)
         return leglines
+    
+def get_perc_and_points(xdata, ydata, xbins,\
+                        percentiles=(5., 25., 50., 75., 95.),\
+                        mincount_x=10,\
+                        getoutliers_y=True, getmincounts_x=True,\
+                        x_extremes_only=True):
+    '''
+    for xdata, ydata points, and bins xbins in the x direction:
+    get percentiles in each bin, and the points outside the selections:
+    - getoutliers_y: in each x bin, return the points with y more extreme than 
+      the requested percentiles
+    - getmincounts_x: return all the points in x bins with at least as many 
+      elements as mincount_x
+    - x_extremes_only: if getmincounts_x , only return points from x bins more 
+      extreme than the first and last where the threshold is not met
+    
+    returns:
+    --------
+    the percentiles in each bin (list of arrays, sorted by increasing
+    percentile)
+    the outlier points (x, y arrays)
+    the indices of points meeting the counts threshold (numpy array of indices)
+    the x binning includes points outside the min/max range at the ends of the 
+    arrays
+    '''
+    xdata = np.array(xdata)
+    ydata = np.array(ydata)
+    
+    percentiles = np.sort(percentiles)
+    bininds = np.digitize(xdata, xbins)
+    nbins = len(xbins) + 1
+    binlists = [[xdata[bininds == i], ydata[bininds == i]] \
+                for i in range(nbins)]
+    percs = np.array([np.percentile(binlists[i][1], percentiles) \
+                      if len(binlists[i][1]) > 0 else \
+                      np.NaN * np.ones(len(percentiles)) \
+                      for i in range(nbins)])
+    xmininds = np.where(np.array([len(_l[0]) \
+                                  for _l in binlists]) >= mincount_x)[0]
+    outliers = [np.array([]), np.array([])]
+    if getmincounts_x:
+        xsel_out = np.append(np.arange(xmininds[0]),\
+                             np.arange(xmininds[-1] + 1, nbins)) \
+                   if x_extremes_only else \
+                   np.where(np.array([len(_l[0]) \
+                                  for _l in binlists]) < mincount_x)[0]
+        xout = np.array([x for i in xsel_out for x in binlists[i][0]])
+        yout = np.array([y for i in xsel_out for y in binlists[i][1]])
+        outliers[0] = np.append(outliers[0], xout)
+        outliers[1] = np.append(outliers[1], yout)
+    if getoutliers_y:
+        if getmincounts_x:
+            if x_extremes_only:
+                xsel = np.arange(xmininds[0], xmininds[-1] + 1)
+            else:
+                xsel = xmininds
+        else:    
+            xsel = np.arange(0, nbins)
+        sel_binlists = [np.logical_or(binlists[i][1] < percs[i][0],\
+                                      binlists[i][1] > percs[i][-1]) \
+                        for i in range(nbins)]
+        
+        xout = np.array([x for i in xsel for x in binlists[i][0][sel_binlists[i]]])
+        yout = np.array([y for i in xsel for y in binlists[i][1][sel_binlists[i]]])
+        outliers[0] = np.append(outliers[0], xout)
+        outliers[1] = np.append(outliers[1], yout)
+        
+    return percs, outliers, xmininds
+    
+    
