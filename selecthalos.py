@@ -1168,7 +1168,14 @@ Mstar_names =['geq%s_le%s'%(Mstar_edges[i], Mstar_edges[i + 1]) \
 
 L0100N1504_27_Mstar_Mhbinmatch_1000 = Galaxyselector(halocat_L0100N1504_27, selections=Mstar_sels, names=Mstar_names, number=1000, seed=0)
 
-        
+Mstar_edges2 = np.array([9., 9.5, 10., 10.5, 11., 11.7])
+Mstar_sels2 = [[('Mstar_Msun', 10**Mstar_edges2[i], 10**Mstar_edges2[i + 1])] \
+              for i in range(len(Mstar_edges2) - 1)]
+Mstar_names2 =['geq%s_le%s'%(Mstar_edges2[i], Mstar_edges2[i + 1]) \
+              for i in range(len(Mstar_edges2) - 1)]
+
+L0100N1504_27_Mstar0p5dex = Galaxyselector(halocat_L0100N1504_27, selections=Mstar_sels2, names=Mstar_names2, number=7000, seed=0)
+
 ###############################################################################
 #                                  Tests                                      #
 ###############################################################################

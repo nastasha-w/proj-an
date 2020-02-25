@@ -2673,7 +2673,60 @@ if jobind in range(20136, 20139): # cosma
                      selection, np.inf, outname=outname,\
                      numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
                      axis='z', velspace=False, offset_los=0., stamps=False)
+
+### get 2d profiles by stellar mass sample: 0.5 dex Mstar bins
+if jobind in range(20139, 20145): 
+    szcens = [str(i) for i in np.arange(16)/16. * 100. + 100./32.]
+    L_x = 100.
+    npix_x = 32000
+    rmin_r200c = 0.
+    rmax_r200c = 3.
+    
+    catname = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    with h5py.File(catname, 'r') as cat:
+        r200cvals = np.array(cat['R200c_pkpc'])
+        galids = np.array(cat['galaxyid'])
+        cosmopars = {key: item for key, item in cat['Header/cosmopars'].attrs.items()}
         
+    # select 1000 halos randomly in  0.5 dex Mstar bins (trying to do everything just gives memory errors)
+    galids_dct = sh.L0100N1504_27_Mstar0p5dex.galids() 
+     # set minimum distance based on virial radius of halo mass bin
+    radii_mstarbins = {key: [r200cvals[galids == galid] for galid in galids_dct[key]] for key in galids_dct}
+    p99_radii_mstarbins = {key: np.percentile(radii_mstarbins[key], 99.) for key in radii_mstarbins} # don't use the maxima since those are determined by outliers
+    #print('for debug: galids_dct:\n')
+    #print(galids_dct)
+    #print('\n')
+    allids = [gid for key in galids_dct.keys() for gid in galids_dct[key]]
+    gkeys = list(galids_dct.keys())
+    keymatch = [gkeys[np.where([gid in galids_dct[key] for key in gkeys])[0][0]] for gid in allids]
+    mindist_pkpc = rmax_r200c * np.array([p99_radii_mstarbins[gkey] for gkey in keymatch])
+    #print('for debug: allids')
+    #print(allids)
+    #print('\n')
+    selection = [('galaxyid', np.array(allids))]
+    
+    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
+    ionind = jobind - 20139
+    ion = ions[ionind]
+    numsl = 1
+    
+    filenames = {'o6': ol.ndir + 'coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                 'o7': ol.ndir + 'coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                 'o8': ol.ndir + 'coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                 'fe17': ol.ndir + 'coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                 'ne8': ol.ndir + 'coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen%s_T4SFR.npz',\
+                 'ne9': ol.ndir + 'coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                 }
+    filename = filenames[ion]
+    outname = ol.pdir + 'rdist_%s_%islice_to-99p-3R200c_Mstar-0p5dex_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
+    
+    crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
+                         rmin_r200c, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=False)
+    
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################
