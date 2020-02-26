@@ -5485,6 +5485,15 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
                     'fe17': {'Mmin': [11., 13.,  14.]},\
                     },\
                 }
+    #plotcrit = {0: None,\
+    #            7: {'o6':   {'Mmin': np.arange(11., 14.1, 0.5)},\
+    #                'o7':   {'Mmin': np.arange(11., 14.1, 0.5)},\
+    #                'o8':   {'Mmin': np.arange(11., 14.1, 0.5)},\
+    #                'ne8':  {'Mmin': np.arange(11., 14.1, 0.5)},\
+    #                'ne9':  {'Mmin': np.arange(11., 14.1, 0.5)},\
+    #                'fe17': {'Mmin': np.arange(11., 14.1, 0.5)},\
+    #                },\
+    #            }
     printnumgals=False
     
     mdir = '/net/luttero/data2/imgs/CGM/radprof/'
@@ -5653,7 +5662,7 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
                             }
     
     readpaths = {val: '%s_bins/binset_0/%s_%s'%(units, ytype, val) for val in yvals_toplot}
-    readpath_bins = '/'.join((readpaths[readpaths.keys()[0]]).split('/')[:-1]) + '/bin_edges'
+    readpath_bins = '/'.join((readpaths[list(readpaths.keys())[0]]).split('/')[:-1]) + '/bin_edges'
     print(readpaths)
     panelwidth = 2.5
     panelheight = 2.
@@ -5982,6 +5991,8 @@ def plot_radprof_limited(ions=None, fontsize=fontsize, imgname=None):
             #xlim = ax.get_xlim()
             ax.axhline(approx_breaks[ion], 0., 0.1, color='gray', linewidth=1.5, zorder=-1) # ioncolors[ion]
     #lax.axis('off')
+        #ax.axvline(1.5, linestyle='dotted', linewidth=1., color='gray')
+        #ax.axvline(1.6, linestyle='dotted', linewidth=1., color='black')
         ax.set_xscale('log')
     
     lcs = []

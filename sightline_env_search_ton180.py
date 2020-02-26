@@ -615,14 +615,35 @@ def find_galenv(slcat, halocat=halocat_default,\
         nnfinder = NearestNeighbors(n_neighbors=nngb, metric='euclidean',\
                                     n_jobs=n_jobs)    
         nnfinder.fit(halopos)
-        neigh_dist, neigh_ind = nnfinder.kneighbors(X=abspos,\
-                                                    n_neighbors=nngb,\
-                                                    return_distance=True)
-        #print(neigh_dist)
-        #print(neigh_ind)
-        neighprops_this = {key: halodct_b[key][neigh_ind] for key in halodct_b}
-        neighprops_this.update({'neighbor_dist_pmpc': neigh_dist})
-        
+        ## second loop for very large datasets:
+        maxlen = int(1e7)
+        if len(abspos) <= maxlen: 
+            neigh_dist, neigh_ind = nnfinder.kneighbors(X=abspos,\
+                                                        n_neighbors=nngb,\
+                                                        return_distance=True)
+            #print(neigh_dist)
+            #print(neigh_ind)
+            neighprops_this = {key: halodct_b[key][neigh_ind] for key in halodct_b}
+            neighprops_this.update({'neighbor_dist_pmpc': neigh_dist})
+        else:
+            numiter = (len(abspos) - 1) // maxlen + 1
+            #print(numiter)
+            neighprops_this = {key: np.empty(shape=(0, nngb)) for key in halodct}
+            neighprops_this.update({'neighbor_dist_pmpc': np.empty(shape=(0, nngb))})
+            neighprops_this.update({'galaxyid': np.empty(shape=(0, nngb), dtype=np.int),\
+                                    'SubGroupNumber': np.empty(shape=(0, nngb), dtype=np.int),\
+                                   })
+            for ind in range(numiter):
+                subsel = slice(ind * maxlen, (ind + 1) * maxlen)
+                neigh_dist, neigh_ind = nnfinder.kneighbors(X=abspos[subsel],\
+                                                        n_neighbors=nngb,\
+                                                        return_distance=True)
+                neighprops_thissub = {key: halodct_b[key][neigh_ind] for key in halodct_b}
+                neighprops_thissub.update({'neighbor_dist_pmpc': neigh_dist})
+                
+                for key in neighprops_this:
+                    neighprops_this[key] = np.append(neighprops_this[key], neighprops_thissub[key], axis=0)
+            
         del nnfinder
         
         for key in neighpropdct:
