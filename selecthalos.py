@@ -1175,6 +1175,7 @@ Mstar_names2 =['geq%s_le%s'%(Mstar_edges2[i], Mstar_edges2[i + 1]) \
               for i in range(len(Mstar_edges2) - 1)]
 
 L0100N1504_27_Mstar0p5dex = Galaxyselector(halocat_L0100N1504_27, selections=Mstar_sels2, names=Mstar_names2, number=7000, seed=0)
+L0100N1504_27_Mstar0p5dex_1500 = Galaxyselector(halocat_L0100N1504_27, selections=Mstar_sels2, names=Mstar_names2, number=1500, seed=0)
 
 ###############################################################################
 #                                  Tests                                      #

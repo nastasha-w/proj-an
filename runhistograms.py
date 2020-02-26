@@ -2688,8 +2688,8 @@ if jobind in range(20139, 20145):
         galids = np.array(cat['galaxyid'])
         cosmopars = {key: item for key, item in cat['Header/cosmopars'].attrs.items()}
         
-    # select 1000 halos randomly in  0.5 dex Mstar bins (trying to do everything just gives memory errors)
-    galids_dct = sh.L0100N1504_27_Mstar0p5dex.galids() 
+    # select 1500 halos randomly in  0.5 dex Mstar bins (trying to do everything just gives memory errors)
+    galids_dct = sh.L0100N1504_27_Mstar0p5dex_1500.galids() 
      # set minimum distance based on virial radius of halo mass bin
     radii_mstarbins = {key: [r200cvals[galids == galid] for galid in galids_dct[key]] for key in galids_dct}
     p99_radii_mstarbins = {key: np.percentile(radii_mstarbins[key], 99.) for key in radii_mstarbins} # don't use the maxima since those are determined by outliers
@@ -2719,7 +2719,7 @@ if jobind in range(20139, 20145):
                  }
     filename = filenames[ion]
     outname = ol.pdir + 'rdist_%s_%islice_to-99p-3R200c_Mstar-0p5dex_centrals.hdf5'%((filename.split('/')[-1][:-4])%('-all'), numsl)
-    
+
     crd.rdists_sl_from_selection(filename, szcens, L_x, npix_x,\
                          rmin_r200c, rmax_r200c,\
                          catname,\
