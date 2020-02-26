@@ -473,7 +473,7 @@ def create_sl_cat():
             
 
 def find_galenv(slcat, halocat=halocat_default,\
-                galsel='def', nngb=3, nsl=0.5, dist3d=False):
+                galsel='def', nngb=3, nsl=0.5, dist3d=False, catsel=None):
     '''
     given absorbers in slcat, halos/galaxies in halocat, and the halocat 
     selection galsel, find nearest neighbors for the absorbers
@@ -487,9 +487,16 @@ def find_galenv(slcat, halocat=halocat_default,\
             0.5 -> only in the same slice
     dist3d: use the 3D distance (assuming zero peculiar velocities and 
             absorbers at slice centers) to find nearest neighbors
+    catsel: part of the slcat to use (concatentate resulting files afterwards)
+            (index, total) tuple of integers: 
+            total is the number of parts to split into, index is which one 
+            this is
+            index runs from 0 to total - 1
     '''
     
     # load sightline data
+    if catsel is None:
+        catsel = (0, 1)
     with h5py.File(slcat, 'r') as fs:
         cosmopars = {key: val for key, val in fs['Header/cosmopars'].attrs.items()}
         ions = list(fs['Header/mapfiles'].keys())
@@ -501,10 +508,15 @@ def find_galenv(slcat, halocat=halocat_default,\
         zedges = np.append([0.], zedges)
         boxperiod = cosmopars['boxsize'] / cosmopars['h'] * cosmopars['a']
         
-        coldens = {ion: np.array(fs['coldens_{ion}'.format(ion=ion)]) for ion in ions}
-        xpos = np.array(fs['xpos_pmpc'])
-        ypos = np.array(fs['ypos_pmpc'])
-        zpos = np.array(fs['zpos_pmpc'])
+        numabs = fs['xpos_pmpc'].shape[0]
+        numperproc = (numabs - 1) // catsel[1] + 1
+        procnum = catsel[0]
+        _sel = slice(procnum * numperproc, (procnum + 1) * numperproc)
+        
+        xpos = np.array(fs['xpos_pmpc'])[_sel]
+        ypos = np.array(fs['ypos_pmpc'])[_sel]
+        zpos = np.array(fs['zpos_pmpc'])[_sel]
+        coldens = {ion: np.array(fs['coldens_{ion}'.format(ion=ion)])[_sel] for ion in ions}
         
         absdct = {'xpos_pmpc': xpos,\
                   'ypos_pmpc': ypos,\
@@ -617,7 +629,9 @@ def find_galenv(slcat, halocat=halocat_default,\
         nnfinder.fit(halopos)
         ## second loop for very large datasets:
         maxlen = int(1e7)
-        if len(abspos) <= maxlen: 
+        if len(abspos) == 0: # only arises with the test set + subset runs
+            continue
+        elif len(abspos) <= maxlen:   
             neigh_dist, neigh_ind = nnfinder.kneighbors(X=abspos,\
                                                         n_neighbors=nngb,\
                                                         return_distance=True)
@@ -654,7 +668,11 @@ def find_galenv(slcat, halocat=halocat_default,\
     ## save the data
     outfile = slcat.split('/')[-1]
     outfile = '.'.join(outfile.split('.')[:-1])
-    outfile = ddir + outfile + '_nearest-neighbor-match_nngb-{nngb}_nsl-{nsl}.hdf5'.format(nngb=nngb, nsl=nsl)
+    if catsel == (0, 1):
+        partstr = ''
+    else:
+        partstr = '_{ind}-of-{tot}'.format(ind=catsel[0], tot=catsel[1])
+    outfile = ddir + outfile + '_nearest-neighbor-match_nngb-{nngb}_nsl-{nsl}{pst}.hdf5'.format(nngb=nngb, nsl=nsl, pst=partstr)
     
     with h5py.File(outfile, 'a') as fo:
         prev = list(fo.keys())
@@ -668,8 +686,7 @@ def find_galenv(slcat, halocat=halocat_default,\
             agp = fo.create_group('absorbers')
             for key in absdct:
                 agp.create_dataset(key, data=absdct[key])
-                if key[1:] != 'pos':
-                    agp.attrs.create('info', np.string_('column density [log10 cm^-2]'))
+            agp.attrs.create('info', np.string_('column density [log10 cm^-2]'))
         else:
             prev.remove('Header')
             prev.remove('absorbers')
@@ -694,7 +711,155 @@ def find_galenv(slcat, halocat=halocat_default,\
         for key in neighpropdct:
             grp.create_dataset(key, data=neighpropdct[key])
             
-            
+def combine_galenv_subsets(examplename, matchnum=0):
+    '''
+    parses the given example name and derives the full set of names
+    then combines those into a galenv file like would be obtained without using
+    subsets
+    
+    matchnum: which to combine (int -> all the same, iterable of ints -> for 
+              each file in order)
+    '''    
+    odir = examplename.split('/')[:-1]
+    if len(odir) == 0:
+        odir = ddir
+    else:
+        odir = '/'.join(odir)
+    onm = examplename.split('/')[-1]
+    subpart = onm.split('_')[-1][:-5]
+    subparts = subpart.split('-')
+    total = int(subparts[2])
+    
+    filenames = [odir + '_'.join(onm.split('_')[:-1]) + \
+                 '_{ind}-of-{tot}.hdf5'.format(ind=ind, tot=total) \
+                 for ind in range(total)]
+    outfile = odir + '_'.join(onm.split('_')[:-1]) + '.hdf5'
+    
+    if isinstance(matchnum, int):
+        matchnum = [matchnum] * total
+        newmatchnum = False
+    with h5py.File(outfile, 'a') as fo:
+        absdct = {}
+        nndct = {}
+        first = True
+        for num, filen in zip(matchnum, filenames):
+            with h5py.File(filen, 'r') as fi:
+                cosmopars = {key: val for key, val in fi['Header/cosmopars'].attrs.items()}
+                slcat = fi['Header'].attrs['sightline_catalogue'].decode()
+                
+                agp = fi['absorbers']
+                grp = fi['match_{num}'.format(num=num)]
+                ggrp = grp['galaxy_selection']
+                
+                prev = list(fo.keys())
+                if 'Header' not in prev: # first file -> do setup
+                    hed = fo.create_group('Header')
+                    csm = hed.create_group('cosmopars')
+                    for key in cosmopars:
+                        csm.attrs.create(key, cosmopars[key])
+                    hed.attrs.create('sightline_catalogue', np.string_(slcat))
+                
+                if first:
+                    halocat = grp.attrs['halo_catalogue'].decode()
+                    nngb = grp.attrs['number_of_neighbours']
+                    nsl = grp.attrs['number_of_slices_for_match']
+                    dist3d = bool(grp.attrs['use_3D_distance'])
+                    galsel = []
+                    for key in ggrp:
+                        arn = ggrp[key].attrs['array'].decode()
+                        minv = ggrp[key].attrs['min']
+                        maxv = ggrp[key].attrs['max']
+                        galsel.append((arn, minv, maxv))
+                        
+                    for key in agp:
+                        absdct[key] = np.array(agp[key])
+                    
+                    for key in grp:
+                        if key == 'galaxy_selection':
+                            continue
+                        nndct[key] = np.array(grp[key])
+                    first = False
+                    
+                else: # not the first file: do checks
+                    _cosmopars = {key: val for key, val in fo['Header/cosmopars'].attrs.items()}
+                    if not set(_cosmopars.keys()) == set(cosmopars.keys()):
+                        raise RuntimeError('Cosmopars in the different files do not match (keys)')
+                    if not np.all([_cosmopars[key] == cosmopars[key] for key in cosmopars]):
+                        raise RuntimeError('Cosmopars in the different files do not match (values)')
+                    
+                    _slcat = fo['Header'].attrs['sightline_catalogue'].decode()
+                    if not _slcat == slcat:
+                        raise RuntimeError('Sightlines in the different files come from different catalogues')
+                    
+                    if not set(absdct.keys()) == set(agp.keys()):
+                        print(absdct)
+                        print(agp.keys())
+                        raise RuntimeError('The different files have different absorber properties stored')
+                    if not set(nndct.keys()) == set(grp.keys()) - {'galaxy_selection'}:
+                        print(grp.keys())
+                        raise RuntimeError('The different files have different neighbor properties stored')
+                        
+                    _halocat = grp.attrs['halo_catalogue'].decode()
+                    _nngb = grp.attrs['number_of_neighbours']
+                    _nsl = grp.attrs['number_of_slices_for_match']
+                    _dist3d = bool(grp.attrs['use_3D_distance'])
+                    _galsel = []
+                    for key in ggrp:
+                        arn = ggrp[key].attrs['array'].decode()
+                        minv = ggrp[key].attrs['min']
+                        maxv = ggrp[key].attrs['max']
+                        _galsel.append((arn, minv, maxv))
+                    if _halocat != halocat:
+                        raise RuntimeError('The different files have different halo catalogues')
+                    if _nngb != nngb:
+                        raise RuntimeError('The different files have different numbers of neighbours')
+                    if _nsl != nsl:
+                        raise RuntimeError('The different files have different slice search radii')
+                    if _dist3d != dist3d:
+                        raise RuntimeError('The different files have different matching dimensions')
+                    if set(galsel) != set(_galsel):
+                        raise RuntimeError('The different files have different galaxy selections')
+                    
+                    if 'Header' in prev:
+                        prev.remove('Header')
+                    if 'absorbers' in prev:
+                        prev.remove('absorbers')
+                    
+                    for key in absdct:
+                        absdct[key] = np.append(absdct[key], np.array(agp[key]), axis=0)
+                    for key in nndct:
+                        nndct[key] = np.append(nndct[key], np.array(grp[key]), axis=0)
+        # store input parameters 
+        numthis = len(prev)
+        if newmatchnum:
+            grp = fo.create_group('match_{num}'.format(num=numthis))
+        else:
+            grp = fo.create_group('match_{num}'.format(num=matchnum[0]))
+        grp.attrs.create('halo_catalogue', np.string_(halocat))
+        grp.attrs.create('number_of_neighbours', nngb)
+        grp.attrs.create('number_of_slices_for_match', nsl)
+        grp.attrs.create('use_3D_distance', dist3d)
+        ggrp = grp.create_group('galaxy_selection')
+        for ti in range(len(galsel)):
+            tup = galsel[ti]
+            sggrp = ggrp.create_group('tuple_{}'.format(ti))
+            sggrp.attrs.create('array', np.string_(tup[0]))
+            #_minv = tup[1] if tup[1] is not None else np.string_('None')
+            #_maxv = tup[2] if tup[2] is not None else np.string_('None')
+            # no None checking: never decoded
+            sggrp.attrs.create('min', minv)
+            sggrp.attrs.create('max', maxv)      
+        for key in nndct:
+            grp.create_dataset(key, data=nndct[key])
+        
+        if 'absorbers' in fo:
+            pass # no checks for now...
+        else:
+            agp = fo.create_group('absorbers')
+            for key in absdct:
+                agp.create_dataset(key, data=absdct[key])
+            agp.attrs.create('info', np.string_('column density [log10 cm^-2]'))
+                 
 def absenv_test(matchnum=0,\
                 nncat=mdir + 'slcat_test_1_nearest-neighbor-match_nngb-3_nsl-0.5.hdf5'):
     '''
@@ -967,19 +1132,7 @@ def save_absenv_hists(nncat, outname,\
     if '/' not in nncat:
         nncat = '/net/quasar/data2/wijers/slcat/' + nncat
     
-    meas = {'uvp': {'o6': (o6_uv,) + (sigma_o6_uv,) * 2,\
-                },\
-           'cie': {'o6': (o6_cie,) + (sigma_o6_cie,) * 2,\
-                   'o7': (o7_cie,) + (sigma_o7_cie,) * 2,\
-                   'o8': (o8_cie,) + (sigma_o8_cie,) * 2,\
-                   },\
-           'so6': {'o7': (o7_slab_zuv,) + sigma_o7_slab_zuv,\
-                   'o8': (o8_slab_zuv,) + sigma_o8_slab_zuv,\
-                   },\
-           'so7': {'o7': (o7_slab_zx,) + sigma_o7_slab_zx,\
-                   'o8': (o8_slab_zx,) + sigma_o8_slab_zx,\
-                   } ,\
-        }
+
     
     # on/off for each ion subset
     ionsel_opts = {'o6': {'uvp': (meas['uvp']['o6'][0] - meas['uvp']['o6'][1],\
