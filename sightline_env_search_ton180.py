@@ -30,33 +30,71 @@ n_jobs = int(os.environ['OMP_NUM_THREADS']) # not shared-memory, I think, but a 
 ## measured column densities: logN / cm^-2 
 ## sigma: single +- value or (-, +) tuple
 ## note: O VII in the slab model is a low-significane detection
+### old model measurements
+## UV priors
+#o6_uv = 13.76
+#sigma_o6_uv = 0.08
+#
+## CIE model (X-ray)
+#o6_cie = 13.9
+#sigma_o6_cie = 0.2
+#o7_cie = 16.4
+#sigma_o7_cie = 0.2
+#o8_cie = 16.0
+#sigma_o8_cie = 0.2
+#
+## slab model (O VI prior z)
+#o7_slab_zuv = 16.59
+#sigma_o7_slab_zuv = (0.28, 0.24)
+#o8_slab_zuv = 15.85
+#sigma_o8_slab_zuv = (0.65, 0.32)
+#
+## slab model (O VII z)
+#o7_slab_zx = 16.62
+#sigma_o7_slab_zx = (0.28, 0.25)
+#o8_slab_zx = 15.82
+#sigma_o8_slab_zx = (0.78, 0.49)
+#
+## redshifts: comparison to z=0.0 or z=0.1 snapshots are both fine
+#zuv = 0.04582
+#zx  = 0.0459
+
+### updated model 2020-02-25 (received)
 # UV priors
 o6_uv = 13.76
 sigma_o6_uv = 0.08
 
-# CIE model (X-ray)
-o6_cie = 13.9
-sigma_o6_cie = 0.2
-o7_cie = 16.4
-sigma_o7_cie = 0.2
-o8_cie = 16.0
-sigma_o8_cie = 0.2
+# CIE model (X-ray, X-ray redshift)
+o6_cie_zx = 13.9
+sigma_o6_cie_zx = 0.2
+o7_cie_zx = 16.4
+sigma_o7_cie_zx = 0.2
+o8_cie_zx = 16.0
+sigma_o8_cie_zx = 0.2
+
+# CIE model (X-ray, UV redshift)
+o6_cie_zuv = 13.8
+sigma_o6_cie_zuv = 0.2
+o7_cie_zuv = 16.4
+sigma_o7_cie_zuv = 0.2
+o8_cie_zuv = 15.9
+sigma_o8_cie_zuv = 0.2
 
 # slab model (O VI prior z)
-o7_slab_zuv = 16.59
-sigma_o7_slab_zuv = (0.28, 0.24)
-o8_slab_zuv = 15.85
-sigma_o8_slab_zuv = (0.65, 0.32)
+o7_slab_zuv = 16.52
+sigma_o7_slab_zuv = (0.28, 0.25)
+o8_slab_zuv = 15.7
+sigma_o8_slab_zuv = (1.1, 0.4)
 
 # slab model (O VII z)
-o7_slab_zx = 16.62
-sigma_o7_slab_zx = (0.28, 0.25)
-o8_slab_zx = 15.82
-sigma_o8_slab_zx = (0.78, 0.49)
-
-# redshifts: comparison to z=0.0 or z=0.1 snapshots are both fine
+o7_slab_zx = 16.69
+sigma_o7_slab_zx = (0.39, 0.37)
+o8_slab_zx = 15.7
+sigma_o8_slab_zx = (1.5, 0.4)
+#
+## redshifts: comparison to z=0.0 or z=0.1 snapshots are both fine
 zuv = 0.04582
-zx  = 0.0459
+zx  = 0.0455
 
 ## data dictionary: 
 # UV-priors: 'uvp', 
@@ -66,9 +104,13 @@ zx  = 0.0459
 # then ion: (logN, sigma+, sigma-) tuples
 meas = {'uvp': {'o6': (o6_uv,) + (sigma_o6_uv,) * 2,\
                 },\
-        'cie': {'o6': (o6_cie,) + (sigma_o6_cie,) * 2,\
-                'o7': (o7_cie,) + (sigma_o7_cie,) * 2,\
-                'o8': (o8_cie,) + (sigma_o8_cie,) * 2,\
+        'co7': {'o6': (o6_cie_zx,) + (sigma_o6_cie_zx,) * 2,\
+                'o7': (o7_cie_zx,) + (sigma_o7_cie_zx,) * 2,\
+                'o8': (o8_cie_zx,) + (sigma_o8_cie_zx,) * 2,\
+                },\
+        'co6': {'o6': (o6_cie_zuv,) + (sigma_o6_cie_zuv,) * 2,\
+                'o7': (o7_cie_zuv,) + (sigma_o7_cie_zuv,) * 2,\
+                'o8': (o8_cie_zuv,) + (sigma_o8_cie_zuv,) * 2,\
                 },\
         'so6': {'o7': (o7_slab_zuv,) + sigma_o7_slab_zuv,\
                 'o8': (o8_slab_zuv,) + sigma_o8_slab_zuv,\
@@ -362,7 +404,8 @@ def create_sl_cat():
     minvals['o7'] = min(minvals['o7'], detlim['o7'])
     print('selecting: {}'.format(minvals))    
     
-    outname = ddir + 'sightlinecat_z-{z:.1f}_selection1.hdf5'.format(**cosmopars)
+    # selection1: used older measured values (less sightlines, too)
+    outname = ddir + 'sightlinecat_z-{z:.1f}_selection2.hdf5'.format(**cosmopars)
     xpos_pmpc = np.array([])
     ypos_pmpc = np.array([])
     zpos_pmpc = np.array([])
@@ -572,14 +615,35 @@ def find_galenv(slcat, halocat=halocat_default,\
         nnfinder = NearestNeighbors(n_neighbors=nngb, metric='euclidean',\
                                     n_jobs=n_jobs)    
         nnfinder.fit(halopos)
-        neigh_dist, neigh_ind = nnfinder.kneighbors(X=abspos,\
-                                                    n_neighbors=nngb,\
-                                                    return_distance=True)
-        #print(neigh_dist)
-        #print(neigh_ind)
-        neighprops_this = {key: halodct_b[key][neigh_ind] for key in halodct_b}
-        neighprops_this.update({'neighbor_dist_pmpc': neigh_dist})
-        
+        ## second loop for very large datasets:
+        maxlen = int(1e7)
+        if len(abspos) <= maxlen: 
+            neigh_dist, neigh_ind = nnfinder.kneighbors(X=abspos,\
+                                                        n_neighbors=nngb,\
+                                                        return_distance=True)
+            #print(neigh_dist)
+            #print(neigh_ind)
+            neighprops_this = {key: halodct_b[key][neigh_ind] for key in halodct_b}
+            neighprops_this.update({'neighbor_dist_pmpc': neigh_dist})
+        else:
+            numiter = (len(abspos) - 1) // maxlen + 1
+            #print(numiter)
+            neighprops_this = {key: np.empty(shape=(0, nngb)) for key in halodct}
+            neighprops_this.update({'neighbor_dist_pmpc': np.empty(shape=(0, nngb))})
+            neighprops_this.update({'galaxyid': np.empty(shape=(0, nngb), dtype=np.int),\
+                                    'SubGroupNumber': np.empty(shape=(0, nngb), dtype=np.int),\
+                                   })
+            for ind in range(numiter):
+                subsel = slice(ind * maxlen, (ind + 1) * maxlen)
+                neigh_dist, neigh_ind = nnfinder.kneighbors(X=abspos[subsel],\
+                                                        n_neighbors=nngb,\
+                                                        return_distance=True)
+                neighprops_thissub = {key: halodct_b[key][neigh_ind] for key in halodct_b}
+                neighprops_thissub.update({'neighbor_dist_pmpc': neigh_dist})
+                
+                for key in neighprops_this:
+                    neighprops_this[key] = np.append(neighprops_this[key], neighprops_thissub[key], axis=0)
+            
         del nnfinder
         
         for key in neighpropdct:
@@ -1205,7 +1269,7 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
             histedge[_ionsel] = {}
             histedge[_ionsel]['hist'] = np.array(grp['hist'])
             histedge[_ionsel]['edges'] = np.array(grp['edges'])
-            logv = bool(grp['edges'].attrs['log'])
+            #logv = bool(grp['edges'].attrs['log'])
             
             if _ionsel != 'catsel':
                 igrp = grp['ionsel']
