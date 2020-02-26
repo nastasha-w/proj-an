@@ -522,7 +522,7 @@ def rdists_sl(base,szcens,L_x,npix_x,rmins,rmaxs,rscales,centres,labels, numsl =
 def rdists_sl_faster(base, szcens, L_x, npix_x,\
                      rmin, rmax, rscales, centres,\
                      numsl=1, npix_y=None, axis='z', logquantity=True,\
-                     labels=None, save=None):
+                     labels=None, save=None, trackprogress=False):
     '''
     inputs:
     ---------------------------------------------------------------------------
@@ -602,6 +602,8 @@ def rdists_sl_faster(base, szcens, L_x, npix_x,\
     #### find the slice ranges for each centre
 
     # slice centres
+    if trackprogress:
+        print('Retrieving slice centers (fills)')
     try:
         szcens = list(szcens)
         szcens.sort(key=lambda x: float(x))
@@ -616,6 +618,8 @@ def rdists_sl_faster(base, szcens, L_x, npix_x,\
         zcens = np.array([0.]) #arbitrary number to not crash stuff
         oneslice = True
 
+    if trackprogress:
+        print('matching galaxies to slices')
     length_per_slice = np.float(L_x)/len(zcens)
     slice_cenleft_inds = np.asarray(np.round(c2 / length_per_slice + 0.5 * (numsl%2), 0) - 1.,dtype=int)%len(zcens)
     # odd number of slices  -> centre falls bin with index ind: ind*length_per_slice <= centre < (ind+1)*length_per_slice
@@ -644,6 +648,8 @@ def rdists_sl_faster(base, szcens, L_x, npix_x,\
 
    
     #### find the indices to select for each centre (note that this list could get pretty unwieldy if the halos selected have a large covering fraction)
+    if trackprogress:
+        print('Finding the pixel indices to select for different galaxies')
     if npix_y == None:
         npix_y = npix_x
     # rscales may differ, so the selection may not be the same size for each centre -> cannot use array to store all selections (unless oject array)
@@ -674,6 +680,8 @@ def rdists_sl_faster(base, szcens, L_x, npix_x,\
     #rs_dct = {labels[i]: rs[i] for i in range(len(fills))}
 
     #### do the image load loop
+    if trackprogress:
+        print('Looping over the maps to extract the pixels')
     qs = [np.zeros(len(rs[i])) for i in range(len(fills))] # set up dict of the right length, initiate to zeros
     for fill in fills_toloop:
         if not oneslice:
@@ -731,12 +739,15 @@ def rdists_sl_faster(base, szcens, L_x, npix_x,\
         del fullim
         num = gc.collect()
         print('garbage collector found %i unreachable objects'%num)
-        
+    
+    if trackprogress:
+        print('Final data operations before saving')
     if logquantity:
         qs  = [np.log10(q) for q in qs]
     
     qs  = [q.flatten() for q in qs]
     dct_out = {labels[i]: np.array([rs[i],qs[i]]) for i in range(len(selections))}
+    print('Saving the r/prop data')
     if save is not None:
         try:
             if '/' not in save:
@@ -771,7 +782,8 @@ def rdists_sl_from_haloids(base, szcens, L_x, npix_x,\
                      catname,\
                      galids='all', outname=None,\
                      numsl=1, npix_y=None, logquantity=True, mindist_pkpc=None,\
-                     axis='z', velspace=False, offset_los=0., stamps=False):
+                     axis='z', velspace=False, offset_los=0., stamps=False,\
+                     trackprogress=False):
     '''
     offset: [float, cMpc] added to all galaxy los positions 
             -> positive offset means looking at stuff redder/further away than
@@ -792,6 +804,8 @@ def rdists_sl_from_haloids(base, szcens, L_x, npix_x,\
         searchdir = None
         base_file = base
     # for total box projections: szcens None or empty -> just leave it
+    if trackprogress:
+        print('Getting slice fills')
     if szcens is not None:
         if len(szcens) > 0:
             szcens = getcenfills(base_file, closevals=[float(cen) for cen in szcens], searchdir=searchdir, tolerance=1e-4)
@@ -810,7 +824,11 @@ def rdists_sl_from_haloids(base, szcens, L_x, npix_x,\
     else:
         raise ValueError("axis must be 'x', y', or 'z'")
 
+    if trackprogress:
+        print('reading in halo catlogue data')
     with h5py.File(catname, 'r') as fi:
+        if trackprogress:
+            print('Succeded in opening halo catalogue hdf5 file')
         z = fi['Header/cosmopars'].attrs['z']
         R200c_cMpc = np.array(fi['R200c_pkpc']) / 1e3 * (1. + z)
         if mindist_pkpc is None:
@@ -831,7 +849,9 @@ def rdists_sl_from_haloids(base, szcens, L_x, npix_x,\
         if offset_los != 0.:
             centres_cMpc[:, Axis3] += offset_los
             centres_cMpc[:, Axis3] %= boxsize
-            
+    
+    if trackprogress:
+        print('Applying galaxyid selection')
     if isinstance(galids, str):
         if galids == 'all':
             halos = ids
@@ -845,6 +865,8 @@ def rdists_sl_from_haloids(base, szcens, L_x, npix_x,\
         R200c = R200c_cMpc[inds]
         centres = centres_cMpc[inds, :]
     
+    if trackprogress:
+        print('Setting extraction radii')
     adjustscale = rmax_r200c * R200c < mindist_cMpc
     if np.sum(adjustscale) > 0:
         rmax_r200c = np.ones(len(halos)) * rmax_r200c 
@@ -853,7 +875,8 @@ def rdists_sl_from_haloids(base, szcens, L_x, npix_x,\
         else:
             _mindist_cMpc = mindist_cMpc            
         rmax_r200c[adjustscale] = _mindist_cMpc / R200c[adjustscale]
-    
+    if trackprogress:
+        print('Calling stamp or r/prop extraction')
     if stamps:
         return stamps_sl(base, szcens, L_x, npix_x,\
                      rmin_r200c, rmax_r200c, R200c, centres,\
@@ -863,7 +886,7 @@ def rdists_sl_from_haloids(base, szcens, L_x, npix_x,\
         return rdists_sl_faster(base, szcens, L_x, npix_x,\
                      rmin_r200c, rmax_r200c, R200c, centres,\
                      numsl=numsl, npix_y=npix_y, axis=axis, logquantity=logquantity,\
-                     labels=halos, save=outname)
+                     labels=halos, save=outname, trackprogress=trackprogress)
 
 
 def rdists_sl_from_selection(base, szcens, L_x, npix_x,\
@@ -871,7 +894,8 @@ def rdists_sl_from_selection(base, szcens, L_x, npix_x,\
                      catname,\
                      selection, maxnum, outname=None,\
                      numsl=1, npix_y=None, logquantity=True, mindist_pkpc=None,\
-                     axis='z', velspace=False, offset_los=0., stamps=False):
+                     axis='z', velspace=False, offset_los=0., stamps=False,\
+                     trackprogress=False):
     '''
     stamps: get images instead of (r, value) arrays
     '''
@@ -882,9 +906,14 @@ def rdists_sl_from_selection(base, szcens, L_x, npix_x,\
     print('\tszcens:\t%s'%szcens)
     print('\tnumsl:\t%s, \taxis:\t%s, \tvelspace:\t%s, \tlogquantity:\t%s, \toffset_los:\t%s'%(numsl, axis, velspace, logquantity, offset_los))
     print('\tL_x:\t%s, \tnpix_x:\t%s, \tnpix_y:\t%s, \trmin_r200c:\t%s, \trmax_r200c:\t%s, \tmindist_pkpc:\t%s'%(L_x, npix_x, npix_y, rmin_r200c, rmax_r200c, mindist_pkpc))
+    print('')
     
+    if trackprogress:
+        print('getting galaxy ids (selecthalos)')
     galids = sh.gethaloselections(catname, selections=[selection], names=[0])
     
+    if trackprogress:
+        print('applying selection')
     if selection is not None and outname is not None:
         if '/' not in outname:
             outname = ol.pdir + outname
@@ -904,13 +933,15 @@ def rdists_sl_from_selection(base, szcens, L_x, npix_x,\
                     sel.create_dataset(name%counter, data=np.array(sl[1:]).astype(np.float))
             if 'galaxyid' not in sel.keys():
                 sel.create_dataset('galaxyid', data=galids[0])
-     
+    if trackprogress:
+        print('Calling rdists_sl_from_haloids') 
     rdists_sl_from_haloids(base, szcens, L_x, npix_x,\
                      rmin_r200c, rmax_r200c,\
                      catname,\
                      galids=galids[0], outname=outname, mindist_pkpc=mindist_pkpc,\
                      numsl=numsl, npix_y=npix_y, logquantity=logquantity,
-                     axis=axis, velspace=velspace, offset_los=offset_los, stamps=stamps)
+                     axis=axis, velspace=velspace, offset_los=offset_los,\
+                     stamps=stamps, trackprogress=trackprogress)
 
 def percentiles_from_hdf5(h5name):
     percentiles = np.array([10., 25., 50., 75., 90.])
