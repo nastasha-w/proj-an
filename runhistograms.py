@@ -3505,11 +3505,11 @@ if jobind in range(30039, 30045): # cosma; CHECK new N-EW FITS
     
     # 4 mA (~ Arcus), Athena 0.18 eV, CDDF break pos.
     fcovs_ion = {'o6':   np.array([12.5, 13.0, 13.5, 14.0, 14.3, 14.5]),\
-                 'o7':   np.array([14.5, 15.0, 15.1, 15.5, 16.0]),\
-                 'o8':   np.array([14.5, 15.0, 15.5, 15.7, 16.0]),\
+                 'o7':   np.array([15.3, 15.4, 15.5, 15.6, 15.7, 16.0]),\
+                 'o8':   np.array([15.5, 15.6, 15.7, 15.8, 15.9, 16.0]),\
                  'ne8':  np.array([12.5, 13.0, 13.5, 13.7, 14.0, 14.5]),\
-                 'ne9':  np.array([14.5, 15.0, 15.3, 15.5, 15.6]),\
-                 'fe17': np.array([13.5, 14.0, 14.5, 14.9, 15.0]),\
+                 'ne9':  np.array([15.3, 15.4, 15.5, 15.6, 15.7]),\
+                 'fe17': np.array([14.7, 14.8, 14.9, 15.0, 15.1]),\
                  }
     
     # galids selection from galaxyselector (halo masses in 0.5 dex)
