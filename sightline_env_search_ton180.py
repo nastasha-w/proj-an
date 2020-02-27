@@ -473,7 +473,7 @@ def create_sl_cat():
             
 
 def find_galenv(slcat, halocat=halocat_default,\
-                galsel='def', nngb=3, nsl=0.5, dist3d=False):
+                galsel='def', nngb=3, nsl=0.5, dist3d=False, catsel=None):
     '''
     given absorbers in slcat, halos/galaxies in halocat, and the halocat 
     selection galsel, find nearest neighbors for the absorbers
@@ -487,9 +487,16 @@ def find_galenv(slcat, halocat=halocat_default,\
             0.5 -> only in the same slice
     dist3d: use the 3D distance (assuming zero peculiar velocities and 
             absorbers at slice centers) to find nearest neighbors
+    catsel: part of the slcat to use (concatentate resulting files afterwards)
+            (index, total) tuple of integers: 
+            total is the number of parts to split into, index is which one 
+            this is
+            index runs from 0 to total - 1
     '''
     
     # load sightline data
+    if catsel is None:
+        catsel = (0, 1)
     with h5py.File(slcat, 'r') as fs:
         cosmopars = {key: val for key, val in fs['Header/cosmopars'].attrs.items()}
         ions = list(fs['Header/mapfiles'].keys())
@@ -501,10 +508,15 @@ def find_galenv(slcat, halocat=halocat_default,\
         zedges = np.append([0.], zedges)
         boxperiod = cosmopars['boxsize'] / cosmopars['h'] * cosmopars['a']
         
-        coldens = {ion: np.array(fs['coldens_{ion}'.format(ion=ion)]) for ion in ions}
-        xpos = np.array(fs['xpos_pmpc'])
-        ypos = np.array(fs['ypos_pmpc'])
-        zpos = np.array(fs['zpos_pmpc'])
+        numabs = fs['xpos_pmpc'].shape[0]
+        numperproc = (numabs - 1) // catsel[1] + 1
+        procnum = catsel[0]
+        _sel = slice(procnum * numperproc, (procnum + 1) * numperproc)
+        
+        xpos = np.array(fs['xpos_pmpc'])[_sel]
+        ypos = np.array(fs['ypos_pmpc'])[_sel]
+        zpos = np.array(fs['zpos_pmpc'])[_sel]
+        coldens = {ion: np.array(fs['coldens_{ion}'.format(ion=ion)])[_sel] for ion in ions}
         
         absdct = {'xpos_pmpc': xpos,\
                   'ypos_pmpc': ypos,\
@@ -617,7 +629,9 @@ def find_galenv(slcat, halocat=halocat_default,\
         nnfinder.fit(halopos)
         ## second loop for very large datasets:
         maxlen = int(1e7)
-        if len(abspos) <= maxlen: 
+        if len(abspos) == 0: # only arises with the test set + subset runs
+            continue
+        elif len(abspos) <= maxlen:   
             neigh_dist, neigh_ind = nnfinder.kneighbors(X=abspos,\
                                                         n_neighbors=nngb,\
                                                         return_distance=True)
@@ -654,7 +668,11 @@ def find_galenv(slcat, halocat=halocat_default,\
     ## save the data
     outfile = slcat.split('/')[-1]
     outfile = '.'.join(outfile.split('.')[:-1])
-    outfile = ddir + outfile + '_nearest-neighbor-match_nngb-{nngb}_nsl-{nsl}.hdf5'.format(nngb=nngb, nsl=nsl)
+    if catsel == (0, 1):
+        partstr = ''
+    else:
+        partstr = '_{ind}-of-{tot}'.format(ind=catsel[0], tot=catsel[1])
+    outfile = ddir + outfile + '_nearest-neighbor-match_nngb-{nngb}_nsl-{nsl}{pst}.hdf5'.format(nngb=nngb, nsl=nsl, pst=partstr)
     
     with h5py.File(outfile, 'a') as fo:
         prev = list(fo.keys())
@@ -668,8 +686,7 @@ def find_galenv(slcat, halocat=halocat_default,\
             agp = fo.create_group('absorbers')
             for key in absdct:
                 agp.create_dataset(key, data=absdct[key])
-                if key[1:] != 'pos':
-                    agp.attrs.create('info', np.string_('column density [log10 cm^-2]'))
+            agp.attrs.create('info', np.string_('column density [log10 cm^-2]'))
         else:
             prev.remove('Header')
             prev.remove('absorbers')
@@ -694,7 +711,157 @@ def find_galenv(slcat, halocat=halocat_default,\
         for key in neighpropdct:
             grp.create_dataset(key, data=neighpropdct[key])
             
-            
+def combine_galenv_subsets(examplename, matchnum=0):
+    '''
+    parses the given example name and derives the full set of names
+    then combines those into a galenv file like would be obtained without using
+    subsets
+    
+    matchnum: which to combine (int -> all the same, iterable of ints -> for 
+              each file in order)
+    
+    this might still give memory errors -> make histograms and combine those
+    '''    
+    odir = examplename.split('/')[:-1]
+    if len(odir) == 0:
+        odir = ddir
+    else:
+        odir = '/'.join(odir) + '/'
+    onm = examplename.split('/')[-1]
+    subpart = onm.split('_')[-1][:-5]
+    subparts = subpart.split('-')
+    total = int(subparts[2])
+    
+    filenames = [odir + '_'.join(onm.split('_')[:-1]) + \
+                 '_{ind}-of-{tot}.hdf5'.format(ind=ind, tot=total) \
+                 for ind in range(total)]
+    outfile = odir + '_'.join(onm.split('_')[:-1]) + '.hdf5'
+    
+    if isinstance(matchnum, int):
+        matchnum = [matchnum] * total
+        newmatchnum = False
+    with h5py.File(outfile, 'a') as fo:
+        absdct = {}
+        nndct = {}
+        first = True
+        for num, filen in zip(matchnum, filenames):
+            with h5py.File(filen, 'r') as fi:
+                cosmopars = {key: val for key, val in fi['Header/cosmopars'].attrs.items()}
+                slcat = fi['Header'].attrs['sightline_catalogue'].decode()
+                
+                agp = fi['absorbers']
+                grp = fi['match_{num}'.format(num=num)]
+                ggrp = grp['galaxy_selection']
+                
+                prev = list(fo.keys())
+                if 'Header' not in prev: # first file -> do setup
+                    hed = fo.create_group('Header')
+                    csm = hed.create_group('cosmopars')
+                    for key in cosmopars:
+                        csm.attrs.create(key, cosmopars[key])
+                    hed.attrs.create('sightline_catalogue', np.string_(slcat))
+                
+                if first:
+                    halocat = grp.attrs['halo_catalogue'].decode()
+                    nngb = grp.attrs['number_of_neighbours']
+                    nsl = grp.attrs['number_of_slices_for_match']
+                    dist3d = bool(grp.attrs['use_3D_distance'])
+                    galsel = []
+                    for key in ggrp:
+                        arn = ggrp[key].attrs['array'].decode()
+                        minv = ggrp[key].attrs['min']
+                        maxv = ggrp[key].attrs['max']
+                        galsel.append((arn, minv, maxv))
+                        
+                    for key in agp:
+                        absdct[key] = np.array(agp[key])
+                    
+                    for key in grp:
+                        if key == 'galaxy_selection':
+                            continue
+                        nndct[key] = np.array(grp[key])
+                    first = False
+                    
+                else: # not the first file: do checks
+                    _cosmopars = {key: val for key, val in fo['Header/cosmopars'].attrs.items()}
+                    if not set(_cosmopars.keys()) == set(cosmopars.keys()):
+                        raise RuntimeError('Cosmopars in the different files do not match (keys)')
+                    if not np.all([_cosmopars[key] == cosmopars[key] for key in cosmopars]):
+                        raise RuntimeError('Cosmopars in the different files do not match (values)')
+                    
+                    _slcat = fo['Header'].attrs['sightline_catalogue'].decode()
+                    if not _slcat == slcat:
+                        raise RuntimeError('Sightlines in the different files come from different catalogues')
+                    
+                    if not set(absdct.keys()) == set(agp.keys()):
+                        print(absdct)
+                        print(agp.keys())
+                        raise RuntimeError('The different files have different absorber properties stored')
+                    if not set(nndct.keys()) == set(grp.keys()) - {'galaxy_selection'}:
+                        print(grp.keys())
+                        raise RuntimeError('The different files have different neighbor properties stored')
+                        
+                    _halocat = grp.attrs['halo_catalogue'].decode()
+                    _nngb = grp.attrs['number_of_neighbours']
+                    _nsl = grp.attrs['number_of_slices_for_match']
+                    _dist3d = bool(grp.attrs['use_3D_distance'])
+                    _galsel = []
+                    for key in ggrp:
+                        arn = ggrp[key].attrs['array'].decode()
+                        minv = ggrp[key].attrs['min']
+                        maxv = ggrp[key].attrs['max']
+                        _galsel.append((arn, minv, maxv))
+                    if _halocat != halocat:
+                        raise RuntimeError('The different files have different halo catalogues')
+                    if _nngb != nngb:
+                        raise RuntimeError('The different files have different numbers of neighbours')
+                    if _nsl != nsl:
+                        raise RuntimeError('The different files have different slice search radii')
+                    if _dist3d != dist3d:
+                        raise RuntimeError('The different files have different matching dimensions')
+                    if set(galsel) != set(_galsel):
+                        raise RuntimeError('The different files have different galaxy selections')
+                    
+                    if 'Header' in prev:
+                        prev.remove('Header')
+                    if 'absorbers' in prev:
+                        prev.remove('absorbers')
+                    
+                    for key in absdct:
+                        absdct[key] = np.append(absdct[key], np.array(agp[key]), axis=0)
+                    for key in nndct:
+                        nndct[key] = np.append(nndct[key], np.array(grp[key]), axis=0)
+        # store input parameters 
+        numthis = len(prev)
+        if newmatchnum:
+            grp = fo.create_group('match_{num}'.format(num=numthis))
+        else:
+            grp = fo.create_group('match_{num}'.format(num=matchnum[0]))
+        grp.attrs.create('halo_catalogue', np.string_(halocat))
+        grp.attrs.create('number_of_neighbours', nngb)
+        grp.attrs.create('number_of_slices_for_match', nsl)
+        grp.attrs.create('use_3D_distance', dist3d)
+        ggrp = grp.create_group('galaxy_selection')
+        for ti in range(len(galsel)):
+            tup = galsel[ti]
+            sggrp = ggrp.create_group('tuple_{}'.format(ti))
+            sggrp.attrs.create('array', np.string_(tup[0]))
+            #_minv = tup[1] if tup[1] is not None else np.string_('None')
+            #_maxv = tup[2] if tup[2] is not None else np.string_('None')
+            # no None checking: never decoded
+            sggrp.attrs.create('min', minv)
+            sggrp.attrs.create('max', maxv)      
+        for key in nndct:
+            grp.create_dataset(key, data=nndct[key])
+        
+        if 'absorbers' in fo:
+            pass # no checks for now...
+        else:
+            agp = fo.create_group('absorbers')
+            for key in absdct:
+                agp.create_dataset(key, data=absdct[key])
+            agp.attrs.create('info', np.string_('column density [log10 cm^-2]'))
+                 
 def absenv_test(matchnum=0,\
                 nncat=mdir + 'slcat_test_1_nearest-neighbor-match_nngb-3_nsl-0.5.hdf5'):
     '''
@@ -954,7 +1121,7 @@ def plot_absenv_hist_v1(nncat, outname,\
         
     plt.savefig(outname, box_inches='tight')
     
-def save_absenv_hists(nncat, outname,\
+def save_absenv_hists(nncat, outname=None,\
                       matchnum=0, props=['neighbor_dist_pmpc', 'Mstar_Msun']):
     '''
     ionsel: ion column density selection -- {ion: (min, max)} dict
@@ -967,34 +1134,29 @@ def save_absenv_hists(nncat, outname,\
     if '/' not in nncat:
         nncat = '/net/quasar/data2/wijers/slcat/' + nncat
     
-    meas = {'uvp': {'o6': (o6_uv,) + (sigma_o6_uv,) * 2,\
-                },\
-           'cie': {'o6': (o6_cie,) + (sigma_o6_cie,) * 2,\
-                   'o7': (o7_cie,) + (sigma_o7_cie,) * 2,\
-                   'o8': (o8_cie,) + (sigma_o8_cie,) * 2,\
-                   },\
-           'so6': {'o7': (o7_slab_zuv,) + sigma_o7_slab_zuv,\
-                   'o8': (o8_slab_zuv,) + sigma_o8_slab_zuv,\
-                   },\
-           'so7': {'o7': (o7_slab_zx,) + sigma_o7_slab_zx,\
-                   'o8': (o8_slab_zx,) + sigma_o8_slab_zx,\
-                   } ,\
-        }
-    
+    if outname is None:
+        odir = '/'.join(nncat.split('/')[:-1]) + '/'
+        oname = 'savedhists_' + nncat.split('/')[-1]
+        outname = odir + oname
+        
     # on/off for each ion subset
     ionsel_opts = {'o6': {'uvp': (meas['uvp']['o6'][0] - meas['uvp']['o6'][1],\
                                     np.inf),\
                           },\
-                   'o7': {'cie': (meas['cie']['o7'][0] - meas['cie']['o7'][1],\
-                                  meas['cie']['o7'][0] + meas['cie']['o7'][2]),\
+                   'o7': {'cuv': (meas['co6']['o7'][0] - meas['co6']['o7'][1],\
+                                  meas['co6']['o7'][0] + meas['co6']['o7'][2]),\
+                          'cxr': (meas['co7']['o7'][0] - meas['co7']['o7'][1],\
+                                  meas['co7']['o7'][0] + meas['co7']['o7'][2]),\
                           'suv': (meas['so6']['o7'][0] - meas['so6']['o7'][1],\
                                   meas['so6']['o7'][0] + meas['so6']['o7'][2]),\
                           'sxr': (meas['so7']['o7'][0] - meas['so7']['o7'][1],\
                                   meas['so7']['o7'][0] + meas['so7']['o7'][2]),\
                           'dlm': (detlim['o7'], np.inf),\
                           },\
-                    'o8': {'cie': (meas['cie']['o8'][0] - meas['cie']['o8'][1],\
-                                   meas['cie']['o8'][0] + meas['cie']['o8'][2]),\
+                    'o8': {'cuv': (meas['co6']['o8'][0] - meas['co6']['o8'][1],\
+                                   meas['co6']['o8'][0] + meas['co6']['o8'][2]),\
+                           'cxr': (meas['co7']['o8'][0] - meas['co7']['o8'][1],\
+                                   meas['co7']['o8'][0] + meas['co7']['o8'][2]),\
                            'suv': (meas['so6']['o8'][0] - meas['so6']['o8'][1],\
                                    meas['so6']['o8'][0] + meas['so6']['o8'][2]),\
                            'sxr': (meas['so7']['o8'][0] - meas['so7']['o8'][1],\
@@ -1011,19 +1173,19 @@ def save_absenv_hists(nncat, outname,\
     ionsels.update({'o6uvp-{ion}{meas}'.format(ion=ion, meas=meas): \
                     {'o6': ionsel_opts['o6']['uvp'],\
                      ion: ionsel_opts[ion][meas]} \
-                    for ion in ['o7', 'o8'] for meas in ['cie', 'suv', 'sxr']})
+                    for ion in ['o7', 'o8'] for meas in ['cuv', 'cxr', 'suv', 'sxr']})
     ionsels.update({'{ion}{meas}'.format(ion=ion, meas=meas): \
                     {ion: ionsel_opts[ion][meas]} \
-                    for ion in ['o7', 'o8'] for meas in ['cie', 'suv', 'sxr']})
+                    for ion in ['o7', 'o8'] for meas in ['cuv', 'cxr', 'suv', 'sxr']})
     ionsels.update({'o7{meas}-o8{meas}'.format(meas=meas): \
                     {ion: ionsel_opts[ion][meas] for ion in ['o7', 'o8']} \
-                    for meas in ['cie', 'suv', 'sxr']})
+                    for meas in ['cuv', 'cxr', 'suv', 'sxr']})
     ionsels.update({'o6uvp-o7{meas}-o8{meas}'.format(meas=meas): \
                     {'o6': ionsel_opts['o6']['uvp'],\
                      'o7': ionsel_opts['o7'][meas],\
                      'o8': ionsel_opts['o8'][meas],\
                      } \
-                    for meas in ['cie', 'suv', 'sxr']})
+                    for meas in ['cuv', 'cxr', 'suv', 'sxr']})
     ions = list(ionsel_opts.keys())
     
     with h5py.File(nncat, 'r') as fn:
@@ -1142,6 +1304,195 @@ def save_absenv_hists(nncat, outname,\
                 dsh = grp.create_dataset('hist', data=hists)
                 dsh.attrs.create('info', np.string_('axis 0: neighbor number, axis 1: histogram'))
 
+def combine_absenv_hists(examplename, matchnum=0):
+    '''
+    combine the 'x-of-y' absorer subset histograms into one file
+    matchnum is assumed to be the same in all files, unless a list is provided
+    '''
+    
+    odir = examplename.split('/')[:-1]
+    if len(odir) == 0:
+        odir = ddir
+    else:
+        odir = '/'.join(odir) + '/'
+    onm = examplename.split('/')[-1]
+    subpart = onm.split('_')[-1][:-5]
+    subparts = subpart.split('-')
+    total = int(subparts[2])
+    
+    filenames = [odir + '_'.join(onm.split('_')[:-1]) + \
+                 '_{ind}-of-{tot}.hdf5'.format(ind=ind, tot=total) \
+                 for ind in range(total)]
+    outfile = odir + '_'.join(onm.split('_')[:-1]) + '.hdf5'
+    
+    if isinstance(matchnum, int):
+        matchnum = [matchnum] * total
+        newmatchnum = False
+    
+    
+    with h5py.File(outfile, 'a') as fo:
+        
+        first = True
+        hists = {}
+        edges = {}
+        ionsels = {}
+        elogs = {}
+        for matchn, filen in zip(matchnum, filenames):
+            with h5py.File(filen, 'r') as fi:
+                
+                mgrp = fi['match_{num}'.format(num=matchn)]
+                hed = fi['Header']
+                ggp = hed['galsel']
+                igp = hed['ionsel_slcat']
+                        
+                if first:
+                    cosmopars = {key: val for key, val in\
+                                 fi['Header/cosmopars'].attrs.items()}
+                    nncat = hed.attrs['nncat'].decode()
+                    halfdz = hed.attrs['halfzrad_search_cMpc']
+                    zslice = hed.attrs['slicewidth_cMpc']
+                    dist3d = bool(mgrp.attrs['use_3D_distance'])
+                    
+                    galsel = []
+                    for key in ggp:
+                        arn = ggp[key].attrs['array'].decode()
+                        minv = ggp[key].attrs['min']
+                        maxv = ggp[key].attrs['max']
+                        galsel.append((arn, minv, maxv))
+                        
+                    slcatsel = {ion: np.array(igp[ion]) for ion in igp}
+                
+                    
+                    
+                else: # not the first file: do checks
+                    _cosmopars = {key: val for key, val in\
+                                 fi['Header/cosmopars'].attrs.items()}
+                    if not set(_cosmopars.keys()) == set(cosmopars.keys()):
+                        raise RuntimeError('Cosmopars in the different files do not match (keys)')
+                    if not np.all([_cosmopars[key] == cosmopars[key] for key in cosmopars]):
+                        raise RuntimeError('Cosmopars in the different files do not match (values)')
+                     
+                    _nncat = hed.attrs['nncat'].decode()
+                    _halfdz = hed.attrs['halfzrad_search_cMpc']
+                    _zslice = hed.attrs['slicewidth_cMpc']
+                    _dist3d = bool(mgrp.attrs['use_3D_distance'])    
+                        
+                    _galsel = []
+                    for key in ggp:
+                        arn = ggp[key].attrs['array'].decode()
+                        minv = ggp[key].attrs['min']
+                        maxv = ggp[key].attrs['max']
+                        _galsel.append((arn, minv, maxv))
+                        
+                    if _nncat != nncat:
+                        # different component files -> expect different indices
+                        _fnpart = _nncat.split('/')[-1]
+                        _fnpart_tomatch = '_'.join((_fnpart.split('_'))[:-1]) + '_' + '-'.join(['index'] + _fnpart.split('_')[-1].split('-')[1:])
+                        fnpart = nncat.split('/')[-1]
+                        fnpart_tomatch = '_'.join((fnpart.split('_'))[:-1]) + '_' + '-'.join(['index'] + fnpart.split('_')[-1].split('-')[1:])
+                        if _fnpart_tomatch != fnpart_tomatch:
+                            raise RuntimeError('The different files have different neighbor catalogues')
+                    if _zslice != zslice:
+                        raise RuntimeError('The different files have different absorber slice widths')
+                    if _halfdz != halfdz:
+                        raise RuntimeError('The different files have different slice search radii')
+                    if _dist3d != dist3d:
+                        raise RuntimeError('The different files have different matching dimensions')
+                    if set(galsel) != set(_galsel):
+                        raise RuntimeError('The different files have different galaxy selections')
+                
+                for ionsel in mgrp:
+                    for prop in mgrp[ionsel]:
+                        iongrp = mgrp[ionsel][prop]['ionsel']
+                        _isel = {ion: np.array(iongrp[ion]) for ion in iongrp}
+                        if ionsel not in ionsels:
+                            ionsels[ionsel] = {}
+                        if prop not in ionsels[ionsel]:
+                            ionsels[ionsel][prop] = _isel
+                        else:
+                            if set(ionsels[ionsel][prop].keys()) != set(_isel.keys()):
+                                raise RuntimeError('Same ion selection names do not match selections (keys/ions)')
+                            if not np.all([np.all(ionsels[ionsel][prop][ion] == _isel[ion]) for ion in _isel]):
+                                raise RuntimeError('Same ion selection names do not match selections (ranges)')
+                        
+                        edge = np.array(mgrp[ionsel][prop]['edges'])
+                        hist = np.array(mgrp[ionsel][prop]['hist'])
+                        if np.sum(hist) == 0: # no contribution -> just skip (edges will be NaN, so that would give errors)
+                            continue
+                        if first:
+                            elog  = bool(mgrp[ionsel][prop]['edges'].attrs['log'])
+                            elogs[prop] = elog
+                        else:
+                            elog = elogs[prop]                                
+                            _elog  = bool(mgrp[ionsel][prop]['edges'].attrs['log'])
+                            if _elog != elog:
+                                raise RuntimeError('log/lin edge spacing is inconsistent between histogram files')
+                        
+                        if ionsel not in hists:
+                            hists[ionsel] = {}
+                            edges[ionsel] = {}
+                        if prop not in hists[ionsel]:
+                            hists[ionsel][prop] = hist
+                            edges[ionsel][prop] = [np.arange(hist.shape[0] + 1), edge]
+                        else:
+                            if hists[ionsel][prop].shape[0] != hist.shape[0]:
+                                raise RuntimeError('Different files contain histograms for different neighbor numbers')
+                            edges0 = np.arange(hists[ionsel][prop].shape[0] + 1)
+                            hists[ionsel][prop], edges[ionsel][prop] = cu.combine_hists(hists[ionsel][prop], hist,\
+                                                                       edges[ionsel][prop], [edges0, edge],\
+                                                                       rtol=1e-5, atol=1e-8, add=True)
+                
+                first = False
+                
+        # slcat info
+        if 'Header' not in fo:
+            hed = fo.create_group('Header')
+            hed.attrs.create('nncat', np.string_(nncat))
+            #hed.attrs.create('dist3d', dist3d)
+            hed.attrs.create('halfzrad_search_cMpc', halfdz)
+            hed.attrs.create('slicewidth_cMpc', zslice)
+            csm = hed.create_group('cosmopars')
+            for key in cosmopars.keys():
+                csm.attrs.create(key, cosmopars[key])
+            ggp = hed.create_group('galsel')
+            for tupn in range(len(galsel)):
+                tup = galsel[tupn]
+                sggp = ggp.create_group('tuple_{num}'.format(num=tupn))
+                sggp.attrs.create('array', np.string_(tup[0]))
+                sggp.attrs.create('min', tup[1])
+                sggp.attrs.create('max', tup[2])
+            igp = hed.create_group('ionsel_slcat')
+            for ion in slcatsel:
+                igp.create_dataset(ion, data=np.array(slcatsel[ion]))
+        
+        if newmatchnum:
+            onum = 0
+            while 'match_{num}'.format(num=onum) in fo:
+                onum += 1
+            print('Storing histograms as match num {num}'.format(num=onum))
+        else:
+            onum = matchnum[0]
+        grp = fo.create_group('match_{num}'.format(num=onum))
+        grp.attrs.create('use_3D_distance', dist3d)
+            
+        # iterate over and store selections   
+        for ionsel in hists:                         
+            for prop in hists[ionsel]:
+                mgrn = 'match_{num}/{ionsel}/{prop}'.format(num=onum, ionsel=ionsel, prop=prop)
+                if mgrn in fo: # already done and stored
+                    continue
+                    hists = np.array(hists)
+                
+                grp = fo.create_group(mgrn)
+                sgp = grp.create_group('ionsel')
+                if ionsels[ionsel][prop] is not None:
+                    for ion in ionsels[ionsel][prop]:
+                        sgp.create_dataset(ion, data=np.array(ionsels[ionsel][prop][ion]))
+                dse = grp.create_dataset('edges', data=edges[ionsel][prop][1])
+                dse.attrs.create('log', elog)
+                dsh = grp.create_dataset('hist', data=hists[ionsel][prop])
+                dsh.attrs.create('info', np.string_('axis 0: neighbor number, axis 1: histogram'))
+
 def est3ddist(galaxy, zcomp=zuv, cosmopars=None):
     '''
     galaxy: dict with 'r' (impact parameter, pMpc), 'z' (redshift) entries
@@ -1163,7 +1514,7 @@ def est3ddist(galaxy, zcomp=zuv, cosmopars=None):
     
     
 def plot_absenv_hist(toplot='dist2d', ionsel=None,\
-                     ionsel_meas='all', histfile='auto'):
+                     ionsel_meas='all', histfile='auto', cumulative=True):
     '''
     toplot:      'dist2d', 'dist3d', or 'mstar' -- what to plot
     ionsel:      which ion column selections to apply
@@ -1173,16 +1524,22 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
                             'o6', 'o7-o8', 'o6-o7-o8'
     ionsel_meas: for o7 and o8, which measurements to use/compare 
                 (list of strings); options are
-                'cie': CIE model fit
+                (old): 'cie': CIE model fit
                 'suv': slab model at the o6/UV redshift
                 'sxr': slab model at the o7/X-ray redshift
     '''
     histfiles = {'2dmatch_sameslice': (ddir + 'savedhists_sightlinecat_z-0.1_selection1_nearest-neighbor-match_nngb-5_nsl-0.5.hdf5', 1),\
                  '2dmatch_2slice': (ddir + 'savedhists_sightlinecat_z-0.1_selection1_nearest-neighbor-match_nngb-5_nsl-1.0.hdf5', 0),\
                  '3dmatch': (ddir + 'savedhists_sightlinecat_z-0.1_selection1_nearest-neighbor-match_nngb-5_nsl-3.0.hdf5', 1),\
+                 '2dmatch_sameslice_meas2': (ddir + 'savedshists_sightlinecat_z-0.1_selection2_nearest-neighbor-match_nngb-5_nsl-0.5.hdf5', 0),\
+                 '2dmatch_2slice_meas2': (ddir + 'savedshists_sightlinecat_z-0.1_selection2_nearest-neighbor-match_nngb-5_nsl-1.0.hdf5', 0),\
                  }
-    maxfracplot = 1e-4
-    mincumulplot = 0.999
+    if cumulative:
+        maxfracplot = 5e-3
+        mincumulplot = 0.995
+    else:
+        maxfracplot = 1e-4
+        mincumulplot = 0.999
     
     # axis label, name of the hdf5 groups containing the histograms
     if toplot == 'dist2d':
@@ -1206,7 +1563,8 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
     else:
         raise ValueError('{} is not a valid toplot option'.format(toplot))
     histfile = histfiles[hkey] 
-    ylabel = 'fraction of absorbers'
+    ylabel = 'cumulative fraction of absorbers' if cumulative else \
+             'fraction of absorbers'
     
     
     # names of the ion selection groups in the histogram files
@@ -1220,7 +1578,7 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
         ions = ionsel.split('-')
         ions.sort()
         if ionsel_meas == 'all':
-            ionsel_meas = ['cie', 'suv', 'sxr']
+            ionsel_meas = ['cuv', 'cxr', 'suv', 'sxr']
         ionsel_meas.sort()
         
         o6part = 'o6uvp-' if 'o6' in ions else ''
@@ -1290,17 +1648,17 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
                     else:
                         _selstr.append('{ion}: ${_min:.2f} \\endash {_max:.2f}$'.format(\
                                        ion=stion, _min=mm[0], _max=mm[1]))
-                selstr[_ionsel] = ', '.join(_selstr)
+                selstr[_ionsel] = '\n'.join(_selstr)
                 
     labels = {'neighbor_dist_pmpc': '$\\mathrm{{r}}_{{\\mathrm{{3D}}}} \\; [\\mathrm{pMpc}]$' if dist3d else\
                                     '$\\mathrm{{r}}_{{\\perp}} \\; [\\mathrm{pMpc}]$',\
               'M200c_Msun': '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}} \\; [\\mathrm{{M}}_{{\\odot}}]$',\
               'Mstar_Msun': '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\star}} \\; [\\mathrm{{M}}_{{\\odot}}]$',\
               }
-         
-    outname = mdir + 'nnhist_{prop}_{ionsel}_{histfile}.pdf'.format(\
+    cumulstr = '_cumul' if cumulative else ''
+    outname = mdir + 'nnhist_{prop}_{ionsel}_{histfile}{cstr}.pdf'.format(\
                              prop=prop, ionsel='_'.join(ionsels),\
-                             histfile=hkey)   
+                             histfile=hkey, cstr=cumulstr)   
 
     galselstrs = []
     for gsel in galsels:
@@ -1333,7 +1691,7 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
     galselstr = 'galaxy selection:\n' + '\n'.join(galselstrs) + '\n'
     
     ionselstr = '$\\log_{{10}} \\mathrm{{N}} \\; [\\mathrm{{cm}}^{{-2}}]$ selection:\n'
-    ionselstr = ionselstr + '\n'.join(['{ins} ({count}):\n {sel}'.format(\
+    ionselstr = ionselstr + '\n'.join(['({count} absorbers)\n{sel}'.format(\
                                        ins=_ionsel, sel=selstr[_ionsel],\
                                        count=np.sum(histedge[_ionsel]['hist'][0], axis=0),\
                                        )\
@@ -1367,7 +1725,8 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
     
     ax.set_xlabel(xlabel, fontsize=fontsize)
     ax.set_ylabel(ylabel, fontsize=fontsize)
-    ax.set_yscale('log')
+    if not cumulative:
+        ax.set_yscale('log')
     ax.tick_params(which='both', direction='in', right=True, top=True,\
                    labelsize=fontsize - 1.)
     ax.minorticks_on()
@@ -1393,7 +1752,11 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
         xmin = min(xmin, edges[0])
         
         for nn in range(nngb):
-            ax.step(edges[:-1], hists[nn], where='post', color=colors_nn[nn],\
+            if cumulative:
+                ax.plot(edges, np.append([0.], cumul[nn]), color=colors_nn[nn],\
+                    linestyle=ls_ionsel[_ionsel], linewidth=lw)
+            else:
+                ax.step(edges[:-1], hists[nn], where='post', color=colors_nn[nn],\
                     linestyle=ls_ionsel[_ionsel], linewidth=lw)
     
     # add measured data:
@@ -1452,7 +1815,10 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
     xmar = 0.01 * (xmax - xmin)
     ymar = 0.01 * np.log10(ymax / ymin)
     ax.set_xlim(xmin - xmar, xmax + xmar)
-    ax.set_ylim(ymin, ymax * (1. + 10**ymar))
+    if cumulative:
+        ax.set_ylim(0., 1.)
+    else:
+        ax.set_ylim(ymin, ymax * (1. + 10**ymar))
                 
     if len(ionsels) > 1:
         handles1 = [mlines.Line2D([], [], color='black',\
@@ -1469,29 +1835,54 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
                     for nn in range(nngb)]
     
     if prop == 'neighbor_dist_pmpc':
-        legendloc = 'upper right'
-        legendanchor = (1., 0.62 - 0.07 * len(ionsels))
-        legendncol = 1 #if handles1 == [] else 2
-        legendframe = True
-        
-        infov = 'top'
-        infoh = 'right'
-        infox = 0.98
-        infoy = 0.98
-        infobbox = None
+        if cumulative:
+            legendloc = 'lower right'
+            legendanchor = (1., 0.4 + 0.07 * len(ionsels))
+            legendncol = 1 #if handles1 == [] else 2
+            legendframe = True
+            
+            infov = 'bottom'
+            infoh = 'right'
+            infox = 0.98
+            infoy = 0.02
+            infobbox = None
+        else:
+            legendloc = 'upper right'
+            legendanchor = (1., 0.62 - 0.07 * len(ionsels))
+            legendncol = 1 #if handles1 == [] else 2
+            legendframe = True
+            
+            infov = 'top'
+            infoh = 'right'
+            infox = 0.98
+            infoy = 0.98
+            infobbox = None
         
     elif prop == 'Mstar_Msun':
-        legendloc = 'upper right'
-        legendanchor = (0.98, 0.98)
-        legendncol = 1 if handles1 == [] else 2
-        legendframe = True
-        
-        infov = 'bottom'
-        infoh = 'left'
-        infox = 0.02
-        infoy = 0.02
-        infobbox = dict(facecolor=(1., 1., 1., 0.5), edgecolor='gray',\
-                        boxstyle='round')
+        if cumulative:
+            legendloc = 'upper left'
+            legendanchor = (0.02, 0.98)
+            legendncol = 1 if handles1 == [] else 2
+            legendframe = True
+            
+            infov = 'bottom'
+            infoh = 'right'
+            infox = 0.98
+            infoy = 0.02
+            infobbox = dict(facecolor=(1., 1., 1., 0.5), edgecolor='gray',\
+                            boxstyle='round')
+        else:
+            legendloc = 'upper right'
+            legendanchor = (0.98, 0.98)
+            legendncol = 1 if handles1 == [] else 2
+            legendframe = True
+            
+            infov = 'bottom'
+            infoh = 'left'
+            infox = 0.02
+            infoy = 0.02
+            infobbox = dict(facecolor=(1., 1., 1., 0.5), edgecolor='gray',\
+                            boxstyle='round')
     ax.legend(handles=handles1 + handles2, fontsize=fontsize - 1.,\
               loc=legendloc, bbox_to_anchor=legendanchor, ncol=legendncol,\
               frameon=legendframe)
