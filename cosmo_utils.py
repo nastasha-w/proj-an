@@ -579,3 +579,111 @@ def getdz(redshift,L_z,cosmopars=None):
         redshift = cosmopars['z']
     dz = Hubble(redshift, cosmopars=cosmopars) / c.c * L_z * c.cm_per_mpc
     return dz
+
+
+def combine_hists(h1, h2, e1, e2, rtol=1e-5, atol=1e-8, add=True):
+    '''
+    add histograms h1, h2 with the same dimension, after aligning edges e1, e2
+    add = True -> add histograms, return sum
+    add = False -> align histograms, return padded histograms and bins
+    
+    e1, e2 are sequences of arrays, h1, h2 are arrays
+    edgetol specifies what relative/absolute (absolute if one is zero) 
+    differences between edge values are acceptable to call bin edges equal
+    
+    if edges are not equal along some axis, they must be on a common, equally 
+    spaced grid.
+    (this is meant for combining histograms run with the same float or fixed 
+    array axbins options)
+    '''
+    if len(h1.shape) != len(h2.shape):
+        raise ValueError('Can only add histograms of the same shape')
+    if not (np.all(np.array(h1.shape) == np.array([len(e) - 1 for e in e1]))\
+            and \
+            np.all(np.array(h2.shape) == np.array([len(e) - 1 for e in e2]))\
+           ):
+        raise ValueError('Histogram shape does not match edges')
+       
+    # iterate over edges, determine overlaps
+    p1 = []
+    p2 = []
+    es = []
+
+    for ei in range(len(e1)):
+        e1t = np.array(e1[ei])
+        e2t = np.array(e2[ei])
+        p1t = [None, None]
+        p2t = [None, None]
+        
+        # if the arrays happen to be equal, it's easy
+        if len(e1t) == len(e2t):
+            if np.allclose(e1t, e2t, rtol=rtol, atol=atol):
+                p1t = [0, 0]
+                p2t = [0, 0]
+                es.append(0.5 * (e1t + e2t))
+                p1.append(p1t)
+                p2.append(p2t)
+                continue
+        
+        # if not, things get messy fast. Assume equal spacing (check) 
+        s1t = np.diff(e1t)
+        s2t = np.diff(e2t)
+        if not np.allclose(s1t[0][np.newaxis], s1t):
+            raise RuntimeError('Cannot deal with unequally spaced arrays that do not match (axis %i)'%(ei))
+        if not np.allclose(s2t[0][np.newaxis], s2t):
+            raise RuntimeError('Cannot deal with unequally spaced arrays that do not match (axis %i)'%(ei))
+        if not np.isclose(np.average(s1t), np.average(s2t), atol=atol, rtol=rtol):
+            raise RuntimeError('Cannot deal with differently spaced arrays (axis %i)'%(ei)) 
+        st = 0.5 * (np.average(s1t) + np.average(s2t))
+        if st <= 0.:
+            raise RuntimeError('Cannot deal with decreasing array values (axis %i)'%(ei))
+        # check if the arrays share a zero point for their scales
+        if not np.isclose(((e1t[0] - e2t[0]) / st + 0.5) % 1 - 0.5, 0., atol=atol, rtol=rtol):
+            raise RuntimeError('Cannot deal with arrays not on a common grid (axis %i)'%(ei))
+
+        g0 = 0.5 * ((e1t[0] / st + 0.5) % 1. - 0.5 + (e2t[0] / st + 0.5) % 1. - 0.5)        
+        # calulate indices of the array endpoints on the common grid (zero point is g0)
+        e1i0 = int(np.floor((e1t[0] - g0) / st + 0.5))
+        e1i1 = int(np.floor((e1t[-1] - g0) / st + 0.5))
+        e2i0 = int(np.floor((e2t[0] - g0) / st + 0.5))
+        e2i1 = int(np.floor((e2t[-1] - g0) / st + 0.5))
+        
+        # set histogram padding based on grid indices
+        p1t = [None, None]
+        p2t = [None, None]
+        if e1i0 > e2i0:
+            p1t[0] = e1i0 - e2i0
+            p2t[0] = 0
+        else:
+            p1t[0] = 0
+            p2t[0] = e2i0 - e1i0
+        if e1i1 > e2i1:
+            p1t[1] = 0
+            p2t[1] = e1i1 - e2i1
+        else:
+            p1t[1] = e2i1 - e1i1
+            p2t[1] = 0
+        # set up new edges based on the grid, initially
+        esi0 = min(e1i0, e2i0)
+        esi1 = max(e1i1, e2i1)
+        est = np.arange(g0 + esi0 * st, g0 + (esi1 + 0.5) * st, st)
+        # overwrite with old edges (2, then 1, to give preference to the histogram 1 edges)
+        # meant to avoid accumulating round-off errors through st, g0
+        est[e2i0 - esi0: e2i1 + 1 - esi0] = e2t
+        est[e1i0 - esi0: e1i1 + 1 - esi0] = e1t
+        
+        p1.append(p1t)
+        p2.append(p2t)
+        es.append(est)
+
+    #print(p1)
+    #print(p2)
+    #print(es)
+        
+    h1 = np.pad(h1, mode='constant', constant_values=0, pad_width=p1)
+    h2 = np.pad(h2, mode='constant', constant_values=0, pad_width=p2)
+    if add:
+        hs = h1 + h2
+        return hs, es
+    else:
+        return h1, h2, es

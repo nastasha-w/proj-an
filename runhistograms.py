@@ -2690,7 +2690,7 @@ if jobind in range(20139, 20145):
         
     # select 1500 halos randomly in  0.5 dex Mstar bins (trying to do everything just gives memory errors)
     print('Getting galaxy ids')
-    galids_dct = sh.L0100N1504_27_Mstar0p5dex_1500.galids() 
+    galids_dct = sh.L0100N1504_27_Mstar0p5dex_1000.galids() 
      # set minimum distance based on virial radius of halo mass bin
     print('Getting halo radii')
     radii_mstarbins = {key: [r200cvals[galids == galid] for galid in galids_dct[key]] for key in galids_dct}
