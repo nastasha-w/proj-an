@@ -3460,7 +3460,7 @@ if jobind in range(30033, 30039): # cosma
         print('Finished %s, full sample, pkpc, fcovs\n'%rqfile)
 
 
-if jobind in range(30039, 30045): # cosma; CHECK new N-EW FITS
+if jobind in range(30139, 30145): # cosma; CHECK new N-EW FITS
     ## for each ion and stellar mass bin, a number of sets:
     # percentiles for the whole stellar mass bin
     # covering fractions for the whole stellar mass bin -> TODO: get the interesting values
