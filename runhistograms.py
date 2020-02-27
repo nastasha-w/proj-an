@@ -3478,7 +3478,7 @@ if jobind in range(30139, 30145): # cosma; CHECK new N-EW FITS
         galids = np.array(cat['galaxyid'])
         cosmopars = {key: item for key, item in cat['Header/cosmopars'].attrs.items()}
         
-    galids_dct = sh.L0100N1504_27_Mstar0p5dex.galids()
+    galids_dct = sh.L0100N1504_27_Mstar0p5dex_1000.galids()
 
     # set minimum distance based on virial radius of halo mass bin
     radii_mstarbins = {key: [r200cvals[galids == galid] for galid in galids_dct[key]] for key in galids_dct}
@@ -3514,7 +3514,7 @@ if jobind in range(30139, 30145): # cosma; CHECK new N-EW FITS
     
     # galids selection from galaxyselector (halo masses in 0.5 dex)
     selcombs_full_sample = {'logMstar_Msun_1000_%s'%key: galids_dct[key] for key in galids_dct.keys()}
-    #gkeys = galids_dct.keys() # set up beforehand to match orders in lists
+    gkeys = galids_dct.keys() # set up beforehand to match orders in lists
     #selcombs_Mhalo_core_sample = {'logMstar_Msun_1000_%s_M200c-%.1f-%.1f-sub'%(key, matchvals_Mstar_Mhalo[key][0], matchvals_Mstar_Mhalo[key][1]): \
     #                              subsamples_halocore[key] for key in galids_dct.keys()}
     selcombs_all = selcombs_full_sample.copy()
