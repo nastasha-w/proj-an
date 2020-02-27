@@ -112,9 +112,9 @@ def linterpsolve(xvals, yvals, xpoint):
     xvals, yvals: 1D arrays
     xpoint: float
     '''
-    if np.all(np.diff(xvals) > 0.):
+    if np.all(np.diff(xvals) >= 0.):
         incr = True
-    elif np.all(np.diff(xvals) < 0.):
+    elif np.all(np.diff(xvals) <= 0.):
         incr = False
     else:
         print('linterpsolve only works for monotonic functions')

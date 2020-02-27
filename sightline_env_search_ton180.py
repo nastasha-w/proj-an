@@ -21,6 +21,8 @@ import eagle_constants_and_units as c
 import cosmo_utils as cu
 import ion_line_data as ild
 
+import plot_utils as pu
+
 # put stored files here
 ddir = '/net/quasar/data2/wijers/slcat/'
 mdir = '/net/luttero/data2/jussi_ton180_data/'
@@ -1514,7 +1516,8 @@ def est3ddist(galaxy, zcomp=zuv, cosmopars=None):
     
     
 def plot_absenv_hist(toplot='dist2d', ionsel=None,\
-                     ionsel_meas='all', histfile='auto', cumulative=True):
+                     ionsel_meas='all', histfile='auto', cumulative=True,\
+                     printcumul=False):
     '''
     toplot:      'dist2d', 'dist3d', or 'mstar' -- what to plot
     ionsel:      which ion column selections to apply
@@ -1743,6 +1746,18 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
         hists /= np.sum(hists, axis=1)[:, np.newaxis]
         
         cumul = np.cumsum(hists, axis=1)
+        if printcumul:
+            levels = [0.01, 0.1, 0.5, 0.9, 0.99]
+            #print(cumul.shape)
+            cinterp = np.append([[0.]] * cumul.shape[0], cumul, axis=1)
+            #print(cinterp)
+            #print(np.diff(cinterp, axis=1) > 0)
+            for nn in range(nngb):
+                print('neighbor {nn}'.format(nn=nn))
+                for lv in levels:
+                    xsolve = pu.linterpsolve(cinterp[nn, :], edges, lv)
+                    print('perc. {p:.2f}: {x}'.format(p=lv, x=xsolve)) 
+        
         ind = np.where(np.all(cumul > mincumulplot, axis=0))[0][0]
         ind = max(ind, np.where(np.any(hists >= np.max(hists) * maxfracplot, axis=0))[0][-1])
         
