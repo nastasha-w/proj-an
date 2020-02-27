@@ -3465,7 +3465,7 @@ if jobind in range(30139, 30145): # cosma; CHECK new N-EW FITS
     # percentiles for the whole stellar mass bin
     # covering fractions for the whole stellar mass bin -> TODO: get the interesting values
     
-    ion = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'][jobind - 30039]
+    ion = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'][jobind - 30139]
     numsl = 1
     
     rmin_r200c = 0.
