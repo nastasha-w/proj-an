@@ -3500,7 +3500,7 @@ if jobind in range(30039, 30045): # cosma; CHECK new N-EW FITS
     
     yvals_perc = [1., 5., 10., 25., 50., 75., 90., 95., 99.]
 
-    rbins_pkpc = np.array([0., 5., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 120., 140., 160., 180.] + list(np.arange(200., maxrad_all, 25.)))
+    rbins_pkpc = np.array([0., 5., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 150., 200., 250.] + list(np.arange(300., maxrad_all, 100.)))
     rbins_r200c = np.arange(0., rmax_r200c + 0.01, 0.05)
     
     # 4 mA (~ Arcus), Athena 0.18 eV, CDDF break pos.
