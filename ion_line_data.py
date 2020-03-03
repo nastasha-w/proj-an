@@ -602,6 +602,9 @@ def lingrowthcurve(ew, ion):
     return (np.pi* c.electroncharge**2 / (c.electronmass * c.c**2) *1e-8)**-1 /(fosc * lambda_rest**2) * ew
   
 def lingrowthcurve_inv(Nion, ion):
+    '''
+    returns EW in A
+    '''
     if isinstance(ion, str):
         lambda_rest = linetable['lambda_angstrom'][ion]
         fosc = linetable['fosc'][ion]
@@ -612,8 +615,8 @@ def lingrowthcurve_inv(Nion, ion):
             lambda_rest = ion.lambda_angstrom
             fosc = ion.fosc
         except AttributeError:
-            lambda_rest = ion.major.lambda_angstrom
-            fosc = ion.major.fosc
+            lines = ion.speclines.keys()
+            return np.sum([lingrowthcurve_inv(Nion, ion.speclines[line]) for line in lines], axis=0)
     return Nion * (fosc * lambda_rest**2) * (np.pi* c.electroncharge**2 / (c.electronmass * c.c**2) * 1e-8)
 
 def linflatcurveofgrowth_inv(Nion, b, ion):

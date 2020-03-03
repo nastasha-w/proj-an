@@ -549,9 +549,9 @@ def combine_sample_NEW(samples=(3, 6)):
                     cdn = 'coldens'
                     
                     Ns0 = np.array(f0['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=cdn, dv=vkey, ion=ion)])
-                    EW0 = np.array(f0['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=cdn, dv=vkey, ion=ion)])
+                    EW0 = np.array(f0['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=ewn, dv=vkey, ion=ion)])
                     Ns1 = np.array(f1['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=cdn, dv=vkey, ion=ion)])
-                    EW1 = np.array(f1['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=cdn, dv=vkey, ion=ion)])
+                    EW1 = np.array(f1['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=ewn, dv=vkey, ion=ion)])
                     
                     Ns = np.append(Ns0, Ns1[keep1])
                     EW = np.append(EW0, EW1[keep1])
@@ -561,7 +561,7 @@ def combine_sample_NEW(samples=(3, 6)):
                     gdv.create_dataset('{qty}/{ion}'.format(qty=cdn, ion=ion),\
                                               data=Ns)
                     
-                attrs_ewn = {key: val for key, val in f0['{path}/{dv}/{qty}'.format(path=vwn, qty=cdn, dv=vkey)].attrs.items()}
+                attrs_ewn = {key: val for key, val in f0['{path}/{dv}/{qty}'.format(path=vwn, qty=ewn, dv=vkey)].attrs.items()}
                 attrs_cdn = {key: val for key, val in f0['{path}/{dv}/{qty}'.format(path=vwn, qty=cdn, dv=vkey)].attrs.items()}
                 for key in attrs_ewn:
                     gdv[ewn].attrs.create(key, attrs_ewn[key])
@@ -651,14 +651,14 @@ def combine_sample_NEW(samples=(3, 6)):
                         cdn = 'coldens'
                         
                         Ns = np.array(fi['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=cdn, dv=vkey, ion=ion)])[subinds]
-                        EW = np.array(fi['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=cdn, dv=vkey, ion=ion)])[subinds]
+                        EW = np.array(fi['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=ewn, dv=vkey, ion=ion)])[subinds]
                         
                         gdv.create_dataset('{qty}/{ion}'.format(qty=ewn, ion=ion),\
                                                   data=EW)                   
                         gdv.create_dataset('{qty}/{ion}'.format(qty=cdn, ion=ion),\
                                                   data=Ns)
                         
-                    attrs_ewn = {key: val for key, val in fi['{path}/{dv}/{qty}'.format(path=vwn, qty=cdn, dv=vkey)].attrs.items()}
+                    attrs_ewn = {key: val for key, val in fi['{path}/{dv}/{qty}'.format(path=vwn, qty=ewn, dv=vkey)].attrs.items()}
                     attrs_cdn = {key: val for key, val in fi['{path}/{dv}/{qty}'.format(path=vwn, qty=cdn, dv=vkey)].attrs.items()}
                     for key in attrs_ewn:
                         gdv[ewn].attrs.create(key, attrs_ewn[key])
@@ -763,7 +763,7 @@ def fitbpar_paper2():
                                   selection='sightline selection',\
                                   EWlog='fit log EW',\
                                   fitval='best-fit b [km/s]')
-    with open(outfile, 'r') as fo:
+    with open(outfile, 'w') as fo:
         fo.write(topstring)
         for ion in vwindows_ion:
             vwindows = vwindows_ion[ion]
