@@ -15,6 +15,7 @@ projects
 import numpy as np
 import h5py
 import os
+import scipy.optimize as spo
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gsp
@@ -437,6 +438,7 @@ def combine_sample_NEW(samples=(3, 6)):
     '''
     applies ion-selected subset selection, and merges total selections
     only adds new data
+    Note: the files are not checked for compatibility
     
     adapted from specwiz_proc for v window N-EW files
     '''
@@ -556,7 +558,7 @@ def combine_sample_NEW(samples=(3, 6)):
                     
                     gdv.create_dataset('{qty}/{ion}'.format(qty=ewn, ion=ion),\
                                               data=EW)                   
-                    grpf.create_dataset('{qty}/{ion}'.format(qty=cdn, ion=ion),\
+                    gdv.create_dataset('{qty}/{ion}'.format(qty=cdn, ion=ion),\
                                               data=Ns)
                     
                 attrs_ewn = {key: val for key, val in f0['{path}/{dv}/{qty}'.format(path=vwn, qty=cdn, dv=vkey)].attrs.items()}
@@ -565,7 +567,231 @@ def combine_sample_NEW(samples=(3, 6)):
                     gdv[ewn].attrs.create(key, attrs_ewn[key])
                 for key in attrs_cdn:
                     gdv[cdn].attrs.create(key, attrs_cdn[key]) 
+        
+        # ion-selected samples
+        for ion in ions:
+            iname = '{ion}_selection'.format(ion=ion)
+            if ion in ionselgrpn0:
+                ionselgrpn = ionselgrpn0[ion]
+                fn_samplesel = fn_samplesel0 
+                fi = f0
+                pix_all = pixels0
+            elif ion in ionselgrpn1:
+                ionselgrpn = ionselgrpn1[ion]
+                fn_samplesel = fn_samplesel1 
+                fi = f1
+                pix_all = pixels1
+            else:
+                print('No selection recorded for ion {ion}; skipping'.format(ion=ion))
+                continue
+            
+            with h5py.File(fn_samplesel, 'r') as fs:
+                _g = fs['Selection/{ign}'.format(ign=ionselgrpn)]
+                # simple check: not bulletproof, but should catch simple all-gas map mismatches
+                mapfile = _g.attrs['filename'].decode()
+                mapfile = mapfile.split('/')[-1]
+                mapparts = mapfile.split('_')
+                if ion not in mapparts:
+                    print('Skippping ion {ion}: map file {mapfile} seems to be wrong'.format(ion=ion, mapfile=mapfile))
+                    continue
+                pix_sub = np.array(_g['selected_pixels_thision'])
+            
+            # indices in pix_all where both coordinates match some pixel in pix_sub
+            eqgrid = np.any(np.all(pix_sub[:, np.newaxis, :] == pix_all[np.newaxis, :, :] , axis=2), axis=0)
+            subinds = np.where(eqgrid)
+            print('For ion {ion}: {num} sightlines'.format(ion=ion, num=len(subinds[0])))
+            
+            if iname in fo:
+                grpi = fo[iname]
+            else:
+                grpi = fo.create_group(iname)
+                grpi.attrs.create('selection_filename', np.string_(fn_samplesel))
+                grpi.attrs.create('selection_groupname', np.string_(ionselgrpn))
+                grpi.create_dataset('selected_specinds', data=subinds[0])
+            
+            if 'EW_tot' not in grpi:
+                for ion in ions:
+                    ewn = 'EW_tot'
+                    cdn = 'coldens_tot'
                     
+                    Ns = np.array(fi['{path}/{ion}'.format(path=cdn, ion=ion)])[subinds]
+                    EW = np.array(fi['{path}/{ion}'.format(path=ewn, ion=ion)])[subinds]
+                    
+                    grpi.create_dataset('{path}/{ion}'.format(path=ewn, ion=ion),\
+                                              data=EW)                
+                    grpi.create_dataset('{path}/{ion}'.format(path=cdn, ion=ion),\
+                                              data=Ns)                    
+                attrs_ewn = {key: val for key, val in fi[ewn].attrs.items()}
+                attrs_cdn = {key: val for key, val in fi[cdn].attrs.items()}
+                for key in attrs_ewn:
+                    grpi['EW_tot'].attrs.create(key, attrs_ewn[key])
+                for key in attrs_cdn:
+                    grpi['coldens_tot'].attrs.create(key, attrs_ewn[key])
+                    
+            vwn = 'vwindows_maxtau'
+            if vwn in fi:
+                if vwn in grpi:
+                    gvw = grpi[vwn]
+                else:
+                    gvw = grpi.create_group(vwn)
+                    _attrs = {key: val for key, val in fi[vwn].attrs.items()}
+                    for key in _attrs: # just Delta v def. info
+                        gvw.attrs.create(key, _attrs[key])
+                        
+                vkeys = set(fi[vwn].keys()) 
+                for vkey in vkeys:
+                    if vkey in gvw: # already copied
+                        continue
+                    dv = fi['{path}/{dv}'.format(path=vwn, dv=vkey)].attrs['Deltav_rf_kmps']
+                    gdv = gvw.create_group(vkey)
+                    gdv.attrs.create('Deltav_rf_kmps', dv)
+                    
+                    for ion in ions:
+                        ewn = 'EW'
+                        cdn = 'coldens'
+                        
+                        Ns = np.array(fi['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=cdn, dv=vkey, ion=ion)])[subinds]
+                        EW = np.array(fi['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=cdn, dv=vkey, ion=ion)])[subinds]
+                        
+                        gdv.create_dataset('{qty}/{ion}'.format(qty=ewn, ion=ion),\
+                                                  data=EW)                   
+                        gdv.create_dataset('{qty}/{ion}'.format(qty=cdn, ion=ion),\
+                                                  data=Ns)
+                        
+                    attrs_ewn = {key: val for key, val in fi['{path}/{dv}/{qty}'.format(path=vwn, qty=cdn, dv=vkey)].attrs.items()}
+                    attrs_cdn = {key: val for key, val in fi['{path}/{dv}/{qty}'.format(path=vwn, qty=cdn, dv=vkey)].attrs.items()}
+                    for key in attrs_ewn:
+                        gdv[ewn].attrs.create(key, attrs_ewn[key])
+                    for key in attrs_cdn:
+                        gdv[cdn].attrs.create(key, attrs_cdn[key]) 
+            
+def fitbpar(datafile, vwindow=None,\
+            ions=('o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'),\
+            fitlogEW=True,\
+            samplegroup=None):
+    '''
+    fit b parameters to the merged and selected N-EW file sets
+    '''
+    ionls = {'o8': ild.o8doublet,\
+             'o7': ild.o7major,\
+             'o6': ild.o6major,\
+             'ne8': ild.ne8major,\
+             'ne9': ild.ne9major,\
+             'fe17': ild.fe17major,\
+             }
+    bstart = 100. * 1e5 # cm/s
+    
+    with h5py.File(datafile, 'r') as df:
+        if samplegroup is None:
+            samplegroup = 'full_sample/'
+        elif samplegroup[-1] != '/':
+            samplegroup = samplegroup + '/'
+            
+        if vwindow is None:
+            epath = 'EW_tot/'
+            cpath = 'coldens_tot/'
+        else:
+            spath = 'vwindows_maxtau/Deltav_{dv:.3f}/'.format(dv=vwindow)
+            epath = spath + 'EW/'
+            cpath = spath + 'coldens/'
+        epath = samplegroup + epath
+        cpath = samplegroup + cpath
+        
+        coldens = {}
+        EWs = {}
+        for ion in ions:
+            coldens[ion] = np.array(df[cpath + ion])
+            EWs[ion] = np.array(df[epath + ion])
+
+    res = {}    
+    for ion in ions:
+        print('fitting ion {ion}'.format(ion=ion))
+        N = 10**coldens[ion]
+        if fitlogEW:
+            EW = np.log10(EWs[ion])
+        else:
+            EW = EWs[ion]
+        
+        _ion = ionls[ion]
+        def lossfunc(b):
+            print('called loss function')
+            EWres = ild.linflatcurveofgrowth_inv(N, b, _ion)
+            if fitlogEW:
+                EWres = np.log10(EWres)
+            return np.sum((EWres - EW)**2)
+        
+        optres = spo.minimize(lossfunc, x0=bstart, method='COBYLA', tol=1e4,\
+                              options={'rhobeg': 2e6})
+         
+        if optres.success:
+            bfit = optres.x * 1e-5 # to km/s
+            res[ion] = bfit
+            print('Best fit for {ion}: {fit}'.format(ion=ion, fit=bfit))
+        else:
+            print('b parameter fitting failed:')
+            print(optres.message)
+            return optres
+    return res
+
+def fitbpar_paper2():
+    '''
+    call fitpar for some interesting paper 2 values 
+    
+    (the overhead from file read-in is minimal compared to the fitting itself)
+    '''
+    datafile = '/net/luttero/data2/specwizard_data/sample3-6_coldens_EW_vwindows_subsamples.hdf5'
+    outfile = '/net/luttero/data2/paper2/bparfit_data.txt'
+    
+    # to test the general dependence on window size
+    vwindows_all = [400., 500., 1000., 1500., 2000., None]
+    vwindows_ion = {'o6': 600.,\
+                    'ne8': 600.,\
+                    'o7': 1200.,\
+                    'o8': 1000.,\
+                    'fe17': 800.,\
+                    'ne9': 700,\
+                    }
+    vwindows_ion = {ion: [vwindows_ion[ion]] +  vwindows_all \
+                    if vwindows_ion[ion] not in vwindows_all else\
+                    vwindows_all \
+                    for ion in vwindows_ion}
+    samplegroups_ion = {ion: ['full_sample', '{ion}_selection'.format(ion=ion)]\
+                              for ion in vwindows_ion}
+    
+    fillstring = '{ion}\t{dv}\t{selection}\t{EWlog}\t{fitval}\n'
+    topstring = fillstring.format(ion='ion', dv='Delta v [full, rest-frame, km/s]',\
+                                  selection='sightline selection',\
+                                  EWlog='fit log EW',\
+                                  fitval='best-fit b [km/s]')
+    with open(outfile, 'r') as fo:
+        fo.write(topstring)
+        for ion in vwindows_ion:
+            vwindows = vwindows_ion[ion]
+            samplegroups = samplegroups_ion[ion]
+            for vwindow in vwindows:
+                for samplegroup in samplegroups:
+            
+                    res_log = fitbpar(datafile, vwindow=vwindow,\
+                          ions=[ion],\
+                          fitlogEW=True,\
+                          samplegroup=samplegroup)
+                    res_lin = fitbpar(datafile, vwindow=vwindow,\
+                          ions=[ion],\
+                          fitlogEW=False,\
+                          samplegroup=samplegroup)
+                    
+                    if vwindow is None:
+                        vwindow = np.inf
+                    fo.write(fillstring.format(ion=ion, dv=vwindow,\
+                                               selection=samplegroup,\
+                                               EWlog=True,\
+                                               fitval=res_log[ion]))
+                    fo.write(fillstring.format(ion=ion, dv=vwindow,\
+                                               selection=samplegroup,\
+                                               EWlog=False,\
+                                               fitval=res_lin[ion])) 
+
+
 def plot_NEW(specset, ions, vwindows=None, savename=None):
 
     alpha = 0.2    

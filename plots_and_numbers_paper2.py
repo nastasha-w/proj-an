@@ -1655,8 +1655,54 @@ def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus'):
     
     plt.savefig(outname, format='pdf', box_inches='tight')
     
+################################ Misc #########################################
+
+# column density equivalent width, coldens, N, EW, N-EW, cog, curve of growth
+# b, bpar
+def plot_NEW(fontsize=fontsize):    
+    outname = mdir + 'coldens_EW_sample3-6_ionselsamples_L0100N1504_27_T4EOS.pdf'
+    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
+
+    bfits = {'o6': 41.,\
+             'o7': 98.,\
+             'o8': 161.,\
+             'ne8': 41.,\
+             'ne9': 92.,\
+             'fe17': 101.,\
+             }
     
+    vwindows_ion = {'o6': 600.,\
+                    'ne8': 600.,\
+                    'o7': 1200.,\
+                    'o8': 1000.,\
+                    'fe17': 800.,\
+                    'ne9': 700,\
+                    }
+    samplegroups_ion = {ion: '{ion}_selection'.format(ion=ion) \
+                              for ion in vwindows_ion}
     
+    datafile = '/net/luttero/data2/specwizard_data/sample3-6_coldens_EW_vwindows_subsamples.hdf5'
+    with h5py.File(datafile, 'r') as df:
+        coldens = {}
+        EWs = {}
+        for ion in ions:
+            samplegroup = samplegroups_ion[ion] + '/'
+            vwindow = vwindows_ion[ion]
+            
+            if vwindow is None:
+                epath = 'EW_tot/'
+                cpath = 'coldens_tot/'
+            else:
+                spath = 'vwindows_maxtau/Deltav_{dv:.3f}/'.format(dv=vwindow)
+                epath = spath + 'EW/'
+                cpath = spath + 'coldens/'
+            epath = samplegroup + epath
+            cpath = samplegroup + cpath
+            
+            coldens[ion] = np.array(df[cpath + ion])
+            EWs[ion] = np.array(df[epath + ion])
+        
+        
 ############################# get numbers #####################################
     
 def get_binmedians(binarr='M200c_Msun', binedges=mass_edges_standard,\
