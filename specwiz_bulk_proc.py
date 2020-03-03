@@ -435,45 +435,41 @@ class SpecSet:
 
 def combine_sample_NEW(samples=(3, 6)):
     '''
-    assumes selection for different ions are in different files, 
-    just copies over those subsets
+    applies ion-selected subset selection, and merges total selections
+    only adds new data
     
-    adapt for v window N-EW files
+    adapted from specwiz_proc for v window N-EW files
     '''
     ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'] # only o8 doublet is expected to be unresolved -> rest is fine to use single lines
     if samples[0] == 3:
-        filen0 = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_subsamples.hdf5'
+        filen0 = '/net/luttero/data2/specwizard_data/sample3_coldens_EW_vwindows.hdf5'
+        fn_samplesel0 = '/net/luttero/data2/specwizard_data/los_sample3_o6-o7-o8_L0100N1504_data.hdf5'
         ionselgrpn0 = {'o7': 'file0',\
                        'o8': 'file1',\
                        'o6': 'file2',\
                        }
     if samples[1] == 6:
-        filen1 = '/net/luttero/data2/specwizard_data/sample6_coldens_EW_subsamples.hdf5'
+        filen1 = '/net/luttero/data2/specwizard_data/sample6_coldens_EW_vwindows.hdf5'
+        fn_samplesel1 = '/net/luttero/data2/specwizard_data/sample6/los_sample6_ne8-ne9-fe17_L0100N1504_data.hdf5'
         ionselgrpn1 = {'ne8': 'file0',\
                        'ne9': 'file1',\
                        'fe17': 'file2',\
                        }
     if samples == (3, 6):
-        outfilen = '/net/luttero/data2/specwizard_data/sample3-6_coldens_EW_subsamples.hdf5'
+        outfilen = '/net/luttero/data2/specwizard_data/sample3-6_coldens_EW_vwindows_subsamples.hdf5'
     
     with h5py.File(filen0, 'r') as f0,\
          h5py.File(filen1, 'r') as f1,\
-         h5py.File(outfilen, 'w') as fo:
-        # just copy the datasets for subgroup selections
-        for ion in ionselgrpn0:
-            grpn = '%s_selection'%ion
-            f0.copy(grpn, fo, name=grpn)
-        f0.copy('Header', fo, name='Header_sample%s'%samples[0])
-        for ion in ionselgrpn1:
-            grpn = '%s_selection'%ion
-            f1.copy(grpn, fo, name=grpn)
-        f1.copy('Header', fo, name='Header_sample%s'%samples[1])
+         h5py.File(outfilen, 'a') as fo:
+
+        # Header info: copy per file
+        if 'Header_sample%s'%samples[0] not in fo:
+            f0.copy('Header', fo, name='Header_sample%s'%samples[0])
+        if 'Header_sample%s'%samples[1] not in fo:
+            f1.copy('Header', fo, name='Header_sample%s'%samples[1])
         
         # combine the full samples: compare integer pixel values -> can just check equality
-        grpn_full = 'full_sample'
-        
-        fn_samplesel0 = f0['Header'].attrs['filename_sample_selection']
-        fn_samplesel1 = f1['Header'].attrs['filename_sample_selection']
+        grpn_full = 'full_sample'        
         with h5py.File(fn_samplesel0, 'r') as ft:
             pixels0 = np.array(ft['Selection/selected_pixels_allions'])
         with h5py.File(fn_samplesel1, 'r') as ft:
@@ -489,25 +485,87 @@ def combine_sample_NEW(samples=(3, 6)):
         specnums_file0 = np.append(specnums_0in0part, specnums_0in1part[keep1])
         specnums_file1 = np.append(specnums_1in0part, specnums_1in1part)
         
-        grp = fo.create_group(grpn_full)
-        grp.create_dataset('specnums_sample%i'%samples[0], data=specnums_file0)
-        grp['specnums_sample%i'%samples[0]].attrs.create('info', np.string_('specnum -1 means the sightline is not present in the file'))
-        grp.create_dataset('specnums_sample%i'%samples[1], data=specnums_file1)
-        grp['specnums_sample%i'%samples[1]].attrs.create('info', np.string_('specnum -1 means the sightline is not present in the file'))
+        if grpn_full in fo:
+            grpf = fo[grpn_full]
+        else:
+            grpf = fo.create_group(grpn_full)
+            grpf.create_dataset('specinds_sample%i'%samples[0], data=specnums_file0)
+            grpf['specinds_sample%i'%samples[0]].attrs.create('info', np.string_('specind -1 means the sightline is not present in the file'))
+            grpf.create_dataset('specinds_sample%i'%samples[1], data=specnums_file1)
+            grpf['specinds_sample%i'%samples[1]].attrs.create('info', np.string_('specind -1 means the sightline is not present in the file'))
         
-        for ion in ions:
-            Ns0 = np.array(f0['%s/%s_data/logN_cmm2'%(grpn_full, ion)])
-            EW0 = np.array(f0['%s/%s_data/EWrest_A'%(grpn_full, ion)])
-            Ns1 = np.array(f1['%s/%s_data/logN_cmm2'%(grpn_full, ion)])
-            EW1 = np.array(f1['%s/%s_data/EWrest_A'%(grpn_full, ion)])
+        if 'EW_tot' not in grpf:
+            for ion in ions:
+                ewn = 'EW_tot'
+                cdn = 'coldens_tot'
+                
+                Ns0 = np.array(f0['{path}/{ion}'.format(path=cdn, ion=ion)])
+                EW0 = np.array(f0['{path}/{ion}'.format(path=ewn, ion=ion)])
+                Ns1 = np.array(f1['{path}/{ion}'.format(path=cdn, ion=ion)])
+                EW1 = np.array(f1['{path}/{ion}'.format(path=ewn, ion=ion)])
+                
+                Ns = np.append(Ns0, Ns1[keep1])
+                EW = np.append(EW0, EW1[keep1])
+                
+                grpf.create_dataset('{path}/{ion}'.format(path=ewn, ion=ion),\
+                                          data=EW)                
+                grpf.create_dataset('{path}/{ion}'.format(path=cdn, ion=ion),\
+                                          data=Ns)                    
+            attrs_ewn = {key: val for key, val in f0[ewn].attrs.items()}
+            attrs_cdn = {key: val for key, val in f0[cdn].attrs.items()}
+            for key in attrs_ewn:
+                grpf['EW_tot'].attrs.create(key, attrs_ewn[key])
+            for key in attrs_cdn:
+                grpf['coldens_tot'].attrs.create(key, attrs_ewn[key])
+                
+        vwn = 'vwindows_maxtau'
+        if vwn in f0 and vwn in f1:
+            if vwn in grpf:
+                gvw = grpf[vwn]
+            else:
+                gvw = grpf.create_group(vwn)
+                _attrs = {key: val for key, val in f0[vwn].attrs.items()}
+                for key in _attrs: # just Delta v def. info
+                    gvw.attrs.create(key, _attrs[key])
+                    
+            vkeys0 = set(f0[vwn].keys())
+            vkeys1 = set(f1[vwn].keys())
+            vkeys = vkeys0 & vkeys1 # only common elements
             
-            Ns = np.append(Ns0, Ns1[keep1])
-            EW = np.append(EW0, EW1[keep1])
-            
-            sgrp = grp.create_group('%s_data'%ion)
-            sgrp.create_dataset('logN_cmm2', data=Ns)
-            sgrp.create_dataset('EWrest_A', data=EW)
-
+            for vkey in vkeys:
+                if vkey in gvw: # already copied
+                    continue
+                dv0 = f0['{path}/{dv}'.format(path=vwn, dv=vkey)].attrs['Deltav_rf_kmps']
+                dv1 = f1['{path}/{dv}'.format(path=vwn, dv=vkey)].attrs['Deltav_rf_kmps']
+                if not np.isclose(dv0, dv1): # Delta v's don't quite match
+                    continue
+                gdv = gvw.create_group(vkey)
+                gdv.attrs.create('Deltav_rf_kmps', 0.5 * (dv0 + dv1))
+                
+                for ion in ions:
+                    ewn = 'EW'
+                    cdn = 'coldens'
+                    
+                    Ns0 = np.array(f0['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=cdn, dv=vkey, ion=ion)])
+                    EW0 = np.array(f0['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=cdn, dv=vkey, ion=ion)])
+                    Ns1 = np.array(f1['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=cdn, dv=vkey, ion=ion)])
+                    EW1 = np.array(f1['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=cdn, dv=vkey, ion=ion)])
+                    
+                    Ns = np.append(Ns0, Ns1[keep1])
+                    EW = np.append(EW0, EW1[keep1])
+                    
+                    gdv.create_dataset('{qty}/{ion}'.format(qty=ewn, ion=ion),\
+                                              data=EW)                   
+                    grpf.create_dataset('{qty}/{ion}'.format(qty=cdn, ion=ion),\
+                                              data=Ns)
+                    
+                attrs_ewn = {key: val for key, val in f0['{path}/{dv}/{qty}'.format(path=vwn, qty=cdn, dv=vkey)].attrs.items()}
+                attrs_cdn = {key: val for key, val in f0['{path}/{dv}/{qty}'.format(path=vwn, qty=cdn, dv=vkey)].attrs.items()}
+                for key in attrs_ewn:
+                    gdv[ewn].attrs.create(key, attrs_ewn[key])
+                for key in attrs_cdn:
+                    gdv[cdn].attrs.create(key, attrs_cdn[key]) 
+                    
 def plot_NEW(specset, ions, vwindows=None, savename=None):
 
     alpha = 0.2    
