@@ -700,9 +700,14 @@ def fitbpar(datafile, vwindow=None,\
         coldens = {}
         EWs = {}
         for ion in ions:
+            #try:
             coldens[ion] = np.array(df[cpath + ion])
             EWs[ion] = np.array(df[epath + ion])
-
+            #except KeyError as err:
+            #    print('For vwindow {vw}, ion {ion}, samplegroup {sg}'.format(vw=vwindow, ion=ion, sg=samplegroup))
+            #    print('Tried paths {pc}, {pe}'.format(pc=cpath + ion,\
+            #          pe=epath + ion))
+            #    raise err
     res = {}    
     for ion in ions:
         print('fitting ion {ion}'.format(ion=ion))
@@ -714,8 +719,7 @@ def fitbpar(datafile, vwindow=None,\
         
         _ion = ionls[ion]
         def lossfunc(b):
-            print('called loss function')
-            EWres = ild.linflatcurveofgrowth_inv(N, b, _ion)
+            EWres = ild.linflatcurveofgrowth_inv_faster(N, b, _ion)
             if fitlogEW:
                 EWres = np.log10(EWres)
             return np.sum((EWres - EW)**2)
@@ -781,12 +785,14 @@ def fitbpar_paper2():
                           samplegroup=samplegroup)
                     
                     if vwindow is None:
-                        vwindow = np.inf
-                    fo.write(fillstring.format(ion=ion, dv=vwindow,\
+                        fvwindow = np.inf
+                    else:
+                        fvwindow = vwindow
+                    fo.write(fillstring.format(ion=ion, dv=fvwindow,\
                                                selection=samplegroup,\
                                                EWlog=True,\
                                                fitval=res_log[ion]))
-                    fo.write(fillstring.format(ion=ion, dv=vwindow,\
+                    fo.write(fillstring.format(ion=ion, dv=fvwindow,\
                                                selection=samplegroup,\
                                                EWlog=False,\
                                                fitval=res_lin[ion])) 

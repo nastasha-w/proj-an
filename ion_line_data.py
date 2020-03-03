@@ -701,7 +701,9 @@ def linflatcurveofgrowth_inv_faster(Nion, b, ion):
     
     if ion == 'o8_assingle': # backwards compatibiltiy
         ion = o8combo
-            
+    # tweak for precision/speed tradeoff
+    xsample = np.arange(-12., 12.005, 0.1)
+    
     if hasattr(ion, 'major') or (ion in elements_ion.keys()): # ion or IonLines, not line
         if hasattr(ion, 'major'):
             #fosc_m   = ion.major.fosc
@@ -727,7 +729,6 @@ def linflatcurveofgrowth_inv_faster(Nion, b, ion):
         prefactor = wavelen_m / c.c * b # just use the average here
         # absorption profiles are multiplied to get total absorption
         # x is the scale over which the exponential changes:
-        xsample = np.arange(-30., 30.005, 0.01)
         # axis 0: Nion, integration, axis 1: lines, axis 2: integration x
         integrand = 1 - np.exp(\
                           np.sum(-tau0s[:, :, np.newaxis] *\
@@ -750,7 +751,6 @@ def linflatcurveofgrowth_inv_faster(Nion, b, ion):
         prefactor = wavelen / c.c * b
         #def integrand(x):
         #    1- np.exp(-tau0*np.exp(-1*x**2))
-        xsample = np.arange(-30., 30.005, 0.01)
         integrand = 1 - np.exp(\
                               -tau0[:, np.newaxis] *\
                                  np.exp(-1 * (xsample[np.newaxis, :])**2)
@@ -787,3 +787,29 @@ def nion_ppv_from_tauv(tau,ion):
     # tau at that pixel -> total Nion represented there 
     # (really Nion*normailised spectrum, but we've got the full tau spectra, so no need to factor that out)
 
+
+def testbparfit_faster():
+    bvals = np.arange(15., 300., 5.) * 1e5 
+    csample = 10**np.arange(12., 17., 0.1) 
+    testdoub = o8doublet
+    testsing = o7major
+    
+    allgood = True
+    print('Testing multiplet {}'.format(testdoub))
+    for bval in bvals:
+         fvals = linflatcurveofgrowth_inv_faster(csample, bval, testdoub)
+         ovals = linflatcurveofgrowth_inv(csample, bval, testdoub)
+         if not np.allclose(fvals, ovals):
+             print('Issue for b={b}'.format(b=bval))
+             allgood = False
+             
+    print('Testing singlet {}'.format(testsing))
+    for bval in bvals:
+         fvals = linflatcurveofgrowth_inv_faster(csample, bval, testsing)
+         ovals = linflatcurveofgrowth_inv(csample, bval, testsing)
+         if not np.allclose(fvals, ovals):
+             print('Issue for b={b}'.format(b=bval))
+             allgood = False
+    
+    if allgood:
+        print('Test succeeded!')
