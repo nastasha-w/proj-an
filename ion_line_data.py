@@ -682,6 +682,84 @@ def linflatcurveofgrowth_inv(Nion, b, ion):
         print('Warning: check integration errors in linflatcurveofgrowth_inv')
     return prefactor * integral[:, 0]
 
+def linflatcurveofgrowth_inv_faster(Nion, b, ion):
+    '''
+    equations from zuserver2.star.ucl.ac.uk/~idh/PHAS2112/Lectures/Current/Part4.pdf
+    b in cm/s
+    Nion in cm^-2
+    out: EW in Angstrom
+    
+    more approx integration, should be fast enough for fitting
+    '''
+    # central optical depth; 1.13e20,c and pi come from comparison to the linear equation
+    #print('lambda_rest[ion]: %f'%lambda_rest[ion])
+    #print('fosc[ion]: %f'%fosc[ion])
+    #print('Nion: ' + str(Nion))
+    #print('b: ' + str(b))
+    if not hasattr(Nion, '__len__'):
+        Nion = np.array([Nion])
+    
+    if ion == 'o8_assingle': # backwards compatibiltiy
+        ion = o8combo
+            
+    if hasattr(ion, 'major') or (ion in elements_ion.keys()): # ion or IonLines, not line
+        if hasattr(ion, 'major'):
+            #fosc_m   = ion.major.fosc
+            wavelen_m = ion.major.lambda_angstrom
+            lines = ion.speclines.keys()
+            fosc    = {line: ion.speclines[line].fosc for line in lines}
+            wavelen = {line: ion.speclines[line].lambda_angstrom for line in lines}
+        else:
+            ionlines = linetable.loc[linetable['ion'] == ion]
+            lines    = ionlines.index 
+            mline     = ionlines.loc[ionlines['major']]
+            #fosc_m    = mline['fosc'][0]
+            wavelen_m = mline['lambda_angstrom'][0]
+            dct  = ionlines.to_dict()
+            fosc = dct['fosc']
+            wavelen = dct['lambda_angstrom']
+        
+        # axis 0: input Nion, axis 1: multiplet component
+        tau0s = np.array([(np.pi**0.5 * c.electroncharge**2 / (c.electronmass * c.c) * 1e-8) * wavelen[line] * fosc[line] * Nion / b for line in lines]).T
+        xoffsets = (c.c / b) * (np.array([wavelen[line] for line in lines]) - wavelen_m) / wavelen_m # it shouldn't matter relative to which the offset is taken
+        #print(tau0s)
+        #print(xoffsets)     
+        prefactor = wavelen_m / c.c * b # just use the average here
+        # absorption profiles are multiplied to get total absorption
+        # x is the scale over which the exponential changes:
+        xsample = np.arange(-30., 30.005, 0.01)
+        # axis 0: Nion, integration, axis 1: lines, axis 2: integration x
+        integrand = 1 - np.exp(\
+                          np.sum(-tau0s[:, :, np.newaxis] *\
+                                 np.exp(-1 * (xsample[np.newaxis, np.newaxis, :] \
+                                              - xoffsets[np.newaxis, :, np.newaxis])**2),\
+                                 axis=1)\
+                               )
+        integral = si.simps(integrand, x=xsample, axis=1)
+
+    else:
+        if hasattr(ion, 'fosc'):
+            fosc  = ion.fosc
+            wavelen = ion.lambda_angstrom
+        else:
+            line     = linetable.loc[ion]
+            fosc     = line['fosc']
+            wavelen  = line['lambda_angstrom']
+            
+        tau0 = (np.pi**0.5* c.electroncharge**2 / (c.electronmass * c.c) *1e-8) * wavelen * fosc * Nion / b
+        prefactor = wavelen / c.c * b
+        #def integrand(x):
+        #    1- np.exp(-tau0*np.exp(-1*x**2))
+        xsample = np.arange(-30., 30.005, 0.01)
+        integrand = 1 - np.exp(\
+                              -tau0[:, np.newaxis] *\
+                                 np.exp(-1 * (xsample[np.newaxis, :])**2)
+                               )
+        integral = si.simps(integrand, x=xsample, axis=1)
+
+    return prefactor * integral[:]
+
+
 def nion_ppv_from_tauv(tau,ion):
     '''
     Same reference as linflatcurveofgrowth; tau here is tau_v (result of specwizard projection), not tau_nu or tau_lambda
