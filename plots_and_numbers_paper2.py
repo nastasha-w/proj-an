@@ -1703,7 +1703,6 @@ def plot_NEW(fontsize=fontsize):
              'ne9': 92.,\
              'fe17': 101.,\
              }
-    bvals_indic = [10., 20., 50., 100., 200.]
     vwindows_ion = {'o6': 600.,\
                     'ne8': 600.,\
                     'o7': 1200.,\
@@ -1735,6 +1734,7 @@ def plot_NEW(fontsize=fontsize):
             coldens[ion] = np.array(df[cpath + ion])
             EWs[ion] = np.array(df[epath + ion])
     
+    bvals_indic = [10., 20., 50., 100., 200.]
     percentiles = [2., 10., 50., 90., 98.]
     logNspacing = 0.1
     linemin = 50
@@ -1747,7 +1747,7 @@ def plot_NEW(fontsize=fontsize):
     size_data = 3.
     linewidth = 2.
     path_effects = [mppe.Stroke(linewidth=linewidth, foreground="black"), mppe.Stroke(linewidth=linewidth - 0.5)]
-    color_data = 'gray'
+    color_data = ['gray', 'dimgray']
     color_bbkg = 'C5'
     color_lin  = 'forestgreen'
     color_cie  = 'orange'
@@ -1760,7 +1760,7 @@ def plot_NEW(fontsize=fontsize):
     ftllabel = 'best-fit $b$'
     cielabel = '$b(\\mathrm{{T}}_{{\\max, \\mathrm{{CIE}}}})$'
     linlabel = 'lin. COG'
-    bkglabel = 'var. $b$' #'$b \\; [\\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}]$'    
+    bkglabel = 'var. $b \\; [\\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}]$'    
     
     nions = len(ions)
     
@@ -1833,13 +1833,13 @@ def plot_NEW(fontsize=fontsize):
             pmin = pvals[i][pinds]
             pmax = pvals[len(pvals) - 1 - i][pinds]
             ax.fill_between(Nbinc[pinds], pmin, pmax,\
-                            color=color_data, alpha=alpha)
+                            color=color_data[i], alpha=alpha)
         if plotmed:
             pmed = pvals[nrange]
             ax.plot(Nbinc, pmed, linestyle=ls_data,\
-                    linewidth=linewidth, color=color_data,\
+                    linewidth=linewidth, color=color_data[0],\
                     path_effects=path_effects)
-        ax.scatter(outliers[0], outliers[1], c=color_data, alpha=alpha,\
+        ax.scatter(outliers[0], outliers[1], c=color_data[0], alpha=alpha,\
                    s=size_data)
         
         linvals = ild.lingrowthcurve_inv(10**Nbinc, uselines[ion])
@@ -1847,31 +1847,31 @@ def plot_NEW(fontsize=fontsize):
         ax.plot(Nbinc, linvals, linestyle=ls_lin, color=color_lin,\
                 linewidth=linewidth, label=linlabel)
         
-        cievals = ild.linflatcurveofgrowth_inv(10**Nbinc,\
+        cievals = ild.linflatcurveofgrowth_inv_faster(10**Nbinc,\
                                                bvals_CIE[ion] * 1e5,\
                                                uselines[ion])
         cievals = np.log10(cievals) + 3
         ax.plot(Nbinc, cievals, linestyle=ls_cie, color=color_cie,\
-                linewidth=linewidth, label=cielabel)
+                linewidth=linewidth, label=cielabel, path_effects=path_effects)
         
-        fitvals = ild.linflatcurveofgrowth_inv(10**Nbinc,\
+        fitvals = ild.linflatcurveofgrowth_inv_faster(10**Nbinc,\
                                                bfits[ion] * 1e5,\
                                                uselines[ion])
         fitvals = np.log10(fitvals) + 3
         ax.plot(Nbinc, fitvals, linestyle=ls_fit, color=color_fit,\
-                linewidth=linewidth, label=ftllabel)
+                linewidth=linewidth, label=ftllabel, path_effects=path_effects)
         
         label = True
-        #xlim = ax.get_xlim()
-        #ylim = ax.get_ylim()
-        #xr = xlim[1] - xlim[0]
-        #yr = ylim[1] - ylim[0]
+        xlim = ax.get_xlim()
+        ylim = ax.get_ylim()
+        xr = xlim[1] - xlim[0]
+        yr = ylim[1] - ylim[0]
         for bval in bvals_indic:
             if label:
                 _label = bkglabel
             else:
                 _label = None
-            _vals = ild.linflatcurveofgrowth_inv(10**Nbinc,\
+            _vals = ild.linflatcurveofgrowth_inv_faster(10**Nbinc,\
                                                bval * 1e5,\
                                                uselines[ion])
             _vals = np.log10(_vals) + 3
@@ -1879,10 +1879,17 @@ def plot_NEW(fontsize=fontsize):
                 linewidth=linewidth, label=_label, zorder=-1)
             label=False
             
-            ## plots are already quit usy, so leave out b labels
-            #if _vals[-1] < ylim[1]:
-            #    ax.text(xlim[1], _vals[-1] - 0.02 * yr, '{:.0f}'.format(bval),\
-            #            horizontalalignment='right', verticalalignment='top')
+            ## plots are already quit busy, so leave out b labels in the 
+            ## cramped top region
+            if _vals[-1] < ylim[1]:
+                rot = np.tan((_vals[-2] - _vals[-5]) / (Nbinc[-2] - Nbinc[-5])\
+                             * xr / yr)
+                rot *= 180. / np.pi # rad -> deg
+                ax.text(xlim[1] - 0.015 * xr, _vals[-1] - 0.02 * yr,\
+                        '{:.0f}'.format(bval),\
+                        horizontalalignment='right', verticalalignment='top',\
+                        color=color_bbkg, fontsize=fontsize - 2, zorder=-1,\
+                        rotation=rot)
             #else:
             #    indcross = np.where(_vals < ylim[1])[0][-1]
             #    xpos = Nbinc[indcross]
