@@ -1696,12 +1696,12 @@ def plot_NEW(fontsize=fontsize):
                       * 1e-5
                  for ion in Tmax_CIE}
     
-    bfits = {'o6': 41.,\
-             'o7': 98.,\
-             'o8': 161.,\
-             'ne8': 41.,\
-             'ne9': 92.,\
-             'fe17': 101.,\
+    bfits = {'o6': 28.,\
+             'o7': 80.,\
+             'o8': 106.,\
+             'ne8': 37.,\
+             'ne9': 74.,\
+             'fe17': 88.,\
              }
     vwindows_ion = {'o6': 600.,\
                     'ne8': 600.,\
@@ -1713,7 +1713,7 @@ def plot_NEW(fontsize=fontsize):
     samplegroups_ion = {ion: '{ion}_selection'.format(ion=ion) \
                               for ion in vwindows_ion}
     
-    datafile = '/net/luttero/data2/specwizard_data/sample3-6_coldens_EW_vwindows_subsamples.hdf5'
+    datafile = '/net/luttero/data2/paper2/sample3-6_coldens_EW_vwindows_subsamples.hdf5'
     with h5py.File(datafile, 'r') as df:
         coldens = {}
         EWs = {}

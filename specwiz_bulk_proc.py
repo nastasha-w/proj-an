@@ -16,11 +16,14 @@ import numpy as np
 import h5py
 import os
 import scipy.optimize as spo
+import pandas as pd
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gsp
+import matplotlib.lines as mlines
 
 import cosmo_utils as cu
+import eagle_constants_and_units as c
 import ion_line_data as ild
 import make_maps_opts_locs as ol
 
@@ -797,6 +800,97 @@ def fitbpar_paper2():
                                                EWlog=False,\
                                                fitval=res_lin[ion])) 
 
+def plotbpar_paper2():
+    datafile = '/net/luttero/data2/paper2/bparfit_data.txt'
+    outname = '/net/luttero/data2/specwizard_data/sample3-6_vwindows_effect_bparfit.pdf'
+    z =  0.10063854175996956
+    boxvel = 100. * c.cm_per_mpc / (1. + z) * cu.Hubble(z) * 1e-5
+    set_boxvel = 1500.
+    
+    data = pd.read_csv(datafile, sep='\t', header=0)
+    
+    ioncolors = {'o7': 'C3',\
+                 'o8': 'C0',\
+                 'o6': 'C2',\
+                 'ne8': 'C1',\
+                 'ne9': 'C9',\
+                 'hneutralssh': 'C6',\
+                 'fe17': 'C4'}
+    vwindows_ion = {'o6': 600.,\
+                    'ne8': 600.,\
+                    'o7': 1200.,\
+                    'o8': 1000.,\
+                    'fe17': 800.,\
+                    'ne9': 700,\
+                    }
+    
+    fontsize = 12
+    
+    fig, ax = plt.subplots(1, 1)
+    ax.set_xlabel('$\\Delta v [\\mathrm{{km}} \\, \\mathrm{{s}}^{{-1}}]$ (half of total range)', fontsize=fontsize)
+    ax.set_ylabel('best-fit $b [\\mathrm{{km}} \\, \\mathrm{{s}}^{{-1}}]$', fontsize=fontsize)
+    size_allsel = 10
+    size_ionsel = 30
+    marker_log = '*'
+    marker_lin = 'o'
+    alpha = 0.3
+    
+    for ind in data.index:
+        _data = data.iloc[ind]
+        ion = _data['ion']
+        color = ioncolors[ion]
+        if _data['fit log EW']:
+            marker = marker_log
+        else:
+            marker = marker_lin
+        if ion in _data['sightline selection']:
+            size = size_ionsel
+        else:
+            size = size_allsel
+            
+        dv  = _data['Delta v [full, rest-frame, km/s]'] * 0.5
+        if dv == np.inf:
+            dv = set_boxvel
+        bfit = _data['best-fit b [km/s]']
+        
+        ax.scatter([dv], [bfit], c=color, s=size, marker=marker, alpha=alpha)
+        
+        if size == size_ionsel:
+            if dv == vwindows_ion[ion] * 0.5:
+                if marker == marker_lin:
+                    print('{ion:4} lin fit pm {dv:4.0f} km/s: {bfit:3.0f}'.format(ion=ion, dv=dv, bfit=bfit))
+                else:
+                    print('{ion:4} log fit pm {dv:4.0f} km/s: {bfit:3.0f}'.format(ion=ion, dv=dv, bfit=bfit))
+            elif dv == set_boxvel and marker == marker_log:
+                print('{ion:4} log fit pm {dv:4.0f} km/s: {bfit:3.0f}'.format(ion=ion, dv=0.5 * boxvel, bfit=bfit))
+            
+    # legend
+    leg_markers = [mlines.Line2D([], [], color='gray', linestyle='None',\
+                          markersize= 0.2 * size, label=label, marker=marker)  \
+                   for marker, size, label in \
+                   zip([marker_log, marker_log, marker_lin, marker_lin],\
+                       [size_ionsel, size_allsel, size_ionsel, size_allsel],\
+                       ['ion-sel., log fit', 'all sl., log fit', 'ion-sel., lin. fit', 'all sl, lin. fit'])\
+                   ]
+    leg_ions = [mlines.Line2D([], [], color=ioncolors[ion], linestyle='None',\
+                          markersize = 0.1 * size_ionsel,\
+                          label=ion, marker='o')  \
+                for ion in ioncolors]
+    xticks = ax.get_xticks()
+    if set_boxvel in xticks: # just change the label
+        xlabels = ['{:.0f}'.format(tick) for tick in xticks]
+        xlabels[np.where(xticks == set_boxvel)[0][0]] = '100 cMpc'
+    else: # insert the label, remove neighboring ticks
+        insind = np.searchsorted(xticks, set_boxvel)
+        xticks = np.array(list(xticks[:insind - 1]) + [set_boxvel] + list(xticks[insind + 1: ]))
+        xlabels = ['{:.0f}'.format(tick) for tick in xticks]
+        xlabels[insind - 1] = '100 cMpc'
+    ax.set_xticks(xticks)
+    ax.set_xticklabels(xlabels)
+    
+    ax.legend(handles=leg_markers + leg_ions, ncol=3, fontsize=fontsize - 1)
+
+    plt.savefig(outname, format='pdf', bbox_inches='tight')         
 
 def plot_NEW(specset, ions, vwindows=None, savename=None):
 
