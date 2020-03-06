@@ -722,6 +722,8 @@ def fitbpar(datafile, vwindow=None,\
         
         _ion = ionls[ion]
         def lossfunc(b):
+            if b <= 0.: # back off from that area!
+                return np.inf
             EWres = ild.linflatcurveofgrowth_inv_faster(N, b, _ion)
             if fitlogEW:
                 EWres = np.log10(EWres)
@@ -750,19 +752,19 @@ def fitbpar_paper2():
     outfile = '/net/luttero/data2/paper2/bparfit_data.txt'
     
     # to test the general dependence on window size
-    vwindows_all = [400., 500., 1000., 1500., 2000., None]
+    vwindows_all = [50.] + list(np.arange(100, 6400, 100.)) + [None]
     vwindows_ion = {'o6': 600.,\
                     'ne8': 600.,\
-                    'o7': 1200.,\
+                    'o7': 1000.,\
                     'o8': 1000.,\
-                    'fe17': 800.,\
-                    'ne9': 700,\
+                    'fe17': 1000.,\
+                    'ne9': 1000,\
                     }
     vwindows_ion = {ion: [vwindows_ion[ion]] +  vwindows_all \
                     if vwindows_ion[ion] not in vwindows_all else\
                     vwindows_all \
                     for ion in vwindows_ion}
-    samplegroups_ion = {ion: ['full_sample', '{ion}_selection'.format(ion=ion)]\
+    samplegroups_ion = {ion: ['{ion}_selection'.format(ion=ion)]\
                               for ion in vwindows_ion}
     
     fillstring = '{ion}\t{dv}\t{selection}\t{EWlog}\t{fitval}\n'
@@ -805,7 +807,7 @@ def plotbpar_paper2():
     outname = '/net/luttero/data2/specwizard_data/sample3-6_vwindows_effect_bparfit.pdf'
     z =  0.10063854175996956
     boxvel = 100. * c.cm_per_mpc / (1. + z) * cu.Hubble(z) * 1e-5
-    set_boxvel = 1500.
+    set_boxvel = 0.5 * boxvel
     
     data = pd.read_csv(datafile, sep='\t', header=0)
     
@@ -818,10 +820,10 @@ def plotbpar_paper2():
                  'fe17': 'C4'}
     vwindows_ion = {'o6': 600.,\
                     'ne8': 600.,\
-                    'o7': 1200.,\
+                    'o7': 1000.,\
                     'o8': 1000.,\
-                    'fe17': 800.,\
-                    'ne9': 700,\
+                    'fe17': 1000.,\
+                    'ne9': 1000,\
                     }
     
     fontsize = 12
@@ -868,14 +870,19 @@ def plotbpar_paper2():
     leg_markers = [mlines.Line2D([], [], color='gray', linestyle='None',\
                           markersize= 0.2 * size, label=label, marker=marker)  \
                    for marker, size, label in \
-                   zip([marker_log, marker_log, marker_lin, marker_lin],\
-                       [size_ionsel, size_allsel, size_ionsel, size_allsel],\
-                       ['ion-sel., log fit', 'all sl., log fit', 'ion-sel., lin. fit', 'all sl, lin. fit'])\
+                   zip([marker_log,  marker_lin],\
+                       [size_ionsel, size_ionsel],\
+                       ['log fit', 'lin. fit'])\
                    ]
     leg_ions = [mlines.Line2D([], [], color=ioncolors[ion], linestyle='None',\
                           markersize = 0.1 * size_ionsel,\
                           label=ion, marker='o')  \
                 for ion in ioncolors]
+    xlim = list(ax.get_xlim())
+    if xlim[0] < 0.:
+        xlim[0] = 0.
+    ax.set_xlim(*tuple(xlim))
+    
     xticks = ax.get_xticks()
     if set_boxvel in xticks: # just change the label
         xlabels = ['{:.0f}'.format(tick) for tick in xticks]
@@ -886,7 +893,7 @@ def plotbpar_paper2():
         xlabels = ['{:.0f}'.format(tick) for tick in xticks]
         xlabels[insind - 1] = '100 cMpc'
     ax.set_xticks(xticks)
-    ax.set_xticklabels(xlabels)
+    ax.set_xticklabels(xlabels)    
     
     ax.legend(handles=leg_markers + leg_ions, ncol=3, fontsize=fontsize - 1)
 

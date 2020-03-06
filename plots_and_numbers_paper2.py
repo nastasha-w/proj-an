@@ -72,6 +72,14 @@ Tranges_CIE = {'o6':   (5.3, 5.8),\
                'ne9':  (5.7, 6.8),\
                'fe17': (6.3, 7.0),\
                }
+Tmax_CIE = {'o6':   10**5.5,\
+            'ne8':  10**5.8,\
+            'o7':   10**5.9,\
+            'ne9':  10**6.2,\
+            'o8':   10**6.4,\
+            'fe17': 10**6.7,\
+            }
+ 
 rho_to_nh = 0.752 / (c.atomw_H * c.u)
 
 #retrieved with mc.getcosmopars
@@ -1662,7 +1670,8 @@ def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus'):
 def plot_NEW(fontsize=fontsize):    
     outname = mdir + 'coldens_EW_sample3-6_ionselsamples_L0100N1504_27_T4EOS.pdf'
     ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
-
+    datafile = datadir + 'sample3-6_coldens_EW_vwindows_subsamples.hdf5'
+    
     uselines = {'o7': ild.o7major,\
                 'o8': ild.o8doublet,\
                 'o6': ild.o6major,\
@@ -1684,36 +1693,38 @@ def plot_NEW(fontsize=fontsize):
                    'ne8':  (1.3, 2.8),\
                    'fe17': (0.0, 1.4),\
                    }
-    Tmax_CIE = {'o6':   10**5.5,\
-                'ne8':  10**5.8,\
-                'o7':   10**5.9,\
-                'ne9':  10**6.2,\
-                'o8':   10**6.4,\
-                'fe17': 10**6.7,\
-                }
+   
     bvals_CIE = {ion: np.sqrt(2. * c.boltzmann * Tmax_CIE[ion] / \
                               (ionh.atomw[string.capwords(ol.elements_ion[ion])] * c.u)) \
                       * 1e-5
                  for ion in Tmax_CIE}
-    
+    # v windows
     bfits = {'o6': 28.,\
-             'o7': 80.,\
-             'o8': 106.,\
+             'o7': 82.,\
+             'o8': 112.,\
              'ne8': 37.,\
-             'ne9': 74.,\
-             'fe17': 88.,\
+             'ne9': 81.,\
+             'fe17': 90.,\
              }
+    # full sightlines
+    #bfits = {'o6': 34.,\
+    #         'o7': 90.,\
+    #         'o8': 158.,\
+    #         'ne8': 41.,\
+    #         'ne9': 90.,\
+    #         'fe17': 102.,\
+    #         }
+    # half range sizes
     vwindows_ion = {'o6': 600.,\
                     'ne8': 600.,\
-                    'o7': 1200.,\
-                    'o8': 1000.,\
-                    'fe17': 800.,\
-                    'ne9': 700,\
+                    'o7': 1600.,\
+                    'o8': 1600.,\
+                    'fe17': 1600.,\
+                    'ne9': 1600,\
                     }
     samplegroups_ion = {ion: '{ion}_selection'.format(ion=ion) \
                               for ion in vwindows_ion}
     
-    datafile = '/net/luttero/data2/paper2/sample3-6_coldens_EW_vwindows_subsamples.hdf5'
     with h5py.File(datafile, 'r') as df:
         coldens = {}
         EWs = {}
@@ -1801,7 +1812,7 @@ def plot_NEW(fontsize=fontsize):
                 horizontalalignment='left',\
                 bbox=None)
         
-        fitlabel = 'fit: $b = {b:.0f} \\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}$'.format(b=bfits[ion])
+        fitlabel = 'fit: $b = {b:.0f} \\, \\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}$'.format(b=bfits[ion])
         ax.text(0.97, 0.03, fitlabel, fontsize=fontsize - 1,\
                 transform=ax.transAxes, verticalalignment='bottom',\
                 horizontalalignment='right', bbox=bbox)
@@ -1904,7 +1915,106 @@ def plot_NEW(fontsize=fontsize):
                          ncol=4, frameon=True, bbox_to_anchor=(0.5, 0.0))
 
     plt.savefig(outname, format='pdf', bbox_inches='tight')    
-        
+
+# b, b parameter, 
+def plotbpar():
+    '''
+    best fit b parameters (log EW) as a function of velocity window size
+    '''
+    datafile = datadir + 'bparfit_data.txt'
+    outname = mdir + 'sample3-6_vwindows_effect_bparfit.pdf'
+    logfit = True
+    if logfit:
+        print('Using log EW fits')
+    else:
+        print('Using (non-log) EW fits')
+    
+    cosmopars = cosmopars_ea_27
+    z = cosmopars['z']
+    boxvel = 100. * c.cm_per_mpc / (1. + z) *\
+             cu.Hubble(z, cosmopars=cosmopars) * 1e-5
+    #set_boxvel = 0.5 * boxvel
+    
+    
+    data = pd.read_csv(datafile, sep='\t', header=0)
+    data['ion'] = data['ion'].astype('category')
+    data['sightline selection'] = data['sightline selection'].astype('category')
+    data.loc[data['Delta v [full, rest-frame, km/s]'] == np.inf, \
+             'Delta v [full, rest-frame, km/s]'] = boxvel
+    # log/lin fits, ion sample selections
+    plotdata = data.loc[data['fit log EW'] == logfit]
+    plotdata = plotdata.loc[plotdata['sightline selection'] != 'full_sample']
+    plotdata = plotdata.pivot(columns='ion',\
+                              index='Delta v [full, rest-frame, km/s]',
+                              values='best-fit b [km/s]')
+    
+    vwindows_ion = {'o6': 600.,\
+                    'ne8': 600.,\
+                    'o7': 1600.,\
+                    'o8': 1600.,\
+                    'fe17': 1600.,\
+                    'ne9': 1600,\
+                    }    
+    bvals_CIE = {ion: np.sqrt(2. * c.boltzmann * Tmax_CIE[ion] / \
+                              (ionh.atomw[string.capwords(ol.elements_ion[ion])] * c.u)) \
+                      * 1e-5
+                 for ion in Tmax_CIE}
+    
+    fontsize = 12
+    
+    fig, ax = plt.subplots(1, 1, figsize=(5.5, 4.),\
+                           gridspec_kw={'bottom': 0.15})
+    ax.set_xlabel('$\\Delta v \\; [\\mathrm{{km}} \\, \\mathrm{{s}}^{{-1}}]$ (half of total range)', fontsize=fontsize)
+    ax.set_ylabel('best-fit $b \\; [\\mathrm{{km}} \\, \\mathrm{{s}}^{{-1}}]$', fontsize=fontsize)
+    size = 30
+    marker = 'o'
+    alpha = 1.
+    
+    for ion in plotdata.columns:
+        xv = plotdata[ion].index * 0.5 # full width -> half width
+        yv = np.array(plotdata[ion])
+        label = ild.getnicename(ion, mathmode=False)
+        ax.plot(xv, yv, color=ioncolors[ion], linewidth=2, alpha=alpha,\
+                label=label)
+        ax.scatter(0.5 * vwindows_ion[ion], plotdata[ion][vwindows_ion[ion]],\
+                   alpha=alpha, s=size, marker=marker, color=ioncolors[ion])
+        ax.axhline(bvals_CIE[ion], 0.0, 0.07, linestyle='dotted', linewidth=2,\
+                   color=ioncolors[ion])
+        print(ion)
+        print('whole box: b={b} km/s'.format(b=plotdata[ion][boxvel]))
+        print('Delta v={dv} km/s: b={b} km/s'.format(dv=vwindows_ion[ion] * 0.5,\
+              b=plotdata[ion][vwindows_ion[ion]]))
+    #leg_ions = [mlines.Line2D([], [], color=ioncolors[ion], linestyle='None',\
+    #                      markersize = 0.1 * size_ionsel,\
+    #                      label=ion, marker='o')  \
+    #            for ion in ioncolors]
+    xlim = list(ax.get_xlim())
+    if xlim[0] < 0.:
+        xlim[0] = 0.
+    ax.set_xlim(*tuple(xlim))
+    ylim = list(ax.get_ylim())
+    ylim[0] = 0.
+    ax.set_ylim(*tuple(ylim))
+    
+    pu.setticks(ax, fontsize=fontsize)
+    #xticks = ax.get_xticks()
+    #if set_boxvel in xticks: # just change the label
+    #    xlabels = ['{:.0f}'.format(tick) for tick in xticks]
+    #    xlabels[np.where(xticks == set_boxvel)[0][0]] = '100 cMpc'
+    #else: # insert the label, remove neighboring ticks
+    #    insind = np.searchsorted(xticks, set_boxvel)
+    #    xticks = np.array(list(xticks[:insind]) + [set_boxvel] + list(xticks[insind: ]))
+    #    xlabels = ['{:.0f}'.format(tick) for tick in xticks]
+    #    xlabels[insind - 1] = ''
+    #    xlabels[insind] = '100 cMpc'
+    #    if len(xlabels) > insind + 1:
+    #        xlabels[insind + 1] = ''
+    #ax.set_xticks(xticks)
+    #ax.set_xticklabels(xlabels)    
+    
+    ax.legend(ncol=3, fontsize=fontsize - 1, loc='upper left', frameon=False)
+
+    plt.savefig(outname, format='pdf', bbox_inches='tight')  
 ############################# get numbers #####################################
     
 def get_binmedians(binarr='M200c_Msun', binedges=mass_edges_standard,\

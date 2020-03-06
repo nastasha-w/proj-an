@@ -997,3 +997,235 @@ def plot_coldenscorr_Tion_v3(plotnum=1, ionT_split=5.7, nh1_split=13.0, nsig_ran
     #lax.legend(typelines, labels, fontsize=fontsize, ncol=1, loc='lower right', bbox_to_anchor=(1.02, -0.02), frameon=False, handlelength=1.5)
     
     plt.savefig(imgname, format='eps', bbox_inches='tight')
+    
+
+def plot_coldenscorr_Tion_v4(ionT='o6', ion1='o6', ion2='o7', Tlim=5.7,\
+                             nsig_range=1.):
+    '''
+    v4: like v2, with limits, but different O VI range indicator and smaller 
+        ackground histogram range
+    '''
+    
+    xlines = {'FUV': (13., 'solid')}
+    ylines = {'RGS': (15.5, 'solid'),\
+              'X-IFU': (15.0, 'dotted')}
+    arrowpos = {'FUV': 0.74, 'RGS': 0.87, 'X-IFU': 0.84}
+    
+     # table 2 log No6, Delta log No6
+    o6meas_fuv_zo6 = (13.76, 0.08)
+    # table 3
+    o6meas_cie_zo6 = (13.8, 0.2)
+    o6meas_cie_zo7 = (13.9, 0.2)
+    o7meas_cie_zo6 = (16.4, 0.2)
+    o7meas_cie_zo7 = (16.4, 0.2)
+    o7meas_slab_zo6 = (16.52, -0.28, 0.25)
+    o7meas_slab_zo7 = (16.69, -0.39, 0.37)
+    o8meas_cie_zo6 = (15.9, 0.2)
+    o8meas_cie_zo7 = (16.0, 0.2)
+    o8meas_slab_zo6 = (15.7, -1.1, 0.4)
+    o8meas_slab_zo7 = (15.7, -1.5, 0.4)
+    
+    T_cie_zo6 = (1.7e6, 0.2e6)
+    T_cie_zo7 = (1.7e6, 0.2e6)
+    
+    logTcuts = [5.7, 5.9, 6.0]
+    
+    measvals = {'fuv': {'zo6': {'o6': o6meas_fuv_zo6}},\
+                'cie': {'zo6': {'o6': o6meas_cie_zo6,\
+                                'o7': o7meas_cie_zo6,\
+                                'o8': o8meas_cie_zo6,\
+                                'T':  T_cie_zo6},\
+                        'zo7': {'o6': o6meas_cie_zo7,\
+                                'o7': o7meas_cie_zo7,\
+                                'o8': o8meas_cie_zo7,\
+                                'T':  T_cie_zo7},\
+                        },\
+                 'slab': {'zo6': {'o7': o7meas_slab_zo6,\
+                                  'o8': o8meas_slab_zo6,\
+                                 },\
+                         'zo7':  {'o7': o7meas_slab_zo7,\
+                                  'o8': o8meas_slab_zo7,\
+                                 },\
+                          },\
+                }
+    
+    
+    if {ion1, ion2} == {'o6', 'o8'}:
+        histf = '/net/luttero/data2/proc/hist_coldens_o6-o8_L0100N1504_27_test3.x_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_and_weighted_Temperature.npz'
+    if {ion1, ion2} == {'o6', 'o7'}:
+        histf = '/net/luttero/data2/proc/hist_coldens_o6-o7_L0100N1504_27_test3.x_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_and_weighted_Temperature.npz'
+    
+    imgname = '/home/wijers/Documents/papers/jussi_paper2_Ton180/hist_coldens_%s-%s_L0100N1504_27_test3.x_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_splitby_T-%s-%.2f_v4.eps'%(ion1, ion2, ionT, Tlim)
+    
+    fontsize = 12
+    xlabel = r'$\log \, \mathrm{N(%s)} \; [\mathrm{cm}^{-2}]$'%(ild.getnicename(ion1, mathmode=True))
+    ylabel = r'$\log \, \mathrm{N(%s)} \; [\mathrm{cm}^{-2}]$'%(ild.getnicename(ion2, mathmode=True))
+    clabel = r'$\log$ relative fraction of absorbers'
+    cmap = truncate_colormap(mpl.cm.get_cmap('gist_yarg'), minval=0.0, maxval=0.7)
+    
+    percentiles = np.array([0.01, 0.05, 0.5, 0.95, 0.99])
+    linestyles = ['dotted', 'dashed', 'solid', 'dashed', 'dotted']
+    color_lowerT = 'C0'
+    color_upperT = 'C1'
+    
+    with np.load(histf) as fi:
+        #print(fi.keys())
+        #print(fi['dimension'])
+        #print(fi['edges'])
+        
+        dimension = fi['dimension']
+        ax_no6 = np.where(dimension == 'N%s'%(string.capwords(ion1)))[0][0]
+        ax_no8 = np.where(dimension == 'N%s'%(string.capwords(ion2)))[0][0]
+        ax_T = np.where(dimension == 'Temperature_w_N%s'%(string.capwords(ionT)))[0][0]
+        numax = len(dimension)
+        
+        edges_o6 = fi['edges'][ax_no6]
+        edges_o8 = fi['edges'][ax_no8]
+        edges_T  = fi['edges'][ax_T]
+        
+        cutind_T = np.argmin(np.abs(edges_T - Tlim))
+        cutval_T = edges_T[cutind_T]
+        lowersel_T = slice(None, cutind_T, None)
+        uppersel_T = slice(cutind_T, None, None)
+        #lowersel_T_label = r'$\log_{10} \, \mathrm{T(%s)} \, / \, \mathrm{K} < %.1f$'%(ild.getnicename(ionT, mathmode=True), cutval_T)
+        #uppersel_T_label = r'$\log_{10} \, \mathrm{T(%s)} \, / \, \mathrm{K} > %.1f$'%(ild.getnicename(ionT, mathmode=True), cutval_T)
+        
+        lowersel_all = [slice(None, None, None)] * numax
+        lowersel_all[ax_T] = lowersel_T
+        lowersel_all = tuple(lowersel_all)
+        
+        uppersel_all = [slice(None, None, None)] * numax
+        uppersel_all[ax_T] = uppersel_T
+        uppersel_all = tuple(uppersel_all)
+        
+        sumaxes = set(np.arange(numax))
+        sumaxes -= {ax_no6, ax_no8}
+        sumaxes = sorted(list(sumaxes))
+        sumaxes = tuple(sumaxes)
+        
+        hist_base = fi['bins']
+        hist_lowerT = np.sum(hist_base[lowersel_all], axis=sumaxes)
+        hist_upperT = np.sum(hist_base[uppersel_all], axis=sumaxes)
+        hist = np.sum(hist_base, axis=sumaxes)
+                    
+    fig = plt.figure(figsize=(5.5, 5.))
+    grid = gsp.GridSpec(1, 2, hspace=0.0, wspace=0.1, width_ratios=[5., 1.])
+    ax = fig.add_subplot(grid[0])
+    cax  = fig.add_subplot(grid[1])
+    
+    # get percentiles from true histogram
+    ax_histsum = 1 if ax_no8 > ax_no6 else 0
+    percentiles_lowerT = percentiles_from_histogram(hist_lowerT, edges_o8, axis=ax_histsum, percentiles=percentiles)
+    percentiles_upperT = percentiles_from_histogram(hist_upperT, edges_o8, axis=ax_histsum, percentiles=percentiles)
+    cens_o6 = edges_o6[:-1] + 0.5 * np.diff(edges_o6)
+    plotwhere_lowerT = np.sum(hist_lowerT, axis=ax_histsum) >= 20
+    plotwhere_upperT = np.sum(hist_upperT, axis=ax_histsum) >= 20
+    
+    # switch to density histogram
+    if ax_no6 < ax_no8:
+        divby = np.diff(edges_o6)[:, np.newaxis] * np.diff(edges_o8)[np.newaxis, :]
+    else:
+        divby = np.diff(edges_o6)[np.newaxis, :] * np.diff(edges_o8)[:, np.newaxis]
+    #hist_lowerT /= divby
+    #hist_upperT /= divby
+    hist_toplot = hist / divby
+    
+    #vmax = np.log10(max(np.max(hist_upperT), np.max(hist_lowerT)))
+    xlim = (12.1, 16.5)
+    ylim = (13.1, 17.5)
+    vmax = np.log10(np.max(hist_toplot[edges_o6[1:] > xlim[0], edges_o8[1:] > ylim[0]]))
+    vmin = vmax - 7.
+    
+    if ax_no6 > ax_no8:
+        hist_lowerT = hist_lowerT.T
+        hist_upperT = hist_upperT.T
+    
+    ax.tick_params(labelsize=fontsize - 1, which='both', direction='in', top=True, right=True)
+    ax.minorticks_on()
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    ax.set_ylim(ylim)
+    ax.set_xlim(xlim)
+    
+    img = ax.pcolormesh(edges_o6, edges_o8, np.log10(hist_lowerT.T), cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True)
+    
+    for pind in range(len(percentiles)):
+        ax.plot(cens_o6[plotwhere_upperT], percentiles_upperT[pind][plotwhere_upperT], color=color_upperT, linewidth=2., linestyle=linestyles[pind])
+        ax.plot(cens_o6[plotwhere_lowerT], percentiles_lowerT[pind][plotwhere_lowerT], color=color_lowerT, linewidth=2., linestyle=linestyles[pind])
+    
+    # add lines for detection limits and measurements
+    ancolor = 'C2'
+    arrowlen = 0.05
+    arrowwidth = 0.002
+    for label in xlines:
+        ax.axvline(xlines[label][0], color=ancolor, linestyle=xlines[label][1], linewidth=1.5)
+        relpos = (xlines[label][0] - xlim[0]) / (xlim[1] - xlim[0])
+        ax.text(relpos + 0.01, 0.8,  label,\
+                color=ancolor, fontsize=fontsize, transform=ax.transAxes,\
+                horizontalalignment='left', verticalalignment='center', rotation=90.)
+        ax.arrow(relpos, arrowpos[label], arrowlen, 0.,\
+                 linestyle='solid', linewidth=1.5, color=ancolor,\
+                 transform=ax.transAxes, width=arrowwidth)
+    for label in ylines:
+        ax.axhline(ylines[label][0], color=ancolor, linestyle=ylines[label][1], linewidth=1.5)
+        relpos = (ylines[label][0] - ylim[0]) / (ylim[1] - ylim[0])
+        ax.text(0.99, relpos + 0.01,  label,\
+                color=ancolor, fontsize=fontsize, transform=ax.transAxes,\
+                horizontalalignment='right', verticalalignment='bottom', rotation=0.)
+        ax.arrow(arrowpos[label], relpos, 0., arrowlen,\
+                 linestyle='solid', linewidth=1.5, color=ancolor,\
+                 transform=ax.transAxes, width=arrowwidth)
+    # FUV
+    fuvcolor='navy'
+    fuvpoint = measvals['fuv']['zo6']['o6']
+    #ax.axvline(fuvpoint[0], 0.0, 0.7, color=fuvcolor)
+    #ax.errorbar(fuvpoint[0], ylim[0] + 0.35 * (ylim[1] - ylim[0]), xerr=fuvpoint[1:],\
+    #            linewidth=1.5, color=fuvcolor, zorder=5)
+    ax.axvspan(fuvpoint[0] - fuvpoint[1], fuvpoint[0] + fuvpoint[1],\
+               alpha=0.5, edgecolor=fuvcolor, facecolor='none', hatch='-')
+    
+    # X-ray
+    xraycolor = 'red'
+    xraypoint_x = (np.log10(10**measvals['cie']['zo7'][ion1][0] +\
+                            10**measvals['fuv']['zo6'][ion1][0]),\
+                   np.sqrt(measvals['cie']['zo7'][ion1][1]**2 + \
+                           measvals['fuv']['zo6'][ion1][1]**2))
+    xraypoint_y = measvals['cie']['zo7'][ion2]   
+    ax.errorbar(xraypoint_x[0], xraypoint_y[0],\
+                xerr=xraypoint_x[1:], yerr=xraypoint_y[1:],\
+                linewidth=2., color=xraycolor, zorder=5)
+    # color bar
+    plt.colorbar(img, cax=cax, extend='min')
+    cax.tick_params(labelsize=fontsize - 1)
+    cax.set_aspect(10.)
+    cax.set_ylabel(clabel, fontsize=fontsize)
+    
+    # legend
+    perc_toplot = percentiles[: (len(percentiles) + 1) // 2]
+    lcs = []
+    line = [[(0, 0)]]
+    for pind in range(len(perc_toplot)):
+        # set up the proxy artist
+        subcols = [mpl.colors.to_rgba(color_lowerT, alpha=1.), mpl.colors.to_rgba(color_upperT, alpha=1.)]
+        subcols = np.array(subcols)
+        #print(subcols)
+        lc = mcol.LineCollection(line * len(subcols), linestyle=linestyles[pind], linewidth=2, colors=subcols)
+        lcs.append(lc)
+    perclabels = ['%.0f %%'%(2. * (0.5 - perc) * 100.) if perc != 0.5 else 'median' for perc in perc_toplot]
+    # create the legend
+    #lax.legend(lcs, [legendnames_techvars[var] for var in techvars], handler_map={type(lc): HandlerDashedLines()}) #handlelength=2.5, handleheight=3
+    #handles_ax1, labels_ax1 = axes[0].get_legend_handles_labels()
+    typelines = [mlines.Line2D([], [], color=color_lowerT, linestyle='solid', label=r'$\log\, \mathrm{T} < %.1f$'%(cutval_T), linewidth=2.),\
+                 mlines.Line2D([], [], color=color_upperT, linestyle='solid', label=r'$\log\, \mathrm{T} < %.1f$'%(cutval_T), linewidth=2.)]
+    labels = [r'$\log\, \mathrm{T}(\mathrm{%s}) < %.1f$'%(ild.getnicename(ion1, mathmode=True), cutval_T), r'$\log\, \mathrm{T}(\mathrm{%s}) > %.1f$'%(ild.getnicename(ion1, mathmode=True), cutval_T)]
+    lax = ax
+    leg1 = lax.legend(typelines, labels, handler_map={type(lc): HandlerDashedLines()}, fontsize=fontsize, ncol=1, loc='lower right', bbox_to_anchor=(1.0, 0.0), frameon=False)
+    leg2 = lax.legend(lcs, perclabels, handler_map={type(lc): HandlerDashedLines()}, fontsize=fontsize, ncol=1, loc='lower right', bbox_to_anchor=(1.0, 0.15), frameon=False)
+    lax.add_artist(leg1)
+    lax.add_artist(leg2)
+    #lax.axis('off')
+   
+    #lax = axes[1]
+    #lax.legend(typelines, labels, fontsize=fontsize, ncol=1, loc='lower right', bbox_to_anchor=(1.02, -0.02), frameon=False, handlelength=1.5)
+    
+    plt.savefig(imgname, format='eps', bbox_inches='tight')
