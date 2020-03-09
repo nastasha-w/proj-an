@@ -400,7 +400,7 @@ def findiontables(ion,z):
         balance1 = balance_d_t_z[:,:,zind1]
         balance2 = balance_d_t_z[:,:,zind2]
 
-        print("interpolating 2 emission tables")
+        print("interpolating 2 ion balance tables")
         balance = 1./( ziopts[zind2] - ziopts[zind1]) * ( (ziopts[zind2]-z)*balance1 + (z-ziopts[zind1])*balance2 )
 
     return balance, logTK, lognHcm3

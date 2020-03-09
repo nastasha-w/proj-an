@@ -671,7 +671,7 @@ def plot_radprof_mstar(var='main', fontsize=fontsize):
         ytype='perc'
         yvals_toplot=[10., 50., 90.]
     elif var == 'main-fcov-break':
-        techvars_touse = [3]
+        techvars_touse = [0]
         highlightcrit = None
         ytype='fcov'
         yvals_toplot = {'o6':   [14.3],\
@@ -680,7 +680,6 @@ def plot_radprof_mstar(var='main', fontsize=fontsize):
                         'ne9':  [15.3],\
                         'o8':   [16.0],\
                         'fe17': [15.0]}
-        xlim = (1., 1.5e3)
     elif var == 'main-fcov-obs':
         techvars_touse = [0]
         highlightcrit = None
@@ -711,12 +710,12 @@ def plot_radprof_mstar(var='main', fontsize=fontsize):
     clabel = r'$\log_{10}\, \mathrm{M}_{\star} \; [\mathrm{M}_{\odot}]$'
     linestyles_fcov = ['solid', 'dashed', 'dotted', 'dotdash']
 
-    ion_filedct_Mstar = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
-                         'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
-                         'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
-                         'o8':   'rdist_coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
-                         'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
-                         'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals_fullrdist_stored_profiles.hdf5',\
+    ion_filedct_Mstar = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o8':   'rdist_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
                          }
 
     # define used mass ranges
@@ -742,7 +741,8 @@ def plot_radprof_mstar(var='main', fontsize=fontsize):
     if not isinstance(yvals_toplot, dict):
         yvals_toplot = {ion: yvals_toplot for ion in ion_filedct_Mstar}
     
-    yvals, bins, numgals = readin_radprof(techvars, yvals_toplot,\
+    yvals, bins, numgals = readin_radprof(techvars,\
+                           {tv: yvals_toplot for tv in techvars},\
                            labels=None, ions_perlabel=None, ytype=ytype,\
                            datadir=datadir, binset=0, units=units)
   
@@ -833,24 +833,29 @@ def plot_radprof_mstar(var='main', fontsize=fontsize):
             var = techvars_touse[vi]
             for ti in range(len(tags)):
                 tag = tags[ti]
+                mkey = galsetnames_smass[tag][1]
                 
                 try:
                     plotx = bins[var][ion][tag]
                 except KeyError: # dataset not read in
                     print('Could not find techvars %i, ion %s, tag %s'%(var, ion, tag))
                     continue
+                # adjust bins based on log scale, not lin
+                plotx = np.log10(plotx)
+                plotx[0] = 2. * plotx[1] - plotx[2] # innermost value is 0 -> -np.inf
                 plotx = plotx[:-1] + 0.5 * np.diff(plotx)
-
+                plotx = 10**plotx
+                
                 if highlightcrit == 'maxcol': #highlightcrit={'techvars': [0], 'Mmin': [10.0, 12.0, 14.0]}
                     Mmin_tomatch = \
-                        10.0 if ion == 'o6' else \
-                        10.0 if ion == 'ne8' else \
+                        10.5 if ion == 'o6' else \
+                        10.5 if ion == 'ne8' else \
                         10.5 if ion == 'o7' else \
                         11.0 if ion == 'ne9' else \
                         11.0 if ion == 'o8' else \
                         11.0 if ion == 'fe17' else \
                         np.inf                     
-                    matched = np.min(np.abs(galsetnames_smass[tag][0] - np.array(Mmin_tomatch))) <= 0.01
+                    matched = np.min(np.abs(galsetnames_smass[tag][1] - Mmin_tomatch)) <= 0.01
                     if matched:
                         yvals_toplot_temp = _yvals_toplot
                     else:
@@ -871,7 +876,7 @@ def plot_radprof_mstar(var='main', fontsize=fontsize):
                             ploty2 = yvals[var][ion][tag][yval]
                         except KeyError:
                             print('Failed to read in %s - %s - %s -%s'%(var, ion, tag, yval))                         
-                        ax.fill_between(plotx, ploty1, ploty2, color=colors[tag],\
+                        ax.fill_between(plotx, ploty1, ploty2, color=colors[mkey],\
                                         alpha=alphas[var] * shading_alpha,\
                                         label=galsetnames_smass[tag])
                         
@@ -890,7 +895,7 @@ def plot_radprof_mstar(var='main', fontsize=fontsize):
                                        mppe.Normal()]
                         else:
                             patheff = []
-                        ax.plot(plotx, ploty, color=colors[tag],\
+                        ax.plot(plotx, ploty, color=colors[mkey],\
                                 linestyle=linestyles[var],\
                                 linewidth=linewidths[var], alpha=alphas[var],\
                                 label=galsetnames_smass[tag],\
@@ -904,7 +909,7 @@ def plot_radprof_mstar(var='main', fontsize=fontsize):
                         patheff = [mppe.Stroke(linewidth=linewidths[var] + 0.5, foreground="b"),\
                                    mppe.Stroke(linewidth=linewidths[var], foreground="w"),\
                                    mppe.Normal()]
-                        ax.plot(plotx, ploty, color=colors[tag],\
+                        ax.plot(plotx, ploty, color=colors[mkey],\
                                 linestyle=linestyle,\
                                 linewidth=linewidths[var], alpha=alphas[var],\
                                 label=galsetnames_smass[tag],\
@@ -940,7 +945,8 @@ def plot_radprof_mstar(var='main', fontsize=fontsize):
     line = [[(0, 0)]]
     for var in techvars_touse:
         # set up the proxy artist
-        subcols = [colors[tag] for tag in tags] # tags is sorted
+        subcols = [colors[mkey] for mkey in \
+                   sorted([galsetnames_smass[tag][1] for tag in tags])] # tags is sorted
         subcols = np.array(subcols)
         subcols[:, 3] = alphas[var]
         lc = mcol.LineCollection(line * len(subcols),\
