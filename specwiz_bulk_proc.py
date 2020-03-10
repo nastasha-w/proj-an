@@ -18,9 +18,11 @@ import os
 import scipy.optimize as spo
 import pandas as pd
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gsp
 import matplotlib.lines as mlines
+import matplotlib.cm as cm
 
 import cosmo_utils as cu
 import eagle_constants_and_units as c
@@ -1157,4 +1159,229 @@ def plot_NEW_fracs(specset, ions, vwindows=None, savename=None):
     if savename is not None:
         plt.savefig(savename, bbox_inches='tight')
         
+def plot_N_EW_growth(ion, numlines=100):
+    '''
+    try to see is the large Delta v `jump' is caused by N or EW features; if so
+    there's a bug somewhere
+    '''
+    fontsize = 12
+    datadir = '/net/luttero/data2/paper2/'
+    mdir = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/'
+    outname = mdir + 'bugcheck_effect_deltav_{ion}_coldens_EW_sample3-6_ionselsamples_L0100N1504_27_T4EOS.pdf'.format(ion=ion)
+    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
+    datafile = datadir + 'sample3-6_coldens_EW_vwindows_subsamples.hdf5'
+    
+    uselines = {'o7': ild.o7major,\
+                'o8': ild.o8doublet,\
+                'o6': ild.o6major,\
+                'ne8': ild.ne8major,\
+                'ne9': ild.ne9major,\
+                'fe17': ild.fe17major,\
+                }
+    Nminmax =  {'o7':   (14.5, 18.3),\
+                'o8':   (14.8, 17.5),\
+                'o6':   (12.8, 17.0),\
+                'ne9':  (14.9, 17.4),\
+                'ne8':  (13.5, 16.4),\
+                'fe17': (14.2, 16.6),\
+                }
+    logEWminmax = {'o7':   (0.0, 1.9),\
+                   'o8':   (0.0, 1.7),\
+                   'o6':   (1.0, 3.2),\
+                   'ne9':  (0.0, 1.3),\
+                   'ne8':  (1.3, 2.8),\
+                   'fe17': (0.0, 1.4),\
+                   }
 
+    samplegroups_ion = {ion: '{ion}_selection'.format(ion=ion) \
+                              for ion in ions}
+    
+    with h5py.File(datafile, 'r') as df:
+        cosmopars = {key: val for key, val in df['Header_sample3/cosmopars'].attrs.items()}
+        boxvel = cosmopars['boxsize'] / cosmopars['h'] * cosmopars['a'] * \
+                 c.cm_per_mpc * \
+                 cu.Hubble(cosmopars['z'], cosmopars=cosmopars) * 1e-5
+        coldens = {}
+        EWs = {}
+        
+        samplegroup = samplegroups_ion[ion] + '/'
+        vgrp = df[samplegroup + 'vwindows_maxtau']
+        vkeys = list(vgrp.keys())
+        subsample = slice(None, None, None)
+        for vkey in [None] + vkeys:
+            if vkey is None:
+                epath = 'EW_tot/'
+                cpath = 'coldens_tot/'
+                dv = boxvel
+            else:
+                spath = 'vwindows_maxtau/{vk}/'.format(vk=vkey)
+                epath = spath + 'EW/'
+                cpath = spath + 'coldens/'
+                dv = df[samplegroup + spath[:-1]].attrs['Deltav_rf_kmps']
+            epath = samplegroup + epath
+            cpath = samplegroup + cpath
+            
+            coldens[dv] = np.array(df[cpath + ion])[subsample]
+            EWs[dv] = np.array(df[epath + ion])[subsample]
+            
+            if vkey is None: 
+                # set up subsampling based on sample size
+                numtot = len(coldens[dv])
+                if numtot > numlines:
+                    subsample = np.random.choice(numtot, size=numlines,\
+                                                 replace=False)                   
+                    coldens[dv] = np.array(df[cpath + ion])[subsample]
+                    EWs[dv] = np.array(df[epath + ion])[subsample]
+    
+    dvs = sorted(coldens.keys())
+    _cds = np.array([coldens[dv] for dv in dvs])
+    _ews = np.array([EWs[dv] for dv in dvs])
+    
+    ylabel_e = r'$\log_{10} \, \mathrm{EW} \; [\mathrm{m\AA}]$'
+    ylabel_n = r'$\log_{10} \, \mathrm{N} \; [\mathrm{cm}^{-2}]$'
+    xlabel   = r'$\Delta \, v \; [\mathrm{km}\, \mathrm{s}^{-1}]$'
+    title = 'growth of N, EW with $\\Delta v$ for {ion}'.format(\
+                        ion=ild.getnicename(ion, mathmode=False),\
+                        )
+    panelwidth = 3.5
+    panelheight = 2.8
+    wspace = 0.25
+    hspace = 0.0
+    ncols = 1
+    nrows = 2
+    
+    fig = plt.figure(figsize=(panelwidth * ncols + wspace * (ncols - 1),\
+                              panelheight * nrows + hspace * (nrows - 1)))
+    grid = gsp.GridSpec(ncols=ncols, nrows=nrows, wspace=wspace, hspace=hspace)   
+    nax = fig.add_subplot(grid[0, 0])
+    eax = fig.add_subplot(grid[1, 0])
+    
+    nax.set_ylabel(ylabel_n, fontsize=fontsize)
+    eax.set_ylabel(ylabel_e, fontsize=fontsize)
+    eax.set_xlabel(xlabel, fontsize=fontsize)
+    fig.suptitle(title, fontsize=fontsize)
+    
+    nax.plot(dvs, _cds, linewidth=1., alpha=0.5)
+    eax.plot(dvs, np.log10(_ews) + 3., linewidth=1., alpha=0.5)
+
+    plt.savefig(outname, format='pdf', bbox_inches='tight')    
+
+    
+def plot_absorber_locations(ion):
+    '''
+    seems like there's a set of jumps at specific column densities for these 
+    ions -> check if they're probing the same structure
+    '''
+    fontsize = 12
+    datadir = '/net/luttero/data2/specwizard_data/'
+    mdir = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/'
+    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
+    datafile = datadir + 'sample3-6_coldens_EW_vwindows_subsamples.hdf5'
+    
+    uselines = {'o7': ild.o7major,\
+                'o8': ild.o8doublet,\
+                'o6': ild.o6major,\
+                'ne8': ild.ne8major,\
+                'ne9': ild.ne9major,\
+                'fe17': ild.fe17major,\
+                }
+    Nminmax =  {'o7':   (14.5, 18.3),\
+                'o8':   (14.8, 17.5),\
+                'o6':   (12.8, 17.0),\
+                'ne9':  (14.9, 17.4),\
+                'ne8':  (13.5, 16.4),\
+                'fe17': (14.2, 16.6),\
+                }
+    logEWminmax = {'o7':   (0.0, 1.9),\
+                   'o8':   (0.0, 1.7),\
+                   'o6':   (1.0, 3.2),\
+                   'ne9':  (0.0, 1.3),\
+                   'ne8':  (1.3, 2.8),\
+                   'fe17': (0.0, 1.4),\
+                   }
+    jumpdN  = {'o6':   0.2,\
+               'o7':   0.2,\
+               'o8':   0.3,\
+               'ne8':  0.2,\
+               'ne9':  0.2,\
+               'fe17': 0.2,\
+               }
+
+    samplegroups_ion = {ion: '{ion}_selection'.format(ion=ion) \
+                              for ion in ions}
+    
+    with h5py.File(datafile, 'r') as df:
+        cosmopars = {key: val for key, val in df['Header_sample3/cosmopars'].attrs.items()}
+        boxvel = cosmopars['boxsize'] / cosmopars['h'] * cosmopars['a'] * \
+                 c.cm_per_mpc * \
+                 cu.Hubble(cosmopars['z'], cosmopars=cosmopars) * 1e-5
+        boxsize = cosmopars['boxsize'] / cosmopars['h'] * cosmopars['a'] 
+        coldens = {}
+        EWs = {}
+        
+        samplegroup = samplegroups_ion[ion] + '/'
+        vgrp = df[samplegroup + 'vwindows_maxtau']
+        vkeys = list(vgrp.keys())
+        subsample = slice(None, None, None)
+        
+        sgrp = df[samplegroup[:-1]]
+        selfilen = sgrp.attrs['selection_filename'].decode()
+        selfnum  = sgrp.attrs['selection_groupname'].decode()
+        
+        for vkey in [None] + vkeys:
+            if vkey is None:
+                epath = 'EW_tot/'
+                cpath = 'coldens_tot/'
+                dv = boxvel
+            else:
+                spath = 'vwindows_maxtau/{vk}/'.format(vk=vkey)
+                epath = spath + 'EW/'
+                cpath = spath + 'coldens/'
+                dv = df[samplegroup + spath[:-1]].attrs['Deltav_rf_kmps']
+            epath = samplegroup + epath
+            cpath = samplegroup + cpath
+            
+            coldens[dv] = np.array(df[cpath + ion])[subsample]
+            EWs[dv] = np.array(df[epath + ion])[subsample]
+    
+    with h5py.File(selfilen, 'r') as sf:
+        pixels = np.array(sf['Selection/{fn}/selected_pixels_thision'.format(fn=selfnum)]).astype(np.float32)
+        coords = (pixels + 0.5) / 32000. * boxsize
+    
+    v1 = boxvel
+    v2 = 5000.
+    deltaN = jumpdN[ion]
+    jumpsel = coldens[v1] - coldens[v2] > deltaN
+    others  = np.logical_not(jumpsel)
+        
+    fig = plt.figure(figsize=(5.5, 5.))
+    grid = gsp.GridSpec(ncols=2, nrows=1, wspace=0.05, width_ratios=[5., 0.5])   
+    ax = fig.add_subplot(grid[0, 0])
+    cax = fig.add_subplot(grid[0, 1])
+    
+    ax.set_xlabel('X [cMpc]', fontsize=fontsize)
+    ax.set_ylabel('Y [cMpc]', fontsize=fontsize)
+    title = '{ion}: sightlines with $ \\log_{{10}} \\mathrm{{N}}({v1:.0f}) - \\log_{{10}} \\mathrm{{N}}({v2:.0f}) > {deltaN}$'.format(\
+             ion=ild.getnicename(ion), v1=v1, v2=v2, deltaN=deltaN)
+    fig.suptitle(title, fontsize=fontsize)
+    
+    cmap = cm.get_cmap('viridis')
+    cdvals = coldens[boxvel]
+    cdmin = np.min(cdvals)
+    cdmax = np.max(cdvals)
+    cdnorm = (cdvals - cdmin) / (cdmax - cdmin)
+    
+    ax.scatter(*tuple(coords[others].T), c=cdnorm[others], s=10, marker='o',\
+               alpha=0.3, edgecolor='none')
+    ax.scatter(*tuple(coords[jumpsel].T), c=cdnorm[jumpsel], s=50, marker='*',\
+               alpha=0.5, edgecolor='black')
+    
+    norm = mpl.colors.Normalize(vmin=cdmin, vmax=cdmax)
+    tomap = cm.ScalarMappable(norm=norm, cmap=cmap)
+    tomap.set_array(np.linspace(cdmin, cdmax, 2))
+    cbar = plt.colorbar(tomap, cax=cax, orientation='vertical', extend='neither')
+    #cbar.set_aspect(10.)
+    cax.set_ylabel('$\\log_{{10}} \\, \\mathrm{{N}} \\; [\\mathrm{{cm}}^{{-2}}]$, 100 cMpc', fontsize=fontsize)
+
+    outname = mdir + 'bugcheck_effect_jump_locations_{ion}_{v1:.0f}-{v2:.0f}-{deltaN}_coldens_EW_sample3-6_ionselsamples_L0100N1504_27_T4EOS.pdf'.format(ion=ion, v1=v1, v2=v2, deltaN=deltaN)
+    plt.savefig(outname, format='pdf', bbox_inches='tight')    
