@@ -2288,6 +2288,9 @@ def plotbpar():
                 label=label)
         ax.scatter(0.5 * vwindows_ion[ion], plotdata[ion][vwindows_ion[ion]],\
                    alpha=alpha, s=size, marker=marker, color=ioncolors[ion])
+        ax.scatter(0.5 * boxvel, plotdata[ion][boxvel],\
+                   alpha=alpha, s=size, marker='o', edgecolor=ioncolors[ion],\
+                   facecolor='none')
         ax.axhline(bvals_CIE[ion], 0.0, 0.07, linestyle='dotted', linewidth=2,\
                    color=ioncolors[ion])
         print(ion)

@@ -1385,3 +1385,231 @@ def plot_absorber_locations(ion):
 
     outname = mdir + 'bugcheck_effect_jump_locations_{ion}_{v1:.0f}-{v2:.0f}-{deltaN}_coldens_EW_sample3-6_ionselsamples_L0100N1504_27_T4EOS.pdf'.format(ion=ion, v1=v1, v2=v2, deltaN=deltaN)
     plt.savefig(outname, format='pdf', bbox_inches='tight')    
+    
+    
+def fitbpar_jumpeffect():
+    '''
+    fit b parameters to subsets of the sightlines to see what's driving the 
+    'jump' across the simulation box from max tau
+    
+    save as hdf5 -> save subsample N, EW data and indices
+    '''
+    outfile = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/' + \
+                      'bparfits_sightline_subsamples_set2.hdf5'
+                      
+    datafile = '/net/luttero/data2/specwizard_data/sample3-6_coldens_EW_vwindows_subsamples.hdf5'
+    vwindows = list(np.arange(3400., 6400., 200.)) + [None]
+    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
+    fitlogEW = True
+    samplegroups = {ion: '{ion}_selection'.format(ion=ion) for ion in ions}
+    
+    # jump identification criteria:
+    jv1 = 5000.
+    jv2 = 6200.
+    jdns = [0.025, 0.05, 0.1, 0.2, 0.4] # Delta log10 N
+    # sightline selection general
+    colmin = {'o6': 13.,\
+              'o7': 15.,\
+              'o8': 15.5,\
+              'ne8': 14.,\
+              'ne9': 15.,\
+              'fe17': 14.5,\
+              } 
+    ionls = {'o8': ild.o8doublet,\
+             'o7': ild.o7major,\
+             'o6': ild.o6major,\
+             'ne8': ild.ne8major,\
+             'ne9': ild.ne9major,\
+             'fe17': ild.fe17major,\
+             }
+    bstart = 100. * 1e5 # cm/s
+    
+    # read in the data
+    coldens = {}
+    EWs = {}
+    with h5py.File(datafile, 'r') as df:  
+        cosmopars = {key: val for key, val in df['Header_sample3/cosmopars'].attrs.items()}
+        boxvel = cosmopars['boxsize'] / cosmopars['h'] * cosmopars['a'] * \
+                 c.cm_per_mpc * \
+                 cu.Hubble(cosmopars['z'], cosmopars=cosmopars) * 1e-5
+                 
+        for ion in ions:
+            _mincd = colmin[ion]
+            coldens[ion] = {}
+            EWs[ion] = {}
+            
+            for vwindow in vwindows:
+                samplegroup = samplegroups[ion]
+                if samplegroup is None:
+                    samplegroup = 'full_sample/'
+                elif samplegroup[-1] != '/':
+                    samplegroup = samplegroup + '/'
+                    
+                if vwindow is None:
+                    epath = 'EW_tot/'
+                    cpath = 'coldens_tot/'
+                    vkey = boxvel
+                else:
+                    spath = 'vwindows_maxtau/Deltav_{dv:.3f}/'.format(dv=vwindow)
+                    epath = spath + 'EW/'
+                    cpath = spath + 'coldens/'
+                    vkey = vwindow
+                epath = samplegroup + epath
+                cpath = samplegroup + cpath
+
+                _cd = np.array(df[cpath + ion])
+                _ew = np.array(df[epath + ion])
+                coldens[ion][vkey] = _cd
+                EWs[ion][vkey] = _ew
+    
+    # get the selections for each ion
+    with h5py.File(outfile, 'a') as fo:
+        hed = fo.create_group('Header')
+        hed.attrs.create('input file', np.string_(datafile))
+        hed.attrs.create('info', np.string_('using ion-selected subsamples as a basis for each ion'))
+        csm = hed.create_group('cosmopars')
+        for key in cosmopars:
+            csm.attrs.create(key, cosmopars[key])
+        
+        for ion in ions:
+            colsel = coldens[ion][boxvel] >= colmin[ion]
+            jumpsels = {jdn: np.logical_and(coldens[ion][jv2] - coldens[ion][jv1] < jdn,\
+                                      colsel) for jdn in jdns}                      
+            igrp = fo.create_group(ion)
+            sgrp = igrp.create_group('selection')
+            sgrp.attrs.create('v1_rf_kmps', jv1)
+            sgrp.attrs.create('v2_rf_kmps', jv2)
+            sgrp.create_dataset('Delta log10 N', data=np.array(jdns))
+            sgrp.attrs.create('min log10 N cm**-2', colmin[ion])
+            sgrp.create_dataset('coldens_selection', data=colsel)
+            jsgrp = sgrp.create_group('coldens_jump_selection')
+            for jdn in jdns:
+                jsgrp.create_dataset('{:.3f}'.format(jdn), data=jumpsels[jdn])
+            igrp.create_dataset('coldens_total_all', data=coldens[ion][boxvel])
+            igrp.create_dataset('ew_total_all', data=EWs[ion][boxvel])
+            
+            bvals = []            
+            for selection in [slice(None, None, None), colsel] + \
+                [jumpsels[jdn] for jdn in jdns]:
+                _bvals = {}
+                vwds = list(coldens[ion].keys())
+                for vwindow in vwds:                   
+                    N = 10**coldens[ion][vwindow][selection]
+                    EW = EWs[ion][vwindow][selection]
+                    if fitlogEW:
+                        EW = np.log10(EW)
+                        
+                    _ion = ionls[ion]
+                    def lossfunc(b):
+                        if b <= 0.: # back off from that area!
+                            return np.inf
+                        EWres = ild.linflatcurveofgrowth_inv_faster(N, b, _ion)
+                        if fitlogEW:
+                            EWres = np.log10(EWres)
+                        return np.sum((EWres - EW)**2)
+                    
+                    optres = spo.minimize(lossfunc, x0=bstart, method='COBYLA', tol=1e4,\
+                                          options={'rhobeg': 2e6})
+                     
+                    if optres.success:
+                        bfit = optres.x * 1e-5 # to km/s
+                        print('Best fit for {ion}: {fit}'.format(ion=ion, fit=bfit))
+                        _bvals[vwindow] = bfit
+                    else:
+                        print('b parameter fitting failed:')
+                        print(optres.message)
+                        return optres
+                print('Collating b values')
+                vvals = sorted(list(_bvals.keys()))
+                _bvals = [_bvals[key] for key in vvals]                
+                bvals.append(_bvals)
+            print('Saving ion data')
+            igrp.create_dataset('Delta v kmps', data=np.array(vvals))
+            ds = igrp.create_dataset('best-fit b kmps', data=np.array(bvals))
+            ds.attrs.create('info', np.string_('index 0: samples - all, coldens, coldens and jumps; index 1: Delta v'))
+            
+def plot_bpareffect_jumpsel(ion):
+
+    datafile = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/' + \
+                      'bparfits_sightline_subsamples_set2.hdf5'
+    outname = '.'.join(datafile.split('.')[:-1]) + '_{ion}.pdf'.format(ion=ion)
+    
+    fig = plt.figure(figsize=(7., 5.))
+    grid = gsp.GridSpec(nrows=2, ncols=2, hspace=0.35, wspace=0.35,\
+                        width_ratios=[5., 3.])
+    fontsize = 12
+    title = 'effect of N-jump selections for {ion}'.format(ion=ild.getnicename(ion))
+    fig.suptitle(title, fontsize=fontsize)
+    
+    bax = fig.add_subplot(grid[:, 0])
+    nax = fig.add_subplot(grid[0, 1])
+    eax = fig.add_subplot(grid[1, 1])
+    
+    bax.set_xlabel('$\\Delta \\, v \\; [\\mathrm{{km}} \\, \\mathrm{{s}}^{{-1}}]$', fontsize=fontsize)
+    bax.set_ylabel('best-fit $b \\; [\\mathrm{{km}} \\, \\mathrm{{s}}^{{-1}}]$', fontsize=fontsize)
+    pu.setticks(bax, fontsize)
+    nax.set_xlabel('$\\log_{{10}} \\, \\mathrm{{N}} \\; [\\mathrm{{cm}}^{{-2}}]$', fontsize=fontsize)
+    nax.set_ylabel('number of sightlines', fontsize=fontsize)
+    pu.setticks(nax, fontsize)
+    eax.set_xlabel('$\\log_{{10}} \\, \\mathrm{{EW}} \\; [\\mathrm{{m\\AA}}]$', fontsize=fontsize)
+    eax.set_ylabel('number of sightlines', fontsize=fontsize)
+    pu.setticks(eax, fontsize)
+    
+    kwargs_ls  = [{'linestyle': 'solid'}, {'linestyle': 'dashed'}] + \
+                 [{'dashes': [6, 2]}, {'dashes': [3, 1]}, {'dashes': [1, 1]},\
+                  {'dashes': [6, 2, 3, 2]}, {'dashes': [6, 2, 1, 2]},\
+                  {'dashes': [3, 1, 1, 1]}]
+    
+    with h5py.File(datafile, 'r') as df:
+        grp = df[ion]
+        sgrp = grp['selection']
+        jdns = np.array(sgrp['Delta log10 N'])
+        csel = np.array(sgrp['coldens_selection'])
+        cjsel = {key: np.array(sgrp['coldens_jump_selection']['{:.3f}'.format(key)])\
+                 for key in jdns}
+        colmin = sgrp.attrs['min log10 N cm**-2']
+        
+        sels = [slice(None, None, None), csel] + [cjsel[key] for key in jdns]
+        labels = ['all', '$\\log_{{10}}\\mathrm{{N}} > {cmin:.1f}$'.format(cmin=colmin)] + \
+                 ['$\\Delta \\log_{{10}} \\mathrm{{N}} < {dn}$'.format(dn=jdn)\
+                  for jdn in jdns]
+        colors = ['gray', 'black'] +\
+                 ['C{}'.format(i % 10) for i in range(len(jdns))]
+                 
+        ew = np.log10(np.array(grp['ew_total_all'])) + 3.
+        cd = np.array(grp['coldens_total_all'])
+        dv = np.array(grp['Delta v kmps'])
+        bv = np.array(grp['best-fit b kmps'])
+        
+    cdmin = np.floor(np.min(cd) / 0.1) * 0.1
+    cdmax = np.ceil(np.max(cd) / 0.1) * 0.1
+    cdbins = np.arange(cdmin, cdmax + 0.05, 0.1)
+    ewmin = np.floor(np.min(ew) / 0.1) * 0.1
+    ewmax = np.ceil(np.max(ew) / 0.1) * 0.1
+    ewbins = np.arange(ewmin, ewmax + 0.05, 0.1)
+    
+    for i in range(len(sels)):
+        color = colors[i]
+        label = labels[i]
+        sel = sels[i]
+        kwargs = kwargs_ls[i]
+        
+        hist, edges = np.histogram(ew[sel], bins=ewbins)
+        ploty = np.array([0] + [count for val in hist for count in [val] * 2] + [0])
+        plotx = np.array([ed for val in edges for ed in [val] * 2])
+        eax.plot(plotx, ploty, color=color,  **kwargs)
+        
+        hist, edges = np.histogram(cd[sel], bins=cdbins)
+        ploty = np.array([0] + [count for val in hist for count in [val] * 2] + [0])
+        plotx = np.array([ed for val in edges for ed in [val] * 2])
+        nax.plot(plotx, ploty, color=color, **kwargs)
+        
+        bax.plot(dv, bv[i], color=color, label=label, **kwargs)
+    
+    bax.legend(fontsize=fontsize)
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
+    
+    
+    
+    
+    
