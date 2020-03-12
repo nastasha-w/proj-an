@@ -656,22 +656,24 @@ def plot_cddfs_nice(fontsize=fontsize, imgname=None):
 # Mstar, stellar mass radial profiles, 2d profiles, impact parameters
 # percentiles, covering fractions, CDDF breaks, detection limits, Athena X-IFU
 # detectablility, M*
-def plot_radprof_mstar(var='main', fontsize=fontsize):
+def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=False):
     '''
     TODO: clean up, change Mstar bins
     var:        main: percenitles in M* bins
                 main-fcov-break for covering fractions at the CDDF break
-                main-fcov-obs   for covering fractions at obs. limits     
+                main-fcov-obs   for covering fractions at obs. limits   
+    lowmass:    include M* < 10^9 Msun galaxies
+                using this option will produce some errors, since the masses 
+                are split over two files, and the read-in function will try to 
+                find all masses in both
     '''
     xlim = None
     units = 'pkpc'
     if var == 'main':
-        techvars_touse = [0]
         highlightcrit = 'maxcol'
         ytype='perc'
         yvals_toplot=[10., 50., 90.]
     elif var == 'main-fcov-break':
-        techvars_touse = [0]
         highlightcrit = None
         ytype='fcov'
         yvals_toplot = {'o6':   [14.3],\
@@ -681,7 +683,6 @@ def plot_radprof_mstar(var='main', fontsize=fontsize):
                         'o8':   [16.0],\
                         'fe17': [15.0]}
     elif var == 'main-fcov-obs':
-        techvars_touse = [0]
         highlightcrit = None
         ytype='fcov'
         yvals_toplot = {'o6':   [13.5],\
@@ -690,10 +691,18 @@ def plot_radprof_mstar(var='main', fontsize=fontsize):
                         'ne9':  [15.5],\
                         'o8':   [15.7],\
                         'fe17': [14.9]}
+    if lowmass:
+        techvars_touse = [0, 1]
+    else:
+        techvars_touse = [0]
     
     ions = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']
+    if lowmass:
+        slm = '_incl-lowmass'
+    else:
+        slm = ''
     
-    imgname = 'radprof_bystellarmass_L0100N1504_27_PtAb_C2Sm_32000pix_T4EOS_6p25slice_zcen-all_{}.pdf'.format(var)
+    imgname = 'radprof_bystellarmass_L0100N1504_27_PtAb_C2Sm_32000pix_T4EOS_6p25slice_zcen-all_{var}{lm}.pdf'.format(var=var, lm=slm)
     imgname = mdir + imgname        
     print('Using y value selection (log10 Nmin/cm2 or percentiles): {}'.format(yvals_toplot))
     
@@ -717,6 +726,13 @@ def plot_radprof_mstar(var='main', fontsize=fontsize):
                          'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
                          'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
                          }
+    ion_filedct_Mstar_lowmass = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o8':   'rdist_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         }
 
     # define used mass ranges
     Ms_edges = np.array([9.0, 9.5, 10., 10.5, 11., 11.7])
@@ -727,15 +743,37 @@ def plot_radprof_mstar(var='main', fontsize=fontsize):
     Ms_sels = [('logMstar_Msun', Ms_mins[i], Ms_maxs[i]) if Ms_maxs[i] is not None else\
                ('logMstar_Msun', Ms_mins[i], np.inf)\
                for i in range(len(Ms_mins))]
-    galsetnames_smass = {name: sel for name, sel in zip(Ms_names, Ms_sels)}    
+    galsetnames_smass = {name: sel for name, sel in zip(Ms_names, Ms_sels)}  
     
     techvars = {0: {'filenames': ion_filedct_Mstar, 'setnames': Ms_names, 'setfills': None},\
-                }    
-    linewidths = {0: 2.}     
-    linestyles = {0: 'solid'}    
-    alphas = {0: 1.}
+                }
+    if lowmass:
+        Ms_edges_lm = np.array([8.0, 8.5, 9.0])
+        Ms_mins_lm = list(Ms_edges_lm[:-1])
+        Ms_maxs_lm = list(Ms_edges_lm[1:]) 
+        #Ms_base = ['geq%.1f_le%.1f'%(smin, smax) for smin, smax in zip(Ms_mins, Ms_maxs)]
+        Ms_names_lm = ['logMstar_Msun_1000_geq%.1f_le%.1f'%(smin, smax)\
+                       for smin, smax in zip(Ms_mins_lm, Ms_maxs_lm)]
+        Ms_sels_lm = [('logMstar_Msun', Ms_mins_lm[i], Ms_maxs_lm[i]) 
+                        if Ms_maxs_lm[i] is not None else\
+                      ('logMstar_Msun', Ms_mins_lm[i], np.inf)\
+                      for i in range(len(Ms_mins_lm))]
+        galsetnames_smass_lm = {name: sel for name, sel in zip(Ms_names_lm, Ms_sels_lm)}
+        
+        galsetnames_smass.update(galsetnames_smass_lm)
+        
+        Ms_edges = np.append(Ms_edges_lm[:-1], Ms_edges)
+        techvars.update({1: {'filenames': ion_filedct_Mstar_lowmass,\
+                             'setnames': Ms_names_lm, 'setfills': None}})
+       
+    linewidths = {0: 2.,\
+                  1: 2.}     
+    linestyles = {0: 'solid',\
+                  1: 'solid'}    
+    alphas = {0: 1., 1: 1.}
     
     legendnames_techvars = {0: r'$\mathrm{M}_{\star}$, pkpc-stacked',\
+                            1: r'$\mathrm{M}_{\star}$, pkpc-stacked',\
                             }
     
     if not isinstance(yvals_toplot, dict):
@@ -746,9 +784,11 @@ def plot_radprof_mstar(var='main', fontsize=fontsize):
                            labels=None, ions_perlabel=None, ytype=ytype,\
                            datadir=datadir, binset=0, units=units)
   
+    addlegend = (len(techvars_touse) > 1 and not lowmass) \
+                or len(techvars_touse) > 2
     panelwidth = 2.5
     panelheight = 2.
-    if len(techvars_touse) > 1:
+    if addlegend:
         legheight = 1.3
     else:
         legheight = 0.0
@@ -766,7 +806,7 @@ def plot_radprof_mstar(var='main', fontsize=fontsize):
                         height_ratios=[panelheight] * numrows + [legheight])
     axes = [fig.add_subplot(grid[i // numcols, i % numcols]) for i in range(len(ions))]
     cax  = fig.add_subplot(grid[:numrows, numcols])
-    if len(techvars_touse) > 1:
+    if addlegend:
         lax  = fig.add_subplot(grid[numrows, :])
     
   
@@ -954,7 +994,7 @@ def plot_radprof_mstar(var='main', fontsize=fontsize):
                                  linewidth=linewidths[var], colors=subcols)
         lcs.append(lc)
         
-    if len(techvars_touse) > 1:
+    if addlegend:
         lax.legend(lcs, [legendnames_techvars[var] for var in techvars_touse],\
                    handler_map={type(lc): pu.HandlerDashedLines()},\
                    fontsize=fontsize, ncol=2, loc='lower center',\
