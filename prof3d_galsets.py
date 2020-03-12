@@ -465,6 +465,9 @@ def genhists_massdist(samplename=None, rbinu='pkpc', idsel=None,\
            useful for testing on a few galaxies
            ! do not run in  parallel: different processes will try to write to
            the same list of output files
+    weighttype gas-[element-]nH gets input as gas for the weight itself, but 
+           an nH cut is used instead of SFR to determine ISM membership later 
+           on
     '''
     if samplename is None:
         samplename = defaults['sample']
@@ -516,10 +519,19 @@ def genhists_massdist(samplename=None, rbinu='pkpc', idsel=None,\
             # gamma = 5/3, G = newton constant, f_g = 1 (gas fraction), P = total pressure
             # A = 1.515 × 10−4 M⊙ yr−1 kpc−2, n = 1.4 (n = 2 at nH > 10^3 cm^-3)
             
-            axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
-            # minimum float32 value -> cgs units; much smaller than any SFR in the 12 Mpc box
-            minval = 2**-149 * c.solar_mass / c.sec_per_year 
-            nonrbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
+            if 'nH' in weighttype.split('-'):
+                axesdct.append({'ptype': 'Niondens', 'ion': 'hydrogen'})
+                # minimum float32 value -> cgs units; much smaller than any SFR in the 12 Mpc box
+                minval = 10**-1 # approx SFR threashold, but Z-independent 
+                nonrbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
+                weighttype = weighttype.split('-')
+                weighttype.remove('nH')
+                weighttype = '-'.join(weighttype)
+            else:
+                axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
+                # minimum float32 value -> cgs units; much smaller than any SFR in the 12 Mpc box
+                minval = 2**-149 * c.solar_mass / c.sec_per_year 
+                nonrbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
             
             axesdct.append({'ptype': 'basic', 'quantity': 'Temperature', 'excludeSFR': False})
             Tbins = np.array([-np.inf, 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8., 8.5, 9., np.inf])
@@ -529,9 +541,7 @@ def genhists_massdist(samplename=None, rbinu='pkpc', idsel=None,\
             logax = [False]
         
         name_append = '_%s_snapdata_CorrPartType'%rbinu
-            
-    
-        
+             
     with open(files(samplename, weighttype, histtype=axdct), 'w') as fdoc:
         fdoc.write('galaxyid\tfilename\tgroupname\n')
         

@@ -2791,7 +2791,15 @@ if jobind in range(20145, 20151):
                          numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
                          axis='z', velspace=False, offset_los=0., stamps=False,\
                          trackprogress=True)
-    
+
+### get 3d profiles: CGM/ISM split by nH
+elif jobind in range(20151, 20155):
+    weighttype = ['gas-nH', 'gas-nH-oxygen', 'gas-nH-neon',\
+                  'gas-nH-iron'][jobind - 20151]
+    p3g.genhists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
+                          rbinu='R200c', idsel=None,\
+                          axdct='rprof', weighttype=weighttype,\
+                          logM200min=11.0)
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################
