@@ -1742,18 +1742,27 @@ def plot3Dprof_ionw(minrshow=minrshow_R200c, ions=('o6', 'o7', 'o8'),\
 # baryon split, baryon contributions, halo mass buildup, halo metals, 
 # metals split
 # makes two of the paper plots: the halo mass and oxygen decompositions
-def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass'):
+def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass', nHcut=False):
     '''
     addedges: radial regions to consider; (0.0, 1.0) or (0.0, 2.0), units R200c
     var: 'Mass' for total mass
          'oxygen', 'neon', or 'iron' for metal mass
+    nHcut: CGM/ISM split based on nH </> 10**-1 cm**-3
+           otherwise: based on SFR =/> 0.
+           False used from examination of var=Mass plots: in low-mass haloes, 
+           the nH cut excludes quite some SF gas, which should be ISM. The SF
+           cut will, however, exclude some dense, but low-Z gas.
     '''
     print('lines are medians, shaded regions are central 80% (only shown for ISM, stars, CGM)')
     
     fontsize = 12
     
-    filename_in = datadir + 'massdist-baryoncomp_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb.hdf5'%(str(addedges[0]), str(addedges[1]))
-    outname = 'masscontr_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb_%s'%(str(addedges[0]), str(addedges[1]), var)
+    if nHcut:
+        filename_in = datadir + 'massdist-baryoncomp_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb_nHcut.hdf5'%(str(addedges[0]), str(addedges[1]))
+        outname = 'masscontr_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb_%s_nHcut'%(str(addedges[0]), str(addedges[1]), var)
+    else:
+        filename_in = datadir + 'massdist-baryoncomp_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb.hdf5'%(str(addedges[0]), str(addedges[1]))
+        outname = 'masscontr_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb_%s'%(str(addedges[0]), str(addedges[1]), var)
     outname = outname.replace('.', 'p')
     outname = mdir + outname + '.pdf'
     m200cbins = np.array(list(np.arange(11., 13.05, 0.1)) + [13.25, 13.5, 13.75, 14.0, 14.6])
@@ -1764,17 +1773,23 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass'):
     
     ylabel = '{var} fraction'.format(var=string.lower(var) + (' mass' if var != 'Mass' else ''))
     
+    if nHcut:
+        cgmlab = 'CGM'
+        ismlab = 'ISM'
+    else:
+        cgmlab = 'nonSF'
+        ismlab = 'SF'
     if var == 'Mass':
         groupname = 'massdist_Mass'
         catcol = {'BHs': ['BHs'],\
                   'DM': ['DM'],\
                   'gas': ['gas'],\
                   'stars': ['stars'],\
-                  'ISM': ['gas_SF_T--inf-5.0', 'gas_SF_T-5.0-5.5',\
-                          'gas_SF_T-5.5-7.0', 'gas_SF_T-7.0-inf'],\
-                  r'CGM $<5.5$': ['gas_nonSF_T--inf-5.0', 'gas_nonSF_T-5.0-5.5'],\
-                  r'CGM $5.5 \endash 7$': ['gas_nonSF_T-5.5-7.0'],\
-                  r'CGM $> 7$': ['gas_nonSF_T-7.0-inf']}
+                  'ISM': ['gas_{ism}_T--inf-5.0', 'gas_{ism}_T-5.0-5.5',\
+                          'gas_{ism}_T-5.5-7.0', 'gas_{ism}_T-7.0-inf'],\
+                  r'CGM $<5.5$': ['gas_{cgm}_T--inf-5.0', 'gas_{cgm}_T-5.0-5.5'],\
+                  r'CGM $5.5 \endash 7$': ['gas_{cgm}_T-5.5-7.0'],\
+                  r'CGM $> 7$': ['gas_{cgm}_T-7.0-inf']}
         addcol = {'total': ['BHs', 'gas', 'stars', 'DM'],\
                   'CGM': [r'CGM $<5.5$', r'CGM $5.5 \endash 7$', r'CGM $> 7$'],\
                   'baryons': ['BHs', 'gas', 'stars'],\
@@ -1783,15 +1798,17 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass'):
         groupname = 'massdist_%s'%(var)
         catcol = {'gas': ['gas-%s'%(var)],\
                   'stars': ['stars-%s'%(var)],\
-                  'ISM': ['gas-%s_SF_T--inf-5.0'%(var), 'gas-%s_SF_T-5.0-5.5'%(var),\
-                          'gas-%s_SF_T-5.5-7.0'%(var), 'gas-%s_SF_T-7.0-inf'%(var)],\
-                  r'CGM $<5.5$': ['gas-%s_nonSF_T--inf-5.0'%(var), 'gas-%s_nonSF_T-5.0-5.5'%(var)],\
-                  r'CGM $5.5 \endash 7$': ['gas-%s_nonSF_T-5.5-7.0'%(var)],\
-                  r'CGM $> 7$': ['gas-%s_nonSF_T-7.0-inf'%(var)]}
+                  'ISM': ['gas-%s_{ism}_T--inf-5.0'%(var), 'gas-%s_{ism}_T-5.0-5.5'%(var),\
+                          'gas-%s_{ism}_T-5.5-7.0'%(var), 'gas-%s_{ism}_T-7.0-inf'%(var)],\
+                  r'CGM $<5.5$': ['gas-%s_{cgm}_T--inf-5.0'%(var), 'gas-%s_{cgm}_T-5.0-5.5'%(var)],\
+                  r'CGM $5.5 \endash 7$': ['gas-%s_{cgm}_T-5.5-7.0'%(var)],\
+                  r'CGM $> 7$': ['gas-%s_{cgm}_T-7.0-inf'%(var)]}
         addcol = {'total': ['gas', 'stars'],\
                   'CGM': [r'CGM $<5.5$', r'CGM $5.5 \endash 7$', r'CGM $> 7$'],\
                   'gas-subsum': ['ISM', r'CGM $<5.5$', r'CGM $5.5 \endash 7$', r'CGM $> 7$']}
-        
+    catcol = {key: [val.format(ism=ismlab, cgm=cgmlab) for val in catcol[key]]\
+                    for key in catcol}
+    
     with h5py.File(filename_in, 'r') as fd:
         cosmopars = {key: item for key, item in fd['Header/cosmopars'].attrs.items()}
         m200cvals = np.log10(np.array(fd['M200c_Msun']))
@@ -2457,6 +2474,9 @@ def plotconfmatrix_mstarmhalo(fontsize=fontsize):
     
 def get_binmedians(binarr='M200c_Msun', binedges=mass_edges_standard,\
                    takelogarr=True):
+    '''
+    get median M200c in M200c bins
+    '''
     catfn = datadir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
     
     with h5py.File(catfn, 'r') as fc:
@@ -2497,3 +2517,488 @@ def calc_deltav_xray(width=2.5, z=0.1):
     print(wls)
     print('Delta v (km/s)')
     print(res)
+
+
+def get_dNdz_halos(limset='break'):   
+    '''
+    get number of absorbers >N for the different halo sets from masked and
+    FoF-only CDDFs. Threasholds N are set by 
+    limset: 'break' (CDDF break) or 'obs' (estimated observation limits)
+    '''
+
+    if limset == 'break':
+        lims = {'o6':   [14.3],\
+                'ne8':  [13.7],\
+                'o7':   [16.0],\
+                'ne9':  [15.3],\
+                'o8':   [16.0],\
+                'fe17': [15.0]}
+    elif limset == 'obs':
+        lims = {'o6':   [13.5],\
+                'ne8':  [13.5],\
+                'o7':   [15.5],\
+                'ne9':  [15.5],\
+                'o8':   [15.7],\
+                'fe17': [14.9]}
+
+    ions = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']
+    medges = np.arange(10., 14.1, 0.5) #np.arange(11., 14.1, 0.5)
+    halofills = [''] +\
+            ['Mhalo_%s<=log200c<%s'%(medges[i], medges[i + 1]) if i < len(medges) - 1 else \
+             'Mhalo_%s<=log200c'%medges[i] for i in range(len(medges))]
+    prefilenames_all = {key: ['coldens_%s_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel.hdf5'%(key, '%s', halofill) for halofill in halofills]
+                 for key in ions}   
+    filenames_all = {key: [ol.pdir + 'cddf_' + ((fn.split('/')[-1])%('-all'))[:-5] + '_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5' for fn in prefilenames_all[key]] for key in prefilenames_all.keys()}
+    
+    masses_proj = ['none'] + list(medges)
+    filedct = {ion: {masses_proj[i]: filenames_all[ion][i] for i in range(len(filenames_all[ion]))} for ion in ions} 
+    
+    masknames =  ['nomask',\
+                  #'logM200c_Msun-9.0-9.5',\
+                  #'logM200c_Msun-9.5-10.0',\
+                  'logM200c_Msun-10.0-10.5',\
+                  'logM200c_Msun-10.5-11.0',\
+                  'logM200c_Msun-11.0-11.5',\
+                  'logM200c_Msun-11.5-12.0',\
+                  'logM200c_Msun-12.0-12.5',\
+                  'logM200c_Msun-12.5-13.0',\
+                  'logM200c_Msun-13.0-13.5',\
+                  'logM200c_Msun-13.5-14.0',\
+                  'logM200c_Msun-14.0-inf',\
+                  ]
+    maskdct = {masses_proj[i]: masknames[i] for i in range(len(masknames))}
+    
+    ## read in cddfs from halo-only projections
+    dct_fofcddf = {}
+    for ion in ions:
+        dct_fofcddf[ion] = {}
+        # FoF CDDFs: only without masks
+        mmass = 'none'
+        dct_fofcddf[ion] = {}
+        for pmass in masses_proj:
+            try:
+                with h5py.File(filedct[ion][pmass]) as fi:
+                    #print(filedct[ion][pmass])
+                    try:
+                        bins = np.array(fi['bins/axis_0'])
+                    except KeyError as err:
+                        print('While trying to load bins in file %s\n:'%(filedct[pmass]))
+                        raise err
+                        
+                    dct_fofcddf[ion]['bins'] = bins
+                    
+                    inname = np.array(fi['input_filenames'])[0]
+                    inname = inname.split('/')[-1] # throw out directory path
+                    parts = inname.split('_')
+            
+                    numpix_1sl = set(part if 'pix' in part else None for part in parts) # find the part of the name needed: '...pix'
+                    numpix_1sl.remove(None)
+                    numpix_1sl = int(list(numpix_1sl)[0][:-3])
+                    print('Using %i pixels per side for the sample size'%numpix_1sl) # needed for the total path length
+                    
+                    grp = fi[maskdct[mmass]]
+                    hist = np.array(grp['hist'])
+                    covfrac = grp.attrs['covfrac']
+                    # recover cosmopars:
+                    cosmopars = cosmopars_ea_27
+                    dztot = cu.getdz(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
+                    #dXtotdlogN = dXtot * np.diff(bins)
+                    dct_fofcddf[ion][pmass] = {'cddf': hist / dztot, 'covfrac': covfrac}
+            
+            except IOError as err:
+                print('Failed to read in %s; stated error:'%filedct[pmass])
+                print(err)
+                
+    ## read in split cddfs from total ion projections
+    ion_filedct_excl_1R200c_cenpos = {'fe17': datadir + 'cddf_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'ne9':  datadir + 'cddf_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'ne8':  datadir + 'cddf_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o8':   datadir + 'cddf_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o7':   datadir + 'cddf_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o6':   datadir + 'cddf_coldens_o6_L0100N1504_27_test3.3_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      }
+    
+    dct_maskcddf = {}
+    for ion in ions:
+        file_allproj = ion_filedct_excl_1R200c_cenpos[ion]
+        dct_maskcddf[ion] = {}
+        with h5py.File(file_allproj) as fi:
+            #print(file_allproj)
+            try:
+                bins = np.array(fi['bins/axis_0'])
+            except KeyError as err:
+                print('While trying to load bins in file %s\n:'%(file_allproj))
+                raise err
+                
+            dct_maskcddf[ion]['bins'] = bins
+            
+            inname = np.array(fi['input_filenames'])[0]
+            inname = inname.split('/')[-1] # throw out directory path
+            parts = inname.split('_')
+        
+            numpix_1sl = set(part if 'pix' in part else None for part in parts) # find the part of the name needed: '...pix'
+            numpix_1sl.remove(None)
+            numpix_1sl = int(list(numpix_1sl)[0][:-3])
+            print('Using %i pixels per side for the sample size'%numpix_1sl) # needed for the total path length
+            
+            for mmass in masses_proj[1:]:
+                grp = fi[maskdct[mmass]]
+                hist = np.array(grp['hist'])
+                covfrac = grp.attrs['covfrac']
+                # recover cosmopars:
+                mask_examples = {key: item for (key, item) in grp.attrs.items()}
+                del mask_examples['covfrac']
+                example_key = mask_examples.keys()[0] # 'mask_<slice center>'
+                example_mask = mask_examples[example_key] # '<dir path><mask file name>'
+                path = 'masks/%s/%s/Header/cosmopars'%(example_key[5:], example_mask.split('/')[-1])
+                cosmopars = {key: item for (key, item) in fi[path].attrs.items()}
+                dXtot = cu.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
+                #dXtotdlogN = dXtot * np.diff(bins)
+            
+                dct_maskcddf[ion][mmass] = {'cddf': hist / dXtot, 'covfrac': covfrac}
+            # use cosmopars from the last read mask
+            mmass = 'none'
+            grp = fi[maskdct[mmass]]
+            hist = np.array(grp['hist'])
+            covfrac = grp.attrs['covfrac']
+            # recover cosmopars:
+            dztot = cu.getdz(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
+            #dXtotdlogN = dXtot * np.diff(bins)
+            dct_maskcddf[ion][mmass] = {'cddf': hist / dztot, 'covfrac': covfrac}
+    
+    results = {}
+    for ion in ions:
+       results[ion] = {}
+       bins_mask = dct_maskcddf[ion]['bins']
+       bins_fof  = dct_fofcddf[ion]['bins']
+       
+       for mmass in masses_proj:
+           cumul_fof =  np.cumsum(dct_fofcddf[ion][mmass]['cddf'][::-1])[::-1]
+           val_fof  = pu.linterpsolve(bins_fof[:-1], cumul_fof, lims[ion][0])
+           results[ion][mmass] = {'fof': val_fof}
+               
+           cumul_mask = np.cumsum(dct_maskcddf[ion][mmass]['cddf'][::-1])[::-1]
+           val_mask = pu.linterpsolve(bins_mask[:-1], cumul_mask, lims[ion][0])
+           fcov_mask = dct_maskcddf[ion][mmass]['covfrac']
+           
+           results[ion][mmass].update({'mask': val_mask, 'fcov': fcov_mask})
+
+    strings_mmass = {'none': 'total'}
+    strings_mmass.update({mmass: '{Mmin:.1f}--{Mmax:.1f}'.format(Mmin=mmass, Mmax=mmass + 0.5) \
+                                 if mmass < 13.9 else \
+                                 '$>{Mmin:.1f}$'.format(Mmin=mmass) \
+                                 for mmass in masses_proj[1:]})
+    
+    ionstr = {ion: '\\ion{{{}}}{{{}}}'.format(ild.getnicename(ion).split(' ')[0], \
+                                              string.lower(ild.getnicename(ion).split(' ')[1])) \
+              for ion in ions}
+    
+    ### print overview table
+    print('FoF-only CDDFs (total = all haloes)')
+    print('dn(>N, halo) / dz')
+    topstr = '$\\mathrm{{M}}_{{200\\mathrm{{c}}}} $ & ' + \
+             ' & '.join(['{ion}'.format(ion=ionstr[ion]) for ion in ions]) + ' \\\\'
+    topstr2 = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\odot}}$ & ' +\
+              ' & '.join(['$>{yval:.1f}$'.format(yval=lims[ion][0]) for ion in ions]) + ' \\\\'
+    fillstr = '{massst} & ' + ' & '.join(['{{{ist}:.3f}}'.format(ist=ion) for ion in ions]) + ' \\\\'
+    #resstr = 'total &  ' +  ' & '.join(['{{{ist}:.4f}}'.format(ist=ion) for ion in ions]) + ' \\\\'
+
+    print(topstr)
+    print(topstr2)
+    print('\\hline')
+    for Mmin in masses_proj:
+        print(fillstr.format(massst=strings_mmass[Mmin],\
+                             **{ion: results[ion][Mmin]['fof'] for ion in ions}))
+    print('\n')
+    print('R200c mask CDDFs (total = all gas)')
+    print(topstr)
+    print(topstr2)
+    print('\\hline')
+    for Mmin in masses_proj:
+        print(fillstr.format(massst=strings_mmass[Mmin],\
+                             **{ion: results[ion][Mmin]['mask'] for ion in ions}))    
+    print('\n')
+    print('R200c mask CDDFs as a fraction of all gas')
+    print(topstr)
+    print(topstr2)
+    print('\\hline')
+    for Mmin in masses_proj[1:]:
+        print(fillstr.format(massst=strings_mmass[Mmin],\
+                             **{ion: results[ion][Mmin]['mask'] / results[ion]['none']['mask'] for ion in ions}))
+    print(fillstr.format(massst='halo total',\
+                             **{ion: np.sum([results[ion][Mmin]['mask'] for Mmin in masses_proj[1:]]) / results[ion]['none']['mask'] for ion in ions}))
+    
+    print('\n')
+    print('FoF all halos / total CDDF')
+    print(topstr)
+    print(topstr2)
+    print('\\hline')
+    print(fillstr.format(massst='all FoF / all gas',\
+                             **{ion: results[ion]['none']['fof'] / results[ion]['none']['mask'] for ion in ions}))
+    
+
+def getcovfrac_total_halo(minr_pkpc, maxr_r200c):
+    '''
+    for an ion, get the fraction of the total halo covering fraction (<maxr) 
+    and the total cddf contribution (< minr, <maxr) for absorber above the 
+    cddf break, assuming no halo overlaps 
+    
+    '''
+    fcovset = 'break'
+    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
+    
+    halocat='/net/luttero/data2/proc/catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    # rounded1 set used in the paper
+    Ms_edges = np.array([8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.7], dtype=np.float32)
+
+    with h5py.File(halocat, 'r') as cat:
+        r200c = np.array(cat['R200c_pkpc'])
+        mstar = np.log10(np.array(cat['Mstar_Msun']))
+        minds = np.digitize(mstar, Ms_edges)
+        rmeds = [np.median(r200c[minds == i]) for i in range(1, len(Ms_edges))] # digitize 0 -> < first bin
+        
+    if fcovset == 'break':
+        ytype='fcov'
+        yvals_toplot = {'o6':   [14.3],\
+                        'ne8':  [13.7],\
+                        'o7':   [16.0],\
+                        'ne9':  [15.3],\
+                        'o8':   [16.0],\
+                        'fe17': [15.0]}
+    elif fcovset == 'obs':
+        ytype='fcov'
+        yvals_toplot = {'o6':   [13.5],\
+                        'ne8':  [13.5],\
+                        'o7':   [15.5],\
+                        'ne9':  [15.5],\
+                        'o8':   [15.7],\
+                        'fe17': [14.9]}
+
+    cosmopars = cosmopars_ea_27
+
+    ion_filedct_Mstar = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o8':   'rdist_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         }
+    ion_filedct_Mstar_lowmass = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o8':   'rdist_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         }
+
+    # define used mass ranges
+    Ms_mins = list(Ms_edges[:-1])
+    Ms_maxs = list(Ms_edges[1:]) 
+    #Ms_base = ['geq%.1f_le%.1f'%(smin, smax) for smin, smax in zip(Ms_mins, Ms_maxs)]
+    Ms_names_hm = ['logMstar_Msun_1000_geq%.1f_le%.1f'%(smin, smax) for smin, smax in zip(Ms_mins[2:], Ms_maxs[2:])]
+    Ms_names_lm = ['logMstar_Msun_1000_geq%.1f_le%.1f'%(smin, smax) for smin, smax in zip(Ms_mins[:2], Ms_maxs[:2])]
+    Ms_names = Ms_names_lm + Ms_names_hm
+    #Ms_sels = [('logMstar_Msun', Ms_mins[i], Ms_maxs[i]) if Ms_maxs[i] is not None else\
+    #           ('logMstar_Msun', Ms_mins[i], np.inf)\
+    #           for i in range(len(Ms_mins))]
+    #galsetnames_smass = {name: sel for name, sel in zip(Ms_names, Ms_sels)}
+        
+    # R200c to assume for each M* bin   
+    R200c_toassume = {name: val for name, val in zip(Ms_names, rmeds)}
+    
+    techvars = {0: {'filenames': ion_filedct_Mstar, 'setnames': Ms_names_hm,\
+                    'setfills': None, 'units': 'pkpc'},\
+                1: {'filenames': ion_filedct_Mstar_lowmass,\
+                    'setnames': Ms_names_lm,\
+                    'setfills': None, 'units': 'pkpc'},\
+                }
+           
+    yvals_label_ion = {tv: yvals_toplot for tv in techvars}
+    yvals, bins, numgals = readin_radprof(techvars, yvals_label_ion,\
+                   labels=None, ions_perlabel=None, ytype=ytype,\
+                   datadir=datadir, binset=0, units='pkpc')
+    
+    # techvars here are just different files for different masses -> combine
+    _yvals = yvals[0].copy()
+    [_yvals[ion].update(yvals[1][ion]) for ion in _yvals]
+    yvals = _yvals
+    
+    _bins = bins[0].copy()
+    [_bins[ion].update(bins[1][ion]) for ion in _bins]
+    bins = _bins
+  
+    npix_rminmax = {}
+    # size of one pixel (pkpc)
+    pixsize = (100. / 32000.) * 1e3 * cosmopars['a']
+    for ionind in range(len(ions)):   
+        ion = ions[ionind]
+        tags = Ms_names
+        # example tag 'logMstar_Msun_1000_geq%.1f_le%.1f'
+        tags = sorted(tags, key=lambda x: float(x.split('_')[3][3:]))
+        #print(tags)
+        npix_rminmax[ion] = {}
+        
+        for ti in range(len(tags)): # mass bins
+            #print(tag)
+            tag = tags[ti]
+            npix_rminmax[ion][tag] = {}         
+            try:
+                rvals = np.array(bins[ion][tag])
+            except KeyError: # dataset not read in
+                print('Could not find ion %s, tag %s'%(ion, tag))
+                continue
+            #rtag = '_'.join(tag.split('_')[-2:])
+            basesize = R200c_toassume[tag]
+            maxr_pkpc = maxr_r200c * basesize
+            fcovs = np.array(yvals[ion][tag][yvals_toplot[ion][0]])
+            
+            npix_r = fcovs * np.pi * (rvals[1:]**2 - rvals[:-1]**2 ) / pixsize**2 # fraction * annulus surface area / pixel size    
+            npix_inr = np.cumsum(npix_r)
+            print(rvals)
+            print(minr_pkpc)
+            print(maxr_pkpc)
+            npix_inrmin = pu.linterpsolve(rvals[1:], npix_inr, minr_pkpc)
+            npix_inrmax = pu.linterpsolve(rvals[1:], npix_inr, maxr_pkpc)
+            
+            npix_rminmax[ion][tag].update({'maxr_pkpc': maxr_pkpc,\
+                        'npix_perhalo_inrmin': npix_inrmin,\
+                        'npix_perhalo_inrmax': npix_inrmax})       
+    
+    ##### read in total cddfs
+    ion_filedct_excl_1R200c_cenpos = {'fe17': datadir + 'cddf_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'ne9':  datadir + 'cddf_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'ne8':  datadir + 'cddf_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o8':   datadir + 'cddf_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o7':   datadir + 'cddf_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o6':   datadir + 'cddf_coldens_o6_L0100N1504_27_test3.3_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      }
+    
+    techvars = {0: ion_filedct_excl_1R200c_cenpos}
+    
+    masknames = ['nomask']
+
+    hists = {}
+    cosmopars = {}
+    dXtot = {}
+    dztot = {}
+    dXtotdlogN = {}
+    bins = {}
+    
+    for var in techvars:
+        hists[var] = {}
+        cosmopars[var] = {}
+        dXtot[var] = {}
+        dztot[var] = {}
+        dXtotdlogN[var] = {}
+        bins[var] = {}
+        for ion in ions:
+            print('Reading in data for ion %s'%ion)
+            filename = techvars[var][ion]
+            with h5py.File(filename, 'r') as fi:
+                _bins = np.array(fi['bins/axis_0'])
+                # handle +- infinity edges for plotting; should be outside the plot range anyway
+                if _bins[0] == -np.inf:
+                    _bins[0] = -100.
+                if _bins[-1] == np.inf:
+                    _bins[-1] = 100.
+                bins[var][ion] = _bins
+                
+                # extract number of pixels from the input filename, using naming system of make_maps
+                inname = np.array(fi['input_filenames'])[0]
+                inname = inname.split('/')[-1] # throw out directory path
+                parts = inname.split('_')
+        
+                numpix_1sl = set(part if 'pix' in part else None for part in parts) # find the part of the name needed: '...pix'
+                numpix_1sl.remove(None)
+                numpix_1sl = int(list(numpix_1sl)[0][:-3])
+                print('Using %i pixels per side for the sample size'%numpix_1sl) # needed for the total path length
+                
+                ionind = 1 + np.where(np.array([part == 'coldens' for part in parts]))[0][0]
+                ion = parts[ionind]
+                
+                masks = masknames
+        
+                hists[var][ion] = {mask: np.array(fi['%s/hist'%mask]) for mask in masks}
+                #print('ion %s: sum = %f'%(ion, np.sum(hists[var][ion]['nomask'])))
+                
+                examplemaskdir = fi['masks'].keys()[0]
+                examplemask = fi['masks/%s'%(examplemaskdir)].keys()[0]
+                cosmopars[var][ion] = {key: item for (key, item) in fi['masks/%s/%s/Header/cosmopars/'%(examplemaskdir, examplemask)].attrs.items()}
+                dXtot[var][ion] = cu.getdX(cosmopars[var][ion]['z'], cosmopars[var][ion]['boxsize'] / cosmopars[var][ion]['h'], cosmopars=cosmopars[var][ion]) * float(numpix_1sl**2)
+                dztot[var][ion] = cu.getdz(cosmopars[var][ion]['z'], cosmopars[var][ion]['boxsize'] / cosmopars[var][ion]['h'], cosmopars=cosmopars[var][ion]) * float(numpix_1sl**2)
+                dXtotdlogN[var][ion] = dXtot[var][ion] * np.diff(bins[var][ion])
+    
+    npix_overlim_all = {}
+    var_tot = 0
+    totpix = 16 * 32000**2 # checked hist sum
+    for ion in ions:
+        lim = yvals_toplot[ion][0]
+        edges = bins[var_tot][ion]
+        counts = hists[var_tot][ion]['nomask']
+        cumulcounts = np.cumsum(counts[::-1])[::-1]
+        npix_overlim_all[ion] = pu.linterpsolve(edges[:-1], cumulcounts, lim)
+        print('{ion} fcov total: {fcov}'.format(ion=ion, fcov=npix_overlim_all[ion] / totpix))
+    print('\n')
+    
+    overview = {}
+    for ion in ions:
+        tags = list(npix_rminmax[ion].keys())
+        minmaxv = np.array([[float(x.split('_')[3][3:]), float(x.split('_')[4][2:])] for x in tags])
+        _ind = np.argsort(minmaxv[:, 0])
+        tags = np.array(tags)[_ind]
+        minmaxv = minmaxv[_ind, :]
+        overview[ion] = {'limval': yvals_toplot[ion][0]}
+        
+        #print('For ion {ion}, absorbers > {val}'.format(ion=ion, val=yvals_toplot[ion]))
+        for ti in range(len(tags)):
+            Mmin, Mmax = minmaxv[ti]
+            tag = tags[ti]
+            numgals = np.sum(np.logical_and(mstar >= Mmin, mstar < Mmax))
+            
+            inmin_over_inmax = npix_rminmax[ion][tag]['npix_perhalo_inrmin'] /\
+                               npix_rminmax[ion][tag]['npix_perhalo_inrmax']
+            inmax_over_total = npix_rminmax[ion][tag]['npix_perhalo_inrmax'] \
+                               * numgals / npix_overlim_all[ion]
+            rmax = npix_rminmax[ion][tag]['maxr_pkpc']
+            
+            overview[ion][Mmin] = {'Mmin': Mmin, 'Mmax': Mmax, 'rmax': rmax,\
+                                   'inmin_over_inmax': inmin_over_inmax,\
+                                   'inmax_over_total': inmax_over_total}
+            #print('In Mstar range {Mmin:4.1f}-{Mmax:4.1f}:'.format(Mmin=Mmin, Mmax=Mmax))
+            #print('    < {rmin:6.3f} pkpc / < {rmax:6.3f} pkpc: {corefrac}'.format(rmin=minr_pkpc, rmax=rmax, corefrac=inmin_over_inmax))
+            #print('    < {rmax:6.3f} pkpc / total: {halofrac}'.format(rmax=rmax, halofrac=inmax_over_total))
+            #print('{num} galaxies'.format(num=numgals))
+        #print('\n')
+    #print([set(overview[ion].keys()) == set(overview[ions[0]].keys()) for ion in ions])
+    
+    ### print overview table
+    print('For an inner radius of {minr} pkpc'.format(minr=minr_pkpc))
+    print('Core contribution / total halo')
+    topstr = '$\\mathrm{{M}}_{{\\star}}$' +\
+             ' & $\\mathrm{{r}}_{{\\perp, \\max}}$ &' +\
+             ' & '.join(['{ion}'.format(ion=ild.getnicename(ion)) for ion in ions]) + ' \\\\'
+    topstr2 = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\odot}}$' +\
+              ' & $\\mathrm{{pkpc}}$ &' +\
+              ' & '.join(['$>{yval:.1f}$'.format(yval=yvals_toplot[ion][0]) for ion in ions]) + ' \\\\'
+    fillstr = '{Mmin:.1f}--{Mmax:.1f} & {rmax:.0f} & ' + ' & '.join(['{{{ist}:.4f}}'.format(ist=ion) for ion in ions]) + ' \\\\'
+    totstr = 'total & \t & ' +  ' & '.join(['{{{ist}:.4f}}'.format(ist=ion) for ion in ions]) + ' \\\\'
+    Mvals = list(overview[ions[0]].keys())
+    Mvals.remove('limval')
+    stion = ions[0]
+    print(topstr)
+    print(topstr2)
+    for Mmin in sorted(Mvals):
+        print(fillstr.format(Mmin=overview[stion][Mmin]['Mmin'],\
+                             Mmax=overview[stion][Mmin]['Mmax'],\
+                             rmax=overview[stion][Mmin]['rmax'],\
+                             **{ion: overview[ion][Mmin]['inmin_over_inmax'] for ion in ions}))
+    print('\n')
+    print('Halo contribution / total')
+    print(topstr)
+    print(topstr2)
+    for Mmin in sorted(Mvals):
+        print(fillstr.format(Mmin=overview[stion][Mmin]['Mmin'],\
+                             Mmax=overview[stion][Mmin]['Mmax'],\
+                             rmax=overview[stion][Mmin]['rmax'],\
+                             **{ion: overview[ion][Mmin]['inmax_over_total'] for ion in ions}))
+    print(totstr.format(**{ion: np.sum([overview[ion][Mmin]['inmax_over_total'] for Mmin in Mvals]) for ion in ions}))

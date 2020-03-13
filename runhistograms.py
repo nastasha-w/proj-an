@@ -2800,6 +2800,16 @@ elif jobind in range(20151, 20155):
                           rbinu='R200c', idsel=None,\
                           axdct='rprof', weighttype=weighttype,\
                           logM200min=11.0)
+# nH, SF cut variations
+elif jobind in range(20155, 20163):
+    weighttype = ['gas-nHm2', 'gas-nHm2-oxygen', 'gas-nHm2-neon',\
+                  'gas-nHm2-iron',\
+                  'gas-nHorSF', 'gas-nHorSF-oxygen', 'gas-nHorSF-neon',\
+                  'gas-nHorSF-iron'][jobind - 20155]
+    p3g.genhists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
+                          rbinu='R200c', idsel=None,\
+                          axdct='rprof', weighttype=weighttype,\
+                          logM200min=11.0)
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################

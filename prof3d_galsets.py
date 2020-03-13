@@ -465,10 +465,14 @@ def genhists_massdist(samplename=None, rbinu='pkpc', idsel=None,\
            useful for testing on a few galaxies
            ! do not run in  parallel: different processes will try to write to
            the same list of output files
-    weighttype gas-[element-]nH gets input as gas for the weight itself, but 
+    weighttype gas-nH-[element] gets input as gas for the weight itself, but 
            an nH cut is used instead of SFR to determine ISM membership later 
-           on
+           on (0.1 cc)
+           nHm2 instead: used 0.01 cc
+           nHorSF: uses 0.1 cc cut or SF to define the ISM
     '''
+    logname = files(samplename, weighttype, histtype=axdct)
+    
     if samplename is None:
         samplename = defaults['sample']
     fin = dataname(samplename)
@@ -527,22 +531,48 @@ def genhists_massdist(samplename=None, rbinu='pkpc', idsel=None,\
                 weighttype = weighttype.split('-')
                 weighttype.remove('nH')
                 weighttype = '-'.join(weighttype)
+                logax = [False, False, True]
+            elif 'nHm2' in weighttype.split('-'):
+                axesdct.append({'ptype': 'Niondens', 'ion': 'hydrogen'})
+                # minimum float32 value -> cgs units; much smaller than any SFR in the 12 Mpc box
+                minval = 10**-2 # approx SFR threashold, but Z-independent 
+                nonrbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
+                weighttype = weighttype.split('-')
+                weighttype.remove('nHm2')
+                weighttype = '-'.join(weighttype)
+                logax = [False, False, True]
+            elif 'nHorSF' in weighttype.split('-'):
+                axesdct.append({'ptype': 'Niondens', 'ion': 'hydrogen'})
+                # minimum float32 value -> cgs units; much smaller than any SFR in the 12 Mpc box
+                minval = 10**-1 # approx SFR threashold, but Z-independent 
+                nonrbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
+                weighttype = weighttype.split('-')
+                weighttype.remove('nHorSF')
+                weighttype = '-'.join(weighttype)
+                
+                axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
+                # minimum float32 value -> cgs units; much smaller than any SFR in the 12 Mpc box
+                minval = 2**-149 * c.solar_mass / c.sec_per_year 
+                nonrbins.append(np.array([-np.inf, minval, np.inf]))
+                
+                logax = [False, False, False, True]
             else:
                 axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
                 # minimum float32 value -> cgs units; much smaller than any SFR in the 12 Mpc box
                 minval = 2**-149 * c.solar_mass / c.sec_per_year 
                 nonrbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
-            
+                logax = [False, False, True]
+                
             axesdct.append({'ptype': 'basic', 'quantity': 'Temperature', 'excludeSFR': False})
             Tbins = np.array([-np.inf, 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8., 8.5, 9., np.inf])
             nonrbins.append(Tbins)
-            logax = [False, False, True]
+            
         else:
             logax = [False]
         
         name_append = '_%s_snapdata_CorrPartType'%rbinu
              
-    with open(files(samplename, weighttype, histtype=axdct), 'w') as fdoc:
+    with open(logname, 'w') as fdoc:
         fdoc.write('galaxyid\tfilename\tgroupname\n')
         
         for gid in galaxyids:
@@ -1005,7 +1035,7 @@ def addhalomasses_hists_ionfrac(samplename='L0100N1504_27_Mh0p5dex_1000',\
         fn.create_dataset('M200c_Msun', data=m200c)
         
 def extracthists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
-              addedges=(0.0, 1.)):    
+              addedges=(0.0, 1.), nHcut=False, nHm2=False, nHorSF=False):    
     '''
     generate the histograms for a given sample
     rbinu: used fixed bins in pkpc or in R200c (relevant for stacking)
@@ -1026,12 +1056,28 @@ def extracthists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
              histogram)
            - 'addnormed-all': add histograms normalized by the sum of the 
              histogram to the outermost radial bin
+    nHcut: use the nH limit (10^-1 cm^-3) instead of SFR to define the ISM
+    nHm2:  use the nH limit (10^-2 cm^-3) instead of SFR to define the ISM
+    nHorSF: use nH > 10^-1 cm^-3 OR SF to define the ISM
     '''
     
     rbinu='R200c'
-    outname = ol.pdir + 'massdist-baryoncomp_halos_%s_%s-%s-%s_PtAb.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)
-    weighttypes_ion = {'Mass': ['gas', 'stars', 'BHs', 'DM']} 
-    weighttypes_ion.update({elt: ['gas-%s'%(elt), 'stars-%s'%(elt)] for elt in ['oxygen', 'neon', 'iron']})
+    if nHcut:
+        outname = ol.pdir + 'massdist-baryoncomp_halos_%s_%s-%s-%s_PtAb_nHcut.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)
+        weighttypes_ion = {'Mass': ['gas-nH', 'stars', 'BHs', 'DM']} 
+        weighttypes_ion.update({elt: ['gas-nH-%s'%(elt), 'stars-%s'%(elt)] for elt in ['oxygen', 'neon', 'iron']})
+    elif nHm2:
+        outname = ol.pdir + 'massdist-baryoncomp_halos_%s_%s-%s-%s_PtAb_nHm2cut.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)
+        weighttypes_ion = {'Mass': ['gas-nHm2', 'stars', 'BHs', 'DM']} 
+        weighttypes_ion.update({elt: ['gas-nHm2-%s'%(elt), 'stars-%s'%(elt)] for elt in ['oxygen', 'neon', 'iron']})
+    elif nHorSF:
+        outname = ol.pdir + 'massdist-baryoncomp_halos_%s_%s-%s-%s_PtAb_nHorSFcut.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)
+        weighttypes_ion = {'Mass': ['gas-nHorSF', 'stars', 'BHs', 'DM']} 
+        weighttypes_ion.update({elt: ['gas-nHorSF-%s'%(elt), 'stars-%s'%(elt)] for elt in ['oxygen', 'neon', 'iron']})
+    else:
+        outname = ol.pdir + 'massdist-baryoncomp_halos_%s_%s-%s-%s_PtAb.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)
+        weighttypes_ion = {'Mass': ['gas', 'stars', 'BHs', 'DM']} 
+        weighttypes_ion.update({elt: ['gas-%s'%(elt), 'stars-%s'%(elt)] for elt in ['oxygen', 'neon', 'iron']})
     gas_tlims_add = [-np.inf, 5., 5.5, 7., np.inf]
     histtype = 'rprof'
     
@@ -1080,8 +1126,13 @@ def extracthists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
 
     # temperature and SF/nonSF gas subset labels
     tlbl = ['T-%s-%s'%(gas_tlims_add[i], gas_tlims_add[i + 1]) for i in range(len(gas_tlims_add) - 1)]
-    slbl = ['nonSF', 'SF']
-    
+    if nHcut or nHm2:
+        slbl = ['CGM', 'ISM']
+    else:
+        slbl = ['nonSF', 'SF']
+    if nHorSF:
+        nlbl = ['lodens', 'hidens']
+        
     with h5py.File(outname, 'a') as fo:
         csp = fo.create_group('Header/cosmopars')
         for key in cosmopars:
@@ -1092,7 +1143,7 @@ def extracthists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
         
         for wtkey in weighttypes_ion:  
             wtlist = weighttypes_ion[wtkey]
-            storeorder = wtlist.copy() 
+            storeorder = list(np.copy(wtlist)) 
             for weight in wtlist:
                 if 'gas' in weight:
                     storeorder += ['_'.join([weight, sl, tl]) for sl in slbl for tl in tlbl]
@@ -1152,28 +1203,65 @@ def extracthists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
                         except KeyError:
                             raise KeyError('Could not retrieve Temperature histogram axis for galaxy %i, file %s'%(galid, ifilen_temp))
                         tinds = np.where(np.isclose(edges_t[tax][:, np.newaxis], np.array(gas_tlims_add)[np.newaxis, :]))[0]
-                                              
-                        try:
-                            sax = edgedata_t['StarFormationRate_T4EOS']['histogram axis']
-                        except KeyError:
-                            raise KeyError('Could not retrieve StarFormationRate histogram axis for galaxy %i, file %s'%(galid, ifilen_temp))
-                        sinds = np.where(np.isclose(edges_t[sax], [-np.inf, 0., np.inf]))[0] # middle value is minimally > 0., but within isclose range
+                        
+                        if nHcut or nHm2:
+                            try:
+                                sax = edgedata_t['Niondens_hydrogen_PtAb_T4EOS']['histogram axis']
+                            except KeyError:
+                                raise KeyError('Could not retrieve nH histogram axis for galaxy %i, file %s'%(galid, ifilen_temp))
+                            if nHcut:
+                                sinds = np.where(np.isclose(edges_t[sax], [-np.inf, 0.1, np.inf]))[0] 
+                            else:
+                                sinds = np.where(np.isclose(edges_t[sax], [-np.inf, 0.01, np.inf]))[0] 
+                        else:
+                            try:
+                                sax = edgedata_t['StarFormationRate_T4EOS']['histogram axis']
+                            except KeyError:
+                                raise KeyError('Could not retrieve StarFormationRate histogram axis for galaxy %i, file %s'%(galid, ifilen_temp))
+                            sinds = np.where(np.isclose(edges_t[sax], [-np.inf, 0., np.inf]))[0] # middle value is minimally > 0., but within isclose range
+                        if nHorSF:
+                            try:
+                                nax = edgedata_t['Niondens_hydrogen_PtAb_T4EOS']['histogram axis']
+                            except KeyError:
+                                raise KeyError('Could not retrieve nH histogram axis for galaxy %i, file %s'%(galid, ifilen_temp))
+                                ninds = np.where(np.isclose(edges_t[nax], [-np.inf, 0.1, np.inf]))[0] 
                                               
                         addsel_base = [slice(None, None, None)] * len(edges_t)
                         addsel_base[rax] = slice(ind1, ind2, None) # left edge ind1 -> start from in ind1, right edge ind2 -> stop after bin ind2 - 1
-                        for ti in range(len(tlbl)):
-                            t1 = tinds[ti]
-                            t2 = tinds[ti + 1]
-                            tl = tlbl[ti]
-                            for si in range(len(slbl)):
-                                s1 = sinds[si]
-                                s2 = sinds[si + 1]
-                                sl = slbl[si]
-                                addsel = addsel_base.copy()
-                                addsel[tax] = slice(t1, t2, None)
-                                addsel[sax] = slice(s1, s2, None)
-                                storekey = '_'.join([wt, sl, tl])
-                                tempsum[storekey] = np.sum(hist_t[tuple(addsel)])
+                        if nHorSF:
+                            for ti in range(len(tlbl)):
+                                t1 = tinds[ti]
+                                t2 = tinds[ti + 1]
+                                tl = tlbl[ti]
+                                for si in range(len(slbl)):
+                                    s1 = sinds[si]
+                                    s2 = sinds[si + 1]
+                                    sl = slbl[si]
+                                    for ni in range(len(nlbl)):
+                                        n1 = ninds[ni]
+                                        n2 = ninds[ni + 1]
+                                        nl = nlbl[ni]
+                                        addsel = list(np.copy(addsel_base))
+                                        addsel[tax] = slice(t1, t2, None)
+                                        addsel[sax] = slice(s1, s2, None)
+                                        addsel[nax] = slice(n1, n2, None)
+                                        storekey = '_'.join([wt, sl, nl, tl])
+                                        tempsum[storekey] = np.sum(hist_t[tuple(addsel)])
+                        else:
+                            for ti in range(len(tlbl)):
+                                t1 = tinds[ti]
+                                t2 = tinds[ti + 1]
+                                tl = tlbl[ti]
+                                for si in range(len(slbl)):
+                                    s1 = sinds[si]
+                                    s2 = sinds[si + 1]
+                                    sl = slbl[si]
+                                    addsel = list(np.copy(addsel_base))
+                                    addsel[tax] = slice(t1, t2, None)
+                                    addsel[sax] = slice(s1, s2, None)
+                                    storekey = '_'.join([wt, sl, tl])
+                                    tempsum[storekey] = np.sum(hist_t[tuple(addsel)])
+                                
                         
                     # also store total gas for conistency checks etc.
                     addsel = [slice(None, None, None)] * len(edges_t)
