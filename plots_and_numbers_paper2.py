@@ -1390,7 +1390,7 @@ def plotcddfsplits_fof_zev():
     
     # set up the proxy artist
     for ls in ['solid', 'dotted']:
-        subcols = [colors[ed] for ed in massedges] +\
+        subcols = [colors[ed] for ed in massedges[:-1]] +\
                   [mpl.colors.to_rgba(colors['allhalos'], alpha=alpha)]
         subcols = np.array(subcols)
         subcols[:, 3] = 1. # alpha value
