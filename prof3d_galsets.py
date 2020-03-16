@@ -523,6 +523,7 @@ def genhists_massdist(samplename=None, rbinu='pkpc', idsel=None,\
             # gamma = 5/3, G = newton constant, f_g = 1 (gas fraction), P = total pressure
             # A = 1.515 × 10−4 M⊙ yr−1 kpc−2, n = 1.4 (n = 2 at nH > 10^3 cm^-3)
             
+            name_append = '_%s_snapdata_CorrPartType'%rbinu
             if 'nH' in weighttype.split('-'):
                 axesdct.append({'ptype': 'Niondens', 'ion': 'hydrogen'})
                 # minimum float32 value -> cgs units; much smaller than any SFR in the 12 Mpc box
@@ -533,7 +534,6 @@ def genhists_massdist(samplename=None, rbinu='pkpc', idsel=None,\
                 weighttype = '-'.join(weighttype)
                 logax = [False, False, True]
             elif 'nHm2' in weighttype.split('-'):
-                print('doing nHm2')
                 axesdct.append({'ptype': 'Niondens', 'ion': 'hydrogen'})
                 # minimum float32 value -> cgs units; much smaller than any SFR in the 12 Mpc box
                 minval = 10**-2 # approx SFR threashold, but Z-independent 
@@ -542,6 +542,7 @@ def genhists_massdist(samplename=None, rbinu='pkpc', idsel=None,\
                 weighttype.remove('nHm2')
                 weighttype = '-'.join(weighttype)
                 logax = [False, False, True]
+                name_append  = name_append + '_m2lim'
             elif 'nHorSF' in weighttype.split('-'):
                 axesdct.append({'ptype': 'Niondens', 'ion': 'hydrogen'})
                 # minimum float32 value -> cgs units; much smaller than any SFR in the 12 Mpc box
@@ -567,13 +568,11 @@ def genhists_massdist(samplename=None, rbinu='pkpc', idsel=None,\
             axesdct.append({'ptype': 'basic', 'quantity': 'Temperature', 'excludeSFR': False})
             Tbins = np.array([-np.inf, 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8., 8.5, 9., np.inf])
             nonrbins.append(Tbins)
-            print(axesdct)
-            print(nonrbins)
-            return
+            
         else:
             logax = [False]
         
-        name_append = '_%s_snapdata_CorrPartType'%rbinu
+        
              
     with open(logname, 'w') as fdoc:
         fdoc.write('galaxyid\tfilename\tgroupname\n')
