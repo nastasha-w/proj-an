@@ -1163,6 +1163,8 @@ def extracthists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
                         raise err
                         
                     with h5py.File(ifilen_temp, 'r') as fit:
+                        print(ifilen_temp)
+                        print(igrpn_temp)
                         igrp_t = fit[igrpn_temp]
                         hist_t = np.array(igrp_t['histogram'])
         
