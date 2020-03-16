@@ -695,6 +695,29 @@ def plot_cddfs(ions, fontsize=fontsize, imgname=None, techvars=[0]):
     
     plt.savefig(imgname, format='pdf', bbox_inches='tight')
 
+def save_Tvir_ions(snap=27, _ioncolors=ioncolors):
+    '''
+    contour plots for ions balances + shading for halo masses at different Tvir
+    '''
+    
+    outdir = '/net/luttero/data2/paper2/'
+    outname = 'ionbal_snap{snap}.hdf5'.format(snap=snap)   
+    outname = outdir + outname
+    
+    ions = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']
+    if snap == 27:
+        cosmopars = cosmopars_ea_27
+        
+    with h5py.File(outname, 'w') as fo:
+        for ion in ions: 
+            bal, T, nH = m3.findiontables(ion, cosmopars['z'])
+        grp = fo.create_group(ion)
+        grp.create_dataset('logTK', data=T)
+        grp.create_dataset('lognHcm3', data=nH)
+        ds = grp.create_dataset('ionbal', data=bal)
+        ds.attrs.create('axis0', np.string_('lognHcm3'))
+        ds.attrs.create('axis1', np.string_('logTK'))
+        
 
 def plot_Tvir_ions(snap=27, _ioncolors=ioncolors):
     '''
