@@ -1086,6 +1086,7 @@ def extracthists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
     fdata = dataname(samplename)
     weights_all = [weight for key in weighttypes_ion for weight in weighttypes_ion[key]]
     fnames_wt = {weight: files(samplename, weight, histtype=histtype) for weight in weights_all}
+    print(fnames_wt)
     
     with open(fdata, 'r') as fi:
         # scan for halo catalogue (only metadata needed for this)
