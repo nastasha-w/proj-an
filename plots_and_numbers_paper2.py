@@ -2032,6 +2032,108 @@ def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus'):
     
 ################################ Misc #########################################
 
+# ionbal, ion balance, ion tables, ionization tables, Tvir, virial temperature
+def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors):
+    '''
+    contour plots for ions balances + shading for halo masses at different Tvir
+    '''
+    fontsize = 12
+    mdir = '/net/luttero/data2/imgs/CGM/'
+    
+    if snap == 27:
+        cosmopars = cosmopars_ea_27
+        logrhob = logrhob_av_ea_27
+
+    elif snap == 23:
+        cosmopars = cosmopars_ea_27
+        cosmopars['a'] = 0.665288  # eagle wiki
+        cosmopars['z'] = 1. / cosmopars['a'] - 1. 
+        logrhob = np.log10( 3. / (8. * np.pi * c.gravity) * c.hubble**2 * cosmopars['h']**2 * cosmopars['omegab'] / cosmopars['a']**3 )
+        
+    ions = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'] #, 'he2'
+    ioncolors = _ioncolors.copy()
+    
+    #ioncolors.update({'he2': 'darkgoldenrod'})
+    Ts = {}
+    Tmaxs = {}
+    nHs = {}
+    bals = {}
+    maxfracs = {}
+    
+    fracv = 0.1
+    
+    filen = datadir + 'ionbal_snap{snap}.hdf5'.format(snap=snap) 
+    with h5py.File(filen, 'r') as fi:
+        for ion in ions:          
+            bal = np.array(fi[ion]['ionbal'])
+            T = np.array(fi[ion]['logTK'])
+            bals[ion] = bal
+            nHs[ion] = np.array(fi[ion]['lognHcm3'])
+            Ts[ion] = T
+            indmaxfrac = np.argmax(bal[-1, :])
+            maxfrac = bal[-1, indmaxfrac]
+            Tmax = T[indmaxfrac]
+            Tmaxs[ion] = Tmax
+        
+            xs = pu.find_intercepts(bal[-1, :], T, fracv * maxfrac)
+            print('Ion %s has maximum CIE fraction %.3f, at log T[K] = %.1f, %s max range is %s'%(ion, maxfrac, Tmax, fracv, str(xs)))
+            maxfracs[ion] = maxfrac
+            
+    fig, (ax1, ax2) = plt.subplots(ncols=1, nrows=2, figsize=(5.5, 10.), gridspec_kw={'hspace': 0.})
+    ax1.set_xlim(-8., -1.5)
+    ax1.set_ylim(3.4, 7.65)
+    ax2.set_xlim(-8., -1.5)
+    ax2.set_ylim(3.4, 7.65)
+    axions = {1: ['o6', 'o7', 'o8'], 2: ['ne8', 'ne9', 'fe17']}
+    
+    ax1.set_ylabel(r'$\log_{10} \, T \; [K]$', fontsize=fontsize)
+    ax2.set_ylabel(r'$\log_{10} \, T \; [K]$', fontsize=fontsize)
+    ax2.set_xlabel(r'$\log_{10} \, n_{\mathrm{H}} \; [\mathrm{cm}^{-3}]$', fontsize=fontsize)
+    pu.setticks(ax1, fontsize=fontsize, right=False, labelbottom=False)
+    pu.setticks(ax2, fontsize=fontsize, right=False)
+    
+    ax1.axvline(logrhob + np.log10(rho_to_nh), 0., 0.85, color='gray', linestyle='dashed', linewidth=1.5)
+    ax2.axvline(logrhob + np.log10(rho_to_nh), 0., 0.85, color='gray', linestyle='dashed', linewidth=1.5)
+    #ax.axvline(logrhoc + np.log10(rho_to_nh * 200. * cosmopars['omegab'] / cosmopars['omegam']), 0., 0.75, color='gray', linestyle='solid', linewidth=1.5)
+    
+
+    for ax, axi in zip([ax1, ax2], [1, 2]):
+        for ion in axions[axi]:
+            ax.contourf(nHs[ion], Ts[ion], bals[ion].T, colors=ioncolors[ion], alpha=0.1, linewidths=[3.], levels=[0.1 * maxfracs[ion], 1.])
+            ax.contour(nHs[ion], Ts[ion], bals[ion].T, colors=ioncolors[ion], linewidths=[2.], levels=[0.1 * maxfracs[ion]], linestyles=['solid'])
+        for ion in ions:
+            ax.axhline(Tmaxs[ion], 0.95, 1., color=ioncolors[ion], linewidth=3.)
+            
+        #bal = bals[ion]
+        #maxcol = bal[-1, :]
+        #diffs = bal / maxcol[np.newaxis, :]
+        #diffs[np.logical_and(maxcol[np.newaxis, :] == 0, bal == 0)] = 0.
+        #diffs[np.logical_and(maxcol[np.newaxis, :] == 0, bal != 0)] = bal[np.logical_and(maxcol[np.newaxis, :] == 0, bal != 0)] / 1e-18
+        #diffs = np.abs(np.log10(diffs))
+            
+        #mask = bal < 0.6 * fracv * maxfracs[ion] # 0.6 gets the contours to ~ the edges of the ion regions
+        #diffs[mask] = np.NaN
+
+        #ax.contour(nHs[ion], Ts[ion][np.isfinite(maxcol)], (diffs[:, np.isfinite(maxcol)]).T, levels=[np.log10(ciemargin)], linestyles=['solid'], linewidths=[1.], alphas=0.5, colors=ioncolors[ion])
+
+        axy2 = ax.twinx()
+        ylim = ax.get_ylim()
+        axy2.set_ylim(*ylim)
+        mhalos = np.arange(9.0, 15.1, 0.5)
+        Tvals = np.log10(T200c_hot(10**mhalos, cosmopars))
+        Tlabels = ['%.1f'%mh for mh in mhalos]
+        axy2.set_yticks(Tvals)
+        axy2.set_yticklabels(Tlabels)
+        pu.setticks(axy2, fontsize=fontsize, left=False, right=True, labelleft=False, labelright=True)
+        axy2.minorticks_off()
+        axy2.set_ylabel(r'$\log_{10} \, \mathrm{M_{\mathrm{200c}}} (T_{\mathrm{200c}}) \; [\mathrm{M}_{\odot}]$', fontsize=fontsize)
+    
+        handles = [mlines.Line2D([], [], label=ild.getnicename(ion, mathmode=False), color=ioncolors[ion]) for ion in axions[axi]]
+        ax.legend(handles=handles, fontsize=fontsize, ncol=3, bbox_to_anchor=(0.0, 1.0), loc='upper left', frameon=False)
+
+    plt.savefig(mdir + 'ionbals_snap{}_HM01_ionizedmu.pdf'.format(snap), format='pdf', bbox_inches='tight')
+
+
 # column density equivalent width, coldens, N, EW, N-EW, cog, curve of growth
 # b, bpar
 def plot_NEW(fontsize=fontsize):    

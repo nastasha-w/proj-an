@@ -695,7 +695,7 @@ def plot_cddfs(ions, fontsize=fontsize, imgname=None, techvars=[0]):
     
     plt.savefig(imgname, format='pdf', bbox_inches='tight')
 
-def save_Tvir_ions(snap=27, _ioncolors=ioncolors):
+def save_Tvir_ions(snap=27):
     '''
     contour plots for ions balances + shading for halo masses at different Tvir
     '''
