@@ -2038,7 +2038,6 @@ def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors):
     contour plots for ions balances + shading for halo masses at different Tvir
     '''
     fontsize = 12
-    mdir = '/net/luttero/data2/imgs/CGM/'
     
     if snap == 27:
         cosmopars = cosmopars_ea_27
