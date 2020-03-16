@@ -1212,6 +1212,7 @@ def extracthists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
                             if nHcut:
                                 sinds = np.where(np.isclose(edges_t[sax], [-np.inf, 0.1, np.inf]))[0] 
                             else:
+                                print(edges_t[sax])
                                 sinds = np.where(np.isclose(edges_t[sax], [-np.inf, 0.01, np.inf]))[0] 
                         else:
                             try:
