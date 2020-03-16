@@ -1230,8 +1230,6 @@ def plotcddfsplits_fof_zev():
             dct_totcddf[23][ion]['bins'] = bins           
             dct_totcddf[23][ion]['none'] = {'cddf': hist / dXtotdlogN, 'covfrac': covfrac}
     
-    cmapname = 'rainbow'
-
     ylabel = r'$\log_{10} \left( \partial^2 n \, / \, \partial \log_{10} \mathrm{N} \, \partial X \right)$'
     xlabel = r'$\log_{10} \, \mathrm{N} \; [\mathrm{cm}^{-2}]$'
     clabel = r'gas from haloes with $\log_{10}\, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'
@@ -1239,7 +1237,7 @@ def plotcddfsplits_fof_zev():
     massedges = list(medges) + [np.inf]
     if massedges[-1] == np.inf: # used for setting the color bar -> just need some dummy value higher than the last one
         massedges[-1] = 2. * massedges[-2] - massedges[-3]
-    masslabels = {name: name + 0.5 * np.average(np.diff(massedges)) for name in masses_proj[1:]}
+    #masslabels = {name: name + 0.5 * np.average(np.diff(massedges)) for name in masses_proj[1:]}
     
     numcols = 3
     numrows = 2
@@ -1273,7 +1271,8 @@ def plotcddfsplits_fof_zev():
     else:
         lax = fig.add_subplot(grid[numrows - 1, legindstart:])
     
-    cbar, colors = add_cbar_mass(cax, fontsize=fontsize, aspect=9.)
+    cbar, colors = add_cbar_mass(cax, fontsize=fontsize, aspect=9.,\
+                                 clabel=clabel)
     colors['none'] = 'gray' # add no mask label for plotting purposes
     colors['total'] = 'black'
     colors['allhalos'] = 'brown'
@@ -1391,7 +1390,8 @@ def plotcddfsplits_fof_zev():
     
     # set up the proxy artist
     for ls in ['solid', 'dotted']:
-        subcols = list(clist) + [mpl.colors.to_rgba(colors['allhalos'], alpha=alpha)]
+        subcols = [colors[ed] for ed in massedges] +\
+                  [mpl.colors.to_rgba(colors['allhalos'], alpha=alpha)]
         subcols = np.array(subcols)
         subcols[:, 3] = 1. # alpha value
         #print(subcols)
