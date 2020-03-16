@@ -1080,7 +1080,7 @@ def extracthists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
         weighttypes_ion.update({elt: ['gas-%s'%(elt), 'stars-%s'%(elt)] for elt in ['oxygen', 'neon', 'iron']})
     gas_tlims_add = [-np.inf, 5., 5.5, 7., np.inf]
     histtype = 'rprof'
-    
+
     if samplename is None:
         samplename = defaults['sample']
     fdata = dataname(samplename)
@@ -1147,7 +1147,10 @@ def extracthists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
             storeorder = list(np.copy(wtlist)) 
             for weight in wtlist:
                 if 'gas' in weight:
-                    storeorder += ['_'.join([weight, sl, tl]) for sl in slbl for tl in tlbl]
+                    if nHorSF:
+                        storeorder += ['_'.join([weight, sl, nl, tl]) for sl in slbl for nl in nlbl for tl in tlbl]
+                    else:
+                        storeorder += ['_'.join([weight, sl, tl]) for sl in slbl for tl in tlbl]
             storeorder.sort()
             savelist = np.ones((len(galids), len(storeorder)), dtype=np.float) * np.NaN
             for gind in range(len(galids)):
