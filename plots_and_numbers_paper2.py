@@ -663,16 +663,13 @@ def plot_cddfs_nice(fontsize=fontsize, imgname=None):
     plt.savefig(imgname, format='pdf', bbox_inches='tight')
 
 
-def plotcddfsplits_fof(relative=False):
+def plotcddfsplits_fof():
     '''
     paper plot: FoF-only projections vs. all gas
     '''
     ions = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'] #, 'hneutralssh'
     
-    mdir = '/net/luttero/data2/imgs/CGM/cddfsplits/'
     outname = mdir + 'split_FoF-M200c_proj_%s'%('-'.join(ions))
-    if relative:
-        outname = outname + '_rel'
     outname = outname + '.pdf'
     
     medges = np.arange(11., 14.1, 0.5) #np.arange(9., 14.1, 0.5)
@@ -682,10 +679,10 @@ def plotcddfsplits_fof(relative=False):
     prefilenames_all = {key: ['coldens_%s_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel.hdf5'%(key, '%s', halofill) for halofill in halofills]
                  for key in ions}
     
-    filenames_all = {key: [ol.pdir + 'cddf_' + ((fn.split('/')[-1])%('-all'))[:-5] + '_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5' for fn in prefilenames_all[key]] for key in prefilenames_all.keys()}
-    
-    #if ion not in ions:
-    #    raise ValueError('Ion must be one of %s'%ions)
+    filenames_all = {key: [datadir + 'cddf_' + ((fn.split('/')[-1])%('-all'))[:-5] +\
+                           '_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5'\
+                           for fn in prefilenames_all[key]] \
+                     for key in prefilenames_all.keys()}
     
     masses_proj = ['none'] + list(medges)
     filenames_ion = {ion: filenames_all[ion] for ion in ions}  
@@ -732,30 +729,15 @@ def plotcddfsplits_fof(relative=False):
                     if numpix_1sl != 32000: # expected for standard CDDFs
                         print('Using %i pixels per side for the sample size'%numpix_1sl) # needed for the total path length
                     
-                    for mmass in masses_proj[1:]:
-                        grp = fi[maskdct[mmass]]
-                        hist = np.array(grp['hist'])
-                        covfrac = grp.attrs['covfrac']
-                        # recover cosmopars:
-                        mask_examples = {key: item for (key, item) in grp.attrs.items()}
-                        del mask_examples['covfrac']
-                        example_key = list(mask_examples.keys())[0] # 'mask_<slice center>'
-                        example_mask = mask_examples[example_key].decode() # '<dir path><mask file name>'
-                        path = 'masks/%s/%s/Header/cosmopars'%(example_key[5:], example_mask.split('/')[-1])
-                        #print(path)
-                        cosmopars = {key: item for (key, item) in fi[path].attrs.items()}
-                        dXtot = mc.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
-                        dXtotdlogN = dXtot * np.diff(bins)
-            
-                        dct_fofcddf[ion][pmass][mmass] = {'cddf': hist / dXtotdlogN, 'covfrac': covfrac}
+                    cosmopars = cosmopars_ea_27
                     
-                    # use cosmopars from the last read mask
                     mmass = 'none'
                     grp = fi[maskdct[mmass]]
                     hist = np.array(grp['hist'])
                     covfrac = grp.attrs['covfrac']
                     # recover cosmopars:
-                    dXtot = mc.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
+                    dXtot = cu.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'],\
+                                     cosmopars=cosmopars) * float(numpix_1sl**2)
                     dXtotdlogN = dXtot * np.diff(bins)
                     dct_fofcddf[ion][pmass][mmass] = {'cddf': hist / dXtotdlogN, 'covfrac': covfrac}
                 
@@ -764,14 +746,13 @@ def plotcddfsplits_fof(relative=False):
                 print(err)
          
             
-    ## read in split cddfs from total ion projections
-    ion_filedct_excl_1R200c_cenpos = {'fe17': ol.pdir + 'cddf_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
-                                      'ne9':  ol.pdir + 'cddf_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
-                                      'ne8':  ol.pdir + 'cddf_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
-                                      'o8':   ol.pdir + 'cddf_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
-                                      'o7':   ol.pdir + 'cddf_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
-                                      'o6':   ol.pdir + 'cddf_coldens_o6_L0100N1504_27_test3.3_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
-                                      #'hneutralssh': ol.pdir + 'cddf_coldens_hneutralssh_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+    ## read in all gas CDDF
+    ion_filedct_excl_1R200c_cenpos = {'fe17': datadir + 'cddf_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'ne9':  datadir + 'cddf_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'ne8':  datadir + 'cddf_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o8':   datadir + 'cddf_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o7':   datadir + 'cddf_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o6':   datadir + 'cddf_coldens_o6_L0100N1504_27_test3.3_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
                                       }
     dct_totcddf = {}
     for ion in ions:
@@ -795,46 +776,23 @@ def plotcddfsplits_fof(relative=False):
             numpix_1sl = int(list(numpix_1sl)[0][:-3])
             print('Using %i pixels per side for the sample size'%numpix_1sl) # needed for the total path length
             
-            for mmass in masses_proj[1:]:
-                grp = fi[maskdct[mmass]]
-                hist = np.array(grp['hist'])
-                covfrac = grp.attrs['covfrac']
-                # recover cosmopars:
-                mask_examples = {key: item for (key, item) in grp.attrs.items()}
-                del mask_examples['covfrac']
-                example_key = list(mask_examples.keys())[0] # 'mask_<slice center>'
-                example_mask = mask_examples[example_key].decode() # '<dir path><mask file name>'
-                path = 'masks/%s/%s/Header/cosmopars'%(example_key[5:], example_mask.split('/')[-1])
-                cosmopars = {key: item for (key, item) in fi[path].attrs.items()}
-                dXtot = mc.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
-                dXtotdlogN = dXtot * np.diff(bins)
+            cosmopars = cosmopars_ea_27
             
-                dct_totcddf[ion][mmass] = {'cddf': hist / dXtotdlogN, 'covfrac': covfrac}
-            # use cosmopars from the last read mask
             mmass = 'none'
             grp = fi[maskdct[mmass]]
             hist = np.array(grp['hist'])
             covfrac = grp.attrs['covfrac']
             # recover cosmopars:
-            dXtot = mc.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
+            dXtot = cu.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
             dXtotdlogN = dXtot * np.diff(bins)
             dct_totcddf[ion][mmass] = {'cddf': hist / dXtotdlogN, 'covfrac': covfrac}
     
-    cmapname = 'rainbow'
-    #sumcolor = 'saddlebrown'
-    #totalcolor = 'black'
-    if relative:
-        ylabel = r'$\log_{10}$ CDDF / total'
-    else:
-        ylabel = r'$\log_{10} \left( \partial^2 n \, / \, \partial \log_{10} \mathrm{N} \, \partial X \right)$'
+    ylabel = r'$\log_{10} \left( \partial^2 n \, / \, \partial \log_{10} \mathrm{N} \, \partial X \right)$'
     xlabel = r'$\log_{10} \, \mathrm{N} \; [\mathrm{cm}^{-2}]$'
     clabel = r'gas from haloes with $\log_{10}\, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'
     
     massedges = list(medges) + [np.inf]
-    if massedges[-1] == np.inf: # used for setting the color bar -> just need some dummy value higher than the last one
-        massedges[-1] = 2. * massedges[-2] - massedges[-3]
-    masslabels = {name: name + 0.5 * np.average(np.diff(massedges)) for name in masses_proj[1:]}
-    
+        
     numcols = 3
     numrows = 2
     panelwidth = 2.5
@@ -867,42 +825,8 @@ def plotcddfsplits_fof(relative=False):
     else:
         lax = fig.add_subplot(grid[numrows - 1, legindstart:])
     
-    clist = cm.get_cmap(cmapname, len(massedges) - 1)(np.linspace(0., 1.,len(massedges) - 1))
-    _masks = sorted(masslabels.keys(), key=masslabels.__getitem__)
-    colors = {_masks[i]: clist[i] for i in range(len(_masks))}
-    colors['none'] = 'gray' # add no mask label for plotting purposes
-    colors['total'] = 'black'
-    colors['allhalos'] = 'brown'
-    #del _masks
-    
-    #print(clist)
-    cmap = mpl.colors.ListedColormap(clist[:-1])
-    cmap.set_over(clist[-1])
-    norm = mpl.colors.BoundaryNorm(massedges[:-1], cmap.N)
-    cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,\
-                                norm=norm,\
-                                boundaries=massedges,\
-                                ticks=massedges,\
-                                spacing='proportional', extend='max',\
-                                orientation='vertical')
-    # to use 'extend', you must
-    # specify two extra boundaries:
-    # boundaries=[0] + bounds + [13],
-    # extend='both',
-    # ticks=bounds,  # optional
-    cbar.set_label(clabel, fontsize=fontsize)
-    cax.tick_params(labelsize=fontsize - 1)
-    cax.set_aspect(9.)
-    
-    #print(clist)
-    
-    # annotate color bar with sample size per bin
-    #if indicatenumgals:
-    #    ancolor = 'black'
-    #    for tag in masslabels.keys():
-    #        ypos = masslabels[tag]
-    #        xpos = 0.5
-    #        cax.text(xpos, (ypos - massedges[0]) / (massedges[-2] - massedges[0]), str(numgals[lines[0]][tag]), fontsize=fontsize, color=ancolor, verticalalignment='center', horizontalalignment='center')
+    cbar, colors = add_cbar_mass(cax, fontsize=fontsize, aspect=9.,\
+                                 clabel=clabel)
     
     linewidth = 2.
     alpha = 1.
@@ -912,13 +836,6 @@ def plotcddfsplits_fof(relative=False):
         yi = ionind // numcols
         ion = ions[ionind]
         ax = axes[ionind]
-        #if massind == 0:
-        #    pmass = masses_proj[massind]
-        #elif massind == 1:
-        #    pmass = 'all halos'
-        #else:
-        #    pmass = masses_proj[massind - 1]
-        #ax = axes[massind]
 
         if ion[0] == 'h':
             ax.set_xlim(12.0, 23.0)
@@ -935,87 +852,81 @@ def plotcddfsplits_fof(relative=False):
         elif ion == 'ne8':
             ax.set_xlim(11.5, 15.5)
             
-        if relative:
-            ax.set_ylim(-4.5, 1.)
-        else:
-            ax.set_ylim(-4.1, 2.5)
+        ax.set_ylim(-4.1, 2.5)
         
         labelx = yi == numrows - 1 #or (yi == numrows - 2 and numcols * yi + xi > len(masses_proj) + 1) 
         labely = xi == 0
-        setticks(ax, fontsize=fontsize, labelbottom=True, labelleft=labely)
+        pu.setticks(ax, fontsize=fontsize, labelbottom=True, labelleft=labely)
         if labelx:
             ax.set_xlabel(xlabel, fontsize=fontsize)
         if labely:
             ax.set_ylabel(ylabel, fontsize=fontsize)
         
         patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"), mppe.Stroke(linewidth=linewidth, foreground="w"), mppe.Normal()]
-        patheff_thick = [mppe.Stroke(linewidth=linewidth + 1.0, foreground="b"), mppe.Stroke(linewidth=linewidth + 0.5, foreground="w"), mppe.Normal()]
-        
-        
-        if relative:
-            divby = dct_totcddf[ion]['none']['cddf']
-        else:
-            divby = 1. 
+       
+        divby = 1. 
                     
         for pmass in masses_proj[1:]:
             _lw = linewidth
             _pe = patheff
-            
-            #bins = dct_totcddf['bins']
-            #plotx = bins[:-1] + 0.5 * np.diff(bins)
-            #ax.plot(plotx, np.log10(dct_totcddf[pmass]['cddf'] / divby), color=colors[pmass], linestyle='dashed', alpha=alpha, path_effects=_pe, linewidth=_lw)
-            
+                       
             # CDDF for projected mass, no mask
             bins = dct_fofcddf[ion][pmass]['bins']
             plotx = bins[:-1] + 0.5 * np.diff(bins)
-            ax.plot(plotx, np.log10(dct_fofcddf[ion][pmass]['none']['cddf'] / divby), color=colors[pmass], linestyle='solid', alpha=alpha, path_effects=_pe, linewidth=_lw)
+            ax.plot(plotx, np.log10(dct_fofcddf[ion][pmass]['none']['cddf'] / divby),\
+                    color=colors[pmass], linestyle='solid', alpha=alpha,\
+                    path_effects=_pe, linewidth=_lw)
             
         _lw = linewidth
         _pe = patheff
         # total CDDF
         bins = dct_totcddf[ion]['bins']
         plotx = bins[:-1] + 0.5 * np.diff(bins)
-        ax.plot(plotx, np.log10(dct_totcddf[ion]['none']['cddf'] / divby), color=colors['total'], linestyle='solid', alpha=alpha, path_effects=_pe, linewidth=_lw)
+        ax.plot(plotx, np.log10(dct_totcddf[ion]['none']['cddf'] / divby),\
+                color=colors['total'], linestyle='solid', alpha=alpha,\
+                path_effects=_pe, linewidth=_lw)
         
         # all halo gas CDDF
         bins = dct_fofcddf[ion]['none']['bins']
         plotx = bins[:-1] + 0.5 * np.diff(bins)
-        ax.plot(plotx, np.log10(dct_fofcddf[ion]['none']['none']['cddf'] / divby), color=colors['allhalos'], linestyle='dashed', alpha=alpha, path_effects=patheff, linewidth=linewidth)
+        ax.plot(plotx, np.log10(dct_fofcddf[ion]['none']['none']['cddf'] / divby),\
+                color=colors['allhalos'], linestyle='dashed',\
+                alpha=alpha, path_effects=patheff, linewidth=linewidth)
 
         text = r'$\mathrm{%s}$'%(ild.getnicename(ion, mathmode=True))
-        if relative:
-            ax.text(0.05, 0.05, text, horizontalalignment='left', verticalalignment='bottom', transform=ax.transAxes, fontsize=fontsize)
-        else:
-            ax.text(0.95, 0.95, text, horizontalalignment='right', verticalalignment='top', transform=ax.transAxes, fontsize=fontsize)            
+        ax.text(0.95, 0.95, text,\
+                horizontalalignment='right', verticalalignment='top',\
+                transform=ax.transAxes, fontsize=fontsize)            
 
     lcs = []
     line = [[(0, 0)]]
     
     # set up the proxy artist
     for ls in ['solid']:
-        subcols = list(clist) + [mpl.colors.to_rgba(colors['allhalos'], alpha=alpha)]
+        subcols = [colors[ed] for ed in massedges[:-1]] +\
+                  [mpl.colors.to_rgba(colors['allhalos'], alpha=alpha)]
         subcols = np.array(subcols)
         subcols[:, 3] = 1. # alpha value
         #print(subcols)
         lc = mcol.LineCollection(line * len(subcols), linestyle=ls, linewidth=linewidth, colors=subcols)
         lcs.append(lc)
-    # create the legend
-    #lax.legend(lcs, [legendnames_techvars[var] for var in techvars], handler_map={type(lc): HandlerDashedLines()}) #handlelength=2.5, handleheight=3
-    #handles_ax1, labels_ax1 = axes[0].get_legend_handles_labels()
-    sumhandles = [#mlines.Line2D([], [], color=colors['none'], linestyle='solid', label='FoF no mask', linewidth=2.),\
-                  mlines.Line2D([], [], color=colors['total'], linestyle='solid', label='all gas', linewidth=2.),\
-                  mlines.Line2D([], [], color=colors['allhalos'], linestyle='dashed', label=r'all halo gas', linewidth=2.),\
+        
+    sumhandles = [mlines.Line2D([], [], color=colors['total'],\
+                                linestyle='solid', label='all gas',\
+                                linewidth=2.),\
+                  mlines.Line2D([], [], color=colors['allhalos'],\
+                                linestyle='dashed', label=r'all halo gas',\
+                                linewidth=2.),\
                   ]
     sumlabels = ['all gas', r'all halo gas']
-    lax.legend(lcs + sumhandles, ['halo gas'] + sumlabels, handler_map={type(lc): HandlerDashedLines()}, fontsize=fontsize, ncol=ncol_legend, loc='lower center', bbox_to_anchor=(0.5, 0.))
+    lax.legend(lcs + sumhandles, ['halo gas'] + sumlabels,\
+               handler_map={type(lc): pu.HandlerDashedLines()},\
+               fontsize=fontsize, ncol=ncol_legend,\
+               loc='lower center', bbox_to_anchor=(0.5, 0.))
     lax.axis('off')
-    #leg1 = lax.legend(handles=legend_handles, fontsize=fontsize-1, loc='lower left', bbox_to_anchor=(0.01, 0.01), frameon=False)
-    #leg2 = lax.legend(handles=legend_handles_ls,fontsize=fontsize-1, loc='upper right', bbox_to_anchor=(0.99, 0.99), frameon=False)
-    #lax.add_artist(leg1)
-    #lax.add_artist(leg2)
-    #ax1.text(0.02, 0.05, r'absorbers close to galaxies at $z=0.37$', horizontalalignment='left', verticalalignment='bottom', transform=ax1.transAxes, fontsize=fontsize)
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
+
 
 def plotcddfsplits_fof_zev():
     '''
