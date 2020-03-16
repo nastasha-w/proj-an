@@ -827,6 +827,9 @@ def plotcddfsplits_fof():
     
     cbar, colors = add_cbar_mass(cax, fontsize=fontsize, aspect=9.,\
                                  clabel=clabel)
+    colors['none'] = 'gray' # add no mask label for plotting purposes
+    colors['total'] = 'black'
+    colors['allhalos'] = 'brown'
     
     linewidth = 2.
     alpha = 1.
