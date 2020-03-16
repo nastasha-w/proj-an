@@ -1164,8 +1164,6 @@ def extracthists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
                         raise err
                         
                     with h5py.File(ifilen_temp, 'r') as fit:
-                        print(ifilen_temp)
-                        print(igrpn_temp)
                         igrp_t = fit[igrpn_temp]
                         hist_t = np.array(igrp_t['histogram'])
         
@@ -1215,7 +1213,6 @@ def extracthists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
                             if nHcut:
                                 sinds = np.where(np.isclose(edges_t[sax], [-np.inf, 0.1, np.inf]))[0] 
                             else:
-                                print(edges_t[sax])
                                 sinds = np.where(np.isclose(edges_t[sax], [-np.inf, 0.01, np.inf]))[0] 
                         else:
                             try:
@@ -1228,7 +1225,7 @@ def extracthists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
                                 nax = edgedata_t['Niondens_hydrogen_PtAb_T4EOS']['histogram axis']
                             except KeyError:
                                 raise KeyError('Could not retrieve nH histogram axis for galaxy %i, file %s'%(galid, ifilen_temp))
-                                ninds = np.where(np.isclose(edges_t[nax], [-np.inf, 0.1, np.inf]))[0] 
+                            ninds = np.where(np.isclose(edges_t[nax], [-np.inf, 0.1, np.inf]))[0] 
                                               
                         addsel_base = [slice(None, None, None)] * len(edges_t)
                         addsel_base[rax] = slice(ind1, ind2, None) # left edge ind1 -> start from in ind1, right edge ind2 -> stop after bin ind2 - 1
