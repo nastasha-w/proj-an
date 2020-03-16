@@ -533,6 +533,7 @@ def genhists_massdist(samplename=None, rbinu='pkpc', idsel=None,\
                 weighttype = '-'.join(weighttype)
                 logax = [False, False, True]
             elif 'nHm2' in weighttype.split('-'):
+                print('doing nHm2')
                 axesdct.append({'ptype': 'Niondens', 'ion': 'hydrogen'})
                 # minimum float32 value -> cgs units; much smaller than any SFR in the 12 Mpc box
                 minval = 10**-2 # approx SFR threashold, but Z-independent 
@@ -566,7 +567,9 @@ def genhists_massdist(samplename=None, rbinu='pkpc', idsel=None,\
             axesdct.append({'ptype': 'basic', 'quantity': 'Temperature', 'excludeSFR': False})
             Tbins = np.array([-np.inf, 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8., 8.5, 9., np.inf])
             nonrbins.append(Tbins)
-            
+            print(axesdct)
+            print(nonrbins)
+            return
         else:
             logax = [False]
         
