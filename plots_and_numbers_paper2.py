@@ -1808,7 +1808,7 @@ def plotfracs_by_halo(ions=['Mass', 'oxygen', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'f
             datafile = datadir + datafile_base%('Nion_%s'%ion)
         datafile_dct[ion] = datafile
     
-    outname = '/net/luttero/data2/imgs/histograms_basic/' + 'barchart_halomass_L0100N1504_27_T4EOS.%s'%(fmt)
+    outname = mdir + 'barchart_halomass_L0100N1504_27_T4EOS.%s'%(fmt)
     
     data_dct = {}
     for ion in ions:
@@ -1894,9 +1894,7 @@ def plotfracs_by_halo(ions=['Mass', 'oxygen', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'f
     cmap = mpl.colors.ListedColormap(clist)
     cmap.set_under(nigmcolor)
     norm = mpl.colors.BoundaryNorm(plotedges, cmap.N)
-    print(len(clist))
-    print(cmap.N)
-    print(len(plotedges))
+
     cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,\
                                 norm=norm,\
                                 boundaries=np.append([0.], plotedges, axis=0),\
