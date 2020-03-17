@@ -1899,7 +1899,7 @@ def plot_radprof_limited(fontsize=fontsize):
                         13.0 if ion == 'o8' else \
                         13.0 if ion == 'fe17' else \
                         np.inf 
-                    matched = np.isclose(masslabels_all[tag][0], matchval)
+                    matched = np.isclose(masslabels_all[tag], matchval)
                     if matched:
                         yvals_toplot_temp = yvals_toplot
                     else:
@@ -1974,7 +1974,6 @@ def plot_radprof_limited(fontsize=fontsize):
 # detectablility, M*
 def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=False):
     '''
-    TODO: clean up, change Mstar bins
     var:        main: percenitles in M* bins
                 main-fcov-break for covering fractions at the CDDF break
                 main-fcov-obs   for covering fractions at obs. limits   
