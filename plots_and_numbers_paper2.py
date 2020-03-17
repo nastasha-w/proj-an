@@ -6,7 +6,7 @@ Created on Tue Feb 11 13:03:06 2020
 @author: wijers
 
 adapted from plothistograms_paper2.py
-paper figures not included: 5, 6, A1
+paper figures not included: 6, A1
 
 """
 
@@ -1326,6 +1326,362 @@ def plotcddfsplits_fof_zev():
     lax.axis('off')
 
     plt.savefig(outname, format='pdf', bbox_inches='tight')
+
+# cddfsplits, FoF, mask, appendix, split method  
+def plotcddfs_fofvsmask(ion):
+    '''
+    Note: all haloes line with masks (brown dashed) is for all haloes with 
+          M200c > 10^9 Msun, while the solid line is for all FoF+200c gas at 
+          any M200c
+    '''
+
+    outname = mdir + 'split_FoF-M200c_proj_%s'%ion
+    outname = outname + '.pdf'
+    
+    ions = ['o7', 'o8', 'o6', 'ne8', 'fe17', 'ne9']
+    medges = np.arange(11., 14.1, 0.5) #np.arange(11., 14.1, 0.5)
+    halofills = [''] +\
+            ['Mhalo_%s<=log200c<%s'%(medges[i], medges[i + 1]) if i < len(medges) - 1 else \
+             'Mhalo_%s<=log200c'%medges[i] for i in range(len(medges))]
+    prefilenames_all = {key: ['coldens_%s_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel.hdf5'%(key, '%s', halofill) for halofill in halofills]
+                 for key in ions}
+    
+    filenames_all = {key: [datadir + 'cddf_' + ((fn.split('/')[-1])%('-all'))[:-5] + '_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5' for fn in prefilenames_all[key]] for key in prefilenames_all.keys()}
+    
+    if ion not in ions:
+        raise ValueError('Ion must be one of %s'%ions)
+        
+    filenames_this = filenames_all[ion]
+    masses_proj = ['none'] + list(medges)
+    filedct = {masses_proj[i]: filenames_this[i] for i in range(len(filenames_this))} 
+    
+    masknames =  ['nomask',\
+                  #'logM200c_Msun-9.0-9.5',\
+                  #'logM200c_Msun-9.5-10.0',\
+                  #'logM200c_Msun-10.0-10.5',\
+                  #'logM200c_Msun-10.5-11.0',\
+                  'logM200c_Msun-11.0-11.5',\
+                  'logM200c_Msun-11.5-12.0',\
+                  'logM200c_Msun-12.0-12.5',\
+                  'logM200c_Msun-12.5-13.0',\
+                  'logM200c_Msun-13.0-13.5',\
+                  'logM200c_Msun-13.5-14.0',\
+                  'logM200c_Msun-14.0-inf',\
+                  ]
+    maskdct = {masses_proj[i]: masknames[i] for i in range(len(masknames))}
+    
+    ## read in cddfs from halo-only projections
+    dct_fofcddf = {}
+    for pmass in masses_proj:
+        dct_fofcddf[pmass] = {}
+        try:
+            with h5py.File(filedct[pmass]) as fi:
+                try:
+                    bins = np.array(fi['bins/axis_0'])
+                except KeyError as err:
+                    print('While trying to load bins in file %s\n:'%(filedct[pmass]))
+                    raise err
+                    
+                dct_fofcddf[pmass]['bins'] = bins
+                
+                inname = np.array(fi['input_filenames'])[0]
+                inname = inname.split('/')[-1] # throw out directory path
+                parts = inname.split('_')
+        
+                numpix_1sl = set(part if 'pix' in part else None for part in parts) # find the part of the name needed: '...pix'
+                numpix_1sl.remove(None)
+                numpix_1sl = int(list(numpix_1sl)[0][:-3])
+                print('Using %i pixels per side for the sample size'%numpix_1sl) # needed for the total path length
+                
+                for mmass in masses_proj[1:]:
+                    grp = fi[maskdct[mmass]]
+                    hist = np.array(grp['hist'])
+                    covfrac = grp.attrs['covfrac']
+                    # recover cosmopars:
+                    mask_examples = {key: item for (key, item) in grp.attrs.items()}
+                    del mask_examples['covfrac']
+                    example_key = mask_examples.keys()[0] # 'mask_<slice center>'
+                    example_mask = mask_examples[example_key] # '<dir path><mask file name>'
+                    path = 'masks/%s/%s/Header/cosmopars'%(example_key[5:], example_mask.split('/')[-1])
+                    #print(path)
+                    cosmopars = {key: item for (key, item) in fi[path].attrs.items()}
+                    dXtot = cu.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
+                    dXtotdlogN = dXtot * np.diff(bins)
+        
+                    dct_fofcddf[pmass][mmass] = {'cddf': hist / dXtotdlogN, 'covfrac': covfrac}
+                
+                # use cosmopars from the last read mask
+                mmass = 'none'
+                grp = fi[maskdct[mmass]]
+                hist = np.array(grp['hist'])
+                covfrac = grp.attrs['covfrac']
+                # recover cosmopars:
+                dXtot = cu.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
+                dXtotdlogN = dXtot * np.diff(bins)
+                dct_fofcddf[pmass][mmass] = {'cddf': hist / dXtotdlogN, 'covfrac': covfrac}
+            
+        except IOError as err:
+            print('Failed to read in %s; stated error:'%filedct[pmass])
+            print(err)
+         
+            
+    ## read in split cddfs from total ion projections
+    ion_filedct_excl_1R200c_cenpos = {'fe17': datadir + 'cddf_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'ne9':  datadir + 'cddf_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'ne8':  datadir + 'cddf_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o8':   datadir + 'cddf_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o7':   datadir + 'cddf_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      'o6':   datadir + 'cddf_coldens_o6_L0100N1504_27_test3.3_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5',\
+                                      }
+    
+    file_allproj = ion_filedct_excl_1R200c_cenpos[ion]
+    dct_totcddf = {}
+    with h5py.File(file_allproj) as fi:
+        try:
+            bins = np.array(fi['bins/axis_0'])
+        except KeyError as err:
+            print('While trying to load bins in file %s\n:'%(file_allproj))
+            raise err
+            
+        dct_totcddf['bins'] = bins
+        
+        inname = np.array(fi['input_filenames'])[0]
+        inname = inname.split('/')[-1] # throw out directory path
+        parts = inname.split('_')
+
+        numpix_1sl = set(part if 'pix' in part else None for part in parts) # find the part of the name needed: '...pix'
+        numpix_1sl.remove(None)
+        numpix_1sl = int(list(numpix_1sl)[0][:-3])
+        print('Using %i pixels per side for the sample size'%numpix_1sl) # needed for the total path length
+        
+        for mmass in masses_proj[1:]:
+            grp = fi[maskdct[mmass]]
+            hist = np.array(grp['hist'])
+            covfrac = grp.attrs['covfrac']
+            # recover cosmopars:
+            mask_examples = {key: item for (key, item) in grp.attrs.items()}
+            del mask_examples['covfrac']
+            example_key = mask_examples.keys()[0] # 'mask_<slice center>'
+            example_mask = mask_examples[example_key] # '<dir path><mask file name>'
+            path = 'masks/%s/%s/Header/cosmopars'%(example_key[5:], example_mask.split('/')[-1])
+            cosmopars = {key: item for (key, item) in fi[path].attrs.items()}
+            dXtot = cu.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
+            dXtotdlogN = dXtot * np.diff(bins)
+        
+            dct_totcddf[mmass] = {'cddf': hist / dXtotdlogN, 'covfrac': covfrac}
+        # use cosmopars from the last read mask
+        mmass = 'none'
+        grp = fi[maskdct[mmass]]
+        hist = np.array(grp['hist'])
+        covfrac = grp.attrs['covfrac']
+        # recover cosmopars:
+        dXtot = cu.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
+        dXtotdlogN = dXtot * np.diff(bins)
+        dct_totcddf[mmass] = {'cddf': hist / dXtotdlogN, 'covfrac': covfrac}
+    
+    ylabel = r'$\log_{10} \left( \partial^2 n \, / \, \partial \log_{10} \mathrm{N} \, \partial X \right)$'
+    xlabel = r'$\log_{10} \, \mathrm{N} \; [\mathrm{cm}^{-2}]$'
+    clabel = r'masks for haloes with $\log_{10}\, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'
+    
+    massedges = list(medges) 
+    
+    numcols = 3
+    numrows = 3
+    panelwidth = 2.5
+    panelheight = 2.
+    legheight = 1.
+    #fcovticklen = 0.035
+    if numcols * numrows - len(massedges) - 2 >= 2: # put legend in lower right corner of panel region
+        seplegend = False
+        legindstart = numcols - (numcols * numrows - len(medges) - 2)
+        legheight = 0.
+        numrows_fig = numrows
+        ncol_legend = (numcols - legindstart) - 1
+        height_ratios=[panelheight] * numrows 
+    else:
+        seplegend = True
+        numrows_fig = numrows + 1
+        legindstart = 0
+        height_ratios=[panelheight] * numrows + [legheight]
+        ncol_legend = numcols
+    
+    figwidth = numcols * panelwidth + 0.6 
+    figheight = numcols * panelheight + 0.2 * numcols + legheight
+    fig = plt.figure(figsize=(figwidth, figheight))
+    grid = gsp.GridSpec(numrows_fig, numcols + 1, hspace=0.0, wspace=0.0, width_ratios=[panelwidth] * numcols + [0.6], height_ratios=height_ratios)
+    axes = [fig.add_subplot(grid[i // numcols, i % numcols]) for i in range(len(masses_proj) + 1)]
+    cax  = fig.add_subplot(grid[:numrows, numcols])
+    if seplegend:
+        lax  = fig.add_subplot(grid[numrows, :])
+    else:
+        lax = fig.add_subplot(grid[numrows - 1, legindstart:])
+    
+    
+    
+    cbar, colors = add_cbar_mass(cax=cax, clabel=clabel, fontsize=fontsize,\
+                                 aspect=9.)
+    linewidth = 2.
+    alpha = 1.
+    
+    for massind in range(len(masses_proj) + 1):
+        xi = massind % numcols
+        yi = massind // numcols
+        if massind == 0:
+            pmass = masses_proj[massind]
+        elif massind == 1:
+            pmass = 'all halos'
+        else:
+            pmass = masses_proj[massind - 1]
+        ax = axes[massind]
+
+        if ion[0] == 'h':
+            ax.set_xlim(12.0, 23.0)
+        elif ion == 'fe17':
+            ax.set_xlim(12., 16.)
+        elif ion == 'o7':
+            ax.set_xlim(13.25, 17.25)
+        elif ion == 'o8':
+            ax.set_xlim(13., 17.)
+        elif ion == 'o6':
+            ax.set_xlim(12., 16.)
+        elif ion == 'ne9':
+            ax.set_xlim(12.5, 16.5)
+        elif ion == 'ne8':
+            ax.set_xlim(11.5, 15.5)
+            
+        ax.set_ylim(-6.0, 2.5)
+        
+        labelx = yi == numrows - 1 or (yi == numrows - 2 and numcols * yi + xi > len(masses_proj) + 1) 
+        labely = xi == 0
+        pu.setticks(ax, fontsize=fontsize, labelbottom=labelx, labelleft=labely)
+        if labelx:
+            ax.set_xlabel(xlabel, fontsize=fontsize)
+        if labely and yi == 1: 
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+        
+        patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"), mppe.Stroke(linewidth=linewidth, foreground="w"), mppe.Normal()]
+        patheff_thick = [mppe.Stroke(linewidth=linewidth + 1.0, foreground="b"), mppe.Stroke(linewidth=linewidth + 0.5, foreground="w"), mppe.Normal()]
+        
+        if pmass == 'none':
+            ptext = 'mask split'
+            divby = 1. 
+        
+            for pmass in masses_proj[1:]:
+                _lw = linewidth
+                _pe = patheff
+                
+                bins = dct_totcddf['bins']
+                plotx = bins[:-1] + 0.5 * np.diff(bins)
+                ax.plot(plotx, np.log10(dct_totcddf[pmass]['cddf'] / divby),\
+                        color=colors[pmass], linestyle='dashed', alpha=alpha,\
+                        path_effects=_pe, linewidth=_lw)
+                
+            _lw = linewidth
+            _pe = patheff
+            bins = dct_totcddf['bins']
+            plotx = bins[:-1] + 0.5 * np.diff(bins)
+            ax.plot(plotx, np.log10(dct_totcddf['none']['cddf'] / divby),\
+                    color=colors['total'], linestyle='solid', alpha=alpha,\
+                    path_effects=_pe, linewidth=_lw)
+
+        elif pmass == 'all halos':
+            divby = 1. 
+
+            bins = dct_fofcddf['none']['bins']
+            plotx = bins[:-1] + 0.5 * np.diff(bins)
+            ax.plot(plotx, np.log10(dct_fofcddf['none']['none']['cddf'] / divby),\
+                    color=colors['none'], linestyle='solid', alpha=alpha,\
+                    path_effects=patheff, linewidth=linewidth)
+            
+            bins = dct_totcddf['bins']
+            plotx = bins[:-1] + 0.5 * np.diff(bins)
+            ax.plot(plotx, np.log10(np.sum([dct_totcddf[mass]['cddf'] for mass in masses_proj[1:]], axis=0) / divby),\
+                    color=colors['allhalos'], linestyle='dashed', alpha=alpha,\
+                    path_effects=patheff_thick, linewidth=linewidth + 0.5)
+            
+            bins = dct_fofcddf['none']['bins']
+            plotx = bins[:-1] + 0.5 * np.diff(bins)
+            ax.plot(plotx, np.log10(np.sum([dct_fofcddf['none'][mass]['cddf'] for mass in masses_proj[1:]], axis=0) / divby),\
+                    color=colors['allhalos'], linestyle='solid', alpha=alpha,\
+                    path_effects=patheff_thick, linewidth=linewidth + 0.5)
+        
+            bins = dct_totcddf['bins']
+            plotx = bins[:-1] + 0.5 * np.diff(bins)
+            ax.plot(plotx, np.log10(dct_totcddf['none']['cddf'] / divby),\
+                    color=colors['total'], linestyle='solid', alpha=alpha,\
+                    path_effects=patheff, linewidth=linewidth)
+            
+        else:
+            if pmass == 14.0:
+                ptext = r'$ > %.1f$'%pmass # \log_{10} \, \mathrm{M}_{\mathrm{200c}} \, / \, \mathrm{M}_{\odot}
+            else:
+                ptext = r'$ %.1f \emdash %.1f$'%(pmass, pmass + 0.5) # \leq \log_{10} \, \mathrm{M}_{\mathrm{200c}} \, / \, \mathrm{M}_{\odot} <
+            divby = 1.
+            
+            bins = dct_totcddf['bins']
+            plotx = bins[:-1] + 0.5 * np.diff(bins)
+            ax.plot(plotx, np.log10(dct_totcddf[pmass]['cddf'] / divby), color=colors[pmass],\
+                    linestyle='dashed', alpha=alpha, path_effects=patheff)
+                
+            mmass = pmass
+            _pe = patheff
+            _lw = linewidth
+            
+            bins = dct_fofcddf[pmass]['bins']
+            plotx = bins[:-1] + 0.5 * np.diff(bins)
+            ax.plot(plotx, np.log10(dct_fofcddf[pmass][mmass]['cddf'] / divby),\
+                    color=colors[mmass], linestyle='solid', alpha=alpha,\
+                    path_effects=_pe, linewidth=_lw)
+            
+            bins = dct_fofcddf[pmass]['bins']
+            plotx = bins[:-1] + 0.5 * np.diff(bins)
+            ax.plot(plotx, np.log10(dct_fofcddf[pmass]['none']['cddf'] / divby),\
+                    color=colors['none'], linestyle='solid',\
+                    alpha=alpha, path_effects=patheff)
+        
+            bins = dct_totcddf['bins']
+            plotx = bins[:-1] + 0.5 * np.diff(bins)
+            ax.plot(plotx, np.log10(dct_totcddf[pmass]['cddf'] / divby),\
+                    color=colors[pmass], linestyle='dashed', alpha=alpha,\
+                    path_effects=patheff_thick, linewidth=linewidth + 0.5)
+            ax.plot(plotx, np.log10(dct_totcddf['none']['cddf'] / divby),\
+                    color=colors['total'], linestyle='solid', alpha=alpha,\
+                    path_effects=patheff, linewidth=linewidth)
+            
+        ax.text(0.97, 0.97, ptext,\
+                horizontalalignment='right', verticalalignment='top',\
+                fontsize=fontsize, transform=ax.transAxes)
+            
+    lcs = []
+    line = [[(0, 0)]]
+    
+    # set up the proxy artist
+    for ls in ['solid', 'dashed']:
+        subcols = [colors[ed] for ed in massedges] + \
+        [mpl.colors.to_rgba(colors['allhalos'], alpha=alpha)]
+        subcols = np.array(subcols)
+        subcols[:, 3] = 1. # alpha value
+        #print(subcols)
+        lc = mcol.LineCollection(line * len(subcols), linestyle=ls, linewidth=linewidth, colors=subcols)
+        lcs.append(lc)
+
+    sumhandles = [mlines.Line2D([], [], color=colors['none'],\
+                                linestyle='solid', label='FoF no mask',\
+                                linewidth=2.),\
+                  mlines.Line2D([], [], color=colors['total'],\
+                                linestyle='solid', label='total',\
+                                linewidth=2.),\
+                  mlines.Line2D([], [], color=colors['allhalos'],\
+                                linestyle='solid', label=r'all FoF+200c gas',\
+                                linewidth=2.),\
+                  ]
+    sumlabels = ['FoF+200c, no mask', 'all gas, no mask', r'mask: all haloes $> 11.0$']
+    lax.legend(lcs + sumhandles, ['FoF+200c, with mask', 'all gas, with mask'] + sumlabels,\
+               handler_map={type(lc): pu.HandlerDashedLines()}, fontsize=fontsize,\
+               ncol=ncol_legend, loc='upper center', bbox_to_anchor=(0.5, 0.))
+    lax.axis('off')
+   
+    plt.savefig(outname, format='pdf')
 
 ############################## 2d profiles ####################################
 
