@@ -1918,7 +1918,8 @@ def plot_radprof_limited(fontsize=fontsize):
                         ploty2 = yvals[var][ion][tag][yval]
                     except KeyError:
                         print('Failed to read in %s - %s - %s -%s'%(var, ion, tag, yval)) 
-                    ax.fill_between(plotx, ploty1, ploty2, color=colors[tag],\
+                    ax.fill_between(plotx, ploty1, ploty2,\
+                                    color=colors[masslabels_all[tag]],\
                                     alpha=alphas[var] * shading_alpha,\
                                     label=masslabels_all[tag])
                     yvals_toplot_temp = [yvals_toplot_temp[1]]
@@ -1936,7 +1937,9 @@ def plot_radprof_limited(fontsize=fontsize):
                                    mppe.Normal()]
                     else:
                         patheff = []
-                    ax.plot(plotx, ploty, color=colors[tag], linestyle=linestyles[var],\
+                    ax.plot(plotx, ploty,\
+                            color=colors[masslabels_all[tag]],\
+                            linestyle=linestyles[var],\
                             linewidth=linewidths[var], alpha=alphas[var],\
                             label=masslabels_all[tag], path_effects=patheff)
                 
@@ -1953,7 +1956,8 @@ def plot_radprof_limited(fontsize=fontsize):
         subcols = np.array(subcols)
         subcols[:, 3] = alphas[var]
         #print(subcols)
-        lc = mcol.LineCollection(line * len(subcols), linestyle=linestyles[var], linewidth=linewidths[var], colors=subcols)
+        lc = mcol.LineCollection(line * len(subcols), linestyle=linestyles[var],\
+                                 linewidth=linewidths[var], colors=subcols)
         lcs.append(lc)
     # create the legend
     if len(techvars_touse) > 1:
