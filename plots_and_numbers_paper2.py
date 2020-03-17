@@ -1900,14 +1900,14 @@ def plot_radprof_limited(fontsize=fontsize):
                         np.inf 
                     matched = np.isclose(masslabels_all[tag], matchval)
                     if matched:
-                        yvals_toplot_temp = yvals_toplot
+                        yvals_toplot_temp = yvals_label_ion[var][ion]
                     else:
-                        yvals_toplot_temp = [yvals_toplot[0]] if len(yvals_toplot) == 1 else [yvals_toplot[1]]
+                        yvals_toplot_temp = [yvals_label_ion[var][ion][0]] \
+                                            if len(yvals_label_ion[var][ion]) == 1 else\
+                                            [yvals_label_ion[var][ion][1]]
                 else:
-                    yvals_toplot_temp = yvals_toplot
-                    print(yvals_toplot_temp)
-                
-                
+                    yvals_toplot_temp = yvals_label_ion[var][ion]
+                                
                 if len(yvals_toplot_temp) == 3:
                     yval = yvals_toplot_temp[0]
                     try:                      
