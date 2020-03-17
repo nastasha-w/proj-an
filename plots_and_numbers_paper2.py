@@ -1806,8 +1806,9 @@ def plot_radprof_limited(fontsize=fontsize):
     if len(techvars_touse) > 1:
         lax  = fig.add_subplot(grid[numrows, :])
     
-    yvals_label_ion = {tv: {ion: yvals_toplot for ion in ions}\
-                       for tv in techvars}
+    yvals_label_ion = {0: {ion: yvals_toplot for ion in ions},\
+                       7: {ion: [yvals_toplot[1]] for ion in ions},\
+                       }
     yvals, bins, numgals = readin_radprof(techvars, yvals_label_ion,\
                    labels=None, ions_perlabel=None, ytype=ytype,\
                    datadir=datadir, binset=0, units=units)
@@ -1903,7 +1904,7 @@ def plot_radprof_limited(fontsize=fontsize):
                     else:
                         yvals_toplot_temp = [yvals_toplot[0]] if len(yvals_toplot) == 1 else [yvals_toplot[1]]
                 else:
-                    yvals_toplot_temp = yvals_toplot
+                    yvals_toplot_temp = yvals_toplot_temp
                 
                 
                 if len(yvals_toplot_temp) == 3:
