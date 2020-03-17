@@ -1815,10 +1815,7 @@ def plot_radprof_limited(fontsize=fontsize):
         
     cbar, colors = add_cbar_mass(cax=cax, fontsize=fontsize, clabel=clabel,\
                                  aspect=9.)
-    
-    massranges = [sel[1:] for sel in Mh_sels]
-    massedges = sorted(list(set([np.log10(val) for rng in massranges for val in rng])))
-    
+        
     masslabels1 = {name: tuple(np.log10(np.array(galsetnames_massonly[name][1:])))\
                    for name in galsetnames_massonly.keys()}
     masslabels2 = {name: tuple(np.log10(np.array(galsetnames_1sl_binfofonly[name][1:])))\
@@ -1826,6 +1823,7 @@ def plot_radprof_limited(fontsize=fontsize):
     masslabels_all = masslabels1
     masslabels_all.update(masslabels2)
     masslabels_all = {key: masslabels_all[key][0] for key in masslabels_all}
+    massedges = sorted([masslabels_all[key] for key in masslabels_all])
     
     for ionind in range(len(ions)):
         xi = ionind % numcols
