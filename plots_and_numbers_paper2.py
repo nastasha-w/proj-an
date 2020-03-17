@@ -41,7 +41,7 @@ if 'OMP_NUM_THREADS' not in os.environ:
     os.environ['OMP_NUM_THREADS'] = '1'
 
 
-fontsize=12
+fontsize = 12
 ioncolors = {'o7': 'C3',\
              'o8': 'C0',\
              'o6': 'C2',\
@@ -518,7 +518,7 @@ def readin_radprof(infodct, yvals_label_ion,\
 ################################ CDDFs ########################################                        
                      
 # CDDFs, total, no split
-def plot_cddfs_nice(fontsize=fontsize, imgname=None):
+def plot_cddfs_nice(fontsize=fontsize):
     '''
     ions in different panels
     colors indicate different halo masses (from a rainbow color bar)
@@ -536,8 +536,7 @@ def plot_cddfs_nice(fontsize=fontsize, imgname=None):
     ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
     techvars = [0]
     
-    if imgname is None:
-        imgname = 'cddfs_total_{ions}_L0100N1504_27_PtAb_C2Sm_32000pix_T4EOS_6p25slice_zcen-all.pdf'.format(ions='-'.join(sorted(ions)))
+    imgname = 'cddfs_total_{ions}_L0100N1504_27_PtAb_C2Sm_32000pix_T4EOS_6p25slice_zcen-all.pdf'.format(ions='-'.join(sorted(ions)))
     if '/' not in imgname:
         imgname = mdir + imgname
     if imgname[-4:] != '.pdf':
@@ -658,7 +657,7 @@ def plot_cddfs_nice(fontsize=fontsize, imgname=None):
     plt.savefig(imgname, format='pdf', bbox_inches='tight')
 
 
-def plotcddfsplits_fof():
+def plotcddfsplits_fof(fontsize=fontsize):
     '''
     paper plot: FoF-only projections vs. all gas
     '''
@@ -926,7 +925,7 @@ def plotcddfsplits_fof():
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 
-def plotcddfsplits_fof_zev():
+def plotcddfsplits_fof_zev(fontsize=fontsize):
     '''
     paper plot: FoF-only projections vs. all gas at z=0.1 and z=0.5
     '''
@@ -1323,7 +1322,7 @@ def plotcddfsplits_fof_zev():
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 # cddfsplits, FoF, mask, appendix, split method  
-def plotcddfs_fofvsmask(ion):
+def plotcddfs_fofvsmask(ion, fontsize=fontsize):
     '''
     Note: all haloes line with masks (brown dashed) is for all haloes with 
           M200c > 10^9 Msun, while the solid line is for all FoF+200c gas at 
@@ -1969,7 +1968,7 @@ def plot_radprof_limited(fontsize=fontsize):
 # Mstar, stellar mass radial profiles, 2d profiles, impact parameters
 # percentiles, covering fractions, CDDF breaks, detection limits, Athena X-IFU
 # detectablility, M*
-def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=False):
+def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
     '''
     var:        main: percenitles in M* bins
                 main-fcov-break for covering fractions at the CDDF break
@@ -2315,7 +2314,7 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=False):
 
     plt.savefig(imgname, format='pdf', bbox_inches='tight')
     
-    
+# 2d radprof, zev, radial profiles, redshift evolution
 def plot_radprof_zev(fontsize=fontsize):
     '''
     ions in different panels
@@ -2588,12 +2587,11 @@ def plot_radprof_zev(fontsize=fontsize):
 ############################## 3d profiles ####################################
 
 # cumulative 3D radial profiles, mass, volume, ions
-def plot3Dprof_cumulative(minrshow=minrshow_R200c, ionset='all'):
+def plot3Dprof_cumulative(minrshow=minrshow_R200c, fontsize=fontsize):
     '''
     minrshow just sets the read-in file here; limits are determined by xlim
     '''
     weighttypes = ['Mass', 'Volume', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']        
-    fontsize = 12
     linewidth = 2.
     
     wnames = {weighttype: r'\mathrm{%s}'%(ild.getnicename(weighttype, mathmode=True)) if weighttype in ol.elements_ion.keys() else \
@@ -2704,7 +2702,7 @@ def plot3Dprof_cumulative(minrshow=minrshow_R200c, ionset='all'):
 # halo temperature, metallicity, density, rho, nH, Z, T,
 # mass-weighted, volume-weighted, 3D
 def plot3Dprof_haloprop(minrshow=minrshow_R200c, minrshow_kpc=None,\
-                        Zshow='oxygen'):
+                        Zshow='oxygen', fontsize=fontsize):
     '''
     mass- and Volume-weighted rho, T, Z profiles for different halo masses
     in R200c units, stacked weighting each halo by 1 / weight in R200c
@@ -2717,7 +2715,6 @@ def plot3Dprof_haloprop(minrshow=minrshow_R200c, minrshow_kpc=None,\
     solarZ = ol.solar_abunds_ea
     massslice = slice(None, None, 2) # subset of halo masses to plot
         
-    fontsize = 12
     percentiles = [50.]
     linestyles = {'Volume': 'solid',\
                   'Mass': 'dashed'}
@@ -2883,7 +2880,7 @@ def plot3Dprof_haloprop(minrshow=minrshow_R200c, minrshow_kpc=None,\
 # halo temperature, density, metallicity, rho, nH, T, Z
 # ion-weighted
 def plot3Dprof_ionw(minrshow=minrshow_R200c, ions=('o6', 'o7', 'o8'),\
-                    axnl=('rho', 'T', 'Z')):
+                    axnl=('T', 'rho', 'Z'), fontsize=fontsize):
     '''
     ion-weighted rho, T, Z profiles for different halo masses
     in R200c units, stacked weighting each halo by 1 / weight in R200c
@@ -2899,7 +2896,6 @@ def plot3Dprof_ionw(minrshow=minrshow_R200c, ions=('o6', 'o7', 'o8'),\
     msel = slice(None, None, 2)
     mnsel = slice(1, None, 2)
         
-    fontsize = 12
     percentiles = [50.]
     alpha = 1.
     
@@ -3052,7 +3048,8 @@ def plot3Dprof_ionw(minrshow=minrshow_R200c, ions=('o6', 'o7', 'o8'),\
 ########################### halo mass splits ##################################
 
 # bar chart, CGM, IGM, halo mass, halo mass contributions, baryon distribution
-def plotfracs_by_halo(ions=['Mass', 'oxygen', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'], fmt='pdf'):
+def plotfracs_by_halo(ions=['Mass', 'oxygen', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'],\
+                      fontsize=fontsize, fmt='pdf'):
     '''
     first: group mass bins by halo mass or subhalo catgory first
     '''
@@ -3262,7 +3259,8 @@ def plotfracs_by_halo(ions=['Mass', 'oxygen', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'f
 # metals split
 # makes two of the paper plots: the halo mass and oxygen decompositions
 def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
-                        nHcut=False, nHm2=False, nHorSF=False):
+                        nHcut=False, nHm2=False, nHorSF=False,\
+                        fontsize=fontsize):
     '''
     addedges: radial regions to consider; (0.0, 1.0) or (0.0, 2.0), units R200c
     var: 'Mass' for total mass
@@ -3279,8 +3277,6 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
            everything typically called ISM
     '''
     print('lines are medians, shaded regions are central 80% (only shown for ISM, stars, CGM)')
-    
-    fontsize = 12
     
     if np.sum([nHcut, nHm2, nHorSF]) > 1:
         print('Set at most one option controlling the ISM definition to True')
@@ -3462,14 +3458,13 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
     
 # oxygen split, oxygen fractions, ion fractions, halo ion fractions, 
 # CGM ion fractions 
-def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus'):
+def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus', fontsize=fontsize):
     '''
     addedges: radial regions to consider; (min, max) units R200c
               min: 0.0, or 0.1, max: 1.0 or 2.0
     var: 'focus' for o6, o7, o8, ne8, ne9, fe17
          'oxygen' for all the oxygen species
     '''
-    fontsize = 12
     
     filename_in = datadir + 'ionfracs_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb.hdf5'%(str(addedges[0]), str(addedges[1]))
     outname = 'ionfracs_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb_%s'%(str(addedges[0]), str(addedges[1]), var)
@@ -3599,11 +3594,10 @@ def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus'):
 ################################ Misc #########################################
 
 # ionbal, ion balance, ion tables, ionization tables, Tvir, virial temperature
-def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors):
+def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors, fontsize=fontsize):
     '''
     contour plots for ions balances + shading for halo masses at different Tvir
     '''
-    fontsize = 12
     
     if snap == 27:
         cosmopars = cosmopars_ea_27
@@ -3951,7 +3945,7 @@ def plot_NEW(fontsize=fontsize):
     plt.savefig(outname, format='pdf', bbox_inches='tight')    
 
 # b, b parameter, 
-def plotbpar():
+def plotbpar(fontsize=fontsize):
     '''
     best fit b parameters (log EW) as a function of velocity window size
     '''
@@ -3994,7 +3988,6 @@ def plotbpar():
                       * 1e-5
                  for ion in Tmax_CIE}
     
-    fontsize = 12
     
     fig, ax = plt.subplots(1, 1, figsize=(5.5, 4.),\
                            gridspec_kw={'bottom': 0.15})
@@ -4077,7 +4070,6 @@ def plotconfmatrix_mstarmhalo(fontsize=fontsize):
     cmap = 'viridis'
     vmin = 0.
     vmax = 1.
-    fontsize = 12
     xmin = 9.0
     ymin = 7.5
     xlabel = r'$\log_{10} \, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'
@@ -4532,9 +4524,6 @@ def getcovfrac_total_halo(minr_pkpc, maxr_r200c):
             
             npix_r = fcovs * np.pi * (rvals[1:]**2 - rvals[:-1]**2 ) / pixsize**2 # fraction * annulus surface area / pixel size    
             npix_inr = np.cumsum(npix_r)
-            print(rvals)
-            print(minr_pkpc)
-            print(maxr_pkpc)
             npix_inrmin = pu.linterpsolve(rvals[1:], npix_inr, minr_pkpc)
             npix_inrmax = pu.linterpsolve(rvals[1:], npix_inr, maxr_pkpc)
             
@@ -4686,3 +4675,50 @@ def getcovfrac_total_halo(minr_pkpc, maxr_r200c):
                              rmax=overview[stion][Mmin]['rmax'],\
                              **{ion: overview[ion][Mmin]['inmax_over_total'] for ion in ions}))
     print(totstr.format(**{ion: np.sum([overview[ion][Mmin]['inmax_over_total'] for Mmin in Mvals]) for ion in ions}))
+    
+
+
+
+#### convience function:
+def plot_all_paper(fontsize=fontsize):
+    
+    # CDDFs
+    plot_cddfs_nice(fontsize=fontsize) # fig 2
+    plotcddfsplits_fof(fontsize=fontsize) # fig 5
+    plotcddfsplits_fof_zev(fontsize=fontsize) # fig C2
+    plotcddfs_fofvsmask('o8', fontsize=fontsize) # fig B1
+    
+    # radial profiles: 2D
+    plot_radprof_limited(fontsize=fontsize) # fig 6
+    plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True) # fig 15
+    plot_radprof_mstar(var='main-fcov-break', fontsize=fontsize, lowmass=True) # fig 16
+    plot_radprof_mstar(var='main-fcov-obs', fontsize=fontsize, lowmass=True) # fig 17
+    plot_radprof_zev(fontsize=fontsize) # fig C1
+    
+    # radial profiles: 3d
+    plot3Dprof_cumulative(minrshow=minrshow_R200c, fontsize=fontsize) # fig 11
+    plot3Dprof_haloprop(minrshow=minrshow_R200c, minrshow_kpc=None,\
+                        Zshow='oxygen', fontsize=fontsize) # fig 12
+    plot3Dprof_ionw(minrshow=minrshow_R200c, ions=('o6', 'o7', 'o8'),\
+                    axnl=('T', 'rho', 'Z'), fontsize=fontsize) # fig 13
+    
+    # overall mass distributions
+    plotfracs_by_halo(ions=['Mass', 'oxygen', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'],\
+                      fontsize=fontsize, fmt='pdf') # fig 4
+    plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
+                        nHcut=False, nHm2=False, nHorSF=False,\
+                        fontsize=fontsize) # fig 7
+    plot_masscontr_halo(addedges=(0.0, 1.), var='oxygen',\
+                        nHcut=False, nHm2=False, nHorSF=False,\
+                        fontsize=fontsize) # fig 8
+    plot_ionfracs_halos(addedges=(0.1, 1.), var='focus', fontsize=fontsize) # fig 9
+    plot_ionfracs_halos(addedges=(0.1, 1.), var='oxygen', fontsize=fontsize) # fig 10
+
+    # other
+    plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors, fontsize=fontsize) # fig 1
+    plot_NEW(fontsize=fontsize) # fig 3
+    plotbpar(fontsize=fontsize) # fig A1
+    plotconfmatrix_mstarmhalo(fontsize=fontsize) # fig 14
+
+if __name__ == '__main__':
+    plot_all()
