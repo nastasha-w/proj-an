@@ -1520,6 +1520,9 @@ def plotcddfs_fofvsmask(ion):
     
     cbar, colors = add_cbar_mass(cax=cax, clabel=clabel, fontsize=fontsize,\
                                  aspect=9.)
+    colors['none'] = 'gray' # add no mask label for plotting purposes
+    colors['total'] = 'black'
+    colors['allhalos'] = 'brown'
     linewidth = 2.
     alpha = 1.
     
