@@ -4318,7 +4318,7 @@ def get_dNdz_halos(limset='break'):
                 # recover cosmopars:
                 mask_examples = {key: item for (key, item) in grp.attrs.items()}
                 del mask_examples['covfrac']
-                example_key = mask_examples.keys()[0].decode() # 'mask_<slice center>'
+                example_key = list(mask_examples.keys())[0].decode() # 'mask_<slice center>'
                 example_mask = mask_examples[example_key] # '<dir path><mask file name>'
                 path = 'masks/%s/%s/Header/cosmopars'%(example_key[5:], example_mask.split('/')[-1])
                 cosmopars = {key: item for (key, item) in fi[path].attrs.items()}
