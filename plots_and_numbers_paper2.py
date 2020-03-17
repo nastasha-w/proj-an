@@ -1904,7 +1904,7 @@ def plot_radprof_limited(fontsize=fontsize):
                     else:
                         yvals_toplot_temp = [yvals_toplot[0]] if len(yvals_toplot) == 1 else [yvals_toplot[1]]
                 else:
-                    yvals_toplot_temp = yvals_toplot_temp
+                    yvals_toplot_temp = yvals_toplot
                 
                 
                 if len(yvals_toplot_temp) == 3:
