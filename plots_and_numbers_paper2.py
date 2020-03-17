@@ -4215,7 +4215,7 @@ def get_dNdz_halos(limset='break'):
              'Mhalo_%s<=log200c'%medges[i] for i in range(len(medges))]
     prefilenames_all = {key: ['coldens_%s_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel.hdf5'%(key, '%s', halofill) for halofill in halofills]
                  for key in ions}   
-    filenames_all = {key: [ol.pdir + 'cddf_' + ((fn.split('/')[-1])%('-all'))[:-5] + '_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5' for fn in prefilenames_all[key]] for key in prefilenames_all.keys()}
+    filenames_all = {key: [datadir + 'cddf_' + ((fn.split('/')[-1])%('-all'))[:-5] + '_masks_M200c-0p5dex_mass-excl-ge-9_halosize-1.0-R200c_closest-normradius_halocen-margin-0.hdf5' for fn in prefilenames_all[key]] for key in prefilenames_all.keys()}
     
     masses_proj = ['none'] + list(medges)
     filedct = {ion: {masses_proj[i]: filenames_all[ion][i] for i in range(len(filenames_all[ion]))} for ion in ions} 
