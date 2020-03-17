@@ -2728,6 +2728,8 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
         arr_all = np.array(grp['mass'])
         collabels = list(grp.attrs['categories'])
         collabels = np.array([lab.decode() for lab in collabels])
+        print(collabels)
+        print(catcol)
         catind = {key: np.array([np.where(collabels == subn)[0][0] for subn in catcol[key]]) \
                        for key in catcol}
         massdata = {key: np.sum(arr_all[:, catind[key]], axis=1) for key in catcol}
