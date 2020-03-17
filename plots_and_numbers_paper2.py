@@ -4254,7 +4254,7 @@ def get_dNdz_halos(limset='break'):
                         
                     dct_fofcddf[ion]['bins'] = bins
                     
-                    inname = np.array(fi['input_filenames'])[0]
+                    inname = np.array(fi['input_filenames'])[0].decode()
                     inname = inname.split('/')[-1] # throw out directory path
                     parts = inname.split('_')
             
