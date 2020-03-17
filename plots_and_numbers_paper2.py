@@ -2747,10 +2747,7 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
         massdata.update(_sumdata)
         # check
         if not np.all(np.isclose(massdata['gas'], massdata['gas-subsum'])):
-            print(catcol)
-            print(collabels)
-            print(massdata['gas'])
-            print(massdata['gas-subsum'])
+            return massdata
             print(massdata)
             raise RuntimeError('The gas subcategory masses do not add up to the total gas mass for all halos')
 
