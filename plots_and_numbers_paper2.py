@@ -4582,7 +4582,7 @@ def getcovfrac_total_halo(minr_pkpc, maxr_r200c):
                 bins[var][ion] = _bins
                 
                 # extract number of pixels from the input filename, using naming system of make_maps
-                inname = np.array(fi['input_filenames'])[0]
+                inname = np.array(fi['input_filenames'])[0].decode()
                 inname = inname.split('/')[-1] # throw out directory path
                 parts = inname.split('_')
         
@@ -4599,11 +4599,17 @@ def getcovfrac_total_halo(minr_pkpc, maxr_r200c):
                 hists[var][ion] = {mask: np.array(fi['%s/hist'%mask]) for mask in masks}
                 #print('ion %s: sum = %f'%(ion, np.sum(hists[var][ion]['nomask'])))
                 
-                examplemaskdir = fi['masks'].keys()[0]
-                examplemask = fi['masks/%s'%(examplemaskdir)].keys()[0]
+                examplemaskdir = list(fi['masks'].keys())[0]
+                examplemask = fi['masks/%s'%(examplemaskdir)].keys()[0].decode()
                 cosmopars[var][ion] = {key: item for (key, item) in fi['masks/%s/%s/Header/cosmopars/'%(examplemaskdir, examplemask)].attrs.items()}
-                dXtot[var][ion] = cu.getdX(cosmopars[var][ion]['z'], cosmopars[var][ion]['boxsize'] / cosmopars[var][ion]['h'], cosmopars=cosmopars[var][ion]) * float(numpix_1sl**2)
-                dztot[var][ion] = cu.getdz(cosmopars[var][ion]['z'], cosmopars[var][ion]['boxsize'] / cosmopars[var][ion]['h'], cosmopars=cosmopars[var][ion]) * float(numpix_1sl**2)
+                dXtot[var][ion] = cu.getdX(cosmopars[var][ion]['z'],\
+                     cosmopars[var][ion]['boxsize'] / cosmopars[var][ion]['h'],\
+                     cosmopars=cosmopars[var][ion]) *\
+                     float(numpix_1sl**2)
+                dztot[var][ion] = cu.getdz(cosmopars[var][ion]['z'], \
+                     cosmopars[var][ion]['boxsize'] / cosmopars[var][ion]['h'],\
+                     cosmopars=cosmopars[var][ion]) *\
+                     float(numpix_1sl**2)
                 dXtotdlogN[var][ion] = dXtot[var][ion] * np.diff(bins[var][ion])
     
     npix_overlim_all = {}
