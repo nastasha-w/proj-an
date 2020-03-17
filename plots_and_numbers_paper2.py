@@ -4268,7 +4268,10 @@ def get_dNdz_halos(limset='break'):
                     covfrac = grp.attrs['covfrac']
                     # recover cosmopars:
                     cosmopars = cosmopars_ea_27
-                    dztot = cu.getdz(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
+                    dztot = cu.getdz(cosmopars['z'],\
+                                     cosmopars['boxsize'] / cosmopars['h'],\
+                                     cosmopars=cosmopars) *\
+                            float(numpix_1sl**2)
                     #dXtotdlogN = dXtot * np.diff(bins)
                     dct_fofcddf[ion][pmass] = {'cddf': hist / dztot, 'covfrac': covfrac}
             
@@ -4299,7 +4302,7 @@ def get_dNdz_halos(limset='break'):
                 
             dct_maskcddf[ion]['bins'] = bins
             
-            inname = np.array(fi['input_filenames'])[0]
+            inname = np.array(fi['input_filenames'])[0].decode()
             inname = inname.split('/')[-1] # throw out directory path
             parts = inname.split('_')
         
@@ -4315,11 +4318,14 @@ def get_dNdz_halos(limset='break'):
                 # recover cosmopars:
                 mask_examples = {key: item for (key, item) in grp.attrs.items()}
                 del mask_examples['covfrac']
-                example_key = mask_examples.keys()[0] # 'mask_<slice center>'
+                example_key = mask_examples.keys()[0].decode() # 'mask_<slice center>'
                 example_mask = mask_examples[example_key] # '<dir path><mask file name>'
                 path = 'masks/%s/%s/Header/cosmopars'%(example_key[5:], example_mask.split('/')[-1])
                 cosmopars = {key: item for (key, item) in fi[path].attrs.items()}
-                dXtot = cu.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
+                dXtot = cu.getdX(cosmopars['z'],\
+                                 cosmopars['boxsize'] / cosmopars['h'],\
+                                 cosmopars=cosmopars) * \
+                        float(numpix_1sl**2)
                 #dXtotdlogN = dXtot * np.diff(bins)
             
                 dct_maskcddf[ion][mmass] = {'cddf': hist / dXtot, 'covfrac': covfrac}
@@ -4329,7 +4335,10 @@ def get_dNdz_halos(limset='break'):
             hist = np.array(grp['hist'])
             covfrac = grp.attrs['covfrac']
             # recover cosmopars:
-            dztot = cu.getdz(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars) * float(numpix_1sl**2)
+            dztot = cu.getdz(cosmopars['z'],\
+                             cosmopars['boxsize'] / cosmopars['h'],\
+                             cosmopars=cosmopars) *\
+                    float(numpix_1sl**2)
             #dXtotdlogN = dXtot * np.diff(bins)
             dct_maskcddf[ion][mmass] = {'cddf': hist / dztot, 'covfrac': covfrac}
     
@@ -4393,7 +4402,8 @@ def get_dNdz_halos(limset='break'):
         print(fillstr.format(massst=strings_mmass[Mmin],\
                              **{ion: results[ion][Mmin]['mask'] / results[ion]['none']['mask'] for ion in ions}))
     print(fillstr.format(massst='halo total',\
-                             **{ion: np.sum([results[ion][Mmin]['mask'] for Mmin in masses_proj[1:]]) / results[ion]['none']['mask'] for ion in ions}))
+                             **{ion: np.sum([results[ion][Mmin]['mask'] for Mmin in masses_proj[1:]]) \
+                                     / results[ion]['none']['mask'] for ion in ions}))
     
     print('\n')
     print('FoF all halos / total CDDF')
@@ -4401,7 +4411,8 @@ def get_dNdz_halos(limset='break'):
     print(topstr2)
     print('\\hline')
     print(fillstr.format(massst='all FoF / all gas',\
-                             **{ion: results[ion]['none']['fof'] / results[ion]['none']['mask'] for ion in ions}))
+                             **{ion: results[ion]['none']['fof'] \
+                                / results[ion]['none']['mask'] for ion in ions}))
     
 
 def getcovfrac_total_halo(minr_pkpc, maxr_r200c):
