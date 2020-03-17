@@ -2625,7 +2625,8 @@ def plotfracs_by_halo(ions=['Mass', 'oxygen', 'o6', 'ne8', 'o7', 'ne9', 'o8', 'f
 # baryon split, baryon contributions, halo mass buildup, halo metals, 
 # metals split
 # makes two of the paper plots: the halo mass and oxygen decompositions
-def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass', nHcut=False):
+def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
+                        nHcut=False, nHm2=False, nHorSF=False):
     '''
     addedges: radial regions to consider; (0.0, 1.0) or (0.0, 2.0), units R200c
     var: 'Mass' for total mass
@@ -2635,15 +2636,33 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass', nHcut=False):
            False used from examination of var=Mass plots: in low-mass haloes, 
            the nH cut excludes quite some SF gas, which should be ISM. The SF
            cut will, however, exclude some dense, but low-Z gas.
+    nHm2:  same as nHcut, but uses a lower density cut of 10**-2 cm**-3. This 
+           will include some gas more typically called CGM in the ISM bin
+    nHorSF: ISM is defined as gas that meets the nH > 10**-1 cm**-3 limit or 
+           is star-forming; compromise definition that tries to inlcude 
+           everything typically called ISM
     '''
     print('lines are medians, shaded regions are central 80% (only shown for ISM, stars, CGM)')
     
     fontsize = 12
     
+    if np.sum([nHcut, nHm2, nHorSF]) > 1:
+        print('Set at most one option controlling the ISM definition to True')
+    
     if nHcut:
+        print('Defining the ISM as nH > 10**-1 cm**-3')
         filename_in = datadir + 'massdist-baryoncomp_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb_nHcut.hdf5'%(str(addedges[0]), str(addedges[1]))
         outname = 'masscontr_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb_%s_nHcut'%(str(addedges[0]), str(addedges[1]), var)
+    elif nHm2:
+        print('Defining the ISM as nH > 10**-2 cm**-3')
+        filename_in = datadir + 'massdist-baryoncomp_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb_nHm2cut.hdf5'%(str(addedges[0]), str(addedges[1]))
+        outname = 'masscontr_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb_%s_nHm2cut'%(str(addedges[0]), str(addedges[1]), var)
+    elif nHorSF:
+        print('Defining the ISM as nH > 10**-1 cm**-3 or SFR > 0')
+        filename_in = datadir + 'massdist-baryoncomp_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb_nHorSFcut.hdf5'%(str(addedges[0]), str(addedges[1]))
+        outname = 'masscontr_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb_%s_nHorSFcut'%(str(addedges[0]), str(addedges[1]), var)
     else:
+        print('Defining the ISM as SFR > 0')
         filename_in = datadir + 'massdist-baryoncomp_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb.hdf5'%(str(addedges[0]), str(addedges[1]))
         outname = 'masscontr_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb_%s'%(str(addedges[0]), str(addedges[1]), var)
     outname = outname.replace('.', 'p')
@@ -2656,12 +2675,21 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass', nHcut=False):
     
     ylabel = '{var} fraction'.format(var=string.lower(var) + (' mass' if var != 'Mass' else ''))
     
-    if nHcut:
+    if nHcut or nHm2:
         cgmlab = 'CGM'
-        ismlab = 'ISM'
+        ismlabs = ['ISM']
+    elif nHorSF:
+        dlolab = 'lodens'
+        dhilab = 'hidens'
+        nsflab = 'nonSF'
+        ysflab = 'SF'
+        ismlabs = [dlolab + '_' + ysflab,\
+                   dhilab + '_' + ysflab,\
+                   dhilab + '_' + nsflab]
+        cgmlab = dlolab + '_' + nsflab
     else:
         cgmlab = 'nonSF'
-        ismlab = 'SF'
+        ismlabs = ['SF']
     if var == 'Mass':
         groupname = 'massdist_Mass'
         catcol = {'BHs': ['BHs'],\
@@ -2689,7 +2717,8 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass', nHcut=False):
         addcol = {'total': ['gas', 'stars'],\
                   'CGM': [r'CGM $<5.5$', r'CGM $5.5 \endash 7$', r'CGM $> 7$'],\
                   'gas-subsum': ['ISM', r'CGM $<5.5$', r'CGM $5.5 \endash 7$', r'CGM $> 7$']}
-    catcol = {key: [val.format(ism=ismlab, cgm=cgmlab) for val in catcol[key]]\
+    catcol = {key: [val.format(ism=ismlab, cgm=cgmlab) \
+                    for val in catcol[key] for ismlab in ismlabs]\
                     for key in catcol}
     
     with h5py.File(filename_in, 'r') as fd:
