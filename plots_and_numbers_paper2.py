@@ -3309,7 +3309,7 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
     lw = 2
     xlabel = r'$\log_{10} \, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'
     
-    ylabel = '{var} fraction'.format(var=string.lower(var) + (' mass' if var != 'Mass' else ''))
+    ylabel = '{var} fraction'.format(var=var.lower() + (' mass' if var != 'Mass' else ''))
     
     if nHcut or nHm2:
         cgmlab = 'CGM'
@@ -4366,7 +4366,7 @@ def get_dNdz_halos(limset='break'):
                                  for mmass in masses_proj[1:]})
     
     ionstr = {ion: '\\ion{{{}}}{{{}}}'.format(ild.getnicename(ion).split(' ')[0], \
-                                              string.lower(ild.getnicename(ion).split(' ')[1])) \
+                                              (ild.getnicename(ion).split(' ')[1]).lower()) \
               for ion in ions}
     
     ### print overview table
