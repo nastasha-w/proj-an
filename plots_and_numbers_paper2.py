@@ -2690,34 +2690,46 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
     else:
         cgmlab = 'nonSF'
         ismlabs = ['SF']
+    if nHm2:
+        ctag = '-nHm2'
+    elif nHorSF:
+        ctag = '-nHorSF'
+    else:
+        ctag = ''
     if var == 'Mass':
         groupname = 'massdist_Mass'
         catcol = {'BHs': ['BHs'],\
                   'DM': ['DM'],\
                   'gas': ['gas'],\
                   'stars': ['stars'],\
-                  'ISM': ['gas_{ism}_T--inf-5.0', 'gas_{ism}_T-5.0-5.5',\
-                          'gas_{ism}_T-5.5-7.0', 'gas_{ism}_T-7.0-inf'],\
-                  r'CGM $<5.5$': ['gas_{cgm}_T--inf-5.0', 'gas_{cgm}_T-5.0-5.5'],\
-                  r'CGM $5.5 \endash 7$': ['gas_{cgm}_T-5.5-7.0'],\
-                  r'CGM $> 7$': ['gas_{cgm}_T-7.0-inf']}
+                  'ISM': ['gas{ctag}_{ism}_T--inf-5.0',\
+                          'gas{ctag}_{ism}_T-5.0-5.5',\
+                          'gas{ctag}_{ism}_T-5.5-7.0',\
+                          'gas{ctag}_{ism}_T-7.0-inf'],\
+                  r'CGM $<5.5$': ['gas{ctag}_{cgm}_T--inf-5.0',\
+                                  'gas{ctag}_{cgm}_T-5.0-5.5'],\
+                  r'CGM $5.5 \endash 7$': ['gas{ctag}_{cgm}_T-5.5-7.0'],\
+                  r'CGM $> 7$': ['gas{ctag}_{cgm}_T-7.0-inf']}
         addcol = {'total': ['BHs', 'gas', 'stars', 'DM'],\
                   'CGM': [r'CGM $<5.5$', r'CGM $5.5 \endash 7$', r'CGM $> 7$'],\
                   'baryons': ['BHs', 'gas', 'stars'],\
                   'gas-subsum': ['ISM', r'CGM $<5.5$', r'CGM $5.5 \endash 7$', r'CGM $> 7$']}
     else:
-        groupname = 'massdist_%s'%(var)
-        catcol = {'gas': ['gas-%s'%(var)],\
-                  'stars': ['stars-%s'%(var)],\
-                  'ISM': ['gas-%s_{ism}_T--inf-5.0'%(var), 'gas-%s_{ism}_T-5.0-5.5'%(var),\
-                          'gas-%s_{ism}_T-5.5-7.0'%(var), 'gas-%s_{ism}_T-7.0-inf'%(var)],\
-                  r'CGM $<5.5$': ['gas-%s_{cgm}_T--inf-5.0'%(var), 'gas-%s_{cgm}_T-5.0-5.5'%(var)],\
-                  r'CGM $5.5 \endash 7$': ['gas-%s_{cgm}_T-5.5-7.0'%(var)],\
-                  r'CGM $> 7$': ['gas-%s_{cgm}_T-7.0-inf'%(var)]}
+        groupname = 'massdist_{var}'.format(var=var)
+        catcol = {'gas': ['gas-{var}'],\
+                  'stars': ['stars-{var}'],\
+                  'ISM': ['gas{ctag}-{var}_{ism}_T--inf-5.0',\
+                          'gas{ctag}-{var}_{ism}_T-5.0-5.5',\
+                          'gas{ctag}-{var}_{ism}_T-5.5-7.0',\
+                          'gas{ctag}-{var}_{ism}_T-7.0-inf'],\
+                  r'CGM $<5.5$': ['gas{ctag}-{var}_{cgm}_T--inf-5.0',\
+                                  'gas{ctag}-{var}_{cgm}_T-5.0-5.5'],\
+                  r'CGM $5.5 \endash 7$': ['gas{ctag}-{var}_{cgm}_T-5.5-7.0'],\
+                  r'CGM $> 7$': ['gas{ctag}-{var}_{cgm}_T-7.0-inf']}
         addcol = {'total': ['gas', 'stars'],\
                   'CGM': [r'CGM $<5.5$', r'CGM $5.5 \endash 7$', r'CGM $> 7$'],\
                   'gas-subsum': ['ISM', r'CGM $<5.5$', r'CGM $5.5 \endash 7$', r'CGM $> 7$']}
-    catcol = {key: [val.format(ism=ismlab, cgm=cgmlab) \
+    catcol = {key: [val.format(ism=ismlab, cgm=cgmlab, var=var, ctag=ctag) \
                     for val in catcol[key] for ismlab in ismlabs]\
                     for key in catcol}
     
