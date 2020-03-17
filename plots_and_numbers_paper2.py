@@ -4600,7 +4600,7 @@ def getcovfrac_total_halo(minr_pkpc, maxr_r200c):
                 #print('ion %s: sum = %f'%(ion, np.sum(hists[var][ion]['nomask'])))
                 
                 examplemaskdir = list(fi['masks'].keys())[0]
-                examplemask = fi['masks/%s'%(examplemaskdir)].keys()[0].decode()
+                examplemask = list(fi['masks/%s'%(examplemaskdir)].keys())[0].decode()
                 cosmopars[var][ion] = {key: item for (key, item) in fi['masks/%s/%s/Header/cosmopars/'%(examplemaskdir, examplemask)].attrs.items()}
                 dXtot[var][ion] = cu.getdX(cosmopars[var][ion]['z'],\
                      cosmopars[var][ion]['boxsize'] / cosmopars[var][ion]['h'],\
