@@ -2683,10 +2683,10 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
         dhilab = 'hidens'
         nsflab = 'nonSF'
         ysflab = 'SF'
-        ismlabs = [dlolab + '_' + ysflab,\
-                   dhilab + '_' + ysflab,\
-                   dhilab + '_' + nsflab]
-        cgmlab = dlolab + '_' + nsflab
+        ismlabs = [ysflab + '_' + dlolab,\
+                   ysflab + '_' + dhilab,\
+                   nsflab + '_' + dhilab]
+        cgmlab = nsflab + '_' + dlolab
     else:
         cgmlab = 'nonSF'
         ismlabs = ['SF']
