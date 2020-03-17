@@ -1743,12 +1743,12 @@ def plot_radprof_limited(fontsize=fontsize):
                        'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
                        }
    
-    ion_filedct_1sl_binfofonly = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
-                           'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
-                           'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
-                           'o6':   'rdist_coldens_o6_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
-                           'o7':   'rdist_coldens_o7_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
-                           'o8':   'rdist_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+    ion_filedct_1sl_binfofonly = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_{hs}_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                           'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_{hs}_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                           'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_{hs}_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                           'o6':   'rdist_coldens_o6_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_{hs}_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                           'o7':   'rdist_coldens_o7_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_{hs}_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                           'o8':   'rdist_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_{hs}_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
                            }
         
     # define used mass ranges
@@ -1768,8 +1768,9 @@ def plot_radprof_limited(fontsize=fontsize):
     galsetnames_massonly = {name: sel for name, sel in zip(Mh_names, Mh_sels)}
     galsetnames_1sl_binfofonly = {name: sel for name, sel in zip(Mh_names_1sl_binfofonly, Mh_sels)}
     
-    fills_filedct_fofonly = {Mh_names_1sl_binfofonly[i]: 'Mhalo_%.1f<=log200c<%.1f'%(Mh_mins[i], Mh_maxs[i]) if Mh_maxs[i] is not None else \
-                                                         'Mhalo_%.1f<=log200c'%(Mh_mins[i]) \
+    fills_filedct_fofonly = {Mh_names_1sl_binfofonly[i]: {'hs': 'Mhalo_%.1f<=log200c<%.1f'%(Mh_mins[i], Mh_maxs[i])\
+                                                                if Mh_maxs[i] is not None else \
+                                                                'Mhalo_%.1f<=log200c'%(Mh_mins[i])} \
                              for i in range(len(Mh_mins))}
     
     techvars = {0: {'filenames': ion_filedct_1sl, 'setnames': galsetnames_massonly.keys(), 'setfills': None},\
