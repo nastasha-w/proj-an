@@ -2729,10 +2729,13 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
         addcol = {'total': ['gas', 'stars'],\
                   'CGM': [r'CGM $<5.5$', r'CGM $5.5 \endash 7$', r'CGM $> 7$'],\
                   'gas-subsum': ['ISM', r'CGM $<5.5$', r'CGM $5.5 \endash 7$', r'CGM $> 7$']}
-    catcol = {key: [val.format(ism=ismlab, cgm=cgmlab, var=var, ctag=ctag) \
-                    for val in catcol[key] for ismlab in ismlabs]\
+    # add ISM formatting iteration separately, otherwise other values are duplicated
+    catcol = {key: [val.format(ism='{ism}', cgm=cgmlab, var=var, ctag=ctag) \
+                    for val in catcol[key]] \
                     for key in catcol}
-    
+    catcol['ISM'] = [val.format(ism=ismlab) for ismlab in ismlabs \
+                     for val in catcol['ISM']]    
+
     with h5py.File(filename_in, 'r') as fd:
         cosmopars = {key: item for key, item in fd['Header/cosmopars'].attrs.items()}
         m200cvals = np.log10(np.array(fd['M200c_Msun']))
