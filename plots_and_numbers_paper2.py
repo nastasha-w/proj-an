@@ -6,8 +6,6 @@ Created on Tue Feb 11 13:03:06 2020
 @author: wijers
 
 adapted from plothistograms_paper2.py
-paper figures not included: 6, A1
-
 """
 
 
@@ -1687,6 +1685,283 @@ def plotcddfs_fofvsmask(ion):
     plt.savefig(outname, format='pdf')
 
 ############################## 2d profiles ####################################
+
+# Halo mass, 2dprof, 2d profiles, R200c, virial radius, normalized,
+# median, scatter, column density profles
+def plot_radprof_limited(fontsize=fontsize):
+    '''
+    ions in different panels
+    colors indicate different halo masses (from a rainbow color bar)
+    '''
+    techvars_touse=[0, 7]
+    units='R200c'
+    ytype='perc'
+    yvals_toplot=[10., 50., 90.]
+    plotcrit = {0: None,\
+                7: {'o6':   {'Mmin': [11., 12.,  14.]},\
+                    'o7':   {'Mmin': [11., 12.5, 14.]},\
+                    'o8':   {'Mmin': [11., 13.,  14.]},\
+                    'ne8':  {'Mmin': [11., 12.,  14.]},\
+                    'ne9':  {'Mmin': [11., 13.,  14.]},\
+                    'fe17': {'Mmin': [11., 13.,  14.]},\
+                    },\
+                }
+    ions = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']
+    
+    imgname = 'radprof_byhalomass_%s_L0100N1504_27_PtAb_C2Sm_32000pix_T4EOS_6p25slice_zcen-all_techvars-%s_units-%s_%s.pdf'%('-'.join(sorted(ions)), '-'.join(sorted([str(var) for var in techvars_touse])), units, ytype)
+    imgname = mdir + imgname
+        
+    if isinstance(ions, str):
+        ions = [ions]
+    if len(ions) <= 3:
+        numrows = 1
+        numcols = len(ions)
+    elif len(ions) == 4:
+        numrows = 2
+        numcols = 2
+    else:
+        numrows = (len(ions) - 1) // 3 + 1
+        numcols = 3
+    
+    shading_alpha = 0.45 
+    if ytype == 'perc':
+        ylabel = r'$\log_{10} \, \mathrm{N} \; [\mathrm{cm}^{-2}]$'
+    elif ytype == 'fcov':
+        ylabel = 'covering fraction'
+    if units == 'pkpc':
+        xlabel = r'$r_{\perp} \; [\mathrm{pkpc}]$'
+    elif units == 'R200c':
+        xlabel = r'$r_{\perp} \; [\mathrm{R}_{\mathrm{200c}}]$'
+    clabel = r'$\log_{10}\, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'
+    
+    # up to 2.5 Rvir / 500 pkpc
+    ion_filedct_1sl = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                       'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                       'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                       'o8':   'rdist_coldens_o8_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                       'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                       'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-500-pkpc-or-2p5-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                       }
+   
+    ion_filedct_1sl_binfofonly = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                           'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                           'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                           'o6':   'rdist_coldens_o6_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                           'o7':   'rdist_coldens_o7_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                           'o8':   'rdist_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_halosel_%s_allinR200c_endhalosel_1slice_to-100-pkpc-or-3-R200c_M200c-0p5dex-7000_centrals_stored_profiles.hdf5',\
+                           }
+        
+    # define used mass ranges
+    Mh_edges = np.array([11., 11.5, 12., 12.5, 13., 13.5, 14.]) # 9., 9.5, 10., 10.5
+    Mh_mins = list(Mh_edges)
+    Mh_maxs = list(Mh_edges[1:]) + [None]
+    Mh_sels = [('M200c_Msun', 10**Mh_mins[i], 10**Mh_maxs[i]) if Mh_maxs[i] is not None else\
+               ('M200c_Msun', 10**Mh_mins[i], np.inf)\
+               for i in range(len(Mh_mins))]
+    Mh_names =['logM200c_Msun_geq%s_le%s'%(Mh_mins[i], Mh_maxs[i]) if Mh_maxs[i] is not None else\
+               'logM200c_Msun_geq%s'%(Mh_mins[i])\
+               for i in range(len(Mh_mins))]
+    Mh_names_1sl_binfofonly = ['geq%s_le%s'%(Mh_mins[i], Mh_maxs[i]) if Mh_maxs[i] is not None else\
+                              'geq%s'%(Mh_mins[i])\
+                              for i in range(len(Mh_mins))]
+
+    galsetnames_massonly = {name: sel for name, sel in zip(Mh_names, Mh_sels)}
+    galsetnames_1sl_binfofonly = {name: sel for name, sel in zip(Mh_names_1sl_binfofonly, Mh_sels)}
+    
+    fills_filedct_fofonly = {Mh_names_1sl_binfofonly[i]: 'Mhalo_%.1f<=log200c<%.1f'%(Mh_mins[i], Mh_maxs[i]) if Mh_maxs[i] is not None else \
+                                                         'Mhalo_%.1f<=log200c'%(Mh_mins[i]) \
+                             for i in range(len(Mh_mins))}
+    
+    techvars = {0: {'filenames': ion_filedct_1sl, 'setnames': galsetnames_massonly.keys(), 'setfills': None},\
+                7: {'filenames': ion_filedct_1sl_binfofonly, 'setnames': galsetnames_1sl_binfofonly.keys(), 'setfills': fills_filedct_fofonly},\
+                }
+    
+    linewidths = {0: 1.5,\
+                  7: 1.,\
+                  }       
+    linestyles = {0: 'solid',\
+                  7: 'dashed',\
+                  }   
+    alphas = {0: 1.,\
+              7: 1.}   
+    legendnames_techvars = {0: 'all gas',\
+                            7: r'FoF gas only',\
+                            }
+    panelwidth = 2.5
+    panelheight = 2.
+    legheight = 0.9
+    cwidth = 0.6
+    if ytype == 'perc':
+        wspace = 0.2
+    else:
+        wspace = 0.0
+    #fcovticklen = 0.035
+    figwidth = numcols * panelwidth + cwidth + wspace * numcols
+    figheight = numcols * panelheight + legheight
+    fig = plt.figure(figsize=(figwidth, figheight))
+    grid = gsp.GridSpec(numrows + 1, numcols + 1, hspace=0.0, wspace=wspace, width_ratios=[panelwidth] * numcols + [cwidth], height_ratios=[panelheight] * numrows + [legheight])
+    axes = [fig.add_subplot(grid[i // numcols, i % numcols]) for i in range(len(ions))]
+    cax  = fig.add_subplot(grid[:numrows, numcols])
+    if len(techvars_touse) > 1:
+        lax  = fig.add_subplot(grid[numrows, :])
+    
+    yvals_label_ion = {tv: {ion: yvals_toplot for ion in ions}\
+                       for tv in techvars}
+    yvals, bins, numgals = readin_radprof(techvars, yvals_label_ion,\
+                   labels=None, ions_perlabel=None, ytype=ytype,\
+                   datadir=datadir, binset=0, units=units)
+    
+        
+    cbar, colors = add_cbar_mass(cax=cax, fontsize=fontsize, clabel=clabel,\
+                                 aspect=9.)
+    
+    massranges = [sel[1:] for sel in Mh_sels]
+    massedges = sorted(list(set([np.log10(val) for rng in massranges for val in rng])))
+    
+    masslabels1 = {name: tuple(np.log10(np.array(galsetnames_massonly[name][1:])))\
+                   for name in galsetnames_massonly.keys()}
+    masslabels2 = {name: tuple(np.log10(np.array(galsetnames_1sl_binfofonly[name][1:])))\
+                   for name in galsetnames_1sl_binfofonly.keys()}
+    masslabels_all = masslabels1
+    masslabels_all.update(masslabels2)
+    
+    for ionind in range(len(ions)):
+        xi = ionind % numcols
+        yi = ionind // numcols
+        ion = ions[ionind]
+        ax = axes[ionind]
+
+        if ytype == 'perc':
+            if ion[0] == 'h':
+                ax.set_ylim(12.0, 21.0)
+            #else:
+            #    ax.set_ylim(11.5, 17.0)
+            elif ion == 'fe17':
+                ax.set_ylim(11.5, 15.5)
+            elif ion == 'o7':
+                ax.set_ylim(12.5, 16.5)
+            elif ion == 'o8':
+                ax.set_ylim(12.5, 16.5)
+            elif ion == 'o6':
+                ax.set_ylim(10.8, 14.8)
+            elif ion == 'ne9':
+                ax.set_ylim(11.9, 15.9)
+            elif ion == 'ne8':
+                ax.set_ylim(10.5, 14.5)
+        
+        elif ytype == 'fcov':
+            ax.set_ylim(0., 1.)
+        
+        labelx = (yi == numrows - 1 or (yi == numrows - 2 and (yi + 1) * numcols + xi > len(ions) - 1)) # bottom plot in column
+        labely = xi == 0
+        if wspace == 0.0:
+            ticklabely = xi == 0
+        else:
+            ticklabely = True
+        pu.setticks(ax, fontsize=fontsize, labelbottom=labelx, labelleft=ticklabely)
+        if labelx:
+            ax.set_xlabel(xlabel, fontsize=fontsize)
+        if labely:
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+        
+
+        ax.text(0.95, 0.95, ild.getnicename(ion, mathmode=False), horizontalalignment='right', verticalalignment='top', fontsize=fontsize, transform=ax.transAxes)
+        
+        #hatchind = 0
+        for vi in range(len(techvars_touse) -1, -1, -1): # backwards to get lowest techvars on top
+            tags = techvars[techvars_touse[vi]]['setnames']
+            tags = sorted(tags, key=masslabels_all.__getitem__)
+            var = techvars_touse[vi]
+            for ti in range(len(tags)):
+                tag = tags[ti]
+                
+                try:
+                    plotx = bins[var][ion][tag]
+                except KeyError: # dataset not read in
+                    print('Could not find techvars %i, ion %s, tag %s'%(var, ion, tag))
+                    continue
+                plotx = plotx[:-1] + 0.5 * np.diff(plotx)
+
+                if plotcrit[var] is not None:
+                    mlist = plotcrit[var][ion]['Mmin']
+                    match = np.min(np.abs(masslabels_all[tag][0] - np.array(mlist)[:, np.newaxis])) <= 0.01
+                    if not match:
+                        continue
+                    
+                if var == 0:
+                    matchval = \
+                        12.0 if ion == 'o6' else \
+                        12.0 if ion == 'ne8' else \
+                        12.5 if ion == 'o7' else \
+                        13.0 if ion == 'ne9' else \
+                        13.0 if ion == 'o8' else \
+                        13.0 if ion == 'fe17' else \
+                        np.inf 
+                    matched = np.isclose(masslabels_all[tag][0], matchval)
+                    if matched:
+                        yvals_toplot_temp = yvals_toplot
+                    else:
+                        yvals_toplot_temp = [yvals_toplot[0]] if len(yvals_toplot) == 1 else [yvals_toplot[1]]
+                else:
+                    yvals_toplot_temp = yvals_toplot
+                
+                
+                if len(yvals_toplot_temp) == 3:
+                    yval = yvals_toplot_temp[0]
+                    try:                      
+                        ploty1 = yvals[var][ion][tag][yval]
+                    except KeyError:
+                        print('Failed to read in %s - %s - %s -%s'%(var, ion, tag, yval)) 
+                    yval = yvals_toplot_temp[2]
+                    try:                      
+                        ploty2 = yvals[var][ion][tag][yval]
+                    except KeyError:
+                        print('Failed to read in %s - %s - %s -%s'%(var, ion, tag, yval)) 
+                    ax.fill_between(plotx, ploty1, ploty2, color=colors[tag],\
+                                    alpha=alphas[var] * shading_alpha,\
+                                    label=masslabels_all[tag])
+                    yvals_toplot_temp = [yvals_toplot_temp[1]]
+                    
+                if len(yvals_toplot_temp) == 1:
+                    yval = yvals_toplot_temp[0]
+                    try:
+                        ploty = yvals[var][ion][tag][yval]
+                    except KeyError:
+                        print('Failed to read in %s - %s - %s -%s'%(var, ion, tag, yval))
+                        continue
+                    if yval == 50.0: # only highlight the medians
+                        patheff = [mppe.Stroke(linewidth=linewidths[var] + 0.5, foreground="b"),\
+                                   mppe.Stroke(linewidth=linewidths[var], foreground="w"),\
+                                   mppe.Normal()]
+                    else:
+                        patheff = []
+                    ax.plot(plotx, ploty, color=colors[tag], linestyle=linestyles[var],\
+                            linewidth=linewidths[var], alpha=alphas[var],\
+                            label=masslabels_all[tag], path_effects=patheff)
+                
+        
+        if ytype == 'perc':
+            ax.axhline(approx_breaks[ion], 0., 0.1, color='gray', linewidth=1.5, zorder=-1) # ioncolors[ion]
+        ax.set_xscale('log')
+    
+    lcs = []
+    line = [[(0, 0)]]
+    for var in techvars_touse:
+        # set up the proxy artist
+        subcols = list(colors[ed] for ed in massedges) #+ [mpl.colors.to_rgba(sumcolor, alpha=alphas[var])]
+        subcols = np.array(subcols)
+        subcols[:, 3] = alphas[var]
+        #print(subcols)
+        lc = mcol.LineCollection(line * len(subcols), linestyle=linestyles[var], linewidth=linewidths[var], colors=subcols)
+        lcs.append(lc)
+    # create the legend
+    if len(techvars_touse) > 1:
+        lax.legend(lcs, [legendnames_techvars[var] for var in techvars_touse],\
+                   handler_map={type(lc): pu.HandlerDashedLines()},\
+                   fontsize=fontsize, ncol=2 * numcols,\
+                   loc='lower center', bbox_to_anchor=(0.5, 0.))
+        lax.axis('off')
+    plt.savefig(imgname, format='pdf', bbox_inches='tight')
 
 # Mstar, stellar mass radial profiles, 2d profiles, impact parameters
 # percentiles, covering fractions, CDDF breaks, detection limits, Athena X-IFU
