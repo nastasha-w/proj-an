@@ -4721,4 +4721,4 @@ def plot_all_paper(fontsize=fontsize):
     plotconfmatrix_mstarmhalo(fontsize=fontsize) # fig 14
 
 if __name__ == '__main__':
-    plot_all()
+    plot_all_paper()
