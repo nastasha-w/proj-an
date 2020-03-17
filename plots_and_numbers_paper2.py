@@ -1825,6 +1825,7 @@ def plot_radprof_limited(fontsize=fontsize):
                    for name in galsetnames_1sl_binfofonly.keys()}
     masslabels_all = masslabels1
     masslabels_all.update(masslabels2)
+    masslabels_all = {key: masslabels_all[key][0] for key in masslabels_all}
     
     for ionind in range(len(ions)):
         xi = ionind % numcols
