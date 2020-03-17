@@ -23,14 +23,11 @@ mdir    = '/net/luttero/data2/imgs/CGM/plots_paper2/'
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib.cm as cm
-import mpl_toolkits.axes_grid1 as axgrid
 import matplotlib.gridspec as gsp
 import matplotlib.lines as mlines
-import matplotlib.legend_handler as mlh
 import matplotlib.collections as mcol
 import matplotlib.patheffects as mppe
 import matplotlib.patches as mpatch
-import matplotlib.ticker as mtick
 
 import make_maps_opts_locs as ol
 import eagle_constants_and_units as c #only use for physical constants and unit conversion!
