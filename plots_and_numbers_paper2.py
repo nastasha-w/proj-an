@@ -1886,7 +1886,7 @@ def plot_radprof_limited(fontsize=fontsize):
 
                 if plotcrit[var] is not None:
                     mlist = plotcrit[var][ion]['Mmin']
-                    match = np.min(np.abs(masslabels_all[tag][0] - np.array(mlist)[:, np.newaxis])) <= 0.01
+                    match = np.any(np.isclose(masslabels_all[tag], np.array(mlist)))
                     if not match:
                         continue
                     
