@@ -2700,7 +2700,7 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
         groupname = 'massdist_Mass'
         catcol = {'BHs': ['BHs'],\
                   'DM': ['DM'],\
-                  'gas': ['gas'],\
+                  'gas': ['gas{ctag}'],\
                   'stars': ['stars'],\
                   'ISM': ['gas{ctag}_{ism}_T--inf-5.0',\
                           'gas{ctag}_{ism}_T-5.0-5.5',\
@@ -2716,7 +2716,7 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
                   'gas-subsum': ['ISM', r'CGM $<5.5$', r'CGM $5.5 \endash 7$', r'CGM $> 7$']}
     else:
         groupname = 'massdist_{var}'.format(var=var)
-        catcol = {'gas': ['gas-{var}'],\
+        catcol = {'gas': ['gas{ctag}-{var}'],\
                   'stars': ['stars-{var}'],\
                   'ISM': ['gas{ctag}-{var}_{ism}_T--inf-5.0',\
                           'gas{ctag}-{var}_{ism}_T-5.0-5.5',\
