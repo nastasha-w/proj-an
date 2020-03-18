@@ -3385,9 +3385,7 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
             return massdata
             print(massdata)
             raise RuntimeError('The gas subcategory masses do not add up to the total gas mass for all halos')
-
-    print(m200cvals)
-    print(m200cbins)    
+    
     bininds = np.digitize(m200cvals, m200cbins)
     bincens = m200cbins[:-1] + 0.5 * np.diff(m200cbins)
     
