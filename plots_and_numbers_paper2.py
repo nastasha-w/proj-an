@@ -1473,8 +1473,9 @@ def plotcddfs_fofvsmask(ion, fontsize=fontsize):
         dXtotdlogN = dXtot * np.diff(bins)
         dct_totcddf[mmass] = {'cddf': hist / dXtotdlogN, 'covfrac': covfrac}
     
-    ylabel = r'$\log_{10} \left( \partial^2 n \, / \, \partial \log_{10} \mathrm{N} \, \partial X \right)$'
-    xlabel = r'$\log_{10} \, \mathrm{N} \; [\mathrm{cm}^{-2}]$'
+    ionn = ild.getnicename(ion, mathmode=True)
+    ylabel = '$\\log_{{10}} \\left( \\partial^2 n \\, / \\, \\partial \\log_{{10}} \\mathrm{{N}}({ion}) \\, \\partial X \\right)$'.format(ion=ionn)
+    xlabel = '$\\log_{{10}} \\, \\mathrm{{N}}({ion}) \\; [\\mathrm{{cm}}^{{-2}}]$'.format(ion=ion)
     clabel = r'masks for haloes with $\log_{10}\, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'
     
     massedges = list(medges) 
