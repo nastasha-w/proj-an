@@ -4808,9 +4808,9 @@ def calc_covfrac_in_radius(r_pkpc, fcovset='break'):
     ### print overview table
     print('For a radius of {rmax} pkpc'.format(rmax=r_pkpc))
     print('Enclosed covering fraction in stellar mass bins')
-    topstr = '$\\mathrm{{M}}_{{\\star}}$' +\
+    topstr = '$\\mathrm{{M}}_{{\\star}}$ & ' +\
              ' & '.join(['{ion}'.format(ion=ild.getnicename(ion)) for ion in ions]) + ' \\\\'
-    topstr2 = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\odot}}$' +\
+    topstr2 = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\odot}}$ & ' +\
               ' & '.join(['$>{yval:.1f}$'.format(yval=yvals_toplot[ion][0]) for ion in ions]) + ' \\\\'
     fillstr = '{Mmin:.1f}--{Mmax:.1f} & ' + ' & '.join(['{{{ist}:.4f}}'.format(ist=ion) for ion in ions]) + ' \\\\'
     #totstr = 'total &' + ' & '.join(['{{{ist}:.4f}}'.format(ist=ion) for ion in ions]) + ' \\\\'
