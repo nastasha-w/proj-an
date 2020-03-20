@@ -1378,7 +1378,7 @@ def plotcddfs_fofvsmask(ion, fontsize=fontsize):
                     
                 dct_fofcddf[pmass]['bins'] = bins
                 
-                inname = np.array(fi['input_filenames'])[0]
+                inname = np.array(fi['input_filenames'])[0].decode()
                 inname = inname.split('/')[-1] # throw out directory path
                 parts = inname.split('_')
         
