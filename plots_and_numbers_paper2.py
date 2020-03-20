@@ -4676,7 +4676,153 @@ def getcovfrac_total_halo(minr_pkpc, maxr_r200c):
     print(totstr.format(**{ion: np.sum([overview[ion][Mmin]['inmax_over_total'] for Mmin in Mvals]) for ion in ions}))
     
 
+def calc_covfrac_in_radius(r_pkpc, fcovset='break'):
+    '''
+    calculated from all-gas profiles in stellar mass bins
+    
+    fcovset: 'break' or 'obs'
+    '''
+    fcovset = 'break'
+    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
+    
+    halocat='/net/luttero/data2/proc/catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    # rounded1 set used in the paper
+    Ms_edges = np.array([8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.7], dtype=np.float32)
 
+    with h5py.File(halocat, 'r') as cat:
+        #r200c = np.array(cat['R200c_pkpc'])
+        mstar = np.log10(np.array(cat['Mstar_Msun']))
+        #minds = np.digitize(mstar, Ms_edges)
+        
+    if fcovset == 'break':
+        ytype='fcov'
+        yvals_toplot = {'o6':   [14.3],\
+                        'ne8':  [13.7],\
+                        'o7':   [16.0],\
+                        'ne9':  [15.3],\
+                        'o8':   [16.0],\
+                        'fe17': [15.0]}
+    elif fcovset == 'obs':
+        ytype='fcov'
+        yvals_toplot = {'o6':   [13.5],\
+                        'ne8':  [13.5],\
+                        'o7':   [15.5],\
+                        'ne9':  [15.5],\
+                        'o8':   [15.7],\
+                        'fe17': [14.9]}
+
+    cosmopars = cosmopars_ea_27
+
+    ion_filedct_Mstar = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o8':   'rdist_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         }
+    ion_filedct_Mstar_lowmass = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o8':   'rdist_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         }
+
+    # define used mass ranges
+    Ms_mins = list(Ms_edges[:-1])
+    Ms_maxs = list(Ms_edges[1:]) 
+    Ms_names_hm = ['logMstar_Msun_1000_geq%.1f_le%.1f'%(smin, smax) for smin, smax in zip(Ms_mins[2:], Ms_maxs[2:])]
+    Ms_names_lm = ['logMstar_Msun_1000_geq%.1f_le%.1f'%(smin, smax) for smin, smax in zip(Ms_mins[:2], Ms_maxs[:2])]
+    Ms_names = Ms_names_lm + Ms_names_hm
+
+    
+    techvars = {0: {'filenames': ion_filedct_Mstar, 'setnames': Ms_names_hm,\
+                    'setfills': None, 'units': 'pkpc'},\
+                1: {'filenames': ion_filedct_Mstar_lowmass,\
+                    'setnames': Ms_names_lm,\
+                    'setfills': None, 'units': 'pkpc'},\
+                }
+           
+    yvals_label_ion = {tv: yvals_toplot for tv in techvars}
+    yvals, bins, numgals = readin_radprof(techvars, yvals_label_ion,\
+                   labels=None, ions_perlabel=None, ytype=ytype,\
+                   datadir=datadir, binset=0, units='pkpc')
+    
+    # techvars here are just different files for different masses -> combine
+    _yvals = yvals[0].copy()
+    [_yvals[ion].update(yvals[1][ion]) for ion in _yvals]
+    yvals = _yvals
+    
+    _bins = bins[0].copy()
+    [_bins[ion].update(bins[1][ion]) for ion in _bins]
+    bins = _bins
+  
+    # size of one pixel (pkpc)
+    pixsize = (100. / 32000.) * 1e3 * cosmopars['a']
+    outcovs = {}
+    for ionind in range(len(ions)):   
+        ion = ions[ionind]
+        tags = Ms_names
+        tags = sorted(tags, key=lambda x: float(x.split('_')[3][3:]))
+        outcovs[ion] = {}
+        
+        for ti in range(len(tags)): # mass bins
+            #print(tag)
+            tag = tags[ti]
+            try:
+                rvals = np.array(bins[ion][tag])
+            except KeyError: # dataset not read in
+                print('Could not find ion %s, tag %s'%(ion, tag))
+                continue
+            fcovs = np.array(yvals[ion][tag][yvals_toplot[ion][0]])
+            
+            npix_r = fcovs * np.pi * (rvals[1:]**2 - rvals[:-1]**2 ) / pixsize**2 # fraction * annulus surface area / pixel size    
+            npix_inr_cov = np.cumsum(npix_r)
+            npix_inr_tot = np.pi * rvals[1:]**2 / pixsize**2
+            fcov_inr = pu.linterpsolve(rvals[1:],\
+                                       npix_inr_cov / npix_inr_tot,\
+                                       r_pkpc)
+            
+            outcovs[ion][tag] = fcov_inr      
+    
+    overview = {}
+    for ion in ions:
+        tags = list(outcovs[ion].keys())
+        minmaxv = np.array([[float(x.split('_')[3][3:]), float(x.split('_')[4][2:])] for x in tags])
+        _ind = np.argsort(minmaxv[:, 0])
+        tags = np.array(tags)[_ind]
+        minmaxv = minmaxv[_ind, :]
+        overview[ion] = {'limval': yvals_toplot[ion][0]}
+        
+        #print('For ion {ion}, absorbers > {val}'.format(ion=ion, val=yvals_toplot[ion]))
+        for ti in range(len(tags)):
+            Mmin, Mmax = minmaxv[ti]
+            tag = tags[ti]
+            numgals = np.sum(np.logical_and(mstar >= Mmin, mstar < Mmax))
+            
+            fcov = outcovs[ion][tag]
+            
+            overview[ion][Mmin] = {'Mmin': Mmin, 'Mmax': Mmax, 'fcov': fcov,\
+                                   'numgals': numgals}
+    
+    ### print overview table
+    print('For a radius of {rmax} pkpc'.format(rmax=r_pkpc))
+    print('Enclosed covering fraction in stellar mass bins')
+    topstr = '$\\mathrm{{M}}_{{\\star}}$' +\
+             ' & '.join(['{ion}'.format(ion=ild.getnicename(ion)) for ion in ions]) + ' \\\\'
+    topstr2 = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\odot}}$' +\
+              ' & '.join(['$>{yval:.1f}$'.format(yval=yvals_toplot[ion][0]) for ion in ions]) + ' \\\\'
+    fillstr = '{Mmin:.1f}--{Mmax:.1f} & ' + ' & '.join(['{{{ist}:.4f}}'.format(ist=ion) for ion in ions]) + ' \\\\'
+    #totstr = 'total &' + ' & '.join(['{{{ist}:.4f}}'.format(ist=ion) for ion in ions]) + ' \\\\'
+    Mvals = list(overview[ions[0]].keys())
+    Mvals.remove('limval')
+    stion = ions[0]
+    print(topstr)
+    print(topstr2)
+    for Mmin in sorted(Mvals):
+        print(fillstr.format(Mmin=overview[stion][Mmin]['Mmin'],\
+                             Mmax=overview[stion][Mmin]['Mmax'],\
+                             **{ion: overview[ion][Mmin]['fcov'] for ion in ions}))
 
 #### convience function:
 def plot_all_paper(fontsize=fontsize):
