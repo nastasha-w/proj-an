@@ -4682,7 +4682,6 @@ def calc_covfrac_in_radius(r_pkpc, fcovset='break'):
     
     fcovset: 'break' or 'obs'
     '''
-    fcovset = 'break'
     ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
     
     halocat='/net/luttero/data2/proc/catalogue_RefL0100N1504_snap27_aperture30.hdf5'
