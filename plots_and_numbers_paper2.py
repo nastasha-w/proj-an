@@ -484,7 +484,7 @@ def readin_radprof(infodct, yvals_label_ion,\
                                     break
                             
                             if ex:
-                                tags[fi[galset].attrs['seltag']] = galset
+                                tags[fi[galset].attrs['seltag'].decode()] = galset
                             
                         #tags_toread = {tag} &  set(tags.keys())
                         tags_unread = {tag} - set(tags.keys())
