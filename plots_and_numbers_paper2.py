@@ -1394,8 +1394,8 @@ def plotcddfs_fofvsmask(ion, fontsize=fontsize):
                     # recover cosmopars:
                     mask_examples = {key: item for (key, item) in grp.attrs.items()}
                     del mask_examples['covfrac']
-                    example_key = mask_examples.keys()[0] # 'mask_<slice center>'
-                    example_mask = mask_examples[example_key] # '<dir path><mask file name>'
+                    example_key = list(mask_examples.keys())[0] # 'mask_<slice center>'
+                    example_mask = mask_examples[example_key].decode() # '<dir path><mask file name>'
                     path = 'masks/%s/%s/Header/cosmopars'%(example_key[5:], example_mask.split('/')[-1])
                     #print(path)
                     cosmopars = {key: item for (key, item) in fi[path].attrs.items()}
