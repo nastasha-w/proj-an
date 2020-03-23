@@ -14,8 +14,6 @@ import h5py
 import pandas as pd
 import string
 import os
-import fnmatch
-import ctypes as ct
 
 datadir = '/net/luttero/data2/paper2/'
 mdir    = '/net/luttero/data2/imgs/CGM/plots_paper2/'
@@ -159,199 +157,6 @@ def R200c_pkpc(M200c, cosmopars):
     rhoc = (3. / (8. * np.pi * c.gravity) * cu.Hubble(cosmopars['z'], cosmopars=cosmopars)**2) # Hubble(z) will assume an EAGLE cosmology
     R200c = (M200c / (200. * rhoc))**(1./3.)
     return R200c / c.cm_per_mpc * 1e3 
-
-### ion tables for the oxygen split plot
-def parse_ionbalfiles_bensgadget2(filename, ioncol=None):
-    '''
-    returns a temperature-density table from the ascii files
-    separated from the main retrieval function findiontables_bensgadget2
-    since these ascii files have some messy specifics to deal with 
-
-    table data returned is (log10 balance, lognHcm3, logTK)
-    balance is lognH x logT
-    '''
-    
-    ## deal with the ascii format -> pandas dataframe
-    # first line has some issues: parse explicitly and pass as arguments to read_csv
-    with open(filename, 'r') as fi:
-        head = fi.readline()
-    if head[0] == '#':
-       head = head[1:]
-       
-    # spacing around column names is inconsistent; split -> strip produces a bunch of empty strings in the list
-    columns = head.split(' ')
-    columns = [column.strip() for column in columns]
-    while '' in columns:
-        columns.remove('')
-    # last 'column' is a redshift indicator (format 'redshift= <#.######>')
-    zcol = ['redshift' in column for column in columns]
-    if np.any(zcol):
-        zinds = np.where(zcol)[0]
-        zfilename = float(filename.split('/')[-1][2:7]) * 1e-4
-        for zi in zinds:
-            #rcol = columns[zi]
-            zcol = float(columns[zi + 1])
-            if not np.isclose(zcol, zfilename, atol=2e-4, rtol=1e-5):
-                raise RuntimeError('redshift value mismatch for file %s: %s from file name, %s in file'%(filename, zfilename, zcol))
-            columns.remove(columns[zi +1])
-            columns.remove(columns[zi])
-                
-    # get the table column name
-    if ioncol is not None:
-        elt, num = ild.get_elt_state(ioncol)
-        elt = string.capwords(elt)
-        snum = ild.arabic_to_roman[num]
-        columnname = elt[:9 - len(snum)] + snum
-        usecols = ['Hdens', 'Temp', columnname]
-    else:
-        usecols = None
-    
-    ## use pandas to read in the file
-    #print(columns)
-    #print(usecols)
-    df = pd.read_csv(filename, header=None, names=columns, usecols=usecols, sep='  ', comment='#', index_col=['Hdens', 'Temp'])
-    if ioncol is None:
-        return df
-
-    # reshape tables: since logT, lognH values are exactly the same across 
-    # rows/columns, not just fp close, pandas can deal with this easily        
-    df = pd.pivot_table(df, values=columnname, index=['Hdens'], columns=['Temp'])
-    ionbal = np.array(df)
-    logTK = np.array(df.columns)
-    lognHcm3 = np.array(df.index)
-    
-    return ionbal, lognHcm3, logTK
-
-
-def findiontables_bensgadget2(ion, z):
-    '''
-    gets ion balance tables at z by interpolating Ben Oppenheimer's ascii 
-    ionization tables made for gagdet-2 analysis
-    
-    note: the directory is set in opts_locs, but the file name pattern is 
-    hard-coded
-    '''
-    # from Ben's tables, using HM01 UV bkg,
-    # files are ascii, contain ionisation fraction of a species for rho, T
-    # different files -> different z
-    
-    
-    # search for the right files
-    pattern = 'lt[0-9][0-9][0-9][0-9][0-9]f100_i31'
-    # determined with ls -l and manual inspection of exmaples that these smaller 
-    # files only contain data for low densities.   
-    # in order to be able to interpolate, use only the complete files
-    files_excl = ['lt01006f100_i31',\
-                  'lt04675f100_i31',\
-                  'lt10530f100_i31',\
-                  'lt18710f100_i31',\
-                  'lt30170f100_i31',\
-                  'lt68590f100_i31',\
-                  'lt94790f100_i31',\
-                  ]
-    zsel = slice(2, 7, None)
-    znorm = 1e-4
-    tabledir = ol.dir_iontab_ben_gadget2
-
-    files = fnmatch.filter(next(os.walk(tabledir))[2], pattern)
-    #print(files)
-    for filen in files_excl:
-        if filen in files:
-            files.remove(filen)
-    files_zs = [float(fil[zsel]) * znorm for fil in files]
-    files = {files_zs[i]: files[i] for i in range(len(files))}
-
-    zs = np.sort(np.array(files_zs))
-    zind2 = np.searchsorted(zs, z)
-    if zind2 == 0:
-        if np.isclose(z, zs[0], atol=1e-3, rtol=1e-3): 
-            zind1 = zind2 # just use the lowest z if it's close enough
-        else:
-            raise RuntimeError('Requested redshift %s is outside the tabulated range %s-%s'%(z, zs[0], zs[-1]))
-    elif zind2 == len(zs):
-        if np.isclose(z, zs[-1], atol=1e-3, rtol=1e-3): 
-            zind2 -= 1 # just use the highest z if it's close enough
-            zind1 = zind2
-        else:
-            raise RuntimeError('Requested redshift %s is outside the tabulated range %s-%s'%(z, zs[0], zs[-1]))
-    else:
-        zind1 = zind2 - 1
-    
-    z1 = zs[zind1]
-    z2 = zs[zind2]
-    if z1 == z2:
-        w1 = 1.
-        w2 = 0.
-    else:
-        w1 = (z - z2) / (z1 - z2)
-        w2 = 1. - w1
-    file1 = tabledir + files[z1]
-    file2 = tabledir + files[z2]   
-    
-    if z1 == z2:
-        ionbal, lognHcm3, logTK = parse_ionbalfiles_bensgadget2(file1, ioncol=ion)
-    else:
-        ionbal1, lognHcm31, logTK1 = parse_ionbalfiles_bensgadget2(file1, ioncol=ion)
-        ionbal2, lognHcm32, logTK2 = parse_ionbalfiles_bensgadget2(file2, ioncol=ion)
-        if not (np.all(logTK1 == logTK2) and np.all(lognHcm31 == lognHcm32)):
-            raise RuntimeError('Density and temperature values used for the closest two tables do not match:\
-                               \n%s\n%s\nused for redshifts %s, %s around desired %s'%(file1, file2, z1, z2, z))
-        logTK = logTK1 #np.average([logTK1, logTK2], axis=0)
-        lognHcm3 = lognHcm31 #np.average([lognHcm31, lognHcm32], axis=1)
-        logionbal = np.log10(w1 * 10**ionbal1 + w2 * 10**ionbal2)
-
-    return logionbal, lognHcm3, logTK
-
-
-def find_ionbal_bensgadget2(z, ion, dct_nH_T):
-    table_zeroequiv = 10**-9.99999
-    
-    # compared to the line emission files, the order of the nH, T indices in the balance tables is switched
-    lognH = dct_nH_T['lognH']
-    logT  = dct_nH_T['logT']
-    logionbal, lognH_tab, logTK_tab = findiontables_bensgadget2(ion,z) #(np.array([[0.,0.],[0.,1.],[0.,2.]]), np.array([0.,1.,2.]), np.array([0.,1.]) )
-    NumPart = len(lognH)
-    inbalance = np.zeros(NumPart, dtype=np.float32)
-
-    if len(logT) != NumPart:
-        raise ValueError('find_ionbal_bensgadget2: lognH and logT should have the same length')
-
-    print("------------------- C interpolation function output --------------------------\n")
-    cfile = ol.c_interpfile
-
-    acfile = ct.CDLL(cfile)
-    interpfunction = acfile.interpolate_2d # just a linear interpolator; works for non-emission stuff too
-    # ion balance tables are density x temperature x redshift
-
-    interpfunction.argtypes = [np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(NumPart,)),\
-                           np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(NumPart,)),\
-                           ct.c_longlong, \
-                           np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(len(logTK_tab)*len(lognH_tab),)), \
-                           np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(len(lognH_tab),)), \
-                           ct.c_int,\
-                           np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(len(logTK_tab),)), \
-                           ct.c_int,\
-                           np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(NumPart,))]
-
-
-    res = interpfunction(lognH.astype(np.float32),\
-               logT.astype(np.float32),\
-               ct.c_longlong(NumPart),\
-               np.ndarray.flatten((10**logionbal).astype(np.float32)),\
-               lognH_tab.astype(np.float32),\
-               ct.c_int(len(lognH_tab)),\
-               logTK_tab.astype(np.float32),\
-               ct.c_int(len(logTK_tab)), \
-               inbalance \
-              )
-
-    print("-------------- C interpolation function output finished ----------------------\n")
-
-    if res != 0:
-        raise RuntimeError('find_ionbal_bensgadget2: Something has gone wrong in the C function: output %s. \n'%str(res))
-        
-    inbalance[inbalance == table_zeroequiv] = 0.
-    return inbalance
 
 
 
@@ -3503,10 +3308,15 @@ def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus', fontsize=fontsize):
     # get ion balance
     iontab = {}
     if var == 'focus':
-        pass
+        _ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
+        fn = datadir + 'ionbal_snap27.hdf5'
+        with h5py.File(fn, 'r') as fi:
+            for ion in _ions:
+                iontab[ion] = {'logTK': np.array(fi['{ion}/logTK'.format(ion=ion)]),\
+                               'ionbal': np.array(fi['{ion}/ionbal'.format(ion=ion)])}
     else:
         _ions = ['o{n}'.format(n=n) for n in range(1, 9)]
-        fn = '/data2/paper2/cietables_oxygen_bensgadget2_z-0.10063854175996956.hdf5'
+        fn = datadir + 'cietables_oxygen_bensgadget2_z-0.10063854175996956.hdf5'
         with h5py.File(fn, 'r') as fi:
             for ion in _ions:
                 iontab[ion] = {'logTK': np.array(fi['{ion}/logTK'.format(ion=ion)]),\
@@ -3564,12 +3374,12 @@ def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus', fontsize=fontsize):
             percvals = np.array([np.percentile(_iondata[bininds == i], percentiles) for i in range(1, len(m200cbins))]).T
             ax.plot(bincens, percvals[1], label=r'$\mathrm{%s}$'%(ild.getnicename(ion, mathmode=True)), color=_color, linewidth=lw)
             ax.fill_between(bincens, percvals[0], percvals[2], color=_color, alpha=alpha)
-            tablevals = cu.find_ionbal(cosmopars['z'], ion, {'logT': np.log10(T200cvals), 'lognH': np.ones(len(T200cvals)) * 6.}) # extreme nH -> highest tabulated values used
-            ax2.plot(np.log10(T200cvals), tablevals, color=_color, linewidth=lw)  
+            #tablevals = cu.find_ionbal(cosmopars['z'], ion, {'logT': np.log10(T200cvals), 'lognH': np.ones(len(T200cvals)) * 6.}) # extreme nH -> highest tabulated values used
+            cievals = [pu.linterpsolve(iontab[ion]['logTK'], iontab[ion]['ionbal'], Tvir)\
+                       for Tvir in np.log10(T200cvals)]   
+            ax2.plot(np.log10(T200cvals), cievals, color=_color, linewidth=lw)  
         else:
             avgs = np.array([np.average(_iondata[bininds == i]) for i in range(1, len(m200cbins))])
-            #tablevals = find_ionbal_bensgadget2(cosmopars['z'], ion, {'logT': np.log10(T200cvals), 'lognH': np.ones(len(T200cvals)) * 6.}) # extreme nH -> highest tabulated values used
-            
             cievals = [pu.linterpsolve(iontab[ion]['logTK'], 10**iontab[ion]['logionbal'], Tvir)\
                        for Tvir in np.log10(T200cvals)]        
             ax.fill_between(bincens, prev_halo, prev_halo + avgs, color=_color, label=r'$\mathrm{%s}$'%(ild.getnicename(ion, mathmode=True)))
