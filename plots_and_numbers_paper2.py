@@ -3374,7 +3374,6 @@ def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus', fontsize=fontsize):
             percvals = np.array([np.percentile(_iondata[bininds == i], percentiles) for i in range(1, len(m200cbins))]).T
             ax.plot(bincens, percvals[1], label=r'$\mathrm{%s}$'%(ild.getnicename(ion, mathmode=True)), color=_color, linewidth=lw)
             ax.fill_between(bincens, percvals[0], percvals[2], color=_color, alpha=alpha)
-            #tablevals = cu.find_ionbal(cosmopars['z'], ion, {'logT': np.log10(T200cvals), 'lognH': np.ones(len(T200cvals)) * 6.}) # extreme nH -> highest tabulated values used
             cievals = [pu.linterpsolve(iontab[ion]['logTK'], iontab[ion]['ionbal'], Tvir)\
                        for Tvir in np.log10(T200cvals)]   
             ax2.plot(np.log10(T200cvals), cievals, color=_color, linewidth=lw)  
