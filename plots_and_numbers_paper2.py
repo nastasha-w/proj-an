@@ -3499,6 +3499,19 @@ def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus', fontsize=fontsize):
         m200cvals = m200cvals[basesel]
         for ion in iondata:
             iondata[ion] = iondata[ion][basesel]
+            
+    # get ion balance
+    iontab = {}
+    if var == 'focus':
+        pass
+    else:
+        _ions = ['o{n}'.format(n=n) for n in range(1, 9)]
+        fn = '/data2/paper2/cietables_oxygen_bensgadget2_z-0.10063854175996956.hdf5'
+        with h5py.File(fn, 'r') as fi:
+            for ion in _ions:
+                iontab[ion] = {'logTK': np.array(fi['{ion}/logTK'.format(ion=ion)]),\
+                               'logionbal': np.array(fi['{ion}/logionbal'.format(ion=ion)])}
+
         
     bininds = np.digitize(m200cvals, m200cbins)
     bincens = m200cbins[:-1] + 0.5 * np.diff(m200cbins)
@@ -3555,12 +3568,14 @@ def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus', fontsize=fontsize):
             ax2.plot(np.log10(T200cvals), tablevals, color=_color, linewidth=lw)  
         else:
             avgs = np.array([np.average(_iondata[bininds == i]) for i in range(1, len(m200cbins))])
-            tablevals = find_ionbal_bensgadget2(cosmopars['z'], ion, {'logT': np.log10(T200cvals), 'lognH': np.ones(len(T200cvals)) * 6.}) # extreme nH -> highest tabulated values used
+            #tablevals = find_ionbal_bensgadget2(cosmopars['z'], ion, {'logT': np.log10(T200cvals), 'lognH': np.ones(len(T200cvals)) * 6.}) # extreme nH -> highest tabulated values used
             
+            cievals = [pu.linterpsolve(iontab[ion]['logTK'], iontab[ion]['logionbal'], Tvir)\
+                       for Tvir in np.log10(T200cvals)]        
             ax.fill_between(bincens, prev_halo, prev_halo + avgs, color=_color, label=r'$\mathrm{%s}$'%(ild.getnicename(ion, mathmode=True)))
             prev_halo += avgs
-            ax2.fill_between(np.log10(T200cvals), prev_cie, prev_cie + tablevals, color=_color)
-            prev_cie += tablevals
+            ax2.fill_between(np.log10(T200cvals), prev_cie, prev_cie + cievals, color=_color)
+            prev_cie += cievals
     
     # set T ticks
     mlim = 10**np.array(ax.get_xlim())
