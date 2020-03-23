@@ -3313,7 +3313,7 @@ def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus', fontsize=fontsize):
         with h5py.File(fn, 'r') as fi:
             for ion in _ions:
                 iontab[ion] = {'logTK': np.array(fi['{ion}/logTK'.format(ion=ion)]),\
-                               'ionbal': np.array(fi['{ion}/ionbal'.format(ion=ion)])}
+                               'ionbal': np.array(fi['{ion}/ionbal'.format(ion=ion)][-1, :])}
     else:
         _ions = ['o{n}'.format(n=n) for n in range(1, 9)]
         fn = datadir + 'cietables_oxygen_bensgadget2_z-0.10063854175996956.hdf5'
