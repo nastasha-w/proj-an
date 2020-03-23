@@ -3374,7 +3374,33 @@ def plotconfmatrix_mstarmhalo(halocat='/net/luttero/data2/proc/catalogue_RefL010
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     
-    
+
+def savetables_bensgadget2_cie():
+    cosmopars_ea_27 = {'a': 0.9085634947881763, 'boxsize': 67.77, 'h': 0.6777,\
+                   'omegab': 0.0482519, 'omegalambda': 0.693, 'omegam': 0.307,\
+                   'z': 0.10063854175996956}
+    cosmopars = cosmopars_ea_27
+    ions = ['o{n}'.format(n=n) for n in range(1, 9)]
+
+    outname = '/net/luttero/data2/paper2/' + \
+              'cietables_oxygen_bensgadget2_z-{z}.hdf5'.format(**cosmopars)    
+    with h5py.File(outname, 'w') as fo:
+        hed = fo.create_group('Header')
+        csm = hed.create_group('cosmopars')
+        for key in cosmopars:
+            csm.attrs.create(key, cosmopars[key])
+        for ion in ions:
+            logionbal, lognHcm3, logTK = m3.findiontables_bensgadget2(ion, cosmopars['z'])
+            cievals = logionbal[-1, :]
+            nval = lognHcm3[-1]
+            
+            igrp = fo.create_group(ion)
+            igrp.create_dataset('logTK', data=logTK)
+            igrp.create_dataset('logionbal', data=cievals)
+        hed.attrs.create('info', np.string_('log ion fractions at max. tabulated nH and redshift given by cosmopars'))    
+        hed.attrs.create('lognHcm3', nval)    
+            
+
 def plot_ionfracs_firstlook(addedges=(0.1, 1.), var='focus'):
     '''
     var: 'focus' for o6, o7, o8, ne8, ne9, fe17
