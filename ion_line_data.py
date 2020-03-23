@@ -20,6 +20,7 @@ dependencies are limited to python standards and constants_and_units
 import numpy as np
 import pandas as pd
 import scipy.integrate as si
+from scipy.special import wofz # fadeeva function; used for getting voight profiles
 import string
 
 import eagle_constants_and_units as c
@@ -137,11 +138,28 @@ except AttributeError:
     usecatdtype=False
 
 class SpecLine:
-    def __init__(self, name, parention, lambda_angstrom, fosc, combination=None):
+    def __init__(self, name, parention, lambda_angstrom, fosc,\
+                 combination=None, Atrans=np.NaN):
+        '''
+        input:
+        ------
+        name:             (str) name of the line
+        parention:        ion within which this is a transition
+                          (str, e.g. 'o8', 'fe17') 
+        lambda_angstrom:  wavelength of the line in Angstrom (float)
+        fosc:             oscillator strength (float)
+        combination:      None: just a single line
+                          tuple of ion names: this line is actually a 
+                          multiplet of the lines in the tuple
+        Atrans:           transition probability (float, s**-1) 
+                          optional, if you want to calculate the curve of 
+                          growth including damping wings
+        '''
         self.name = name
         self.ion = parention
         self.lambda_angstrom = lambda_angstrom
         self.fosc = fosc
+        self.Atrans = Atrans
         if combination is None:
             self.single = True
         else:
@@ -267,8 +285,8 @@ def readlinetable(hdf5group):
     return table
 
 # O VIII
-o8major    = SpecLine('o8major',   'o8', 18.9671, 0.277)   
-o8minor    = SpecLine('o8minor',   'o8', 18.9725, 0.139)
+o8major    = SpecLine('o8major',   'o8', 18.9671, 0.277, Atrans=2.57e12)   
+o8minor    = SpecLine('o8minor',   'o8', 18.9725, 0.139, Atrans=2.58e12)
 o8combo    = SpecLine('o8combo',   'o8', 18.9689, 0.416, combination=(o8major, o8minor))
 o8_2major  = SpecLine('o8_2major', 'o8', 16.0055, 0.0527)
 o8_2minor  = SpecLine('o8_2minor', 'o8', 16.0067, 0.0263)
@@ -278,7 +296,7 @@ o8lines    = IonLines('o8', 'oxygen', (o8major, o8minor, o8_2major, o8_2minor), 
 o8doublet  = IonLines('o8', 'oxygen', (o8major, o8minor), o8major)
 
 # O VII
-o7major    = SpecLine('o7major',   'o7', 21.6019, 0.696)
+o7major    = SpecLine('o7major',   'o7', 21.6019, 0.696, Atrans=3.32e12)
 o7r        = o7major
 o7_2       = SpecLine('o7_2',      'o7', 18.6284, 0.146)
 o7_3       = SpecLine('o7_3',      'o7', 17.7683, 5.52E-02)
@@ -287,7 +305,7 @@ o7_5       = SpecLine('o7_5',      'o7', 17.2000, 1.51E-02)
 o7lines    = IonLines('o7', 'oxygen', (o7major, o7_2), o7major)
 
 # O VI
-o6major    = SpecLine('o6major',   'o6', 1031.9261, 0.13250)   
+o6major    = SpecLine('o6major',   'o6', 1031.9261, 0.13250, Atrans=4.17e8)   
 o6minor    = SpecLine('o6minor',   'o6', 1037.6167, 0.06580)
 o6_3major  = SpecLine('o6_3major', 'o6', 150.1246, 8.84E-02)
 o6_3minor  = SpecLine('o6_3minor', 'o6', 150.0893, 1.77E-01)
@@ -312,7 +330,7 @@ o6lines    = IonLines('o6', 'oxygen', (o6major, o6minor, o6_2major, o6_2minor), 
 o6doublet  = IonLines('o6', 'oxygen', (o6major, o6minor), o6major)               
 
 # Fe XVII
-fe17major  = SpecLine('fe17major',   'fe17', 15.0140, 2.72)   
+fe17major  = SpecLine('fe17major',   'fe17', 15.0140, 2.72, Atrans=2.70e13)   
 fe17minor  = SpecLine('fe17minor',   'fe17', 15.2610, 0.614) 
 fe17_3     = SpecLine('fe17_3',      'fe17', 17.0550, 1.30E-01) 
 fe17_4     = SpecLine('fe17_4',      'fe17', 16.7800, 1.14E-01) 
@@ -392,7 +410,7 @@ n5_8minor  = SpecLine('n5_8minor', 'n5', 29.1279, 3.91E-02)
 
 
 # Ne VIII
-ne8major   = SpecLine('ne8major',  'ne8', 770.409, 0.103) 
+ne8major   = SpecLine('ne8major',  'ne8', 770.409, 0.103, Atrans=5.79e8) 
 ne8minor   = SpecLine('ne8minor',  'ne8', 780.324, 0.0505) 
 ne8_2major = SpecLine('ne8_2major','ne8', 88.0790, 2.01E-01) 
 ne8_2minor = SpecLine('ne8_2minor','ne8', 88.1170, 1.00E-01) 
@@ -406,7 +424,7 @@ ne8_6major = SpecLine('ne8_6major','ne8', 13.6553, 1.87E-01)
 ne8_6minor = SpecLine('ne8_6minor','ne8', 13.6533, 3.81E-01)
 
 # Ne IX
-ne9major   = SpecLine('ne9major',   'ne9', 13.4471, 0.724)   
+ne9major   = SpecLine('ne9major',   'ne9', 13.4471, 0.724, Atrans=8.90e12)   
 ne9_2      = SpecLine('ne9_2',      'ne9', 11.5466, 1.49E-01)
 ne9_3      = SpecLine('ne9_3',      'ne9', 11.0003, 5.61E-02)
 ne9_4      = SpecLine('ne9_4',      'ne9', 10.7643, 2.71E-02)
@@ -755,6 +773,103 @@ def linflatcurveofgrowth_inv_faster(Nion, b, ion):
                               -tau0[:, np.newaxis] *\
                                  np.exp(-1 * (xsample[np.newaxis, :])**2)
                                )
+        integral = si.simps(integrand, x=xsample, axis=1)
+
+    return prefactor * integral[:]
+
+def linflatdampedcurveofgrowth_inv(Nion, b, ion):
+    '''
+    equations from zuserver2.star.ucl.ac.uk/~idh/PHAS2112/Lectures/Current/Part4.pdf
+    b in cm/s
+    Nion in cm^-2
+    out: EW in Angstrom
+    
+    '''
+    # central optical depth; 1.13e20,c and pi come from comparison to the linear equation
+    #print('lambda_rest[ion]: %f'%lambda_rest[ion])
+    #print('fosc[ion]: %f'%fosc[ion])
+    #print('Nion: ' + str(Nion))
+    #print('b: ' + str(b))
+    if not hasattr(Nion, '__len__'):
+        Nion = np.array([Nion])
+    
+    if ion == 'o8_assingle': # backwards compatibiltiy
+        ion = o8combo
+    
+    if hasattr(ion, 'major') or (ion in elements_ion.keys()): # ion or IonLines, not line
+        if hasattr(ion, 'major'):
+            #fosc_m   = ion.major.fosc
+            wavelen_m = ion.major.lambda_angstrom
+            lines = ion.speclines.keys()
+            fosc    = {line: ion.speclines[line].fosc for line in lines}
+            wavelen = {line: ion.speclines[line].lambda_angstrom for line in lines}
+            atrans  = {line: ion.speclines[line].Atrans for line in lines}
+        else:
+            ionlines = linetable.loc[linetable['ion'] == ion]
+            lines    = ionlines.index 
+            mline     = ionlines.loc[ionlines['major']]
+            #fosc_m    = mline['fosc'][0]
+            wavelen_m = mline['lambda_angstrom'][0]
+            dct  = ionlines.to_dict()
+            fosc = dct['fosc']
+            wavelen = dct['lambda_angstrom']
+            atrans = dct['Atrans']
+        wavelen_m = np.sum([fosc[line] * wavelen[line] for line in lines]) \
+                   / np.sum([fosc[line] for line in lines]) 
+        
+        # tweak for precision/speed tradeoff; units: frequency (s**-1)
+        xsample = np.arange(-12., 12.005, 0.1) * c.c / (wavelen_m * 1e-8)
+        xoffsets = (np.array([wavelen[line] for line in lines]) - wavelen_m) \
+                   / wavelen_m**2 * c.c 
+        # axis 0: input Nion, axis 1: multiplet component
+        sigma = b / (wavelen_m * 1e-8 * 2.**0.5) # gaussian sigma from b parameter
+        hwhm_cauchy = np.array([atrans[line] for line in lines]) / (4. * np.pi)
+               
+        # axis 0: Nion, axis 1: lines, axis 2: integration x
+        z_in = (xsample[np.newaxis, np.newaxis, :]  \
+                 - xoffsets[np.newaxis, :, np.newaxis] \
+                 + hwhm_cauchy[np.newaxis, : , np.newaxis] * 1j) \
+                / (sigma * 2.**0.5)       
+        vps = np.real(wofz(z_in))
+        # norm * rework from fadeeva function 
+        norms = np.array([np.pi * c.electroncharge**2 / (c.electronmass * c.c) *\
+                          wavelen[line] * 1e-8 * fosc[line] * Nion \
+                          for line in lines]).T \
+                / (sigma * (2. * np.pi)**0.5)
+        
+        tau = np.sum(vps * norms[:, :, np.newaxis], axis=1) # total opt. depth
+        prefactor = (wavelen_m * 1e-8)**2 / c.c # just use the average here
+        
+        integrand = 1 - np.exp(-1. * tau)
+        integral = si.simps(integrand, x=xsample, axis=1)
+
+    else:
+        if hasattr(ion, 'fosc'):
+            fosc  = ion.fosc
+            wavelen = ion.lambda_angstrom
+            atrans  = ion.Atrans
+        else:
+            line     = linetable.loc[ion]
+            fosc     = line['fosc']
+            wavelen  = line['lambda_angstrom']
+            atrans   = line['Atrans']
+            
+        xsample = np.arange(-100., 100.005, 0.01) * c.c / (wavelen * 1e-8)
+
+        sigma = b / (wavelen * 1e-8 * 2.**0.5) # gaussian sigma from b parameter
+        hwhm_cauchy = atrans / (4. * np.pi)
+             
+        z_in = (xsample + hwhm_cauchy * 1j) \
+                / (sigma * 2.**0.5)       
+        vps = np.real(wofz(z_in))
+        # axis 0: Nion, axis 1: lines, axis 2: integration x
+        norm = np.pi * c.electroncharge**2 / (c.electronmass * c.c) *\
+               wavelen * 1e-8 * fosc * Nion \
+               / (sigma * (2. * np.pi)**0.5) 
+        tau = vps[np.newaxis, :] * norm[:, np.newaxis] # total opt. depth
+        prefactor = (wavelen)**2 / c.c * 1e-8  # just use the average here
+        
+        integrand = 1 - np.exp(-1. * tau)
         integral = si.simps(integrand, x=xsample, axis=1)
 
     return prefactor * integral[:]

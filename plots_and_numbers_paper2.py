@@ -6,6 +6,7 @@ Created on Tue Feb 11 13:03:06 2020
 @author: wijers
 
 adapted from plothistograms_paper2.py
+should work for python2 and python3 (tested: 2.7, 3.7)
 """
 
 
