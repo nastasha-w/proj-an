@@ -3568,14 +3568,14 @@ def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus', fontsize=fontsize):
             ax2.plot(np.log10(T200cvals), tablevals, color=_color, linewidth=lw)  
         else:
             avgs = np.array([np.average(_iondata[bininds == i]) for i in range(1, len(m200cbins))])
-            tablevals = find_ionbal_bensgadget2(cosmopars['z'], ion, {'logT': np.log10(T200cvals), 'lognH': np.ones(len(T200cvals)) * 6.}) # extreme nH -> highest tabulated values used
+            #tablevals = find_ionbal_bensgadget2(cosmopars['z'], ion, {'logT': np.log10(T200cvals), 'lognH': np.ones(len(T200cvals)) * 6.}) # extreme nH -> highest tabulated values used
             
             cievals = [pu.linterpsolve(iontab[ion]['logTK'], 10**iontab[ion]['logionbal'], Tvir)\
                        for Tvir in np.log10(T200cvals)]        
             ax.fill_between(bincens, prev_halo, prev_halo + avgs, color=_color, label=r'$\mathrm{%s}$'%(ild.getnicename(ion, mathmode=True)))
             prev_halo += avgs
-            ax2.fill_between(np.log10(T200cvals), prev_cie, prev_cie + tablevals, color=_color)
-            prev_cie += tablevals
+            ax2.fill_between(np.log10(T200cvals), prev_cie, prev_cie + cievals, color=_color)
+            prev_cie += cievals
     
     # set T ticks
     mlim = 10**np.array(ax.get_xlim())
