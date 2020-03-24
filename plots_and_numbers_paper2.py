@@ -4648,6 +4648,70 @@ def calc_covfrac_in_radius(r_pkpc, fcovset='break'):
                              Mmax=overview[stion][Mmin]['Mmax'],\
                              **{ion: overview[ion][Mmin]['fcov'] for ion in ions}))
 
+def calc_maxdiffs_dampingwings():
+    Tranges_CIE = {'o6':   (5.3, 5.8),\
+                   'o7':   (5.4, 6.5),\
+                   'o8':   (6.1, 6.8),\
+                   'ne8':  (5.6, 6.1),\
+                   'ne9':  (5.7, 6.8),\
+                   'fe17': (6.3, 7.0),\
+                   }
+    bvals_CIEmin = {ion: np.sqrt(2. * c.boltzmann * 10**Tranges_CIE[ion][0] / \
+                              (ionh.atomw[string.capwords(ol.elements_ion[ion])] *\
+                          c.u)) * 1e-5
+                    for ion in Tranges_CIE}
+    bfits = {'o6': 28.,\
+             'o7': 82.,\
+             'o8': 112.,\
+             'ne8': 37.,\
+             'ne9': 81.,\
+             'fe17': 90.,\
+             }
+    Nvals_max = {'o6': 15.5,\
+                 'o7': 16.9,\
+                 'o8': 16.6,\
+                 'ne8': 15.0,\
+                 'ne9': 16.2,\
+                 'fe17': 15.7,\
+                 }
+    
+    Nvals_check = {ion: [approx_breaks[ion], Nvals_max[ion]] \
+                   for ion in Nvals_max}
+    
+    Nvals = np.arange(12., 20.05, 0.1)
+    lines = [ild.o6major, ild.o7major, ild.o8doublet,\
+             ild.ne8major, ild.ne9major, ild.fe17major]
+    topstr  = 'b [km/s] \t min <{val1:4.1f} \t max <{val1:4.1f}' + \
+              ' \t min <{val2:4.1f} \t max <{val2:4.1f}'
+    fillstr = '{bval:5.0f} \t\t {diff1min:4.2f} \t\t {diff1max:4.2f} \t\t ' + \
+              '{diff2min:4.2f} \t\t {diff2max:4.2f}'
+    for line in lines:
+        try:
+            ion = line.ion
+        except AttributeError:
+            ion = line.major.ion
+        print(ild.getnicename(ion))
+        bvals = [bvals_CIEmin[ion], bfits[ion]]
+        if ion == 'o6':
+            bvals = [5.] + bvals
+        elif ion == 'o8':
+            bvals = list(np.arange(40., 251., 2.5)) + bvals
+        Nvals_crit = Nvals_check[ion]
+        print(topstr.format(val1=Nvals_crit[0], val2=Nvals_crit[1]))
+        for bval in bvals:
+            dmp = ild.linflatdampedcurveofgrowth_inv(10**Nvals, bval * 1e5, line)
+            lnf = ild.linflatcurveofgrowth_inv_faster(10**Nvals, bval * 1e5, line)
+            diff = np.log10(dmp/lnf)
+            
+            d1min = np.min(diff[Nvals <= Nvals_crit[0]])
+            d1max = np.max(diff[Nvals <= Nvals_crit[0]])
+            d2min = np.min(diff[Nvals <= Nvals_crit[1]])
+            d2max = np.max(diff[Nvals <= Nvals_crit[1]])
+            
+            print(fillstr.format(bval=bval, diff1min=d1min, diff2min=d2min,\
+                                 diff1max=d1max, diff2max=d2max))
+        print()
+
 #### convience function:
 def plot_all_paper(fontsize=fontsize):
     
