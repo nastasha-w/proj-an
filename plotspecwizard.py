@@ -24,7 +24,7 @@ ndir = ol.npzdir
 pdir = ol.pdir
 mdir = ol.mdir
 
-import specwiz_proc as sp
+import specwiz_proc_minimal as sp
 import ion_line_data as ild
 
 lambda_rest = ild.linetable['lambda_angstrom']
@@ -1796,7 +1796,7 @@ def plotspectrum_o78(sightline, sample_in=None, auxdata = None):
     pvals = vvals*1.e5 # rest-frame velocity in km/s ->  rest-frame velocity in cm/s
     pvals /= cu.Hubble(sample.cosmopars['z'],cosmopars=sample.cosmopars) * cu.c.cm_per_mpc # pMpc (local hubble flow means local size)
     pvals *= (1. + sl.cosmopars['z']) # convert to cMpc
-    print (max(pvals))
+    print(max(pvals))
     
     # retrieve compnents (TODO: add auxfile handling once I have a parameter set nailed down)
     #dclim = 0.01
@@ -2470,7 +2470,7 @@ def savemocks_o78(sightline, hdf5name):
     pvals = vvals*1.e5 # rest-frame velocity in km/s ->  rest-frame velocity in cm/s
     pvals /= cu.Hubble(sample.cosmopars['z'],cosmopars=sample.cosmopars) * cu.c.cm_per_mpc # pMpc (local hubble flow means local size)
     pvals *= (1. + sl.cosmopars['z']) # convert to cMpc
-    print (max(pvals))
+    print(max(pvals))
     grp.create_dataset('vrest_kmps', data=vvals)
     grp.create_dataset('lospos_cMpc', data=pvals)
     
@@ -2601,7 +2601,7 @@ def savemocks_o78_proposal_JKFN(sightline, hdf5name):
     pvals = vvals*1.e5 # rest-frame velocity in km/s ->  rest-frame velocity in cm/s
     pvals /= cu.Hubble(sample.cosmopars['z'],cosmopars=sample.cosmopars) * cu.c.cm_per_mpc # pMpc (local hubble flow means local size)
     pvals *= (1. + sl.cosmopars['z']) # convert to cMpc
-    print (max(pvals))
+    print(max(pvals))
     grp.create_dataset('vrest_kmps', data=vvals)
     grp.create_dataset('lospos_cMpc', data=pvals)
     
@@ -2839,3 +2839,73 @@ def get_absorbed_spectrum(specnum, ions, inname=sdir + 'sample3/spec.snap_027_z0
     Evals_out = Evals_interm[0] - 0.5 * spacing_interm_keV + spacing_interm_keV * float(numoversample) * np.arange(len(basespectrum) // numoversample + 1)    
                                              
     return Evals_out, spectrum_out
+
+
+## test whether we need damping wings
+    
+def plotdiff_damped_vs_gaussian_ions():
+    outname = '/net/luttero/data2/specwizard_data/damping_wing_check_paper2ions.pdf'
+    fig, (ax, lax) = plt.subplots(nrows=1, ncols=2,\
+         gridspec_kw={'width_ratios': [1., 0.2]})
+    fontsize=12
+    
+    ax.set_xlabel('$\\log_{{10}} \\, \\mathrm{{N}} \\; \\mathrm{{cm}}^{{-2}}$',\
+                  fontsize=fontsize)
+    ax.set_ylabel('$\\log_{{10}}$ damping wing EW / gaussian EW', fontsize=fontsize)
+    
+    Nvals = np.arange(12., 20.05, 0.1)
+    bvals = np.array([5., 10., 20., 50., 100., 200.])
+    dashes = [[6, 2], [3, 1], [1, 1],\
+              [6, 2, 3, 2], [6, 2, 1, 2], [3, 1, 1, 1]]
+    lines = [ild.o6major, ild.o7major, ild.o8doublet,\
+             ild.ne8major, ild.ne9major, ild.fe17major]
+    colors  = {'o7': 'C3',\
+             'o8': 'C0',\
+             'o6': 'C2',\
+             'ne8': 'C1',\
+             'ne9': 'C9',\
+             'hneutralssh': 'C6',\
+             'fe17': 'C4'}
+    thick = {'o6': 5.,\
+             'o7': 50.,\
+             'o8': 50.,\
+             'ne8': 20.,\
+             'ne9': 50.,\
+             'fe17': 50.,\
+             }
+    offset = 1.
+    offset_step = 1.
+    ax.tick_params(which='both', labelsize=fontsize-1, direction='in',\
+                   right=True, left=True)
+    ax.minorticks_on()
+    
+    for line in lines:
+        try:
+            ion = line.ion
+        except AttributeError:
+            ion = line.major.ion
+        color = colors[ion]
+        for bi in range(len(bvals)):
+            bval = bvals[bi]
+            pattern = dashes[bi]
+            dmp = ild.linflatdampedcurveofgrowth_inv(10**Nvals, bval * 1e5, line)
+            lnf = ild.linflatcurveofgrowth_inv_faster(10**Nvals, bval * 1e5, line)
+            lw = 2.5 if thick[ion] == bval else 1.5
+            ax.plot(Nvals, np.log10(dmp/lnf) + offset, dashes=pattern,\
+                    color=color, linewidth=lw)
+            
+        ax.axhline(offset, linestyle='solid', color=color)
+        ax.text(Nvals[0], offset, ild.getnicename(ion),
+                fontsize=fontsize, color=color, verticalalignment='bottom',
+                horizontalalignment='left')
+        offset += offset_step
+    
+    handles = [mlines.Line2D([], [], color='gray', dashes=dashes[bi],\
+                             label='{b:.0f}'.format(b=bvals[bi]))
+               for bi in range(len(bvals))]
+    leg = lax.legend(handles=handles, fontsize=fontsize, ncol=1,\
+              loc='upper left', bbox_to_anchor=(0.05, 0.95))
+    leg.set_title('b [km/s]', prop={'size': fontsize})
+    lax.axis('off')
+    
+    plt.savefig(outname, bbox_inches='tight', format='pdf')

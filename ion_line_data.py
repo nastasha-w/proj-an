@@ -840,7 +840,7 @@ def linflatdampedcurveofgrowth_inv(Nion, b, ion):
         xsample_mi = np.arange(range_hires[0], range_hires[1] + 0.5 * delta_rel_cen, delta_rel_cen)
         xsample = np.append(xsample_lo, xsample_mi)
         xsample = np.append(xsample, xsample_hi)
-        assert np.all(np.diff(xsample) > 0.)
+        
         # axis 0: Nion, axis 1: lines, axis 2: integration x
         z_in = (xsample[np.newaxis, np.newaxis, :]  \
                  - xoffsets[np.newaxis, :, np.newaxis] \
@@ -850,11 +850,8 @@ def linflatdampedcurveofgrowth_inv(Nion, b, ion):
         # norm * rework from fadeeva function 
         norms = np.array([np.pi * c.electroncharge**2 / (c.electronmass * c.c) *\
                           fosc[line] * Nion \
-                          for line in lines]).T 
-                      
+                          for line in lines]).T            
         tau = np.sum(vps * norms[:, :, np.newaxis], axis=1) # total opt. depth
-        import matplotlib.pyplot as plt
-        plt.plot(xsample, tau.T)
         prefactor = (wavelen_m)**2 / c.c * 1e-8 # just use the average here
         
         integrand = 1 - np.exp(-1. * tau)
