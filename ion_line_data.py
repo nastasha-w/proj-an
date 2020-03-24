@@ -832,18 +832,19 @@ def linflatdampedcurveofgrowth_inv(Nion, b, ion):
         xo_max = snus[-1] - snus[0]
         delta_rel = 0.05 * sigma
         delta_rel_cen = min(0.1 * xo_min, delta_rel)
-        range_hires = (2. * np.floor((snus[0] - nucen) / delta_rel) * delta_rel,\
-                       2. * np.ceil((snus[-1] - nucen) / delta_rel) * delta_rel )
+        range_hires = (2. * np.floor((snus[0] - nucen) / delta_rel_cen) * delta_rel_cen,\
+                       2. * np.ceil((snus[-1] - nucen) / delta_rel_cen) * delta_rel_cen)
         diff_max = 300. * np.max(hwhm_cauchy) + 20. * sigma + xo_max
         print(snus)
         print(delta_rel)
         print(diff_max)
-        xsample_lo = np.arange(-diff_max, range_hires[0] - 0.5 * delta_rel, delta_rel)
-        xsample_hi = np.arange(range_hires[1] + 0.5 * delta_rel, diff_max, delta_rel)
-        xsample_mi = np.arange(range_hires[0], range_hires[1] + 0.9 * delta_rel, delta_rel_cen)
+        xsample_lo = np.arange(range_hires[0] - 0.5 * delta_rel_cen, -diff_max, -delta_rel)[::-1]
+        xsample_hi = np.arange(range_hires[1] + 0.5 * delta_rel_cen, diff_max, delta_rel)
+        xsample_mi = np.arange(range_hires[0], range_hires[1] + 0.5 * delta_rel_cen, delta_rel_cen)
         xsample = np.append(xsample_lo, xsample_mi)
         xsample = np.append(xsample, xsample_hi)
         print(len(xsample))
+        print(xsample)
         return
           
         # axis 0: Nion, axis 1: lines, axis 2: integration x
