@@ -853,6 +853,8 @@ def linflatdampedcurveofgrowth_inv(Nion, b, ion):
                           for line in lines]).T 
                       
         tau = np.sum(vps * norms[:, :, np.newaxis], axis=1) # total opt. depth
+        import matplotlib.pyplot as plt
+        plt.plot(xsample, tau)
         prefactor = (wavelen_m)**2 / c.c * 1e-8 # just use the average here
         
         integrand = 1 - np.exp(-1. * tau)
