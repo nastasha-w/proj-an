@@ -796,6 +796,7 @@ def linflatdampedcurveofgrowth_inv(Nion, b, ion):
     if ion == 'o8_assingle': # backwards compatibiltiy
         ion = o8combo
     
+    # multiple lines in one go
     if hasattr(ion, 'major') or (ion in elements_ion.keys()): # ion or IonLines, not line
         if hasattr(ion, 'major'):
             #fosc_m   = ion.major.fosc
@@ -818,32 +819,43 @@ def linflatdampedcurveofgrowth_inv(Nion, b, ion):
                    / np.sum([fosc[line] for line in lines]) 
         
         # tweak for precision/speed tradeoff; units: frequency (s**-1)
-        xsample = np.arange(-12., 12.005, 0.1) * c.c / (wavelen_m * 1e-8)
-        xoffsets = (np.array([wavelen[line] for line in lines]) - wavelen_m) \
-                   / wavelen_m**2 * c.c 
+        nucen = c.c / wavelen_m
+        nus = c.c / np.array([wavelen[line] for line in lines])
+        xoffsets = nus - nucen
+        
         # axis 0: input Nion, axis 1: multiplet component
         sigma = b / (wavelen_m * 1e-8 * 2.**0.5) # gaussian sigma from b parameter
         hwhm_cauchy = np.array([atrans[line] for line in lines]) / (4. * np.pi)
-               
+        
+        snus = np.sort(nus)
+        xo_min = np.min(np.diff(np.sort(snus)))
+        xo_max = snus[-1] - snus[0]
+        delta_rel = min(0.05 * sigma, 0.1 * xo_min)
+        diff_max = 300. * np.max(hwhm_cauchy) + 20. * sigma + xo_max
+        print(snus)
+        print(delta_rel)
+        print(diff_max)
+        return
+        xsample = np.arange(-diff_max, diff_max + 0.5 * delta_rel, delta_rel)
+          
         # axis 0: Nion, axis 1: lines, axis 2: integration x
         z_in = (xsample[np.newaxis, np.newaxis, :]  \
                  - xoffsets[np.newaxis, :, np.newaxis] \
                  + hwhm_cauchy[np.newaxis, : , np.newaxis] * 1j) \
                 / (sigma * 2.**0.5)       
-        vps = np.real(wofz(z_in))
+        vps = np.real(wofz(z_in)) / (sigma * (2. * np.pi)**0.5)
         # norm * rework from fadeeva function 
         norms = np.array([np.pi * c.electroncharge**2 / (c.electronmass * c.c) *\
-                          wavelen[line] * 1e-8 * fosc[line] * Nion \
-                          for line in lines]).T \
-                / (sigma * (2. * np.pi)**0.5)
-        
+                          fosc[line] * Nion \
+                          for line in lines]).T 
+                      
         tau = np.sum(vps * norms[:, :, np.newaxis], axis=1) # total opt. depth
-        prefactor = (wavelen_m * 1e-8)**2 / c.c # just use the average here
+        prefactor = (wavelen_m)**2 / c.c * 1e-8 # just use the average here
         
         integrand = 1 - np.exp(-1. * tau)
         integral = si.simps(integrand, x=xsample, axis=1)
 
-    else:
+    else: # singlet line
         if hasattr(ion, 'fosc'):
             fosc  = ion.fosc
             wavelen = ion.lambda_angstrom
@@ -853,21 +865,24 @@ def linflatdampedcurveofgrowth_inv(Nion, b, ion):
             fosc     = line['fosc']
             wavelen  = line['lambda_angstrom']
             atrans   = line['Atrans']
-            
-        xsample = np.arange(-100., 100.005, 0.01) * c.c / (wavelen * 1e-8)
-
+        
         sigma = b / (wavelen * 1e-8 * 2.**0.5) # gaussian sigma from b parameter
         hwhm_cauchy = atrans / (4. * np.pi)
              
+        delta_rel = 0.05 * sigma
+        diff_max = 300. * hwhm_cauchy + 20. * sigma
+        xsample = np.arange(-diff_max, diff_max + 0.5 * delta_rel, delta_rel)
+        
         z_in = (xsample + hwhm_cauchy * 1j) \
                 / (sigma * 2.**0.5)       
-        vps = np.real(wofz(z_in))
-        # axis 0: Nion, axis 1: lines, axis 2: integration x
+        vps = np.real(wofz(z_in)) / (sigma * (2. * np.pi)**0.5) 
+        #print(si.simps(vps, x=xsample)) # checked: this works out to ~1
+        
+        # axis 0: Nion, axis 1: integration x
         norm = np.pi * c.electroncharge**2 / (c.electronmass * c.c) *\
-               wavelen * 1e-8 * fosc * Nion \
-               / (sigma * (2. * np.pi)**0.5) 
+               fosc * Nion             
         tau = vps[np.newaxis, :] * norm[:, np.newaxis] # total opt. depth
-        prefactor = (wavelen)**2 / c.c * 1e-8  # just use the average here
+        prefactor = (wavelen)**2 / c.c * 1e-8  
         
         integrand = 1 - np.exp(-1. * tau)
         integral = si.simps(integrand, x=xsample, axis=1)
