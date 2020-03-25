@@ -1674,7 +1674,7 @@ def selectsamples_jumpeffect():
             sample = sample.split('/')[-1] # file name
             sample = sample.split('_')
             sample = np.array(sample)[np.array(['sample' in part \
-                                                for part in sample])]
+                                                for part in sample])][0]
             
             ogrp.attrs.create('jump_v1', jv1)
             ogrp.attrs.create('jump_v2', jv2)
