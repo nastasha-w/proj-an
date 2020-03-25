@@ -1689,9 +1689,9 @@ def selectsamples_jumpeffect():
             
             specnums = np.array(grp['selected_specinds'])
             cdtot = np.array(grp['coldens_tot/{ion}'.format(ion=ion)])
-            cdcen = np.array(grp['Deltav_{dv:.3f}/coldens/{ion}'.format(dv=vc1, ion=ion)])
-            cdjv1 = np.array(grp['Deltav_{dv:.3f}/coldens/{ion}'.format(dv=jv1, ion=ion)])
-            cdjv2 = np.array(grp['Deltav_{dv:.3f}/coldens/{ion}'.format(dv=jv2, ion=ion)])
+            cdcen = np.array(grp['vwindows_maxtau/Deltav_{dv:.3f}/coldens/{ion}'.format(dv=vc1, ion=ion)])
+            cdjv1 = np.array(grp['vwindows_maxtau/Deltav_{dv:.3f}/coldens/{ion}'.format(dv=jv1, ion=ion)])
+            cdjv2 = np.array(grp['vwindows_maxtau/Deltav_{dv:.3f}/coldens/{ion}'.format(dv=jv2, ion=ion)])
             
             gensel = cdtot >= colmin[ion]
             jumpinds = np.where(np.logical_and(gensel, cdjv2 - cdjv1 >= jumpcrit[ion]))[0]
