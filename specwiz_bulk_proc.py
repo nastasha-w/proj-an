@@ -1671,8 +1671,8 @@ def selectsamples_jumpeffect():
             
             grp = df['{ion}_selection'.format(ion=ion)]
             sample = grp.attrs['selection_filename'].decode()
-            sample = sample.split['/'][-1] # file name
-            sample = sample.split['_']
+            sample = sample.split('/')[-1] # file name
+            sample = sample.split('_')
             sample = np.array(sample)[np.array(['sample' in part \
                                                 for part in sample])]
             
