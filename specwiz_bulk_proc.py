@@ -1665,7 +1665,7 @@ def selectsamples_jumpeffect():
         dkeys = df.keys()
         for key in dkeys:
             if 'Header' in key:
-                fo.copy(key, df)
+                df.copy(key, fo)
         for ion in ions:
             ogrp = fo.create_group('{ion}_sample'.format(ion=ion))
             
