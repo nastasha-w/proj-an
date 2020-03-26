@@ -3808,7 +3808,7 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False,\
                 
             EWdiff = EWgrid_dmp - EWgrid_lnf
             
-            xpoints = np.tile(Nsample, len(EWgrid_lnf.shape[0]))
+            xpoints = np.tile(Nsample, EWgrid_lnf.shape[0])
             ypoints = EWgrid_lnf.flatten()
             zpoints = EWdiff.flatten()
            
