@@ -15,6 +15,7 @@ import h5py
 import pandas as pd
 import string
 import os
+import scipy.interpolate as si
 
 datadir = '/net/luttero/data2/paper2/'
 mdir    = '/net/luttero/data2/imgs/CGM/plots_paper2/'
@@ -3519,18 +3520,26 @@ def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors, fontsize=fontsize):
 
 # column density equivalent width, coldens, N, EW, N-EW, cog, curve of growth
 # b, bpar
-def plot_NEW(fontsize=fontsize, dampingwingindic=False): 
+def plot_NEW(fontsize=fontsize, dampingwingindic=False,\
+             dampingwing_deltaEW_indic=False): 
     '''
     dampingwingindic: plot the damping wings COGs for the same b parameters 
                       as the gaussian line model COGs
+    dampingwing_deltaEW_indic: plot contours at constant Delta log EW, when \
+                      going from a Gaussian line with a given EW and N to a
+                      Voigt profile with the same N and b
     '''
     if dampingwingindic:
         dwi = '_withdampedCOGs'
     else:
         dwi = ''
+    if dampingwing_deltaEW_indic:
+        dEWi = '_with_DeltalogEWcontours'
+    else:
+        dEWi = ''
     outname = mdir +\
-        'coldens_EW_sample3-6_ionselsamples_L0100N1504_27_T4EOS{dwi}.pdf'
-    outname.format(dwi=dwi)
+        'coldens_EW_sample3-6_ionselsamples_L0100N1504_27_T4EOS{dwi}{dEWi}.pdf'
+    outname.format(dwi=dwi, dEWi=dEWi)
     ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
     datafile = datadir + 'sample3-6_coldens_EW_vwindows_subsamples.hdf5'
     
@@ -3789,7 +3798,32 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False):
             #    xpos = Nbinc[indcross]
             #    ax.text(xpos + 0.02 * xr, ylim[1], '{:.0f}'.format(bval),\
             #            horizontalalignment='left', verticalalignment='top')
+        if dampingwing_deltaEW_indic:
+            Nsample = np.linspace(xlim[0], xlim[1], 200)
+            bsample = np.arange(2., 500., 1.)
             
+            EWgrid_lnf = np.array([ild.linflatcurveofgrowth_inv_faster(Nsample,\
+                                                                       b,\
+                                                             uselines[ion])
+                                  for b in bsample])
+            EWgrid_dmp = np.array([ild.linflatdampedcurveofgrowth_inv(Nsample,\
+                                                                       b,\
+                                                             uselines[ion])
+                                  for b in bsample])
+            EWdiff = np.log10(EWgrid_dmp / EWgrid_lnf)
+            
+            xpoints = np.tile(Nsample, len(bsample))
+            ypoints = EWgrid_lnf.flatten()
+            zpoints = EWdiff.flatten()
+           
+            EWpoints = np.linspace(ylim[0], ylim[1], 200)
+            gridpoints = (Nsample[np.newaxis, :], EWpoints[:,None])
+            diffvals = si.griddata((xpoints, ypoints), zpoints, gridpoints,\
+                                   method='linear')
+            contours = ax.contourf(Nsample, EWpoints, diffvals,\
+                                   levels=[0.01, 0.02, 0.05, 0.1, 0.15, 0.2],\
+                                   color='red', zorder=2)
+            ax.clabel(contours, inline=1, fontsize=fontsize - 2)
             
     print('Used b values {} km/s (low-to-high -> bottom to top in plot)'.format(bvals_indic))        
     lax.axis('off')
