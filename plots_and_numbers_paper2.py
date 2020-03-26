@@ -3816,9 +3816,9 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False,\
             gridpoints = (Nsample[np.newaxis, :], EWpoints[:,None])
             diffvals = si.griddata((xpoints, ypoints), zpoints, gridpoints,\
                                    method='linear')
-            contours = ax.contourf(Nsample, EWpoints, diffvals,\
-                                   levels=[0.01, 0.02, 0.05, 0.1, 0.15, 0.2],\
-                                   color='red', zorder=2)
+            contours = ax.contour(Nsample, EWpoints, diffvals,\
+                                  levels=[0.01, 0.02, 0.05, 0.1, 0.15, 0.2],\
+                                  colors='red', zorder=2)
             ax.clabel(contours, inline=1, fontsize=fontsize - 2)
             
     print('Used b values {} km/s (low-to-high -> bottom to top in plot)'.format(bvals_indic))        
