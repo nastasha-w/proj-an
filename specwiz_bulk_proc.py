@@ -1770,11 +1770,11 @@ def savedata_jumpeffect_vwindows():
                 EWs = {}
                 Ns = {}
                 
-                EWs = {_g['vwindows_maxtau/gp'.format(gp=key)].attrs['Deltav_rf_kmps']: \
+                EWs = {_g['vwindows_maxtau/{gp}'.format(gp=key)].attrs['Deltav_rf_kmps']: \
                         {_ion: np.array(_g['vwindows_maxtau/{gp}/EW/{ion}'.format(gp=key, ion=_ion)])\
                          for _ion in ions_all}
                        for key in _g['vwindows_maxtau'].keys()}
-                Ns = {_g['vwindows_maxtau/gp'.format(gp=key)].attrs['Deltav_rf_kmps']: \
+                Ns = {_g['vwindows_maxtau/{gp}'.format(gp=key)].attrs['Deltav_rf_kmps']: \
                         {_ion: np.array(_g['vwindows_maxtau/{gp}/coldens/{ion}'.format(gp=key, ion=_ion)])\
                          for _ion in ions_all}
                        for key in _g['vwindows_maxtau'].keys()}
