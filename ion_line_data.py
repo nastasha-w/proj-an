@@ -234,8 +234,8 @@ def saveionlines(openhdf5group, ionlines):
     saves line data as attributes in openhdf5group
     recursively saves components in a 'linecomponents' subgroup
     '''
-    openhdf5group.attrs.create('linesetname',    ionlines.name)
-    openhdf5group.attrs.create('element',        ionlines.element)
+    openhdf5group.attrs.create('linesetname',    np.string_(ionlines.name))
+    openhdf5group.attrs.create('element',        np.string_(ionlines.element))
     mgrp = openhdf5group.create_group('major')
     savelinedata(mgrp, ionlines.major)
     lgrp = openhdf5group.create_group('lines')
@@ -247,8 +247,8 @@ def readionlines(hdf5group):
     '''
     return a IonLines object read in from a saveionlines-format hdf5 group 
     '''
-    name     = hdf5group.attrs['linesetname']
-    element  = hdf5group.attrs['element']
+    name     = hdf5group.attrs['linesetname'].decode()
+    element  = hdf5group.attrs['element'].decode()
     major    = readlinedata(hdf5group['major'])
     lgrp     = hdf5group['lines']
     lines    = {key: readlinedata(lgrp[key]) for key in lgrp.keys()}
