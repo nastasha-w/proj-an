@@ -1771,17 +1771,17 @@ def savedata_jumpeffect_vwindows():
                 Ns = {}
                 
                 EWs = {_g['vwindows_maxtau/gp'.format(gp=key)].attrs['Deltav_rf_kmps']: \
-                        {_ion: np.array(_g['vwindows_maxtau/gp/EW/ion'.format(gp=key, ion=_ion)])\
+                        {_ion: np.array(_g['vwindows_maxtau/{gp}/EW/{ion}'.format(gp=key, ion=_ion)])\
                          for _ion in ions_all}
                        for key in _g['vwindows_maxtau'].keys()}
                 Ns = {_g['vwindows_maxtau/gp'.format(gp=key)].attrs['Deltav_rf_kmps']: \
-                        {_ion: np.array(_g['vwindows_maxtau/gp/coldens/ion'.format(gp=key, ion=_ion)])\
+                        {_ion: np.array(_g['vwindows_maxtau/{gp}/coldens/{ion}'.format(gp=key, ion=_ion)])\
                          for _ion in ions_all}
                        for key in _g['vwindows_maxtau'].keys()}
                         
-                EWs[boxvel] = {_ion: np.array(_g['EW_tot/ion'.format(ion=_ion)]) \
+                EWs[boxvel] = {_ion: np.array(_g['EW_tot/{ion}'.format(ion=_ion)]) \
                                for _ion in ions_all} 
-                Ns[boxvel] = {_ion: np.array(_g['coldens_tot/ion'.format(ion=_ion)]) \
+                Ns[boxvel] = {_ion: np.array(_g['coldens_tot/{ion}'.format(ion=_ion)]) \
                               for _ion in ions_all}  
                 
                 vvals = np.array(sorted(list(EWs.keys())))
