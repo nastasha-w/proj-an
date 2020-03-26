@@ -1734,4 +1734,21 @@ def savedata_jumpeffect():
     store spectra, x/y positions, max tau positions, and cross-reff'd galaxies
     for the jump-selected and control sample sightlines
     '''
-    pass    
+    
+    vwindowfile = '/net/luttero/data2/specwizard_data/' + \
+                  'sample3-6_coldens_EW_vwindows_subsamples.hdf5'
+    samplefile = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/' + \
+                 'sample_selection1.hdf5'
+    spectrumfile_fill = '/net/luttero/data2/specwizard_data/{samplename}/' + \
+                        'spec.snap_027_z000p101.0.hdf5'
+    halocat = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    
+    outfile = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/' + \
+              'plotdata_jumpsamples_and_controls.hdf5'
+    ions_sel = ['o8', 'ne9', 'fe17']
+    ions_all = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']   
+    
+    with h5py.File(samplefile, 'r') as sf,\
+         h5py.File(outfile, 'w') as fo:
+        for ion in ions_sel:
+            pass

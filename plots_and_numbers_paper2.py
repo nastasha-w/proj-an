@@ -3519,8 +3519,18 @@ def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors, fontsize=fontsize):
 
 # column density equivalent width, coldens, N, EW, N-EW, cog, curve of growth
 # b, bpar
-def plot_NEW(fontsize=fontsize):    
-    outname = mdir + 'coldens_EW_sample3-6_ionselsamples_L0100N1504_27_T4EOS.pdf'
+def plot_NEW(fontsize=fontsize, dampingwingindic=False): 
+    '''
+    dampingwingindic: plot the damping wings COGs for the same b parameters 
+                      as the gaussian line model COGs
+    '''
+    if dampingwingindic:
+        dwi = '_withdampedCOGs'
+    else:
+        dwi = ''
+    outname = mdir +\
+        'coldens_EW_sample3-6_ionselsamples_L0100N1504_27_T4EOS{dwi}.pdf'
+    outname.format(dwi=dwi)
     ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
     datafile = datadir + 'sample3-6_coldens_EW_vwindows_subsamples.hdf5'
     
@@ -3716,6 +3726,13 @@ def plot_NEW(fontsize=fontsize):
         cievals = np.log10(cievals) + 3
         ax.plot(Nbinc, cievals, linestyle=ls_cie, color=color_cie,\
                 linewidth=linewidth, label=cielabel, path_effects=path_effects)
+        if dampingwingindic:
+            cievals = ild.linflatdampedcurveofgrowth_inv(10**Nbinc,\
+                                               bvals_CIE[ion] * 1e5,\
+                                               uselines[ion])
+            cievals = np.log10(cievals) + 3
+            ax.plot(Nbinc, cievals, linestyle=ls_cie, color=color_cie,\
+                    linewidth=linewidth - 1., label=None)
         
         fitvals = ild.linflatcurveofgrowth_inv_faster(10**Nbinc,\
                                                bfits[ion] * 1e5,\
@@ -3723,7 +3740,14 @@ def plot_NEW(fontsize=fontsize):
         fitvals = np.log10(fitvals) + 3
         ax.plot(Nbinc, fitvals, linestyle=ls_fit, color=color_fit,\
                 linewidth=linewidth, label=ftllabel, path_effects=path_effects)
-        
+        if dampingwingindic:
+            fitvals = ild.linflatdampedcurveofgrowth_inv(10**Nbinc,\
+                                               bfits[ion] * 1e5,\
+                                               uselines[ion])
+            fitvals = np.log10(fitvals) + 3
+            ax.plot(Nbinc, fitvals, linestyle=ls_fit, color=color_fit,\
+                    linewidth=linewidth - 1., label=None)
+            
         label = True
         xlim = ax.get_xlim()
         ylim = ax.get_ylim()
@@ -3753,6 +3777,13 @@ def plot_NEW(fontsize=fontsize):
                         horizontalalignment='right', verticalalignment='top',\
                         color=color_bbkg, fontsize=fontsize - 2, zorder=-1,\
                         rotation=rot)
+            if dampingwingindic:
+                _vals = ild.linflatdampedcurveofgrowth_inv(10**Nbinc,\
+                                               bval * 1e5,\
+                                               uselines[ion])
+                _vals = np.log10(_vals) + 3
+                ax.plot(Nbinc, _vals, linestyle=ls_bbkg, color=color_bbkg,\
+                        linewidth=linewidth - 1., label=None, zorder=-1)
             #else:
             #    indcross = np.where(_vals < ylim[1])[0][-1]
             #    xpos = Nbinc[indcross]
