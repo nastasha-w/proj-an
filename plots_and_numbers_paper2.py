@@ -3732,7 +3732,7 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False):
                                                uselines[ion])
             cievals = np.log10(cievals) + 3
             ax.plot(Nbinc, cievals, linestyle=ls_cie, color=color_cie,\
-                    linewidth=linewidth - 1., label=None)
+                    linewidth=linewidth - 0.5, label=None)
         
         fitvals = ild.linflatcurveofgrowth_inv_faster(10**Nbinc,\
                                                bfits[ion] * 1e5,\
@@ -3746,7 +3746,7 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False):
                                                uselines[ion])
             fitvals = np.log10(fitvals) + 3
             ax.plot(Nbinc, fitvals, linestyle=ls_fit, color=color_fit,\
-                    linewidth=linewidth - 1., label=None)
+                    linewidth=linewidth - 0.5, label=None)
             
         label = True
         xlim = ax.get_xlim()
@@ -3783,7 +3783,7 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False):
                                                uselines[ion])
                 _vals = np.log10(_vals) + 3
                 ax.plot(Nbinc, _vals, linestyle=ls_bbkg, color=color_bbkg,\
-                        linewidth=linewidth - 1., label=None, zorder=-1)
+                        linewidth=linewidth - 0.5, label=None, zorder=-1)
             #else:
             #    indcross = np.where(_vals < ylim[1])[0][-1]
             #    xpos = Nbinc[indcross]
