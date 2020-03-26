@@ -1731,7 +1731,7 @@ def selectsamples_jumpeffect():
             
 def savedata_jumpeffect_vwindows():
     '''
-    store spectra, x/y positions, max tau positions, and cross-reff'd galaxies
+    store evolution of N, EW as a function of Delta v
     for the jump-selected and control sample sightlines
     '''
     
@@ -1746,9 +1746,10 @@ def savedata_jumpeffect_vwindows():
     ions_all = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']   
     
     with h5py.File(samplefile, 'r') as sf,\
-         h5py.File(outfile, 'w') as fo:
-        sf.copy('Header_sample3', fo)
-        sf.copy('Header_sample6', fo)
+         h5py.File(outfile, 'a') as fo:
+        if not np.any(['Header' in key for key in fo.keys()]):
+            sf.copy('Header_sample3', fo)
+            sf.copy('Header_sample6', fo)
         cosmopars = {key: item for key, item in \
                      sf['Header_sample3/cosmopars'].attrs.items()}
         boxvel = cosmopars['boxsize'] / cosmopars['h'] * cosmopars['a'] \
@@ -1761,10 +1762,14 @@ def savedata_jumpeffect_vwindows():
         vwinds_jump = {ion: np.array(sf['{ion}_sample/indices_jump_in_ion_sample'.format(ion=ion)])\
                        for ion in ions_sel}
 
-        # EW and N growth with Delta v       
-        iongrps = {ion: fo.create_group('{ion}_jump'.format(ion=ion)) \
-                   for ion in ions_sel}
-        with h5py.File(vwindowfile, 'a') as _f:            
+        # EW and N growth with Delta v    
+        if not np.any(['jump' in key for key in fo.keys()]):
+            iongrps = {ion: fo.create_group('{ion}_jump'.format(ion=ion)) \
+                       for ion in ions_sel}
+        else:
+            iongrps = {ion: fo['{ion}_jump'.format(ion=ion)] \
+                       for ion in ions_sel}
+        with h5py.File(vwindowfile, 'r') as _f:            
             for ion in ions_sel:
                 _g = _f['{ion}_selection'.format(ion=ion)]
                 EWs = {}
