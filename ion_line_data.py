@@ -22,6 +22,7 @@ import pandas as pd
 import scipy.integrate as si
 from scipy.special import wofz # fadeeva function; used for getting voight profiles
 import string
+import h5py
 
 import eagle_constants_and_units as c
 
@@ -947,3 +948,39 @@ def testbparfit_faster():
     
     if allgood:
         print('Test succeeded!')
+        
+def getEWdiffgrid():
+    outfile = '/net/luttero/data2/paper2/' + \
+              'EWdiffs_dampingwings.hdf5'
+    
+    Nsample = np.linspace(12., 20., 200)
+    bsample = np.arange(2., 500.5, 1.) * 1e5
+    uselines = {'o7': o7major,\
+                'o8': o8doublet,\
+                'o6': o6major,\
+                'ne8': ne8major,\
+                'ne9': ne9major,\
+                'fe17': fe17major,\
+                }
+    with h5py.File(outfile, 'w') as fo:
+        for ion in uselines:
+            line = uselines[ion]
+            grp = fo.create_group(ion)
+            lgrp = grp.attrs.create('lines')
+            if hasattr(line, 'major'):
+                saveionlines(lgrp, line)
+            else:
+                savelinedata(lgrp, line)
+            EWgrid_lnf = np.array([linflatcurveofgrowth_inv_faster(Nsample,\
+                                                                       b,\
+                                                             uselines[ion])
+                                  for b in bsample])
+            EWgrid_dmp = np.array([linflatdampedcurveofgrowth_inv(Nsample,\
+                                                                       b,\
+                                                             uselines[ion])
+                                  for b in bsample])
+            
+            grp.create_dataset('logNcm2', data=Nsample)
+            grp.create_dataset('b_cmps', data=bsample)
+            grp.create_dataset('EW_Angstrom_gaussian', data=EWgrid_lnf)
+            grp.create_dataset('EW_Angstrom_voigt', data=EWgrid_dmp)

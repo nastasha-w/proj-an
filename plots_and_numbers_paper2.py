@@ -3799,20 +3799,16 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False,\
             #    ax.text(xpos + 0.02 * xr, ylim[1], '{:.0f}'.format(bval),\
             #            horizontalalignment='left', verticalalignment='top')
         if dampingwing_deltaEW_indic:
-            Nsample = np.linspace(xlim[0], xlim[1], 200)
-            bsample = np.arange(2., 500., 1.)
+            dfn = datadir + 'EWdiffs_dampingwings.hdf5'
+            with h5py.File(dfn, 'r') as df:
+                grp = df[ion]
+                Nsample = np.array(grp['logNcm2'])
+                EWgrid_lnf = np.log10(np.array(grp['EW_Angstrom_gaussian'])) + 3.
+                EWgrid_dmp = np.log10(np.array(grp['EW_Angstrom_voigt'])) + 3.
+                
+            EWdiff = EWgrid_dmp - EWgrid_lnf
             
-            EWgrid_lnf = np.array([ild.linflatcurveofgrowth_inv_faster(Nsample,\
-                                                                       b,\
-                                                             uselines[ion])
-                                  for b in bsample])
-            EWgrid_dmp = np.array([ild.linflatdampedcurveofgrowth_inv(Nsample,\
-                                                                       b,\
-                                                             uselines[ion])
-                                  for b in bsample])
-            EWdiff = np.log10(EWgrid_dmp / EWgrid_lnf)
-            
-            xpoints = np.tile(Nsample, len(bsample))
+            xpoints = np.tile(Nsample, len(EWgrid_lnf.shape[0]))
             ypoints = EWgrid_lnf.flatten()
             zpoints = EWdiff.flatten()
            
