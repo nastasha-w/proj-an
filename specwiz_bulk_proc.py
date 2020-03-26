@@ -1791,18 +1791,18 @@ def savedata_jumpeffect_vwindows():
                 Ngrid =  {_ion: np.array([Ns[v][_ion] for v in vvals]) \
                           for _ion in ions_all}
                 
-                EWgrid_jump = {_ion: EWgrid[_ion][vwinds_jump[ion]] \
+                EWgrid_jump = {_ion: EWgrid[_ion][:, vwinds_jump[ion]].T \
                                for _ion in EWgrid}                
-                EWgrid_ctl1 = {_ion: EWgrid[_ion][vwinds_ctl1[ion]] \
+                EWgrid_ctl1 = {_ion: EWgrid[_ion][:, vwinds_ctl1[ion]].T \
                                for _ion in EWgrid} 
-                EWgrid_ctl2 = {_ion: EWgrid[_ion][vwinds_ctl2[ion]] \
+                EWgrid_ctl2 = {_ion: EWgrid[_ion][:, vwinds_ctl2[ion]].T \
                                for _ion in EWgrid}
                 
-                Ngrid_jump = {_ion: Ngrid[_ion][vwinds_jump[ion]] \
+                Ngrid_jump = {_ion: Ngrid[_ion][:, vwinds_jump[ion]].T \
                                for _ion in Ngrid}                
-                Ngrid_ctl1 = {_ion: Ngrid[_ion][vwinds_ctl1[ion]] \
+                Ngrid_ctl1 = {_ion: Ngrid[_ion][:, vwinds_ctl1[ion]].T \
                                for _ion in Ngrid} 
-                Ngrid_ctl2 = {_ion: Ngrid[_ion][vwinds_ctl2[ion]] \
+                Ngrid_ctl2 = {_ion: Ngrid[_ion][:, vwinds_ctl2[ion]].T \
                                for _ion in Ngrid}
                 
                 sgrp = iongrps[ion].create_group('Delta_v_trends')
