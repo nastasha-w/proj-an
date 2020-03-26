@@ -3816,7 +3816,7 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False,\
             gridpoints = (Nsample[np.newaxis, :], EWpoints[:,None])
             diffvals = si.griddata((xpoints, ypoints), zpoints, gridpoints,\
                                    method='linear')
-            contours = ax.contour(Nsample, EWpoints, diffvals,\
+            contours = ax.contour(Nsample, EWpoints, np.abs(diffvals),\
                                   levels=[0.01, 0.02, 0.05, 0.1, 0.15, 0.2],\
                                   colors='red', zorder=2)
             ax.clabel(contours, inline=1, fontsize=fontsize - 2)
