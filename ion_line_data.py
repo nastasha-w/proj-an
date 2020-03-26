@@ -971,11 +971,11 @@ def getEWdiffgrid():
                 saveionlines(lgrp, line)
             else:
                 savelinedata(lgrp, line)
-            EWgrid_lnf = np.array([linflatcurveofgrowth_inv_faster(Nsample,\
+            EWgrid_lnf = np.array([linflatcurveofgrowth_inv_faster(10**Nsample,\
                                                                        b,\
                                                              uselines[ion])
                                   for b in bsample])
-            EWgrid_dmp = np.array([linflatdampedcurveofgrowth_inv(Nsample,\
+            EWgrid_dmp = np.array([linflatdampedcurveofgrowth_inv(10**Nsample,\
                                                                        b,\
                                                              uselines[ion])
                                   for b in bsample])
