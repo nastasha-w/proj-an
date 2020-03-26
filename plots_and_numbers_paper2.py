@@ -3539,7 +3539,7 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False,\
         dEWi = ''
     outname = mdir +\
         'coldens_EW_sample3-6_ionselsamples_L0100N1504_27_T4EOS{dwi}{dEWi}.pdf'
-    outname.format(dwi=dwi, dEWi=dEWi)
+    outname = outname.format(dwi=dwi, dEWi=dEWi)
     ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
     datafile = datadir + 'sample3-6_coldens_EW_vwindows_subsamples.hdf5'
     
