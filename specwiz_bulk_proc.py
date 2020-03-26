@@ -1729,6 +1729,103 @@ def selectsamples_jumpeffect():
             print('control1 sample contains {} unique sightlines'.format(len(np.unique(specnums_control1))))
             print('control2 sample contains {} unique sightlines'.format(len(np.unique(specnums_control2))))
             
+def savedata_jumpeffect_vwindows():
+    '''
+    store spectra, x/y positions, max tau positions, and cross-reff'd galaxies
+    for the jump-selected and control sample sightlines
+    '''
+    
+    vwindowfile = '/net/luttero/data2/specwizard_data/' + \
+                  'sample3-6_coldens_EW_vwindows_subsamples.hdf5'
+    samplefile = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/' + \
+                 'sample_selection1.hdf5'
+                 
+    outfile = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/' + \
+              'plotdata_jumpsamples_and_controls.hdf5'
+    ions_sel = ['o8', 'ne9', 'fe17']
+    ions_all = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']   
+    
+    with h5py.File(samplefile, 'r') as sf,\
+         h5py.File(outfile, 'w') as fo:
+        sf.copy('Header_sample3', fo)
+        sf.copy('Header_sample6', fo)
+        cosmopars = {key: item for key, item in \
+                     sf['Header_sample3/cosmopars'].attrs.items()}
+        boxvel = cosmopars['boxsize'] / cosmopars['h'] * cosmopars['a'] \
+                 * cu.Hubble(z=cosmopars['z'], cosmopars=cosmopars)
+        
+        vwinds_ctl1 = {ion: np.array(sf['{ion}_sample/indices_control1_in_ion_sample'.format(ion=ion)])\
+                       for ion in ions_sel}
+        vwinds_ctl2 = {ion: np.array(sf['{ion}_sample/indices_control2_in_ion_sample'.format(ion=ion)])\
+                       for ion in ions_sel}
+        vwinds_jump = {ion: np.array(sf['{ion}_sample/indices_jump_in_ion_sample'.format(ion=ion)])\
+                       for ion in ions_sel}
+
+        # EW and N growth with Delta v       
+        iongrps = {ion: fo.create_group('{ion}_jump'.format(ion=ion)) \
+                   for ion in ions_sel}
+        with h5py.File(vwindowfile, 'a') as _f:            
+            for ion in ions_sel:
+                _g = _f['{ion}_selection'.format(ion=ion)]
+                EWs = {}
+                Ns = {}
+                
+                EWs = {_g['vwindows_maxtau/gp'.format(gp=key)].attrs['Deltav_rf_kmps']: \
+                        {_ion: np.array(_g['vwindows_maxtau/gp/EW/ion'.format(gp=key, ion=_ion)])\
+                         for _ion in ions_all}
+                       for key in _g['vwindows_maxtau'].keys()}
+                Ns = {_g['vwindows_maxtau/gp'.format(gp=key)].attrs['Deltav_rf_kmps']: \
+                        {_ion: np.array(_g['vwindows_maxtau/gp/coldens/ion'.format(gp=key, ion=_ion)])\
+                         for _ion in ions_all}
+                       for key in _g['vwindows_maxtau'].keys()}
+                        
+                EWs[boxvel] = {_ion: np.array(_g['EW_tot/ion'.format(ion=_ion)]) \
+                               for _ion in ions_all} 
+                Ns[boxvel] = {_ion: np.array(_g['coldens_tot/ion'.format(ion=_ion)]) \
+                              for _ion in ions_all}  
+                
+                vvals = np.array(sorted(list(EWs.keys())))
+                
+                EWgrid = {_ion: np.array([EWs[v][_ion] for v in vvals]) \
+                          for _ion in ions_all}
+                Ngrid =  {_ion: np.array([Ns[v][_ion] for v in vvals]) \
+                          for _ion in ions_all}
+                
+                EWgrid_jump = {_ion: EWgrid[vwinds_jump[ion]] \
+                               for _ion in EWgrid}                
+                EWgrid_ctl1 = {_ion: EWgrid[vwinds_ctl1[ion]] \
+                               for _ion in EWgrid} 
+                EWgrid_ctl2 = {_ion: EWgrid[vwinds_ctl2[ion]] \
+                               for _ion in EWgrid}
+                
+                Ngrid_jump = {_ion: Ngrid[vwinds_jump[ion]] \
+                               for _ion in Ngrid}                
+                Ngrid_ctl1 = {_ion: Ngrid[vwinds_ctl1[ion]] \
+                               for _ion in Ngrid} 
+                Ngrid_ctl2 = {_ion: Ngrid[vwinds_ctl2[ion]] \
+                               for _ion in Ngrid}
+                
+                sgrp = iongrps[ion].create_group('Delta_v_trends')
+                sgrp.create_dataset('Deltav_rf_kmps', data=vvals)
+                _grp = sgrp.create_group('EWs_ctl1')
+                for _ion in ions_all:
+                    _grp.create_dataset(_ion, data=EWgrid_ctl1[_ion])
+                _grp = sgrp.create_group('EWs_ctl2')
+                for _ion in ions_all:
+                    _grp.create_dataset(_ion, data=EWgrid_ctl2[_ion])
+                _grp = sgrp.create_group('EWs_jump')
+                for _ion in ions_all:
+                    _grp.create_dataset(_ion, data=EWgrid_jump[_ion])
+                _grp = sgrp.create_group('logNs_ctl1')
+                for _ion in ions_all:
+                    _grp.create_dataset(_ion, data=Ngrid_ctl1[_ion])
+                _grp = sgrp.create_group('logNs_ctl2')
+                for _ion in ions_all:
+                    _grp.create_dataset(_ion, data=Ngrid_ctl2[_ion])
+                _grp = sgrp.create_group('logNs_jump')
+                for _ion in ions_all:
+                    _grp.create_dataset(_ion, data=Ngrid_jump[_ion])
+                    
 def savedata_jumpeffect():
     '''
     store spectra, x/y positions, max tau positions, and cross-reff'd galaxies
@@ -1750,5 +1847,26 @@ def savedata_jumpeffect():
     
     with h5py.File(samplefile, 'r') as sf,\
          h5py.File(outfile, 'w') as fo:
-        for ion in ions_sel:
-            pass
+        sf.copy('Header_sample3', fo)
+        sf.copy('Header_sample6', fo)
+        cosmopars = {key: item for key, item in \
+                     sf['Header_sample3/cosmopars'].attrs.items()}
+        boxvel = cosmopars['boxsize'] / cosmpars['h'] * cosmopars['a'] \
+                 * cu.Hubble(z=cosmopars['z'], cosmopars=cosmopars)
+        
+        vwinds_ctl1 = {ion: np.array(sf['{ion}_sample/indices_control1_in_ion_sample'.format(ion=ion)])\
+                       for ion in ions_sel}
+        vwinds_ctl2 = {ion: np.array(sf['{ion}_sample/indices_control2_in_ion_sample'.format(ion=ion)])\
+                       for ion in ions_sel}
+        vwinds_jump = {ion: np.array(sf['{ion}_sample/indices_jump_in_ion_sample'.format(ion=ion)])\
+                       for ion in ions_sel}
+        
+        specnums_ctl1 = {ion: np.array(sf['{ion}_sample/specnums_control1'.format(ion=ion)])\
+                         for ion in ions_sel}
+        specnums_ctl2 = {ion: np.array(sf['{ion}_sample/specnums_control2'.format(ion=ion)])\
+                         for ion in ions_sel}
+        specnums_jump = {ion: np.array(sf['{ion}_sample/specnums_jump'.format(ion=ion)])\
+                         for ion in ions_sel}
+
+        samples = {ion: sf['{ion}_sample'.format(ion=ion)].attrs['specwizard_sample'].decode()\
+                   for ion in ions_sel}
