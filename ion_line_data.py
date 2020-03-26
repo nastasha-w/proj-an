@@ -966,7 +966,7 @@ def getEWdiffgrid():
         for ion in uselines:
             line = uselines[ion]
             grp = fo.create_group(ion)
-            lgrp = grp.attrs.create('lines')
+            lgrp = grp.create_group('lines')
             if hasattr(line, 'major'):
                 saveionlines(lgrp, line)
             else:
