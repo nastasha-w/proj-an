@@ -1335,7 +1335,7 @@ def plot_N_EW_growth(ion, numlines=100):
                     coldens[dv] = np.array(df[cpath + ion])[subsample]
                     EWs[dv] = np.array(df[epath + ion])[subsample]
     
-     dvs = sorted(coldens.keys())
+    dvs = sorted(coldens.keys())
     _cds = np.array([coldens[dv] for dv in dvs])
     _ews = np.array([EWs[dv] for dv in dvs])
     
