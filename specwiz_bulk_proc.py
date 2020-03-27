@@ -500,7 +500,7 @@ class SpecSet:
                     evgp = svgp.create_group('EW')
                     evgp.attrs.create('info', np.string_('equivalent width [Angstrom, rest-frame] for each ion'))
                     
-                    for ion in self.vwindow_EW[deltav]:
+                    for ion in self.vwindow_EW_dw[deltav]:
                         evgp.create_dataset(ion, data=self.vwindow_EW_dw[deltav][ion])
                         cvgp.create_dataset(ion, data=self.vwindow_coldens_dw[deltav][ion])
         
