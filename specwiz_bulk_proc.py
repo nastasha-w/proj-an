@@ -107,6 +107,7 @@ class SpecSet:
         self.positions *= 1. / self.cosmopars['h']
         self.slicelength = self.cosmopars['boxsize'] / self.cosmopars['h'] #in cMpc
         self.boxvel_cmps = self.slicelength * self.cosmopars['a'] *\
+                           c.cm_per_mpc * \
                            cu.Hubble(self.cosmopars['z'],\
                                      cosmopars=self.cosmopars) # in cm/s
         # observed Delta z, since the comoving slice length is used
