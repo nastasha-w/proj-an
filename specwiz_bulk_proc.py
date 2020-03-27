@@ -255,6 +255,9 @@ class SpecSet:
                 tau = np.sum(tau, axis=2)
             else:
                 tau = np.copy(self.tau_base[ion])
+                if includedampingwings:
+                    tau= self.add_dampingwings(tau,\
+                           lambda_r_use[0] * 1e-8, atrans_use[0])
             # save results
             if includedampingwings:
                 self.tau_dw.update({ion: tau})
