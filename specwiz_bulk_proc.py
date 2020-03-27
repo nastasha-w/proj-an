@@ -77,7 +77,7 @@ class SpecSet:
         else:
             self.filename = sdir + filename
         self.specfile = h5py.File(self.filename, 'r')
-        self.specgroups = np.array(self.specfile.keys())
+        self.specgroups = np.array(list(self.specfile.keys()))
         self.isspec = np.array(['Spectrum' in group for group in self.specgroups])
         self.numspecs = np.sum(self.isspec)
         if not self.numspecs > 0:
