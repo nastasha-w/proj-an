@@ -134,7 +134,7 @@ class SpecSet:
         self.aligned_dw =   {}
         
         # if the file has no lines of sight, it's useless anyway
-        self.ions = np.array(self.specfile['Spectrum0'].keys()) 
+        self.ions = np.array(list(self.specfile['Spectrum0'].keys())) 
         self.ision = np.array(['RealSpaceMass' not in group for group in self.ions])
         self.ions = self.ions[self.ision]
         del self.ision
@@ -174,7 +174,8 @@ class SpecSet:
     def getlinedata_in(self):
         # header also contains unused lines: only the first listed line is used
         # for each ion
-        _ions_in = np.array(self.specfile['Header'].attrs['Ions'])
+        _ions_in = np.array(ion.decode() for ion in \
+                            self.specfile['Header'].attrs['Ions'])
         self.ions_in, _inds = np.unique(_ions_in, return_index=True) 
         self.fosc_in = np.array(self.specfile['Header'].attrs['Transitions_Oscillator_Strength'])[_inds]
         self.lambda_in = np.array(self.specfile['Header'].attrs['Transitions_Rest_Wavelength'])[_inds]
@@ -1334,7 +1335,7 @@ def plot_N_EW_growth(ion, numlines=100):
                     coldens[dv] = np.array(df[cpath + ion])[subsample]
                     EWs[dv] = np.array(df[epath + ion])[subsample]
     
-    dvs = sorted(coldens.keys())
+     dvs = sorted(coldens.keys())
     _cds = np.array([coldens[dv] for dv in dvs])
     _ews = np.array([EWs[dv] for dv in dvs])
     
