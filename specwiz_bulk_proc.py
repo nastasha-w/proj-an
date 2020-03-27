@@ -309,8 +309,12 @@ class SpecSet:
             dions = [dions]
         #print(dions)
         for ion in dions:
-            if ion not in self.spectra.keys():
-                self.getspectra(dions=[ion])
+            if usedampingwings:
+                if ion not in self.spectra_dw.keys():
+                    self.getspectra(dions=[ion], includedampingwings=usedampingwings)
+            else:
+                if ion not in self.spectra.keys():
+                    self.getspectra(dions=[ion], includedampingwings=usedampingwings)
             
             foscs = np.array([specl.fosc for specl in self.ionlines[ion]])
             lambdas = np.array([specl.lambda_angstrom for specl in self.ionlines[ion]])
@@ -340,8 +344,12 @@ class SpecSet:
         toalign = []
         togetcd = []
         for ion in dions:
-            if not self.aligned[ion]:
-                toalign.append(ion)
+            if usedampingwings:
+                if not self.aligned_dw[ion]:
+                    toalign.append(ion)
+            else:
+                if not self.aligned[ion]:
+                    toalign.append(ion)
             if ion not in self.coldens:
                 togetcd.append(ion)
         self.alignmaxtau(dions=toalign, usedampingwings=usedampingwings)
