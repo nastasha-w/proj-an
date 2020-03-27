@@ -47,6 +47,19 @@ ion_default_lines = {'o6': (ild.o6major,),\
                      'fe17': (ild.fe17major,),\
                      }
 
+def add_dampingwings(vvals, spectrum_tau, wavelength, atrans, boxvel):
+    '''
+    assumes vvals, wavelength, atrans, boxvel in cgs units
+    '''
+    Gamma_vel = atrans / (4. * np.pi) * wavelength  # A / 4 pi = hwhm in frequency space     
+    Delta_v = (vvals + 0.5 * boxvel) % boxvel - 0.5 * boxvel # periodic distance
+    voigtprof = Gamma_vel / np.pi / (Delta_v**2 + Gamma_vel**2)
+    voigtprof *= 1. / (np.sum(voigtprof)) # renormalize: 
+    dwspectrum = np.fft.irfft(np.fft.rfft(spectrum_tau, axis=1) * \
+                              np.fft.rfft(voigtprof)[np.newaxis, :],\
+                              axis=1)
+    return dwspectrum
+
 # extract groups containing spectra
 # spectrum files contained in groups Spectrum<number>
 # loading from luttero takes a while on quasar; 
@@ -93,6 +106,9 @@ class SpecSet:
         # convert to cMpc
         self.positions *= 1. / self.cosmopars['h']
         self.slicelength = self.cosmopars['boxsize'] / self.cosmopars['h'] #in cMpc
+        self.boxvel_cmps = self.slicelength * self.cosmopars['a'] *\
+                           cu.Hubble(self.cosmopars['z'],\
+                                     cosmopars=self.cosmopars) # in cm/s
         # observed Delta z, since the comoving slice length is used
         self.deltaredshift_obs = cu.Hubble(self.cosmopars['z'],\
                                        cosmopars=self.cosmopars) \
@@ -102,9 +118,12 @@ class SpecSet:
 
         # set dicts to add to per ion
         self.spectra = {}
+        self.spectra_dw = {}
         self.tau     = {}
+        self.tau_dw  = {}
         self.coldens = {}
         self.EW      = {}
+        self.EW_dw   = {}
         self.nion    = {}
         self.posmassw= {}
         self.posionw = {}
@@ -112,6 +131,7 @@ class SpecSet:
         self.tau_base     = {}
         self.base_spectra = {}     
         self.aligned = {}
+        self.aligned_dw =   {}
         
         # if the file has no lines of sight, it's useless anyway
         self.ions = np.array(self.specfile['Spectrum0'].keys()) 
@@ -173,7 +193,22 @@ class SpecSet:
                                for specgrp in self.specgroups])\
                              for ion in dions})
     
-    def getspectra(self, dions='all'):
+    def add_dampingwings(self, spectrum_tau, wavelength_cm, atrans_Hz):
+        '''
+        assumes vvals, wavelength, atrans, boxvel in cgs units
+        spectrum_tau: axis 0 = specnum, axis 1 = spectrum direction
+        '''
+        Gamma_vel = atrans_Hz / (4. * np.pi) * wavelength_cm  # A / 4 pi = hwhm in frequency space     
+        Delta_v = (self.vvals_kmps * 1e5 + 0.5 * self.boxvel_cmps) \
+                  % self.boxvel_cmps - 0.5 * self.boxvel_cmps # periodic distance
+        voigtprof = Gamma_vel / np.pi / (Delta_v**2 + Gamma_vel**2)
+        voigtprof *= 1. / (np.sum(voigtprof)) # renormalize: 
+        dwspectrum = np.fft.irfft(np.fft.rfft(spectrum_tau, axis=1) * \
+                                  np.fft.rfft(voigtprof)[np.newaxis, :],\
+                                  axis=1)
+        return dwspectrum
+    
+    def getspectra(self, dions='all', includedampingwings=False):
         '''
         dions:    ions to get EWs for
         ionlines: ion: tuple of lines dict. lines are ion_line_data.SpecLine 
@@ -186,8 +221,8 @@ class SpecSet:
         elif isinstance(dions, str): # single ion input as a string in stead of a length-1 iterable
             dions = [dions]
         #print(dions)
-        self.velperpix_kmps = np.average(np.diff(np.array(self.specfile['VHubble_KMpS'])))
-        
+        self.vvals_kmps = np.array(self.specfile['VHubble_KMpS'])
+        self.velperpix_kmps = np.average(np.diff(self.vvals_kmps))       
         for ion in dions:
             if ion not in self.tau_base.keys():
                 self.getquantity('tau', 'ion', dions=[ion])
@@ -196,6 +231,7 @@ class SpecSet:
             
             fosc_use = np.array([specl.fosc for specl in self.ionlines[ion]])
             lambda_r_use = np.array([specl.lambda_angstrom for specl in self.ionlines[ion]])
+            atrans_use = np.array([specl.Atrans for specl in self.ionlines[ion]]) # for damping wings
             
             veldiff_at_z_kmps = [(lambda_r - lambda_r_in) \
                                   / lambda_r_in * cu.c.c * 1.e-5 
@@ -211,15 +247,23 @@ class SpecSet:
                 for li in range(len(pixshifts)):
                     shift = pixshifts[li]
                     tau[:, :, li] = np.roll(tau[:, :, li], shift, axis=1)
+                    if includedampingwings:
+                        tau[:, :, li] = self.add_dampingwings(tau[:, :, li],\
+                           lambda_r_use[li] * 1e-8, atrans_use[li])
                 tau = np.sum(tau, axis=2)
             else:
                 tau = np.copy(self.tau_base[ion])
             # save results
-            self.tau.update({ion: tau})
-            self.spectra.update({ion: np.exp(-1 * tau)})
-            self.aligned[ion] = False
+            if includedampingwings:
+                self.tau_dw.update({ion: tau})
+                self.spectra_dw.update({ion: np.exp(-1 * tau)})
+                self.aligned_dw[ion] = False
+            else:
+                self.tau.update({ion: tau})
+                self.spectra.update({ion: np.exp(-1 * tau)})
+                self.aligned[ion] = False
     
-    def alignmaxtau(self, dions='all'):
+    def alignmaxtau(self, dions='all', usedampingwings=False):
         '''
         shift all spectra so max. tau is at the central pixel
         if multiple maxima have the exact same value, the first instance in 
@@ -234,17 +278,25 @@ class SpecSet:
         self.centerpix = self.numspecpix // 2
         for ion in dions:
             if ion not in self.tau:
-                self.getspectra(dions=[ion])
-            tau = self.tau[ion]
+                self.getspectra(dions=[ion], includedampingwings=usedampingwings)
+            if usedampingwings:
+                tau = self.tau_dw[ion]
+            else:
+                tau = self.tau[ion]
             maxpos = np.argmax(tau, axis=1) 
             rollargs = self.centerpix - maxpos
             for i in range(tau.shape[0]):
                 tau[i, :] = np.roll(tau[i, :], rollargs[i])
-            self.tau[ion] = tau
-            self.spectra.update({ion: np.exp(-1 * tau)})
-            self.aligned[ion] = True
+            if usedampingwings:
+                self.tau_dw[ion] = tau
+                self.spectra_dw.update({ion: np.exp(-1 * tau)})
+                self.aligned_dw[ion] = True
+            else:
+                self.tau[ion] = tau
+                self.spectra.update({ion: np.exp(-1 * tau)})
+                self.aligned[ion] = True
             
-    def getEWtot(self, dions='all'):
+    def getEWtot(self, dions='all', usedampingwings=False):
         '''
         dions:    ions to get EWs for
         ionlines: ion: tuple of lines dict. lines are ion_line_data.SpecLine 
@@ -263,11 +315,16 @@ class SpecSet:
             lambdas = np.array([specl.lambda_angstrom for specl in self.ionlines[ion]])
             lambda_eff = np.sum(foscs  * lambdas) / np.sum(foscs)
             
-            # EW = \int dlamdba (1-flux) = (Delta lambda) - (Delta lambda)/N * sum_i=1^N F_normalised(i)  
-            self.EW[ion] = 1. - np.sum(self.spectra[ion], axis=1) / float(self.spectra[ion].shape[1])
-            self.EW[ion] *= self.deltaredshift_obs / (self.cosmopars['z'] + 1.) * lambda_eff # convert absorbed flux fraction to rest-frame EW
-    
-    def getcoldens_EW_vwindow(self, deltav_rest_kmps, dions='all'):    
+            # EW = \int dlamdba (1-flux) = (Delta lambda) - (Delta lambda)/N * sum_i=1^N F_normalised(i) 
+            if usedampingwings:
+                self.EW_dw[ion] = 1. - np.sum(self.spectra_dw[ion], axis=1) / float(self.spectra_dw[ion].shape[1])
+                self.EW_dw[ion] *= self.deltaredshift_obs / (self.cosmopars['z'] + 1.) * lambda_eff # convert absorbed flux fraction to rest-frame EW
+            else:
+                self.EW[ion] = 1. - np.sum(self.spectra[ion], axis=1) / float(self.spectra[ion].shape[1])
+                self.EW[ion] *= self.deltaredshift_obs / (self.cosmopars['z'] + 1.) * lambda_eff # convert absorbed flux fraction to rest-frame EW
+        
+    def getcoldens_EW_vwindow(self, deltav_rest_kmps, dions='all',\
+                              usedampingwings=False):    
         '''
         dions:            ions to get EWs for
         deltav_rest_kmps: velocity interval (total = 2x maximum offset from max
@@ -286,7 +343,7 @@ class SpecSet:
                 toalign.append(ion)
             if ion not in self.coldens:
                 togetcd.append(ion)
-        self.alignmaxtau(dions=toalign)
+        self.alignmaxtau(dions=toalign, usedampingwings=usedampingwings)
         self.getcoldenstot(dions=togetcd)
         
         # set up selection ranges
@@ -304,27 +361,47 @@ class SpecSet:
         
         # iterate over ions: select region, calculate N, EW
         vkey = deltav_rest_kmps
-        if not hasattr(self, 'vwindow_EW'):
-            self.vwindow_EW = {vkey: {}}
-            self.vwindow_coldens = {vkey: {}}
+        if usedampingwings:
+            if not hasattr(self, 'vwindow_EW_dw'):
+                self.vwindow_EW_dw = {vkey: {}}
+                self.vwindow_coldens_dw = {vkey: {}}
+            else:
+                self.vwindow_EW_dw.update({vkey: {}})
+                self.vwindow_coldens_dw.update({vkey: {}})
         else:
-            self.vwindow_EW.update({vkey: {}})
-            self.vwindow_coldens.update({vkey: {}})
+            if not hasattr(self, 'vwindow_EW'):
+                self.vwindow_EW = {vkey: {}}
+                self.vwindow_coldens = {vkey: {}}
+            else:
+                self.vwindow_EW.update({vkey: {}})
+                self.vwindow_coldens.update({vkey: {}})
+            
         for ion in dions:           
             foscs = np.array([specl.fosc for specl in self.ionlines[ion]])
             lambdas = np.array([specl.lambda_angstrom for specl in self.ionlines[ion]])
             lambda_eff = np.sum(foscs  * lambdas) / np.sum(foscs)
             
-            self.vwindow_EW[vkey][ion] = 1. - np.sum(self.spectra[ion][:, vsel], axis=1) / float(numpix)
-            # convert absorbed flux fraction to rest-frame EW
-            self.vwindow_EW[vkey][ion] *= pathfrac * self.deltaredshift_obs / (self.cosmopars['z'] + 1.) * lambda_eff
-            
-            # N \propto tau
-            self.vwindow_coldens[vkey][ion] = np.sum(self.tau[ion][:, vsel], axis=1) \
-                                              / np.sum(self.tau[ion][:, :], axis=1)            
-            self.vwindow_coldens[vkey][ion] *= 10**self.coldens[ion]
-            self.vwindow_coldens[vkey][ion] = np.log10(self.vwindow_coldens[vkey][ion])
-            
+            if usedampingwings:
+                self.vwindow_EW_dw[vkey][ion] = 1. - np.sum(self.spectra_dw[ion][:, vsel], axis=1) / float(numpix)
+                # convert absorbed flux fraction to rest-frame EW
+                self.vwindow_EW_dw[vkey][ion] *= pathfrac * self.deltaredshift_obs / (self.cosmopars['z'] + 1.) * lambda_eff
+                
+                # N \propto tau
+                self.vwindow_coldens_dw[vkey][ion] = np.sum(self.tau_dw[ion][:, vsel], axis=1) \
+                                                  / np.sum(self.tau_dw[ion][:, :], axis=1)            
+                self.vwindow_coldens_dw[vkey][ion] *= 10**self.coldens_dw[ion]
+                self.vwindow_coldens_dw[vkey][ion] = np.log10(self.vwindow_coldens_dw[vkey][ion])
+            else:
+                self.vwindow_EW[vkey][ion] = 1. - np.sum(self.spectra[ion][:, vsel], axis=1) / float(numpix)
+                # convert absorbed flux fraction to rest-frame EW
+                self.vwindow_EW[vkey][ion] *= pathfrac * self.deltaredshift_obs / (self.cosmopars['z'] + 1.) * lambda_eff
+                
+                # N \propto tau
+                self.vwindow_coldens[vkey][ion] = np.sum(self.tau[ion][:, vsel], axis=1) \
+                                                  / np.sum(self.tau[ion][:, :], axis=1)            
+                self.vwindow_coldens[vkey][ion] *= 10**self.coldens[ion]
+                self.vwindow_coldens[vkey][ion] = np.log10(self.vwindow_coldens[vkey][ion])
+
     def save_specdata(self, filename):
         '''
         filename should include the directory
@@ -363,31 +440,55 @@ class SpecSet:
                 grp = fo.create_group('EW_tot')
                 for ion in self.EW:
                     grp.create_dataset(ion, data=self.EW[ion])
-                grp.attrs.create('info', np.string_('equivalent width [Angstrom, rest-frame] for each ion'))
+                grp.attrs.create('info', np.string_('equivalent width [Angstrom, rest-frame] for each ion (Gaussian spectra)'))
+            if 'EW_tot_dw' not in fo.keys() and len(self.EW_dw) > 0:
+                grp = fo.create_group('EW_tot_dw')
+                for ion in self.EW_dw:
+                    grp.create_dataset(ion, data=self.EW_dw[ion])
+                grp.attrs.create('info', np.string_('equivalent width [Angstrom, rest-frame] for each ion (Voigt spectra)'))
             
-            if not hasattr(self, 'vwindow_EW'):
-                # nothing left to save
-                return
-                
-            if 'vwindows_maxtau' not in fo.keys():
-                vgp = fo.create_group('vwindows_maxtau')
-                vgp.attrs.create('info', np.string_('column density and EW in rest-frame velocity windows Deltav (+- 0.5 * Deltav) [km/s] around the maximum-optical-depth pixel'))
-            else:
-                vgp = fo['vwindows_maxtau']
-            for deltav in self.vwindow_EW:
-                vname = 'Deltav_{dv:.3f}'.format(dv=deltav)
-                if vname in vgp.keys(): # already stored
-                    continue
-                svgp = vgp.create_group(vname)
-                svgp.attrs.create('Deltav_rf_kmps', deltav)
-                cvgp = svgp.create_group('coldens')
-                cvgp.attrs.create('info', np.string_('column density [log10 cm^-2] for each ion'))
-                evgp = svgp.create_group('EW')
-                evgp.attrs.create('info', np.string_('equivalent width [Angstrom, rest-frame] for each ion'))
-                
-                for ion in self.vwindow_EW[deltav]:
-                    evgp.create_dataset(ion, data=self.vwindow_EW[deltav][ion])
-                    cvgp.create_dataset(ion, data=self.vwindow_coldens[deltav][ion])
+            
+            if hasattr(self, 'vwindow_EW'):              
+                if 'vwindows_maxtau' not in fo.keys():
+                    vgp = fo.create_group('vwindows_maxtau')
+                    vgp.attrs.create('info', np.string_('column density and EW in rest-frame velocity windows Deltav (+- 0.5 * Deltav) [km/s] around the maximum-optical-depth pixel (Gaussian spectra)'))
+                else:
+                    vgp = fo['vwindows_maxtau']
+                for deltav in self.vwindow_EW:
+                    vname = 'Deltav_{dv:.3f}'.format(dv=deltav)
+                    if vname in vgp.keys(): # already stored
+                        continue
+                    svgp = vgp.create_group(vname)
+                    svgp.attrs.create('Deltav_rf_kmps', deltav)
+                    cvgp = svgp.create_group('coldens')
+                    cvgp.attrs.create('info', np.string_('column density [log10 cm^-2] for each ion'))
+                    evgp = svgp.create_group('EW')
+                    evgp.attrs.create('info', np.string_('equivalent width [Angstrom, rest-frame] for each ion'))
+                    
+                    for ion in self.vwindow_EW[deltav]:
+                        evgp.create_dataset(ion, data=self.vwindow_EW[deltav][ion])
+                        cvgp.create_dataset(ion, data=self.vwindow_coldens[deltav][ion])
+            
+            if hasattr(self, 'vwindow_EW_dw'):              
+                if 'vwindows_maxtau_dw' not in fo.keys():
+                    vgp = fo.create_group('vwindows_maxtau_dw')
+                    vgp.attrs.create('info', np.string_('column density and EW in rest-frame velocity windows Deltav (+- 0.5 * Deltav) [km/s] around the maximum-optical-depth pixel (Voigt spectra)'))
+                else:
+                    vgp = fo['vwindows_maxtau_dw']
+                for deltav in self.vwindow_EW:
+                    vname = 'Deltav_{dv:.3f}'.format(dv=deltav)
+                    if vname in vgp.keys(): # already stored
+                        continue
+                    svgp = vgp.create_group(vname)
+                    svgp.attrs.create('Deltav_rf_kmps', deltav)
+                    cvgp = svgp.create_group('coldens')
+                    cvgp.attrs.create('info', np.string_('column density [log10 cm^-2] for each ion'))
+                    evgp = svgp.create_group('EW')
+                    evgp.attrs.create('info', np.string_('equivalent width [Angstrom, rest-frame] for each ion'))
+                    
+                    for ion in self.vwindow_EW[deltav]:
+                        evgp.create_dataset(ion, data=self.vwindow_EW[deltav][ion])
+                        cvgp.create_dataset(ion, data=self.vwindow_coldens[deltav][ion])
         
     def getnion(self, dions='all'): # ion number density in cm^3 in each pixel: 
         if dions == 'all':

@@ -3538,7 +3538,7 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False,\
     else:
         dEWi = ''
     outname = mdir +\
-        'coldens_EW_sample3-6_ionselsamples_L0100N1504_27_T4EOS{dwi}{dEWi}_samevwindow.pdf'
+        'coldens_EW_sample3-6_ionselsamples_L0100N1504_27_T4EOS{dwi}{dEWi}.pdf'
     outname = outname.format(dwi=dwi, dEWi=dEWi)
     ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
     datafile = datadir + 'sample3-6_coldens_EW_vwindows_subsamples.hdf5'
@@ -3585,9 +3585,9 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False,\
     #         'ne9': 90.,\
     #         'fe17': 102.,\
     #         }
-    # half range sizes 600
-    vwindows_ion = {'o6': 1600.,\
-                    'ne8': 1600.,\
+    # half range sizes
+    vwindows_ion = {'o6': 600.,\
+                    'ne8': 600.,\
                     'o7': 1600.,\
                     'o8': 1600.,\
                     'fe17': 1600.,\
