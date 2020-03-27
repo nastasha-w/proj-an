@@ -431,7 +431,7 @@ class SpecSet:
                 for key in self.cosmopars:
                     csm.attrs.create(key, self.cosmopars[key])
                 hed.create_dataset('specgroups', data=self.specgroups.astype(np.string_))
-                hed.attrs.create('filename_specwizard', np.string_(self.specfile))
+                hed.attrs.create('filename_specwizard', np.string_(self.filename))
                 # used lines
                 inl = hed.create_group('ionlines')
                 for ion in self.ionlines:
