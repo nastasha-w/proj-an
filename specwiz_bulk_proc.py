@@ -398,7 +398,7 @@ class SpecSet:
                 # N \propto tau
                 self.vwindow_coldens_dw[vkey][ion] = np.sum(self.tau_dw[ion][:, vsel], axis=1) \
                                                   / np.sum(self.tau_dw[ion][:, :], axis=1)            
-                self.vwindow_coldens_dw[vkey][ion] *= 10**self.coldens_dw[ion]
+                self.vwindow_coldens_dw[vkey][ion] *= 10**self.coldens[ion]
                 self.vwindow_coldens_dw[vkey][ion] = np.log10(self.vwindow_coldens_dw[vkey][ion])
             else:
                 self.vwindow_EW[vkey][ion] = 1. - np.sum(self.spectra[ion][:, vsel], axis=1) / float(numpix)
