@@ -139,7 +139,8 @@ class SpecSet:
         self.ions = self.ions[self.ision]
         del self.ision
         self.aligned = {ion: False for ion in self.ions}
- 
+        self.aligned_dw = {ion: False for ion in self.ions}
+        
         self.dataoptions = {\
              'posmassw':\
              {'pecvel':      'RealSpaceMassWeighted/LOSPeculiarVelocity_KMpS',\
