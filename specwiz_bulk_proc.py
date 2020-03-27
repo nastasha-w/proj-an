@@ -489,7 +489,7 @@ class SpecSet:
                     vgp.attrs.create('info', np.string_('column density and EW in rest-frame velocity windows Deltav (+- 0.5 * Deltav) [km/s] around the maximum-optical-depth pixel (Voigt spectra)'))
                 else:
                     vgp = fo['vwindows_maxtau_dw']
-                for deltav in self.vwindow_EW:
+                for deltav in self.vwindow_EW_dw:
                     vname = 'Deltav_{dv:.3f}'.format(dv=deltav)
                     if vname in vgp.keys(): # already stored
                         continue
@@ -501,8 +501,8 @@ class SpecSet:
                     evgp.attrs.create('info', np.string_('equivalent width [Angstrom, rest-frame] for each ion'))
                     
                     for ion in self.vwindow_EW[deltav]:
-                        evgp.create_dataset(ion, data=self.vwindow_EW[deltav][ion])
-                        cvgp.create_dataset(ion, data=self.vwindow_coldens[deltav][ion])
+                        evgp.create_dataset(ion, data=self.vwindow_EW_dw[deltav][ion])
+                        cvgp.create_dataset(ion, data=self.vwindow_coldens_dw[deltav][ion])
         
     def getnion(self, dions='all'): # ion number density in cm^3 in each pixel: 
         if dions == 'all':
