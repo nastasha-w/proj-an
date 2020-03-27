@@ -174,8 +174,8 @@ class SpecSet:
     def getlinedata_in(self):
         # header also contains unused lines: only the first listed line is used
         # for each ion
-        _ions_in = np.array(ion.decode() for ion in \
-                            self.specfile['Header'].attrs['Ions'])
+        _ions_in = np.array([ion.decode() for ion in \
+                             self.specfile['Header'].attrs['Ions']])
         self.ions_in, _inds = np.unique(_ions_in, return_index=True) 
         self.fosc_in = np.array(self.specfile['Header'].attrs['Transitions_Oscillator_Strength'])[_inds]
         self.lambda_in = np.array(self.specfile['Header'].attrs['Transitions_Rest_Wavelength'])[_inds]
