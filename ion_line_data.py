@@ -820,8 +820,8 @@ def linflatdampedcurveofgrowth_inv(Nion, b, ion):
                    / np.sum([fosc[line] for line in lines]) 
         
         # tweak for precision/speed tradeoff; units: frequency (s**-1)
-        nucen = c.c / wavelen_m
-        nus = c.c / np.array([wavelen[line] for line in lines])
+        nucen = c.c / wavelen_m * 1e8
+        nus = c.c / np.array([wavelen[line] for line in lines]) * 1e8
         xoffsets = nus - nucen
         
         # axis 0: input Nion, axis 1: multiplet component
