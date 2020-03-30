@@ -3405,7 +3405,8 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                 vwindow = cosmopars_ea_27['boxsize'] * cosmopars_ea_27['a'] \
                           / cosmopars_ea_27['h'] * c.cm_per_mpc *\
                           cu.Hubble(cosmopars_ea_27['z'],\
-                                    cosmopars=cosmopars_ea_27)
+                                    cosmopars=cosmopars_ea_27) \
+                          * 1e-5
             if usevwindows:
                 spath_gs = 'vwindows_maxtau/Deltav_{dv:.3f}/'.format(dv=vwindow)
                 spath_vt = 'vwindows_maxtau_dw/Deltav_{dv:.3f}/'.format(dv=vwindow)
