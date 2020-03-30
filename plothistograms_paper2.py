@@ -13,6 +13,7 @@ import pandas as pd
 import string
 import os
 import scipy.integrate as si
+import scipy.interpolate as sint
 
 ndir = ol.ndir
 mdir = '/net/luttero/data2/imgs/CGM/misc_start/' # luttero location
@@ -3613,8 +3614,9 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
             cax   = fig.add_axes([axpos.x0 + 0.15 * axpos.width,\
                                   axpos.y0 + 0.05 * axpos.height,\
                                   axpos.width * 0.7, axpos.height * 0.1])
-            cbar = plt.colorbar(img_c, cax=cax)
-            cax.set_xlabel(clabel, fontsize=fontsize)
+            cbar = plt.colorbar(img_c, cax=cax, orientation='horizontal')
+            cax.set_xlabel(clabel, fontsize=fontsize - 1)
+            cax.xaxis.set_label_position('top') 
             
             linvals = ild.lingrowthcurve_inv(10**Nbinc, uselines[ion])
             linvals = np.log10(linvals) + 3
@@ -3677,7 +3679,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
            
             EWpoints = np.linspace(ylim[0], ylim[1], 200)
             gridpoints = (Nsample[np.newaxis, :], EWpoints[:,None])
-            diffvals = si.griddata((xpoints, ypoints), zpoints, gridpoints,\
+            diffvals = sint.griddata((xpoints, ypoints), zpoints, gridpoints,\
                                    method='linear')
             contours = ax.contour(Nsample, EWpoints, np.abs(diffvals),\
                                   levels=[0.01, 0.02, 0.05, 0.1, 0.15, 0.2],\
