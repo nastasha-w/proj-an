@@ -3606,7 +3606,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                                   axpos.y0 + 0.05 * axpos.height,\
                                   axpos.width * 0.7, axpos.height * 0.1])
             cbar = plt.colorbar(img_c, cax=cax)
-            cbar.set_xlabel(clabel, fontsize=fontsize)
+            cax.set_xlabel(clabel, fontsize=fontsize)
             
             linvals = ild.lingrowthcurve_inv(10**Nbinc, uselines[ion])
             linvals = np.log10(linvals) + 3
