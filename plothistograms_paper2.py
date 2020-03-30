@@ -3407,11 +3407,6 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                           cu.Hubble(cosmopars_ea_27['z'],\
                                     cosmopars=cosmopars_ea_27)
             if usevwindows:
-                epath_gs = 'EW_tot/'
-                epath_vt = 'EW_tot_dw/'
-                cpath_gs = 'coldens_tot/'
-                cpath_vt = 'coldens_tot/'
-            else:
                 spath_gs = 'vwindows_maxtau/Deltav_{dv:.3f}/'.format(dv=vwindow)
                 spath_vt = 'vwindows_maxtau_dw/Deltav_{dv:.3f}/'.format(dv=vwindow)
                 
@@ -3424,10 +3419,12 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                 cpath_gs = samplegroup + cpath_gs
                 epath_vt = samplegroup + epath_vt
                 cpath_vt = samplegroup + cpath_vt
-            print(cpath_gs + ion)
-            print(epath_gs + ion)
-            print(cpath_vt + ion)
-            print(epath_vt + ion)
+            else:
+                epath_gs = 'EW_tot/'
+                epath_vt = 'EW_tot_dw/'
+                cpath_gs = 'coldens_tot/'
+                cpath_vt = 'coldens_tot/'
+                
             coldens_gs[ion] = np.array(df[cpath_gs + ion])
             EWs_gs[ion] = np.array(df[epath_gs + ion])
             coldens_vt[ion] = np.array(df[cpath_vt + ion])
