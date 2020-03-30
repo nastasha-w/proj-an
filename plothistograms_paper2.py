@@ -3440,10 +3440,10 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
     linemin = 50
     ncols = 3
     if EWdiff:
-        ylabel = r'$\\log_{{10}} \\, \\mathrm{{EW}}_{{\\mathrm{voigt}}} \\, / \\, \\mathrm{{EW}}_{{\\mathrm{gauss}}}$'
+        ylabel = '$\\log_{{10}} \\, \\mathrm{{EW}}_{{\\mathrm{{voigt}}}} \\, / \\, \\mathrm{{EW}}_{{\\mathrm{{gauss}}}}$'
     else:
         ylabel = r'$\log_{10} \, \mathrm{EW} \; [\mathrm{m\AA}]$'
-    clabel = r'$\\log_{{10}} \\, \\mathrm{{EW}}_{{\\mathrm{voigt}}} \\, / \\, \\mathrm{{EW}}_{{\\mathrm{gauss}}}$'
+    clabel = '$\\log_{{10}} \\, \\mathrm{{EW}}_{{\\mathrm{{voigt}}}} \\, / \\, \\mathrm{{EW}}_{{\\mathrm{{gauss}}}}$'
     xlabel = r'$\log_{10} \, \mathrm{N} \; [\mathrm{cm}^{-2}]$'
     bbox = {'facecolor': 'white', 'alpha': 0.5, 'edgecolor': 'none'}
     
