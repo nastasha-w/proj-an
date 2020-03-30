@@ -959,7 +959,7 @@ def fitbpar(datafile, vwindow=None,\
         _ion = ionls[ion]
         if usedampingwings:
             def lossfunc(b):
-                if b <= 0.: # back off from that area!
+                if b <= 1.: # back off from that area! (b parameter too small -> too large integration array needed)
                     return np.inf
                 EWres = ild.linflatdampedcurveofgrowth_inv(N, b, _ion)
                 if fitlogEW:
