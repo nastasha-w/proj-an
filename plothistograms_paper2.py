@@ -3425,10 +3425,10 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                 cpath_gs = samplegroup + 'coldens_tot/'
                 cpath_vt = samplegroup + 'coldens_tot/'
                 
-            print(cpath_gs + ion)
-            print(epath_gs + ion)
-            print(cpath_vt + ion)
-            print(epath_vt + ion)
+            #print(cpath_gs + ion)
+            #print(epath_gs + ion)
+            #print(cpath_vt + ion)
+            #print(epath_vt + ion)
             coldens_gs[ion] = np.array(df[cpath_gs + ion])
             EWs_gs[ion] = np.array(df[epath_gs + ion])
             coldens_vt[ion] = np.array(df[cpath_vt + ion])
@@ -3559,7 +3559,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                 
                 ## plots are already quit busy, so leave out b labels in the 
                 ## cramped top region
-                if _vals[-1] < ylim[1] and _vals > ylim[0]:
+                if _vals[-1] < ylim[1] and _vals[-1] > ylim[0]:
                     rot = np.tan((_vals[-2] - _vals[-5]) / (Nbinc[-2] - Nbinc[-5])\
                                  * xr / yr)
                     rot *= 180. / np.pi # rad -> deg
