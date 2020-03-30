@@ -3597,6 +3597,14 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                 N = coldens_gs[ion]
                 EW = np.log10(EWs_gs[ion]) + 3. # Angstrom -> mA
                 indf = ild.linflatdampedcurveofgrowth_inv
+            Nmin = np.min(N)
+            Nmax = np.max(N)
+            Nbmin = np.floor(Nmin / logNspacing) * logNspacing
+            Nbmax = np.ceil(Nmax / logNspacing) * logNspacing
+            Nbins = np.arange(Nbmin, Nbmax + 0.5 * logNspacing, logNspacing)
+            Nbinc = Nbins + 0.5 * logNspacing
+            Nbinc = np.append([Nbinc[0] - 0.5 * logNspacing], Nbinc)
+            
             delta = np.log10(EWs_vt[ion]) - np.log10(EWs_gs[ion]) 
             img_c = ax.scatter(N, EW, c=delta, alpha=alpha,\
                                s=size_data)
