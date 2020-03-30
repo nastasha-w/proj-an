@@ -3544,7 +3544,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                         linewidth=linewidth, color=color_data[0],\
                         path_effects=path_effects)
             ax.scatter(outliers[0], outliers[1], c=color_data[0], alpha=alpha,\
-                       s=size_data)
+                       s=size_data, rasterized=True)
             ylim = ax.get_ylim()
             xlim = ax.get_xlim()
             ymax = np.max(delta[N >= xlim[0]])
@@ -3694,7 +3694,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
     lax.legend(handles=hnd, labels=lab, fontsize=fontsize, loc='lower center',\
                          ncol=4, frameon=True, bbox_to_anchor=(0.5, 0.0))
 
-    plt.savefig(outname, format='pdf', bbox_inches='tight')    
+    plt.savefig(outname, format='pdf', bbox_inches='tight', dpi=400)    
     
     
 def plotconfmatrix_mstarmhalo(halocat='/net/luttero/data2/proc/catalogue_RefL0100N1504_snap27_aperture30.hdf5',\
