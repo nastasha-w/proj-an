@@ -3297,7 +3297,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
     
     mdir = '/net/luttero/data2/specwizard_data/voigt_gaussian_diffs_paper2ions/'
     if EWdiff:
-        outname = 'EWdiff_same_sightline'
+        outname = 'EWdiff_same_sightline_for_Gaussian_N'
     elif deltaEW_at_newEW:       
         outname = 'EWdiff_for_Gaussian_N-EW'
     else:
@@ -3508,12 +3508,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
         if EWdiff:
             ax.set_xlim(*Nminmax[ion])
             
-            if deltaEW_at_newEW:
-                N = coldens_vt[ion]
-                EW = np.log10(EWs_vt[ion]) + 3. # Angstrom -> mA
-            elif deltaEW_at_oldEW:
-                N = coldens_gs[ion]
-                EW = np.log10(EWs_gs[ion]) + 3. # Angstrom -> mA
+            N = coldens_gs[ion]
             delta = np.log10(EWs_vt[ion]) - np.log10(EWs_gs[ion]) 
             Nmin = np.min(N)
             Nmax = np.max(N)
