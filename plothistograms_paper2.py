@@ -3420,10 +3420,10 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                 epath_vt = samplegroup + epath_vt
                 cpath_vt = samplegroup + cpath_vt
             else:
-                epath_gs = 'EW_tot/'
-                epath_vt = 'EW_tot_dw/'
-                cpath_gs = 'coldens_tot/'
-                cpath_vt = 'coldens_tot/'
+                epath_gs = samplegroup + 'EW_tot/'
+                epath_vt = samplegroup + 'EW_tot_dw/'
+                cpath_gs = samplegroup + 'coldens_tot/'
+                cpath_vt = samplegroup + 'coldens_tot/'
                 
             print(cpath_gs + ion)
             print(epath_gs + ion)
