@@ -901,7 +901,7 @@ def combine_sample_NEW(samples=(3, 6)):
 def fitbpar(datafile, vwindow=None,\
             ions=('o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'),\
             fitlogEW=True,\
-            samplegroup=None):
+            samplegroup=None, usedampingwings=False):
     '''
     fit b parameters to the merged and selected N-EW file sets
     '''
@@ -921,10 +921,16 @@ def fitbpar(datafile, vwindow=None,\
             samplegroup = samplegroup + '/'
             
         if vwindow is None:
-            epath = 'EW_tot/'
+            if usedampingwings:
+                epath = 'EW_tot_dw'
+            else:
+                epath = 'EW_tot/'
             cpath = 'coldens_tot/'
         else:
-            spath = 'vwindows_maxtau/Deltav_{dv:.3f}/'.format(dv=vwindow)
+            if usedampingwings:
+                spath = 'vwindows_maxtau_dw/Deltav_{dv:.3f}/'.format(dv=vwindow)
+            else:
+                spath = 'vwindows_maxtau/Deltav_{dv:.3f}/'.format(dv=vwindow)
             epath = spath + 'EW/'
             cpath = spath + 'coldens/'
         epath = samplegroup + epath
@@ -951,13 +957,22 @@ def fitbpar(datafile, vwindow=None,\
             EW = EWs[ion]
         
         _ion = ionls[ion]
-        def lossfunc(b):
-            if b <= 0.: # back off from that area!
-                return np.inf
-            EWres = ild.linflatcurveofgrowth_inv_faster(N, b, _ion)
-            if fitlogEW:
-                EWres = np.log10(EWres)
-            return np.sum((EWres - EW)**2)
+        if usedampingwings:
+            def lossfunc(b):
+                if b <= 0.: # back off from that area!
+                    return np.inf
+                EWres = ild.linflatdampedcurveofgrowth_inv(N, b, _ion)
+                if fitlogEW:
+                    EWres = np.log10(EWres)
+                return np.sum((EWres - EW)**2)
+        else:
+            def lossfunc(b):
+                if b <= 0.: # back off from that area!
+                    return np.inf
+                EWres = ild.linflatcurveofgrowth_inv_faster(N, b, _ion)
+                if fitlogEW:
+                    EWres = np.log10(EWres)
+                return np.sum((EWres - EW)**2)
         
         optres = spo.minimize(lossfunc, x0=bstart, method='COBYLA', tol=1e4,\
                               options={'rhobeg': 2e6})
@@ -972,14 +987,17 @@ def fitbpar(datafile, vwindow=None,\
             return optres
     return res
 
-def fitbpar_paper2():
+def fitbpar_paper2(usedampingwings=False):
     '''
     call fitpar for some interesting paper 2 values 
     
     (the overhead from file read-in is minimal compared to the fitting itself)
     '''
     datafile = '/net/luttero/data2/specwizard_data/sample3-6_coldens_EW_vwindows_subsamples.hdf5'
-    outfile = '/net/luttero/data2/paper2/bparfit_data.txt'
+    if usedampingwings:
+        outfile = '/net/luttero/data2/paper2/bparfit_data_dw.txt'
+    else:
+        outfile = '/net/luttero/data2/paper2/bparfit_data.txt'
     
     # to test the general dependence on window size
     vwindows_all = [50.] + list(np.arange(100, 6400, 100.)) + [None]
@@ -1013,11 +1031,13 @@ def fitbpar_paper2():
                     res_log = fitbpar(datafile, vwindow=vwindow,\
                           ions=[ion],\
                           fitlogEW=True,\
-                          samplegroup=samplegroup)
+                          samplegroup=samplegroup,\
+                          usedampingwings=usedampingwings)
                     res_lin = fitbpar(datafile, vwindow=vwindow,\
                           ions=[ion],\
                           fitlogEW=False,\
-                          samplegroup=samplegroup)
+                          samplegroup=samplegroup,\
+                          usedampingwings=usedampingwings)
                     
                     if vwindow is None:
                         fvwindow = np.inf
