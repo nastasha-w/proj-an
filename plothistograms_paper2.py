@@ -3397,16 +3397,19 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
         EWs_gs = {}
         coldens_vt = {}
         EWs_vt = {}
+        vwlabels = {}
         for ion in ions:
             samplegroup = samplegroups_ion[ion] + '/'
             if usevwindows:
                 vwindow = vwindows_ion[ion]
+                vwlabels[ion] = vwindow
             else:
                 vwindow = cosmopars_ea_27['boxsize'] * cosmopars_ea_27['a'] \
                           / cosmopars_ea_27['h'] * c.cm_per_mpc *\
                           cu.Hubble(cosmopars_ea_27['z'],\
                                     cosmopars=cosmopars_ea_27) \
                           * 1e-5
+                vwlabels[ion] = vwindow
             if usevwindows:
                 spath_gs = 'vwindows_maxtau/Deltav_{dv:.3f}/'.format(dv=vwindow)
                 spath_vt = 'vwindows_maxtau_dw/Deltav_{dv:.3f}/'.format(dv=vwindow)
@@ -3496,7 +3499,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
         
         axlabel1 = '$\\Delta v = \\pm {dv:.0f} \\, \\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}$'
         axlabel2 = '$\\mathrm{{{ion}}}$'
-        axlabel1 = axlabel1.format(dv=0.5 * vwindow)
+        axlabel1 = axlabel1.format(dv=0.5 * vwlabels[ion])
         axlabel2 = axlabel2.format(ion=ild.getnicename(ion, mathmode=True))
         ax.text(0.03, 0.97, axlabel1, fontsize=fontsize - 1,\
                 transform=ax.transAxes, verticalalignment='top',\
