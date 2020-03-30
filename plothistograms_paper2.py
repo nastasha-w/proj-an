@@ -3370,7 +3370,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                  'ne9': 90.,\
                  'fe17': 102.,\
                  }
-        bfits_gs = {'o6': 34.,\
+        bfits_vt = {'o6': 34.,\
                  'o7': 91.,\
                  'o8': 168.,\
                  'ne8': 41.,\
