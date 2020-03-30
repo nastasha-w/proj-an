@@ -3495,7 +3495,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
         
         axlabel1 = '$\\Delta v = \\pm {dv:.0f} \\, \\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}$'
         axlabel2 = '$\\mathrm{{{ion}}}$'
-        axlabel1 = axlabel1.format(dv=0.5 * vwindows_ion[ion])
+        axlabel1 = axlabel1.format(dv=0.5 * vwindow)
         axlabel2 = axlabel2.format(ion=ild.getnicename(ion, mathmode=True))
         ax.text(0.03, 0.97, axlabel1, fontsize=fontsize - 1,\
                 transform=ax.transAxes, verticalalignment='top',\
@@ -3559,7 +3559,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                 
                 ## plots are already quit busy, so leave out b labels in the 
                 ## cramped top region
-                if _vals[-1] < ylim[1]:
+                if _vals[-1] < ylim[1] and _vals > ylim[0]:
                     rot = np.tan((_vals[-2] - _vals[-5]) / (Nbinc[-2] - Nbinc[-5])\
                                  * xr / yr)
                     rot *= 180. / np.pi # rad -> deg
@@ -3631,7 +3631,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                 
                 ## plots are already quit busy, so leave out b labels in the 
                 ## cramped top region
-                if _vals[-1] < ylim[1]:
+                if _vals[-1] < ylim[1] and _vals[-1] > ylim[0]:
                     rot = np.tan((_vals[-2] - _vals[-5]) / (Nbinc[-2] - Nbinc[-5])\
                                  * xr / yr)
                     rot *= 180. / np.pi # rad -> deg
