@@ -3608,7 +3608,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
             
             delta = np.log10(EWs_vt[ion]) - np.log10(EWs_gs[ion]) 
             img_c = ax.scatter(N, EW, c=delta, alpha=alpha,\
-                               s=size_data)
+                               s=size_data, rasterized=True)
             # add color bar in axes:
             axpos = ax.get_position()
             cax   = fig.add_axes([axpos.x0 + 0.25 * axpos.width,\
