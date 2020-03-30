@@ -3467,7 +3467,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
     ls_lin     = 'dotted'
     ls_cie     = 'dashed'
     ls_fit     = 'dashdot'
-    ftllabel = 'best-fit $b$'
+    ftllabel = 'best-fit $b \\; [\\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}]$'
     cielabel = '$b(\\mathrm{{T}}_{{\\max, \\mathrm{{CIE}}}})$'
     linlabel = 'lin. COG'
     bkglabel = 'var. $b \\; [\\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}]$'    
@@ -3582,10 +3582,10 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
             ax.set_ylim(*ylim)
             
         else:    
-            fitlabel = 'fit: $b = {b:.0f} \\, \\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}$'.format(b=bfits[ion])
-            ax.text(0.97, 0.03, fitlabel, fontsize=fontsize - 1,\
-                    transform=ax.transAxes, verticalalignment='bottom',\
-                    horizontalalignment='right', bbox=bbox)
+            fitlabel = '$b = {b:.0f}$'.format(b=bfits[ion])
+            ax.text(0.03, 0.72, fitlabel, fontsize=fontsize - 1,\
+                    transform=ax.transAxes, verticalalignment='top',\
+                    horizontalalignment='left', bbox=bbox)
             
             ax.set_xlim(*Nminmax[ion])
             ax.set_ylim(*logEWminmax[ion])
@@ -3683,7 +3683,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                                    method='linear')
             contours = ax.contour(Nsample, EWpoints, np.abs(diffvals),\
                                   levels=[0.01, 0.02, 0.05, 0.1, 0.15, 0.2],\
-                                  colors='red', zorder=2)
+                                  colors='red', zorder=2, linewidth=1)
             ax.clabel(contours, inline=1, fontsize=fontsize - 2)
             
     print('Used b values {} km/s (low-to-high -> bottom to top in plot)'.format(bvals_indic))        
