@@ -3611,9 +3611,9 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                                s=size_data)
             # add color bar in axes:
             axpos = ax.get_position()
-            cax   = fig.add_axes([axpos.x0 + 0.15 * axpos.width,\
-                                  axpos.y0 + 0.05 * axpos.height,\
-                                  axpos.width * 0.7, axpos.height * 0.1])
+            cax   = fig.add_axes([axpos.x0 + 0.25 * axpos.width,\
+                                  axpos.y0 + 0.15 * axpos.height,\
+                                  axpos.width * 0.7, axpos.height * 0.07])
             cbar = plt.colorbar(img_c, cax=cax, orientation='horizontal')
             cax.set_xlabel(clabel, fontsize=fontsize - 1)
             cax.xaxis.set_label_position('top') 
@@ -3668,14 +3668,14 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                 EWgrid_lnf = np.log10(np.array(grp['EW_Angstrom_gaussian'])) + 3.
                 EWgrid_dmp = np.log10(np.array(grp['EW_Angstrom_voigt'])) + 3.
                 
-            EWdiff = EWgrid_dmp - EWgrid_lnf
+            dEW = EWgrid_dmp - EWgrid_lnf
             
             xpoints = np.tile(Nsample, EWgrid_lnf.shape[0])
             if deltaEW_at_newEW:
                 ypoints = EWgrid_lnf.flatten()
             else:
                 ypoints = EWgrid_dmp.flatten()
-            zpoints = EWdiff.flatten()
+            zpoints = dEW.flatten()
            
             EWpoints = np.linspace(ylim[0], ylim[1], 200)
             gridpoints = (Nsample[np.newaxis, :], EWpoints[:,None])
