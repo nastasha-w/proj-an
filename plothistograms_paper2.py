@@ -3617,7 +3617,9 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
             cbar = plt.colorbar(img_c, cax=cax, orientation='horizontal')
             cax.set_xlabel(clabel, fontsize=fontsize - 1)
             cax.xaxis.set_label_position('top') 
-            
+            for label in cax.get_xmajorticklabels():
+                label.set_rotation(35)
+        
             linvals = ild.lingrowthcurve_inv(10**Nbinc, uselines[ion])
             linvals = np.log10(linvals) + 3
             ax.plot(Nbinc, linvals, linestyle=ls_lin, color=color_lin,\
