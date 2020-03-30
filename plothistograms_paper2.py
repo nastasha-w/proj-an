@@ -3424,7 +3424,10 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                 cpath_gs = samplegroup + cpath_gs
                 epath_vt = samplegroup + epath_vt
                 cpath_vt = samplegroup + cpath_vt
-            
+            print(cpath_gs + ion)
+            print(epath_gs + ion)
+            print(cpath_vt + ion)
+            print(epath_vt + ion)
             coldens_gs[ion] = np.array(df[cpath_gs + ion])
             EWs_gs[ion] = np.array(df[epath_gs + ion])
             coldens_vt[ion] = np.array(df[cpath_vt + ion])
