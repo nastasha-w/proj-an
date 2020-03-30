@@ -922,7 +922,7 @@ def fitbpar(datafile, vwindow=None,\
             
         if vwindow is None:
             if usedampingwings:
-                epath = 'EW_tot_dw'
+                epath = 'EW_tot_dw/'
             else:
                 epath = 'EW_tot/'
             cpath = 'coldens_tot/'
