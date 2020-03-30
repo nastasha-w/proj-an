@@ -561,6 +561,7 @@ def combine_sample_NEW(samples=(3, 6)):
     Note: the files are not checked for compatibility
     
     adapted from specwiz_proc for v window N-EW files
+    addition: also does damping-wing data
     '''
     ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'] # only o8 doublet is expected to be unresolved -> rest is fine to use single lines
     if samples[0] == 3:
@@ -639,6 +640,21 @@ def combine_sample_NEW(samples=(3, 6)):
                 grpf['EW_tot'].attrs.create(key, attrs_ewn[key])
             for key in attrs_cdn:
                 grpf['coldens_tot'].attrs.create(key, attrs_ewn[key])
+
+        if 'EW_tot_dw' not in grpf:
+            for ion in ions:
+                ewn = 'EW_tot_dw'
+                
+                EW0 = np.array(f0['{path}/{ion}'.format(path=ewn, ion=ion)])
+                EW1 = np.array(f1['{path}/{ion}'.format(path=ewn, ion=ion)])
+                
+                EW = np.append(EW0, EW1[keep1])
+                
+                grpf.create_dataset('{path}/{ion}'.format(path=ewn, ion=ion),\
+                                          data=EW)                             
+            attrs_ewn = {key: val for key, val in f0[ewn].attrs.items()}
+            for key in attrs_ewn:
+                grpf['EW_tot_dw'].attrs.create(key, attrs_ewn[key])
                 
         vwn = 'vwindows_maxtau'
         if vwn in f0 and vwn in f1:
@@ -687,7 +703,55 @@ def combine_sample_NEW(samples=(3, 6)):
                     gdv[ewn].attrs.create(key, attrs_ewn[key])
                 for key in attrs_cdn:
                     gdv[cdn].attrs.create(key, attrs_cdn[key]) 
-        
+  
+        vwn = 'vwindows_maxtau_dw'
+        if vwn in f0 and vwn in f1:
+            if vwn in grpf:
+                gvw = grpf[vwn]
+            else:
+                gvw = grpf.create_group(vwn)
+                _attrs = {key: val for key, val in f0[vwn].attrs.items()}
+                for key in _attrs: # just Delta v def. info
+                    gvw.attrs.create(key, _attrs[key])
+                    
+            vkeys0 = set(f0[vwn].keys())
+            vkeys1 = set(f1[vwn].keys())
+            vkeys = vkeys0 & vkeys1 # only common elements
+            
+            for vkey in vkeys:
+                if vkey in gvw: # already copied
+                    continue
+                dv0 = f0['{path}/{dv}'.format(path=vwn, dv=vkey)].attrs['Deltav_rf_kmps']
+                dv1 = f1['{path}/{dv}'.format(path=vwn, dv=vkey)].attrs['Deltav_rf_kmps']
+                if not np.isclose(dv0, dv1): # Delta v's don't quite match
+                    continue
+                gdv = gvw.create_group(vkey)
+                gdv.attrs.create('Deltav_rf_kmps', 0.5 * (dv0 + dv1))
+                
+                for ion in ions:
+                    ewn = 'EW'
+                    cdn = 'coldens'
+                    
+                    Ns0 = np.array(f0['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=cdn, dv=vkey, ion=ion)])
+                    EW0 = np.array(f0['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=ewn, dv=vkey, ion=ion)])
+                    Ns1 = np.array(f1['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=cdn, dv=vkey, ion=ion)])
+                    EW1 = np.array(f1['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=ewn, dv=vkey, ion=ion)])
+                    
+                    Ns = np.append(Ns0, Ns1[keep1])
+                    EW = np.append(EW0, EW1[keep1])
+                    
+                    gdv.create_dataset('{qty}/{ion}'.format(qty=ewn, ion=ion),\
+                                              data=EW)                   
+                    gdv.create_dataset('{qty}/{ion}'.format(qty=cdn, ion=ion),\
+                                              data=Ns)
+                    
+                attrs_ewn = {key: val for key, val in f0['{path}/{dv}/{qty}'.format(path=vwn, qty=ewn, dv=vkey)].attrs.items()}
+                attrs_cdn = {key: val for key, val in f0['{path}/{dv}/{qty}'.format(path=vwn, qty=cdn, dv=vkey)].attrs.items()}
+                for key in attrs_ewn:
+                    gdv[ewn].attrs.create(key, attrs_ewn[key])
+                for key in attrs_cdn:
+                    gdv[cdn].attrs.create(key, attrs_cdn[key]) 
+                    
         # ion-selected samples
         for ion in ions:
             iname = '{ion}_selection'.format(ion=ion)
@@ -747,7 +811,19 @@ def combine_sample_NEW(samples=(3, 6)):
                     grpi['EW_tot'].attrs.create(key, attrs_ewn[key])
                 for key in attrs_cdn:
                     grpi['coldens_tot'].attrs.create(key, attrs_ewn[key])
+            if 'EW_tot_dw' not in grpi:
+                for ion in ions:
+                    ewn = 'EW_tot_dw'
+
+                    EW = np.array(fi['{path}/{ion}'.format(path=ewn, ion=ion)])[subinds]
                     
+                    grpi.create_dataset('{path}/{ion}'.format(path=ewn, ion=ion),\
+                                              data=EW)                
+                    
+                attrs_ewn = {key: val for key, val in fi[ewn].attrs.items()}
+                for key in attrs_ewn:
+                    grpi['EW_tot_dw'].attrs.create(key, attrs_ewn[key])
+   
             vwn = 'vwindows_maxtau'
             if vwn in fi:
                 if vwn in grpi:
@@ -785,6 +861,43 @@ def combine_sample_NEW(samples=(3, 6)):
                     for key in attrs_cdn:
                         gdv[cdn].attrs.create(key, attrs_cdn[key]) 
             
+            vwn = 'vwindows_maxtau_dw'
+            if vwn in fi:
+                if vwn in grpi:
+                    gvw = grpi[vwn]
+                else:
+                    gvw = grpi.create_group(vwn)
+                    _attrs = {key: val for key, val in fi[vwn].attrs.items()}
+                    for key in _attrs: # just Delta v def. info
+                        gvw.attrs.create(key, _attrs[key])
+                        
+                vkeys = set(fi[vwn].keys()) 
+                for vkey in vkeys:
+                    if vkey in gvw: # already copied
+                        continue
+                    dv = fi['{path}/{dv}'.format(path=vwn, dv=vkey)].attrs['Deltav_rf_kmps']
+                    gdv = gvw.create_group(vkey)
+                    gdv.attrs.create('Deltav_rf_kmps', dv)
+                    
+                    for ion in ions:
+                        ewn = 'EW'
+                        cdn = 'coldens'
+                        
+                        Ns = np.array(fi['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=cdn, dv=vkey, ion=ion)])[subinds]
+                        EW = np.array(fi['{path}/{dv}/{qty}/{ion}'.format(path=vwn, qty=ewn, dv=vkey, ion=ion)])[subinds]
+                        
+                        gdv.create_dataset('{qty}/{ion}'.format(qty=ewn, ion=ion),\
+                                                  data=EW)                   
+                        gdv.create_dataset('{qty}/{ion}'.format(qty=cdn, ion=ion),\
+                                                  data=Ns)
+                        
+                    attrs_ewn = {key: val for key, val in fi['{path}/{dv}/{qty}'.format(path=vwn, qty=ewn, dv=vkey)].attrs.items()}
+                    attrs_cdn = {key: val for key, val in fi['{path}/{dv}/{qty}'.format(path=vwn, qty=cdn, dv=vkey)].attrs.items()}
+                    for key in attrs_ewn:
+                        gdv[ewn].attrs.create(key, attrs_ewn[key])
+                    for key in attrs_cdn:
+                        gdv[cdn].attrs.create(key, attrs_cdn[key]) 
+                        
 def fitbpar(datafile, vwindow=None,\
             ions=('o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17'),\
             fitlogEW=True,\
