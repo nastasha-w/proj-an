@@ -836,6 +836,7 @@ def linflatdampedcurveofgrowth_inv(Nion, b, ion):
         range_hires = (2. * np.floor((snus[0] - nucen) / delta_rel_cen) * delta_rel_cen,\
                        2. * np.ceil((snus[-1] - nucen) / delta_rel_cen) * delta_rel_cen)
         diff_max = 300. * np.max(hwhm_cauchy) + 20. * sigma + xo_max
+        print('b parameter [km / s]: {}'.format(b))
         print('dw EW calc: x samplesize ~ {}'.format(2. * diff_max / delta_rel +\
                                                    (range_hires[1] - range_hires[0]) / delta_rel_cen))
         xsample_lo = np.arange(range_hires[0] - 0.5 * delta_rel_cen, -diff_max, -delta_rel)[::-1]
