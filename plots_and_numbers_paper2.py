@@ -3746,11 +3746,11 @@ def plot_NEW(fontsize=fontsize):
             ## plots are already quit busy, so leave out b labels in the 
             ## cramped top region
             if bi == 0:
-                Nind = -40
+                Nind = -20
             elif bi == 1:
-                Nind == -20
+                Nind = -10
             else:
-                bi == -5
+                Nind = -3
             if _vals[Nind] < ylim[1]:  
                 rot = np.tan((_vals[Nind + 2] - _vals[Nind - 2]) /\
                              (Nbinc[Nind + 2] - Nbinc[Nind - 2])\
