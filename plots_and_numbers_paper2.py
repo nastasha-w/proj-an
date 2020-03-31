@@ -3729,7 +3729,8 @@ def plot_NEW(fontsize=fontsize):
         ylim = ax.get_ylim()
         xr = xlim[1] - xlim[0]
         yr = ylim[1] - ylim[0]
-        for bval in bvals_indic:
+        for bi in range(len(bvals_indic)):
+            bval = bvals_indic[bi]
             if label:
                 _label = bkglabel
             else:
@@ -3744,17 +3745,24 @@ def plot_NEW(fontsize=fontsize):
             
             ## plots are already quit busy, so leave out b labels in the 
             ## cramped top region
-            if _vals[-1] < ylim[1]:
-                rot = np.tan((_vals[-2] - _vals[-5]) / (Nbinc[-2] - Nbinc[-5])\
+            if bi == 0:
+                Nind = -40
+            elif bi == 1:
+                Nind == -20
+            else:
+                bi == -5
+            if _vals[Nind] < ylim[1]:  
+                rot = np.tan((_vals[Nind + 2] - _vals[Nind - 2]) /\
+                             (Nbinc[Nind + 2] - Nbinc[Nind - 2])\
                              * xr / yr)
                 rot *= 180. / np.pi # rad -> deg
-                ax.text(xlim[1] - 0.015 * xr, _vals[-1] - 0.02 * yr,\
+                ax.text(Nbinc[Nind] - 0.015 * xr, _vals[Nind] - 0.02 * yr,\
                         '{:.0f}'.format(bval),\
                         horizontalalignment='right', verticalalignment='top',\
                         color=color_bbkg, fontsize=fontsize - 2, zorder=-1,\
                         rotation=rot)
         
-#        if dampingwing_deltaEW_indic:
+#        if dampingwing_deltaEW_indic:            
 #            dfn = datadir + 'EWdiffs_dampingwings.hdf5'
 #            with h5py.File(dfn, 'r') as df:
 #                grp = df[ion]
