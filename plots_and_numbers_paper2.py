@@ -2076,8 +2076,8 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
                                     linewidth=linewidths[var],\
                                     alpha=alphas[var],\
                                     path_effects=patheff,\
-                                    capsize=2.2,\
-                                    capthick=linewidths[var],\
+                                    capsize=2.5,\
+                                    capthick=linewidths[var] - 1.,\
                                     )
                         plotline.set_path_effects(patheff)
                         [cap.set_path_effects(patheff) for cap in caplines]
@@ -2107,8 +2107,8 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
                                     linewidth=linewidths[var],\
                                     alpha=alphas[var],\
                                     path_effects=patheff,\
-                                    capsize=2.2,\
-                                    capthick=linewidths[var],\
+                                    capsize=2.5,\
+                                    capthick=linewidths[var] - 1.,\
                                     )
                         plotline.set_path_effects(patheff)
                         [cap.set_path_effects(patheff) for cap in caplines]
