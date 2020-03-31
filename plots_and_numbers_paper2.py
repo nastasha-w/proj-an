@@ -4066,10 +4066,11 @@ def calc_EW_angstrom(EW_eV, z=0.1):
           }
     res = {ion: EW_eV * c.ev_to_erg / (1. + z) / \
                  (c.c * c.planck / (wls[ion] * 1e-8)) \
+                 * wls[ion]
                  for ion in wls}
     print('Wavelenghts (A)')
     print(wls)
-    print('Delta v (km/s)')
+    print('EW (Angstrom)')
     print(res)
 
 def get_dNdz_halos(limset='break'):   
