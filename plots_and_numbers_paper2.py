@@ -3756,7 +3756,7 @@ def plot_NEW(fontsize=fontsize):
                              (Nbinc[Nind - 2] - Nbinc[Nind - 4])\
                              * xr / yr)
                 rot *= 180. / np.pi # rad -> deg
-                ax.text((Nbinc[Nind] - xlim[0]) / xr - 0.015,\
+                ax.text((Nbinc[Nind] - xlim[0]) / xr,\
                         (_vals[Nind] - ylim[0]) / yr - 0.02,\
                         '{:.0f}'.format(bval),\
                         horizontalalignment='center', verticalalignment='top',\
