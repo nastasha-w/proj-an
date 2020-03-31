@@ -3593,11 +3593,11 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
             if deltaEW_at_newEW:
                 N = coldens_vt[ion]
                 EW = np.log10(EWs_vt[ion]) + 3. # Angstrom -> mA
-                indf = ild.linflatcurveofgrowth_inv_faster
+                indf = ild.linflatdampedcurveofgrowth_inv
             elif deltaEW_at_oldEW:
                 N = coldens_gs[ion]
                 EW = np.log10(EWs_gs[ion]) + 3. # Angstrom -> mA
-                indf = ild.linflatdampedcurveofgrowth_inv
+                indf = ild.linflatcurveofgrowth_inv_faster
             Nmin = np.min(N)
             Nmax = np.max(N)
             Nbmin = np.floor(Nmin / logNspacing) * logNspacing
