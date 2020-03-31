@@ -3746,11 +3746,11 @@ def plot_NEW(fontsize=fontsize):
             ## plots are already quit busy, so leave out b labels in the 
             ## cramped top region
             if bi == 0:
-                Nind = np.argmin(np.abs(ylim[1] - 0.3 * yr - Nbinc))
+                Nind = np.argmin(np.abs(xlim[1] - 0.3 * xr - Nbinc))
             elif bi == 1:
-                Nind = np.argmin(np.abs(ylim[1] - 0.15 * yr - Nbinc))
+                Nind = np.argmin(np.abs(xlim[1] - 0.15 * xr - Nbinc))
             else:
-                Nind = np.argmin(np.abs(ylim[1] - 0.03 * yr - Nbinc))
+                Nind = np.argmin(np.abs(xlim[1] - 0.03 * xr - Nbinc))
             if _vals[Nind] < ylim[1]:  
                 rot = np.tan((_vals[Nind + 1] - _vals[Nind - 1]) /\
                              (Nbinc[Nind + 1] - Nbinc[Nind - 1])\
