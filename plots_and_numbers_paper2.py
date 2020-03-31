@@ -2067,9 +2067,9 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
                         rvir_range = rperc[mkey]
                         yv = pu.linterpsolve(plotx, ploty, rvir_range[1])
                         ax.errorbar(rvir_range[1], yv,\
-                                    xerr=[[rvir_range[0] - rvir_range[1]],\
+                                    xerr=[[rvir_range[1] - rvir_range[0]],\
                                           [rvir_range[2] - rvir_range[1]]],\
-                                    fmt='o',\
+                                    fmt='.',\
                                     color=colors[mkey],\
                                     linestyle=linestyles[var],\
                                     linewidth=linewidths[var],\
@@ -2095,9 +2095,9 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
                         rvir_range = rperc[mkey]
                         yv = pu.linterpsolve(plotx, ploty, rvir_range[1])
                         ax.errorbar(rvir_range[1], yv,\
-                                    xerr=[[rvir_range[0] - rvir_range[1]],\
+                                    xerr=[[rvir_range[1] - rvir_range[0]],\
                                           [rvir_range[2] - rvir_range[1]]],\
-                                    fmt='o',\
+                                    fmt='.',\
                                     color=colors[mkey],\
                                     linestyle=linestyles[var],\
                                     linewidth=linewidths[var],\
