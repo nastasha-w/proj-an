@@ -3750,15 +3750,15 @@ def plot_NEW(fontsize=fontsize):
             elif bi == 1:
                 Nind = np.argmin(np.abs(xlim[1] - 0.15 * xr - Nbinc))
             else:
-                Nind = min(np.argmin(np.abs(xlim[1] - 0.07 * xr - Nbinc)),\
+                Nind = min(np.argmin(np.abs(xlim[1] - 0.08 * xr - Nbinc)),\
                            len(Nbinc) - 2)
             if _vals[Nind] < ylim[1]:  
-                rot = np.tan((_vals[Nind - 1] - _vals[Nind - 3]) /\
-                             (Nbinc[Nind - 1] - Nbinc[Nind - 3])\
+                rot = np.tan((_vals[Nind - 2] - _vals[Nind - 4]) /\
+                             (Nbinc[Nind - 2] - Nbinc[Nind - 4])\
                              * xr / yr)
                 rot *= 180. / np.pi # rad -> deg
                 ax.text((Nbinc[Nind] - xlim[0]) / xr,\
-                        (_vals[Nind] - ylim[0]) / yr - 0.007,\
+                        (_vals[Nind] - ylim[0]) / yr - 0.005,\
                         '{:.0f}'.format(bval),\
                         horizontalalignment='center', verticalalignment='top',\
                         color=color_bbkg, fontsize=fontsize - 2, zorder=-1,\
