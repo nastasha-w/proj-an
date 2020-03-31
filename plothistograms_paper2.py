@@ -3548,7 +3548,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
             ylim = ax.get_ylim()
             xlim = ax.get_xlim()
             ymax = np.max(delta[N >= xlim[0]])
-            ymin = np.max(delta[N >= xlim[0]])
+            ymin = np.min(delta[N >= xlim[0]])
             if ylim[-1] > ymax * 1.5:
                 ylim = (min(ylim[0], - ymin * 1.5, ymin * 1.5, -0.05 * ymax),\
                         1.5 * ymax)
