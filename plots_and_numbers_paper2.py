@@ -2068,7 +2068,12 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
                         yv = pu.linterpsolve(plotx, ploty, rvir_range[1])
                         ax.errorbar(rvir_range[1], yv,\
                                     xerr=[[rvir_range[0] - rvir_range[1],\
-                                           rvir_range[2] - rvir_range[1]]])
+                                           rvir_range[2] - rvir_range[1]]],\
+                                    color=colors[mkey],\
+                                    linestyle=linestyles[var],\
+                                    linewidth=linewidths[var],\
+                                    alpha=alphas[var],\
+                                    )
                 elif ytype == 'fcov':
                     for yi in range(len(yvals_toplot_temp)):
                         linestyle = linestyles_fcov[yi]
@@ -2082,7 +2087,17 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
                                 linewidth=linewidths[var], alpha=alphas[var],\
                                 label=galsetnames_smass[tag],\
                                 path_effects=patheff)
-                                           
+                        # mark median, 80 range
+                        rvir_range = rperc[mkey]
+                        yv = pu.linterpsolve(plotx, ploty, rvir_range[1])
+                        ax.errorbar(rvir_range[1], yv,\
+                                    xerr=[[rvir_range[0] - rvir_range[1],\
+                                           rvir_range[2] - rvir_range[1]]],\
+                                    color=colors[mkey],\
+                                    linestyle=linestyles[var],\
+                                    linewidth=linewidths[var],\
+                                    alpha=alphas[var],\
+                                    )
         if ytype == 'perc':
             ax.axhline(approx_breaks[ion], 0., 0.1, color='gray',\
                        linewidth=1.5, zorder=-1) 
