@@ -1800,7 +1800,7 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
     elif var == 'main-fcov-break':
         highlightcrit = None
         ytype='fcov'
-        yvals_toplot = approx_breaks
+        yvals_toplot = {ion: [approx_breaks[ion]] for ion in approx_breaks}
     elif var == 'main-fcov-obs':
         highlightcrit = None
         ytype='fcov'
