@@ -15,7 +15,7 @@ import h5py
 import pandas as pd
 import string
 import os
-import scipy.interpolate as si
+#import scipy.interpolate as si
 
 datadir = '/net/luttero/data2/paper2/'
 mdir    = '/net/luttero/data2/imgs/CGM/plots_paper2/'
@@ -4053,6 +4053,24 @@ def calc_deltav_xray(width=2.5, z=0.1):
     print('Delta v (km/s)')
     print(res)
 
+def calc_EW_angtrom(EW_eV, z=0.1):
+    '''
+    for an EW in eV, calculate width in rest-frame Angstrom for the X-ray ions
+    '''
+    wls = {'o7': ild.o7major.lambda_angstrom,\
+           'o8': (ild.o8minor.lambda_angstrom * ild.o8minor.fosc + \
+                  ild.o8major.lambda_angstrom * ild.o8major.fosc) / \
+                 (ild.o8minor.fosc + ild.o8major.fosc),\
+           'ne9': ild.ne9major.lambda_angstrom,\
+           'fe17': ild.fe17major.lambda_angstrom,\
+          }
+    res = {ion: EW_eV * c.ev_to_erg / (1. + z) / \
+                 (c.c * c.planck / (wls[ion] * 1e-8)) \
+                 for ion in wls}
+    print('Wavelenghts (A)')
+    print(wls)
+    print('Delta v (km/s)')
+    print(res)
 
 def get_dNdz_halos(limset='break'):   
     '''
