@@ -2304,8 +2304,8 @@ def plot_radprof_zev(fontsize=fontsize):
             var = techvars_touse[vi]
             for ti in range(len(tags)):
                 tag = tags[ti]
-                si  = ti % 2
-                ax = _axes[si]
+                _si  = ti % 2
+                ax = _axes[_si]
                 color = colordct[np.round(masslabels_all[tag][0], 1)]
                 
                 try:
@@ -3796,12 +3796,18 @@ def plot_NEW(fontsize=fontsize):
     plt.savefig(outname, format='pdf', bbox_inches='tight')    
 
 # b, b parameter, 
-def plotbpar(fontsize=fontsize):
+def plotbpar(fontsize=fontsize, showgaussian=False):
     '''
     best fit b parameters (log EW) as a function of velocity window size
     '''
-    datafile = datadir + 'bparfit_data.txt'
-    outname = mdir + 'sample3-6_vwindows_effect_bparfit.pdf'
+    datafile_gauss = datadir + 'bparfit_data.txt'
+    datafile_voigt = datadir + 'bparfit_data_dw.txt'
+    if showgaussian:
+        gs = '_withgaussiandatafits'
+    else:
+        gs = ''
+    outname = mdir + 'sample3-6_vwindows_effect_bparfit{gs}.pdf'
+    outname = outname.format(gs=gs)
     logfit = True
     if logfit:
         print('Using log EW fits')
@@ -3815,15 +3821,27 @@ def plotbpar(fontsize=fontsize):
     #set_boxvel = 0.5 * boxvel
     
     
-    data = pd.read_csv(datafile, sep='\t', header=0)
-    data['ion'] = data['ion'].astype('category')
-    data['sightline selection'] = data['sightline selection'].astype('category')
-    data.loc[data['Delta v [full, rest-frame, km/s]'] == np.inf, \
+    data_gs = pd.read_csv(datafile_gauss, sep='\t', header=0)
+    data_gs['ion'] = data_gs['ion'].astype('category')
+    data_gs['sightline selection'] = data_gs['sightline selection'].astype('category')
+    data_gs.loc[data_gs['Delta v [full, rest-frame, km/s]'] == np.inf, \
              'Delta v [full, rest-frame, km/s]'] = boxvel
     # log/lin fits, ion sample selections
-    plotdata = data.loc[data['fit log EW'] == logfit]
-    plotdata = plotdata.loc[plotdata['sightline selection'] != 'full_sample']
-    plotdata = plotdata.pivot(columns='ion',\
+    plotdata_gs = data_gs.loc[data_gs['fit log EW'] == logfit]
+    plotdata_gs = plotdata_gs.loc[plotdata_gs['sightline selection'] != 'full_sample']
+    plotdata_gs = plotdata_gs.pivot(columns='ion',\
+                              index='Delta v [full, rest-frame, km/s]',
+                              values='best-fit b [km/s]')
+    
+    data_vt = pd.read_csv(datafile_voigt, sep='\t', header=0)
+    data_vt['ion'] = data_vt['ion'].astype('category')
+    data_vt['sightline selection'] = data_vt['sightline selection'].astype('category')
+    data_vt.loc[data_vt['Delta v [full, rest-frame, km/s]'] == np.inf, \
+             'Delta v [full, rest-frame, km/s]'] = boxvel
+    # log/lin fits, ion sample selections
+    plotdata_vt = data_vt.loc[data_vt['fit log EW'] == logfit]
+    plotdata_vt = plotdata_vt.loc[plotdata_vt['sightline selection'] != 'full_sample']
+    plotdata_vt = plotdata_vt.pivot(columns='ion',\
                               index='Delta v [full, rest-frame, km/s]',
                               values='best-fit b [km/s]')
     
@@ -3848,23 +3866,30 @@ def plotbpar(fontsize=fontsize):
     marker = 'o'
     alpha = 1.
     
-    for ion in plotdata.columns:
-        xv = plotdata[ion].index * 0.5 # full width -> half width
-        yv = np.array(plotdata[ion])
+    for ion in plotdata_vt.columns:
+        xv = plotdata_vt[ion].index * 0.5 # full width -> half width
+        yv = np.array(plotdata_vt[ion])
         label = ild.getnicename(ion, mathmode=False)
         ax.plot(xv, yv, color=ioncolors[ion], linewidth=2, alpha=alpha,\
                 label=label)
-        ax.scatter(0.5 * vwindows_ion[ion], plotdata[ion][vwindows_ion[ion]],\
+        ax.scatter(0.5 * vwindows_ion[ion], plotdata_vt[ion][vwindows_ion[ion]],\
                    alpha=alpha, s=size, marker=marker, color=ioncolors[ion])
-        ax.scatter(0.5 * boxvel, plotdata[ion][boxvel],\
+        ax.scatter(0.5 * boxvel, plotdata_vt[ion][boxvel],\
                    alpha=alpha, s=size, marker='o', edgecolor=ioncolors[ion],\
                    facecolor='none')
         ax.axhline(bvals_CIE[ion], 0.0, 0.07, linestyle='dotted', linewidth=2,\
                    color=ioncolors[ion])
+        if showgaussian:
+            xv = plotdata_gs[ion].index * 0.5 # full width -> half width
+            yv = np.array(plotdata_gs[ion])
+            ax.plot(xv, yv, color=ioncolors[ion], linewidth=2, alpha=alpha,\
+                    label=None, linestyle='dashed')
         print(ion)
-        print('whole box: b={b} km/s'.format(b=plotdata[ion][boxvel]))
+        print('whole box: b={b} km/s'.format(b=plotdata_vt[ion][boxvel]))
         print('Delta v={dv} km/s: b={b} km/s'.format(dv=vwindows_ion[ion] * 0.5,\
-              b=plotdata[ion][vwindows_ion[ion]]))
+              b=plotdata_vt[ion][vwindows_ion[ion]]))
+    if showgaussian:
+        print('Dashed lines show Gaussian spectra and fit function results')
     #leg_ions = [mlines.Line2D([], [], color=ioncolors[ion], linestyle='None',\
     #                      markersize = 0.1 * size_ionsel,\
     #                      label=ion, marker='o')  \
