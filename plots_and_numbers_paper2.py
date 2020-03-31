@@ -3750,7 +3750,7 @@ def plot_NEW(fontsize=fontsize):
             elif bi == 1:
                 Nind = np.argmin(np.abs(xlim[1] - 0.15 * xr - Nbinc))
             else:
-                Nind = np.argmin(np.abs(xlim[1] - 0.03 * xr - Nbinc))
+                Nind = min(np.argmin(np.abs(xlim[1] - 0.03 * xr - Nbinc)), len(Nbinc) - 2)
             if _vals[Nind] < ylim[1]:  
                 rot = np.tan((_vals[Nind + 1] - _vals[Nind - 1]) /\
                              (Nbinc[Nind + 1] - Nbinc[Nind - 1])\
