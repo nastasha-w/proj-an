@@ -58,7 +58,12 @@ approx_breaks = {'o7': 16.0,\
              'ne9': 15.3,\
              'hneutralssh': 20.3,\
              'fe17': 15.0}
-
+obslims = {'o6':   [13.5],\
+           'ne8':  [13.5],\
+           'o7':   [15.4],\
+           'ne9':  [15.4],\
+           'o8':   [15.6],\
+           'fe17': [14.8]}
 # at max. tabulated density, range where ion frac. is >= 10% of the maximum at max density
 Tranges_CIE = {'o6':   (5.3, 5.8),\
                'o7':   (5.4, 6.5),\
@@ -1795,21 +1800,11 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
     elif var == 'main-fcov-break':
         highlightcrit = None
         ytype='fcov'
-        yvals_toplot = {'o6':   [14.3],\
-                        'ne8':  [13.7],\
-                        'o7':   [16.0],\
-                        'ne9':  [15.3],\
-                        'o8':   [16.0],\
-                        'fe17': [15.0]}
+        yvals_toplot = approx_breaks
     elif var == 'main-fcov-obs':
         highlightcrit = None
         ytype='fcov'
-        yvals_toplot = {'o6':   [13.5],\
-                        'ne8':  [13.5],\
-                        'o7':   [15.5],\
-                        'ne9':  [15.5],\
-                        'o8':   [15.7],\
-                        'fe17': [14.9]}
+        yvals_toplot = obslims
     if lowmass:
         techvars_touse = [0, 1]
     else:
@@ -1884,6 +1879,15 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
         Ms_edges = np.append(Ms_edges_lm[:-1], Ms_edges)
         techvars.update({1: {'filenames': ion_filedct_Mstar_lowmass,\
                              'setnames': Ms_names_lm, 'setfills': None}})
+    
+    halocat='/net/luttero/data2/proc/catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+
+    with h5py.File(halocat, 'r') as cat:
+        r200c = np.array(cat['R200c_pkpc'])
+        mstar = np.log10(np.array(cat['Mstar_Msun']))
+        minds = np.digitize(mstar, Ms_edges)
+        rperc = [np.percentile(r200c[minds == i], [10., 50., 90.]) for i in range(1, len(Ms_edges))] # digitize 0 -> < first bin
+        rperc = {Ms_edges[i]: rperc[i] for i in range(len(Ms_edges) - 1)}
        
     linewidths = {0: 2.,\
                   1: 2.}     
@@ -2059,7 +2063,12 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
                                 linewidth=linewidths[var], alpha=alphas[var],\
                                 label=galsetnames_smass[tag],\
                                 path_effects=patheff)
-
+                        # mark median, 80 range 
+                        rvir_range = rperc[mkey]
+                        yv = pu.linterpsolve(plotx, ploty, rvir_range[1])
+                        ax.errorbar(rvir_range[1], yv,\
+                                    xerr=[[rvir_range[0] - rvir_range[1],\
+                                           rvir_range[2] - rvir_range[1]]])
                 elif ytype == 'fcov':
                     for yi in range(len(yvals_toplot_temp)):
                         linestyle = linestyles_fcov[yi]
@@ -4332,12 +4341,7 @@ def getcovfrac_total_halo(minr_pkpc, maxr_r200c):
                         'fe17': [15.0]}
     elif fcovset == 'obs':
         ytype='fcov'
-        yvals_toplot = {'o6':   [13.5],\
-                        'ne8':  [13.5],\
-                        'o7':   [15.5],\
-                        'ne9':  [15.5],\
-                        'o8':   [15.7],\
-                        'fe17': [14.9]}
+        yvals_toplot = obslims
 
     cosmopars = cosmopars_ea_27
 
