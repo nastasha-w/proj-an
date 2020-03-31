@@ -2067,14 +2067,15 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
                         rvir_range = rperc[mkey]
                         yv = pu.linterpsolve(plotx, ploty, rvir_range[1])
                         ax.errorbar(rvir_range[1], yv,\
-                                    xerr=[[rvir_range[0] - rvir_range[1],\
-                                           rvir_range[2] - rvir_range[1]]],\
+                                    xerr=[rvir_range[0] - rvir_range[1],\
+                                          rvir_range[2] - rvir_range[1]],\
+                                    fmt='o',\
                                     color=colors[mkey],\
                                     linestyle=linestyles[var],\
                                     linewidth=linewidths[var],\
                                     alpha=alphas[var],\
                                     path_effects=patheff,\
-                                    capsize=3.,\
+                                    capsize=2.2,\
                                     capthick=linewidths[var],\
                                     )
                 elif ytype == 'fcov':
@@ -2094,14 +2095,15 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
                         rvir_range = rperc[mkey]
                         yv = pu.linterpsolve(plotx, ploty, rvir_range[1])
                         ax.errorbar(rvir_range[1], yv,\
-                                    xerr=[[rvir_range[0] - rvir_range[1],\
-                                           rvir_range[2] - rvir_range[1]]],\
+                                    xerr=[rvir_range[0] - rvir_range[1],\
+                                          rvir_range[2] - rvir_range[1]],\
+                                    fmt='o',\
                                     color=colors[mkey],\
                                     linestyle=linestyles[var],\
                                     linewidth=linewidths[var],\
                                     alpha=alphas[var],\
                                     path_effects=patheff,\
-                                    capsize=3.,\
+                                    capsize=2.2,\
                                     capthick=linewidths[var],\
                                     )
         if ytype == 'perc':
