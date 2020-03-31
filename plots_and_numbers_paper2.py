@@ -2074,7 +2074,8 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
                                     linewidth=linewidths[var],\
                                     alpha=alphas[var],\
                                     path_effects=patheff,\
-                                    capsize=1.,\
+                                    capsize=3.,\
+                                    capthick=linewidths[var],\
                                     )
                 elif ytype == 'fcov':
                     for yi in range(len(yvals_toplot_temp)):
@@ -2100,7 +2101,8 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
                                     linewidth=linewidths[var],\
                                     alpha=alphas[var],\
                                     path_effects=patheff,\
-                                    capsize=1.,\
+                                    capsize=3.,\
+                                    capthick=linewidths[var],\
                                     )
         if ytype == 'perc':
             ax.axhline(approx_breaks[ion], 0., 0.1, color='gray',\
