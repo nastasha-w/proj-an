@@ -4053,7 +4053,7 @@ def calc_deltav_xray(width=2.5, z=0.1):
     print('Delta v (km/s)')
     print(res)
 
-def calc_EW_angtrom(EW_eV, z=0.1):
+def calc_EW_angstrom(EW_eV, z=0.1):
     '''
     for an EW in eV, calculate width in rest-frame Angstrom for the X-ray ions
     '''
