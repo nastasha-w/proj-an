@@ -3520,26 +3520,13 @@ def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors, fontsize=fontsize):
 
 # column density equivalent width, coldens, N, EW, N-EW, cog, curve of growth
 # b, bpar
-def plot_NEW(fontsize=fontsize, dampingwingindic=False,\
-             dampingwing_deltaEW_indic=False): 
+def plot_NEW(fontsize=fontsize): 
     '''
-    dampingwingindic: plot the damping wings COGs for the same b parameters 
-                      as the gaussian line model COGs
-    dampingwing_deltaEW_indic: plot contours at constant Delta log EW, when \
-                      going from a Gaussian line with a given EW and N to a
-                      Voigt profile with the same N and b
+    EW vs. column density using voigt profile spectra
     '''
-    if dampingwingindic:
-        dwi = '_withdampedCOGs'
-    else:
-        dwi = ''
-    if dampingwing_deltaEW_indic:
-        dEWi = '_with_DeltalogEWcontours'
-    else:
-        dEWi = ''
+
     outname = mdir +\
-        'coldens_EW_sample3-6_ionselsamples_L0100N1504_27_T4EOS{dwi}{dEWi}.pdf'
-    outname = outname.format(dwi=dwi, dEWi=dEWi)
+        'coldens_EW_sample3-6_ionselsamples_L0100N1504_27_T4EOS_voigt.pdf'
     ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
     datafile = datadir + 'sample3-6_coldens_EW_vwindows_subsamples.hdf5'
     
@@ -3571,21 +3558,13 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False,\
                  for ion in Tmax_CIE}
     # v windows
     bfits = {'o6': 28.,\
-             'o7': 82.,\
+             'o7': 83.,\
              'o8': 112.,\
              'ne8': 37.,\
-             'ne9': 81.,\
-             'fe17': 90.,\
+             'ne9': 82.,\
+             'fe17': 92.,\
              }
-    # full sightlines
-    #bfits = {'o6': 34.,\
-    #         'o7': 90.,\
-    #         'o8': 158.,\
-    #         'ne8': 41.,\
-    #         'ne9': 90.,\
-    #         'fe17': 102.,\
-    #         }
-    # half range sizes
+    
     vwindows_ion = {'o6': 600.,\
                     'ne8': 600.,\
                     'o7': 1600.,\
@@ -3604,10 +3583,10 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False,\
             vwindow = vwindows_ion[ion]
             
             if vwindow is None:
-                epath = 'EW_tot/'
+                epath = 'EW_tot_dw/'
                 cpath = 'coldens_tot/'
             else:
-                spath = 'vwindows_maxtau/Deltav_{dv:.3f}/'.format(dv=vwindow)
+                spath = 'vwindows_maxtau_dw/Deltav_{dv:.3f}/'.format(dv=vwindow)
                 epath = spath + 'EW/'
                 cpath = spath + 'coldens/'
             epath = samplegroup + epath
@@ -3628,7 +3607,8 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False,\
     alpha = 0.3
     size_data = 3.
     linewidth = 2.
-    path_effects = [mppe.Stroke(linewidth=linewidth, foreground="black"), mppe.Stroke(linewidth=linewidth - 0.5)]
+    path_effects = [mppe.Stroke(linewidth=linewidth, foreground="black"),\
+                    mppe.Stroke(linewidth=linewidth - 0.5)]
     color_data = ['gray', 'dimgray']
     color_bbkg = 'C5'
     color_lin  = 'forestgreen'
@@ -3656,7 +3636,8 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False,\
     fig = plt.figure(figsize=(panelwidth * ncols + wspace * (ncols - 1),\
                               panelheight * nrows + hspace * (nrows - 1) +\
                               legheight))
-    grid = gsp.GridSpec(ncols=ncols, nrows=nrows + 1, wspace=wspace, hspace=hspace, height_ratios=[panelheight] * nrows + [legheight])   
+    grid = gsp.GridSpec(ncols=ncols, nrows=nrows + 1, wspace=wspace, hspace=hspace,\
+                        height_ratios=[panelheight] * nrows + [legheight])   
     axes = [fig.add_subplot(grid[ioni // ncols, ioni % ncols]) for ioni in range(nions)]
     lax = fig.add_subplot(grid[nrows, :])
     
@@ -3729,33 +3710,19 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False,\
         ax.plot(Nbinc, linvals, linestyle=ls_lin, color=color_lin,\
                 linewidth=linewidth, label=linlabel)
         
-        cievals = ild.linflatcurveofgrowth_inv_faster(10**Nbinc,\
+        cievals = ild.linflatdampedcurveofgrowth_inv(10**Nbinc,\
                                                bvals_CIE[ion] * 1e5,\
                                                uselines[ion])
         cievals = np.log10(cievals) + 3
         ax.plot(Nbinc, cievals, linestyle=ls_cie, color=color_cie,\
                 linewidth=linewidth, label=cielabel, path_effects=path_effects)
-        if dampingwingindic:
-            cievals = ild.linflatdampedcurveofgrowth_inv(10**Nbinc,\
-                                               bvals_CIE[ion] * 1e5,\
-                                               uselines[ion])
-            cievals = np.log10(cievals) + 3
-            ax.plot(Nbinc, cievals, linestyle=ls_cie, color=color_cie,\
-                    linewidth=linewidth - 0.5, label=None)
         
-        fitvals = ild.linflatcurveofgrowth_inv_faster(10**Nbinc,\
+        fitvals = ild.linflatdampedcurveofgrowth_inv(10**Nbinc,\
                                                bfits[ion] * 1e5,\
                                                uselines[ion])
         fitvals = np.log10(fitvals) + 3
         ax.plot(Nbinc, fitvals, linestyle=ls_fit, color=color_fit,\
                 linewidth=linewidth, label=ftllabel, path_effects=path_effects)
-        if dampingwingindic:
-            fitvals = ild.linflatdampedcurveofgrowth_inv(10**Nbinc,\
-                                               bfits[ion] * 1e5,\
-                                               uselines[ion])
-            fitvals = np.log10(fitvals) + 3
-            ax.plot(Nbinc, fitvals, linestyle=ls_fit, color=color_fit,\
-                    linewidth=linewidth - 0.5, label=None)
             
         label = True
         xlim = ax.get_xlim()
@@ -3767,7 +3734,7 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False,\
                 _label = bkglabel
             else:
                 _label = None
-            _vals = ild.linflatcurveofgrowth_inv_faster(10**Nbinc,\
+            _vals = ild.linflatdampedcurveofgrowth_inv(10**Nbinc,\
                                                bval * 1e5,\
                                                uselines[ion])
             _vals = np.log10(_vals) + 3
@@ -3786,40 +3753,29 @@ def plot_NEW(fontsize=fontsize, dampingwingindic=False,\
                         horizontalalignment='right', verticalalignment='top',\
                         color=color_bbkg, fontsize=fontsize - 2, zorder=-1,\
                         rotation=rot)
-            if dampingwingindic:
-                _vals = ild.linflatdampedcurveofgrowth_inv(10**Nbinc,\
-                                               bval * 1e5,\
-                                               uselines[ion])
-                _vals = np.log10(_vals) + 3
-                ax.plot(Nbinc, _vals, linestyle=ls_bbkg, color=color_bbkg,\
-                        linewidth=linewidth - 0.5, label=None, zorder=-1)
-            #else:
-            #    indcross = np.where(_vals < ylim[1])[0][-1]
-            #    xpos = Nbinc[indcross]
-            #    ax.text(xpos + 0.02 * xr, ylim[1], '{:.0f}'.format(bval),\
-            #            horizontalalignment='left', verticalalignment='top')
-        if dampingwing_deltaEW_indic:
-            dfn = datadir + 'EWdiffs_dampingwings.hdf5'
-            with h5py.File(dfn, 'r') as df:
-                grp = df[ion]
-                Nsample = np.array(grp['logNcm2'])
-                EWgrid_lnf = np.log10(np.array(grp['EW_Angstrom_gaussian'])) + 3.
-                EWgrid_dmp = np.log10(np.array(grp['EW_Angstrom_voigt'])) + 3.
-                
-            EWdiff = EWgrid_dmp - EWgrid_lnf
-            
-            xpoints = np.tile(Nsample, EWgrid_lnf.shape[0])
-            ypoints = EWgrid_lnf.flatten()
-            zpoints = EWdiff.flatten()
-           
-            EWpoints = np.linspace(ylim[0], ylim[1], 200)
-            gridpoints = (Nsample[np.newaxis, :], EWpoints[:,None])
-            diffvals = si.griddata((xpoints, ypoints), zpoints, gridpoints,\
-                                   method='linear')
-            contours = ax.contour(Nsample, EWpoints, np.abs(diffvals),\
-                                  levels=[0.01, 0.02, 0.05, 0.1, 0.15, 0.2],\
-                                  colors='red', zorder=2)
-            ax.clabel(contours, inline=1, fontsize=fontsize - 2)
+        
+#        if dampingwing_deltaEW_indic:
+#            dfn = datadir + 'EWdiffs_dampingwings.hdf5'
+#            with h5py.File(dfn, 'r') as df:
+#                grp = df[ion]
+#                Nsample = np.array(grp['logNcm2'])
+#                EWgrid_lnf = np.log10(np.array(grp['EW_Angstrom_gaussian'])) + 3.
+#                EWgrid_dmp = np.log10(np.array(grp['EW_Angstrom_voigt'])) + 3.
+#                
+#            EWdiff = EWgrid_dmp - EWgrid_lnf
+#            
+#            xpoints = np.tile(Nsample, EWgrid_dmp.shape[0])
+#            ypoints = EWgrid_dmp.flatten()
+#            zpoints = EWdiff.flatten()
+#           
+#            EWpoints = np.linspace(ylim[0], ylim[1], 200)
+#            gridpoints = (Nsample[np.newaxis, :], EWpoints[:,None])
+#            diffvals = si.griddata((xpoints, ypoints), zpoints, gridpoints,\
+#                                   method='linear')
+#            contours = ax.contour(Nsample, EWpoints, np.abs(diffvals),\
+#                                  levels=[0.01, 0.02, 0.05, 0.1, 0.15, 0.2],\
+#                                  colors='red', zorder=2)
+#            ax.clabel(contours, inline=1, fontsize=fontsize - 2)
             
     print('Used b values {} km/s (low-to-high -> bottom to top in plot)'.format(bvals_indic))        
     lax.axis('off')
