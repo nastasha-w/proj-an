@@ -3685,7 +3685,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                                    method='linear')
             contours = ax.contour(Nsample, EWpoints, np.abs(diffvals),\
                                   levels=[0.01, 0.02, 0.05, 0.1, 0.15, 0.2],\
-                                  colors='red', zorder=2, linewidth=1)
+                                  colors='red', zorder=2, linewidths=1.)
             ax.clabel(contours, inline=1, fontsize=fontsize - 2)
             
     print('Used b values {} km/s (low-to-high -> bottom to top in plot)'.format(bvals_indic))        
