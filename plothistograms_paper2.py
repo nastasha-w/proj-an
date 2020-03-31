@@ -3356,7 +3356,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                     }
         bfits_vt = {'o6': 28.,\
                     'o7': 83.,\
-                    'o8': 125.,\
+                    'o8': 112.,\
                     'ne8': 37.,\
                     'ne9': 82.,\
                     'fe17': 92.,\
@@ -3372,7 +3372,7 @@ def plot_NEW_dw_diffs(fontsize=fontsize,\
                  }
         bfits_vt = {'o6': 34.,\
                  'o7': 91.,\
-                 'o8': 168.,\
+                 'o8': 158.,\
                  'ne8': 41.,\
                  'ne9': 91.,\
                  'fe17': 105.,\
