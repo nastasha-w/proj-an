@@ -3759,7 +3759,7 @@ def plot_NEW(fontsize=fontsize):
                 ax.text((Nbinc[Nind] - xlim[0]) / xr - 0.015,\
                         (_vals[Nind] - ylim[0]) / yr - 0.02,\
                         '{:.0f}'.format(bval),\
-                        horizontalalignment='right', verticalalignment='top',\
+                        horizontalalignment='center', verticalalignment='top',\
                         color=color_bbkg, fontsize=fontsize - 2, zorder=-1,\
                         rotation=rot, transform=ax.transAxes)
         
