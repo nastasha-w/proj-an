@@ -58,12 +58,25 @@ approx_breaks = {'o7': 16.0,\
              'ne9': 15.3,\
              'hneutralssh': 20.3,\
              'fe17': 15.0}
+# Athena X-IFU: EWobs = 0.18 eV, using X-ray window (+- 800 km/s) 
+# best-fit b parameters with voigt profiles
 obslims = {'o6':   [13.5],\
            'ne8':  [13.5],\
            'o7':   [15.4],\
            'ne9':  [15.4],\
            'o8':   [15.6],\
            'fe17': [14.8]}
+obslims_arcus = \
+          {'o7':   [15.3],\
+           'ne9':  [15.7],\
+           'o8':   [15.6],\
+           'fe17': [15.0]}
+obslims_lynxxgs = \
+          {'o7':   [14.6],\
+           'ne9':  [15.0],\
+           'o8':   [14.9],\
+           'fe17': [14.3]}
+          
 # at max. tabulated density, range where ion frac. is >= 10% of the maximum at max density
 Tranges_CIE = {'o6':   (5.3, 5.8),\
                'o7':   (5.4, 6.5),\
@@ -4112,7 +4125,51 @@ def calc_EW_angstrom(EW_eV, z=0.1):
     print(wls)
     print('EW (Angstrom)')
     print(res)
+    return res
 
+def calc_mincol_obs(z=0.1):    
+    ions = ['o7', 'o8', 'ne9', 'fe17']
+    # Athena X-IFU, technical requirements limits
+    minEW_xifu = calc_EW_angstrom(0.18, z=z)
+    # smith_abraham_etal_2016_arcus, brenneman_smith_etal_2016
+    minEW_arcus = {ion: 4.e-3 * (1. + z) for ion in ions} 
+    # lynx_2018_08 (XGS)
+    minEW_lynx = {ion: 1.e-3 * (1. + z)for ion in ions} 
+    
+    Ngrid = np.arange(12., 20.1, 0.1)
+    # +- 300 km/s (UV) / +- 800 km/s (X-ray), voigt profile spectra and fits 
+    bfits = {'o6': 28.,\
+             'o7': 83.,\
+             'o8': 112.,\
+             'ne8': 37.,\
+             'ne9': 82.,\
+             'fe17': 92.,\
+             }
+    lines = {'o6': ild.o6major,\
+             'o7': ild.o7major,\
+             'o8': ild.o8doublet,\
+             'ne8': ild.ne8major,\
+             'ne9': ild.ne9major,\
+             'fe17': ild.fe17major,\
+             }
+    Egrid = {ion: ild.linflatdampedcurveofgrowth_inv(10**Ngrid,\
+                                                     bfits[ion] * 1e5,\
+                                                     lines[ion]) \
+             for ion in ions}
+    print('Athena min. col.:')
+    res = {ion: Ngrid[np.argmin(np.abs(Egrid[ion] - minEW_xifu[ion]))]\
+                for ion in ions}
+    print(res)
+    print('Arcus min. col.:')
+    res = {ion: Ngrid[np.argmin(np.abs(Egrid[ion] - minEW_arcus[ion]))]\
+                for ion in ions} 
+    print(res)
+    print('Lynx min. col.:')
+    res = {ion: Ngrid[np.argmin(np.abs(Egrid[ion] - minEW_lynx[ion]))]\
+                for ion in ions}
+    print(res)
+    return None
+    
 def get_dNdz_halos(limset='break'):   
     '''
     get number of absorbers >N for the different halo sets from masked and
@@ -4120,6 +4177,7 @@ def get_dNdz_halos(limset='break'):
     limset: 'break' (CDDF break) or 'obs' (estimated observation limits)
     '''
 
+    ions = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']
     if limset == 'break':
         lims = {'o6':   [14.3],\
                 'ne8':  [13.7],\
@@ -4128,14 +4186,14 @@ def get_dNdz_halos(limset='break'):
                 'o8':   [16.0],\
                 'fe17': [15.0]}
     elif limset == 'obs':
-        lims = {'o6':   [13.5],\
-                'ne8':  [13.5],\
-                'o7':   [15.5],\
-                'ne9':  [15.5],\
-                'o8':   [15.7],\
-                'fe17': [14.9]}
-
-    ions = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']
+        lims = obslims
+    elif limset == 'obs_arcus':
+        lims = obslims_arcus
+        ions = ['o7', 'ne9', 'o8', 'fe17']
+    elif limset == 'obs_lynxxgs':
+        lims = obslims_lynxxgs
+        ions = ['o7', 'ne9', 'o8', 'fe17']
+    
     medges = np.arange(10., 14.1, 0.5) #np.arange(11., 14.1, 0.5)
     halofills = [''] +\
             ['Mhalo_%s<=log200c<%s'%(medges[i], medges[i + 1]) if i < len(medges) - 1 else \
@@ -4634,12 +4692,7 @@ def calc_covfrac_in_radius(r_pkpc, fcovset='break'):
                         'fe17': [15.0]}
     elif fcovset == 'obs':
         ytype='fcov'
-        yvals_toplot = {'o6':   [13.5],\
-                        'ne8':  [13.5],\
-                        'o7':   [15.5],\
-                        'ne9':  [15.5],\
-                        'o8':   [15.7],\
-                        'fe17': [14.9]}
+        yvals_toplot = obslims
 
     cosmopars = cosmopars_ea_27
 
