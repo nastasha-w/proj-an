@@ -4807,6 +4807,146 @@ def calc_covfrac_in_radius(r_pkpc, fcovset='break'):
                              Mmax=overview[stion][Mmin]['Mmax'],\
                              **{ion: overview[ion][Mmin]['fcov'] for ion in ions}))
 
+def calc_covfrac_radius(fc=0.5, limset='break'):
+    '''
+    for a given set of column density limits, calculate at what radius the 
+    covering fraction reaches that limit 
+    This is calculated from the column percentile profiles.
+    The outermost radius is used if multiple crossings are present.
+    '''
+    
+    ions = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']
+    if limset == 'break':
+        lims = {'o6':   [14.3],\
+                'ne8':  [13.7],\
+                'o7':   [16.0],\
+                'ne9':  [15.3],\
+                'o8':   [16.0],\
+                'fe17': [15.0]}
+    elif limset == 'obs':
+        lims = obslims
+    elif limset == 'obs_arcus':
+        lims = obslims_arcus
+        ions = ['o7', 'ne9', 'o8', 'fe17']
+    elif limset == 'obs_lynxxgs':
+        lims = obslims_lynxxgs
+        ions = ['o7', 'ne9', 'o8', 'fe17']
+
+    Ms_edges = np.array([8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.7], dtype=np.float32)
+
+
+    ion_filedct_Mstar = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o8':   'rdist_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex_centrals_fullrdist_stored_profiles.hdf5',\
+                         }
+    ion_filedct_Mstar_lowmass = {'fe17': 'rdist_coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne9':  'rdist_coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'ne8':  'rdist_coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen-all_T4SFR_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o8':   'rdist_coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
+                         }
+
+    # define used mass ranges
+    Ms_mins = list(Ms_edges[:-1])
+    Ms_maxs = list(Ms_edges[1:]) 
+    Ms_names_hm = ['logMstar_Msun_1000_geq%.1f_le%.1f'%(smin, smax) \
+                   for smin, smax in zip(Ms_mins[2:], Ms_maxs[2:])]
+    Ms_names_lm = ['logMstar_Msun_1000_geq%.1f_le%.1f'%(smin, smax) \
+                   for smin, smax in zip(Ms_mins[:2], Ms_maxs[:2])]
+    Ms_names = Ms_names_lm + Ms_names_hm
+
+    
+    techvars = {0: {'filenames': ion_filedct_Mstar, 'setnames': Ms_names_hm,\
+                    'setfills': None, 'units': 'pkpc'},\
+                1: {'filenames': ion_filedct_Mstar_lowmass,\
+                    'setnames': Ms_names_lm,\
+                    'setfills': None, 'units': 'pkpc'},\
+                }
+           
+    yvals_label_ion = {tv: {ion: [fc * 100.] for ion in ions} \
+                            for tv in techvars}
+    yvals, bins, numgals = readin_radprof(techvars, yvals_label_ion,\
+                   labels=None, ions_perlabel=None, ytype='perc',\
+                   datadir=datadir, binset=0, units='pkpc')
+    
+    # techvars here are just different files for different masses -> combine
+    _yvals = yvals[0].copy()
+    [_yvals[ion].update(yvals[1][ion]) for ion in _yvals]
+    yvals = _yvals
+    
+    _bins = bins[0].copy()
+    [_bins[ion].update(bins[1][ion]) for ion in _bins]
+    bins = _bins
+  
+    outradii = {}
+    for ionind in range(len(ions)):   
+        ion = ions[ionind]
+        tags = Ms_names
+        tags = sorted(tags, key=lambda x: float(x.split('_')[3][3:]))
+        outradii[ion] = {}
+        
+        for ti in range(len(tags)): # mass bins
+            #print(tag)
+            tag = tags[ti]
+            try:
+                rvals = np.array(bins[ion][tag])
+                rvals = rvals[:-1] + 0.5 * np.diff(rvals)
+            except KeyError: # dataset not read in
+                print('Could not find ion %s, tag %s'%(ion, tag))
+                continue
+            Nvals = np.array(yvals[ion][tag][fc * 100.])
+            crossings = pu.find_intercepts(Nvals, rvals, lims[ion])
+            if len(crossings) == 0:
+                outradii[ion][tag] = '-'
+            elif len(crossings) > 1:
+                outradii[ion][tag] = '{:.0f}'.format(crossings[-1])
+                print('For ion {ion}, mass {mass}, there are mutliple solutions (pkpc): {vals}'.format(\
+                      ion=ion, mass=tag, vals=crossings))
+            else:
+                outradii[ion][tag] = '{:.0f}'.format(crossings[0])
+   
+    
+    overview = {}
+    for ion in ions:
+        tags = list(outradii[ion].keys())
+        minmaxv = np.array([[float(x.split('_')[3][3:]), float(x.split('_')[4][2:])] for x in tags])
+        _ind = np.argsort(minmaxv[:, 0])
+        tags = np.array(tags)[_ind]
+        minmaxv = minmaxv[_ind, :]
+        overview[ion] = {}
+        
+        #print('For ion {ion}, absorbers > {val}'.format(ion=ion, val=yvals_toplot[ion]))
+        for ti in range(len(tags)):
+            Mmin, Mmax = minmaxv[ti]
+            tag = tags[ti]
+            
+            rad = outradii[ion][tag]
+            
+            overview[ion][Mmin] = {'Mmin': Mmin, 'Mmax': Mmax, 'rad': rad}
+    
+    ### print overview table
+    print('A covering fraction of {fc}'.format(fc=fc))
+    print('Is reached at the following radii for different stellar mass bins')
+    topstr = '$\\mathrm{{M}}_{{\\star}}$ & ' +\
+             ' & '.join(['{ion}'.format(ion=ild.getnicename(ion)) for ion in ions]) + ' \\\\'
+    topstr2 = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\odot}}$ & ' +\
+              ' & '.join(['$>{Nval:.1f}$'.format(Nval=lims[ion][0]) for ion in ions]) + ' \\\\'
+    fillstr = '{Mmin:.1f}--{Mmax:.1f} & ' + ' & '.join(['{{{ist}}}'.format(ist=ion) for ion in ions]) + ' \\\\'
+    #totstr = 'total &' + ' & '.join(['{{{ist}:.4f}}'.format(ist=ion) for ion in ions]) + ' \\\\'
+    Mvals = list(overview[ions[0]].keys())
+    stion = ions[0]
+    print(topstr)
+    print(topstr2)
+    for Mmin in sorted(Mvals):
+        print(fillstr.format(Mmin=overview[stion][Mmin]['Mmin'],\
+                             Mmax=overview[stion][Mmin]['Mmax'],\
+                             **{ion: overview[ion][Mmin]['rad'] for ion in ions}))
+
+
 def calc_maxdiffs_dampingwings():
     Tranges_CIE = {'o6':   (5.3, 5.8),\
                    'o7':   (5.4, 6.5),\
