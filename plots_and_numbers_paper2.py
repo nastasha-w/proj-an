@@ -4849,7 +4849,7 @@ def calc_covfrac_radius(fc=0.5, limset='break'):
                          'o7':   'rdist_coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
                          'o6':   'rdist_coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_1slice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals_fullrdist_stored_profiles.hdf5',\
                          }
-    keys = ion_filedct_Mstar_lowmass.keys()
+    keys = list(ion_filedct_Mstar_lowmass.keys())
     for ion in keys:
         if ion not in ions:
             del ion_filedct_Mstar_lowmass[ion]
