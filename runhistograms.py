@@ -3711,3 +3711,95 @@ if jobind in range(30145, 30151): # cosma; CHECK new N-EW FITS
                     separateprofiles=False,\
                     rpfilename=rpfilen, galsettag=skey)
         print('Finished %s, full sample, pkpc, fcovs\n'%rqfile)
+        
+if jobind in range(30151, 30159): # cosma; CHECK new N-EW FITS
+    ## for each ion and stellar mass bin, a number of sets:
+    # Arcus and Lynx limits + margin (X-ray ions only)
+    # percentiles for the whole stellar mass bin
+    # covering fractions for the whole stellar mass bin -> TODO: get the interesting values
+    
+    ion = ['o7', 'o8', 'ne9', 'fe17'][(jobind - 30151) % 4]
+    dolowmass = bool((jobind - 30151) // 4)
+    numsl = 1
+    
+    rmin_r200c = 0.
+    rmax_r200c = 3.
+    
+    halocat = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    with h5py.File(halocat, 'r') as cat:
+        r200cvals = np.array(cat['R200c_pkpc'])
+        m200cvals = np.log10(np.array(cat['M200c_Msun']))
+        galids = np.array(cat['galaxyid'])
+        cosmopars = {key: item for key, item in cat['Header/cosmopars'].attrs.items()}
+    
+    if dolowmass:
+        galids_dct = sh.L0100N1504_27_Mstar0p5dex_1000_lowmass.galids()
+    else:
+        galids_dct = sh.L0100N1504_27_Mstar0p5dex_1000.galids()
+    # set minimum distance based on virial radius of halo mass bin
+    radii_mstarbins = {key: [r200cvals[galids == galid] for galid in galids_dct[key]] for key in galids_dct}
+    p99_radii_mstarbins = {key: np.percentile(radii_mstarbins[key], 99.) for key in radii_mstarbins} # don't use the maxima since those are determined by outliers
+    maxrad_all = rmax_r200c * np.max([p99_radii_mstarbins[key] for key in p99_radii_mstarbins])
+    
+    
+    filenames_proj = {'o6': ol.ndir + 'coldens_o6_L0100N1504_27_test3.11_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                      'o7': ol.ndir + 'coldens_o7_L0100N1504_27_test3.1_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                      'o8': ol.ndir + 'coldens_o8_L0100N1504_27_test3.4_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                      'fe17': ol.ndir + 'coldens_fe17_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                      'ne8': ol.ndir + 'coldens_ne8_L0100N1504_27_test3_PtAb_C2Sm_32000pix_6.250000slice_zcen%s_T4SFR.npz',\
+                      'ne9': ol.ndir + 'coldens_ne9_L0100N1504_27_test3.31_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.npz',\
+                      }
+    filename_proj = filenames_proj[ion]
+    if dolowmass:
+        rqfile = ol.pdir + 'rdist_%s_%islice_to-99p-3R200c_Mstar-0p5dex-lowmass_centrals.hdf5'%((filename_proj.split('/')[-1][:-4])%('-all'), numsl)
+    else:
+        rqfile = ol.pdir + 'rdist_%s_%islice_to-99p-3R200c_Mstar-0p5dex_centrals.hdf5'%((filename_proj.split('/')[-1][:-4])%('-all'), numsl)
+    #rqfile = 'rdist_%s_%islice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals.hdf5'%((filename_proj.split('/')[-1][:-4])%('-all'), numsl)
+    rpfilen = rqfile_old[:-5] + '_fullrdist_stored_profiles.hdf5' # append to high-mass files
+    
+    yvals_perc = [1., 5., 10., 25., 50., 75., 90., 95., 99.]
+
+    rbins_pkpc = np.array([0., 5., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 150., 200., 250.] + list(np.arange(300., maxrad_all, 100.)))
+    rbins_r200c = np.arange(0., rmax_r200c + 0.01, 0.05)
+    
+    # Arcus, Lynx +- 0.1, 0.2 dex (as far as wasn't already covered)
+    fcovs_ion = {'o7':   np.array([14.4, 14.5, 14.6, 14.7, 14.8, 15.1, 15.2,]),\
+                 'o8':   np.array([14.7, 14.8, 14.9, 15.0, 15.1, 15.4]),\
+                 'ne9':  np.array([14.8, 14.9, 15.0, 15.1, 15.2, 15.8, 15.9]),\
+                 'fe17': np.array([14.1, 14.2, 14.3, 14.4, 14.5, 15.2]),\
+                 }
+    
+    # galids selection from galaxyselector (halo masses in 0.5 dex)
+    selcombs_full_sample = {'logMstar_Msun_1000_%s'%key: galids_dct[key] for key in galids_dct.keys()}
+    gkeys = galids_dct.keys() # set up beforehand to match orders in lists
+    #selcombs_Mhalo_core_sample = {'logMstar_Msun_1000_%s_M200c-%.1f-%.1f-sub'%(key, matchvals_Mstar_Mhalo[key][0], matchvals_Mstar_Mhalo[key][1]): \
+    #                              subsamples_halocore[key] for key in galids_dct.keys()}
+    selcombs_all = selcombs_full_sample.copy()
+    #selcombs_all.update(selcombs_Mhalo_core_sample)
+    
+    for skey in selcombs_all:
+        gkey = gkeys[np.where([_key in skey for _key in gkeys])[0][0]]
+        #iscoresample = skey.endswith('-sub')
+        
+        galids = selcombs_all[skey]
+        
+        maxallstored = rmax_r200c * p99_radii_mstarbins[gkey]
+        _rbins_pkpc = rbins_pkpc[np.where(rbins_pkpc <= maxallstored)]
+        if _rbins_pkpc[-1] < maxallstored:
+            _rbins_pkpc = np.append(_rbins_pkpc, maxallstored)
+        
+        print('Starting %s, full sample, pkpc'%rqfile)
+        crd.get_radprof(rqfile, halocat, _rbins_pkpc, yvals_perc,\
+                    xunit='pkpc', ytype='perc',\
+                    galids=galids, combinedprofile=True,\
+                    separateprofiles=False,\
+                    rpfilename=rpfilen, galsettag=skey)
+        print('Finished %s, full sample, pkpc\n'%rqfile)
+        
+        print('Starting %s, full sample, pkpc, fcovs'%rqfile)
+        crd.get_radprof(rqfile, halocat, _rbins_pkpc, fcovs_ion[ion],\
+                    xunit='pkpc', ytype='fcov',\
+                    galids=galids, combinedprofile=True,\
+                    separateprofiles=False,\
+                    rpfilename=rpfilen, galsettag=skey)
+        print('Finished %s, full sample, pkpc, fcovs\n'%rqfile)
