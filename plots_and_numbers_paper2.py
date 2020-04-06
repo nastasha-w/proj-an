@@ -3258,16 +3258,15 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
         print('Defining the ISM as SFR > 0')
         #filename_in = datadir + 'massdist-baryoncomp_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb.hdf5'%(str(addedges[0]), str(addedges[1]))
         outname = 'masscontr_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb_%s'%(str(addedges[0]), str(addedges[1]), var)
-#    outname = outname.replace('.', 'p')
-#    outname = mdir + outname + '.pdf'
-#    m200cbins = np.array(list(np.arange(11., 13.05, 0.1)) + [13.25, 13.5, 13.75, 14.0, 14.6])
-#    percentiles = [10., 50., 90.]
-#    alpha = 0.3
-#    lw = 2
-#    xlabel = r'$\log_{10} \, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'
-#    
-#    ylabel = '{var} fraction'.format(var=var.lower() + (' mass' if var != 'Mass' else ''))
-#    
+    outname = outname.replace('.', 'p')
+    outname = mdir + outname + '.pdf'
+    m200cbins = np.array(list(np.arange(11., 13.05, 0.1)) + [13.25, 13.5, 13.75, 14.0, 14.6])
+    percentiles = [10., 50., 90.]
+    alpha = 0.3
+    lw = 2
+    xlabel = r'$\log_{10} \, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\odot}]$'   
+    ylabel = '{var} fraction'.format(var=var.lower() + (' mass' if var != 'Mass' else ''))
+    
 #    if nHcut or nHm2:
 #        cgmlab = 'CGM'
 #        ismlabs = ['ISM']
