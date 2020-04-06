@@ -3683,7 +3683,7 @@ def plot_NEW(fontsize=fontsize):
     panelwidth = 2.8
     panelheight = 2.8
     legheight = 1.0
-    wspace = 0.25
+    wspace = 0.35
     hspace = 0.2
     nrows = nions // ncols
     
@@ -3717,7 +3717,7 @@ def plot_NEW(fontsize=fontsize):
                 transform=ax.transAxes, verticalalignment='bottom',\
                 horizontalalignment='right', bbox=bbox)
         
-        pu.setticks(ax, fontsize - 1, right=False)
+        pu.setticks(ax, fontsize - 2, right=False)
         if ioni % ncols == 0:
             ax.set_ylabel(ylabel, fontsize=fontsize)
         if ioni // ncols == nrows - 1:
@@ -3728,7 +3728,7 @@ def plot_NEW(fontsize=fontsize):
         
         # add EW [eV] axis
         ax2 = ax.twinx()
-        pu.setticks(ax2, fontsize - 1, right=True, left=False, top=False,\
+        pu.setticks(ax2, fontsize - 2, right=True, left=False, top=False,\
                     bottom=False, labelright=True,\
                     labelleft=False, labelbottom=False, labeltop=False)
         if ioni % ncols == ncols - 1:
@@ -3737,7 +3737,8 @@ def plot_NEW(fontsize=fontsize):
         try:
             wlen = uselines[ion].lambda_angstrom * 1e-8
         except AttributeError:
-            sls = [ln for ln in uselines[ion].speclines]
+            sls = [uselines[ion].speclines[lnn] \
+                   for lnn in uselines[ion].speclines]
             wlen = np.sum([ln.lambda_angstrom * 1e-8 * ln.fosc for ln in sls])\
                    / np.sum([ln.fosc for ln in sls])
         ylim_eV = c.planck * c.c / (wlen**2) * 10**ylim_mA * 1e-8 / c.ev_to_erg
