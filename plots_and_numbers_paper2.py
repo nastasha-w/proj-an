@@ -3410,7 +3410,7 @@ def plot_masscontr_ratios_halo(addedges=(0.0, 1.), var='Mass',\
     else:
         m200cvals = m200cvals_num
     if denom == '0.027M*':
-        denom_all = massdata_denom['stars'] * 0.027
+        denom_all = massdata_denom['stars'] * 0.027 / (c.atomw_O * c.u)
         massdata = {key: divide_ratio_for_perc(massdata_num[key], denom_all)\
                     for key in massdata_num}
     else:
