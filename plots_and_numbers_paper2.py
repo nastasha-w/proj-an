@@ -3335,6 +3335,13 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
     
     plt.savefig(outname, format='pdf', box_inches='tight')
 
+def divide_ratio_for_perc(a1, a2):
+    '''
+    division where 0. / 0. = 1. (ratio percentile -> these are equal)
+    '''
+    div = a1 / a2
+    div[a1 == a2] = 1.
+    return div
 
 def plot_masscontr_ratios_halo(addedges=(0.0, 1.), var='Mass',\
                         num='nHorSF', denom='SF',\
@@ -3404,9 +3411,11 @@ def plot_masscontr_ratios_halo(addedges=(0.0, 1.), var='Mass',\
         m200cvals = m200cvals_num
     if denom == '0.027M*':
         denom_all = massdata_denom['stars'] * 0.027
-        massdata = {key: massdata_num[key] / denom_all for key in massdata_num}
+        massdata = {key: divide_ratio_for_perc(massdata_num[key], denom_all)\
+                    for key in massdata_num}
     else:
-        massdata = {key: massdata_num[key] / massdata_denom[key]\
+        massdata = {key: divide_ratio_for_perc(massdata_num[key],\
+                                               massdata_denom[key])\
                     for key in massdata_num}
     
     bininds = np.digitize(m200cvals, m200cbins)
