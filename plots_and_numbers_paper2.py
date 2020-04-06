@@ -3745,7 +3745,11 @@ def plot_NEW(fontsize=fontsize):
         ylim_eV = np.log10(ylim_eV)
         ax2.set_ylim(*tuple(ylim_eV))
         
-        
+        for label in ax.get_ymajorticklabels():
+            label.set_rotation(45)
+        for label in ax2.get_ymajorticklabels():
+            label.set_rotation(45)
+            
         N = coldens[ion]
         EW = np.log10(EWs[ion]) + 3. # Angstrom -> mA
         Nmin = np.min(N)
