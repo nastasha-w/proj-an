@@ -3469,7 +3469,7 @@ def plot_masscontr_ratios_halo(addedges=(0.0, 1.), var='Mass',\
     for label in massdata:
         if label in ['DM', 'total', 'gas-subsum', 'gas', r'CGM $<5.5$', r'CGM $> 7$', 'BHs']:
             continue
-        _massdata = massdata[label] / massdata['total']
+        _massdata = massdata[label] #/ massdata['total']
         _color = colors[label]
         
         percvals = np.array([np.percentile(_massdata[bininds == i], percentiles) for i in range(1, len(m200cbins))]).T
