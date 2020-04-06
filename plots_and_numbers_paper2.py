@@ -3654,6 +3654,7 @@ def plot_NEW(fontsize=fontsize):
     linemin = 50
     ncols = 3
     ylabel = r'$\log_{10} \, \mathrm{EW} \; [\mathrm{m\AA}]$'
+    ylabel2 = r'$\log_{10} \, \mathrm{EW} \; [\mathrm{eV}]$'
     xlabel = r'$\log_{10} \, \mathrm{N} \; [\mathrm{cm}^{-2}]$'
     bbox = {'facecolor': 'white', 'alpha': 0.5, 'edgecolor': 'none'}
     
@@ -3698,12 +3699,6 @@ def plot_NEW(fontsize=fontsize):
         ax = axes[ioni]
         ion = ions[ioni]
         
-        pu.setticks(ax, fontsize)
-        if ioni % ncols == 0:
-            ax.set_ylabel(ylabel, fontsize=fontsize)
-        if ioni // ncols == nrows - 1:
-            ax.set_xlabel(xlabel, fontsize=fontsize)
-        
         axlabel1 = '$\\Delta v = \\pm {dv:.0f} \\, \\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}$'
         axlabel2 = '$\\mathrm{{{ion}}}$'
         axlabel1 = axlabel1.format(dv=0.5 * vwindows_ion[ion])
@@ -3722,8 +3717,33 @@ def plot_NEW(fontsize=fontsize):
                 transform=ax.transAxes, verticalalignment='bottom',\
                 horizontalalignment='right', bbox=bbox)
         
+        pu.setticks(ax, fontsize - 1, right=False)
+        if ioni % ncols == 0:
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+        if ioni // ncols == nrows - 1:
+            ax.set_xlabel(xlabel, fontsize=fontsize)
+        
         ax.set_xlim(*Nminmax[ion])
         ax.set_ylim(*logEWminmax[ion])
+        
+        # add EW [eV] axis
+        ax2 = ax.twinx()
+        pu.setticks(ax2, fontsize - 1, right=True, left=False, top=False,\
+                    bottom=False, labelright=True,\
+                    labelleft=False, labelbottom=False, labeltop=False)
+        if ioni % ncols == ncols - 1:
+            ax2.set_ylabel(ylabel2, fontsize=fontsize)
+        ylim_mA = np.array(ax.get_ylim())
+        try:
+            wlen = uselines[ion].lambda_angstrom * 1e-8
+        except AttributeError:
+            sls = [ln for ln in uselines[ion].speclines]
+            wlen = np.sum([ln.lambda_angstrom * 1e-8 * ln.fosc for ln in sls])\
+                   / np.sum([ln.fosc for ln in sls])
+        ylim_eV = c.planck * c.c / (wlen**2) * 10**ylim_mA * 1e-8 / c.ev_to_erg
+        ylim_eV = np.log10(ylim_eV)
+        ax2.set_ylim(*tuple(ylim_eV))
+        
         
         N = coldens[ion]
         EW = np.log10(EWs[ion]) + 3. # Angstrom -> mA

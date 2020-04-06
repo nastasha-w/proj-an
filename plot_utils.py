@@ -205,10 +205,10 @@ def handleinfedges_dct(edges, setmin=-100., setmax=100.):
 ### small plot helpers
 def setticks(ax, fontsize, color='black', labelbottom=True, top=True,\
              labelleft=True, labelright=False, right=True, labeltop=False,\
-             left=True):
+             left=True, bottom=True):
     ax.minorticks_on()
     ax.tick_params(labelsize=fontsize, direction='in', right=right, top=top,\
-                   left=left,\
+                   left=left, bottom=bottom,\
                    axis='both', which='both', color=color,\
                    labelleft=labelleft, labeltop=labeltop,\
                    labelbottom=labelbottom, labelright=labelright)
