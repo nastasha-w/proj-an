@@ -3474,7 +3474,7 @@ def plot_masscontr_ratios_halo(addedges=(0.0, 1.), var='Mass',\
         
         percvals = np.array([np.percentile(_massdata[bininds == i], percentiles) for i in range(1, len(m200cbins))]).T
         ax.plot(bincens, percvals[1], label=label, color=_color, linewidth=lw, linestyle=linestyles[label])
-        if label not in ['baryons', r'CGM $5.5 \endash 7$']:
+        if label not in []: #['baryons', r'CGM $5.5 \endash 7$']:
             ax.fill_between(bincens, percvals[0], percvals[2], color=_color, alpha=alpha)
     
     handles, lables = ax.get_legend_handles_labels()
