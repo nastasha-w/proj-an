@@ -3381,7 +3381,7 @@ def plot_masscontr_ratios_halo(addedges=(0.0, 1.), var='Mass',\
     
     outname = 'masscontr_ratio_perhalo_L0100N1504_27_Mh0p5dex_1000' + \
               '_{rmin}-{rmax}-R200c_PtAb_{var}_{num}-over-{denom}'.format(\
-                rmin=addedges[0], rmax=addeges[1], var=var,\
+                rmin=addedges[0], rmax=addedges[1], var=var,\
                 num=num, denom=denom)
     outname = outname.replace('.', 'p')
     outname = mdir + outname + '.pdf'
