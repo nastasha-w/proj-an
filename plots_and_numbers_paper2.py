@@ -28,6 +28,7 @@ import matplotlib.lines as mlines
 import matplotlib.collections as mcol
 import matplotlib.patheffects as mppe
 import matplotlib.patches as mpatch
+import matplotlib.ticker as ticker
 
 import make_maps_opts_locs as ol
 import eagle_constants_and_units as c #only use for physical constants and unit conversion!
@@ -3745,13 +3746,15 @@ def plot_NEW(fontsize=fontsize):
         ylim_eV = np.log10(ylim_eV)
         ax2.set_ylim(*tuple(ylim_eV))
         
-        if ion in ['ne9', 'o8']:
-            for label in ax.get_ymajorticklabels():
-                label.set_rotation(45)
-        if ion in ['ne8', 'o7', 'o8']:
-            for label in ax2.get_ymajorticklabels():
-                label.set_rotation(-45)
-            
+        #if ion in ['ne9', 'o8']:
+        #    for label in ax.get_ymajorticklabels():
+        #        label.set_rotation(45)
+        #if ion in ['ne8', 'o7', 'o8']:
+        #    for label in ax2.get_ymajorticklabels():
+        #        label.set_rotation(-45)
+        ax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
+        ax2.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
+        
         N = coldens[ion]
         EW = np.log10(EWs[ion]) + 3. # Angstrom -> mA
         Nmin = np.min(N)
