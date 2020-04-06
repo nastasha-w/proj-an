@@ -3741,7 +3741,7 @@ def plot_NEW(fontsize=fontsize):
                    for lnn in uselines[ion].speclines]
             wlen = np.sum([ln.lambda_angstrom * 1e-8 * ln.fosc for ln in sls])\
                    / np.sum([ln.fosc for ln in sls])
-        ylim_eV = c.planck * c.c / (wlen**2) * 10**ylim_mA * 1e-8 / c.ev_to_erg
+        ylim_eV = c.planck * c.c / (wlen**2) * 10**ylim_mA * 1e-11 / c.ev_to_erg
         ylim_eV = np.log10(ylim_eV)
         ax2.set_ylim(*tuple(ylim_eV))
         
