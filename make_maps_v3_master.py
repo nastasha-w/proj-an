@@ -2804,14 +2804,15 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,\
 
         if not vardict.isstored_part('logT'):
             if excludeSFR == 'T4':
-                vardict.readif('OnEquationOfState',rawunits=True)
-                vardict.add_part('eos',vardict.particle['OnEquationOfState'] > 0.)
-                vardict.delif('OnEquationOfState',last=last)
-                vardict.readif('Temperature',rawunits=True,setsel = vardict.particle['eos'],setval = 1e4)
+                vardict.readif('OnEquationOfState', rawunits=True)
+                vardict.add_part('eos', vardict.particle['OnEquationOfState'] > 0.)
+                vardict.delif('OnEquationOfState', last=last)
+                vardict.readif('Temperature', rawunits=True,\
+                               setsel=vardict.particle['eos'], setval = 1e4)
                 vardict.delif('eos',last=last)
             else:
-                vardict.readif('Temperature',rawunits=True)
-            vardict.add_part('logT',np.log10(vardict.particle['Temperature']))
+                vardict.readif('Temperature', rawunits=True)
+            vardict.add_part('logT', np.log10(vardict.particle['Temperature']))
             vardict.delif('Temperature',last=last)
         if len(vardict.particle['logT']) > 0:
             print('Min, max, median of particle log temperature [K]: %.5e %.5e %.5e' \
@@ -2981,7 +2982,8 @@ def Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=True, updatesel=True, misc
 
 def Nion_to_coldens(vardict, Ls, Axis1, Axis2, Axis3, npix_x, npix_y):
     afact = vardict.simfile.a
-    area = (Ls[Axis1] / np.float32(npix_x)) * (Ls[Axis2] / np.float32(npix_y)) * c.cm_per_mpc ** 2 * afact**2
+    area = (Ls[Axis1] / np.float32(npix_x)) * (Ls[Axis2] / np.float32(npix_y))\
+            * c.cm_per_mpc ** 2 * afact**2
     return 1. / area
 
 
