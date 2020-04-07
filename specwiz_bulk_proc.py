@@ -2118,7 +2118,7 @@ def savedata_jumpeffect_spectra():
             
             xypos_cMpc = specset.positions
             tauspecs = specset.tau
-            tausingle_o8 = specset.tau_raw['o8']
+            tausingle_o8 = specset.tau_base['o8']
             
             grp = tgrp.create_group('tau_jump')
             for _ion in ions_all:
@@ -2137,7 +2137,7 @@ def savedata_jumpeffect_spectra():
             
             tgrp.create_dataset('XY_cMpc_jump', data=xypos_cMpc[specnums_jump[ion]])
             tgrp.create_dataset('XY_cMpc_ctl1', data=xypos_cMpc[specnums_ctl1[ion]])
-            tgrp.create_dataset('XY_cMpc_ctl1', data=xypos_cMpc[specnums_ctl2[ion]])
+            tgrp.create_dataset('XY_cMpc_ctl2', data=xypos_cMpc[specnums_ctl2[ion]])
             
             tgrp.create_dataset('VHubble_KMpS', data=specset.vvals_kmps)
             
@@ -2159,66 +2159,100 @@ def savedata_jumpeffect_galaxies():
     '''
     store spectra, x/y positions, max tau positions, and cross-reff'd galaxies
     for the jump-selected and control sample sightlines
-    '''
     
-    vwindowfile = '/net/luttero/data2/specwizard_data/' + \
-                  'sample3-6_coldens_EW_vwindows_subsamples.hdf5'
-    samplefile = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/' + \
-                 'sample_selection1.hdf5'
-    spectrumfile_fill = '/net/luttero/data2/specwizard_data/{samplename}/' + \
-                        'spec.snap_027_z000p101.0.hdf5'
+    run after spectrum extraction: xy positions needed
+    '''
+
     halocat = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
     
     outfile = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/' + \
               'plotdata_jumpsamples_and_controls.hdf5'
     ions_sel = ['o8', 'ne9', 'fe17']
-    ions_all = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']   
+    #ions_all = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']   
     
-    with h5py.File(samplefile, 'r') as sf,\
+    with h5py.File(halocat, 'r') as hc,\
          h5py.File(outfile, 'a') as fo:
-        sf.copy('Header_sample3', fo)
-        sf.copy('Header_sample6', fo)
-        cosmopars = {key: item for key, item in \
-                     sf['Header_sample3/cosmopars'].attrs.items()}
-        boxvel = cosmopars['boxsize'] / cosmpars['h'] * cosmopars['a'] \
-                 * cu.Hubble(z=cosmopars['z'], cosmopars=cosmopars)
         
-        specnums_ctl1 = {ion: np.array(sf['{ion}_sample/specnums_control1'.format(ion=ion)])\
-                         for ion in ions_sel}
-        specnums_ctl2 = {ion: np.array(sf['{ion}_sample/specnums_control2'.format(ion=ion)])\
-                         for ion in ions_sel}
-        specnums_jump = {ion: np.array(sf['{ion}_sample/specnums_jump'.format(ion=ion)])\
-                         for ion in ions_sel}
-
-        samples = {ion: sf['{ion}_sample'.format(ion=ion)].attrs['specwizard_sample'].decode()\
-                   for ion in ions_sel}
+        cosmopars = {key: item for key, item in \
+                     hc['Header/cosmopars'].attrs.items()}
+        #boxvel = cosmopars['boxsize'] / cosmpars['h'] * cosmopars['a'] \
+        #         * cu.Hubble(z=cosmopars['z'], cosmopars=cosmopars)
+        
+        xypos_jump = {ion: np.array(fo['{ion}_jump/XY_cMpc_jump'.format(ion=ion)]) \
+                              for ion in ions_sel}
+        xypos_ctl1 = {ion: np.array(fo['{ion}_jump/XY_cMpc_ctl1'.format(ion=ion)]) \
+                              for ion in ions_sel}
+        xypos_ctl2 = {ion: np.array(fo['{ion}_jump/XY_cMpc_ctl2'.format(ion=ion)]) \
+                              for ion in ions_sel}
+        
+        minmass = 1e11 # minimum halo mass in solar masses
+        mindist_pkpc = 200.
+        mindist_R200c = 3.
+        M200c_Msun = np.array(hc['M200c_Msun']) 
+        msel = M200c_Msun >= minmass
+        M200c_Msun = M200c_Msun[msel]
+        R200c_pkpc = np.array(hc['R200c_kpc'])[msel] 
+        Xcom_cMpc = np.array(hc['Xcom_cMpc'])[msel]
+        Ycom_cMpc = np.array(hc['Ycom_cMpc'])[msel]
+        Zcom_cMpc = np.array(hc['Zcom_cMpc'])[msel]
+        VZpec_kmps = np.array(hc['VZpec_kmps'])[msel]
+        galaxyid = np.array(hc['galaxyid'])[msel]
         
         for ion in ions_sel:
-            swfilen = spectrumfile_fill.format(samplename=samples[ion])
-            tgrp = fo['{ion}_jump'.format(ion=ion)]
+            for subset in ['jump', 'ctl1', 'ctl2']:
+                if subset == 'jump':
+                    xpos_sls = xypos_jump[ion][:, 0]
+                    ypos_sls = xypos_jump[ion][:, 1]
+                elif subset == 'ctl1':
+                    xpos_sls = xypos_ctl1[ion][:, 0]
+                    ypos_sls = xypos_ctl1[ion][:, 1] 
+                elif subset == 'ctl2':
+                    xpos_sls = xypos_ctl2[ion][:, 0]
+                    ypos_sls = xypos_ctl2[ion][:, 1] 
+                    
+            _grp = fo['{ion}_jump'.format(ion=ion)]
+            tgrp = _grp.create_group('halos')
+            tgrp.attrs.create('min. M200c [Msun]', minmass)
+            tgrp.attrs.create('max. impact parameter [pkpc]', mindist_pkpc)
+            tgrp.attrs.create('max. impact parameter [R200c]', mindist_R200c)  
+        
+            # minmass 1e11 Msun -> ~10000 haloes, can cross-ref controls in one go
+            dists = (Xcom_cMpc[np.newaxis, :] - xpos_sls[:, np.newaxis])**2 + \
+                    (Ycom_cMpc[np.newaxis, :] - ypos_sls[:, np.newaxis])**2 
+            dmin_abs = mindist_pkpc * (1e-3 / cosmopars['a'])
+            dmin_rel = mindist_R200c * R200c_pkpc[np.newaxis, :] \
+                       * (1e-3 / cosmopars['a'])
+            dsel = np.logical_or(dists <= dmin_abs**2, dists <= dmin_rel**2)
             
-            specset = SpecSet(swfilen)
-            specset.getspectra(dions=ions_all, includedampingwings=False)
-            xypos_cMpc = specset.positions
-            tauspecs = specset.tau
-            tausingle_o8 = specset.tau_raw['o8']
+            sel_M200c = [M200c_Msun[dsel[i]] for i in range(len(xpos_sls))]
+            sel_R200c = [R200c_pkpc[dsel[i]] for i in range(len(xpos_sls))]
+            sel_Xcom = [Xcom_cMpc[dsel[i]] for i in range(len(xpos_sls))]
+            sel_Ycom = [Ycom_cMpc[dsel[i]] for i in range(len(xpos_sls))]
+            sel_Zcom = [Zcom_cMpc[dsel[i]] for i in range(len(xpos_sls))]
+            sel_VZpec = [VZpec_kmps[dsel[i]] for i in range(len(xpos_sls))]
+            sel_galaxyid = [galaxyid[dsel[i]] for i in range(len(xpos_sls))]
             
-            grp = tgrp.create_group('tau_jump')
-            for _ion in ions_all:
-                grp.create_dataset(ion, data=tauspecs[_ion][specnums_jump[ion]])
-            grp.create_dataset('o8major', data=tausingle_o8[specnums_jump[ion]])
-            
-            grp = tgrp.create_group('tau_ctl1')
-            for _ion in ions_all:
-                grp.create_dataset(ion, data=tauspecs[_ion][specnums_ctl1[ion]])
-            grp.create_dataset('o8major', data=tausingle_o8[specnums_ctl1[ion]])
-            
-            grp = tgrp.create_group('tau_ctl2')
-            for _ion in ions_all:
-                grp.create_dataset(ion, data=tauspecs[_ion][specnums_ctl2[ion]])
-            grp.create_dataset('o8major', data=tausingle_o8[specnums_ctl2[ion]])
-            
-            tgrp.create_dataset('XY_cMpc_jump', data=xypos_cMpc[specnums_jump[ion]])
-            tgrp.create_dataset('XY_cMpc_ctl1', data=xypos_cMpc[specnums_ctl1[ion]])
-            tgrp.create_dataset('XY_cMpc_ctl1', data=xypos_cMpc[specnums_ctl2[ion]])
-            
+            # have to save as separate datasets for each sightline due to 
+            # different numbers of intersecting halos expected
+            sgrp = tgrp.create_group(subset)
+            _gp = sgrp.create_group('M200c_Msun')
+            [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_M200c[sl]) \
+                                for sl in range(len(xpos_sls))]
+            _gp = sgrp.create_group('R200c_pkpc')
+            [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_R200c[sl]) \
+                                for sl in range(len(xpos_sls))]
+            _gp = sgrp.create_group('Xcom_cMpc')
+            [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_Xcom[sl]) \
+                                for sl in range(len(xpos_sls))]
+            _gp = sgrp.create_group('Ycom_cMpc')
+            [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_Ycom[sl]) \
+                                for sl in range(len(xpos_sls))]
+            _gp = sgrp.create_group('Zcom_cMpc')
+            [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_Zcom[sl]) \
+                                for sl in range(len(xpos_sls))]
+            _gp = sgrp.create_group('VZpec_kmps')
+            [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_VZpec[sl]) \
+                                for sl in range(len(xpos_sls))]
+            _gp = sgrp.create_group('galaxyid')
+            [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_galaxyid[sl]) \
+                                for sl in range(len(xpos_sls))]
