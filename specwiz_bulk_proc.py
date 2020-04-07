@@ -2210,52 +2210,52 @@ def savedata_jumpeffect_galaxies():
                     xpos_sls = xypos_ctl2[ion][:, 0]
                     ypos_sls = xypos_ctl2[ion][:, 1] 
                     
-            _grp = fo['{ion}_jump'.format(ion=ion)]
-            tgrp = _grp.create_group('halos')
-            tgrp.attrs.create('min. M200c [Msun]', minmass)
-            tgrp.attrs.create('max. impact parameter [pkpc]', mindist_pkpc)
-            tgrp.attrs.create('max. impact parameter [R200c]', mindist_R200c)  
-        
-            # minmass 1e11 Msun -> ~10000 haloes, can cross-ref controls in one go
-            dists = (Xcom_cMpc[np.newaxis, :] - xpos_sls[:, np.newaxis])**2 + \
-                    (Ycom_cMpc[np.newaxis, :] - ypos_sls[:, np.newaxis])**2 
-            dmin_abs = mindist_pkpc * (1e-3 / cosmopars['a'])
-            dmin_rel = mindist_R200c * R200c_pkpc[np.newaxis, :] \
-                       * (1e-3 / cosmopars['a'])
-            dsel = np.logical_or(dists <= dmin_abs**2, dists <= dmin_rel**2)
+                _grp = fo['{ion}_jump'.format(ion=ion)]
+                tgrp = _grp.create_group('halos')
+                tgrp.attrs.create('min. M200c [Msun]', minmass)
+                tgrp.attrs.create('max. impact parameter [pkpc]', mindist_pkpc)
+                tgrp.attrs.create('max. impact parameter [R200c]', mindist_R200c)  
             
-            sel_M200c = [M200c_Msun[dsel[i]] for i in range(len(xpos_sls))]
-            sel_R200c = [R200c_pkpc[dsel[i]] for i in range(len(xpos_sls))]
-            sel_Xcom = [Xcom_cMpc[dsel[i]] for i in range(len(xpos_sls))]
-            sel_Ycom = [Ycom_cMpc[dsel[i]] for i in range(len(xpos_sls))]
-            sel_Zcom = [Zcom_cMpc[dsel[i]] for i in range(len(xpos_sls))]
-            sel_VZpec = [VZpec_kmps[dsel[i]] for i in range(len(xpos_sls))]
-            sel_galaxyid = [galaxyid[dsel[i]] for i in range(len(xpos_sls))]
-            
-            # have to save as separate datasets for each sightline due to 
-            # different numbers of intersecting halos expected
-            sgrp = tgrp.create_group(subset)
-            _gp = sgrp.create_group('M200c_Msun')
-            [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_M200c[sl]) \
-                                for sl in range(len(xpos_sls))]
-            _gp = sgrp.create_group('R200c_pkpc')
-            [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_R200c[sl]) \
-                                for sl in range(len(xpos_sls))]
-            _gp = sgrp.create_group('Xcom_cMpc')
-            [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_Xcom[sl]) \
-                                for sl in range(len(xpos_sls))]
-            _gp = sgrp.create_group('Ycom_cMpc')
-            [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_Ycom[sl]) \
-                                for sl in range(len(xpos_sls))]
-            _gp = sgrp.create_group('Zcom_cMpc')
-            [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_Zcom[sl]) \
-                                for sl in range(len(xpos_sls))]
-            _gp = sgrp.create_group('VZpec_kmps')
-            [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_VZpec[sl]) \
-                                for sl in range(len(xpos_sls))]
-            _gp = sgrp.create_group('galaxyid')
-            [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_galaxyid[sl]) \
-                                for sl in range(len(xpos_sls))]
+                # minmass 1e11 Msun -> ~10000 haloes, can cross-ref controls in one go
+                dists = (Xcom_cMpc[np.newaxis, :] - xpos_sls[:, np.newaxis])**2 + \
+                        (Ycom_cMpc[np.newaxis, :] - ypos_sls[:, np.newaxis])**2 
+                dmin_abs = mindist_pkpc * (1e-3 / cosmopars['a'])
+                dmin_rel = mindist_R200c * R200c_pkpc[np.newaxis, :] \
+                           * (1e-3 / cosmopars['a'])
+                dsel = np.logical_or(dists <= dmin_abs**2, dists <= dmin_rel**2)
+                
+                sel_M200c = [M200c_Msun[dsel[i]] for i in range(len(xpos_sls))]
+                sel_R200c = [R200c_pkpc[dsel[i]] for i in range(len(xpos_sls))]
+                sel_Xcom = [Xcom_cMpc[dsel[i]] for i in range(len(xpos_sls))]
+                sel_Ycom = [Ycom_cMpc[dsel[i]] for i in range(len(xpos_sls))]
+                sel_Zcom = [Zcom_cMpc[dsel[i]] for i in range(len(xpos_sls))]
+                sel_VZpec = [VZpec_kmps[dsel[i]] for i in range(len(xpos_sls))]
+                sel_galaxyid = [galaxyid[dsel[i]] for i in range(len(xpos_sls))]
+                
+                # have to save as separate datasets for each sightline due to 
+                # different numbers of intersecting halos expected
+                sgrp = tgrp.create_group(subset)
+                _gp = sgrp.create_group('M200c_Msun')
+                [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_M200c[sl]) \
+                                    for sl in range(len(xpos_sls))]
+                _gp = sgrp.create_group('R200c_pkpc')
+                [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_R200c[sl]) \
+                                    for sl in range(len(xpos_sls))]
+                _gp = sgrp.create_group('Xcom_cMpc')
+                [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_Xcom[sl]) \
+                                    for sl in range(len(xpos_sls))]
+                _gp = sgrp.create_group('Ycom_cMpc')
+                [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_Ycom[sl]) \
+                                    for sl in range(len(xpos_sls))]
+                _gp = sgrp.create_group('Zcom_cMpc')
+                [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_Zcom[sl]) \
+                                    for sl in range(len(xpos_sls))]
+                _gp = sgrp.create_group('VZpec_kmps')
+                [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_VZpec[sl]) \
+                                    for sl in range(len(xpos_sls))]
+                _gp = sgrp.create_group('galaxyid')
+                [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_galaxyid[sl]) \
+                                    for sl in range(len(xpos_sls))]
             
 
 
