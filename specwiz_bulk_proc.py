@@ -2199,6 +2199,12 @@ def savedata_jumpeffect_galaxies():
         galaxyid = np.array(hc['galaxyid'])[msel]
         
         for ion in ions_sel:
+            _grp = fo['{ion}_jump'.format(ion=ion)]
+            tgrp = _grp.create_group('halos')
+            tgrp.attrs.create('min. M200c [Msun]', minmass)
+            tgrp.attrs.create('max. impact parameter [pkpc]', mindist_pkpc)
+            tgrp.attrs.create('max. impact parameter [R200c]', mindist_R200c)  
+            
             for subset in ['jump', 'ctl1', 'ctl2']:
                 if subset == 'jump':
                     xpos_sls = xypos_jump[ion][:, 0]
@@ -2209,12 +2215,6 @@ def savedata_jumpeffect_galaxies():
                 elif subset == 'ctl2':
                     xpos_sls = xypos_ctl2[ion][:, 0]
                     ypos_sls = xypos_ctl2[ion][:, 1] 
-                    
-                _grp = fo['{ion}_jump'.format(ion=ion)]
-                tgrp = _grp.create_group('halos')
-                tgrp.attrs.create('min. M200c [Msun]', minmass)
-                tgrp.attrs.create('max. impact parameter [pkpc]', mindist_pkpc)
-                tgrp.attrs.create('max. impact parameter [R200c]', mindist_R200c)  
             
                 # minmass 1e11 Msun -> ~10000 haloes, can cross-ref controls in one go
                 dists = (Xcom_cMpc[np.newaxis, :] - xpos_sls[:, np.newaxis])**2 + \
