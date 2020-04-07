@@ -2191,7 +2191,7 @@ def savedata_jumpeffect_galaxies():
         M200c_Msun = np.array(hc['M200c_Msun']) 
         msel = M200c_Msun >= minmass
         M200c_Msun = M200c_Msun[msel]
-        R200c_pkpc = np.array(hc['R200c_kpc'])[msel] 
+        R200c_pkpc = np.array(hc['R200c_pkpc'])[msel] 
         Xcom_cMpc = np.array(hc['Xcom_cMpc'])[msel]
         Ycom_cMpc = np.array(hc['Ycom_cMpc'])[msel]
         Zcom_cMpc = np.array(hc['Zcom_cMpc'])[msel]
@@ -2256,3 +2256,41 @@ def savedata_jumpeffect_galaxies():
             _gp = sgrp.create_group('galaxyid')
             [_gp.create_dataset('{sl}'.format(sl=sl), data=sel_galaxyid[sl]) \
                                 for sl in range(len(xpos_sls))]
+            
+
+
+
+
+def plotcomp_jumpeffect_controls(jion, index):
+    '''
+    plot an overview of sightline index and its control counterparts in the 
+    jump sample of ion jion
+    '''
+    plotdatafile = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/' + \
+              'plotdata_jumpsamples_and_controls.hdf5'
+    
+    
+    fig = plt.figure(figsize=(10., 7.))
+    
+    coursegrid = gsp.GridSpec(ncols=7, nrows=1, hspace=0.0, wspace=0.0,\
+                              width_ratios=[1., 0.2, 0.5, 0.2, 1., 0.1, 1.],\
+                              top=0.95, bottom=0.05)
+    hrs_spec = [0.2, 1., 1., 1., 1.]
+    jumpgrid = coursegrid[0, 0].subgridspec(ncols=1, rrows=5,\
+                         height_ratios=hrs_spec,\
+                         wspace=0.0, hspace=0.2)
+    ctl1grid = coursegrid[0, 4].subgridspec(ncols=1, rrows=5,\
+                         height_ratios=hrs_spec,\
+                         wspace=0.0, hspace=0.2)
+    ctl2grid = coursegrid[0, 6].subgridspec(ncols=1, rrows=5,\
+                         height_ratios=hrs_spec,\
+                         wspace=0.0, hspace=0.2)
+    growthplot_grid = coursegrid[0, 2].subgridspec(ncols=1, rrows=3,\
+                         height_ratios=[1., 1., 1.],\
+                         wspace=0.0, hspace=0.2)
+    
+   
+    
+
+
+
