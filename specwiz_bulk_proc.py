@@ -2079,7 +2079,83 @@ def savedata_jumpeffect_vwindows():
                 for _ion in ions_all:
                     _grp.create_dataset(_ion, data=Ngrid_jump[_ion])
                     
-def savedata_jumpeffect():
+def savedata_jumpeffect_spectra():
+    '''
+    store spectra, x/y positions, max tau positions, and cross-reff'd galaxies
+    for the jump-selected and control sample sightlines
+    '''
+    samplefile = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/' + \
+                 'sample_selection1.hdf5'
+    spectrumfile_fill = '/net/luttero/data2/specwizard_data/{samplename}/' + \
+                        'spec.snap_027_z000p101.0.hdf5'
+    
+    outfile = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/' + \
+              'plotdata_jumpsamples_and_controls.hdf5'
+    ions_sel = ['o8', 'ne9', 'fe17']
+    ions_all = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']   
+    
+    with h5py.File(samplefile, 'r') as sf,\
+         h5py.File(outfile, 'w') as fo:
+        
+        specnums_ctl1 = {ion: np.array(sf['{ion}_sample/specnums_control1'.format(ion=ion)])\
+                         for ion in ions_sel}
+        specnums_ctl2 = {ion: np.array(sf['{ion}_sample/specnums_control2'.format(ion=ion)])\
+                         for ion in ions_sel}
+        specnums_jump = {ion: np.array(sf['{ion}_sample/specnums_jump'.format(ion=ion)])\
+                         for ion in ions_sel}
+
+        samples = {ion: sf['{ion}_sample'.format(ion=ion)].attrs['specwizard_sample'].decode()\
+                   for ion in ions_sel}
+        
+        for ion in ions_sel:
+            swfilen = spectrumfile_fill.format(samplename=samples[ion])
+            tgrp = fo['{ion}_jump'.format(ion=ion)]
+            
+            specset = SpecSet(swfilen)
+            specset.getspectra(dions=ions_all, includedampingwings=False)
+            specset.getquantity('overdensity', 'posmassw', dions=ions_all)
+            specset.getquantity('pecvel', 'posmassw', dions=ions_all)
+            
+            xypos_cMpc = specset.positions
+            tauspecs = specset.tau
+            tausingle_o8 = specset.tau_raw['o8']
+            
+            grp = tgrp.create_group('tau_jump')
+            for _ion in ions_all:
+                grp.create_dataset(ion, data=tauspecs[_ion][specnums_jump[ion]])
+            grp.create_dataset('o8major', data=tausingle_o8[specnums_jump[ion]])
+            
+            grp = tgrp.create_group('tau_ctl1')
+            for _ion in ions_all:
+                grp.create_dataset(ion, data=tauspecs[_ion][specnums_ctl1[ion]])
+            grp.create_dataset('o8major', data=tausingle_o8[specnums_ctl1[ion]])
+            
+            grp = tgrp.create_group('tau_ctl2')
+            for _ion in ions_all:
+                grp.create_dataset(ion, data=tauspecs[_ion][specnums_ctl2[ion]])
+            grp.create_dataset('o8major', data=tausingle_o8[specnums_ctl2[ion]])
+            
+            tgrp.create_dataset('XY_cMpc_jump', data=xypos_cMpc[specnums_jump[ion]])
+            tgrp.create_dataset('XY_cMpc_ctl1', data=xypos_cMpc[specnums_ctl1[ion]])
+            tgrp.create_dataset('XY_cMpc_ctl1', data=xypos_cMpc[specnums_ctl2[ion]])
+            
+            tgrp.create_dataset('VHubble_KMpS', data=specset.vvals_kmps)
+            
+            tgrp.create_dataset('massw_overdensity_jump',\
+                                data=specset.posmassw['overdensity'][specnums_jump[ion]])
+            tgrp.create_dataset('massw_overdensity_ctl1',\
+                                data=specset.posmassw['overdensity'][specnums_ctl1[ion]])
+            tgrp.create_dataset('massw_overdensity_ctl2',\
+                                data=specset.posmassw['overdensity'][specnums_ctl2[ion]])
+            
+            tgrp.create_dataset('massw_pecvel_jump',\
+                                data=specset.posmassw['pecvel'][specnums_jump[ion]])
+            tgrp.create_dataset('massw_pecvel_ctl1',\
+                                data=specset.posmassw['pecvel'][specnums_ctl1[ion]])
+            tgrp.create_dataset('massw_pecvel_ctl2',\
+                                data=specset.posmassw['pecvel'][specnums_ctl2[ion]])
+            
+def savedata_jumpeffect_galaxies():
     '''
     store spectra, x/y positions, max tau positions, and cross-reff'd galaxies
     for the jump-selected and control sample sightlines
@@ -2107,13 +2183,6 @@ def savedata_jumpeffect():
         boxvel = cosmopars['boxsize'] / cosmpars['h'] * cosmopars['a'] \
                  * cu.Hubble(z=cosmopars['z'], cosmopars=cosmopars)
         
-        vwinds_ctl1 = {ion: np.array(sf['{ion}_sample/indices_control1_in_ion_sample'.format(ion=ion)])\
-                       for ion in ions_sel}
-        vwinds_ctl2 = {ion: np.array(sf['{ion}_sample/indices_control2_in_ion_sample'.format(ion=ion)])\
-                       for ion in ions_sel}
-        vwinds_jump = {ion: np.array(sf['{ion}_sample/indices_jump_in_ion_sample'.format(ion=ion)])\
-                       for ion in ions_sel}
-        
         specnums_ctl1 = {ion: np.array(sf['{ion}_sample/specnums_control1'.format(ion=ion)])\
                          for ion in ions_sel}
         specnums_ctl2 = {ion: np.array(sf['{ion}_sample/specnums_control2'.format(ion=ion)])\
@@ -2123,3 +2192,33 @@ def savedata_jumpeffect():
 
         samples = {ion: sf['{ion}_sample'.format(ion=ion)].attrs['specwizard_sample'].decode()\
                    for ion in ions_sel}
+        
+        for ion in ions_sel:
+            swfilen = spectrumfile_fill.format(samplename=samples[ion])
+            tgrp = fo['{ion}_jump'.format(ion=ion)]
+            
+            specset = SpecSet(swfilen)
+            specset.getspectra(dions=ions_all, includedampingwings=False)
+            xypos_cMpc = specset.positions
+            tauspecs = specset.tau
+            tausingle_o8 = specset.tau_raw['o8']
+            
+            grp = tgrp.create_group('tau_jump')
+            for _ion in ions_all:
+                grp.create_dataset(ion, data=tauspecs[_ion][specnums_jump[ion]])
+            grp.create_dataset('o8major', data=tausingle_o8[specnums_jump[ion]])
+            
+            grp = tgrp.create_group('tau_ctl1')
+            for _ion in ions_all:
+                grp.create_dataset(ion, data=tauspecs[_ion][specnums_ctl1[ion]])
+            grp.create_dataset('o8major', data=tausingle_o8[specnums_ctl1[ion]])
+            
+            grp = tgrp.create_group('tau_ctl2')
+            for _ion in ions_all:
+                grp.create_dataset(ion, data=tauspecs[_ion][specnums_ctl2[ion]])
+            grp.create_dataset('o8major', data=tausingle_o8[specnums_ctl2[ion]])
+            
+            tgrp.create_dataset('XY_cMpc_jump', data=xypos_cMpc[specnums_jump[ion]])
+            tgrp.create_dataset('XY_cMpc_ctl1', data=xypos_cMpc[specnums_ctl1[ion]])
+            tgrp.create_dataset('XY_cMpc_ctl1', data=xypos_cMpc[specnums_ctl2[ion]])
+            

@@ -3355,7 +3355,7 @@ def plot_masscontr_ratios_halo(addedges=(0.0, 1.), var='Mass',\
          'oxygen', 'neon', or 'iron' for metal mass
     num:   numerator: 'nHorSF', 'nHm2', 'nHcut', 'SF'
     denom: denominator: same options as numerator, as well as 
-           '0.027M*' (only for oxygen)
+           '0.027Mstar' (only for oxygen)
 
     SF:    ISM is all gas with SFR > 0, CGM is all other gas within the addeges
            radii.
@@ -3382,7 +3382,7 @@ def plot_masscontr_ratios_halo(addedges=(0.0, 1.), var='Mass',\
     var_denom = var
     if denom in kwargs_denom:
         kwargs_denom[denom] = True
-    if denom == '0.027M*':
+    if denom == '0.027Mstar':
         var_denom = 'Mass'
         kwargs_denom = kwargs_num
     
@@ -3409,7 +3409,7 @@ def plot_masscontr_ratios_halo(addedges=(0.0, 1.), var='Mass',\
         raise ValueError('Halo mass (order) does not match')
     else:
         m200cvals = m200cvals_num
-    if denom == '0.027M*':
+    if denom == '0.027Mstar':
         denom_all = massdata_denom['stars'] * 0.027 / (c.atomw_O * c.u)
         massdata = {key: divide_ratio_for_perc(massdata_num[key], denom_all)\
                     for key in massdata_num}
