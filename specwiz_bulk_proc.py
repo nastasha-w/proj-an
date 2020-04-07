@@ -2122,17 +2122,17 @@ def savedata_jumpeffect_spectra():
             
             grp = tgrp.create_group('tau_jump')
             for _ion in ions_all:
-                grp.create_dataset(ion, data=tauspecs[_ion][specnums_jump[ion]])
+                grp.create_dataset(_ion, data=tauspecs[_ion][specnums_jump[ion]])
             grp.create_dataset('o8major', data=tausingle_o8[specnums_jump[ion]])
             
             grp = tgrp.create_group('tau_ctl1')
             for _ion in ions_all:
-                grp.create_dataset(ion, data=tauspecs[_ion][specnums_ctl1[ion]])
+                grp.create_dataset(_ion, data=tauspecs[_ion][specnums_ctl1[ion]])
             grp.create_dataset('o8major', data=tausingle_o8[specnums_ctl1[ion]])
             
             grp = tgrp.create_group('tau_ctl2')
             for _ion in ions_all:
-                grp.create_dataset(ion, data=tauspecs[_ion][specnums_ctl2[ion]])
+                grp.create_dataset(_ion, data=tauspecs[_ion][specnums_ctl2[ion]])
             grp.create_dataset('o8major', data=tausingle_o8[specnums_ctl2[ion]])
             
             tgrp.create_dataset('XY_cMpc_jump', data=xypos_cMpc[specnums_jump[ion]])
