@@ -2095,7 +2095,7 @@ def savedata_jumpeffect_spectra():
     ions_all = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']   
     
     with h5py.File(samplefile, 'r') as sf,\
-         h5py.File(outfile, 'w') as fo:
+         h5py.File(outfile, 'a') as fo:
         
         specnums_ctl1 = {ion: np.array(sf['{ion}_sample/specnums_control1'.format(ion=ion)])\
                          for ion in ions_sel}
@@ -2175,7 +2175,7 @@ def savedata_jumpeffect_galaxies():
     ions_all = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17']   
     
     with h5py.File(samplefile, 'r') as sf,\
-         h5py.File(outfile, 'w') as fo:
+         h5py.File(outfile, 'a') as fo:
         sf.copy('Header_sample3', fo)
         sf.copy('Header_sample6', fo)
         cosmopars = {key: item for key, item in \
