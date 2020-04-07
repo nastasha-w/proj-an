@@ -3755,7 +3755,9 @@ if jobind in range(30151, 30159): # cosma; CHECK new N-EW FITS
     else:
         rqfile = ol.pdir + 'rdist_%s_%islice_to-99p-3R200c_Mstar-0p5dex_centrals.hdf5'%((filename_proj.split('/')[-1][:-4])%('-all'), numsl)
     #rqfile = 'rdist_%s_%islice_to-99p-3R200c_Mstar-M200c-0p5dex-match_centrals.hdf5'%((filename_proj.split('/')[-1][:-4])%('-all'), numsl)
-    rpfilen = rqfile_old[:-5] + '_fullrdist_stored_profiles.hdf5' # append to high-mass files
+    rpfilen = rqfile[:-5] + '_fullrdist_stored_profiles.hdf5' # append to high-mass files
+    rpfilen = rpfilen.split('/')[-1]
+    rpfilen = ol.pdir + 'radprof/' + rpfilen
     
     yvals_perc = [1., 5., 10., 25., 50., 75., 90., 95., 99.]
 
