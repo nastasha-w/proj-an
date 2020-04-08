@@ -2277,19 +2277,19 @@ def plotcomp_jumpeffect_controls(jion, index):
                               width_ratios=[1., 0.2, 0.5, 0.2, 1., 0.1, 1.],\
                               top=0.95, bottom=0.05)
     hrs_spec = [0.2, 1., 1., 1.]
-    jumpgrid = gsp.GridSpecFromSubplotSpec(1, 4,\
+    jumpgrid = gsp.GridSpecFromSubplotSpec(4, 1,\
                          height_ratios=hrs_spec,\
                          wspace=0.0, hspace=0.2,\
                          subplot_spec=coursegrid[0, 0])
-    ctl1grid = gsp.GridSpecFromSubplotSpec(1, 4,\
+    ctl1grid = gsp.GridSpecFromSubplotSpec(4, 1,\
                          height_ratios=hrs_spec,\
                          wspace=0.0, hspace=0.2,\
                          subplot_spec=coursegrid[0, 4])
-    ctl2grid = gsp.GridSpecFromSubplotSpec(1, 4,\
+    ctl2grid = gsp.GridSpecFromSubplotSpec(4, 1,\
                          height_ratios=hrs_spec,\
                          wspace=0.0, hspace=0.2,\
                          subplot_spec=coursegrid[0, 6])
-    growthplot_grid = gsp.GridSpecFromSubplotSpec(1, 3,\
+    growthplot_grid = gsp.GridSpecFromSubplotSpec(3, 1,\
                          height_ratios=[1., 1., 1.],\
                          wspace=0.0, hspace=0.2,\
                          subplot_spec=coursegrid[0, 3])
