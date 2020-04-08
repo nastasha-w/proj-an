@@ -2271,7 +2271,7 @@ def plotcomp_jumpeffect_controls(jion, index):
     
     
     fig = plt.figure(figsize=(13., 5.))
-    fontsize=12
+    fontsize=11
     ioncolors = {'o7': 'C3',\
              'o8': 'C0',\
              'o6': 'C2',\
@@ -2291,8 +2291,8 @@ def plotcomp_jumpeffect_controls(jion, index):
     ionorder = ['o6', 'o7', 'o8', 'o8major', 'ne8', 'ne9', 'fe17']
     
     coursegrid = gsp.GridSpec(ncols=7, nrows=1, hspace=0.0, wspace=0.0,\
-                              width_ratios=[1., 0.2, 0.5, 0.2, 1., 0.1, 1.],\
-                              top=0.95, bottom=0.05)
+                              width_ratios=[1., 0.2, 0.5, 0.2, 1., 0.15, 1.],\
+                              top=0.95, bottom=0.05, left=0.05, right=0.95)
     hrs_spec = [0.2, 1., 0.4, 1., 0.4, 1.]
     jumpgrid = gsp.GridSpecFromSubplotSpec(6, 1,\
                          height_ratios=hrs_spec,\
@@ -2304,7 +2304,7 @@ def plotcomp_jumpeffect_controls(jion, index):
                          subplot_spec=coursegrid[0, 4])
     ctl2grid = gsp.GridSpecFromSubplotSpec(6, 1,\
                          height_ratios=hrs_spec,\
-                         wspace=0.0, hspace=0.40,\
+                         wspace=0.0, hspace=0.0,\
                          subplot_spec=coursegrid[0, 6])
     growthplot_grid = gsp.GridSpecFromSubplotSpec(3, 1,\
                          height_ratios=[1., 1., 1.],\
@@ -2340,6 +2340,7 @@ def plotcomp_jumpeffect_controls(jion, index):
                       horizontalalignment='center', verticalalignment='bottom')
             tiax.axis('off')
             
+            ## optical depths
             odgrp = igrp['tau_{sample}'.format(sample=sample)]
             xv = np.array(igrp['VHubble_KMpS'])
             offset = 0.0
@@ -2348,7 +2349,7 @@ def plotcomp_jumpeffect_controls(jion, index):
                 ion = ionorder[ii]
                 yv = np.array(odgrp[ion][index, :])
                 odax.plot(xv, yv + offset, color=ioncolors[ion], **kw_ls[ion])
-                if ion != 'o8major':
+                if ion != 'o8':
                     offset += doff
             if sample in ['jump']:
                 odax.set_ylabel('$\\tau$ (offset)', fontsize=fontsize)
@@ -2356,7 +2357,24 @@ def plotcomp_jumpeffect_controls(jion, index):
                           fontsize=fontsize)
             odax.tick_params(which='both', direction='in',\
                              labelsize=fontsize - 1, top=True, right=True,\
-                             labelleft=True, labelbottom=True)            
+                             labelleft=True, labelbottom=True) 
+            
+            ## mass and peculiar velocity
+            mod = np.array(igrp['massw_overdensity_{sample}'.format(sample=sample)][index, :])
+            mvp = np.array(igrp['massw_pecvel_{sample}'.format(sample=sample)][index, :])
+            hf = cu.Hubble(cosmopars['z'], comsopars=cosmopars) * 1e-5 / c.cm_per_mpc
+            xp = xv / hf
+            mvax.plot(xp, mod, color='black')
+            mvax2 = mvax.twinx()
+            mvax2.plot(xp, mvp, color='gray')
+            
+            mvax.tick_params(which='both', direction='in',\
+                             labelsize=fontsize - 1, top=True, right=False,\
+                             labelleft=True, labelbottom=True)  
+            mvax.set_xlabel('Z [cMpc]', fontize=fontsize)
+            mvax.set_ylabel('$\\delta(\\mathrm{{Mass}})$', fontsize=fontsize)
+            mvax2.set_ylabel('$v(\\mathrm{{pec}}, \\mathrm{{Mass}})$',\
+                             fontsize=fontsize, color='gray')
             
             
    
