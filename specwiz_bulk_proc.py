@@ -2317,8 +2317,8 @@ def plotcomp_jumpeffect_controls(jion, index):
              'ctl1': ctl1grid,\
              'ctl2': ctl2grid}
     
-    title = '{ion} jump selection, sightlines {ind}.' + \
-             'left: jump sightline, center (ctl1) : matched N at' + \
+    title = '{ion} jump selection, sightlines {ind}. ' + \
+             'left: jump sightline, center (ctl1) : matched N at ' + \
              '$\\Delta v = \pm 800 \\mathrm{{km}} \\, \\mathrm{{s}}^{{-1}}$, ' + \
              'right (ctl2): matched total N'
     title = title.format(ion=ild.getnicename(jion, mathmode=False), ind=index)
@@ -2505,17 +2505,17 @@ def plotcomp_jumpeffect_controls(jion, index):
                         labelleft=True, labelbottom=True)
         
         lax = fig.add_subplot(growthplot_grid[3, 0])
-        ionl = [mlines.line2D([], [], color=ioncolors[ion],\
+        ionl = [mlines.Line2D([], [], color=ioncolors[ion],\
                 linestyle='solid', label=ild.getnicename(ion))\
                 for ion in ions]
-        ionl.append(mlines.line2D([], [], color=ioncolors['o8major'],\
+        ionl.append(mlines.Line2D([], [], color=ioncolors['o8major'],\
                     **kw_ls['o8major'], label='O VIII (single)'))
-        samplel = [mlines.line2D([], [], color=ioncolors[ion],\
+        samplel = [mlines.Line2D([], [], color=ioncolors[ion],\
                    linestyle=samplestyles[sample], label=sample)\
                    for isample in samples]
         lax.legend(handles=samplel + ionl, fontsize=fontsize, ncol=2,\
                    loc='upper center', bbox_to_anchor=(0.5, 1.0))
-        
+        lax.axis('off')
     print('Colored lines in galaxy panels show impact parameters, black lines show R200c')
    
     
