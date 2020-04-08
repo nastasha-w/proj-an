@@ -2372,10 +2372,10 @@ def plotcomp_jumpeffect_controls(jion, index):
             mvax2.axhline(0., color=vcolor, linestyle='dotted')
             mvax.set_yscale('log')
             
-            mvax.tick_params(which='both', direction='in', axix='x',\
+            mvax.tick_params(which='both', direction='in', axis='x',\
                              labelsize=fontsize - 1, top=True, right=False,\
                              labelleft=False, labelbottom=True)
-            mvax.tick_params(which='both', direction='in', axix='y',\
+            mvax.tick_params(which='both', direction='in', axis='y',\
                              color=mcolor, labelcolor=mcolor,\
                              labelsize=fontsize - 1, top=False, right=False,\
                              labelleft=True, labelbottom=False)
