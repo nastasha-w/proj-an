@@ -2326,9 +2326,9 @@ def plotcomp_jumpeffect_controls(jion, index):
     
     cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,\
                                 norm=norm,\
-                                boundaries=np.append(mrange, mrange[1] + 0.1),\
                                 spacing='proportional', extend='max',\
                                 orientation='horizontal')
+    # boundaries=np.append(np.linspace(mrange[0], mrange[1], 100.), mrange[1] + 0.1),\
     # to use 'extend', you must
     # specify two extra boundaries:
     # boundaries=[0] + bounds + [13],
@@ -2430,7 +2430,7 @@ def plotcomp_jumpeffect_controls(jion, index):
             
             hlax.scatter(zs, xoff, c=ms, cmap=cmap, norm=norm, marker='*',\
                          s=20)
-            for gi in len(gs):
+            for gi in range(len(gs)):
                 hlax.plot([zs[gi], zs[gi]],\
                           [0., xoff[gi] / abs(xoff[gi]) * roff[gi]],\
                           color=cmap((ms - mrange[0]) / (mrange[1] - mrange[0])),\
