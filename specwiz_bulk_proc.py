@@ -2298,7 +2298,7 @@ def plotcomp_jumpeffect_controls(jion, index):
              'ctl2': ctl2grid}
     
     title = '{ion} jump selection, sightlines {ind}'.format(\
-             ion=ild.getnicename(ion, mathmode=False), ind=index)
+             ion=ild.getnicename(jion, mathmode=False), ind=index)
     fig.suptitle(title, fontsize=fontsize)
     
     with h5py.File(plotdatafile, 'r') as pf:
