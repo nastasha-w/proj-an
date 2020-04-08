@@ -2271,24 +2271,53 @@ def plotcomp_jumpeffect_controls(jion, index):
     
     
     fig = plt.figure(figsize=(10., 7.))
+    fontsize=12
     
     coursegrid = gsp.GridSpec(ncols=7, nrows=1, hspace=0.0, wspace=0.0,\
                               width_ratios=[1., 0.2, 0.5, 0.2, 1., 0.1, 1.],\
                               top=0.95, bottom=0.05)
-    hrs_spec = [0.2, 1., 1., 1., 1.]
-    jumpgrid = coursegrid[0, 0].subgridspec(ncols=1, rrows=5,\
+    hrs_spec = [0.2, 1., 1., 1.]
+    jumpgrid = coursegrid[0, 0].subgridspec(ncols=1, rrows=4,\
                          height_ratios=hrs_spec,\
                          wspace=0.0, hspace=0.2)
-    ctl1grid = coursegrid[0, 4].subgridspec(ncols=1, rrows=5,\
+    ctl1grid = coursegrid[0, 4].subgridspec(ncols=1, rrows=4,\
                          height_ratios=hrs_spec,\
                          wspace=0.0, hspace=0.2)
-    ctl2grid = coursegrid[0, 6].subgridspec(ncols=1, rrows=5,\
+    ctl2grid = coursegrid[0, 6].subgridspec(ncols=1, rrows=4,\
                          height_ratios=hrs_spec,\
                          wspace=0.0, hspace=0.2)
     growthplot_grid = coursegrid[0, 2].subgridspec(ncols=1, rrows=3,\
                          height_ratios=[1., 1., 1.],\
                          wspace=0.0, hspace=0.2)
+    grids = {'jump': jumpgrid,\
+             'ctl1': ctl1grid,\
+             'ctl2': ctl2grid}
     
+    title = '{ion} jump selection, sightlines {ind}'.format(\
+             ion=ild.getnicename(ion, mathmode=False), ind=index)
+    fig.suptitle(title, fontsize=fontsize)
+    
+    with h5py.File(plotdatafile, 'r') as pf:
+        keys = list(pf.keys())
+        hedn = keys[np.where(['Header' in key for key in keys])[0][0]]
+        cosmopars = {key: val for key, val in \
+               pf['{header}/cosmopars'.format(header=hedn)].attrs.items()}
+        igrp = pf['{ion}_jump'.format(ion=jion)]
+        
+        for sample in ['jump', 'ctl1', 'ctl2']:
+            grid = grids[sample]
+            tiax = fig.add_subplot(grid[0, 0])
+            odax = fig.add_subplot(grid[1, 0])
+            mvax = fig.add_subplot(grid[2, 0])
+            hlax = fig.add_subplot(grid[3, 0])
+            
+            XY = np.array(igrp['XY_cMpc_{sample}'.format(sample=sample)][index, :])
+            coltext = 'sightline at $X = {x:.1f}, Y = {y:.1f}\\, \\mathrm{{cMpc}}$'.format(\
+                            x=XY[0], y=XY[1])
+            tiax.text(0.5, 0.0, coltext, fontsize=fontsize,\
+                      transform=tiax.transAxes,\
+                      horizontalalignment='center', verticalalignment='bottom')
+            
    
     
 
