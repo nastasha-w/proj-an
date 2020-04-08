@@ -2291,7 +2291,7 @@ def plotcomp_jumpeffect_controls(jion, index):
     ionorder = ['o6', 'o7', 'o8', 'o8major', 'ne8', 'ne9', 'fe17']
     
     coursegrid = gsp.GridSpec(ncols=7, nrows=1, hspace=0.0, wspace=0.0,\
-                              width_ratios=[1., 0.2, 0.5, 0.2, 1., 0.15, 1.],\
+                              width_ratios=[1., 0.25, 0.5, 0.25, 1., 0.25, 1.],\
                               top=0.95, bottom=0.05, left=0.05, right=0.95)
     hrs_spec = [0.2, 1., 0.4, 1., 0.4, 1.]
     jumpgrid = gsp.GridSpecFromSubplotSpec(6, 1,\
@@ -2360,30 +2360,41 @@ def plotcomp_jumpeffect_controls(jion, index):
                              labelleft=True, labelbottom=True) 
             
             ## mass and peculiar velocity
+            vcolor = 'gray'
+            mcolor = 'blue'
             mod = np.array(igrp['massw_overdensity_{sample}'.format(sample=sample)][index, :])
             mvp = np.array(igrp['massw_pecvel_{sample}'.format(sample=sample)][index, :])
             hf = cu.Hubble(cosmopars['z'], cosmopars=cosmopars) 
             xp = xv * 1e5 / hf / c.cm_per_mpc
-            mvax.plot(xp, mod, color='black')
+            mvax.plot(xp, mod, color=mcolor)
             mvax2 = mvax.twinx()
-            mvax2.plot(xp, mvp, color='gray')
-            mvax2.axhline(0., color='gray', linestyle='dotted')
+            mvax2.plot(xp, mvp, color=vcolor, linestyle='dashed')
+            mvax2.axhline(0., color=vcolor, linestyle='dotted')
+            mvax.set_yscale('log')
             
-            mvax.tick_params(which='both', direction='in',\
+            mvax.tick_params(which='both', direction='in', axix='x',\
                              labelsize=fontsize - 1, top=True, right=False,\
-                             labelleft=True, labelbottom=True)
-            mvax2.tick_params(which='both', direction='in',\
+                             labelleft=False, labelbottom=True)
+            mvax.tick_params(which='both', direction='in', axix='y',\
+                             color=mcolor, labelcolor=mcolor,\
+                             labelsize=fontsize - 1, top=False, right=False,\
+                             labelleft=True, labelbottom=False)
+            mvax2.tick_params(which='both', direction='in', color=vcolor,\
                              labelsize=fontsize - 1,\
+                             color=vcolor, labelcolor=vcolor,\
                              top=False, right=True, bottom=False, left=False,\
                              labelleft=False, labelbottom=False,\
                              labelright=True, labeltop=False)
             mvax.set_xlabel('Z [cMpc]', fontsize=fontsize)
-            mvax.set_ylabel('$\\delta(\\mathrm{{Mass}})$', fontsize=fontsize)
-            mvax2.set_ylabel('$v(\\mathrm{{pec}}, \\mathrm{{Mass}})$',\
-                             fontsize=fontsize, color='gray')
+            if sample in ['jump']:
+                mvax.set_ylabel('$\\delta(\\mathrm{{Mass}})$',\
+                                fontsize=fontsize, color=mcolor)
+            if sample in ['ctl2']:
+                mvax2.set_ylabel('$v(\\mathrm{{pec}}, \\mathrm{{Mass}}) \\; [\\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}]$',\
+                                 fontsize=fontsize, color=vcolor)
             
-            
-   
+    
+    # sync vpec   
     
 
 
