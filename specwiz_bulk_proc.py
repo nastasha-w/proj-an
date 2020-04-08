@@ -2430,11 +2430,11 @@ def plotcomp_jumpeffect_controls(jion, index):
             roff = np.sqrt(xoff**2 + yoff**2)
             
             hlax.scatter(zs, xoff, c=ms, cmap=cmap, norm=norm, marker='*',\
-                         s=20)
+                         s=20, markeredgecolor='black')
             for gi in range(len(gs)):
                 hlax.plot([zs[gi], zs[gi]],\
                           [0., xoff[gi] / abs(xoff[gi]) * roff[gi]],\
-                          color=cmap((ms - mrange[0]) / (mrange[1] - mrange[0])),\
+                          color=cmap((ms[gi] - mrange[0]) / (mrange[1] - mrange[0])),\
                           linewidth=4.)
                 hlax.plot([zs[gi], zs[gi]],\
                           [xoff[gi], xoff[gi] - xoff[gi]/ abs(xoff[gi]) * rs[gi]],\
