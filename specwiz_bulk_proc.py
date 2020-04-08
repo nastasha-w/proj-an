@@ -2362,7 +2362,7 @@ def plotcomp_jumpeffect_controls(jion, index):
             ## mass and peculiar velocity
             mod = np.array(igrp['massw_overdensity_{sample}'.format(sample=sample)][index, :])
             mvp = np.array(igrp['massw_pecvel_{sample}'.format(sample=sample)][index, :])
-            hf = cu.Hubble(cosmopars['z'], comsopars=cosmopars) * 1e-5 / c.cm_per_mpc
+            hf = cu.Hubble(cosmopars['z'], cosmopars=cosmopars) * 1e-5 / c.cm_per_mpc
             xp = xv / hf
             mvax.plot(xp, mod, color='black')
             mvax2 = mvax.twinx()
