@@ -2294,8 +2294,8 @@ def plotcomp_jumpeffect_controls(jion, index):
     ionorder = ['o6', 'o7', 'o8', 'o8major', 'ne8', 'ne9', 'fe17']
     ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
     coursegrid = gsp.GridSpec(ncols=7, nrows=1, hspace=0.0, wspace=0.0,\
-                              width_ratios=[1., 0.25, 0.7, 0.25, 1., 0.25, 1.],\
-                              top=0.95, bottom=0.1, left=0.07, right=0.93)
+                              width_ratios=[1., 0.35, 1., 0.2, 1., 0.25, 1.],\
+                              top=0.93, bottom=0.1, left=0.07, right=0.93)
     hrs_spec = [0.2, 1., 0.4, 1., 0.2, 1.]
     jumpgrid = gsp.GridSpecFromSubplotSpec(6, 1,\
                          height_ratios=hrs_spec,\
@@ -2317,8 +2317,11 @@ def plotcomp_jumpeffect_controls(jion, index):
              'ctl1': ctl1grid,\
              'ctl2': ctl2grid}
     
-    title = '{ion} jump selection, sightlines {ind}'.format(\
-             ion=ild.getnicename(jion, mathmode=False), ind=index)
+    title = '{ion} jump selection, sightlines {ind}.' + \
+             'left: jump sightline, center (ctl1) : matched N at' + \
+             '$\\Delta v = \pm 800 \\mathrm{{km}} \\, \\mathrm{{s}}^{{-1}}$, ' + \
+             'right (ctl2): matched total N'
+    title = title.format(ion=ild.getnicename(jion, mathmode=False), ind=index)
     fig.suptitle(title, fontsize=fontsize)
     
     cax = fig.add_subplot(growthplot_grid[4, 0])
@@ -2470,10 +2473,17 @@ def plotcomp_jumpeffect_controls(jion, index):
         samples = ['jump', 'ctl1', 'ctl2']
         
         dv = np.array(ggrp['Deltav_rf_kmps']) * 0.5
+        boxvel = cosmopars['boxsize'] / cosmopars['h'] * c.cm_per_mpc *\
+                 hf * 1e-5
+        dv = np.append(dv[1:], 0.5 * boxvel)
         ns = {sample: {ion: np.array(ggrp['logNs_{sample}/{ion}'.format(sample=sample, ion=ion)][index, :]) \
                        for ion in ions} for sample in samples}
         es = {sample: {ion: np.log10(np.array(ggrp['EWs_{sample}/{ion}'.format(sample=sample, ion=ion)][index, :])) + 3. \
                        for ion in ions} for sample in samples}  
+        ns = {k1: {k2: np.append(ns[k1][k2][1:], ns[k1][k2][0]) \
+                   for k2 in ns[k1]} for k1 in ns}
+        es = {k1: {k2: np.append(es[k1][k2][1:], es[k1][k2][0]) \
+                   for k2 in es[k1]} for k1 in ns}
         for sample in samples:
             for ion in ions:
                 nax.plot(dv, ns[sample][ion], color=ioncolors[ion],\
@@ -2492,7 +2502,19 @@ def plotcomp_jumpeffect_controls(jion, index):
                         labelleft=True, labelbottom=False)
         eax.tick_params(which='both', direction='in',\
                         labelsize=fontsize - 1, top=True, right=True,\
-                        labelleft=True, labelbottom=False)
+                        labelleft=True, labelbottom=True)
+        
+        lax = fig.add_subplot(growthplot_grid[3, 0])
+        ionl = [mlines.line2D([], [], color=ioncolors[ion],\
+                linestyle='solid', label=ild.getnicename(ion))\
+                for ion in ions]
+        ionl.append(mlines.line2D([], [], color=ioncolors['o8major'],\
+                    **kw_ls['o8major'], label='O VIII (single)'))
+        samplel = [mlines.line2D([], [], color=ioncolors[ion],\
+                   linestyle=samplestyles[sample], label=sample)\
+                   for isample in samples]
+        lax.legend(handles=samplel + ionl, fontsize=fontsize, ncol=2,\
+                   loc='upper center', bbox_to_anchor=(0.5, 1.0))
         
     print('Colored lines in galaxy panels show impact parameters, black lines show R200c')
    
