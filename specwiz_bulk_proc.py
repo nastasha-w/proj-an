@@ -2272,6 +2272,23 @@ def plotcomp_jumpeffect_controls(jion, index):
     
     fig = plt.figure(figsize=(13., 5.))
     fontsize=12
+    ioncolors = {'o7': 'C3',\
+             'o8': 'C0',\
+             'o6': 'C2',\
+             'ne8': 'C1',\
+             'ne9': 'C9',\
+             'hneutralssh': 'C6',\
+             'fe17': 'C4'}
+    ioncolors.update({'o8major': ioncolors['o8']})
+    kw_ls = {'o6':   {'dashes': [6, 2]},\
+             'o7':   {'dashes': [3, 1]},\
+             'o8':   {'dashes': [1, 0]},\
+             'o8major': {'dashes': [1, 1]},\
+             'ne8':  {'dashes': [6, 2, 3, 2]},\
+             'ne9':  {'dashes': [6, 2, 1, 2]},\
+             'fe17': {'dashes': [3, 1, 1, 1]},\
+             }
+    ionorder = ['o6', 'o7', 'o8', 'o8major', 'ne8', 'ne9', 'fe17']
     
     coursegrid = gsp.GridSpec(ncols=7, nrows=1, hspace=0.0, wspace=0.0,\
                               width_ratios=[1., 0.2, 0.5, 0.2, 1., 0.1, 1.],\
@@ -2316,12 +2333,27 @@ def plotcomp_jumpeffect_controls(jion, index):
             hlax = fig.add_subplot(grid[3, 0])
             
             XY = np.array(igrp['XY_cMpc_{sample}'.format(sample=sample)][index, :])
-            coltext = 'sightline at $X = {x:.1f}, Y = {y:.1f}\\, \\mathrm{{cMpc}}$'.format(\
+            coltext = 'sl. at $X = {x:.1f}, Y = {y:.1f}\\, \\mathrm{{cMpc}}$'.format(\
                             x=XY[0], y=XY[1])
             tiax.text(0.5, 0.0, coltext, fontsize=fontsize,\
                       transform=tiax.transAxes,\
                       horizontalalignment='center', verticalalignment='bottom')
             tiax.axis('off')
+            
+            odgrp = igrp['tau_{sample}'.format(sample=sample)]
+            xv = np.array(igrp['VHubble_KMpS'])
+            for ion in ionorder:
+                yv = np.array(odgrp[ion][index, :])
+                odax.plot(xv, yv, color=ioncolors[ion], **kw_ls[ion])
+            if sample in ['jump']:
+                odax.set_ylabel('$\\tau$', fontsize=fontsize)
+            odax.set_xlabel('$\\Delta v \\; [\\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}]$',\
+                          fontsize=fontsize)
+            odax.tick_params(which='both', direction='in',\
+                             labelsize=fontsize - 1, top=True, right=True,\
+                             labelleft=True, labelbottom=True)            
+            
+            
    
     
 
