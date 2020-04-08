@@ -2463,36 +2463,36 @@ def plotcomp_jumpeffect_controls(jion, index):
             hlax.axhline(200., color='black', linestyle='dotted')
             hlax.axhline(-200., color='black', linestyle='dotted')
 
-       ## Comparing EW, N growth
-       nax = fig.add_axes(growthplot_grid[0, 0])
-       eax = fig.add_axes(growthplot_grid[1, 0])
-       ggrp = igrp['Delta_v_trends']
-       samples = ['jump', 'ctl1', 'ctl2']
-       
-       dv = np.array(ggrp['Deltav_rf_kmps']) * 0.5
-       ns = {sample: {ion: np.array(ggrp['logNs_{sample}/{ion}'.format(sample=sample, ion=ion)]) \
-                      for ion in ions} for sample in samples}
-       es = {sample: {ion: np.log10(np.array(ggrp['EWs_{sample}/{ion}'.format(sample=sample, ion=ion)])) + 3. \
-                      for ion in ions} for sample in samples}  
-       for sample in samples:
-           for ion in ions:
-               nax.plot(dv, ns[sample][ion], color=ioncolors[ion],\
-                        linestyle=samplestyles[ion])
-               eax.plot(dv, es[sample][ion], color=ioncolors[ion],\
-                        linestyle=samplestyles[ion])
-        nax.set_ylabel('$\\log_{{10}} \\, \\mathrm{{N}} \\; [\\mathrm{{cm}}^{{-2}}]$',\
-                       fontsize=fontsize)
-        eax.set_ylabel('$\\log_{{10}} \\, \\mathrm{{EW}} \\; [\\mathrm{{m{{\AA}}}}]$',\
-                       fontsize=fontsize)
-        eax.set_xlabel('$\\pm \\Delta \\, v \\; [\\mathrm{{km}} \\, \\mathrm{{s}}^{{-1}}]$',\
-                       fontsize=fontsize)
-        nax.set_xlim(*eax.get_xlim())
-        nax.tick_params(which='both', direction='in',\
-                        labelsize=fontsize - 1, top=True, right=True,\
-                        labelleft=True, labelbottom=False)
-        eax.tick_params(which='both', direction='in',\
-                        labelsize=fontsize - 1, top=True, right=True,\
-                        labelleft=True, labelbottom=False)
+        ## Comparing EW, N growth
+        nax = fig.add_axes(growthplot_grid[0, 0])
+        eax = fig.add_axes(growthplot_grid[1, 0])
+        ggrp = igrp['Delta_v_trends']
+        samples = ['jump', 'ctl1', 'ctl2']
+        
+        dv = np.array(ggrp['Deltav_rf_kmps']) * 0.5
+        ns = {sample: {ion: np.array(ggrp['logNs_{sample}/{ion}'.format(sample=sample, ion=ion)]) \
+                       for ion in ions} for sample in samples}
+        es = {sample: {ion: np.log10(np.array(ggrp['EWs_{sample}/{ion}'.format(sample=sample, ion=ion)])) + 3. \
+                       for ion in ions} for sample in samples}  
+        for sample in samples:
+            for ion in ions:
+                nax.plot(dv, ns[sample][ion], color=ioncolors[ion],\
+                         linestyle=samplestyles[ion])
+                eax.plot(dv, es[sample][ion], color=ioncolors[ion],\
+                         linestyle=samplestyles[ion])
+         nax.set_ylabel('$\\log_{{10}} \\, \\mathrm{{N}} \\; [\\mathrm{{cm}}^{{-2}}]$',\
+                        fontsize=fontsize)
+         eax.set_ylabel('$\\log_{{10}} \\, \\mathrm{{EW}} \\; [\\mathrm{{m{{\AA}}}}]$',\
+                        fontsize=fontsize)
+         eax.set_xlabel('$\\pm \\Delta \\, v \\; [\\mathrm{{km}} \\, \\mathrm{{s}}^{{-1}}]$',\
+                        fontsize=fontsize)
+         nax.set_xlim(*eax.get_xlim())
+         nax.tick_params(which='both', direction='in',\
+                         labelsize=fontsize - 1, top=True, right=True,\
+                         labelleft=True, labelbottom=False)
+         eax.tick_params(which='both', direction='in',\
+                         labelsize=fontsize - 1, top=True, right=True,\
+                         labelleft=True, labelbottom=False)
         
     print('Colored lines in galaxy panels show impact parameters, black lines show R200c')
    
