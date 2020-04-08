@@ -2288,8 +2288,11 @@ def plotcomp_jumpeffect_controls(jion, index):
              'ne9':  {'dashes': [6, 2, 1, 2]},\
              'fe17': {'dashes': [3, 1, 1, 1]},\
              }
+    samplestyles = {'jump': 'solid',\
+                    'ctl1': 'dashed',\
+                    'ctl2': 'dotted'}
     ionorder = ['o6', 'o7', 'o8', 'o8major', 'ne8', 'ne9', 'fe17']
-    
+    ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'fe17']
     coursegrid = gsp.GridSpec(ncols=7, nrows=1, hspace=0.0, wspace=0.0,\
                               width_ratios=[1., 0.25, 0.7, 0.25, 1., 0.25, 1.],\
                               top=0.95, bottom=0.1, left=0.07, right=0.93)
@@ -2307,8 +2310,8 @@ def plotcomp_jumpeffect_controls(jion, index):
                          wspace=0.0, hspace=0.0,\
                          subplot_spec=coursegrid[0, 6])
     growthplot_grid = gsp.GridSpecFromSubplotSpec(4, 1,\
-                         height_ratios=[1., 1., 1., 0.2],\
-                         wspace=0.0, hspace=0.2,\
+                         height_ratios=[1., 1., 0.4, 1., 0.2],\
+                         wspace=0.0, hspace=0.0,\
                          subplot_spec=coursegrid[0, 2])
     grids = {'jump': jumpgrid,\
              'ctl1': ctl1grid,\
@@ -2318,7 +2321,7 @@ def plotcomp_jumpeffect_controls(jion, index):
              ion=ild.getnicename(jion, mathmode=False), ind=index)
     fig.suptitle(title, fontsize=fontsize)
     
-    cax = fig.add_subplot(growthplot_grid[3, 0])
+    cax = fig.add_subplot(growthplot_grid[4, 0])
     mrange = (11., 14.5)
     cmap = cm.get_cmap('rainbow')
     cmap.set_over(cmap(1.))
@@ -2349,6 +2352,7 @@ def plotcomp_jumpeffect_controls(jion, index):
                pf['{header}/cosmopars'.format(header=hedn)].attrs.items()}
         igrp = pf['{ion}_jump'.format(ion=jion)]
         
+        ## sightline data
         for sample in ['jump', 'ctl1', 'ctl2']:
             grid = grids[sample]
             tiax = fig.add_subplot(grid[0, 0])
@@ -2458,7 +2462,38 @@ def plotcomp_jumpeffect_controls(jion, index):
             hlax.axhline(0., color='black', linestyle='solid')
             hlax.axhline(200., color='black', linestyle='dotted')
             hlax.axhline(-200., color='black', linestyle='dotted')
-                
+
+       ## Comparing EW, N growth
+       nax = fig.add_axes(growthplot_grid[0, 0])
+       eax = fig.add_axes(growthplot_grid[1, 0])
+       ggrp = igrp['Delta_v_trends']
+       samples = ['jump', 'ctl1', 'ctl2']
+       
+       dv = np.array(ggrp['Deltav_rf_kmps']) * 0.5
+       ns = {sample: {ion: np.array(ggrp['logNs_{sample}/{ion}'.format(sample=sample, ion=ion)]) \
+                      for ion in ions} for sample in samples}
+       es = {sample: {ion: np.log10(np.array(ggrp['EWs_{sample}/{ion}'.format(sample=sample, ion=ion)])) + 3. \
+                      for ion in ions} for sample in samples}  
+       for sample in samples:
+           for ion in ions:
+               nax.plot(dv, ns[sample][ion], color=ioncolors[ion],\
+                        linestyle=samplestyles[ion])
+               eax.plot(dv, es[sample][ion], color=ioncolors[ion],\
+                        linestyle=samplestyles[ion])
+        nax.set_ylabel('$\\log_{{10}} \\, \\mathrm{{N}} \\; [\\mathrm{{cm}}^{{-2}}]$',\
+                       fontsize=fontsize)
+        eax.set_ylabel('$\\log_{{10}} \\, \\mathrm{{EW}} \\; [\\mathrm{{m{{\AA}}}}]$',\
+                       fontsize=fontsize)
+        eax.set_xlabel('$\\pm \\Delta \\, v \\; [\\mathrm{{km}} \\, \\mathrm{{s}}^{{-1}}]$',\
+                       fontsize=fontsize)
+        nax.set_xlim(*eax.get_xlim())
+        nax.tick_params(which='both', direction='in',\
+                        labelsize=fontsize - 1, top=True, right=True,\
+                        labelleft=True, labelbottom=False)
+        eax.tick_params(which='both', direction='in',\
+                        labelsize=fontsize - 1, top=True, right=True,\
+                        labelleft=True, labelbottom=False)
+        
     print('Colored lines in galaxy panels show impact parameters, black lines show R200c')
    
     
