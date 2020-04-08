@@ -2293,22 +2293,22 @@ def plotcomp_jumpeffect_controls(jion, index):
     coursegrid = gsp.GridSpec(ncols=7, nrows=1, hspace=0.0, wspace=0.0,\
                               width_ratios=[1., 0.2, 0.5, 0.2, 1., 0.1, 1.],\
                               top=0.95, bottom=0.05)
-    hrs_spec = [0.2, 1., 1., 1.]
-    jumpgrid = gsp.GridSpecFromSubplotSpec(4, 1,\
+    hrs_spec = [0.2, 1., 0.4, 1., 0.4, 1.]
+    jumpgrid = gsp.GridSpecFromSubplotSpec(6, 1,\
                          height_ratios=hrs_spec,\
-                         wspace=0.0, hspace=0.4,\
+                         wspace=0.0, hspace=0.0,\
                          subplot_spec=coursegrid[0, 0])
-    ctl1grid = gsp.GridSpecFromSubplotSpec(4, 1,\
+    ctl1grid = gsp.GridSpecFromSubplotSpec(6, 1,\
                          height_ratios=hrs_spec,\
-                         wspace=0.0, hspace=0.4,\
+                         wspace=0.0, hspace=0.0,\
                          subplot_spec=coursegrid[0, 4])
-    ctl2grid = gsp.GridSpecFromSubplotSpec(4, 1,\
+    ctl2grid = gsp.GridSpecFromSubplotSpec(6, 1,\
                          height_ratios=hrs_spec,\
-                         wspace=0.0, hspace=0.2,\
+                         wspace=0.0, hspace=0.40,\
                          subplot_spec=coursegrid[0, 6])
     growthplot_grid = gsp.GridSpecFromSubplotSpec(3, 1,\
                          height_ratios=[1., 1., 1.],\
-                         wspace=0.0, hspace=0.4,\
+                         wspace=0.0, hspace=0.2,\
                          subplot_spec=coursegrid[0, 3])
     grids = {'jump': jumpgrid,\
              'ctl1': ctl1grid,\
@@ -2329,8 +2329,8 @@ def plotcomp_jumpeffect_controls(jion, index):
             grid = grids[sample]
             tiax = fig.add_subplot(grid[0, 0])
             odax = fig.add_subplot(grid[1, 0])
-            mvax = fig.add_subplot(grid[2, 0])
-            hlax = fig.add_subplot(grid[3, 0])
+            mvax = fig.add_subplot(grid[3, 0])
+            hlax = fig.add_subplot(grid[5, 0])
             
             XY = np.array(igrp['XY_cMpc_{sample}'.format(sample=sample)][index, :])
             coltext = 'sl. at $X = {x:.1f}, Y = {y:.1f}\\, \\mathrm{{cMpc}}$'.format(\
@@ -2347,7 +2347,7 @@ def plotcomp_jumpeffect_controls(jion, index):
             for ii in range(len(ionorder)):
                 ion = ionorder[ii]
                 yv = np.array(odgrp[ion][index, :])
-                odax.plot(xv, yv, color=ioncolors[ion], **kw_ls[ion])
+                odax.plot(xv, yv + offset, color=ioncolors[ion], **kw_ls[ion])
                 if ion != 'o8major':
                     offset += doff
             if sample in ['jump']:
