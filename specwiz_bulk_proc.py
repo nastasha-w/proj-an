@@ -2321,7 +2321,7 @@ def plotcomp_jumpeffect_controls(jion, index):
     cax = growthplot_grid[3, 0]
     mrange = (11., 14.5)
     cmap = cm.get_cmap('rainbow')
-    cmap.set_over(cmap[1])
+    cmap.set_over(cmap(1.))
     norm = mpl.colors.Normalize(vmin=mrange[0], vmax=mrange[1])
     
     cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,\
