@@ -2270,7 +2270,7 @@ def plotcomp_jumpeffect_controls(jion, index):
               'plotdata_jumpsamples_and_controls.hdf5'
     
     
-    fig = plt.figure(figsize=(10., 7.))
+    fig = plt.figure(figsize=(13., 5.))
     fontsize=12
     
     coursegrid = gsp.GridSpec(ncols=7, nrows=1, hspace=0.0, wspace=0.0,\
@@ -2321,7 +2321,7 @@ def plotcomp_jumpeffect_controls(jion, index):
             tiax.text(0.5, 0.0, coltext, fontsize=fontsize,\
                       transform=tiax.transAxes,\
                       horizontalalignment='center', verticalalignment='bottom')
-            
+            tiax.axis('off')
    
     
 
