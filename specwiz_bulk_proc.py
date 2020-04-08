@@ -2528,6 +2528,7 @@ def plotset_jumps1():
         while True:
             try:
                 plotcomp_jumpeffect_controls(ion, ind)
+                plt.close()
                 ind += 1
             except ValueError:
                 break
