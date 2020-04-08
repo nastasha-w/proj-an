@@ -2318,7 +2318,7 @@ def plotcomp_jumpeffect_controls(jion, index):
              ion=ild.getnicename(jion, mathmode=False), ind=index)
     fig.suptitle(title, fontsize=fontsize)
     
-    cax = growthplot_grid[3, 0]
+    cax = fig.add_subplot(growthplot_grid[3, 0])
     mrange = (11., 14.5)
     cmap = cm.get_cmap('rainbow')
     cmap.set_over(cmap(1.))
