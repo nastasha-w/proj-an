@@ -2362,16 +2362,22 @@ def plotcomp_jumpeffect_controls(jion, index):
             ## mass and peculiar velocity
             mod = np.array(igrp['massw_overdensity_{sample}'.format(sample=sample)][index, :])
             mvp = np.array(igrp['massw_pecvel_{sample}'.format(sample=sample)][index, :])
-            hf = cu.Hubble(cosmopars['z'], cosmopars=cosmopars) * 1e-5 / c.cm_per_mpc
-            xp = xv / hf
+            hf = cu.Hubble(cosmopars['z'], cosmopars=cosmopars) 
+            xp = xv * 1e5 / hf / c.cm_per_mpc
             mvax.plot(xp, mod, color='black')
             mvax2 = mvax.twinx()
             mvax2.plot(xp, mvp, color='gray')
+            mvax2.axhline(0., color='gray', linestyle='dotted')
             
             mvax.tick_params(which='both', direction='in',\
                              labelsize=fontsize - 1, top=True, right=False,\
-                             labelleft=True, labelbottom=True)  
-            mvax.set_xlabel('Z [cMpc]', fontize=fontsize)
+                             labelleft=True, labelbottom=True)
+            mvax2.tick_params(which='both', direction='in',\
+                             labelsize=fontsize - 1,\
+                             top=False, right=True, bottom=False, left=False,\
+                             labelleft=False, labelbottom=False,\
+                             labelright=True, labeltop=False)
+            mvax.set_xlabel('Z [cMpc]', fontsize=fontsize)
             mvax.set_ylabel('$\\delta(\\mathrm{{Mass}})$', fontsize=fontsize)
             mvax2.set_ylabel('$v(\\mathrm{{pec}}, \\mathrm{{Mass}})$',\
                              fontsize=fontsize, color='gray')
