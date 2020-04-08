@@ -2309,7 +2309,7 @@ def plotcomp_jumpeffect_controls(jion, index):
     growthplot_grid = gsp.GridSpecFromSubplotSpec(4, 1,\
                          height_ratios=[1., 1., 1., 0.2],\
                          wspace=0.0, hspace=0.2,\
-                         subplot_spec=coursegrid[0, 3])
+                         subplot_spec=coursegrid[0, 2])
     grids = {'jump': jumpgrid,\
              'ctl1': ctl1grid,\
              'ctl2': ctl2grid}
@@ -2318,7 +2318,7 @@ def plotcomp_jumpeffect_controls(jion, index):
              ion=ild.getnicename(jion, mathmode=False), ind=index)
     fig.suptitle(title, fontsize=fontsize)
     
-    cax = fig.add_subplot(growthplot_grid[2, 0])
+    cax = fig.add_subplot(growthplot_grid[3, 0])
     mrange = (11., 14.5)
     cmap = cm.get_cmap('rainbow')
     cmap.set_over(cmap(1.))
@@ -2337,7 +2337,7 @@ def plotcomp_jumpeffect_controls(jion, index):
     # ticks=bounds,  # optional
     cbar.set_label('$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}} \\; [\\mathrm{{M}}_{{\\odot}}]$', fontsize=fontsize)
     cax.tick_params(labelsize=fontsize - 1)
-    cax.set_aspect(8.)
+    cax.set_aspect(0.1)
     
     #bbox = {'facecolor': 'white', 'alpha': 0.5, 'edgecolor': 'none'}
     
@@ -2430,7 +2430,7 @@ def plotcomp_jumpeffect_controls(jion, index):
             roff = np.sqrt(xoff**2 + yoff**2)
             
             hlax.scatter(zs, xoff, c=ms, cmap=cmap, norm=norm, marker='*',\
-                         s=20, edgecolor='black', zorder=2)
+                         s=20, edgecolor='black', zorder=8)
             for gi in range(len(gs)):
                 hlax.plot([zs[gi], zs[gi]],\
                           [0., xoff[gi] / abs(xoff[gi]) * roff[gi]],\
@@ -2452,7 +2452,7 @@ def plotcomp_jumpeffect_controls(jion, index):
             hlax.tick_params(which='both', direction='in',\
                              labelsize=fontsize - 1, top=True, right=True,\
                              labelleft=True, labelbottom=True) 
-            hlax.axhline(0., color='black', linstyle='solid')
+            hlax.axhline(0., color='black', linestyle='solid')
             hlax.axhline(200., color='black', linestyle='dotted')
             hlax.axhline(-200., color='black', linestyle='dotted')
                 
