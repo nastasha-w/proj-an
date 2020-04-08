@@ -2268,7 +2268,8 @@ def plotcomp_jumpeffect_controls(jion, index):
     '''
     plotdatafile = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/' + \
               'plotdata_jumpsamples_and_controls.hdf5'
-    
+    outdir = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/controlset1/'
+    outname = outdir + 'jump_and_controls_{ion}_{index}.pdf'.format(ion=jion, index=index)
     
     fig = plt.figure(figsize=(13., 5.))
     fontsize=11
@@ -2510,16 +2511,27 @@ def plotcomp_jumpeffect_controls(jion, index):
                 for ion in ions]
         ionl.append(mlines.Line2D([], [], color=ioncolors['o8major'],\
                     **kw_ls['o8major'], label='O VIII (single)'))
-        samplel = [mlines.Line2D([], [], color=ioncolors[ion],\
+        samplel = [mlines.Line2D([], [], color='black',\
                    linestyle=samplestyles[sample], label=sample)\
                    for sample in samples]
         lax.legend(handles=samplel + ionl, fontsize=fontsize -1, ncol=2,\
                    loc='upper center', bbox_to_anchor=(0.5, 1.0),\
                    frameon=False)
         lax.axis('off')
-    print('Colored lines in galaxy panels show impact parameters, black lines show R200c')
-   
     
+    plt.savefig(outname=outname, format='pdf', bbox_inches='tight')
+   
+def plotset_jumps1():
+    ions = ['o8', 'fe17', 'ne9']
+    for ion in ions:
+        ind = 0
+        while True:
+            try:
+                plotcomp_jumpeffect_controls(ion, ind)
+                ind += 1
+            except ValueError:
+                break
+            
 
 
 
