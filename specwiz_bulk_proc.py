@@ -2291,7 +2291,7 @@ def plotcomp_jumpeffect_controls(jion, index):
     ionorder = ['o6', 'o7', 'o8', 'o8major', 'ne8', 'ne9', 'fe17']
     
     coursegrid = gsp.GridSpec(ncols=7, nrows=1, hspace=0.0, wspace=0.0,\
-                              width_ratios=[1., 0.25, 0.5, 0.25, 1., 0.25, 1.],\
+                              width_ratios=[1., 0.25, 0.7, 0.25, 1., 0.25, 1.],\
                               top=0.95, bottom=0.1, left=0.07, right=0.93)
     hrs_spec = [0.2, 1., 0.4, 1., 0.2, 1.]
     jumpgrid = gsp.GridSpecFromSubplotSpec(6, 1,\
@@ -2337,7 +2337,7 @@ def plotcomp_jumpeffect_controls(jion, index):
     # ticks=bounds,  # optional
     cbar.set_label('$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}} \\; [\\mathrm{{M}}_{{\\odot}}]$', fontsize=fontsize)
     cax.tick_params(labelsize=fontsize - 1)
-    cax.set_aspect(0.1)
+    cax.set_aspect(0.07)
     
     #bbox = {'facecolor': 'white', 'alpha': 0.5, 'edgecolor': 'none'}
     
@@ -2430,15 +2430,17 @@ def plotcomp_jumpeffect_controls(jion, index):
             roff = np.sqrt(xoff**2 + yoff**2)
             
             hlax.scatter(zs, xoff, c=ms, cmap=cmap, norm=norm, marker='*',\
-                         s=20, edgecolor='black', zorder=8)
+                         s=60, edgecolor='black', zorder=8)
             for gi in range(len(gs)):
                 hlax.plot([zs[gi], zs[gi]],\
                           [0., xoff[gi] / abs(xoff[gi]) * roff[gi]],\
                           color=cmap((ms[gi] - mrange[0]) / (mrange[1] - mrange[0])),\
                           linewidth=4.)
                 hlax.plot([zs[gi], zs[gi]],\
-                          [xoff[gi], xoff[gi] - xoff[gi]/ abs(xoff[gi]) * rs[gi]],\
-                          color='black',\
+                          [xoff[gi] / abs(xoff[gi]) * roff[gi],\
+                           xoff[gi] / abs(xoff[gi]) * roff[gi] \
+                            - xoff[gi]/ abs(xoff[gi]) * rs[gi]],\
+                          color='black', alpha=0.5,\
                           linewidth=2.)
                 #gtext = '$\\mathrm{{M}}_{{\\mathrm{{200c}}}}$: {mass:.1f}\n' +\
                 #        'galaxy id: {gid}'
