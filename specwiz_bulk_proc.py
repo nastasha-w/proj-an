@@ -2292,7 +2292,7 @@ def plotcomp_jumpeffect_controls(jion, index):
     
     coursegrid = gsp.GridSpec(ncols=7, nrows=1, hspace=0.0, wspace=0.0,\
                               width_ratios=[1., 0.25, 0.5, 0.25, 1., 0.25, 1.],\
-                              top=0.95, bottom=0.05, left=0.05, right=0.95)
+                              top=0.95, bottom=0.05, left=0.07, right=0.93)
     hrs_spec = [0.2, 1., 0.4, 1., 0.4, 1.]
     jumpgrid = gsp.GridSpecFromSubplotSpec(6, 1,\
                          height_ratios=hrs_spec,\
@@ -2307,7 +2307,7 @@ def plotcomp_jumpeffect_controls(jion, index):
                          wspace=0.0, hspace=0.0,\
                          subplot_spec=coursegrid[0, 6])
     growthplot_grid = gsp.GridSpecFromSubplotSpec(3, 1,\
-                         height_ratios=[1., 1., 1.],\
+                         height_ratios=[1., 1., 1., 0.2],\
                          wspace=0.0, hspace=0.2,\
                          subplot_spec=coursegrid[0, 3])
     grids = {'jump': jumpgrid,\
@@ -2317,6 +2317,28 @@ def plotcomp_jumpeffect_controls(jion, index):
     title = '{ion} jump selection, sightlines {ind}'.format(\
              ion=ild.getnicename(jion, mathmode=False), ind=index)
     fig.suptitle(title, fontsize=fontsize)
+    
+    cax = growthplot_grid[3, 0]
+    mrange = (11., 14.5)
+    cmap = cm.get_cmap('rainbow')
+    cmap.set_over(cmap[1])
+    norm = mpl.colors.Normalize(vmin=mrange[0], vmax=mrange[1])
+    
+    cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,\
+                                norm=norm,\
+                                boundaries=np.append(mrange, mrange[1] + 0.1),\
+                                spacing='proportional', extend='max',\
+                                orientation='horizontal')
+    # to use 'extend', you must
+    # specify two extra boundaries:
+    # boundaries=[0] + bounds + [13],
+    # extend='both',
+    # ticks=bounds,  # optional
+    cbar.set_label('$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}}$ \\; [\\mathrm{{M}}_{{\\odot}}]', fontsize=fontsize)
+    cax.tick_params(labelsize=fontsize - 1)
+    cax.set_aspect(0.1)
+    
+    bbox = {'facecolor': 'white', 'alpha': 0.5, 'edgecolor': 'none'}
     
     with h5py.File(plotdatafile, 'r') as pf:
         keys = list(pf.keys())
@@ -2393,8 +2415,45 @@ def plotcomp_jumpeffect_controls(jion, index):
                 mvax2.set_ylabel('$v(\\mathrm{{pec}}, \\mathrm{{Mass}}) \\; [\\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}]$',\
                                  fontsize=fontsize, color=vcolor)
             
-    
-    # sync vpec   
+            ## galaxies in the sightline environment
+            hgrp = igrp['halos/{sample}'.format(sample=sample)]
+            ms = np.log10(np.array(hgrp['M200c_Msun/{ind}'.format(ind=index)]))
+            rs = np.array(hgrp['R200c_pkpc/{ind}'.format(ind=index)])
+            xs = np.array(hgrp['Xcom_cMpc/{ind}'.format(ind=index)])
+            ys = np.array(hgrp['Ycom_cMpc/{ind}'.format(ind=index)])
+            zs = np.array(hgrp['Zcom_cMpc/{ind}'.format(ind=index)])
+            gs = np.array(hgrp['galaxyid/{ind}'.format(ind=index)])
+            
+            xoff = (xs - XY[0]) * cosmopars['a'] * 1e3 # cMpc -> pkpc
+            yoff = (ys - XY[1]) * cosmopars['a'] * 1e3
+            roff = np.sqrt(xoff**2 + yoff**2)
+            
+            hlax.scatter(zs, xoff, c=ms, cmap=cmap, norm=norm, marker='*',\
+                         s=20)
+            for gi in len(gs):
+                hlax.plot([zs[gi], zs[gi]],\
+                          [0., xoff[gi] / abs(xoff[gi]) * roff[gi]],\
+                          color=cmap((ms - mrange[0]) / (mrange[1] - mrange[0])),\
+                          linewidth=4.)
+                hlax.plot([zs[gi], zs[gi]],\
+                          [xoff[gi], xoff[gi] - xoff[gi]/ abs(xoff[gi]) * rs[gi]],\
+                          color='black',\
+                          linewidth=2.)
+                gtext = '$\\mathrm{{M}}_{{\\mathrm{{200c}}}}$: {mass:.1f}\n' +\
+                        'galaxy id: {gid}'
+                hlax.text(zs[gi], xoff[gi], gtext.format(mass=ms[gi], gid=gs[gi]),\
+                          fontsize=fontsize-1, horizontalalignment='left',\
+                          verticalalignment='center', bbox=bbox)
+            hlax.set_xlim(0., cosmopars['boxsize'] / cosmopars['h'])
+            hlax.set_xlabel('Z [cMpc]', fontsize=fontsize)
+            if sample in ['jump']:
+                hlax.set_ylabel('$\\Delta$ X [pkpc]', fontsize=fontsize)
+            hlax.tick_params(which='both', direction='in',\
+                             labelsize=fontsize - 1, top=True, right=True,\
+                             labelleft=True, labelbottom=True) 
+                
+    print('Colored lines in galaxy panels show impact parameters, black lines show R200c')
+   
     
 
 
