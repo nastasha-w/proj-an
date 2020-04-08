@@ -2296,11 +2296,11 @@ def plotcomp_jumpeffect_controls(jion, index):
     hrs_spec = [0.2, 1., 1., 1.]
     jumpgrid = gsp.GridSpecFromSubplotSpec(4, 1,\
                          height_ratios=hrs_spec,\
-                         wspace=0.0, hspace=0.2,\
+                         wspace=0.0, hspace=0.4,\
                          subplot_spec=coursegrid[0, 0])
     ctl1grid = gsp.GridSpecFromSubplotSpec(4, 1,\
                          height_ratios=hrs_spec,\
-                         wspace=0.0, hspace=0.2,\
+                         wspace=0.0, hspace=0.4,\
                          subplot_spec=coursegrid[0, 4])
     ctl2grid = gsp.GridSpecFromSubplotSpec(4, 1,\
                          height_ratios=hrs_spec,\
@@ -2308,7 +2308,7 @@ def plotcomp_jumpeffect_controls(jion, index):
                          subplot_spec=coursegrid[0, 6])
     growthplot_grid = gsp.GridSpecFromSubplotSpec(3, 1,\
                          height_ratios=[1., 1., 1.],\
-                         wspace=0.0, hspace=0.2,\
+                         wspace=0.0, hspace=0.4,\
                          subplot_spec=coursegrid[0, 3])
     grids = {'jump': jumpgrid,\
              'ctl1': ctl1grid,\
@@ -2342,11 +2342,16 @@ def plotcomp_jumpeffect_controls(jion, index):
             
             odgrp = igrp['tau_{sample}'.format(sample=sample)]
             xv = np.array(igrp['VHubble_KMpS'])
-            for ion in ionorder:
+            offset = 0.0
+            doff = 0.5
+            for ii in range(len(ionorder)):
+                ion = ionorder[ii]
                 yv = np.array(odgrp[ion][index, :])
                 odax.plot(xv, yv, color=ioncolors[ion], **kw_ls[ion])
+                if ion != 'o8major':
+                    offset += doff
             if sample in ['jump']:
-                odax.set_ylabel('$\\tau$', fontsize=fontsize)
+                odax.set_ylabel('$\\tau$ (offset)', fontsize=fontsize)
             odax.set_xlabel('$\\Delta v \\; [\\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}]$',\
                           fontsize=fontsize)
             odax.tick_params(which='both', direction='in',\
