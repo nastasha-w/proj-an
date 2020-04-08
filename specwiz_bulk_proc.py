@@ -2292,7 +2292,7 @@ def plotcomp_jumpeffect_controls(jion, index):
     
     coursegrid = gsp.GridSpec(ncols=7, nrows=1, hspace=0.0, wspace=0.0,\
                               width_ratios=[1., 0.25, 0.5, 0.25, 1., 0.25, 1.],\
-                              top=0.95, bottom=0.07, left=0.07, right=0.93)
+                              top=0.95, bottom=0.1, left=0.07, right=0.93)
     hrs_spec = [0.2, 1., 0.4, 1., 0.2, 1.]
     jumpgrid = gsp.GridSpecFromSubplotSpec(6, 1,\
                          height_ratios=hrs_spec,\
@@ -2335,11 +2335,11 @@ def plotcomp_jumpeffect_controls(jion, index):
     # boundaries=[0] + bounds + [13],
     # extend='both',
     # ticks=bounds,  # optional
-    cbar.set_label('$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}}$ \\; [\\mathrm{{M}}_{{\\odot}}]', fontsize=fontsize)
+    cbar.set_label('$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}} \\; [\\mathrm{{M}}_{{\\odot}}]$', fontsize=fontsize)
     cax.tick_params(labelsize=fontsize - 1)
-    cax.set_aspect(0.1)
+    cax.set_aspect(8.)
     
-    bbox = {'facecolor': 'white', 'alpha': 0.5, 'edgecolor': 'none'}
+    #bbox = {'facecolor': 'white', 'alpha': 0.5, 'edgecolor': 'none'}
     
     with h5py.File(plotdatafile, 'r') as pf:
         keys = list(pf.keys())
@@ -2430,7 +2430,7 @@ def plotcomp_jumpeffect_controls(jion, index):
             roff = np.sqrt(xoff**2 + yoff**2)
             
             hlax.scatter(zs, xoff, c=ms, cmap=cmap, norm=norm, marker='*',\
-                         s=20, edgecolor='black')
+                         s=20, edgecolor='black', zorder=2)
             for gi in range(len(gs)):
                 hlax.plot([zs[gi], zs[gi]],\
                           [0., xoff[gi] / abs(xoff[gi]) * roff[gi]],\
@@ -2445,7 +2445,7 @@ def plotcomp_jumpeffect_controls(jion, index):
                 #hlax.text(zs[gi], xoff[gi], gtext.format(mass=ms[gi], gid=gs[gi]),\
                 #          fontsize=fontsize-1, horizontalalignment='left',\
                 #          verticalalignment='center', bbox=bbox)
-            hlax.set_xlim(**mvax.get_xlim())
+            hlax.set_xlim(*mvax.get_xlim())
             hlax.set_xlabel('Z [cMpc]', fontsize=fontsize)
             if sample in ['jump']:
                 hlax.set_ylabel('$\\Delta$ X [pkpc]', fontsize=fontsize)
