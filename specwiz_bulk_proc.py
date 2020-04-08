@@ -2480,19 +2480,19 @@ def plotcomp_jumpeffect_controls(jion, index):
                          linestyle=samplestyles[ion])
                 eax.plot(dv, es[sample][ion], color=ioncolors[ion],\
                          linestyle=samplestyles[ion])
-         nax.set_ylabel('$\\log_{{10}} \\, \\mathrm{{N}} \\; [\\mathrm{{cm}}^{{-2}}]$',\
-                        fontsize=fontsize)
-         eax.set_ylabel('$\\log_{{10}} \\, \\mathrm{{EW}} \\; [\\mathrm{{m{{\AA}}}}]$',\
-                        fontsize=fontsize)
-         eax.set_xlabel('$\\pm \\Delta \\, v \\; [\\mathrm{{km}} \\, \\mathrm{{s}}^{{-1}}]$',\
-                        fontsize=fontsize)
-         nax.set_xlim(*eax.get_xlim())
-         nax.tick_params(which='both', direction='in',\
-                         labelsize=fontsize - 1, top=True, right=True,\
-                         labelleft=True, labelbottom=False)
-         eax.tick_params(which='both', direction='in',\
-                         labelsize=fontsize - 1, top=True, right=True,\
-                         labelleft=True, labelbottom=False)
+        nax.set_ylabel('$\\log_{{10}} \\, \\mathrm{{N}} \\; [\\mathrm{{cm}}^{{-2}}]$',\
+                         fontsize=fontsize)
+        eax.set_ylabel('$\\log_{{10}} \\, \\mathrm{{EW}} \\; [\\mathrm{{m{{\AA}}}}]$',\
+                       fontsize=fontsize)
+        eax.set_xlabel('$\\pm \\Delta \\, v \\; [\\mathrm{{km}} \\, \\mathrm{{s}}^{{-1}}]$',\
+                       fontsize=fontsize)
+        nax.set_xlim(*eax.get_xlim())
+        nax.tick_params(which='both', direction='in',\
+                        labelsize=fontsize - 1, top=True, right=True,\
+                        labelleft=True, labelbottom=False)
+        eax.tick_params(which='both', direction='in',\
+                        labelsize=fontsize - 1, top=True, right=True,\
+                        labelleft=True, labelbottom=False)
         
     print('Colored lines in galaxy panels show impact parameters, black lines show R200c')
    
