@@ -2512,9 +2512,10 @@ def plotcomp_jumpeffect_controls(jion, index):
                     **kw_ls['o8major'], label='O VIII (single)'))
         samplel = [mlines.Line2D([], [], color=ioncolors[ion],\
                    linestyle=samplestyles[sample], label=sample)\
-                   for isample in samples]
-        lax.legend(handles=samplel + ionl, fontsize=fontsize, ncol=2,\
-                   loc='upper center', bbox_to_anchor=(0.5, 1.0))
+                   for sample in samples]
+        lax.legend(handles=samplel + ionl, fontsize=fontsize -1, ncol=2,\
+                   loc='upper center', bbox_to_anchor=(0.5, 1.0),\
+                   frameon=False)
         lax.axis('off')
     print('Colored lines in galaxy panels show impact parameters, black lines show R200c')
    
