@@ -2292,8 +2292,8 @@ def plotcomp_jumpeffect_controls(jion, index):
     
     coursegrid = gsp.GridSpec(ncols=7, nrows=1, hspace=0.0, wspace=0.0,\
                               width_ratios=[1., 0.25, 0.5, 0.25, 1., 0.25, 1.],\
-                              top=0.95, bottom=0.05, left=0.07, right=0.93)
-    hrs_spec = [0.2, 1., 0.4, 1., 0.4, 1.]
+                              top=0.95, bottom=0.07, left=0.07, right=0.93)
+    hrs_spec = [0.2, 1., 0.4, 1., 0.2, 1.]
     jumpgrid = gsp.GridSpecFromSubplotSpec(6, 1,\
                          height_ratios=hrs_spec,\
                          wspace=0.0, hspace=0.0,\
@@ -2318,7 +2318,7 @@ def plotcomp_jumpeffect_controls(jion, index):
              ion=ild.getnicename(jion, mathmode=False), ind=index)
     fig.suptitle(title, fontsize=fontsize)
     
-    cax = fig.add_subplot(growthplot_grid[3, 0])
+    cax = fig.add_subplot(growthplot_grid[2, 0])
     mrange = (11., 14.5)
     cmap = cm.get_cmap('rainbow')
     cmap.set_over(cmap(1.))
@@ -2388,7 +2388,7 @@ def plotcomp_jumpeffect_controls(jion, index):
             mod = np.array(igrp['massw_overdensity_{sample}'.format(sample=sample)][index, :])
             mvp = np.array(igrp['massw_pecvel_{sample}'.format(sample=sample)][index, :])
             hf = cu.Hubble(cosmopars['z'], cosmopars=cosmopars) 
-            xp = xv * 1e5 / hf / c.cm_per_mpc
+            xp = xv * 1e5 / hf / c.cm_per_mpc / cosmopars['a']
             mvax.plot(xp, mod, color=mcolor)
             mvax2 = mvax.twinx()
             mvax2.plot(xp, mvp, color=vcolor, linestyle='dashed')
@@ -2408,7 +2408,7 @@ def plotcomp_jumpeffect_controls(jion, index):
                              top=False, right=True, bottom=False, left=False,\
                              labelleft=False, labelbottom=False,\
                              labelright=True, labeltop=False)
-            mvax.set_xlabel('Z [cMpc]', fontsize=fontsize)
+            #mvax.set_xlabel('Z [cMpc]', fontsize=fontsize)
             if sample in ['jump']:
                 mvax.set_ylabel('$\\delta(\\mathrm{{Mass}})$',\
                                 fontsize=fontsize, color=mcolor)
@@ -2440,18 +2440,21 @@ def plotcomp_jumpeffect_controls(jion, index):
                           [xoff[gi], xoff[gi] - xoff[gi]/ abs(xoff[gi]) * rs[gi]],\
                           color='black',\
                           linewidth=2.)
-                gtext = '$\\mathrm{{M}}_{{\\mathrm{{200c}}}}$: {mass:.1f}\n' +\
-                        'galaxy id: {gid}'
-                hlax.text(zs[gi], xoff[gi], gtext.format(mass=ms[gi], gid=gs[gi]),\
-                          fontsize=fontsize-1, horizontalalignment='left',\
-                          verticalalignment='center', bbox=bbox)
-            hlax.set_xlim(0., cosmopars['boxsize'] / cosmopars['h'])
+                #gtext = '$\\mathrm{{M}}_{{\\mathrm{{200c}}}}$: {mass:.1f}\n' +\
+                #        'galaxy id: {gid}'
+                #hlax.text(zs[gi], xoff[gi], gtext.format(mass=ms[gi], gid=gs[gi]),\
+                #          fontsize=fontsize-1, horizontalalignment='left',\
+                #          verticalalignment='center', bbox=bbox)
+            hlax.set_xlim(**mvax.get_xlim())
             hlax.set_xlabel('Z [cMpc]', fontsize=fontsize)
             if sample in ['jump']:
                 hlax.set_ylabel('$\\Delta$ X [pkpc]', fontsize=fontsize)
             hlax.tick_params(which='both', direction='in',\
                              labelsize=fontsize - 1, top=True, right=True,\
                              labelleft=True, labelbottom=True) 
+            hlax.axhline(0., color='black', linstyle='solid')
+            hlax.axhline(200., color='black', linestyle='dotted')
+            hlax.axhline(-200., color='black', linestyle='dotted')
                 
     print('Colored lines in galaxy panels show impact parameters, black lines show R200c')
    
