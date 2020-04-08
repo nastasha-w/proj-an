@@ -2519,7 +2519,7 @@ def plotcomp_jumpeffect_controls(jion, index):
                    frameon=False)
         lax.axis('off')
     
-    plt.savefig(outname=outname, format='pdf', bbox_inches='tight')
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
    
 def plotset_jumps1():
     ions = ['o8', 'fe17', 'ne9']
