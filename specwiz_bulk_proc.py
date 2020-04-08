@@ -2470,9 +2470,9 @@ def plotcomp_jumpeffect_controls(jion, index):
         samples = ['jump', 'ctl1', 'ctl2']
         
         dv = np.array(ggrp['Deltav_rf_kmps']) * 0.5
-        ns = {sample: {ion: np.array(ggrp['logNs_{sample}/{ion}'.format(sample=sample, ion=ion)]) \
+        ns = {sample: {ion: np.array(ggrp['logNs_{sample}/{ion}'.format(sample=sample, ion=ion)][index, :]) \
                        for ion in ions} for sample in samples}
-        es = {sample: {ion: np.log10(np.array(ggrp['EWs_{sample}/{ion}'.format(sample=sample, ion=ion)])) + 3. \
+        es = {sample: {ion: np.log10(np.array(ggrp['EWs_{sample}/{ion}'.format(sample=sample, ion=ion)][index, :])) + 3. \
                        for ion in ions} for sample in samples}  
         for sample in samples:
             for ion in ions:
