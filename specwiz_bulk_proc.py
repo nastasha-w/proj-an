@@ -2379,7 +2379,7 @@ def plotcomp_jumpeffect_controls(jion, index):
                              color=mcolor, labelcolor=mcolor,\
                              labelsize=fontsize - 1, top=False, right=False,\
                              labelleft=True, labelbottom=False)
-            mvax2.tick_params(which='both', direction='in', color=vcolor,\
+            mvax2.tick_params(which='both', direction='in',\
                              labelsize=fontsize - 1,\
                              color=vcolor, labelcolor=vcolor,\
                              top=False, right=True, bottom=False, left=False,\
