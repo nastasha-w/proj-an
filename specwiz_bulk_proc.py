@@ -2464,8 +2464,8 @@ def plotcomp_jumpeffect_controls(jion, index):
             hlax.axhline(-200., color='black', linestyle='dotted')
 
         ## Comparing EW, N growth
-        nax = fig.add_axes(growthplot_grid[0, 0])
-        eax = fig.add_axes(growthplot_grid[1, 0])
+        nax = fig.add_subplot(growthplot_grid[0, 0])
+        eax = fig.add_subplot(growthplot_grid[1, 0])
         ggrp = igrp['Delta_v_trends']
         samples = ['jump', 'ctl1', 'ctl2']
         
