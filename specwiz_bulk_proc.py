@@ -2477,9 +2477,9 @@ def plotcomp_jumpeffect_controls(jion, index):
         for sample in samples:
             for ion in ions:
                 nax.plot(dv, ns[sample][ion], color=ioncolors[ion],\
-                         linestyle=samplestyles[ion])
+                         linestyle=samplestyles[sample])
                 eax.plot(dv, es[sample][ion], color=ioncolors[ion],\
-                         linestyle=samplestyles[ion])
+                         linestyle=samplestyles[sample])
         nax.set_ylabel('$\\log_{{10}} \\, \\mathrm{{N}} \\; [\\mathrm{{cm}}^{{-2}}]$',\
                          fontsize=fontsize)
         eax.set_ylabel('$\\log_{{10}} \\, \\mathrm{{EW}} \\; [\\mathrm{{m{{\AA}}}}]$',\
