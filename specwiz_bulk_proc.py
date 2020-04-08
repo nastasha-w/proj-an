@@ -2309,7 +2309,7 @@ def plotcomp_jumpeffect_controls(jion, index):
                          height_ratios=hrs_spec,\
                          wspace=0.0, hspace=0.0,\
                          subplot_spec=coursegrid[0, 6])
-    growthplot_grid = gsp.GridSpecFromSubplotSpec(4, 1,\
+    growthplot_grid = gsp.GridSpecFromSubplotSpec(5, 1,\
                          height_ratios=[1., 1., 0.4, 1., 0.2],\
                          wspace=0.0, hspace=0.0,\
                          subplot_spec=coursegrid[0, 2])
