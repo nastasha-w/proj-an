@@ -2533,6 +2533,70 @@ def plotset_jumps1():
             except ValueError:
                 break
             
-
-
+def plot_jumps_and_halos():
+    plotdatafile = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/' + \
+              'plotdata_jumpsamples_and_controls.hdf5'
+    outdir = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/controlset1/'
+    outname = outdir + 'locations_jump_and_controls.pdf'
+    
+    
+    fig = plt.figure(figsize=(13., 5.))
+    fontsize=11
+    Mmin = 12.5
+    sampleions = ['o8', 'ne9', 'fe17']
+    
+    grid = gsp.GridSpec(ncols=4, nrows=1, hspace=0.0, wspace=0.2,\
+                        width_ratios=[1., 1., 1., 0.2])
+    cax = fig.add_subplot(grid[0, 3])
+    
+    mrange = (11., 14.5)
+    cmap = cm.get_cmap('rainbow')
+    cmap.set_over(cmap(1.))
+    norm = mpl.colors.Normalize(vmin=mrange[0], vmax=mrange[1])
+    
+    cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,\
+                                norm=norm,\
+                                boundaries=np.append(np.linspace(mrange[0], mrange[1], 351.), mrange[1] + 0.1),\
+                                ticks=[11., 12., 13., 14.],\
+                                spacing='proportional', extend='max',\
+                                orientation='vertical')
+    # 
+    # to use 'extend', you must
+    # specify two extra boundaries:
+    # boundaries=[0] + bounds + [13],
+    # extend='both',
+    # ticks=bounds,  # optional
+    cbar.set_label('$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}} \\; [\\mathrm{{M}}_{{\\odot}}]$', fontsize=fontsize)
+    cax.tick_params(labelsize=fontsize - 1)
+    cax.set_aspect(12.)
+    cax.axhline(Mmin, color='black')
+    
+    bbox = {'facecolor': 'white', 'alpha': 0.5, 'edgecolor': 'none'}
+    
+    samples = ['jump', 'ctl1', 'ctl2']
+    kwargs_samples = {'jump': {'marker': '*', 'c': 'none', 'edgecolors': 'red', 's': 30},\
+                      'ctl1': {'marker': 'o', 'c': 'none', 'edgecolors': 'blue', 's': 20},\
+                      'ctl2': {'marker': 's', 'c': 'none', 'edgecolors': 'green', 's': 20},\
+                      }
+    with h5py.File(plotdatafile, 'r') as pf:
+        keys = list(pf.keys())
+        hedn = keys[np.where(['Header' in key for key in keys])[0][0]]
+        cosmopars = {key: val for key, val in \
+               pf['{header}/cosmopars'.format(header=hedn)].attrs.items()}
+        
+        for ii in range(len(sampleions)):
+            ax = fig.add_subplot(grid[0, ii])
+            ion = sampleions[ii]
+            itext = '{ion} samples'.format(ion=ild.getnicename(ion))
+            ax.text(0.01, 0.99, itext, fontsize=fontsize,\
+                    verticalalignment='top', horizontalalignment='left',\
+                    transform=ax.transAxes, bbox=bbox)
+            
+            igrp = pf['{ion}_jump'.format(ion=ion)]
+            
+            for sample in samples:
+                XY = np.array(igrp['XY_cMpc_{sample}'.format(sample=sample)])
+                ax.scatter(XY[:, 0], XY[:, 1], **kwargs_samples[sample])
+                
+                
 
