@@ -4146,6 +4146,7 @@ def plotbpar(fontsize=fontsize, showgaussian=False):
         print('whole box: b={b} km/s'.format(b=plotdata_vt[ion][boxvel]))
         print('Delta v={dv} km/s: b={b} km/s'.format(dv=vwindows_ion[ion] * 0.5,\
               b=plotdata_vt[ion][vwindows_ion[ion]]))
+    
     if showgaussian:
         print('Dashed lines show Gaussian spectra and fit function results')
     #leg_ions = [mlines.Line2D([], [], color=ioncolors[ion], linestyle='None',\
@@ -4155,6 +4156,8 @@ def plotbpar(fontsize=fontsize, showgaussian=False):
     xlim = list(ax.get_xlim())
     if xlim[0] < 0.:
         xlim[0] = 0.
+    if xlim[1] > 1500.:
+        xlim[1] = 1500.
     ax.set_xlim(*tuple(xlim))
     ylim = list(ax.get_ylim())
     ylim[0] = 0.
