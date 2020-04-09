@@ -1148,7 +1148,7 @@ def plotcddfsplits_fof_zev(fontsize=fontsize):
                ncol=ncol_legend, loc='lower center', bbox_to_anchor=(0.5, 0.))
     lax.axis('off')
 
-    plt.savefig(outname, format='pdf', bbox_inches='tight')
+    plt.savefig(outname, format='pdf') # , bbox_inches='tight'
 
 # cddfsplits, FoF, mask, appendix, split method  
 def plotcddfs_fofvsmask(ion, fontsize=fontsize):
@@ -2446,7 +2446,7 @@ def plot_radprof_zev(fontsize=fontsize):
                    loc='lower center', bbox_to_anchor=(0.5, 0.))
         lax.axis('off')
 
-    plt.savefig(imgname, format='pdf', bbox_inches='tight')
+    plt.savefig(imgname, format='pdf') # , bbox_inches='tight'
     
     
 ############################## 3d profiles ####################################
