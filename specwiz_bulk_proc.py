@@ -2533,7 +2533,7 @@ def plotset_jumps1():
             except ValueError:
                 break
             
-def plot_jumps_and_halos():
+def plot_jump_locations():
     plotdatafile = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/' + \
               'plotdata_jumpsamples_and_controls.hdf5'
     outdir = '/net/luttero/data2/specwizard_data/bugcheck_bpar_deltav/controlset1/'
@@ -2579,10 +2579,10 @@ def plot_jumps_and_halos():
                       'ctl2': {'marker': 's', 'c': 'none', 'edgecolors': 'green', 's': 20},\
                       }
     with h5py.File(plotdatafile, 'r') as pf:
-        keys = list(pf.keys())
-        hedn = keys[np.where(['Header' in key for key in keys])[0][0]]
-        cosmopars = {key: val for key, val in \
-               pf['{header}/cosmopars'.format(header=hedn)].attrs.items()}
+        #keys = list(pf.keys())
+        #hedn = keys[np.where(['Header' in key for key in keys])[0][0]]
+        #cosmopars = {key: val for key, val in \
+        #       pf['{header}/cosmopars'.format(header=hedn)].attrs.items()}
         
         for ii in range(len(sampleions)):
             ax = fig.add_subplot(grid[0, ii])
@@ -2597,6 +2597,6 @@ def plot_jumps_and_halos():
             for sample in samples:
                 XY = np.array(igrp['XY_cMpc_{sample}'.format(sample=sample)])
                 ax.scatter(XY[:, 0], XY[:, 1], **kwargs_samples[sample])
-                
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
                 
 
