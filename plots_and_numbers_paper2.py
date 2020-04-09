@@ -4135,7 +4135,7 @@ def plotbpar(fontsize=fontsize, showgaussian=False):
         ax.scatter(0.5 * boxvel, plotdata_vt[ion][boxvel],\
                    alpha=alpha, s=size, marker='o', edgecolor=ioncolors[ion],\
                    facecolor='none')
-        ax.axhline(bvals_CIE[ion], 0.0, 0.07, linestyle='dotted', linewidth=2,\
+        ax.axhline(bvals_CIE[ion], 0.0, 0.12, linestyle='dotted', linewidth=2,\
                    color=ioncolors[ion])
         if showgaussian:
             xv = plotdata_gs[ion].index * 0.5 # full width -> half width
@@ -4161,6 +4161,7 @@ def plotbpar(fontsize=fontsize, showgaussian=False):
     ax.set_xlim(*tuple(xlim))
     ylim = list(ax.get_ylim())
     ylim[0] = 0.
+    ylim[1] = 150.
     ax.set_ylim(*tuple(ylim))
     
     pu.setticks(ax, fontsize=fontsize)
@@ -4179,7 +4180,7 @@ def plotbpar(fontsize=fontsize, showgaussian=False):
     #ax.set_xticks(xticks)
     #ax.set_xticklabels(xlabels)    
     
-    ax.legend(ncol=3, fontsize=fontsize - 1, loc='upper left', frameon=False)
+    ax.legend(ncol=3, fontsize=fontsize - 1, loc='upper center', frameon=False)
 
     plt.savefig(outname, format='pdf', bbox_inches='tight')  
 
