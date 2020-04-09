@@ -2273,8 +2273,8 @@ def plot_radprof_zev(fontsize=fontsize):
                             8: 'all gas, z=0.5'}
 
     panelwidth = 2.5
-    panelheight = 2.5
-    legheight = 1.3
+    panelheight = 1.9
+    legheight = 1.1
     cwidth = 0.6
     if ytype == 'perc':
         wspace = 0.22
@@ -2289,7 +2289,7 @@ def plot_radprof_zev(fontsize=fontsize):
                         wspace=wspace,\
                         width_ratios=[panelwidth] * numcols + [cwidth],\
                         height_ratios=[panelheight] * numrows * 2 + [legheight],\
-                        bottom=0.05)
+                        bottom=0.0)
     axes = [[fig.add_subplot(grid[(i // numcols) * 2 + j, i % numcols]) for j in range(2)]for i in range(len(ions))]
     cax  = fig.add_subplot(grid[: 2 * numrows, numcols])
     if len(techvars_touse) > 1:
@@ -2323,17 +2323,17 @@ def plot_radprof_zev(fontsize=fontsize):
             ax = _axes[axi]
             if ytype == 'perc':
                 if ion == 'fe17':
-                    ax.set_ylim(11.5, 15.5)
+                    ax.set_ylim(12.0, 15.5)
                 elif ion == 'o7':
-                    ax.set_ylim(12.5, 16.5)
+                    ax.set_ylim(13.0, 16.5)
                 elif ion == 'o8':
-                    ax.set_ylim(12.5, 16.5)
+                    ax.set_ylim(13.0, 16.5)
                 elif ion == 'o6':
-                    ax.set_ylim(10.8, 14.8)
+                    ax.set_ylim(11.8, 14.8)
                 elif ion == 'ne9':
-                    ax.set_ylim(11.9, 15.9)
+                    ax.set_ylim(12.4, 15.9)
                 elif ion == 'ne8':
-                    ax.set_ylim(10.5, 14.5)
+                    ax.set_ylim(11.0, 14.5)
             
             elif ytype == 'fcov':
                 ax.set_ylim(0., 1.)
