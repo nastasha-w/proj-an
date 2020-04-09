@@ -978,7 +978,7 @@ def plotcddfsplits_fof_zev(fontsize=fontsize):
     panelwidth = 2.5
     panelheight = 2.5
     spaceh = 0.0
-    legheight = 1.8
+    legheight = 1.6
     #fcovticklen = 0.035
     if numcols * numrows - len(massedges) - 2 >= 2: # put legend in lower right corner of panel region
         seplegend = False
@@ -997,7 +997,10 @@ def plotcddfsplits_fof_zev(fontsize=fontsize):
     figwidth = numcols * panelwidth + 0.6 
     figheight = numrows * panelheight + spaceh * numrows + legheight
     fig = plt.figure(figsize=(figwidth, figheight))
-    grid = gsp.GridSpec(numrows_fig, numcols + 1, hspace=spaceh, wspace=0.0, width_ratios=[panelwidth] * numcols + [0.6], height_ratios=height_ratios)
+    grid = gsp.GridSpec(numrows_fig, numcols + 1, hspace=spaceh, wspace=0.0,\
+                        width_ratios=[panelwidth] * numcols + [0.6],\
+                        height_ratios=height_ratios,\
+                        bottom=0.0)
     axes = [fig.add_subplot(grid[i // numcols, i % numcols]) for i in range(2 * len(ions))]
     cax  = fig.add_subplot(grid[:numrows, numcols])
     if seplegend:
@@ -3562,7 +3565,7 @@ def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus', fontsize=fontsize):
     else:
         rt = 0.90
     fig = plt.figure(figsize=(5.5, 5.))
-    grid = grid = gsp.GridSpec(ncols=2, nrows=2, hspace=0.0, wspace=0.0,\
+    grid = gsp.GridSpec(ncols=2, nrows=2, hspace=0.0, wspace=0.0,\
                                width_ratios=[5., 1.], height_ratios=[0.7, 2.],\
                                left=0.15, right=rt)
     ax  = fig.add_subplot(grid[1, 0])
