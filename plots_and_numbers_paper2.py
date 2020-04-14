@@ -72,6 +72,11 @@ obslims_arcus = \
            'ne9':  [15.7],\
            'o8':   [15.6],\
            'fe17': [15.0]}
+obslims_arcus3 = \
+          {'o7': [15.1],\
+           'o8': [15.4],\
+           'ne9': [15.5],\
+           'fe17': [14.8]}
 obslims_lynxxgs = \
           {'o7':   [14.6],\
            'ne9':  [15.0],\
@@ -1827,6 +1832,11 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
         ytype='fcov'
         yvals_toplot = obslims
         yvals_toplot.update(obslims_arcus)
+    elif var == 'main-fcov-obs-arcus-3mA':
+        highlightcrit = None
+        ytype='fcov'
+        yvals_toplot = obslims
+        yvals_toplot.update(obslims_arcus3)
     elif var == 'main-fcov-obs-lynxxgs':
         highlightcrit = None
         ytype='fcov'
@@ -4351,7 +4361,8 @@ def calc_mincol_obs(z=0.1):
     # Athena X-IFU, technical requirements limits
     minEW_xifu = calc_EW_angstrom(0.18, z=z)
     # smith_abraham_etal_2016_arcus, brenneman_smith_etal_2016
-    minEW_arcus = {ion: 4.e-3 * (1. + z) for ion in ions} 
+    minEW_arcus = {ion: 4.e-3 * (1. + z) for ion in ions}
+    minEW_arcus3 = {ion: 3.e-3 * (1. + z) for ion in ions}
     # lynx_2018_08 (XGS)
     minEW_lynx = {ion: 1.e-3 * (1. + z)for ion in ions} 
     
@@ -4381,6 +4392,10 @@ def calc_mincol_obs(z=0.1):
     print(res)
     print('Arcus min. col.:')
     res = {ion: Ngrid[np.argmin(np.abs(Egrid[ion] - minEW_arcus[ion]))]\
+                for ion in ions} 
+    print(res)
+    print('Arcus min. col. (3 mA):')
+    res = {ion: Ngrid[np.argmin(np.abs(Egrid[ion] - minEW_arcus3[ion]))]\
                 for ion in ions} 
     print(res)
     print('Lynx min. col.:')
