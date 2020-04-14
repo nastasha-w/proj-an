@@ -1822,6 +1822,16 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
         highlightcrit = None
         ytype='fcov'
         yvals_toplot = obslims
+    elif var == 'main-fcov-obs-arcus':
+        highlightcrit = None
+        ytype='fcov'
+        yvals_toplot = obslims
+        yvals_toplot.update(obslims_arcus)
+    elif var == 'main-fcov-obs-lynxxgs':
+        highlightcrit = None
+        ytype='fcov'
+        yvals_toplot = obslims
+        yvals_toplot.update(obslims_lynxxgs)
     if lowmass:
         techvars_touse = [0, 1]
     else:
