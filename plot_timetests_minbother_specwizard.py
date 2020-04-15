@@ -86,7 +86,7 @@ def plot_timing(*args, **kwargs):
     
     times = np.array(times)
     # stored times are cumulative over the sightlines
-    times = np.append(times[0][np.newaxis, :], -np.diff(times, axis=1), axis=0)
+    times = np.append(times[0][:, np.newaxis], -np.diff(times, axis=1), axis=1)
     
     fontsize = 12
     fig = plt.figure(figsize=(5.5, 3.))
