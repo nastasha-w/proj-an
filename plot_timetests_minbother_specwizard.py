@@ -198,7 +198,7 @@ def plotdiffs_spectra(file_test, file_check,\
                 #boxsize = dct_test['BoxSize']
                 redshift = dct_test['Redshift']
                 
-                ions, ioninds = np.unique(ions, return_index=False)
+                ions, ioninds = np.unique(ions, return_index=True)
                 fosc = {ions[i]: fosc[ioninds[i]] for i in range(len(ions))}
                 lang = {ions[i]: lang[ioninds[i]] for i in range(len(ions))}
         
