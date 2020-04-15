@@ -190,7 +190,8 @@ def plotdiffs_spectra(file_test, file_check,\
                 erm = 'Test file missing keys {t}\nCheck file missing keys {c}'
                 erm.format(t=test_missing, c=check_missing)
                 raise RuntimeError(erm)
-            attrs_diff.update(diffkeys)
+            attrs_diff.update({key: (dct_test[key], dct_check[key]) \
+                               for key in diffkeys})
             if path == 'Header':
                 ions = np.array([ion.decode() for ion in dct_test['Ions']])
                 fosc = dct_test['Transitions_Oscillator_Strength']
