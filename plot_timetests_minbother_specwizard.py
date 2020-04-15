@@ -192,7 +192,7 @@ def plotdiffs_spectra(file_test, file_check,\
                 raise RuntimeError(erm)
             attrs_diff.update(diffkeys)
             if path == 'Header':
-                ions = np.array([ion.decode() for ion in dct_test['ions']])
+                ions = np.array([ion.decode() for ion in dct_test['Ions']])
                 fosc = dct_test['Transitions_Oscillator_Strength']
                 lang = dct_test['Transitions_Rest_Wavelength']
                 #boxsize = dct_test['BoxSize']
