@@ -102,7 +102,7 @@ def plot_timing(*args, **kwargs):
                    labelleft=True, labelbottom=True,\
                    top=True, left=True, bottom=True, right=True)
     ax.set_yscale('log')
-    ax.legend(fontsize=fontsize, ncols=2)
+    ax.legend(fontsize=fontsize, ncol=2)
     
     if 'savename' in kwargs:
         foname = kwargs['savename']
