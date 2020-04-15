@@ -20,7 +20,22 @@ logfiles = ['/cosma5/data/dp004/dc-wije1/specwiz/timetest_shacc_r32/stdout.L0100
             '/cosma5/data/dp004/dc-wije1/specwiz/timetest_miacc_r32/stdout.L0100N1504-miacc-32-2009549',\
             '/cosma5/data/dp004/dc-wije1/specwiz/timetest_loacc_r32/stdout.L0100N1504-loacc-32-2009550',\
             ]
+specfiles = ['/cosma5/data/dp004/dc-wije1/specwiz/timetest_shacc_r32/spec.snap_027_z000p101.0.hdf5',\
+             '/cosma5/data/dp004/dc-wije1/specwiz/timetest_hiacc_r32/spec.snap_027_z000p101.0.hdf5',\
+             '/cosma5/data/dp004/dc-wije1/specwiz/timetest_miacc_r32/spec.snap_027_z000p101.0.hdf5',\
+             '/cosma5/data/dp004/dc-wije1/specwiz/timetest_loacc_r32/spec.snap_027_z000p101.0.hdf5',\
+             ]
 labels = ['shacc', 'hiacc', 'miacc', 'loacc']
+# not recorded in the hdf5 files
+minbother_vals = {'shacc': {'minbother_red': 1e-14,\
+                            'minbother_blue': 1e-13},\
+                  'hiacc': {'minbother_red': 1e-14,\
+                            'minbother_blue': 1e-13},\
+                  'miacc': {'minbother_red': 1e-4,\
+                            'minbother_blue ': 1e-3},\
+                  'loacc': {'minbother_red': 1e-3,\
+                            'minbother_blue': 1e-2},\
+                  }
 
 
 
@@ -119,5 +134,89 @@ def plot_timing(*args, **kwargs):
         plt.savefig(foname, bbox_inches='tight')
                 
 
+def comparedct(dct1, dct2):
+    '''
+    compares two dictionaries
+    input:
+    ------
+    dct1, dct2: the two dictionaries
+    
+    returns:
+    --------
+    keysonlyin1 (set), keysonlyin2 (set), keysdifferent (set)
+    '''
+    keys1 = set(dct1.keys())
+    keys2 = set(dct2.keys())
+    keysonlyin1 = keys1 - keys2
+    keysonlyin2 = keys2 - keys1
+    keysboth = keys1 & keys2
+    dct_eq = {key: np.all(dct1[key] == dct2[key]) for key in keysboth}
+    keysdiff = {key if not dct_eq[key] else None for key in dct_eq}
+    keysdiff -= {None}
+    return keysonlyin1, keysonlyin2, keysdiff
 
-
+def plotdiffs_spectra(file_test, file_check,\
+                      label_test='test', label_check='check'):
+    '''
+    plot the differences bwteen spectra in two files. test is compared to the
+    baseline file check. The labels are used in the plots.
+    This assumes the spectra in the two files are along the same sightlines, 
+    etc.
+    '''
+    # arrays and attributes to compare for run difference overview 
+    gpaths_attrs = ['Constants',\
+                    'Header',\
+                    'Header/ModifyMetallicityParameters',\
+                    'Parameters/ChemicalElements',\
+                    'Parameters/SpecWizardRuntimeParameters',\
+                    'Projection',\
+                    ]
+    gpaths_arrays = ['Projection/ncontr',\
+                     'Projection/x_fraction_array',\
+                     'Projection/y_fraction_array',\
+                     ]
+    plotpath = 'Spectrum{specnum}/{ion}/Flux'
+    
+    with h5py.File(file_test, 'r') as ft,\
+        h5py.file(file_check, 'r') as fc:
+        
+        attrs_diff = {}
+        for path in gpaths_attrs:
+            dct_test = {key: val for key, val in ft[path].attrs.items()} 
+            dct_check = {key: val for key, val in ft[path].attrs.items()} 
+            test_missing, check_missing, diffkeys = \
+               comparedct(dct_test, dct_check)
+            if len(test_missing) > 0 or len(check_missing) > 0:
+                erm = 'Test file missing keys {t}\nCheck file missing keys {c}'
+                erm.format(t=test_missing, c=check_missing)
+                raise RuntimeError(erm)
+            attrs_diff.update(diffkeys)
+            if path == 'Header':
+                ions = np.array([ion.decode() for ion in dct_test['ions']])
+                fosc = dct_test['Transitions_Oscillator_Strength']
+                lang = dct_test['Transitions_Rest_Wavelength']
+                #boxsize = dct_test['BoxSize']
+                redshift = dct_test['Redshift']
+                
+                ions, ioninds = np.unique(ions, return_index=False)
+                fosc = {ions[i]: fosc[ioninds[i]] for i in range(len(ions))}
+                lang = {ions[i]: lang[ioninds[i]] for i in range(len(ions))}
+        
+        for path in gpaths_arrays:
+            ta = np.array(ft[path])
+            tc = np.array(fc[path])
+            if not np.all(ta ==tc):
+                erm = 'The sightlines for the input files are different'
+                raise ValueError(erm)
+                
+    minbother_red = minbother_vals[label_test]['minbother_red']\
+                    if label_test in minbother_vals else 0.
+    minbother_blue = minbother_vals[label_test]['minbother_blue']\
+                    if label_test in minbother_vals else 0.
+    lyalpha = 1215.6701
+    
+    print(fosc)
+    print(lang)
+    ion = 'o8'
+    maxdiff = minbother_red if lang[ion] > 1.001 * lyalpha else minbother_blue
+    print(attrs_diff)
