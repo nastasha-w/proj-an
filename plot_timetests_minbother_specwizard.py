@@ -183,7 +183,7 @@ def plotdiffs_spectra(file_test, file_check,\
         attrs_diff = {}
         for path in gpaths_attrs:
             dct_test = {key: val for key, val in ft[path].attrs.items()} 
-            dct_check = {key: val for key, val in ft[path].attrs.items()} 
+            dct_check = {key: val for key, val in fc[path].attrs.items()} 
             test_missing, check_missing, diffkeys = \
                comparedct(dct_test, dct_check)
             if len(test_missing) > 0 or len(check_missing) > 0:
