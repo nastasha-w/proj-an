@@ -202,7 +202,9 @@ def plotdiffs_spectra(file_test, file_check,\
                 ions, ioninds = np.unique(ions, return_index=True)
                 fosc = {ions[i]: fosc[ioninds[i]] for i in range(len(ions))}
                 lang = {ions[i]: lang[ioninds[i]] for i in range(len(ions))}
-        
+            if 'limsigma' in dct_test:
+                print(dct_test['limsigma'])
+                print(dct_check['limsigma'])
         for path in gpaths_arrays:
             ta = np.array(ft[path])
             tc = np.array(fc[path])
