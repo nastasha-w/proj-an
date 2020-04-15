@@ -85,6 +85,8 @@ def plot_timing(*args, **kwargs):
         times.append(_times)
     
     times = np.array(times)
+    # stored times are cumulative over the sightlines
+    times = np.append(times[0][np.newaxis, :], -np.diff(times, axis=1), axis=0)
     
     fontsize = 12
     fig = plt.figure(figsize=(5.5, 3.))
@@ -99,6 +101,7 @@ def plot_timing(*args, **kwargs):
     ax.tick_params(which='both', direction='in', labelsize=fontsize - 1,\
                    labelleft=True, labelbottom=True,\
                    top=True, left=True, bottom=True, right=True)
+    ax.set_yscale('log')
     ax.legend(fontsize=fontsize)
     
     if 'savename' in kwargs:
