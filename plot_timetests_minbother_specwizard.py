@@ -89,7 +89,7 @@ def plot_timing(*args, **kwargs):
     times = np.append(times[:, 0][:, np.newaxis], np.diff(times, axis=1), axis=1)
     
     fontsize = 12
-    fig = plt.figure(figsize=(5.5, 3.))
+    fig = plt.figure(figsize=(5.5, 5.))
     ax = fig.add_subplot(1, 1, 1)
     
     for i in range(times.shape[0]):
@@ -102,7 +102,7 @@ def plot_timing(*args, **kwargs):
                    labelleft=True, labelbottom=True,\
                    top=True, left=True, bottom=True, right=True)
     ax.set_yscale('log')
-    ax.legend(fontsize=fontsize)
+    ax.legend(fontsize=fontsize, ncols=2)
     
     if 'savename' in kwargs:
         foname = kwargs['savename']
