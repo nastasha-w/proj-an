@@ -12,6 +12,17 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
+# a few useful defaults
+imgdir = '/cosma5/data/dp004/dc-wije1/specwiz/imgs/timetests/'
+
+logfiles = ['/cosma5/data/dp004/dc-wije1/specwiz/timetest_shacc_r32/stdout.L0100N1504-shacc-32-2009555',\
+            '/cosma5/data/dp004/dc-wije1/specwiz/timetest_hiacc_r32/stdout.L0100N1504-hiacc-32-2009548',\
+            '/cosma5/data/dp004/dc-wije1/specwiz/timetest_miacc_r32/stdout.L0100N1504-miacc-32-2009549',\
+            '/cosma5/data/dp004/dc-wije1/specwiz/timetest_loacc_r32/stdout.L0100N1504-loacc-32-2009550',\
+            ]
+labels = ['shacc', 'hiacc', 'miacc', 'loacc']
+
+
 
 def plot_timing(*args, **kwargs):
     '''
@@ -39,7 +50,7 @@ def plot_timing(*args, **kwargs):
                 default: log file names, with directory path removed
     'savename': if set and not None, save the plot to this file (string)
     'savedir':  (default: '/cosma5/data/dp004/dc-wije1/specwiz/imgs/timetests/')
-                directory to save the file in
+                directory to save the file in (string)
     
     '''
     
@@ -82,7 +93,7 @@ def plot_timing(*args, **kwargs):
     for i in range(times.shape[0]):
         ydata = times[i]
         xdata = np.arange(len(ydata))
-        ax.scatter(xdata, label=labels[i], marker='o', alpha=0.5)
+        ax.scatter(xdata, ydata, label=labels[i], marker='o', alpha=0.5)
     ax.set_xlabel('spectrum number', fontsize=fontsize)
     ax.set_ylabel('{fname} time [s]'.format(fname=mfunc), fontsize=fontsize)
     ax.tick_params(which='both', direction='in', labelsize=fontsize - 1,\
