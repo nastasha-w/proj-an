@@ -178,7 +178,7 @@ def plotdiffs_spectra(file_test, file_check,\
     plotpath = 'Spectrum{specnum}/{ion}/Flux'
     
     with h5py.File(file_test, 'r') as ft,\
-        h5py.file(file_check, 'r') as fc:
+        h5py.File(file_check, 'r') as fc:
         
         attrs_diff = {}
         for path in gpaths_attrs:
