@@ -369,7 +369,7 @@ def plotdiffs_spectra(file_test, file_check,\
                 pt = ptbase.format(ion=ild.getnicename(ion), wl=lang[ion])              
                 ax0.text(0.0, 0.0, pt, fontsize=fontsize - 1,\
                          verticalalignment='bottom', \
-                         horizontalalignent='left', transform=ax0.transAxes,\
+                         horizontalalignment='left', transform=ax0.transAxes,\
                          bbox=bbox)
                 
                 maxdiff = minbother_red if lang[ion] > 1.001 * lyalpha else\
