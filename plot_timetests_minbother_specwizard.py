@@ -238,7 +238,7 @@ def plotdiffs_spectra(file_test, file_check,\
                 except KeyError:
                     outofspectra = True
             specnum += 1   
-    
+    return ions, spectra_test
                
     minbother_red = minbother_vals[label_test]['minbother_red']\
                     if label_test in minbother_vals else 0.
@@ -329,19 +329,20 @@ def plotdiffs_spectra(file_test, file_check,\
             axs2 = [fig.add_subplot(grid[i + 1, 2]) for i in range(_nions)]
             
             [tax.axis('off') for tax in taxs]
-            taxs[0].text(0.0, 1., 'spectra', fontsize=fontsize,\
-               verticalalignment='top', horizontalalignment='left',\
-               transform=taxs[0].transAxes)
+            #taxs[0].text(0.5, 0.8, 'spectra', fontsize=fontsize,\
+            #   verticalalignment='top', horizontalalignment='center',\
+            #   transform=taxs[0].transAxes)
             
             taxs[0].legend(handles=leghandles, fontsize=fontsize, ncol=2,\
-                loc='upper right', bbox_to_anchor=(1., 1.), frameon=False)
+                loc='lower center', bbox_to_anchor=(0.5, 0.), frameon=False,\
+                title='spectra', title_fontsize=fontsize)
                         
-            taxs[1].text(0.5, 1., t1, fontsize=fontsize,\
-                verticalalignment='top', horizontalalignment='center',\
+            taxs[1].text(0.5, 0., t1, fontsize=fontsize,\
+                verticalalignment='bottom', horizontalalignment='center',\
                 transform=taxs[1].transAxes)
             
-            taxs[2].text(0.5, 1., t2, fontsize=fontsize,\
-                verticalalignment='top', horizontalalignment='center',\
+            taxs[2].text(0.5, 0., t2, fontsize=fontsize,\
+                verticalalignment='bottom', horizontalalignment='center',\
                 transform=taxs[2].transAxes)
             
             for ii in range(_nions):
