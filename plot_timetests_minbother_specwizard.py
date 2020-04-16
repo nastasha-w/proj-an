@@ -281,10 +281,10 @@ def plotdiffs_spectra(file_test, file_check,\
     kwargs_check = {'color': 'C1', 'linestyle': 'solid'}
     fontsize = 10
     
-    margin = 0.5
+    margin = 0.6
     panelheight = 0.8
     panelwidth = 2.5
-    titleheight = 0.6
+    titleheight = 0.7
     wspace = 0.35
     
     t1 = 'flux difference: {test} - {check}'.format(test=label_test,\
@@ -303,6 +303,7 @@ def plotdiffs_spectra(file_test, file_check,\
     ylab0 = 'normalized flux'
     ylab1 = '$\\Delta$ flux'
     ylab2 = '$\\Delta \\, \\log_{{10}}$ flux'
+    xlab = '$\\Delta \\, v \\; [\\mathrm{{km}} \\, \\mathrm{{s}}^{{-2}}]$'
     ptbase = '{ion}, $\lambda = {wl:.1f} \\, \\mathrm{{\AA}}$'
     nlabelbase = '$\\mathrm{{N}} = {:.1f}$' # \\log_{{10}} \\mathrm{{N}} / \\mathrm{{cm}}^{{-2}}
     tickparams = {'which': 'both', 'direction': 'in',\
@@ -382,6 +383,10 @@ def plotdiffs_spectra(file_test, file_check,\
                     ax0.set_ylabel(ylab0, fontsize=fontsize, labelpad=6.)
                     ax1.set_ylabel(ylab1, fontsize=fontsize, labelpad=6.)
                     ax2.set_ylabel(ylab2, fontsize=fontsize, labelpad=6.)
+                if ii == _nions - 1:
+                    ax0.set_xlabel(xlab, fontsize=fontsize)
+                    ax1.set_xlabel(xlab, fontsize=fontsize)
+                    ax2.set_xlabel(xlab, fontsize=fontsize)
                     
                 ax0.plot(vvals_check, spectra_check[specnum][ion],\
                          **kwargs_check)
@@ -418,6 +423,7 @@ def plotdiffs_spectra(file_test, file_check,\
                 ax2.plot(vvals_check, lograt, color='gray')
                 ax2.axhline(np.log10(1. + maxdiff), linestyle='dashed',\
                             color='black')
+            
             plt.savefig(fname)
         break
                 
