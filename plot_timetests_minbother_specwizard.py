@@ -285,7 +285,7 @@ def plotdiffs_spectra(file_test, file_check,\
     panelheight = 0.8
     panelwidth = 2.5
     titleheight = 0.5
-    wspace = 0.3
+    wspace = 0.35
     
     t1 = 'flux difference: {test} - {check}'.format(test=label_test,\
                               check=label_check)
@@ -298,7 +298,7 @@ def plotdiffs_spectra(file_test, file_check,\
     ylab1 = '$\\Delta$ flux'
     ylab2 = '$\\Delta \\, \\log_{{10}}$ flux'
     ptbase = '{ion}, $\lambda = {wl:.1f} \\, \\mathrm{{\AA}}$'
-    nlabelbase = '$\\log_{{10}} \\mathrm{{N}} / \\mathrm{{cm}}^{{-2}} = {:.1f}$'
+    nlabelbase = '$\\mathrm{{N}} = {:.1f}$' # \\log_{{10}} \\mathrm{{N}} / \\mathrm{{cm}}^{{-2}}
     tickparams = {'which': 'both', 'direction': 'in',\
                   'labelsize': fontsize - 1,\
                   'left': True, 'right': True, 'top': True, 'bottom': True,\
@@ -307,8 +307,8 @@ def plotdiffs_spectra(file_test, file_check,\
     
     for specnum in spectra_test:
         for pi in range(numplots_persl):
-            iimin = pi * numplots_persl
-            iimax = min((pi + 1) * numplots_persl, numions)
+            iimin = pi * maxionsperplot
+            iimax = min((pi + 1) * maxionsperplot, numions)
             _ions = ions[iimin : iimax]
             _nions = len(_ions)
             
@@ -377,9 +377,9 @@ def plotdiffs_spectra(file_test, file_check,\
                 ax0.plot(vvals_test, spectra_test[specnum][ion],\
                          **kwargs_test)
                 pt = ptbase.format(ion=ild.getnicename(ion), wl=lang[ion])              
-                ax0.text(0.0, 0.0, pt, fontsize=fontsize - 1,\
+                ax0.text(1.0, 0.0, pt, fontsize=fontsize - 1,\
                          verticalalignment='bottom', \
-                         horizontalalignment='left', transform=ax0.transAxes,\
+                         horizontalalignment='right', transform=ax0.transAxes,\
                          bbox=bbox)
                 nt = nlabelbase.format(nvals_check[specnum][ion])
                 if nvals_check[specnum][ion] != nvals_test[specnum][ion]:
@@ -389,7 +389,7 @@ def plotdiffs_spectra(file_test, file_check,\
                              c=nvals_check[specnum][ion]))
                 ax1.text(1.0, 0.0, nt, fontsize=fontsize - 1,\
                          verticalalignment='bottom', \
-                         horizontalalignment='right', transform=ax0.transAxes,\
+                         horizontalalignment='right', transform=ax1.transAxes,\
                          bbox=bbox)
                 
                 maxdiff = minbother_red if lang[ion] > 1.001 * lyalpha else\
