@@ -322,7 +322,7 @@ def plotdiffs_spectra(file_test, file_check,\
                                 hspace=0.0, wspace=wspace, height_ratios=hrs,\
                                 top=top, bottom=bottom, left=left, right=right)
             ## add column titles
-            fig.suptitle(ptitle, fonrsize=fontsize)
+            fig.suptitle(ptitle, fontsize=fontsize)
             taxs = [fig.add_subplot(grid[0, i]) for i in range(3)]
             axs0 = [fig.add_subplot(grid[i + 1, 0]) for i in range(_nions)]
             axs1 = [fig.add_subplot(grid[i + 1, 1]) for i in range(_nions)]
