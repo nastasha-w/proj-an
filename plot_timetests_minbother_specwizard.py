@@ -425,7 +425,6 @@ def plotdiffs_spectra(file_test, file_check,\
                             color='black')
             
             plt.savefig(fname)
-        break
                 
                 
                 
