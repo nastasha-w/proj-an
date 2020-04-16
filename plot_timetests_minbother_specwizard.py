@@ -246,10 +246,11 @@ def plotdiffs_spectra(file_test, file_check,\
                                 specnum=specnum, ion=ion)])[()]
                 except KeyError:
                     outofspectra = True
-                    del spectra_test[specnum]
-                    del spectra_check[specnum]
-                    del nvals_test[specnum]
-                    del nvals_check[specnum]
+            if outofspectra:
+                del spectra_test[specnum]
+                del spectra_check[specnum]
+                del nvals_test[specnum]
+                del nvals_check[specnum]
             specnum += 1   
                
     minbother_red = minbother_vals[label_test]['minbother_red']\
