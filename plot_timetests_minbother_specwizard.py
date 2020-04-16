@@ -317,6 +317,9 @@ def plotdiffs_spectra(file_test, file_check,\
                   'labelleft': True, 'labelbottom': False}
     bbox = {'facecolor': 'white', 'alpha': 0.5, 'edgecolor': 'none'}
     
+    maxdiff = 0.
+    maxreldiff = 0.
+    
     for specnum in spectra_test:
         for pi in range(numplots_persl):
             iimin = pi * maxionsperplot
@@ -419,6 +422,9 @@ def plotdiffs_spectra(file_test, file_check,\
                 ax1.plot(vvals_check, spectra_test[specnum][ion] -\
                          spectra_check[specnum][ion], color='gray')
                 ax1.axhline(maxdiff, linestyle='dashed', color='black')
+                _md = np.max(np.abs(spectra_test[specnum][ion] -\
+                         spectra_check[specnum][ion]))
+                maxdiff = max(maxdiff, _md)
                 
                 lograt = np.log10(spectra_test[specnum][ion] \
                                   / spectra_test[specnum][ion])
@@ -428,10 +434,12 @@ def plotdiffs_spectra(file_test, file_check,\
                 ax2.plot(vvals_check, lograt, color='gray')
                 ax2.axhline(np.log10(1. + maxdiff), linestyle='dashed',\
                             color='black')
-            
+                maxreldiff = max(maxreldiff, np.max(np.abs(lograt)))
+                
             plt.savefig(fname)
             plt.close() # large number of plots -> limit memory use
-                
+    print('Max. difference: {md}, Max. log10 rel. diff: {mlrd}'.format(
+            md=maxdiff, mlrd=maxreldiff))                   
                 
                 
                 
