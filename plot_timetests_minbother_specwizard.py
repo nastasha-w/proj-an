@@ -265,7 +265,7 @@ def plotdiffs_spectra(file_test, file_check,\
                       
     numions = len(ions) 
     numplots_persl = (numions  - 1) // maxionsperplot + 1
-    ions = sorted(ions, key=lang.__get__) # sort by wavelength
+    ions = sorted(ions, key=lang.get) # sort by wavelength
     ions = ions[::-1]
     
     name = plotdir + 'Spectrum{specnum}_ionset{pi}_{tlabel}-vs-{clabel}.pdf'
