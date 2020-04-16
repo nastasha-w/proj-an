@@ -284,7 +284,7 @@ def plotdiffs_spectra(file_test, file_check,\
     margin = 0.5
     panelheight = 0.8
     panelwidth = 2.5
-    titleheight = 0.5
+    titleheight = 0.6
     wspace = 0.35
     
     t1 = 'flux difference: {test} - {check}'.format(test=label_test,\
@@ -293,6 +293,12 @@ def plotdiffs_spectra(file_test, file_check,\
                          test=label_test, check=label_check)
     leghandles = [mlines.Line2D([], [], label=label_test, **kwargs_test),\
                   mlines.Line2D([], [], label=label_check, **kwargs_check),\
+                  ]
+    leghandles_diff =\
+                  [mlines.Line2D([], [], label='$\\Delta($minbother$)$',\
+                                linestyle='dashed', color='black'),\
+                  mlines.Line2D([], [], label='$\\Delta$',\
+                                linestyle='solid', color='gray'),\
                   ]
     ylab0 = 'normalized flux'
     ylab1 = '$\\Delta$ flux'
@@ -343,17 +349,22 @@ def plotdiffs_spectra(file_test, file_check,\
             #   transform=taxs[0].transAxes)
             
             leg = taxs[0].legend(handles=leghandles, fontsize=fontsize, ncol=2,\
-                loc='lower center', bbox_to_anchor=(0.5, 0.), frameon=False,\
+                loc='lower center', bbox_to_anchor=(0.5, 0.1), frameon=False,\
                 ) #title='spectra', title_fontsize=fontsize
             leg.set_title(r'spectra', prop={'size': fontsize})            
             
-            taxs[1].text(0.5, 0.2, t1, fontsize=fontsize,\
+            taxs[1].text(0.5, 0.3, t1, fontsize=fontsize,\
                 verticalalignment='bottom', horizontalalignment='center',\
                 transform=taxs[1].transAxes)
             
-            taxs[2].text(0.5, 0.2, t2, fontsize=fontsize,\
-                verticalalignment='bottom', horizontalalignment='center',\
-                transform=taxs[2].transAxes)
+            leg2 = taxs[0].legend(handles=leghandles_diff,\
+                fontsize=fontsize, ncol=2,\
+                loc='lower center', bbox_to_anchor=(0.5, 0.1), frameon=False,\
+                ) #title='spectra', title_fontsize=fontsize
+            leg2.set_title(t2, prop={'size': fontsize})
+            #taxs[2].text(0.5, 0.3, t2, fontsize=fontsize,\
+            #    verticalalignment='bottom', horizontalalignment='center',\
+            #    transform=taxs[2].transAxes)
             
             for ii in range(_nions):
                 ion = _ions[ii]
@@ -377,7 +388,7 @@ def plotdiffs_spectra(file_test, file_check,\
                 ax0.plot(vvals_test, spectra_test[specnum][ion],\
                          **kwargs_test)
                 pt = ptbase.format(ion=ild.getnicename(ion), wl=lang[ion])              
-                ax0.text(1.0, 0.0, pt, fontsize=fontsize - 1,\
+                ax0.text(1.0, 0.1, pt, fontsize=fontsize - 1,\
                          verticalalignment='bottom', \
                          horizontalalignment='right', transform=ax0.transAxes,\
                          bbox=bbox)
@@ -387,7 +398,7 @@ def plotdiffs_spectra(file_test, file_check,\
                           ' specnum {sn}, {ion}'.format(sn=specnum, ion=ion) +\
                           ': {t} and {c}'.format(t=nvals_test[specnum][ion],\
                              c=nvals_check[specnum][ion]))
-                ax1.text(1.0, 0.0, nt, fontsize=fontsize - 1,\
+                ax1.text(1.0, 0.1, nt, fontsize=fontsize - 1,\
                          verticalalignment='bottom', \
                          horizontalalignment='right', transform=ax1.transAxes,\
                          bbox=bbox)
