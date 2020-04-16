@@ -315,7 +315,7 @@ def plotdiffs_spectra(file_test, file_check,\
             top = 1. - bottom
             left = margin / totalwidth
             right = 1. - left
-            hrs = [titleheight] + [panelheight] * len(ions)
+            hrs = [titleheight] + [panelheight] * _nions
             
             fig = plt.figure(figsize=(totalwidth, totalheight))
             grid = gsp.GridSpec(nrows=len(_ions) + 1, ncols=3,\
