@@ -347,11 +347,11 @@ def plotdiffs_spectra(file_test, file_check,\
                 ) #title='spectra', title_fontsize=fontsize
             leg.set_title(r'spectra', prop={'size': fontsize})            
             
-            taxs[1].text(0.5, 0., t1, fontsize=fontsize,\
+            taxs[1].text(0.5, 0.2, t1, fontsize=fontsize,\
                 verticalalignment='bottom', horizontalalignment='center',\
                 transform=taxs[1].transAxes)
             
-            taxs[2].text(0.5, 0., t2, fontsize=fontsize,\
+            taxs[2].text(0.5, 0.2, t2, fontsize=fontsize,\
                 verticalalignment='bottom', horizontalalignment='center',\
                 transform=taxs[2].transAxes)
             
@@ -387,7 +387,7 @@ def plotdiffs_spectra(file_test, file_check,\
                           ' specnum {sn}, {ion}'.format(sn=specnum, ion=ion) +\
                           ': {t} and {c}'.format(t=nvals_test[specnum][ion],\
                              c=nvals_check[specnum][ion]))
-                ax0.text(0.0, 1.0, nt, fontsize=fontsize - 1,\
+                ax1.text(1.0, 0.0, nt, fontsize=fontsize - 1,\
                          verticalalignment='bottom', \
                          horizontalalignment='right', transform=ax0.transAxes,\
                          bbox=bbox)
@@ -405,10 +405,9 @@ def plotdiffs_spectra(file_test, file_check,\
                 lograt[spectra_test[specnum][ion] == \
                        spectra_test[specnum][ion]] = 0. 
                 ax2.plot(vvals_check, lograt, color='gray')
-                ax2.axhline(np.log10(maxdiff), linestyle='dashed',\
+                ax2.axhline(np.log10(1. + maxdiff), linestyle='dashed',\
                             color='black')
             plt.savefig(fname)
-            break
         break
                 
                 
