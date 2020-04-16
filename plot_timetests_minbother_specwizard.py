@@ -425,6 +425,7 @@ def plotdiffs_spectra(file_test, file_check,\
                             color='black')
             
             plt.savefig(fname)
+            plt.close() # large number of plots -> limit memory use
                 
                 
                 
