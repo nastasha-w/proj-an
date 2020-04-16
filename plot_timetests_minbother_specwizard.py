@@ -11,6 +11,10 @@ import h5py
 import numpy as np
 
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gsp
+import matplotlib.lines as mlines
+
+import ion_line_data as ild
 
 # a few useful defaults
 imgdir = '/cosma5/data/dp004/dc-wije1/specwiz/imgs/timetests/'
@@ -156,12 +160,15 @@ def comparedct(dct1, dct2):
     return keysonlyin1, keysonlyin2, keysdiff
 
 def plotdiffs_spectra(file_test, file_check,\
-                      label_test='test', label_check='check'):
+                      label_test='test', label_check='check',\
+                      maxionsperplot=10, plotdir=imgdir):
     '''
     plot the differences bwteen spectra in two files. test is compared to the
-    baseline file check. The labels are used in the plots.
+    baseline file check. The labels are used in the plots, and to get the 
+    minbother values.
     This assumes the spectra in the two files are along the same sightlines, 
     etc.
+    
     '''
     # arrays and attributes to compare for run difference overview 
     gpaths_attrs = ['Constants',\
@@ -174,7 +181,9 @@ def plotdiffs_spectra(file_test, file_check,\
     gpaths_arrays = ['Projection/ncontr',\
                      'Projection/x_fraction_array',\
                      'Projection/y_fraction_array',\
+                     'VHubble_KMpS',\
                      ]
+    attrs_ignore = ['SpectrumFile', 'outputdir']
     plotpath = 'Spectrum{specnum}/{ion}/Flux'
     
     with h5py.File(file_test, 'r') as ft,\
@@ -202,24 +211,187 @@ def plotdiffs_spectra(file_test, file_check,\
                 ions, ioninds = np.unique(ions, return_index=True)
                 fosc = {ions[i]: fosc[ioninds[i]] for i in range(len(ions))}
                 lang = {ions[i]: lang[ioninds[i]] for i in range(len(ions))}
-            if 'limsigma' in dct_test:
-                print(dct_test['limsigma'])
-                print(dct_check['limsigma'])
+
         for path in gpaths_arrays:
             ta = np.array(ft[path])
             tc = np.array(fc[path])
             if not np.all(ta ==tc):
                 erm = 'The sightlines for the input files are different'
                 raise ValueError(erm)
+            if path == 'VHubble_KMpS':
+                vvals_test = ta  
+                vvals_check = tc
                 
+        outofspectra = False
+        specnum = 0
+        spectra_test = {}
+        spectra_check = {}
+        while not outofspectra:
+            spectra_test[specnum] = {}
+            spectra_check[specnum] = {}
+            for ion in ions:
+                try:
+                    spectra_test[specnum][ion] = np.array(ft[plotpath.format(\
+                                specum=specnum, ion=ion)])
+                    spectra_check[specnum][ion] = np.array(fc[plotpath.format(\
+                                specum=specnum, ion=ion)])
+                except KeyError:
+                    outofspectra = True
+            specnum += 1   
+    
+               
     minbother_red = minbother_vals[label_test]['minbother_red']\
                     if label_test in minbother_vals else 0.
     minbother_blue = minbother_vals[label_test]['minbother_blue']\
                     if label_test in minbother_vals else 0.
     lyalpha = 1215.6701
     
-    print(fosc)
-    print(lang)
-    ion = 'o8'
-    maxdiff = minbother_red if lang[ion] > 1.001 * lyalpha else minbother_blue
-    print(attrs_diff)
+    title = 'Spectrum {specnum}, $z = {z:.2f}$, comparing\n' + \
+            '{test}: {tlist}\n' +\
+            '{check}: {clist}'
+    dctfmt = '{key}={val}'
+    attrs_note = set(attrs_diff.keys()) - set(attrs_ignore)
+    dct_note = {key: attrs_diff[key] for key in attrs_note}
+    dct_note.update({'minbother_red': (minbother_red,\
+                            minbother_vals[label_check]['minbother_red']),\
+                     'minbother_blue': (minbother_blue,\
+                            minbother_vals[label_check]['minbother_blue']),\
+                     })
+    keys_note = sorted(list(dct_note.keys()))
+    tlist = ', '.join([dctfmt.format(key=key, val=dct_note[key][0]) \
+                       for key in keys_note])
+    clist = ', '.join([dctfmt.format(key=key, val=dct_note[key][1]) \
+                       for key in keys_note])
+                      
+    numions = len(ions) 
+    numplots_persl = (numions  - 1) // maxionsperplot + 1
+    ions = sorted(ions, key=lang.__get__) # sort by wavelength
+    ions = ions[::-1]
+    
+    name = plotdir + 'Spectrum{specnum}_ionset{pi}_{tlabel}-vs-{clabel}.pdf'
+    kwargs_test = {'color': 'C0', 'linestyle': 'dashed'}
+    kwargs_check = {'color': 'C1', 'linestyle': 'solid'}
+    fontsize = 12
+    
+    margin = 0.5
+    panelheight = 0.5
+    panelwidth = 1.
+    titleheight = 0.3
+    wspace = 0.3
+    
+    t1 = 'flux difference: {test} - {check}'.format(test=label_test,\
+                              check=label_check)
+    t2 = '$\\log_{{10}}$ flux ratio: {test} / {check}'.format(\
+                         test=label_test, check=label_check)
+    leghandles = [mlines.Line2D([], [], label=label_test, **kwargs_test),\
+                  mlines.Line2D([], [], label=label_check, **kwargs_check),\
+                  ]
+    ylab0 = 'normalized flux'
+    ylab1 = '$\\Delta$ flux'
+    ylab2 = '$\\Delta \\, \\log_{{10}}$ flux'
+    ptbase = '{ion}, $\lambda = {wl} \\, \\mathrm{\AA}$'
+    tickparams = {'which': 'both', 'direction': 'in',\
+                  'labelsize': fontsize - 1,\
+                  'left': True, 'right': True, 'top': True, 'bottom': True,\
+                  'labelleft': True, 'labelbottom': False}
+    bbox = {'facecolor': 'white', 'alpha': 0.5, 'edgecolor': 'none'}
+    
+    for specnum in spectra_test:
+        for pi in range(numplots_persl):
+            iimin = pi * numplots_persl
+            iimax = min((pi + 1) * numplots_persl, numions)
+            _ions = ions[iimin : iimax]
+            _nions = len(_ions)
+            
+            fname = name.format(specnum=specnum, pi=pi,\
+                               tlabel=label_test, clabel=label_check)
+            ptitle = title.format(specnum=specnum, z=redshift,\
+                                  test=label_test, tlist=tlist,\
+                                  check=label_check, clist=clist)
+            
+            totalheight = margin * 2 + panelheight * len(_ions) + titleheight
+            totalwidth = margin * 2 + panelwidth * 3 + wspace * 2 
+            bottom = margin / totalheight
+            top = 1. - bottom
+            left = margin / totalwidth
+            right = 1. - left
+            hrs = [titleheight] + [panelheight] * len(ions)
+            
+            fig = plt.figure(figsize=(totalwidth, totalheight))
+            grid = gsp.GridSpec(len(_ions) + 1, 3, hspace=0.0, wspace=wspace,\
+                                height_ratios=hrs,\
+                                top=top, bottom=bottom, left=left, right=right)
+            ## add column titles
+            fig.suptitle(ptitle, fonrsize=fontsize)
+            taxs = [fig.add_subplot(grid[0, i]) for i in range(3)]
+            axs0 = [fig.add_subplot(grid[i + 1, 0]) for i in range(_nions)]
+            axs1 = [fig.add_subplot(grid[i + 1, 1]) for i in range(_nions)]
+            axs2 = [fig.add_subplot(grid[i + 1, 2]) for i in range(_nions)]
+            
+            [tax.axis('off') for tax in taxs]
+            taxs[0].text(0.0, 1., 'spectra', fontsize=fontsize,\
+               verticalalignment='top', horizontalalignment='left',\
+               transform=taxs[0].transAxes)
+            
+            taxs[0].legend(handles=leghandles, fontsize=fontsize, ncols=2,\
+                loc='upper right', bbox_to_anchor=(1., 1.), frameon=False)
+                        
+            taxs[1].text(0.5, 1., t1, fontsize=fontsize,\
+                verticalalignment='top', horizontalalignment='center',\
+                transform=taxs[1].transAxes)
+            
+            taxs[2].text(0.5, 1., t2, fontsize=fontsize,\
+                verticalalignment='top', horizontalalignment='center',\
+                transform=taxs[2].transAxes)
+            
+            for ii in range(_nions):
+                ion = _ions[ii]
+                ax0 = axs0[ii]
+                ax1 = axs1[ii]
+                ax2 = axs2[ii]
+                
+                tps = tickparams.copy()
+                tps.update({'labelbottom': ii == _nions - 1})
+                ax0.tick_params(**tps)
+                ax1.tick_params(**tps)
+                ax2.tick_params(**tps)
+                
+                if ii == _nions // 2: # somewhere in the middle
+                    ax0.set_ylabel(ylab0, fontsize=fontsize, labelpad=6.)
+                    ax1.set_ylabel(ylab1, fontsize=fontsize, labelpad=6.)
+                    ax2.set_ylabel(ylab2, fontsize=fontsize, labelpad=6.)
+                    
+                ax0.plot(vvals_check, spectra_check[specnum][ion],\
+                         **kwargs_check)
+                ax0.plot(vvals_test, spectra_test[specnum][ion],\
+                         **kwargs_test)
+                pt = ptbase.format(ion=ild.getnicename(ion), wl=lang[ion])              
+                ax0.text(0.0, 0.0, pt, fontsize=fontsize - 1,\
+                         verticalalignment='bottom', \
+                         horizontalalignent='left', transform=ax0.transAxes,\
+                         bbox=bbox)
+                
+                maxdiff = minbother_red if lang[ion] > 1.001 * lyalpha else\
+                          minbother_blue
+                          
+                ax1.plot(vvals_check, spectra_test[specnum][ion] -\
+                         spectra_check[specnum][ion], color='gray')
+                ax1.axhline(maxdiff, linestyle='dashed', color='black')
+                
+                lograt = np.log10(spectra_test[specnum][ion] \
+                                  / spectra_test[specnum][ion])
+                # zero difference if both fluxes are zero
+                lograt[spectra_test[specnum][ion] == \
+                       spectra_test[specnum][ion]] = 0. 
+                ax1.plot(vvals_check, lograt, color='gray')
+                ax1.axhline(np.log10(maxdiff), linestyle='dashed',\
+                            color='black')
+            plt.savefig(fname)
+            break
+        break
+                
+                
+                
+                
+    
+    
