@@ -185,6 +185,7 @@ def plotdiffs_spectra(file_test, file_check,\
                      ]
     attrs_ignore = ['SpectrumFile', 'outputdir']
     plotpath = 'Spectrum{specnum}/{ion}/Flux'
+    lognpath = 'Spectrum{specnum}/{ion}/LogTotalIonColumnDensity'
     
     with h5py.File(file_test, 'r') as ft,\
         h5py.File(file_check, 'r') as fc:
@@ -226,15 +227,23 @@ def plotdiffs_spectra(file_test, file_check,\
         specnum = 0
         spectra_test = {}
         spectra_check = {}
+        nvals_test = {}
+        nvals_check = {}
         while not outofspectra:
             spectra_test[specnum] = {}
             spectra_check[specnum] = {}
+            nvals_test[specnum] = {}
+            nvals_check[specnum] = {}
             for ion in ions:
                 try:
                     spectra_test[specnum][ion] = np.array(ft[plotpath.format(\
                                 specnum=specnum, ion=ion)])
                     spectra_check[specnum][ion] = np.array(fc[plotpath.format(\
                                 specnum=specnum, ion=ion)])
+                    nvals_test[specnum][ion] = np.array(ft[lognpath.format(\
+                                specnum=specnum, ion=ion)])[0]
+                    nvals_check[specnum][ion] = np.array(fc[lognpath.format(\
+                                specnum=specnum, ion=ion)])[0]
                 except KeyError:
                     outofspectra = True
             specnum += 1   
@@ -288,7 +297,8 @@ def plotdiffs_spectra(file_test, file_check,\
     ylab0 = 'normalized flux'
     ylab1 = '$\\Delta$ flux'
     ylab2 = '$\\Delta \\, \\log_{{10}}$ flux'
-    ptbase = '{ion}, $\lambda = {wl} \\, \\mathrm{{\AA}}$'
+    ptbase = '{ion}, $\lambda = {wl:.1f} \\, \\mathrm{{\AA}}$'
+    nlabelbase = '$\\log_{{10}} \\mathrm{{N}} / \\mathrm{{cm}}^{{-2}} = {:.1f}$'
     tickparams = {'which': 'both', 'direction': 'in',\
                   'labelsize': fontsize - 1,\
                   'left': True, 'right': True, 'top': True, 'bottom': True,\
@@ -371,6 +381,16 @@ def plotdiffs_spectra(file_test, file_check,\
                          verticalalignment='bottom', \
                          horizontalalignment='left', transform=ax0.transAxes,\
                          bbox=bbox)
+                nt = nlabelbase.format(nvals_check[specnum][ion])
+                if nvals_check[specnum][ion] != nvals_test[specnum][ion]:
+                    print('Warning: different column densities for' +\
+                          ' specnum {sn}, {ion}'.format(sn=specnum, ion=ion) +\
+                          ': {t} and {c}'.format(t=nvals_test[specnum][ion],\
+                             c=nvals_check[specnum][ion]))
+                ax0.text(0.0, 1.0, nt, fontsize=fontsize - 1,\
+                         verticalalignment='bottom', \
+                         horizontalalignment='right', transform=ax0.transAxes,\
+                         bbox=bbox)
                 
                 maxdiff = minbother_red if lang[ion] > 1.001 * lyalpha else\
                           minbother_blue
@@ -384,8 +404,8 @@ def plotdiffs_spectra(file_test, file_check,\
                 # zero difference if both fluxes are zero
                 lograt[spectra_test[specnum][ion] == \
                        spectra_test[specnum][ion]] = 0. 
-                ax1.plot(vvals_check, lograt, color='gray')
-                ax1.axhline(np.log10(maxdiff), linestyle='dashed',\
+                ax2.plot(vvals_check, lograt, color='gray')
+                ax2.axhline(np.log10(maxdiff), linestyle='dashed',\
                             color='black')
             plt.savefig(fname)
             break
