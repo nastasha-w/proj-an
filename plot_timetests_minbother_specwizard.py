@@ -303,8 +303,8 @@ def plotdiffs_spectra(file_test, file_check,\
     ylab0 = 'normalized flux'
     ylab1 = '$\\Delta$ flux'
     ylab2 = '$\\Delta \\, \\log_{{10}}$ flux'
-    xlab = '$\\Delta \\, v \\; [\\mathrm{{km}} \\, \\mathrm{{s}}^{{-2}}]$'
-    ptbase = '{ion}, $\lambda = {wl:.1f} \\, \\mathrm{{\AA}}$'
+    xlab = '$\\Delta \\, v \\; [\\mathrm{{km}} \\, \\mathrm{{s}}^{{-1}}]$'
+    ptbase = '{ion}, ${wl:.2f} \\, \\mathrm{{\AA}}$' # \\lambda = 
     nlabelbase = '$\\mathrm{{N}} = {:.1f}$' # \\log_{{10}} \\mathrm{{N}} / \\mathrm{{cm}}^{{-2}}
     tickparams = {'which': 'both', 'direction': 'in',\
                   'labelsize': fontsize - 1,\
@@ -393,7 +393,7 @@ def plotdiffs_spectra(file_test, file_check,\
                 ax0.plot(vvals_test, spectra_test[specnum][ion],\
                          **kwargs_test)
                 pt = ptbase.format(ion=ild.getnicename(ion), wl=lang[ion])              
-                ax0.text(1.0, 0.1, pt, fontsize=fontsize - 1,\
+                ax0.text(0.98, 0.05, pt, fontsize=fontsize - 1,\
                          verticalalignment='bottom', \
                          horizontalalignment='right', transform=ax0.transAxes,\
                          bbox=bbox)
@@ -403,7 +403,7 @@ def plotdiffs_spectra(file_test, file_check,\
                           ' specnum {sn}, {ion}'.format(sn=specnum, ion=ion) +\
                           ': {t} and {c}'.format(t=nvals_test[specnum][ion],\
                              c=nvals_check[specnum][ion]))
-                ax1.text(1.0, 0.1, nt, fontsize=fontsize - 1,\
+                ax1.text(0.98, 0.05, nt, fontsize=fontsize - 1,\
                          verticalalignment='bottom', \
                          horizontalalignment='right', transform=ax1.transAxes,\
                          bbox=bbox)
