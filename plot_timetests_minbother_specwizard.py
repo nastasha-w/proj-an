@@ -288,7 +288,7 @@ def plotdiffs_spectra(file_test, file_check,\
     ylab0 = 'normalized flux'
     ylab1 = '$\\Delta$ flux'
     ylab2 = '$\\Delta \\, \\log_{{10}}$ flux'
-    ptbase = '{ion}, $\lambda = {wl} \\, \\mathrm{\AA}$'
+    ptbase = '{ion}, $\lambda = {wl} \\, \\mathrm{{\AA}}$'
     tickparams = {'which': 'both', 'direction': 'in',\
                   'labelsize': fontsize - 1,\
                   'left': True, 'right': True, 'top': True, 'bottom': True,\
