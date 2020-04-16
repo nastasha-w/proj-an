@@ -36,7 +36,7 @@ minbother_vals = {'shacc': {'minbother_red': 1e-14,\
                   'hiacc': {'minbother_red': 1e-14,\
                             'minbother_blue': 1e-13},\
                   'miacc': {'minbother_red': 1e-4,\
-                            'minbother_blue ': 1e-3},\
+                            'minbother_blue': 1e-3},\
                   'loacc': {'minbother_red': 1e-3,\
                             'minbother_blue': 1e-2},\
                   }
