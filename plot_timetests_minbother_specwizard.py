@@ -238,7 +238,6 @@ def plotdiffs_spectra(file_test, file_check,\
                 except KeyError:
                     outofspectra = True
             specnum += 1   
-    return ions, spectra_test
                
     minbother_red = minbother_vals[label_test]['minbother_red']\
                     if label_test in minbother_vals else 0.
