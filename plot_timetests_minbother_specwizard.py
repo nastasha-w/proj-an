@@ -274,8 +274,8 @@ def plotdiffs_spectra(file_test, file_check,\
     fontsize = 12
     
     margin = 0.5
-    panelheight = 0.5
-    panelwidth = 1.
+    panelheight = 0.8
+    panelwidth = 2.
     titleheight = 0.3
     wspace = 0.3
     
@@ -318,8 +318,8 @@ def plotdiffs_spectra(file_test, file_check,\
             hrs = [titleheight] + [panelheight] * len(ions)
             
             fig = plt.figure(figsize=(totalwidth, totalheight))
-            grid = gsp.GridSpec(len(_ions) + 1, 3, hspace=0.0, wspace=wspace,\
-                                height_ratios=hrs,\
+            grid = gsp.GridSpec(nrows=len(_ions) + 1, ncols=3,\
+                                hspace=0.0, wspace=wspace, height_ratios=hrs,\
                                 top=top, bottom=bottom, left=left, right=right)
             ## add column titles
             fig.suptitle(ptitle, fonrsize=fontsize)
