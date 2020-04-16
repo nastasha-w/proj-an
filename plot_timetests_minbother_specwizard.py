@@ -271,12 +271,12 @@ def plotdiffs_spectra(file_test, file_check,\
     name = plotdir + 'Spectrum{specnum}_ionset{pi}_{tlabel}-vs-{clabel}.pdf'
     kwargs_test = {'color': 'C0', 'linestyle': 'dashed'}
     kwargs_check = {'color': 'C1', 'linestyle': 'solid'}
-    fontsize = 12
+    fontsize = 10
     
     margin = 0.5
     panelheight = 0.8
-    panelwidth = 2.
-    titleheight = 0.3
+    panelwidth = 2.5
+    titleheight = 0.5
     wspace = 0.3
     
     t1 = 'flux difference: {test} - {check}'.format(test=label_test,\
@@ -333,7 +333,7 @@ def plotdiffs_spectra(file_test, file_check,\
                verticalalignment='top', horizontalalignment='left',\
                transform=taxs[0].transAxes)
             
-            taxs[0].legend(handles=leghandles, fontsize=fontsize, ncols=2,\
+            taxs[0].legend(handles=leghandles, fontsize=fontsize, ncol=2,\
                 loc='upper right', bbox_to_anchor=(1., 1.), frameon=False)
                         
             taxs[1].text(0.5, 1., t1, fontsize=fontsize,\
