@@ -357,7 +357,7 @@ def plotdiffs_spectra(file_test, file_check,\
                 verticalalignment='bottom', horizontalalignment='center',\
                 transform=taxs[1].transAxes)
             
-            leg2 = taxs[0].legend(handles=leghandles_diff,\
+            leg2 = taxs[2].legend(handles=leghandles_diff,\
                 fontsize=fontsize, ncol=2,\
                 loc='lower center', bbox_to_anchor=(0.5, 0.1), frameon=False,\
                 ) #title='spectra', title_fontsize=fontsize
