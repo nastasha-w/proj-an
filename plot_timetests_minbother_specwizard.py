@@ -241,9 +241,9 @@ def plotdiffs_spectra(file_test, file_check,\
                     spectra_check[specnum][ion] = np.array(fc[plotpath.format(\
                                 specnum=specnum, ion=ion)])
                     nvals_test[specnum][ion] = np.array(ft[lognpath.format(\
-                                specnum=specnum, ion=ion)])[0]
+                                specnum=specnum, ion=ion)])[()]
                     nvals_check[specnum][ion] = np.array(fc[lognpath.format(\
-                                specnum=specnum, ion=ion)])[0]
+                                specnum=specnum, ion=ion)])[()]
                 except KeyError:
                     outofspectra = True
             specnum += 1   
