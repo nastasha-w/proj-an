@@ -579,8 +579,8 @@ def plotdiffs_EW(file_test, file_check,\
     name = name.format(logdiff=logdiff, tlabel=label_test, clabel=label_check)
     fontsize = 10
     
-    margin = 0.6
-    panelheight = 2.
+    margin = 1.
+    panelheight = 1.5
     panelwidth = 2.
     #titleheight = 0.5
     wspace = 0.25
