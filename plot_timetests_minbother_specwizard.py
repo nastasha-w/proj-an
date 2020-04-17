@@ -667,8 +667,8 @@ def plotdiffs_EW(file_test, file_check,\
         
         maxdiff_rec = max(maxdiff_rec, np.max(np.abs(yvals)))
                         
-    plt.savefig(fname)
-    print('Max. difference: {}'.format(maxdiff_rec)              
+    plt.savefig(name)
+    print('Max. difference: {}'.format(maxdiff_rec))              
     
                 
     
