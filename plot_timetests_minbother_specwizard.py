@@ -661,7 +661,7 @@ def plotdiffs_EW(file_test, file_check,\
             yvals = np.log10(et) - np.log10(ec)
             yvals[et == ec] = 0.
         else:
-            #ax.axhline(maxdiff * efac * lang[ion])
+            ax.axhline(maxdiff * efac * lang[ion])
             yvals = np.abs(et - ec)
         ax.scatter(nc, yvals, marker='o', color='gray', alpha=0.7)
         
