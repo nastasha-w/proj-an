@@ -588,7 +588,7 @@ def plotdiffs_EW(file_test, file_check,\
     
     
     ylab = '$\\Delta \\, \\log_{{10}} \\, \\mathrm{{EW}}$' if logdiff else\
-           '$\\Delta \\, \\mathrm{{EW}} \\; [\\mathrm{{\\AA}}]$'
+           '$\\left|\\Delta \\, \\mathrm{{EW}} \\right| \\; [\\mathrm{{\\AA}}]$'
     xlab = '$\\log_{{10}} \\, \\mathrm{{N}} \\; [\\mathrm{{cm}}^{{-2}}]$'
     ptbase = '{ion}, ${wl:.2f} \\, \\mathrm{{\AA}}$' # \\lambda = 
     tickparams = {'which': 'both', 'direction': 'in',\
@@ -662,7 +662,7 @@ def plotdiffs_EW(file_test, file_check,\
             yvals[et == ec] = 0.
         else:
             #ax.axhline(maxdiff * efac * lang[ion])
-            yvals = et - ec
+            yvals = np.abs(et - ec)
         ax.scatter(nc, yvals, marker='o', color='gray', alpha=0.7)
         
         maxdiff_rec = max(maxdiff_rec, np.max(np.abs(yvals)))
