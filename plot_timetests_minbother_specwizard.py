@@ -656,12 +656,12 @@ def plotdiffs_EW(file_test, file_check,\
         maxdiff = minbother_red if lang[ion] > 1.001 * lyalpha else\
                   minbother_blue
         if logdiff:
-            ax.axhline(np.log10(1. + maxdiff), linestyle='dashed',\
+            ax.axhline(0., linestyle='dashed',\
                     color='black')
             yvals = np.log10(et) - np.log10(ec)
             yvals[et == ec] = 0.
         else:
-            ax.axhline(maxdiff * efac * lang[ion])
+            #ax.axhline(maxdiff * efac * lang[ion])
             yvals = et - ec
         ax.scatter(nc, yvals, marker='o', color='gray', alpha=0.7)
         
