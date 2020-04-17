@@ -26,17 +26,23 @@ import h5py
 
 import eagle_constants_and_units as c
 
-elements_ion = {'c1': 'carbon', 'c2': 'carbon', 'c3': 'carbon', 'c4': 'carbon', 'c5': 'carbon', 'c6': 'carbon',\
-             'fe2': 'iron', 'fe3': 'iron', 'fe17': 'iron', \
-             'h1': 'hydrogen', 'h2': 'hydrogen', 'lyalpha': 'hydrogen', 'halpha': 'hydrogen', 'h1ssh': 'hydrogen', 'hmolssh': 'hydrogen', 'hneutralssh': 'hydrogen',\
-             'he1': 'helium', 'he2': 'helium',\
-             'mg1': 'magnesium', 'mg2': 'magnesium',\
-             'n2': 'nitrogen', 'n3': 'nitrogen', 'n4': 'nitrogen', 'n5': 'nitrogen', 'n6': 'nitrogen', 'n7': 'nitrogen',\
-             'ne8': 'neon', 'ne9': 'neon', 'ne10': 'neon',\
-             'o1': 'oxygen', 'o3': 'oxygen', 'o4': 'oxygen', 'o5': 'oxygen', 'o6': 'oxygen', 'o7': 'oxygen', 'o8': 'oxygen',\
-             'o7r': 'oxygen',\
-             's5': 'sulfur',\
-             'si2': 'silicon', 'si3': 'silicon', 'si4': 'silicon', 'si13': 'silicon'}
+elements_ion = {'c1': 'carbon', 'c2': 'carbon', 'c3': 'carbon',\
+                'c4': 'carbon', 'c5': 'carbon', 'c6': 'carbon',\
+                'fe2': 'iron', 'fe3': 'iron', 'fe17': 'iron', \
+                'h1': 'hydrogen', 'h2': 'hydrogen', 'lyalpha': 'hydrogen',\
+                'halpha': 'hydrogen', 'h1ssh': 'hydrogen',\
+                'hmolssh': 'hydrogen', 'hneutralssh': 'hydrogen',\
+                'he1': 'helium', 'he2': 'helium',\
+                'mg1': 'magnesium', 'mg2': 'magnesium',\
+                'n2': 'nitrogen', 'n3': 'nitrogen', 'n4': 'nitrogen',\
+                'n5': 'nitrogen', 'n6': 'nitrogen', 'n7': 'nitrogen',\
+                'ne8': 'neon', 'ne9': 'neon', 'ne10': 'neon',\
+                'o1': 'oxygen', 'o3': 'oxygen', 'o4': 'oxygen',\
+                'o5': 'oxygen', 'o6': 'oxygen', 'o7': 'oxygen',\
+                'o8': 'oxygen', 'o7r': 'oxygen',\
+                's5': 'sulfur',\
+                'si2': 'silicon', 'si3': 'silicon', 'si4': 'silicon',\
+                'si13': 'silicon'}
 element_to_abbr = {\
                    'hydrogen':  'H',\
                    'helium':    'He',\
@@ -285,25 +291,6 @@ def readlinetable(hdf5group):
         table["element"] = table["element"].astype('category', categories=element_list, ordered=False)
     return table
 
-# O VIII
-o8major    = SpecLine('o8major',   'o8', 18.9671, 0.277, Atrans=2.57e12)   
-o8minor    = SpecLine('o8minor',   'o8', 18.9725, 0.139, Atrans=2.58e12)
-o8combo    = SpecLine('o8combo',   'o8', 18.9689, 0.416, combination=(o8major, o8minor))
-o8_2major  = SpecLine('o8_2major', 'o8', 16.0055, 0.0527)
-o8_2minor  = SpecLine('o8_2minor', 'o8', 16.0067, 0.0263)
-o8_3major  = SpecLine('o8_3major', 'o8', 15.1765, 9.67E-03)
-o8_3minor  = SpecLine('o8_3minor', 'o8', 15.1760, 1.93E-02)
-o8lines    = IonLines('o8', 'oxygen', (o8major, o8minor, o8_2major, o8_2minor), o8major)
-o8doublet  = IonLines('o8', 'oxygen', (o8major, o8minor), o8major)
-
-# O VII
-o7major    = SpecLine('o7major',   'o7', 21.6019, 0.696, Atrans=3.32e12)
-o7r        = o7major
-o7_2       = SpecLine('o7_2',      'o7', 18.6284, 0.146)
-o7_3       = SpecLine('o7_3',      'o7', 17.7683, 5.52E-02)
-o7_4       = SpecLine('o7_4',      'o7', 17.3960, 2.68E-02)
-o7_5       = SpecLine('o7_5',      'o7', 17.2000, 1.51E-02)
-o7lines    = IonLines('o7', 'oxygen', (o7major, o7_2), o7major)
 
 # O VI
 o6major    = SpecLine('o6major',   'o6', 1031.9261, 0.13250, Atrans=4.17e8)   
@@ -329,6 +316,26 @@ o6_10minor = SpecLine('o6_10minor', 'o6', 18.5869, 1.43E-02)
 
 o6lines    = IonLines('o6', 'oxygen', (o6major, o6minor, o6_2major, o6_2minor), o6major)
 o6doublet  = IonLines('o6', 'oxygen', (o6major, o6minor), o6major)               
+
+# O VII
+o7major    = SpecLine('o7major',   'o7', 21.6019, 0.696, Atrans=3.32e12)
+o7r        = o7major
+o7_2       = SpecLine('o7_2',      'o7', 18.6284, 0.146)
+o7_3       = SpecLine('o7_3',      'o7', 17.7683, 5.52E-02)
+o7_4       = SpecLine('o7_4',      'o7', 17.3960, 2.68E-02)
+o7_5       = SpecLine('o7_5',      'o7', 17.2000, 1.51E-02)
+o7lines    = IonLines('o7', 'oxygen', (o7major, o7_2), o7major)
+
+# O VIII
+o8major    = SpecLine('o8major',   'o8', 18.9671, 0.277, Atrans=2.57e12)   
+o8minor    = SpecLine('o8minor',   'o8', 18.9725, 0.139, Atrans=2.58e12)
+o8combo    = SpecLine('o8combo',   'o8', 18.9689, 0.416, combination=(o8major, o8minor))
+o8_2major  = SpecLine('o8_2major', 'o8', 16.0055, 0.0527)
+o8_2minor  = SpecLine('o8_2minor', 'o8', 16.0067, 0.0263)
+o8_3major  = SpecLine('o8_3major', 'o8', 15.1765, 9.67E-03)
+o8_3minor  = SpecLine('o8_3minor', 'o8', 15.1760, 1.93E-02)
+o8lines    = IonLines('o8', 'oxygen', (o8major, o8minor, o8_2major, o8_2minor), o8major)
+o8doublet  = IonLines('o8', 'oxygen', (o8major, o8minor), o8major)
 
 # Fe XVII
 fe17major  = SpecLine('fe17major',   'fe17', 15.0140, 2.72, Atrans=2.70e13)   
@@ -439,6 +446,8 @@ ne10_2major = SpecLine('ne10_2major', 'ne10', 10.2396, 2.63E-02)
 ne10_2minor = SpecLine('ne10_2minor', 'ne10', 10.2385, 5.27E-02) 
 ne10_3major = SpecLine('ne10_3major', 'ne10', 9.7085, 9.67E-03) 
 ne10_3minor = SpecLine('ne10_3minor', 'ne10', 9.7080, 1.93E-02) 
+
+
 
 lambda_rest = {
                'h1':        1156.6987178884301,\

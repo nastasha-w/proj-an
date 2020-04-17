@@ -14,7 +14,9 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gsp
 import matplotlib.lines as mlines
 
+import eagle_constants_and_units as c
 import ion_line_data as ild
+
 
 # a few useful defaults
 imgdir = '/cosma5/data/dp004/dc-wije1/specwiz/imgs/timetests/'
@@ -163,7 +165,7 @@ def plotdiffs_spectra(file_test, file_check,\
                       label_test='test', label_check='check',\
                       maxionsperplot=10, plotdir=imgdir):
     '''
-    plot the differences bwteen spectra in two files. test is compared to the
+    plot the differences between spectra in two files. test is compared to the
     baseline file check. The labels are used in the plots, and to get the 
     minbother values.
     This assumes the spectra in the two files are along the same sightlines, 
@@ -317,7 +319,7 @@ def plotdiffs_spectra(file_test, file_check,\
                   'labelleft': True, 'labelbottom': False}
     bbox = {'facecolor': 'white', 'alpha': 0.5, 'edgecolor': 'none'}
     
-    maxdiff = 0.
+    maxdiff_rec = 0.
     maxreldiff = 0.
     
     for specnum in spectra_test:
@@ -424,7 +426,7 @@ def plotdiffs_spectra(file_test, file_check,\
                 ax1.axhline(maxdiff, linestyle='dashed', color='black')
                 _md = np.max(np.abs(spectra_test[specnum][ion] -\
                          spectra_check[specnum][ion]))
-                maxdiff = max(maxdiff, _md)
+                maxdiff_rec = max(maxdiff_rec, _md)
                 
                 lograt = np.log10(spectra_test[specnum][ion] \
                                   / spectra_test[specnum][ion])
@@ -439,9 +441,235 @@ def plotdiffs_spectra(file_test, file_check,\
             plt.savefig(fname)
             plt.close() # large number of plots -> limit memory use
     print('Max. difference: {md}, Max. log10 rel. diff: {mlrd}'.format(
-            md=maxdiff, mlrd=maxreldiff))                   
+            md=maxdiff_rec, mlrd=maxreldiff))                   
                 
+def plotdiffs_EW(file_test, file_check,\
+                 label_test='test', label_check='check',\
+                 plotdir=imgdir, logdiff=True):       
+    '''
+    plot the total EW differences in two files, as a function of column 
+    density, for the different ions. test is compared to the
+    baseline file check. The labels are used in the plots, and to get the 
+    minbother values.
+    This assumes the spectra in the two files are along the same sightlines, 
+    etc.
+    '''
+    # arrays and attributes to compare for run difference overview 
+    gpaths_attrs = ['Constants',\
+                    'Header',\
+                    'Header/ModifyMetallicityParameters',\
+                    'Parameters/ChemicalElements',\
+                    'Parameters/SpecWizardRuntimeParameters',\
+                    'Projection',\
+                    ]
+    gpaths_arrays = ['Projection/ncontr',\
+                     'Projection/x_fraction_array',\
+                     'Projection/y_fraction_array',\
+                     'VHubble_KMpS',\
+                     ]
+    attrs_ignore = ['SpectrumFile', 'outputdir']
+    plotpath = 'Spectrum{specnum}/{ion}/Flux'
+    lognpath = 'Spectrum{specnum}/{ion}/LogTotalIonColumnDensity'
+    
+    with h5py.File(file_test, 'r') as ft,\
+        h5py.File(file_check, 'r') as fc:
+        
+        attrs_diff = {}
+        for path in gpaths_attrs:
+            dct_test = {key: val for key, val in ft[path].attrs.items()} 
+            dct_check = {key: val for key, val in fc[path].attrs.items()} 
+            test_missing, check_missing, diffkeys = \
+               comparedct(dct_test, dct_check)
+            if len(test_missing) > 0 or len(check_missing) > 0:
+                erm = 'Test file missing keys {t}\nCheck file missing keys {c}'
+                erm.format(t=test_missing, c=check_missing)
+                raise RuntimeError(erm)
+            attrs_diff.update({key: (dct_test[key], dct_check[key]) \
+                               for key in diffkeys})
+            if path == 'Header':
+                ions = np.array([ion.decode() for ion in dct_test['Ions']])
+                fosc = dct_test['Transitions_Oscillator_Strength']
+                lang = dct_test['Transitions_Rest_Wavelength']
+                #boxsize = dct_test['BoxSize']
+                redshift = dct_test['Redshift']
                 
+                ions, ioninds = np.unique(ions, return_index=True)
+                fosc = {ions[i]: fosc[ioninds[i]] for i in range(len(ions))}
+                lang = {ions[i]: lang[ioninds[i]] for i in range(len(ions))}
+
+        for path in gpaths_arrays:
+            ta = np.array(ft[path])
+            tc = np.array(fc[path])
+            if not np.all(ta ==tc):
+                erm = 'The sightlines for the input files are different'
+                raise ValueError(erm)
+            if path == 'VHubble_KMpS':
+                vvals_test = ta  
+                vvals_check = tc
+                
+        outofspectra = False
+        specnum = 0
+        # rest-frame EWs [Angstrom]
+        EW_test = {}
+        EW_check = {}
+        nvals_test = {}
+        nvals_check = {}
+        while not outofspectra:
+            EW_test[specnum] = {}
+            EW_check[specnum] = {}
+            nvals_test[specnum] = {}
+            nvals_check[specnum] = {}
+            for ion in ions:
+                try:
+                    tt = np.array(ft[plotpath.format(\
+                                     specnum=specnum, ion=ion)])
+                    tc = np.array(fc[plotpath.format(\
+                                specnum=specnum, ion=ion)])
+                    EW_test[specnum][ion] = np.sum(1. - tt) / len(tt) \
+                              * np.average(np.diff(vvals_test)) * 1e5 / c.c \
+                              * lang[ion]
+                    EW_check[specnum][ion] = np.sum(1. - tc) / len(tc) \
+                              * np.average(np.diff(vvals_check)) * 1e5 / c.c \
+                              * lang[ion]
+                    nvals_test[specnum][ion] = np.array(ft[lognpath.format(\
+                                specnum=specnum, ion=ion)])[()]
+                    nvals_check[specnum][ion] = np.array(fc[lognpath.format(\
+                                specnum=specnum, ion=ion)])[()]
+                except KeyError:
+                    outofspectra = True
+            if outofspectra:
+                del EW_test[specnum]
+                del EW_check[specnum]
+                del nvals_test[specnum]
+                del nvals_check[specnum]
+            specnum += 1   
+    efac = np.average(np.diff(vvals_check)) * 1e5 / c.c * len(vvals_check)
+    
+    minbother_red = minbother_vals[label_test]['minbother_red']\
+                    if label_test in minbother_vals else 0.
+    minbother_blue = minbother_vals[label_test]['minbother_blue']\
+                    if label_test in minbother_vals else 0.
+    lyalpha = 1215.6701
+    
+    title = '$z = {z:.2f}$, comparing\n' + \
+            '{test}: {tlist}\n' +\
+            '{check}: {clist}'
+    dctfmt = '{key}={val}'
+    attrs_note = set(attrs_diff.keys()) - set(attrs_ignore)
+    dct_note = {key: attrs_diff[key] for key in attrs_note}
+    dct_note.update({'minbother_red': (minbother_red,\
+                            minbother_vals[label_check]['minbother_red']),\
+                     'minbother_blue': (minbother_blue,\
+                            minbother_vals[label_check]['minbother_blue']),\
+                     })
+    keys_note = sorted(list(dct_note.keys()))
+    tlist = ', '.join([dctfmt.format(key=key, val=dct_note[key][0]) \
+                       for key in keys_note])
+    clist = ', '.join([dctfmt.format(key=key, val=dct_note[key][1]) \
+                       for key in keys_note])
+    ptitle = title.format(z=redshift,\
+                          test=label_test, tlist=tlist,\
+                          check=label_check, clist=clist)
+    
+    numions = len(ions) 
+    ions = sorted(ions, key=lang.get) # sort by wavelength
+    ions = ions[::-1]
+    
+    name = plotdir + 'EWdiff_log-{logdiff}_{tlabel}-vs-{clabel}.pdf'
+    name = name.format(logdiff=logdiff, tlabel=label_test, clabel=label_check)
+    fontsize = 10
+    
+    margin = 0.6
+    panelheight = 2.
+    panelwidth = 2.
+    #titleheight = 0.5
+    wspace = 0.25
+    hspace = 0.25
+    
+    
+    ylab = '$\\Delta \\, \\log_{{10}} \\, \\mathrm{{EW}}$' if logdiff else\
+           '$\\Delta \\, \\mathrm{{EW}} \\; [\\mathrm{{\\AA}}]$'
+    xlab = '$\\log_{{10}} \\, \\mathrm{{N}} \\; [\\mathrm{{cm}}^{{-2}}]$'
+    ptbase = '{ion}, ${wl:.2f} \\, \\mathrm{{\AA}}$' # \\lambda = 
+    tickparams = {'which': 'both', 'direction': 'in',\
+                  'labelsize': fontsize - 1,\
+                  'left': True, 'right': True, 'top': True, 'bottom': True,\
+                  'labelleft': True, 'labelbottom': True}
+    bbox = {'facecolor': 'white', 'alpha': 0.5, 'edgecolor': 'none'}
+    
+    maxdiff_rec = 0.
+    
+    ncols = 4
+    nrows = (numions - 1) // ncols + 1
+    
+    totalheight = margin * 2 + panelheight * nrows + hspace * (nrows - 1) 
+    totalwidth = margin * 2 + panelwidth * ncols + wspace * (ncols - 1) 
+    
+    bottom = margin / totalheight
+    top = 1. - bottom
+    left = margin / totalwidth
+    right = 1. - left
+            
+    fig = plt.figure(figsize=(totalwidth, totalheight))
+    grid = gsp.GridSpec(nrows=nrows, ncols=ncols,\
+                        hspace=hspace, wspace=wspace,\
+                        top=top, bottom=bottom, left=left, right=right)
+    fig.suptitle(ptitle, fontsize=fontsize)
+    axes = [fig.add_subplot(grid[i // ncols, i % ncols]) \
+            for i in range(numions)]
+            
+    for ii in range(numions):
+        ion = ions[ii]
+        ax = axes[ii]
+        
+        tps = tickparams.copy()
+        ax.tick_params(**tps)
+        
+        if numions - ii <= ncols: 
+            ax.set_xlabel(xlab, fontsize=fontsize)
+        if ii % ncols == 0:
+            ax.set_ylabel(ylab, fontsize=fontsize)
+            
+        pt = ptbase.format(ion=ild.getnicename(ion), wl=lang[ion]) 
+        if logdiff:        
+            ax.text(0.95, 0.05, pt, fontsize=fontsize - 1,\
+                    verticalalignment='bottom', \
+                    horizontalalignment='right', transform=ax.transAxes,\
+                    bbox=bbox)
+        else:
+            ax.text(0.95, 0.95, pt, fontsize=fontsize - 1,\
+                    verticalalignment='top', \
+                    horizontalalignment='right', transform=ax.transAxes,\
+                    bbox=bbox)
+            ax.set_yscale('log')
+        specnums = sorted(nvals_test.keys())
+        nt = np.array([nvals_test[specnum][ion] for specnum in specnums])
+        nc = np.array([nvals_check[specnum][ion] for specnum in specnums])
+        et = np.array([EW_test[specnum][ion] for specnum in specnums])
+        ec = np.array([EW_check[specnum][ion] for specnum in specnums])
+        
+        if not np.all(nt == nc):
+            print('Warning: different column densities for' +\
+                  ' {ion}'.format(sn=specnum, ion=ion) +\
+                  ':\n{t}\n{c}'.format(t=nt, c=nc))
+        
+        maxdiff = minbother_red if lang[ion] > 1.001 * lyalpha else\
+                  minbother_blue
+        if logdiff:
+            ax.axhline(np.log10(1. + maxdiff), linestyle='dashed',\
+                    color='black')
+            yvals = np.log10(et) - np.log10(ec)
+            yvals[et == ec] = 0.
+        else:
+            ax.axhline(maxdiff * efac * lang[ion])
+            yvals = et - ec
+        ax.scatter(nc, yvals, marker='o', color='gray', alpha=0.7)
+        
+        maxdiff_rec = max(maxdiff_rec, np.max(np.abs(yvals)))
+                        
+    plt.savefig(fname)
+    print('Max. difference: {}'.format(maxdiff_rec)              
+    
                 
     
     
