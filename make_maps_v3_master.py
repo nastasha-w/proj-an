@@ -148,8 +148,8 @@ def comoving_distance_cm(z, simfile=None): # assumes Omega_k = 0
     def integrand(zi):
         return (omega0 * (1. + zi)**3 + omegalambda)**0.5
     zi_arr = np.arange(0, z + 0.5 * z / 512., z / 512.)
-    com = np.trapz(1. / integrand(zi_arr),x=zi_arr)
-    return com * c.c / (c.hubble*hpar)
+    com = np.trapz(1. / integrand(zi_arr), x=zi_arr)
+    return com * c.c / (c.hubble * hpar)
 
 def ang_diam_distance_cm(z,simfile=None):
     if simfile is None:
@@ -178,7 +178,21 @@ def Hubble(z,simfile=None):
 
     return (c.hubble*hpar)*(omega0*(1.+z)**3 + omegalambda)**0.5
 
-def solidangle(alpha,beta): # alpha = 0.5 * pix_length_1/D_A, beta = 0.5 * pix_length_2/D_A
+def solidangle(alpha,beta):
+    '''
+    calculates the solid angle of a rectangular pixel with half angles alpha 
+    and beta defining the rectangle
+    
+    input:
+    ------
+    alpha:  0.5 * pix_length_1/D_A, 
+    beta:   0.5 * pix_length_2/D_
+    
+    returns:
+    --------
+    solid angle in steradians
+    
+    '''
     #from www.mpia.de/~mathar/public/mathar20051002.pdf
     # citing  A. Khadjavi, J. Opt. Soc. Am. 58, 1417 (1968).
     # stored in home/papers
@@ -2739,12 +2753,37 @@ def luminosity_calc(vardict,excludeSFR,eltab,hab,ion,last=True,updatesel=True):
 
 
 
-def lumninosty_to_Sb(vardict, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ion):
+def luminosty_to_Sb(vardict, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ion):
     '''
     converts cgs lumninosity (erg/s) to cgs surface brightness
     (photons/s/cm2/steradian)
     ion needed because conversion depends on the line energy
-    '''
+    
+    input:
+    ------
+    vardict:        Vardict instance -- used to get cosmological parameters
+    Ls:             the dimensions of the projected box:
+                    Ls[0] is the full extent along the x axis, Ls[1] along y,
+                    Ls[2] is along z (diameter, not radius)
+    Axis1, Axis2:   axes perpendicular to the line of sight (0=x, 1=y, 2=z)
+                    (int)
+    Axis3:          axis along the line of sight (int)
+    npix_x, npix_y: number of pixels along Axis1 and Axis2, respectively 
+    ion:            name for the line to get the conversion for, as used in 
+                    make_maps_opts_locs
+    In Ls, the the indices match the simulation axes every time: indices 0, 1, 
+    and 2 always correspond to the X, Y, and Z axes respectively.
+    Axis1, Axis2, and Axis3 and as used as indices for Ls. Axis1 and Axis2, 
+    are used with Ls and npix_<x/y> to determine the dimensions of each pixel, 
+    and Axis3 is used to impose a minimum comoving distance of half the extent
+    along the line of sight.
+
+    returns:
+    --------
+    a number (float) which can be multiplied by the emission line luminosity 
+    in a pixel in erg/s to get the surface brightness in 
+    photons/cm^2/s/steradian            
+        '''
     zcalc = vardict.simfile.z
     comdist = comoving_distance_cm(zcalc, simfile=vardict.simfile)
     longlen = max(Ls) * 0.5 * c.cm_per_mpc
@@ -2764,7 +2803,8 @@ def lumninosty_to_Sb(vardict, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ion):
     # the (1+z) is not so much a correction to the line energy as to the luminosity distance:
     # the 1/4 pi dL^2 luminosity -> flux conversion is for a broad spectrum and includes energy flux decrease to to redshifting
     # multiplying by (1+z) compensates for this: the number of photons does not change from redshifting
-    return 1. / (4 * np.pi * ldist**2) * (1. + zcalc) / ol.line_eng_ion[ion] * 1. / solidangle(halfangle_x,halfangle_y)
+    return 1. / (4 * np.pi * ldist**2) * (1. + zcalc) / ol.line_eng_ion[ion] *\
+           1. / solidangle(halfangle_x, halfangle_y)
 
 
 
@@ -3050,7 +3090,6 @@ def readbasic(vardict, quantity, excludeSFR, last=True, **kwargs):
 
 
 
-
 def project(NumPart, Ls, Axis1, Axis2, Axis3, box3, periodic, npix_x, npix_y,\
             kernel, dct, tree, ompproj=True, projmin=None, projmax=None):
     '''
@@ -3086,7 +3125,7 @@ def project(NumPart, Ls, Axis1, Axis2, Axis3, box3, periodic, npix_x, npix_y,\
                   [-Ls[0] / 2., Ls[0] / 2.,\
                    -Ls[1] / 2., Ls[1] / 2.,\
                    -Ls[2] / 2., Ls[2] / 2. ]
-                  box (if not perdiodic) or
+                  box (if not periodic) or
                   [0., Ls[0], 0., Ls[1], 0., Ls[2]] if it is.
                   (The reason for this assumption in the periodic case is that 
                   it makes it easy to determine when something needs to be 
@@ -3097,10 +3136,10 @@ def project(NumPart, Ls, Axis1, Axis2, Axis3, box3, periodic, npix_x, npix_y,\
       o 'lsmooth': gas smoothing lengths (same units as coords)
       o 'qW':     the array containing the particle property to directly,
                   project, and to weight qQ by
-      o 'qQ':     the array to get a qW-weighted average for in eahc pizel
+      o 'qQ':     the array to get a qW-weighted average for in each pixel
     - projmin, projmax: maximum coordinate values in projection direction
-              (override default values in Ls; I put this in for a specific
-              application)
+                  (override default values in Ls; I put this in for a specific
+                  application)
               
     returns:
     --------------------------------------------------------------------------
@@ -4131,11 +4170,11 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
 
     elif ptypeW == 'emission' and excludeSFRW != 'from':
         qW, multipafterW = luminosity_calc(vardict_WQ, excludeSFRW, eltabW, habW, ionW, last=last, updatesel=True)
-        multipafterW *= lumninosty_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
+        multipafterW *= luminosty_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
     elif ptypeW == 'emission' and excludeSFRW == 'from':
         if ionW == 'halpha':
             qW, multipafterW = luminosity_calc_halpha_fromSFR(vardict_WQ, excludeSFRW, last=last, updatesel=True)
-        multipafterW *= lumninosty_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
+        multipafterW *= luminosty_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
 
 
     if ptypeQ == 'basic':
@@ -4157,11 +4196,11 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
 
     elif ptypeQ == 'emission' and excludeSFRQ != 'from':
         qQ, multipafterQ = luminosity_calc(vardict_WQ, excludeSFRQ, eltabQ, habQ, ionQ, last=True, updatesel=False)
-        multipafterQ *= lumninosty_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
+        multipafterQ *= luminosty_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
     elif ptypeQ == 'emission' and excludeSFRQ == 'from':
         if ionQ == 'halpha':
             qQ, multipafterQ = luminosity_calc_halpha_fromSFR(vardict_WQ, excludeSFRQ, last=True, updatesel=False)
-        multipafterQ *= lumninosty_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
+        multipafterQ *= luminosty_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
 
     if velcut == False:
         vardict_WQ.readif('Coordinates',rawunits=True)
