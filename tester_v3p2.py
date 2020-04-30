@@ -18,9 +18,9 @@ from matplotlib.collections import PatchCollection
 
 # test module: expect changes so reload modules
 import make_maps_v3_master as m3
-reload(m3)
 import simfileclone as sfc
 reload(sfc)
+reload(m3)
 #import make_maps_opts_locs as ol
 from prof3d_galsets import combine_hists
 
@@ -1620,4 +1620,46 @@ def plot_testhaloonly(filename_halos='testselection.txt'):
         addlabels(plotaxes)
         
         plt.savefig(figname, format='pdf')
+        
+
+def compare_emission_v3p4_to_v3p5():
+    ddir = '/net/luttero/data1/line_em_abs/v3_master_tests/test_v3p5_from_3p4/'
+    v3p4 = {'fe17':   'emission_fe17_L0025N0376_27_test3.4_SmAb_C2Sm_8000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5',\
+            'halpha': 'emission_halpha_L0025N0376_27_test3.4_SmAb_C2Sm_8000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5',\
+            'o7r':    'emission_o7r_L0025N0376_27_test3.4_SmAb_C2Sm_8000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5',\
+            'o8':     'emission_o8_L0025N0376_27_test3.4_SmAb_C2Sm_8000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5',\
+            }
+    v3p5 = {'fe17':   'emission_fe17_L0025N0376_27_test3.5_SmAb_C2Sm_8000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5',\
+            'halpha': 'emission_halpha_L0025N0376_27_test3.5_SmAb_C2Sm_8000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5',\
+            'o7r':    'emission_o7r_L0025N0376_27_test3.5_SmAb_C2Sm_8000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5',\
+            'o8':     'emission_o8_L0025N0376_27_test3.5_SmAb_C2Sm_8000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5',\
+            }
+    
+    clabel = 'SB [ph/cm2/s/sr]'
+    outname_map = ddir + 'mapcomp_emission_test-3p4_check-3p5_{line}.pdf'
+    outname_hist = ddir + 'histcomp_emission_test-3p4_check-3p5_{line}.pdf'
+    for line in v3p4:
+        f4 = h5py.File(ddir + v3p4[line], 'r')
+        i4 = f4['map'][:]
+        f4.close()
+        f5 = h5py.File(ddir + v3p5[line], 'r')
+        i5 = f5['map'][:]
+        f5.close()
+        
+        compareplot(i5, i4, fontsize=12, clabel=clabel,\
+                    name=outname_map.format(line=line), diffmax=None)
+        comparehist(i5, i4, fontsize=12 ,clabel=clabel,\
+                    name=outname_hist.format(line=line), diffmax=None,\
+                    nbins=100)
+        
+#emission_fe17_L0025N0376_27_test3.5_SmAb_C2Sm_8000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5
+
+#emission_halpha_L0025N0376_27_test3.5_SmAb_C2Sm_8000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5
+
+#emission_o7r_L0025N0376_27_test3.5_SmAb_C2Sm_8000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5
+
+
+#emission_o8_L0025N0376_27_test3.5_SmAb_C2Sm_8000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5
+    
+    
         

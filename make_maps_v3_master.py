@@ -2743,7 +2743,7 @@ def luminosity_calc(vardict,excludeSFR,eltab,hab,ion,last=True,updatesel=True):
     #lowZ = eltabund < 10**-15
     #eltabund[lowZ] = 0.
 
-    if eltab == hab: # no rescaling if hydrogen; can give weird behaviour if using different Sm/Pt settings
+    if ol.elements_ion[ion] == 'hydrogen': # no rescaling if hydrogen
         zscale = 1.
     else:
         if isinstance(hab, str):
@@ -3852,6 +3852,10 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                'auto' is smoothed for ptype 'emission', particle for 'coldens',
                and same as the one-option setting for hydrogen
                options are 'Sm', 'Pt', 'auto', float, or a tuple of these
+               For emission from hydrogen, only the hydrogen abundance matters;
+               the element abundance is not used in this case. 
+               (Mixing eltab and hab settings is, in any case, not 
+               recommended.)
     kernel:    smoothing kernel to use in projections; string
                options: 'C2', 'gadget'
                default: 'C2'

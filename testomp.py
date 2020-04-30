@@ -46,10 +46,10 @@ print('Testing if OpenMP works in general:')
 test_library = ct.CDLL("/home/wijers/plot_sims/make_maps_emission_coupled/HsmlAndProject/test_omp_parallel.so")
  # set the return type
 test_library.main.restype = int
-print '----------'
+print('----------')
 # call the findHsmlAndProject C routine
 test_library.main()
-print '----------'
+print('----------')
 
 
 if False:
