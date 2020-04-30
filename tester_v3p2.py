@@ -7,6 +7,7 @@ Created on Mon Nov  6 16:32:05 2017
 import numpy as np
 import h5py
 import pandas as pd
+import sys
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -19,6 +20,8 @@ from matplotlib.collections import PatchCollection
 # test module: expect changes so reload modules
 import make_maps_v3_master as m3
 import simfileclone as sfc
+if sys.version.split('.')[0] == '3':
+    from importlib import reload
 reload(sfc)
 reload(m3)
 #import make_maps_opts_locs as ol
