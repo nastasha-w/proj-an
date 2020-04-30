@@ -27,10 +27,13 @@ TODO:
       (can be basic only, initially)
 """
 
-version = 3.4 # matches corresponding make_maps version
+version = 3.5 # matches corresponding make_maps version
+# for 3.4:
 # naming of outputs updated to be more sensible, e.g. cares less about
 # projection axis;
 # sacrifices naming equal to previous versions
+# for 3.5:
+# changed metallicity scaling calculation for line emission
 
 ###############################################################################
 ###############################################################################
@@ -2669,10 +2672,9 @@ def luminosity_calc(vardict,excludeSFR,eltab,hab,ion,last=True,updatesel=True):
     print('Calculating particle luminosities...')
 
     if isinstance(eltab, str):
-        vardict.readif(eltab,rawunits = True)
+        vardict.readif(eltab, rawunits=True)
         if updatesel and (ol.elements_ion[ion] not in ['hydrogen', 'helium']):
             vardict.update(vardict.particle[eltab] > 0.)
-
 
     if not vardict.isstored_part('propvol'):
         vardict.readif('Density', rawunits=True)
@@ -2689,40 +2691,51 @@ def luminosity_calc(vardict,excludeSFR,eltab,hab,ion,last=True,updatesel=True):
     if not vardict.isstored_part('lognH'):
         vardict.readif('Density', rawunits=True)
         if isinstance(hab, str):
-            vardict.readif(hab,rawunits = True)
-            vardict.add_part('lognH', np.log10(vardict.particle[hab]) + np.log10(vardict.particle['Density']) + np.log10( vardict.CGSconv['Density'] / (c.atomw_H*c.u) ) )
-            if eltab != hab:
-                vardict.delif(hab,last=last)
+            vardict.readif(hab, rawunits=True)
+            vardict.add_part('lognH', np.log10(vardict.particle[hab]) +\
+                                      np.log10(vardict.particle['Density']) +\
+                                      np.log10(vardict.CGSconv['Density'] / (c.atomw_H * c.u)) )
         else:
-            vardict.add_part('lognH', np.log10(vardict.particle['Density']) + np.log10( vardict.CGSconv['Density'] * hab / (c.atomw_H * c.u) ) )
+            vardict.add_part('lognH', np.log10(vardict.particle['Density']) +\
+                                      np.log10(vardict.CGSconv['Density'] * hab / (c.atomw_H * c.u)) )
         vardict.delif('Density',last=last)
 
     if len(vardict.particle['lognH']) > 0:
         print('Min, max, median of particle log10 nH [cgs]: %.5e %.5e %.5e' \
-            % (np.min(vardict.particle['lognH']), np.max(vardict.particle['lognH']), np.median(vardict.particle['lognH'])) )
+            % (np.min(vardict.particle['lognH']),\
+               np.max(vardict.particle['lognH']),\
+               np.median(vardict.particle['lognH'])) )
 
     if not vardict.isstored_part('logT'):
         if excludeSFR == 'T4':
-            vardict.readif('OnEquationOfState',rawunits=True)
-            vardict.add_part('eos',vardict.particle['OnEquationOfState'] > 0.)
-            vardict.delif('OnEquationOfState',last=last)
-            vardict.readif('Temperature',rawunits=True,setsel = vardict.particle['eos'],setval = 1e4)
-            vardict.delif('eos',last=last)
+            vardict.readif('OnEquationOfState', rawunits=True)
+            vardict.add_part('eos', vardict.particle['OnEquationOfState'] > 0.)
+            vardict.delif('OnEquationOfState', last=last)
+            vardict.readif('Temperature', rawunits=True,\
+                           setsel=vardict.particle['eos'], setval = 1e4)
+            vardict.delif('eos', last=last)
         else:
-            vardict.readif('Temperature',rawunits=True)
-        vardict.add_part('logT',np.log10(vardict.particle['Temperature']))
-        vardict.delif('Temperature',last=last)
+            vardict.readif('Temperature', rawunits=True)
+        vardict.add_part('logT', np.log10(vardict.particle['Temperature']))
+        vardict.delif('Temperature', last=last)
     
     if len(vardict.particle['logT']) > 0:
         print('Min, max, median of particle log temperature [K]: %.5e %.5e %.5e' \
-            % (np.min(vardict.particle['logT']), np.max(vardict.particle['logT']), np.median(vardict.particle['logT'])))
+            % (np.min(vardict.particle['logT']),\
+               np.max(vardict.particle['logT']),\
+               np.median(vardict.particle['logT'])))
 
 
     lineind = ol.line_nos_ion[ion]
-    vardict.add_part('emdenssq', find_emdenssq(vardict.simfile.z, ol.elements_ion[ion], vardict.particle, lineind))
+    vardict.add_part('emdenssq', find_emdenssq(vardict.simfile.z,\
+                                               ol.elements_ion[ion],\
+                                               vardict.particle,\
+                                               lineind))
     if len(vardict.particle['emdenssq']) > 0:
         print('Min, max, median of particle emdenssq: %.5e %.5e %.5e' \
-            % (np.min(vardict.particle['emdenssq']), np.max(vardict.particle['emdenssq']), np.median(vardict.particle['emdenssq'])))
+            % (np.min(vardict.particle['emdenssq']),\
+               np.max(vardict.particle['emdenssq']),\
+               np.median(vardict.particle['emdenssq'])))
     vardict.delif('logT',last = last)
 
     # for agreement with Cosmoplotter
@@ -2730,13 +2743,33 @@ def luminosity_calc(vardict,excludeSFR,eltab,hab,ion,last=True,updatesel=True):
     #lowZ = eltabund < 10**-15
     #eltabund[lowZ] = 0.
 
+    if eltab == hab: # no rescaling if hydrogen; can give weird behaviour if using different Sm/Pt settings
+        zscale = 1.
+    else:
+        if isinstance(hab, str):
+            vardict.readif(hab, rawunits=True)
+            hmfrac = vardict.particle[hab]
+            if eltab != hab:
+                vardict.delif(hab, last=last)
+        else:
+            hmfrac = hab
+        if isinstance(eltab, str):
+            vardict.readif(eltab, rawunits=True)
+            emfrac = vardict.particle[eltab]
+            vardict.delif(eltab, last=last)
+        else:
+            emfrac = eltab
+        zscale = emfrac / hmfrac
+        del emfrac
+        del hmfrac
+        zscale *= ionh.atomw['Hydrogen'] / \
+                  ionh.atomw[string.capwords(ol.elements_ion[ion])]
+        zscale /= ol.solar_abunds_sb[ol.elements_ion[ion]]
     # using units of 10**-10 * CGS, to make sure overflow of float32 does not occur in C
     # (max is within 2-3 factors of 10 of float32 overflow in one simulation)
-    if isinstance(eltab, str):
-        luminosity = vardict.particle[eltab] / ol.solar_abunds[ol.elements_ion[ion]] * 10**(vardict.particle['emdenssq'] + 2. * vardict.particle['lognH'] + np.log10(vardict.particle['propvol']) - 10.)
-        vardict.delif(eltab,last=last)
-    else:
-        luminosity = eltab / ol.solar_abunds[ol.elements_ion[ion]] * 10**(vardict.particle['emdenssq'] + 2. * vardict.particle['lognH'] + np.log10(vardict.particle['propvol']) - 10.)
+    luminosity = zscale * 10**(vardict.particle['emdenssq'] +\
+                               2. * vardict.particle['lognH'] +\
+                               np.log10(vardict.particle['propvol']) - 10.)
     vardict.delif('lognH',last=last)
     vardict.delif('emdenssq',last=last)
     vardict.delif('propvol',last=last)
