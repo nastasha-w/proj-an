@@ -51,7 +51,7 @@ class Simfileclone_data:
         '''
         self.data.update(data)
         # make sure any coordinates fit in the box
-        keys = np.array(data.keys())
+        keys = np.array(list(data.keys()))
         coordkeys = keys[np.array(['Coordinates' in key for key in keys])]
         for key in coordkeys:
             self.data[key].data %= self.boxsize
