@@ -2905,12 +2905,24 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,\
                         vardict.add_part('logZ', np.log10(vardict.particle['Metallicity']))
                         vardict.delif('Metallicity', last=last)
                 else:
-                    vardict.add_part('logZ', np.ones(len(vardict.particle['lognH'])) * eltab / ol.solar_abunds[ol.elements_ion[ion]] * ol.Zsun_sylviastables)
+                    vardict.add_part('logZ', np.ones(len(vardict.particle['lognH'])) *\
+                                     np.log10(eltab / ol.solar_abunds_ea[ol.elements_ion[ion]] *\
+                                              ol.Zsun_sylviastables))
+                # zero metallicity leads to interpolation errors; 
+                # if hydrogen or helium, set minimum to > -np.inf 
+                # any value < -50. -> minimum table value used
+                minlz = np.min(vardict.particle['logZ'])
+                print('Minimum logZ found: {}'.format(minlz))
+                dellz = False
+                if minlz == -np.inf:
+                    print('Adjusting minimum logZ to small finite value')
+                    vardict.particle['logZ'][vardict.particle['logZ'] == -np.inf] = -100.
+                    dellz = True
             vardict.add_part('ionfrac', find_ionbal_sylviassh(vardict.simfile.z, ion, vardict.particle))
             if not isinstance(eltab, str):
                 vardict.delif('logZ', last=True)
             else:
-                vardict.delif('logZ', last=last)
+                vardict.delif('logZ', last=dellz)
         elif bensgadget2tables: # same data as the default tables from Serena Bertone
             vardict.add_part('ionfrac', find_ionbal_bensgadget2(vardict.simfile.z, ion, vardict.particle))
         else:
