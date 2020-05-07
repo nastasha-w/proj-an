@@ -10,6 +10,7 @@ import numpy as np
 
 import eagle_constants_and_units as c
 import cosmo_utils as cu
+import make_maps_opts_locs as ol
 
 res_arcsec = {'Athena X-IFU': 5.,\
               'Athena WFI':  3.,\
@@ -63,4 +64,43 @@ def get_resolution_tables(zvals=[0.01, 0.05, 0.1, 0.2]):
     print(hline)
     print(table)
     print(tabend)
+
+def make_and_save_stamps(filen_in, filen_weight=None,\
+                         filen_out=None, group_out=None,\
+                         resolution_out=None, center_out=None,\
+                         diameter_out=None):
+    '''
+    from an input hdf5 file (simulation slice), save the 'map' array at a 
+    lower resolution and/or save a subset of the pixels for images. The average
+    values from filen_in are used
+    
+    input:
+    ------
+    filen_in:      (str) hdf5 file containing a 'map' dataset (2d array). 
+                   Assumed to be in the format of make_maps outputs (metadata)
+                   If the filename does not contain a path, it is assumed to 
+                   be in make_maps_opts_locs.ndir
+    filen_weight:  (str) if the data in filen_in is a map of weighted averages,
+                   this file can be used to specifiy the weights, so that the 
+                   stamp map contains consistently defined averages. This is 
+                   only needed if the map resolution is changed. 
+    filen_out:     (str) name of the hdf5 file to store the output in. Default 
+                   is  filen_in with '_stamps' appended. If a path is not part 
+                   of this name, it is stored in 
+                   make_maps_opts_locs.pdir + 'stamps/'
+    group_out:     (str) name of the hdf5 group to store the stamp in. Default
+                   is 'stamp#', where '#' is a number (starting at 0)
+    resolution out: (float, int, or None) resolution of the final map.
+                   None -> keep old resolution
+                   int  -> use that many pixels (must divide the number of 
+                   pixels in the selected region)
+                   float -> use that many cpkc per pixel (integer multiple of 
+                   original resolution)
+    center_out:    (tuple of 2 floats) center of the region to cut out of the 
+                   image (units: cMpc). If None, the whole image is used
+    diameter out:  (float or tuple of 2 floats, or None) extent of the region 
+                   to cut out of the image. May overlap periodic box edges. 
+                   If one float, the region is square, if two, matches the axes
+                   of the image. May not be None if center_out isn't.
+    '''
     

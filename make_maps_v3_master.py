@@ -552,7 +552,9 @@ def findiontables_sylviassh(ion, z):
         balance2 = tab_z_T_Z_nH[zind2, :, :, :]
 
         print("interpolating 2 emission tables")
-        balance = 1./( ziopts[zind2] - ziopts[zind1]) * ( (ziopts[zind2] - z) * balance1 + (z - ziopts[zind1]) * balance2 )
+        balance = 1. / ( ziopts[zind2] - ziopts[zind1]) *\
+                  ( (ziopts[zind2] - z) * balance1 \
+                   + (z - ziopts[zind1]) * balance2 )
 
     return balance, logTK, logZ, lognHcm3
 
@@ -2653,7 +2655,8 @@ def get_eltab_names(abunds,iselt,ion): #assumes
 #################################
 
 
-def luminosity_calc(vardict,excludeSFR,eltab,hab,ion,last=True,updatesel=True):
+def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
+                    last=True, updatesel=True):
     '''
     Calculate the per particle luminosity of an emission line (ion)
     vardict should already contain the particle selection for which to
