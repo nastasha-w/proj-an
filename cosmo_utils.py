@@ -258,6 +258,25 @@ def find_ionbal(z, ion, dct_nH_T):
 
 
 def comoving_distance_cm(z, cosmopars=None): # assumes Omega_k = 0
+    '''
+    input:
+    ------
+    z: redshift (cosmopars redshift is used if cosmopars is None)
+    cosmopars: dictionary of cosmological parameter containing
+               'omegam': (baryon + dark) matter density / rho_critical at z=0
+               'omegam': baryon density / rho_critical at z=0
+               'omegalambda': dark energy density / rho_critical at z=0
+               'z': redshift
+               'a': expansion factor 1 / (1 + z)
+               'h': hubble factor z=0 in units of km/s/Mpc
+               'boxsize': size of the simulation box in cMpc/h (not used here)
+               or None: then the Eagle cosmological parameters from 
+               eagle_constants_and_units.py are used, and the input redshift z 
+               
+    returns:
+    --------
+    comoving distance in cm
+    '''
     if z < 1e-8:
         print('Using 0 comoving distance from z. \n')
         return 0.
