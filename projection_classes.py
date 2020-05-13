@@ -235,7 +235,7 @@ class Sel:
                 self.val = np.asarray(arr[key],dtype=bool)
             elif len(arr.keys()) ==1: # must the the one element, right?
                 key_old = key
-                key = arr.keys()[0]
+                key = list(arr.keys())[0]
                 if key_old is not None:
                     print('Warning: invalid key %s for dictionary input to Sel.__init__; using only key %s in stead.'%(str(key_old), str(key)))
                 self.seldef = True
@@ -280,7 +280,7 @@ class Sel:
                     print('Error (Sel.comb): can not combine Sel instance with object %s; Sel instance unmodified'%type(arr[key]))
             elif len(arr.keys()) ==1: # must the the one element, right?
                 key_old = key
-                key = arr.keys()[0]
+                key = list(arr.keys())[0]
                 if key_old is not None:
                     print('Warning (Sel.comb): invalid key %s for dictionary input to Sel.comb; using only key %s in stead.'%(str(key_old), str(key)))
                 if isinstance(arr[key],np.ndarray):
@@ -340,7 +340,7 @@ class Sel:
                     print('Error (Sel.refine): can not combine Sel instance with object %s; Sel instance unmodified'%type(arr[key]))
             elif len(arr.keys()) ==1: # must the the one element, right?
                 key_old = key
-                key = arr.keys()[0]
+                key = list(arr.keys())[0]
                 if key_old is not None:
                     print('Warning (Sel.refine): invalid key %s for dictionary input to Sel.comb; using only key %s in stead.'%(str(key_old), str(key)))
                 if isinstance(arr[key],np.ndarray):
@@ -473,7 +473,7 @@ class Vardict:
                     self.particle[name] = (self.particle[name])[self.tempsel,...]
                 del self.tempsel
                 self.readsel.comb(selname)
-            elif selname.val.shape[0] == self.particle[self.particle.keys()[0]].shape[0]: # if keys()[0] happens to be coordinates or something, we just want to match the zero index
+            elif selname.val.shape[0] == self.particle[list(self.particle.keys())[0]].shape[0]: # if keys()[0] happens to be coordinates or something, we just want to match the zero index
                 for name in self.particle.keys():
                     self.particle[name] = (self.particle[name])[selname.val,...]
                 self.readsel.refine(selname)

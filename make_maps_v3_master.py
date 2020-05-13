@@ -189,7 +189,7 @@ def solidangle(alpha,beta):
     input:
     ------
     alpha:  0.5 * pix_length_1/D_A, 
-    beta:   0.5 * pix_length_2/D_
+    beta:   0.5 * pix_length_2/D_A
     
     returns:
     --------
@@ -2789,7 +2789,7 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
 
 
 
-def luminosty_to_Sb(vardict, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ion):
+def luminosity_to_Sb(vardict, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ion):
     '''
     converts cgs lumninosity (erg/s) to cgs surface brightness
     (photons/s/cm2/steradian)
@@ -4222,11 +4222,11 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
 
     elif ptypeW == 'emission' and excludeSFRW != 'from':
         qW, multipafterW = luminosity_calc(vardict_WQ, excludeSFRW, eltabW, habW, ionW, last=last, updatesel=True)
-        multipafterW *= luminosty_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
+        multipafterW *= luminosity_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
     elif ptypeW == 'emission' and excludeSFRW == 'from':
         if ionW == 'halpha':
             qW, multipafterW = luminosity_calc_halpha_fromSFR(vardict_WQ, excludeSFRW, last=last, updatesel=True)
-        multipafterW *= luminosty_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
+        multipafterW *= luminosity_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
 
 
     if ptypeQ == 'basic':
@@ -4248,11 +4248,11 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
 
     elif ptypeQ == 'emission' and excludeSFRQ != 'from':
         qQ, multipafterQ = luminosity_calc(vardict_WQ, excludeSFRQ, eltabQ, habQ, ionQ, last=True, updatesel=False)
-        multipafterQ *= luminosty_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
+        multipafterQ *= luminosity_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
     elif ptypeQ == 'emission' and excludeSFRQ == 'from':
         if ionQ == 'halpha':
             qQ, multipafterQ = luminosity_calc_halpha_fromSFR(vardict_WQ, excludeSFRQ, last=True, updatesel=False)
-        multipafterQ *= luminosty_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
+        multipafterQ *= luminosity_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
 
     if velcut == False:
         vardict_WQ.readif('Coordinates',rawunits=True)
