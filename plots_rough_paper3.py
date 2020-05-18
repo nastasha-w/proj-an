@@ -228,13 +228,13 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
             lowerleftcorner = (cen_x - 0.5 * extent_x, cen_y - 0.5 * extent_y)
             # extent in units of pixel size 
             extent_target = ((center_out[0] - 0.5 * diameter_out[0] \
-                              - lowerleftcorner[0]) / (res_in_x * 1000),\
+                              - lowerleftcorner[0]) * 1e3 / res_in_x,\
                              (center_out[0] + 0.5 * diameter_out[0] \
-                              - lowerleftcorner[0]) / (res_in_x * 1000),\
+                              - lowerleftcorner[0]) * 1e3 / res_in_x,\
                              (center_out[1] - 0.5 * diameter_out[1] \
-                              - lowerleftcorner[1]) / (res_in_y * 1000),\
+                              - lowerleftcorner[1]) * 1e3 / res_in_y,\
                              (center_out[1] + 0.5 * diameter_out[1] \
-                              - lowerleftcorner[1]) / (res_in_y * 1000)\
+                              - lowerleftcorner[1]) * 1e3 / res_in_y\
                              )
             print(extent_target)
             npix_sel_x_target = int(extent_target[1] - extent_target[0] + 0.5)
