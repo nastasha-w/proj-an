@@ -355,7 +355,7 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
             else:
                 map_w = None
         
-        res = reducedims(map_in, weights_in=map_w, outdims)
+        res = reducedims(map_in, outdims, weights_in=map_w)
         if logw:
             res = np.log10(res)
             
