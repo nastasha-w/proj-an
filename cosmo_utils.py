@@ -709,3 +709,32 @@ def combine_hists(h1, h2, e1, e2, rtol=1e-5, atol=1e-8, add=True):
         return hs, es
     else:
         return h1, h2, es
+    
+def periodic_sel(array, edges, period):
+    '''
+    select the elements of array that are between the edges, with both in units
+    periodic in period
+    
+    input:
+    ------
+    array:   contains the values to select from
+    edges:   (float, size 2 indexable) the lower and upper bounds to select
+    period:  (float) the period of the range
+    
+    output:
+    -------
+    boolean array indicating which elements fall within the range: 
+    (edges[0] <= value < edges[1])
+    '''
+    array = np.array(array)
+    period = float(period)
+    array %= period
+    edges = np.array(edges) % period
+    
+    if edges[0] <= edges[1]:
+        out = array >= edges[0]
+        out &= array < edges[1]
+    else:
+        out = array >= edges[0]
+        out |= array < edges[1]
+    return out
