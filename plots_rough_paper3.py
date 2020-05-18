@@ -365,7 +365,7 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
         if filen_weight is not None:
             fq.copy('Header', grp, 'Header_weight')
         ds = grp.create_dataset('map', data=res)
-        ds.attrs.create('subregion', center_out is None)
+        ds.attrs.create('subregion', center_out is not None)
         if center_out is not None:
             ds.attrs.create('edges_axis0_cMpc', np.array([edges_sel[0], edges_sel[1]]))
             ds.attrs.create('edges_axis1_cMpc', np.array([edges_sel[2], edges_sel[3]]))
