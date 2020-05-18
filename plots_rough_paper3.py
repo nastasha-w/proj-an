@@ -199,7 +199,7 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
         
         logw = bool(fw['Header/inputpars'].attrs['log'])
         logq = False
-        filen_weight is not None:
+        if filen_weight is not None:
             logq = bool(fq['Header/inputpars'].attrs['log'])
             
         if not hasattr(diameter_out, '__len__'):
@@ -367,8 +367,8 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
         ds = grp.create_dataset('map', data=res)
         ds.attrs.create('subregion', center_out is None)
         if center_out is not None:
-            ds.attrs.create('edges_axis0_cMpc', np.array([edges_sel[0], edges_sel[1]])
-            ds.attrs.create('edges_axis1_cMpc', np.array([edges_sel[2], edges_sel[3]])
+            ds.attrs.create('edges_axis0_cMpc', np.array([edges_sel[0], edges_sel[1]]))
+            ds.attrs.create('edges_axis1_cMpc', np.array([edges_sel[2], edges_sel[3]]))
             
         if filen_weight is not None:
             fq.close()
