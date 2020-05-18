@@ -79,12 +79,12 @@ def reducedims(map_in, dims_out, weights_in=None):
     axis = tuple([2 * i + 1 for i in range(ndims)])
       
     if weights_in is None:
-        map_iterm = map_in.reshape(interm_shape)
+        map_interm = map_in.reshape(interm_shape)
         norm = 1. / np.prod([shape_in[i] // dims_out[i] for i in range(ndims)])
         map_out = np.sum(map_interm, axis=axis) * norm
     else:
-        map_iterm = (map_in * weights_in).reshape(interm_shape)
-        weights_iterm = (weights_in).reshape(interm_shape)
+        map_interm = (map_in * weights_in).reshape(interm_shape)
+        weights_interm = (weights_in).reshape(interm_shape)
         norm = 1. / np.sum(weights_interm, axis=axis)
         map_out = np.sum(map_interm, axis=axis) * norm
     return map_out
