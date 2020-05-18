@@ -259,12 +259,12 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
                           int(resolution_out / res_in_y + 0.5))
                 outdims = ((npix_sel_x_target - 1) // pixrat[0] + 1,\
                            (npix_sel_y_target - 1) // pixrat[1] + 1)
-                seldims = (outdims[0] * pixrat, outdims[1] * pixrat)
+                seldims = (outdims[0] * pixrat[0], outdims[1] * pixrat[1])
             
             box = cosmopars['boxsize'] / cosmopars['h']
             # pix zero has its center at 0.5 in pixel units -> floored to zero
-            cenpix = (center_out[0] - lowerleftcorner[0] / res_in_x,\
-                      center_out[1] - lowerleftcorner[1] / res_in_y)   
+            cenpix = ((center_out[0] - lowerleftcorner[0]) / res_in_x,\
+                      (center_out[1] - lowerleftcorner[1]) / res_in_y)   
             selregion = (cenpix[0] - 0.5 * seldims[0], cenpix[0] + 0.5 * seldims[0],\
                          cenpix[1] - 0.5 * seldims[1], cenpix[1] + 0.5 * seldims[1])
             selinds = [int(reg) for reg in selregion]
