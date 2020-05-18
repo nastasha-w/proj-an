@@ -168,7 +168,7 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
         L_y = fw['Header/inputpars'].attrs['L_y']
         L_z = fw['Header/inputpars'].attrs['L_z']
         LsinMpc = bool(fw['Header/inputpars'].attrs['LsinMpc'])
-        cosmopars = {key: val for key, val in fw['Header/cosmopars'].attrs.items()}
+        cosmopars = {key: val for key, val in fw['Header/inputpars/cosmopars'].attrs.items()}
         Ls = np.array([L_x, L_y, L_z])
         if not LsinMpc:
             Ls /= cosmopars['h']
