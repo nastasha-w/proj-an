@@ -246,7 +246,7 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
                     raise ValueError(errst.format(res_out_x=npix_sel_x_target,\
                                                   res_out_y=npix_sel_y_target,\
                                                   inx=npix_x, iny=npix_y))
-                outdims = (npix_sel_x_target, npix_sel_y_target)
+                outdims = (resolution_out, resolution_out)
                 seldims = (npix_sel_x_target, npix_sel_y_target)
             else:
                 if not (np.isclose(resolution_out % res_in_x, 0.) and
@@ -266,7 +266,6 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
                       (center_out[1] - lowerleftcorner[1]) * 1000 / res_in_y)   
             selregion = (cenpix[0] - 0.5 * seldims[0], cenpix[0] + 0.5 * seldims[0],\
                          cenpix[1] - 0.5 * seldims[1], cenpix[1] + 0.5 * seldims[1])
-            print(selregion)
             selinds = [int(reg) for reg in selregion]
             if selinds[1] - selinds[0] != seldims[0]: # might happen (rounding errors; which is modified should then be arbitrary):
                 selinds[1] = selinds[0]  + seldims[0]
@@ -277,9 +276,6 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
                          lowerleftcorner[1] + res_in_x * 1e-3 * selinds[2],\
                          lowerleftcorner[1] + res_in_x * 1e-3 * selinds[3],\
                          ]
-            print(edges_sel)
-            print(extent_x)
-            print(extent_y)
             if edges_sel[1] - edges_sel[0] > extent_x or \
                edges_sel[3] - edges_sel[2] > extent_y:
                 raise RuntimeError('Selected region is larger than the region in the map. '+\
