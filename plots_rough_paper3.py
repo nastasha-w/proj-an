@@ -236,11 +236,8 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
                              (center_out[1] + 0.5 * diameter_out[1] \
                               - lowerleftcorner[1]) * 1e3 / res_in_y\
                              )
-            print(extent_target)
             npix_sel_x_target = int(extent_target[1] - extent_target[0] + 0.5)
             npix_sel_y_target = int(extent_target[3] - extent_target[2] + 0.5)
-            print(npix_sel_x_target)
-            print(npix_sel_y_target)
             if isinstance(resolution_out, int):
                 if not (npix_x % npix_sel_x_target == 0 and \
                         npix_y % npix_sel_y_target == 0 ):
@@ -260,15 +257,13 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
                                               inx=res_in_x, iny=res_in_y))
                 pixrat = (int(resolution_out / res_in_x + 0.5),\
                           int(resolution_out / res_in_y + 0.5))
-                print(pixrat)
                 outdims = ((npix_sel_x_target - 1) // pixrat[0] + 1,\
                            (npix_sel_y_target - 1) // pixrat[1] + 1)
                 seldims = (outdims[0] * pixrat[0], outdims[1] * pixrat[1])
-                print(seldims)
             box = cosmopars['boxsize'] / cosmopars['h']
             # pix zero has its center at 0.5 in pixel units -> floored to zero
-            cenpix = ((center_out[0] - lowerleftcorner[0]) / res_in_x,\
-                      (center_out[1] - lowerleftcorner[1]) / res_in_y)   
+            cenpix = ((center_out[0] - lowerleftcorner[0]) * 1000 / res_in_x,\
+                      (center_out[1] - lowerleftcorner[1]) * 1000 / res_in_y)   
             selregion = (cenpix[0] - 0.5 * seldims[0], cenpix[0] + 0.5 * seldims[0],\
                          cenpix[1] - 0.5 * seldims[1], cenpix[1] + 0.5 * seldims[1])
             print(selregion)
@@ -277,10 +272,10 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
                 selinds[1] = selinds[0]  + seldims[0]
             if selinds[3] - selinds[2] != seldims[1]: # might happen (rounding errors; which is modified should then be arbitrary):
                 selinds[3] = selinds[2] + seldims[1]
-            edges_sel = [lowerleftcorner[0] + res_in_x * selinds[0],\
-                         lowerleftcorner[0] + res_in_x * selinds[1],\
-                         lowerleftcorner[1] + res_in_x * selinds[2],\
-                         lowerleftcorner[1] + res_in_x * selinds[3],\
+            edges_sel = [lowerleftcorner[0] + res_in_x * 1e-3 * selinds[0],\
+                         lowerleftcorner[0] + res_in_x * 1e-3 * selinds[1],\
+                         lowerleftcorner[1] + res_in_x * 1e-3 * selinds[2],\
+                         lowerleftcorner[1] + res_in_x * 1e-3 * selinds[3],\
                          ]
             print(edges_sel)
             print(extent_x)
@@ -289,8 +284,8 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
                edges_sel[3] - edges_sel[2] > extent_y:
                 raise RuntimeError('Selected region is larger than the region in the map. '+\
                                    'This might be the result of rounding to match the chosen resolution.')
-            inds_wholebox_x = int(box / res_in_x + 0.5)
-            inds_wholebox_y = int(box / res_in_y + 0.5)
+            inds_wholebox_x = int(box * 1e3 / res_in_x + 0.5)
+            inds_wholebox_y = int(box * 1e3 / res_in_y + 0.5)
             selinds = [selinds[0] % inds_wholebox_x,\
                        selinds[1] % inds_wholebox_x,\
                        selinds[2] % inds_wholebox_y,\
