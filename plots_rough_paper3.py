@@ -260,13 +260,14 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
                 outdims = ((npix_sel_x_target - 1) // pixrat[0] + 1,\
                            (npix_sel_y_target - 1) // pixrat[1] + 1)
                 seldims = (outdims[0] * pixrat[0], outdims[1] * pixrat[1])
-            
+                print(seldims)
             box = cosmopars['boxsize'] / cosmopars['h']
             # pix zero has its center at 0.5 in pixel units -> floored to zero
             cenpix = ((center_out[0] - lowerleftcorner[0]) / res_in_x,\
                       (center_out[1] - lowerleftcorner[1]) / res_in_y)   
             selregion = (cenpix[0] - 0.5 * seldims[0], cenpix[0] + 0.5 * seldims[0],\
                          cenpix[1] - 0.5 * seldims[1], cenpix[1] + 0.5 * seldims[1])
+            print(selregion)
             selinds = [int(reg) for reg in selregion]
             if selinds[1] - selinds[0] != seldims[0]: # might happen (rounding errors; which is modified should then be arbitrary):
                 selinds[1] = selinds[0]  + seldims[0]
@@ -277,6 +278,9 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
                          lowerleftcorner[1] + res_in_x * selinds[2],\
                          lowerleftcorner[1] + res_in_x * selinds[3],\
                          ]
+            print(edges_sel)
+            print(extent_x)
+            print(extent_y)
             if edges_sel[1] - edges_sel[0] > extent_x or \
                edges_sel[3] - edges_sel[2] > extent_y:
                 raise RuntimeError('Selected region is larger than the region in the map. '+\
