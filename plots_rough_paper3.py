@@ -66,7 +66,7 @@ def get_resolution_tables(zvals=[0.01, 0.05, 0.1, 0.2]):
     print(table)
     print(tabend)
     
-def reducedims(map_in, weights_in=None, dims_out):
+def reducedims(map_in, dims_out, weights_in=None):
     '''
     reduce the size of an image to shape dims_out, by taking average values in 
     the new pixels (weighted by weights_in, if given)
