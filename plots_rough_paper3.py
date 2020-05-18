@@ -257,8 +257,8 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
                                               inx=res_in_x, iny=res_in_y))
                 pixrat = (int(resolution_out / res_in_x + 0.5),\
                           int(resolution_out / res_in_y + 0.5))
-                outdims = ((npix_sel_x_target - 1) // pixrat + 1,\
-                           (npix_sel_y_target - 1) // pixrat + 1)
+                outdims = ((npix_sel_x_target - 1) // pixrat[0] + 1,\
+                           (npix_sel_y_target - 1) // pixrat[1] + 1)
                 seldims = (outdims[0] * pixrat, outdims[1] * pixrat)
             
             box = cosmopars['boxsize'] / cosmopars['h']
