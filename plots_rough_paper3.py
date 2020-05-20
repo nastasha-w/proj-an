@@ -585,7 +585,7 @@ def plotstamps(filebase, halocat, outname=None, \
         height_ratios = [panelheight] * nrows
         nrows_use = nrows
     else:
-        addheight = 1.
+        addheight = 1.5
         height_ratios = [panelheight] * nrows + [addheight]
         nrows_use = nrows + 1
     
@@ -607,7 +607,7 @@ def plotstamps(filebase, halocat, outname=None, \
         gridreg = grid[nrows, :]
         cgrid = gsp.GridSpecFromSubplotSpec(nrows=2, ncols=2,\
                        subplot_spec=gridreg, wspace=0.2, hspace=0.0,\
-                       height_ratios=[0.25, 0.75])
+                       height_ratios=[0.5, 1.])
         cax1  = fig.add_subplot(cgrid[1, 0])
         cax2  = fig.add_subplot(cgrid[1, 1])
     
@@ -619,7 +619,7 @@ def plotstamps(filebase, halocat, outname=None, \
     
     for li in range(len(_lines)):
         ax = axes[li]
-        line = lines[li]
+        line = _lines[li]
         
         labelbottom = li > len(lines) - ncols - 1
         labeltop = li < ncols 
