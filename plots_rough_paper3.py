@@ -543,6 +543,8 @@ def plotstamps(filebase, halocat, outname=None, \
                     extents[line] = np.array([[0., extent_x],\
                                               [0., extent_y]])
                 depths[line] = (centre[axis3] - 0.5 * Ls[axis3], centre[axis3] + 0.5 * Ls[axis3]) 
+                print(extents[line])
+                print(maps[line].shape)
                 resolutions[line] = ((extents[0][1] - extents[0][0]) * 1e3 *\
                                       cosmopars['a'] / maps[line].shape[0],\
                                      (extents[1][1] - extents[1][0]) * 1e3 *\
