@@ -325,7 +325,9 @@ def combdists(rqarr,selkeys,rbins,percentiles=None):
 
 
 
-def rdist_sl(base,szcens,L_x,npix_x,rmin,rmax,rscale,centre,numsl = 1,npix_y = None,plot=None,clabel=None, title=None, label='',axis='z'):
+def rdist_sl(base, szcens, L_x, npix_x, rmin, rmax, rscale, centre,\
+             numsl=1, npix_y=None, plot=None, clabel=None, title=None,\
+             label='', axis='z'):
     '''
     inputs:
     ---------------------------------------------------------------------------
@@ -620,8 +622,10 @@ def rdists_sl_faster(base, szcens, L_x, npix_x,\
 
     if trackprogress:
         print('matching galaxies to slices')
-    length_per_slice = np.float(L_x)/len(zcens)
-    slice_cenleft_inds = np.asarray(np.round(c2 / length_per_slice + 0.5 * (numsl%2), 0) - 1.,dtype=int)%len(zcens)
+    length_per_slice = np.float(L_x) / len(zcens)
+    slice_cenleft_inds = np.asarray(\
+                             np.round(c2 / length_per_slice + 0.5 * (numsl % 2), 0) - 1.,\
+                             dtype=int) % len(zcens)
     # odd number of slices  -> centre falls bin with index ind: ind*length_per_slice <= centre < (ind+1)*length_per_slice
     # even number of slices -> centre/left has ind+1 (bins right edge) closest to centre coordinate in length_per_slice units
     #
@@ -636,7 +640,9 @@ def rdists_sl_faster(base, szcens, L_x, npix_x,\
     #  odd case is ok, %len(zcens) takes care of -1/len(zcens) indices that may come out 
     #  even case should be as well, when using %len(zcens)
 
-    ceninds = (slice_cenleft_inds[:, np.newaxis] - ((numsl-1) // 2) + np.arange(numsl)[np.newaxis, :]) % len(zcens) # numsl/2 should be integer division 
+    ceninds = (slice_cenleft_inds[:, np.newaxis] \
+               - ((numsl - 1) // 2) + np.arange(numsl)[np.newaxis, :])\
+              % len(zcens) # numsl/2 should be integer division 
     fills = np.array(szcens)[ceninds]
     #fills_dct = {labels[i]: fills[i] for i in range(len(fills))}
     fills_toloop = list(set(list(fills.flatten()))) # eliminate doubles for the total loop
@@ -659,7 +665,8 @@ def rdists_sl_faster(base, szcens, L_x, npix_x,\
     length_per_pixel = np.float(L_x) / float(npix_x)
     
     # selection for a 2d array should be a list of x indices, then a list of y indices
-    rminmax = np.array([rscales * rmin / length_per_pixel, rscales * rmax / length_per_pixel]).T #min/max radii in pixel units
+    rminmax = np.array([rscales * rmin / length_per_pixel,\
+                        rscales * rmax / length_per_pixel]).T #min/max radii in pixel units
     pixcens0 = c0 / length_per_pixel
     pixcens1 = c1 / length_per_pixel
     # get all indices with pixel centres in radius limits
@@ -672,7 +679,8 @@ def rdists_sl_faster(base, szcens, L_x, npix_x,\
     rs_sel  = [np.all(np.array([rs[i] >= rminmax[i,0], rs[i] < rminmax[i,1]]), axis=0)  for i in range(len(c0))]
     # selections[i] should get all relevant pixels from an image
     selections = [ ( ((basegrid[i][0][rs_sel[i]] + np.round(pixcens0[i],0)).astype(np.int)).flatten()%npix_x,\
-                     ((basegrid[i][1][rs_sel[i]] + np.round(pixcens1[i],0)).astype(np.int)).flatten()%npix_y ) for i in range(len(c0))] 
+                     ((basegrid[i][1][rs_sel[i]] + np.round(pixcens1[i],0)).astype(np.int)).flatten()%npix_y ) \
+                  for i in range(len(c0))] 
     del basegrid
     gc.collect()
     # convert distances to rscale units -> ready for output
@@ -808,7 +816,8 @@ def rdists_sl_from_haloids(base, szcens, L_x, npix_x,\
         print('Getting slice fills')
     if szcens is not None:
         if len(szcens) > 0:
-            szcens = getcenfills(base_file, closevals=[float(cen) for cen in szcens], searchdir=searchdir, tolerance=1e-4)
+            szcens = getcenfills(base_file, closevals=[float(cen) for cen in szcens],\
+                                 searchdir=searchdir, tolerance=1e-4)
     #print('---------------------------------------------------------------')
     #print(szcens)
     
@@ -956,9 +965,9 @@ def percentiles_from_hdf5(h5name):
     return dct_out
 
 def stamps_sl(base, szcens, L_x, npix_x,\
-                     rmin, rmax, rscales, centres,\
-                     numsl=1, npix_y=None, axis='z', logquantity=True,\
-                     labels=None, save=None):
+              rmin, rmax, rscales, centres,\
+              numsl=1, npix_y=None, axis='z', logquantity=True,\
+              labels=None, save=None):
     '''
     inputs:
     ---------------------------------------------------------------------------
@@ -1034,8 +1043,10 @@ def stamps_sl(base, szcens, L_x, npix_x,\
     zcens = [np.float(cen) for cen in szcens]
     zcens = np.asarray(zcens)
 
-    length_per_slice = np.float(L_x)/len(zcens)
-    slice_cenleft_inds = np.asarray(np.round(c2/length_per_slice + 0.5*(numsl%2),0) -1.,dtype=int)%len(zcens)
+    length_per_slice = np.float(L_x) / len(zcens)
+    slice_cenleft_inds = np.asarray(\
+        np.round(c2 / length_per_slice + 0.5 * (numsl % 2), 0) - 1.,\
+        dtype=int) % len(zcens)
     # odd number of slices  -> centre falls bin with index ind: ind*length_per_slice <= centre < (ind+1)*length_per_slice
     # even number of slices -> centre/left has ind+1 (bins right edge) closest to centre coordinate in length_per_slice units
     #
@@ -1050,7 +1061,9 @@ def stamps_sl(base, szcens, L_x, npix_x,\
     #  odd case is ok, %len(zcens) takes care of -1/len(zcens) indices that may come out 
     #  even case should be as well, when using %len(zcens)
 
-    ceninds = (slice_cenleft_inds[:, np.newaxis] - ((numsl-1)/2) + np.arange(numsl)[np.newaxis, :])%len(zcens) # numsl/2 should be integer division 
+    ceninds = (slice_cenleft_inds[:, np.newaxis] -\
+               ((numsl - 1) // 2) + np.arange(numsl)[np.newaxis, :]) \
+              % len(zcens) # numsl/2 should be integer division 
     fills = np.array(szcens)[ceninds]
     #fills_dct = {labels[i]: fills[i] for i in range(len(fills))}
     fills_toloop = list(set(list(fills.flatten()))) # eliminate doubles for the total loop
@@ -1067,24 +1080,31 @@ def stamps_sl(base, szcens, L_x, npix_x,\
     selections = []
 
     # square pixels assumed
-    length_per_pixel = np.float(L_x)/npix_x
+    length_per_pixel = np.float(L_x) / npix_x
     
     # selection for a 2d array should be a list of x indices, then a list of y indices
     rmax = np.array(rscales) * rmax / length_per_pixel 
-    pixcens0 = c0/length_per_pixel
-    pixcens1 = c1/length_per_pixel
+    pixcens0 = c0 / length_per_pixel
+    pixcens1 = c1 / length_per_pixel
     # get all indices with pixel centres in radius limits
-    minsmaxs = np.array([[[np.floor(pixcens0[i] - rmax[i]), np.ceil(pixcens0[i] + rmax[i]) + 1], [np.floor(pixcens1[i] - rmax[i]), np.ceil(pixcens1[i] + rmax[i]) + 1]] for i in range(len(c0))]).astype(int)
+    minsmaxs = np.array([[[np.floor(pixcens0[i] - rmax[i]),\
+                           np.ceil(pixcens0[i] + rmax[i]) + 1],\
+                          [np.floor(pixcens1[i] - rmax[i]),\
+                           np.ceil(pixcens1[i] + rmax[i]) + 1]]\
+                         for i in range(len(c0))]).astype(int)
     selections = [(slice(minsmaxs[i][0][0], minsmaxs[i][0][1], None),\
-                  slice(minsmaxs[i][1][0], minsmaxs[i][1][1], None)) for i in range(len(c0))]
-    lower_left_corners = length_per_pixel * np.array([[minsmaxs[i][0][0], minsmaxs[i][1][0]] for i in range(len(fills))])
+                   slice(minsmaxs[i][1][0], minsmaxs[i][1][1], None)) for i in range(len(c0))]
+    lower_left_corners = length_per_pixel * np.array([[minsmaxs[i][0][0], minsmaxs[i][1][0]]\
+                                                      for i in range(len(fills))])
 
     # get all indices with pixel centres in radius limits
     #rmaxall = np.max(rminmax)
-    basegrid = [np.indices((int(2 * np.ceil(rhmax) + 3),) * 2) - np.ceil(rhmax) for rhmax in rmax] # grid centered on 0
+    basegrid = [np.indices((int(2 * np.ceil(rhmax) + 3),) * 2)\
+                - np.ceil(rhmax) for rhmax in rmax] # grid centered on 0
     # selections[i] should get all relevant pixels from an image
     selections = [ ( ((basegrid[i][0] + np.round(pixcens0[i], 0)).astype(np.int))%npix_x,\
-                     ((basegrid[i][1] + np.round(pixcens1[i], 0)).astype(np.int))%npix_y ) for i in range(len(c0))] 
+                     ((basegrid[i][1] + np.round(pixcens1[i], 0)).astype(np.int))%npix_y )\
+                  for i in range(len(c0))] 
     del basegrid
     gc.collect()
 
@@ -1110,9 +1130,11 @@ def stamps_sl(base, szcens, L_x, npix_x,\
         print('Loaded %s'%fill)
         # only modify the arrays for which we want to use this slice; avoid for loops by list comprehension (arrays won't work if the selection regions have different sizes)
         if logquantity:
-            qs = [qs[i] + 10**fullim[selections[i]]  if fill in fills[i] else qs[i] for i in range(len(fills))]
+            qs = [qs[i] + 10**fullim[selections[i]]  if fill in fills[i] else\
+                  qs[i] for i in range(len(fills))]
         else:
-            qs = [qs[i] +     fullim[selections[i]]  if fill in fills[i] else qs[i] for i in range(len(fills))]
+            qs = [qs[i] +     fullim[selections[i]]  if fill in fills[i] else\
+                  qs[i] for i in range(len(fills))]
     
     if logquantity:
         qs  = [ np.log10(q) for q in qs]
@@ -1163,25 +1185,25 @@ def stamps_sl(base, szcens, L_x, npix_x,\
     return dct_out    
 
 
-def stamps_sl_from_haloids(base, szcens, L_x, npix_x,\
-                     rmin_r200c, rmax_r200c,\
-                     catname, haloids, z, outname=None,\
-                     numsl=1, npix_y=None, axis='z', logquantity=True):
-    if '/' not in catname:
-        catname = pdir + catname
-    with h5py.File(catname, 'r') as fi:
-        R200c_cMpc = np.array(fi['R200c_pkpc']) / 1e3 * (1. + z)
-        centres_cMpc = np.array([np.array(fi['Xcop_cMpc']), np.array(fi['Ycop_cMpc']), np.array(fi['Zcop_cMpc'])]).T
-        ids   = np.array(fi['groupid'])
-    inds = np.array([np.where(ids == haloid)[0][0] for haloid in haloids])
-    halos = ids[inds]
-    R200c = R200c_cMpc[inds]
-    centres = centres_cMpc[inds, :]
-
-    rdists_sl_faster(base, szcens, L_x, npix_x,\
-                     rmin_r200c, rmax_r200c, R200c, centres,\
-                     numsl=numsl, npix_y=npix_y, axis=axis, logquantity=logquantity,\
-                     labels=halos, save=outname)
+#def stamps_sl_from_haloids(base, szcens, L_x, npix_x,\
+#                     rmin_r200c, rmax_r200c,\
+#                     catname, haloids, z, outname=None,\
+#                     numsl=1, npix_y=None, axis='z', logquantity=True):
+#    if '/' not in catname:
+#        catname = pdir + catname
+#    with h5py.File(catname, 'r') as fi:
+#        R200c_cMpc = np.array(fi['R200c_pkpc']) / 1e3 * (1. + z)
+#        centres_cMpc = np.array([np.array(fi['Xcop_cMpc']), np.array(fi['Ycop_cMpc']), np.array(fi['Zcop_cMpc'])]).T
+#        ids   = np.array(fi['groupid'])
+#    inds = np.array([np.where(ids == haloid)[0][0] for haloid in haloids])
+#    halos = ids[inds]
+#    R200c = R200c_cMpc[inds]
+#    centres = centres_cMpc[inds, :]
+#
+#    rdists_sl_faster(base, szcens, L_x, npix_x,\
+#                     rmin_r200c, rmax_r200c, R200c, centres,\
+#                     numsl=numsl, npix_y=npix_y, axis=axis, logquantity=logquantity,\
+#                     labels=halos, save=outname)
 
 
 
