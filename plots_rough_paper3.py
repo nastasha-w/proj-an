@@ -480,7 +480,7 @@ def plotstamps(filebase, halocat, outname=None, \
     outname:   (str) name of the file to save the plot to
     '''        
     
-    marklength = 5. #cMpc
+    marklength = 10. #cMpc
     vmin = -12. # log10 photons / cm2 / s / sr 
     vmax = 0.5
     scaler200 = 2. # show radii at this times R200c
@@ -693,13 +693,13 @@ def plotstamps(filebase, halocat, outname=None, \
         ax.set_xlim(*xlim)
         ax.set_ylim(*ylim)
         
-        patheff_text = [mppe.Stroke(linewidth=1.0, foreground="b"),\
-                        mppe.Stroke(linewidth=1.0, foreground="w"),\
-                        mppe.Normal()]        
+        #patheff_text = [mppe.Stroke(linewidth=1.0, foreground="b"),\
+        #                mppe.Stroke(linewidth=1.0, foreground="w"),\
+        #                mppe.Normal()]        
         ltext = nicenames_lines[line]
-        ax.text(0.95, 0.95, ltext, fontsize=fontsize, path_effects=patheff_text,\
+        ax.text(0.95, 0.95, ltext, fontsize=fontsize, path_effects=None,\
                 horizontalalignment='right', verticalalignment='top',\
-                transform=ax.transAxes)
+                transform=ax.transAxes, color='white')
         if li == 0:
             mtext = str(marklength)
             if mtext[-2:] == '.0':
@@ -722,14 +722,16 @@ def plotstamps(filebase, halocat, outname=None, \
             ax.plot([xs, xs + marklength], [ypos, ypos], color='white',\
                     path_effects=patheff, linewidth=2)
             ax.text(xcen, ypos + 0.01 * yr, mtext, fontsize=fontsize,\
-                    path_effects=patheff_text, horizontalalignment='center',\
-                    verticalalignment='bottom')
+                    path_effects=None, horizontalalignment='center',\
+                    verticalalignment='bottom', color='white')
             
     plt.colorbar(img, cax=cax1, orientation='horizontal', extend='both')
     cax1.set_xlabel(clabel_img, fontsize=fontsize)
     cax1.tick_params(labelsize=fontsize - 1, which='both')
     cax1.set_aspect(0.1)   
     
+    print('Halos indicated at {rs} x R200c'.format(rs=scaler200))
+
     if outname is not None:
         if '/' not in outname:
             outname = mdir + outname
