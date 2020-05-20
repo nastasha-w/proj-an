@@ -668,7 +668,8 @@ def plotstamps(filebase, halocat, outname=None, \
         rd = radii[hsel]
         
         me = np.array(sorted(list(colordct.keys())) + [17.])
-        mi = np.max(np.array(np.searchsorted(me, ms) - 1, [0] * len(ms)), axis=0)
+        mi = np.max(np.array(np.searchsorted(me, ms) - 1,\
+                             np.array([0] * len(ms))), axis=0)
         colors = np.array([colordct[me[i]] for i in mi])
         
         patches = [mpatch.Circle((posx[ind], posy[ind]), rd[ind]) \
