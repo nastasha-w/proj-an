@@ -650,7 +650,7 @@ def plotstamps(filebase, halocat, outname=None, \
                   extent=(extents[line][0][0], extents[line][0][1],\
                           extents[line][1][0], extents[line][1][1]),\
                   cmap=cmap_img, vmin=vmin, vmax=vmax) 
-
+        
         posx = pos[axis1]
         posy = pos[axis2]
         posz = pos[axis3]
@@ -687,15 +687,19 @@ def plotstamps(filebase, halocat, outname=None, \
         collection = mcol.PatchCollection(patches)
         collection.set(edgecolor=colors, facecolor='none', linewidth=1.,\
                        path_effects=patheff)
+        ylim = ax.get_ylim()
+        xlim = ax.get_xlim()
         ax.add_collection(collection)
+        ax.set_xlim(*xlim)
+        ax.set_ylim(*ylim)
         
-        patheff_text = [mppe.Stroke(linewidth=1.5, foreground="b"),\
-                        mppe.Stroke(linewidth=1.5, foreground="w"),\
+        patheff_text = [mppe.Stroke(linewidth=1.0, foreground="b"),\
+                        mppe.Stroke(linewidth=1.0, foreground="w"),\
                         mppe.Normal()]        
         ltext = nicenames_lines[line]
         ax.text(0.95, 0.95, ltext, fontsize=fontsize, path_effects=patheff_text,\
                 horizontalalignment='right', verticalalignment='top',\
-                transform=ax.transAxes, color='white')
+                transform=ax.transAxes)
         if li == 0:
             mtext = str(marklength)
             if mtext[-2:] == '.0':
