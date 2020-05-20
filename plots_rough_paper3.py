@@ -42,7 +42,7 @@ nicenames_lines =  {'c5r': 'C V',\
                     'mg12': 'Mg XII',\
                     'si13r': 'Si XIII',\
                     'fe18': 'Fe XVIII',\
-                    'fe17_other1': 'Fe XVII (15.10 A)',\
+                    'fe17-other1': 'Fe XVII (15.10 A)',\
                     'fe19': 'Fe XIX',\
                     'o7r': 'O VII (r)',\
                     'o7ix': 'O VII (x)',\
@@ -649,7 +649,7 @@ def plotstamps(filebase, halocat, outname=None, \
                   extent=(extents[line][0][0], extents[line][0][1],\
                           extents[line][1][0], extents[line][1][1]),\
                   cmap=cmap_img, vmin=vmin, vmax=vmax) 
-        
+        continue
         posx = pos[axis1]
         posy = pos[axis2]
         posz = pos[axis3]
