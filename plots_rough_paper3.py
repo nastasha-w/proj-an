@@ -537,8 +537,8 @@ def plotstamps(filebase, halocat, outname=None, \
                 snapshots[line] = grp['Header_in/inputpars'].attrs['snapnum']
                 
                 if bool(grp['map'].attrs['subregion']):
-                    extents[line] = np.array([grp['map'].attrs['edges_axis0_cMpc'],\
-                                              grp['map'].attrs['edges_axis0_cMpc']])
+                    extents[line] = np.array([np.array(grp['map'].attrs['edges_axis0_cMpc']),\
+                                              np.array(grp['map'].attrs['edges_axis0_cMpc'])])
                 else:
                     extents[line] = np.array([[0., extent_x],\
                                               [0., extent_y]])
