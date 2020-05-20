@@ -591,7 +591,7 @@ def plotstamps(filebase, halocat, outname=None, \
     
     figheight = sum(height_ratios)
     fig = plt.figure(figsize=(figwidth, figheight))
-    grid = gsp.GridSpec(nrows_use, ncols, hspace=0.0, wspace=0.0,\
+    grid = gsp.GridSpec(nrows=nrows_use, ncols=ncols, hspace=0.0, wspace=0.0,\
                         width_ratios=[panelwidth] * ncols,\
                         height_ratios=height_ratios)
     axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(len(_lines))]
