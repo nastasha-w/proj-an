@@ -483,6 +483,7 @@ def plotstamps(filebase, halocat, outname=None, \
     marklength = 5. #cMpc
     vmin = -12. # log10 photons / cm2 / s / sr 
     vmax = 0.5
+    scaler200 = 2. # show radii at this times R200c
     
     # retrieve the stamps, and necessary metadata
     if '/' not in filebase:
@@ -674,13 +675,16 @@ def plotstamps(filebase, halocat, outname=None, \
                     axis=0)
         colors = np.array([colordct[me[i]] for i in mi])
         
-        patches = [mpatch.Circle((posx[ind], posy[ind]), rd[ind]) \
+        patches = [mpatch.Circle((posx[ind], posy[ind]), scaler200 * rd[ind]) \
                    for ind in range(len(posx))] # x, y axes only
     
+        patheff = [mppe.Stroke(linewidth=1.5, foreground="b"),\
+                       mppe.Stroke(linewidth=1.5, foreground="w"),\
+                       mppe.Normal()] 
         collection = mcol.PatchCollection(patches)
-        collection.set(edgecolor=colors, facecolor='none', linewidth=2)
+        collection.set(edgecolor=colors, facecolor='none', linewidth=1.,\
+                       path_effects=patheff)
         ax.add_collection(collection)
-        continue
         
         patheff_text = [mppe.Stroke(linewidth=1.5, foreground="b"),\
                         mppe.Stroke(linewidth=1.5, foreground="w"),\
@@ -710,7 +714,7 @@ def plotstamps(filebase, halocat, outname=None, \
                        mppe.Normal()] 
             ax.plot([xs, xs + marklength], [ypos, ypos], color='white',\
                     path_effects=patheff, linewidth=2)
-            ax.text(xcen, pos + 0.01 * yr, mtext, fontsize=fontsize,\
+            ax.text(xcen, ypos + 0.01 * yr, mtext, fontsize=fontsize,\
                     path_effects=patheff_text, horizontalalignment='center',\
                     verticalalignment='bottom')
             
