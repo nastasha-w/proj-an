@@ -617,7 +617,7 @@ def plotstamps(filebase, halocat, outname=None, \
              orientation='horizontal', clabel=clabel_hmass, fontsize=fontsize, aspect=0.1)
     print('Max value in maps: {}'.format(max([np.max(maps[line]) for line in _lines])))
     
-    cmap_img = cm.getcolormap('viridis')
+    cmap_img = cm.get_cmap('viridis')
     cmap_img.set_under(cmap_img(0.))
     
     for li in range(len(_lines)):
