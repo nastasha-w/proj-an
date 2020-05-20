@@ -574,7 +574,7 @@ def plotstamps(filebase, halocat, outname=None, \
         pos = pos[:, msel]
     
     ncols = 4
-    nrows = (len(lines) - 1 // ncols) + 1
+    nrows = (len(_lines) - 1 // ncols) + 1
     figwidth = 11. 
     lrspace = len(_lines) <= nrows * ncols
     
