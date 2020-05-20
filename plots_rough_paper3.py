@@ -33,7 +33,7 @@ res_arcsec = {'Athena X-IFU': 5.,\
 lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
          'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
          'c6', 'n7']
-lines = sorted(lines)
+lines = sorted(lines, key=ol.line_eng_ion.__get__)
 nicenames_lines =  {'c5r': 'C V',\
                     'n6r': 'N VI',\
                     'ne9r': 'Ne IX',\
@@ -56,6 +56,7 @@ nicenames_lines =  {'c5r': 'C V',\
 
 mass_edges_standard = (11., 11.5, 12.0, 12.5, 13.0, 13.5, 14.0)
 fontsize = 12
+mdir = ol.mdir + 'paper3_misc/'
 
 def add_cbar_mass(cax, cmapname='rainbow', massedges=mass_edges_standard,\
              orientation='vertical', clabel=None, fontsize=fontsize, aspect=10.):
@@ -168,6 +169,9 @@ def make_and_save_stamps(filen_in, filen_weight=None,\
     from an input hdf5 file (simulation slice), save the 'map' array at a 
     lower resolution and/or save a subset of the pixels for images. The average
     values from filen_in are used
+    
+    Note that for large sets of stamps, a different function that only loads 
+    the original maps once is recommended.
     
     input:
     ------
@@ -571,11 +575,46 @@ def plotstamps(filebase, halocat, outname=None, \
     _lines = sorted(maps.keys())
     ncols = 4
     nrows = (len(lines) - 1 // ncols) + 1
+    figwidth = 11. 
+    lrspace = len(_lines) <= nrows * ncols
     
-    clabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{ph.} \\, \\mathrm{cm}^{-2} \\mathrm{s}^{-1} \\mathrm{sr}^{-1}]$'
-
-    cbar, colordct = add_cbar_mass(cax, cmapname='rainbow', massedges=mass_edges_standard,\
-             orientation='vertical', clabel=clabel, fontsize=fontsize, aspect=10.)
+    panelwidth = figwidth / ncols
+    panelheight = panelwidth
+    if lrspace:
+        addheight = 0.
+        height_ratios = [panelheight] * ncols
+        nrows_use = nrows
+    else:
+        addheight = 1.
+        height_ratios = [panelheight] * ncols + [addheight]
+        nrows_use = nrows + 1
+    
+    figheight = sum(height_ratios)
+    fig = plt.figure(figsize=(figwidth, figheight))
+    grid = gsp.GridSpec(nrows_use, ncols, hspace=0.0, wspace=0.0,\
+                        width_ratios=[panelwidth] * ncols,\
+                        height_ratios=height_ratios)
+    axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(len(_lines))]
+    if lrspace:
+        colstart = ncols - (nrows * ncols - len(_lines)) 
+        gridreg = grid[nrows - 1, colstart:]
+        cgrid = gsp.GridSpecFromSubplotSpec(nrows=3, ncols=1,\
+                       subplot_spec=gridreg, wspace=0.0, hspace=0.25)
+        height_ratios = [0.1, 0.45, 0.45]
+        cax1  = fig.add_subplot(cgrid[1, :])
+        cax2  = fig.add_subplot(cgrid[2, :])
+    else:
+        gridreg = grid[nrows, :]
+        cgrid = gsp.GridSpecFromSubplotSpec(nrows=2, ncols=2,\
+                       subplot_spec=gridreg, wspace=0.2, hspace=0.0,\
+                       height_ratios=[0.25, 0.75])
+        cax1  = fig.add_subplot(cgrid[1, 0])
+        cax2  = fig.add_subplot(cgrid[1, 1])
+    
+    clabel_img = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{ph.} \\, \\mathrm{cm}^{-2} \\mathrm{s}^{-1} \\mathrm{sr}^{-1}]$'
+    clabel_hmass = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
+    cbar, colordct = add_cbar_mass(cax2, cmapname='rainbow', massedges=mass_edges_standard,\
+             orientation='horizontal', clabel=clabel_hmass, fontsize=fontsize, aspect=0.1)
     print('Max value in maps: {}'.format(max([np.max(maps[line]) for line in _lines])))
     
     for li in range(len(_lines)):
@@ -635,4 +674,39 @@ def plotstamps(filebase, halocat, outname=None, \
         collection.set(edgecolor=colors, facecolor='none', linewidth=2)
         ax.add_collection(collection)
         
-        
+        patheff_text = [mppe.Stroke(linewidth=1.5, foreground="b"),\
+                        mppe.Stroke(linewidth=1.5, foreground="w"),\
+                        mppe.Normal()]        
+        ltext = nicenames_lines[line]
+        ax.text(0.95, 0.95, ltext, fontsize=fontsize, path_effects=patheff_text,\
+                horizontalalignment='right', verticalalignment='top',\
+                transform=ax.transAxes, color='white')
+        if li == 0:
+            mtext = str(marklength)
+            if mtext[-2:] == '.0':
+                mtext = mtext[:-2]
+            mtext = mtext + ' cMpc'
+            xlim = ax.get_xlim()
+            ylim = ax.get_ylim()
+            xr = xlim[1] - xlim[0]
+            yr = ylim[1] - ylim[0]
+            if marklength > 2.5 * xr:
+                print('Marklength {} is too large for the plotted range'.format(marklength))
+                continue
+            xs = xlim[0] + 0.05 * xr
+            ypos = ylim[0] + 0.07 * yr
+            xcen = xs + 0.5 * marklength
+            
+            patheff = [mppe.Stroke(linewidth=2.5, foreground="b"),\
+                       mppe.Stroke(linewidth=2.5, foreground="w"),\
+                       mppe.Normal()] 
+            ax.plot([xs, xs + marklength], [ypos, ypos], color='white',\
+                    path_effects=patheff, linewidth=2)
+            ax.text(xcen, pos + 0.01 * yr, mtext, fontsize=fontsize,\
+                    path_effects=patheff_text, horizontalalignment='center',\
+                    verticalalignment='bottom')
+            
+    plt.colorbar(img, cax=cax1, orientation='horizontal')
+    cax1.set_ylabel(clabel_img, fontsize=fontsize)
+    cax1.tick_params(labelsize=fontsize - 1, which='both')
+    cax1.set_aspect(0.1)   

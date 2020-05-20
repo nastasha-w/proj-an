@@ -3294,7 +3294,7 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
     bincens = m200cbins[:-1] + 0.5 * np.diff(m200cbins)
     
     fig = plt.figure(figsize=(5.5, 5.))
-    grid = grid = gsp.GridSpec(ncols=1, nrows=2, hspace=0.1, wspace=0.0,\
+    grid = gsp.GridSpec(ncols=1, nrows=2, hspace=0.1, wspace=0.0,\
                                height_ratios=[3.8, 1.2], top=0.95, bottom=0.05)
     ax  = fig.add_subplot(grid[0, 0])
     lax = fig.add_subplot(grid[1, 0])
