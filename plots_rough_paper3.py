@@ -641,7 +641,7 @@ def plotstamps(filebase, halocat, outname=None, \
             yl = lbase.format(ax=['X', 'Y', 'Z'][axis2])
             ax.set_ylabel(yl, fontsize=fontsize)
             
-        img = ax.imshow(maps[line].T, origin='lower', inteperpolation='nearest',\
+        img = ax.imshow(maps[line].T, origin='lower', interpolation='nearest',\
                   extent=(extents[line][0][0], extents[line][0][1],\
                           extents[line][1][0], extents[line][1][1]),\
                   cmap='viridis', vmin=vmin, vmax=vmax) 
