@@ -681,11 +681,11 @@ def plotstamps(filebase, halocat, outname=None, \
         patches = [mpatch.Circle((posx[ind], posy[ind]), scaler200 * rd[ind]) \
                    for ind in range(len(posx))] # x, y axes only
     
-        patheff = [mppe.Stroke(linewidth=1.0, foreground="b"),\
-                       mppe.Stroke(linewidth=0.5, foreground="w"),\
+        patheff = [mppe.Stroke(linewidth=1.2, foreground="b"),\
+                       mppe.Stroke(linewidth=0.7, foreground="w"),\
                        mppe.Normal()] 
         collection = mcol.PatchCollection(patches)
-        collection.set(edgecolor=colors, facecolor='none', linewidth=0.5,\
+        collection.set(edgecolor=colors, facecolor='none', linewidth=0.7,\
                        path_effects=patheff)
         ylim = ax.get_ylim()
         xlim = ax.get_xlim()
