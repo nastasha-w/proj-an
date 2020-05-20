@@ -492,7 +492,7 @@ def plotstamps(filebase, halocat, outname=None, \
     maps = {}
     extents = {}
     depths = {}
-    axes = {}
+    paxes = {}
     resolutions = {}
     cosmoparss = {}
     snapshots = {}
@@ -531,7 +531,7 @@ def plotstamps(filebase, halocat, outname=None, \
                     axis1 = 1
                     axis2 = 2
                     axis3 = 0
-                axes[line] = (axis1, axis2, axis3)
+                paxes[line] = (axis1, axis2, axis3)
                 extent_x = Ls[axis1]
                 extent_y = Ls[axis2]
                 snapshots[line] = grp['Header_in/inputpars'].attrs['snapnum']
@@ -574,9 +574,9 @@ def plotstamps(filebase, halocat, outname=None, \
         pos = pos[:, msel]
     
     ncols = 4
-    nrows = (len(_lines) - 1 // ncols) + 1
+    nrows = (len(_lines) - 1) // ncols + 1
     figwidth = 11. 
-    lrspace = len(_lines) <= nrows * ncols
+    lrspace = len(_lines) < nrows * ncols
     
     panelwidth = figwidth / ncols
     panelheight = panelwidth
@@ -631,9 +631,9 @@ def plotstamps(filebase, halocat, outname=None, \
                        top=labeltop, left=labelleft, bottom=labelbottom,\
                        right=labelright)
         lbase = '{ax} [cMpc]'
-        axis1 = axes[line][0]
-        axis2 = axes[line][1]
-        axis3 = axes[line][2]
+        axis1 = paxes[line][0]
+        axis2 = paxes[line][1]
+        axis3 = paxes[line][2]
         if labelbottom:
             xl = lbase.format(ax=['X', 'Y', 'Z'][axis1])
             ax.set_xlabel(xl, fontsize=fontsize)
