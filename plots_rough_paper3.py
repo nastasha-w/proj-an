@@ -545,6 +545,11 @@ def plotstamps(filebase, halocat, outname=None, \
                 depths[line] = (centre[axis3] - 0.5 * Ls[axis3], centre[axis3] + 0.5 * Ls[axis3]) 
                 print(extents[line])
                 print(maps[line].shape)
+                print((extents[0][1] - extents[0][0]) * 1e3 )
+                print(cosmopars['a'])
+                print(maps[line].shape[0])
+                print((extents[1][1] - extents[1][0]) * 1e3 )
+                print(maps[line].shape[1])
                 resolutions[line] = ((extents[0][1] - extents[0][0]) * 1e3 *\
                                       cosmopars['a'] / maps[line].shape[0],\
                                      (extents[1][1] - extents[1][0]) * 1e3 *\
