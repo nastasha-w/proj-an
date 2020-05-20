@@ -625,10 +625,11 @@ def plotstamps(filebase, halocat, outname=None, \
         labeltop = li < ncols 
         labelleft = li % ncols == 0
         labelright = li % ncols == ncols - 1
-        pu.setticks(ax, labelbottom=labelbottom, labeltop=labeltop,\
-                    labelleft=labelleft, labelright=labelright, direction='in',\
-                    top=labeltop, left=labelleft, bottom=labelbottom,\
-                    right=labelright)
+        ax.tick_params(labelsize=fontsize - 1,  direction='in',\
+                       labelbottom=labelbottom, labeltop=labeltop,\
+                       labelleft=labelleft, labelright=labelright,\
+                       top=labeltop, left=labelleft, bottom=labelbottom,\
+                       right=labelright)
         lbase = '{ax} [cMpc]'
         axis1 = axes[line][0]
         axis2 = axes[line][1]
