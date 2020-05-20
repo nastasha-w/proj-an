@@ -654,9 +654,12 @@ def plotstamps(filebase, halocat, outname=None, \
         posx = pos[axis1]
         posy = pos[axis2]
         posz = pos[axis3]
+        margin = np.max(radii)
         zrange = depths[line]
-        xrange = extents[line][0]
-        yrange = extents[line][1]
+        xrange = [extents[line][0][0] - margin,\
+                  extents[line][0][1] + margin]
+        yrange = [extents[line][1][0] - margin,\
+                  extents[line][1][1] + margin]
         hsel = np.ones(len(posx), dtype=bool)
         cosmopars = cosmoparss[line]
         boxsize = cosmopars['boxsize'] / cosmopars['h'] 
