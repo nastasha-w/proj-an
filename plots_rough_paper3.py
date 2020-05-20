@@ -481,8 +481,8 @@ def plotstamps(filebase, halocat, outname=None, \
     '''        
     
     marklength = 5. #cMpc
-    vmin = -10. # log10 photons / cm2 / s / sr 
-    vmax = 2.
+    vmin = -12. # log10 photons / cm2 / s / sr 
+    vmax = 0.5
     
     # retrieve the stamps, and necessary metadata
     if '/' not in filebase:
@@ -649,7 +649,7 @@ def plotstamps(filebase, halocat, outname=None, \
                   extent=(extents[line][0][0], extents[line][0][1],\
                           extents[line][1][0], extents[line][1][1]),\
                   cmap=cmap_img, vmin=vmin, vmax=vmax) 
-        continue
+
         posx = pos[axis1]
         posy = pos[axis2]
         posz = pos[axis3]
@@ -680,6 +680,7 @@ def plotstamps(filebase, halocat, outname=None, \
         collection = mcol.PatchCollection(patches)
         collection.set(edgecolor=colors, facecolor='none', linewidth=2)
         ax.add_collection(collection)
+        continue
         
         patheff_text = [mppe.Stroke(linewidth=1.5, foreground="b"),\
                         mppe.Stroke(linewidth=1.5, foreground="w"),\
@@ -714,7 +715,7 @@ def plotstamps(filebase, halocat, outname=None, \
                     verticalalignment='bottom')
             
     plt.colorbar(img, cax=cax1, orientation='horizontal', extend='both')
-    cax1.set_ylabel(clabel_img, fontsize=fontsize)
+    cax1.set_xlabel(clabel_img, fontsize=fontsize)
     cax1.tick_params(labelsize=fontsize - 1, which='both')
     cax1.set_aspect(0.1)   
     
