@@ -553,6 +553,7 @@ def plotstamps(filebase, halocat, outname=None, \
                   line=line, filen=filen))
     
     print('Using map resolutions:\n{res}'.format(res=resolutions))
+    _lines = sorted(maps.keys())
     
     # get halo catalogue data for overplotting
     if '/' not in halocat:
@@ -560,7 +561,7 @@ def plotstamps(filebase, halocat, outname=None, \
     with h5py.File(halocat, 'r') as hc:
         snapnum = hc['Header'].attrs['snapnum']
         cosmopars = {key: val for key, val in hc['Header/cosmopars'].attrs.items()}
-        if not np.all(snapnum == np.array([snapshots[line] for line in lines])):
+        if not np.all(snapnum == np.array([snapshots[line] for line in _lines])):
             raise RuntimeError('Stamp snapshots do not match halo catalogue snapshot')
         masses = np.log10(hc['M200c_Msun'][:])
         radii = hc['R200c_pkpc'] / cosmopars['a'] * 1e-3
@@ -572,7 +573,6 @@ def plotstamps(filebase, halocat, outname=None, \
         radii = radii[msel]
         pos = pos[:, msel]
     
-    _lines = sorted(maps.keys())
     ncols = 4
     nrows = (len(lines) - 1 // ncols) + 1
     figwidth = 11. 
@@ -710,3 +710,10 @@ def plotstamps(filebase, halocat, outname=None, \
     cax1.set_ylabel(clabel_img, fontsize=fontsize)
     cax1.tick_params(labelsize=fontsize - 1, which='both')
     cax1.set_aspect(0.1)   
+    
+    if outname is not None:
+        if '/' not in outname:
+            outname = mdir + outname
+        if outname[-4:] != '.pdf':
+            outname = outname + '.pdf'
+        plt.savefig(outname, format='pdf', bbox_inches='tight')
