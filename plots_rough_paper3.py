@@ -681,11 +681,11 @@ def plotstamps(filebase, halocat, outname=None, \
         patches = [mpatch.Circle((posx[ind], posy[ind]), scaler200 * rd[ind]) \
                    for ind in range(len(posx))] # x, y axes only
     
-        patheff = [mppe.Stroke(linewidth=1.5, foreground="b"),\
-                       mppe.Stroke(linewidth=1.5, foreground="w"),\
+        patheff = [mppe.Stroke(linewidth=1.0, foreground="b"),\
+                       mppe.Stroke(linewidth=0.5, foreground="w"),\
                        mppe.Normal()] 
         collection = mcol.PatchCollection(patches)
-        collection.set(edgecolor=colors, facecolor='none', linewidth=1.,\
+        collection.set(edgecolor=colors, facecolor='none', linewidth=0.5,\
                        path_effects=patheff)
         ylim = ax.get_ylim()
         xlim = ax.get_xlim()
@@ -693,11 +693,11 @@ def plotstamps(filebase, halocat, outname=None, \
         ax.set_xlim(*xlim)
         ax.set_ylim(*ylim)
         
-        #patheff_text = [mppe.Stroke(linewidth=1.0, foreground="b"),\
-        #                mppe.Stroke(linewidth=1.0, foreground="w"),\
-        #                mppe.Normal()]        
+        patheff_text = [mppe.Stroke(linewidth=0.6, foreground="b"),\
+                        mppe.Stroke(linewidth=0.4, foreground="w"),\
+                        mppe.Normal()]        
         ltext = nicenames_lines[line]
-        ax.text(0.95, 0.95, ltext, fontsize=fontsize, path_effects=None,\
+        ax.text(0.95, 0.95, ltext, fontsize=fontsize, path_effects=patheff_text,\
                 horizontalalignment='right', verticalalignment='top',\
                 transform=ax.transAxes, color='white')
         if li == 0:
@@ -712,7 +712,7 @@ def plotstamps(filebase, halocat, outname=None, \
             if marklength > 2.5 * xr:
                 print('Marklength {} is too large for the plotted range'.format(marklength))
                 continue
-            xs = xlim[0] + 0.05 * xr
+            xs = xlim[0] + 0.1 * xr
             ypos = ylim[0] + 0.07 * yr
             xcen = xs + 0.5 * marklength
             
@@ -722,7 +722,7 @@ def plotstamps(filebase, halocat, outname=None, \
             ax.plot([xs, xs + marklength], [ypos, ypos], color='white',\
                     path_effects=patheff, linewidth=2)
             ax.text(xcen, ypos + 0.01 * yr, mtext, fontsize=fontsize,\
-                    path_effects=None, horizontalalignment='center',\
+                    path_effects=patheff_text, horizontalalignment='center',\
                     verticalalignment='bottom', color='white')
             
     plt.colorbar(img, cax=cax1, orientation='horizontal', extend='both')
