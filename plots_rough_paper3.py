@@ -617,11 +617,14 @@ def plotstamps(filebase, halocat, outname=None, \
              orientation='horizontal', clabel=clabel_hmass, fontsize=fontsize, aspect=0.1)
     print('Max value in maps: {}'.format(max([np.max(maps[line]) for line in _lines])))
     
+    cmap_img = cm.getcolormap('viridis')
+    cmap_img.set_under(cmap_img(0.))
+    
     for li in range(len(_lines)):
         ax = axes[li]
         line = _lines[li]
         
-        labelbottom = li > len(lines) - ncols - 1
+        labelbottom = li > len(_lines) - ncols - 1
         labeltop = li < ncols 
         labelleft = li % ncols == 0
         labelright = li % ncols == ncols - 1
@@ -644,7 +647,7 @@ def plotstamps(filebase, halocat, outname=None, \
         img = ax.imshow(maps[line].T, origin='lower', interpolation='nearest',\
                   extent=(extents[line][0][0], extents[line][0][1],\
                           extents[line][1][0], extents[line][1][1]),\
-                  cmap='viridis', vmin=vmin, vmax=vmax) 
+                  cmap=cmap_img, vmin=vmin, vmax=vmax) 
         
         posx = pos[axis1]
         posy = pos[axis2]
@@ -665,7 +668,7 @@ def plotstamps(filebase, halocat, outname=None, \
         rd = radii[hsel]
         
         me = np.array(sorted(list(colordct.keys())) + [17.])
-        mi = np.max(np.searchsorted(me, ms) - 1, 0)
+        mi = np.max(np.array(np.searchsorted(me, ms) - 1, [0] * len(ms)), axis=0)
         colors = np.array([colordct[me[i]] for i in mi])
         
         patches = [mpatch.Circle((posx[ind], posy[ind]), rd[ind]) \
@@ -707,7 +710,7 @@ def plotstamps(filebase, halocat, outname=None, \
                     path_effects=patheff_text, horizontalalignment='center',\
                     verticalalignment='bottom')
             
-    plt.colorbar(img, cax=cax1, orientation='horizontal')
+    plt.colorbar(img, cax=cax1, orientation='horizontal', extend='both')
     cax1.set_ylabel(clabel_img, fontsize=fontsize)
     cax1.tick_params(labelsize=fontsize - 1, which='both')
     cax1.set_aspect(0.1)   
