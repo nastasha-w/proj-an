@@ -1943,6 +1943,60 @@ def get_radprof(rqfilenames, halocat, rbins, yvals,\
         ydct.update(ydct_temp)
         
     return ydct
+
+def getprofiles_fromstamps(filenames, rbins, galids,\
+                           xunit='pkpc', ytype='perc', yvals=50.,\
+                           separateprofiles=False,\
+                           outfile=None, grptag=None):
+    '''
+    just a skeleton
+    
+    input:
+    ------
+    filenames:   list of hdf5 files containing the stamps. Assumes the groups 
+                 are named by their central galaxy ids. A single file is also 
+                 ok.
+    '''
+    if '.' in filenames:
+        filenames = [filenames]
+    filenames = [ol.pdir + filename if '/' not in filename else filename\
+                 for filename in filenames]
+    
+    files = [h5py.File(filename, 'r') for filename in filenames]
+    # get header info per file
+    # get list of galids per file
+    # loop over files, contained galids
+    # get requested info
+    # store info
+    
+    for galid in galids:
+        grn = str(galid)
+        fileuse = np.where([grn in file for file in files])[0]
+        if len(fileuse) == 0:
+            raise RuntimeError('Galaxyid {} not found in any file'.format(galid))
+        fileuse = fileuse[0]
+        
+        stamp = fileuse[grn][:]
+        
+    
+    [file.close() for file in files]
+
+    ## metadata storage format stamp files
+    hed = fo.create_group('Header')
+    hed.attrs.create('filename_base', base)
+    hed.attrs.create('filename_fills', szcens)
+    hed.attrs.create('pixels_along_x', npix_x)
+    hed.attrs.create('pixels_along_y', npix_y)
+    hed.attrs.create('size_along_x', L_x)
+    hed.attrs.create('pixel_size_size_x_units', length_per_pixel)
+    hed.attrs.create('axis', axis)
+    hed.attrs.create('logvalues', logquantity)
+    hed.attrs.create('radius_min_size_x_units', rmin)
+    hed.attrs.create('radius_max_size_x_units', rmax)
+    hed.create_dataset('rscales_size_x_units', data=rscales)
+    hed.create_dataset('labels', data=np.array(labels, dtype=int))
+    hed.create_dataset('centres_size_x_units', data=centres)
+    hed.create_dataset('lower_left_corners_size_x_units', data=lower_left_corners)
 #################################################################
 # plots investigating the pet halos and convergence of profiles #  
 #################################################################
