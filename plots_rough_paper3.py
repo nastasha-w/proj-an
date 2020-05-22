@@ -482,7 +482,7 @@ def plotstamps(filebase, halocat, outname=None, \
     
     marklength = 10. #cMpc
     vmin = -12. # log10 photons / cm2 / s / sr 
-    vmax = 0.5
+    vmax = 1.0
     scaler200 = 2. # show radii at this times R200c
     
     # retrieve the stamps, and necessary metadata
@@ -554,7 +554,7 @@ def plotstamps(filebase, halocat, outname=None, \
                   line=line, filen=filen))
     
     print('Using map resolutions:\n{res}'.format(res=resolutions))
-    _lines = sorted(maps.keys())
+    _lines = sorted(maps.keys(), key=ol.line_eng_ion.get)
     
     # get halo catalogue data for overplotting
     if '/' not in halocat:
@@ -599,11 +599,13 @@ def plotstamps(filebase, halocat, outname=None, \
     if lrspace:
         colstart = ncols - (nrows * ncols - len(_lines)) 
         gridreg = grid[nrows - 1, colstart:]
-        cgrid = gsp.GridSpecFromSubplotSpec(nrows=3, ncols=1,\
-                       subplot_spec=gridreg, wspace=0.0, hspace=0.25)
-        height_ratios = [0.1, 0.45, 0.45]
-        cax1  = fig.add_subplot(cgrid[1, :])
-        cax2  = fig.add_subplot(cgrid[2, :])
+        cgrid = gsp.GridSpecFromSubplotSpec(nrows=3, ncols=2,\
+                       subplot_spec=gridreg, wspace=0.0, hspace=0.35,\
+                       height_ratios = [0.001, 0.5, 0.5],\
+                       width_ratios=[0.1, 0.9])
+        
+        cax1  = fig.add_subplot(cgrid[1, 1:])
+        cax2  = fig.add_subplot(cgrid[2, 1:])
     else:
         gridreg = grid[nrows, :]
         cgrid = gsp.GridSpecFromSubplotSpec(nrows=2, ncols=2,\
