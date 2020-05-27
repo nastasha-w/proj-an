@@ -1315,7 +1315,7 @@ def stamps_sl_hdf5(base, szcens, rmax, centres, rscales=1.,\
     zcens = np.asarray(zcens)
     if not (np.isclose(length_per_slice * len(szcens),\
                       heddata[sc]['cosmopars']['boxsize'] / heddata[sc]['cosmopars']['h']) \
-            and np.allclose(np.diff(zcens)), length_per_slice):
+            and np.allclose(np.diff(zcens), length_per_slice)):
         raise ValueError('stamps_sl_hdf5: input files are not evenly spaced slices covering the length of the simulation box')
     if not (np.isclose(L_x, boxsize) and np.isclose(L_y, boxsize)):
         raise ValueError('The slices do not span the simulation box perpendixular to the line of sight')
