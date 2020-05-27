@@ -888,9 +888,10 @@ def rdists_sl_from_haloids(base, szcens, L_x, npix_x,\
         print('Calling stamp or r/prop extraction')
     if stamps:
         if base[-5:] == '.hdf5':
-            stamps_sl_hdf5(base, szcens, rmax_r200c, centres, rscales=R200c,\
+            return stamps_sl_hdf5(base, szcens, rmax_r200c, centres, rscales=R200c,\
                            numsl=numsl, labels=halos, save=outname)
-        return stamps_sl(base, szcens, L_x, npix_x,\
+        else:
+            return stamps_sl(base, szcens, L_x, npix_x,\
                      rmin_r200c, rmax_r200c, R200c, centres,\
                      numsl=numsl, npix_y=npix_y, axis=axis, logquantity=logquantity,\
                      labels=halos, save=outname)
@@ -1313,8 +1314,6 @@ def stamps_sl_hdf5(base, szcens, rmax, centres, rscales=1.,\
     szcens.sort(key=slicezcen.get)
     zcens = [slicezcen[_sc] for _sc in szcens]
     zcens = np.asarray(zcens)
-    print(length_per_slice)
-    print(zcens)
     if not (np.isclose(length_per_slice * len(szcens),\
                       heddata[sc]['cosmopars']['boxsize'] / heddata[sc]['cosmopars']['h']) \
             and np.allclose(np.diff(zcens), length_per_slice)):
