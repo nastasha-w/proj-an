@@ -1226,12 +1226,10 @@ def stamps_sl_hdf5(base, szcens, rmax, centres, rscales=1.,\
     _base = base
     if '/' not in base:
         _base = ol.ndir + base
-        if os.path.isfile(_base%szcens[0]):
-            pass
-        else:
+        if not os.path.isfile(_base%szcens[0]):
             _base = ol.ndir_old + base
-    if not os.path.isfile(_base):
-        raise ValueError('Coukd not find file {}'.format(_base))
+    if not os.path.isfile(_base%szcens[0]):
+        raise ValueError('Could not find file {}'.format(_base%szcens[0]))
     base = _base
     
     # first file loop: metadata
