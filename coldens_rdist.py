@@ -1411,7 +1411,12 @@ def stamps_sl_hdf5(base, szcens, rmax, centres, rscales=1.,\
     dct_out = {labels[i]: qs[i] for i in range(len(selections))}
     if save is not None:
         try:
-            with h5py.File(pdir + save + '.hdf5') as fo:
+            fon = save
+            if '/' not in fon:
+                fon = ol.pdir + 'stamps/' + fon
+            if fon[-5:] != '.hdf5':
+                fon = fon + '.hdf5'
+            with h5py.File(fon) as fo:
                 for key in dct_out.keys():
                     fo.create_dataset(str(key), data=dct_out[key])
                 hed = fo.create_group('Header')
