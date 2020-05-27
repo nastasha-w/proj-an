@@ -1159,8 +1159,13 @@ def stamps_sl(base, szcens, L_x, npix_x,\
             simfile_set = True
         except Exception as exp:
             print('Retrieveing projection data failed for some reason\n%s'%exp) 
+        fon = save
+        if '/' not in fon:
+            fon = pdir + fon
+        if fon[-5:] != '.hdf5':
+            fon = fon + '.hdf5'
         try:
-            with h5py.File(pdir + save + '.hdf5') as fo:
+            with h5py.File(fon , 'a') as fo:
                 for key in dct_out.keys():
                     fo.create_dataset(str(key), data=dct_out[key])
                 hed = fo.create_group('Header')
