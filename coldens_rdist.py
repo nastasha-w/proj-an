@@ -1310,7 +1310,7 @@ def stamps_sl_hdf5(base, szcens, rmax, centres, rscales=1.,\
 
     # slice centres
     szcens = list(szcens)
-    szcens.sort(key=lambda x: slicezcen.get)
+    szcens.sort(key=slicezcen.get)
     zcens = [slicezcen[_sc] for _sc in szcens]
     zcens = np.asarray(zcens)
     print(length_per_slice)
