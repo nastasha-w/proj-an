@@ -1200,6 +1200,7 @@ def stamps_sl_hdf5(base, szcens, rmax, centres, rscales=1.,\
               numsl=1, labels=None, save=None):
     '''
     extract stamps from make_maps outputs in hdf5 format
+    note: this is pretty memory-intensive
     
     inputs:
     ---------------------------------------------------------------------------
