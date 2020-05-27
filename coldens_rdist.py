@@ -1436,14 +1436,14 @@ def stamps_sl_hdf5(base, szcens, rmax, centres, rscales=1.,\
                     for key in heddata[scen]['misc']:
                         tmp.attrs.create(key, heddata[scen]['misc'][key])
                         
-                hed.attrs.create('filename_base', base)
-                hed.attrs.create('filename_fills', szcens)
+                hed.attrs.create('filename_base', np.string_(base))
+                hed.attrs.create('filename_fills', np.string_(szcens))
                 hed.attrs.create('pixels_along_x', npix_x)
                 hed.attrs.create('pixels_along_y', npix_y)
                 hed.attrs.create('size_along_x', L_x)
                 hed.attrs.create('pixel_size_x_cMpc', length_per_pixel_x)
                 hed.attrs.create('pixel_size_y_cMpc', length_per_pixel_y)
-                hed.attrs.create('axis', axis)
+                hed.attrs.create('axis', np.string_(axis))
                 hed.attrs.create('logvalues', logquantity)
                 hed.attrs.create('radius_max_cMpc', rmax)
                 hed.create_dataset('rscales_size_x_units', data=rscales)
