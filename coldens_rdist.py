@@ -1313,6 +1313,9 @@ def stamps_sl_hdf5(base, szcens, rmax, centres, rscales=1.,\
     szcens.sort(key=lambda x: slicezcen.get)
     zcens = [slicezcen[_sc] for _sc in szcens]
     zcens = np.asarray(zcens)
+    print(length_per_slice)
+    print(szcens)
+    print(heddata[sc]['cosmopars']['boxsize'] / heddata[sc]['cosmopars']['h'])
     if not (np.isclose(length_per_slice * len(szcens),\
                       heddata[sc]['cosmopars']['boxsize'] / heddata[sc]['cosmopars']['h']) \
             and np.allclose(np.diff(zcens), length_per_slice)):
