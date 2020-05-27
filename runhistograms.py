@@ -2850,7 +2850,7 @@ if jobind in range(20163, 20181):
             'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
             'c6', 'n7']
     lineind = jobind - 20163
-    line = lines[ionind]
+    line = lines[lineind]
     numsl = 1
     
     basename = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
