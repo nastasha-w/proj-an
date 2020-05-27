@@ -887,6 +887,9 @@ def rdists_sl_from_haloids(base, szcens, L_x, npix_x,\
     if trackprogress:
         print('Calling stamp or r/prop extraction')
     if stamps:
+        if base[-5:] == '.hdf5':
+            stamps_sl_hdf5(base, szcens, rmax_r200c, centres, rscales=R200c,\
+                           numsl=numsl, labels=halos, save=outname)
         return stamps_sl(base, szcens, L_x, npix_x,\
                      rmin_r200c, rmax_r200c, R200c, centres,\
                      numsl=numsl, npix_y=npix_y, axis=axis, logquantity=logquantity,\
@@ -969,6 +972,9 @@ def stamps_sl(base, szcens, L_x, npix_x,\
               numsl=1, npix_y=None, axis='z', logquantity=True,\
               labels=None, save=None):
     '''
+    switch to stamps_sl_hdf5 is recommended: more checks and header logging 
+    from hdf5 map files
+    
     inputs:
     ---------------------------------------------------------------------------
     base:        (str incl. %s) string containing the file name (including 
@@ -1010,7 +1016,7 @@ def stamps_sl(base, szcens, L_x, npix_x,\
 
     output:
     ---------------------------------------------------------------------------
-    dct of float array [rs,qs]: radii (rscale units) and quantity (input image units)
+    dct of images (2d-arrays)
     '''
     ## loop over images, then galaxies within each image
     
@@ -1184,6 +1190,264 @@ def stamps_sl(base, szcens, L_x, npix_x,\
             print('Output save failed for some reason\n%s'%exp)          
     return dct_out    
 
+def stamps_sl_hdf5(base, szcens, rmax, centres, rscales=1.,\
+              numsl=1, labels=None, save=None):
+    '''
+    extract stamps from make_maps outputs in hdf5 format
+    
+    inputs:
+    ---------------------------------------------------------------------------
+    base:        (str incl. %s) string containing the file name (including 
+                 directory) for the images to extract 
+                 data from (data = image values)
+    szcens:      (iterable of strings) should complete the file names when 
+                 substituted into base. 
+                 (follow coldens/emission projection naming conventions)
+    rmax:        (float array) (2D) radius around the centre to take data from 
+                 (rmax * rscales units: cMpc) 
+    rscales:     (float or float array) factor to multiply rmax with 
+                 (rmax * rscales units: cMpc) 
+    centres:     (iterable of float * 3) centre around which to extract data, 
+                 in EAGLE x,y,z coordinates (units: cMpc)
+    numsl:       (int) number of slices around the centre to use
+                 default: 1
+    labels:      names to store image arrays with (int; intended for galaxy 
+                 ids)
+                 default: None -> centre coordinates
+    save:        name of hdf5 file to save results to
+                 default None -> save nothing
+
+    output:
+    ---------------------------------------------------------------------------
+    dct of images (2d-arrays): {label: image}
+    '''
+    ## loop over images, then galaxies within each image
+    
+    _base = base
+    if '/' not in base:
+        _base = ol.ndir + base
+        if os.path.isfile(_base%szcens[0]):
+            pass
+        else:
+            _base = ol.ndir_old + base
+    if not os.path.isfile(_base):
+        raise ValueError('Coukd not find file {}'.format(_base))
+    base = _base
+    
+    # first file loop: metadata
+    heddata = {}
+    for scen in szcens:
+        _filen = base%scen
+        with h5py.File(_filen, 'r') as ft:
+            heddata[scen] = {}
+            heddata[scen]['inputpars'] = {key: val for key, val in\
+                   ft['Header/inputpars'].attrs.items()}
+            heddata[scen]['cosmopars'] = {key: val for key, val in\
+                   ft['Header/inputpars/cosmopars'].attrs.items()}
+            heddata[scen]['halosel'] = {key: val for key, val in\
+                   ft['Header/inputpars/halosel'].attrs.items()}
+            heddata[scen]['misc'] = {key: val for key, val in\
+                   ft['Header/inputpars/misc'].attrs.items()}
+    ## sanity check on metadata: do the values we need agree between slices
+    sc = szcens[0]
+    # projection axis
+    axis = heddata[sc]['inputpars']['axis']
+    if not np.all([axis == heddata[_sc]['inputpars']['axis'] for _sc in szcens]):
+        raise ValueError('stamps_sl_hdf5: Different slices had different projection axes')
+    axis = axis.decode()
+    if axis == 'z':
+        axis1 = 0
+        axis2 = 1
+        axis3 = 2
+    elif axis == 'x':
+        axis1 = 1
+        axis2 = 2
+        axis3 = 0
+    elif axis == 'y':
+        axis1 = 2
+        axis2 = 0
+        axis3 = 1
+    # slice dimensions    
+    Ls = np.array([heddata[sc]['inputpars']['L_x'],\
+                   heddata[sc]['inputpars']['L_y'],\
+                   heddata[sc]['inputpars']['L_z']])
+    if not np.all([np.isclose(Ls[0], heddata[_sc]['inputpars']['L_x']) and \
+                   np.isclose(Ls[1], heddata[_sc]['inputpars']['L_y']) and\
+                   np.isclose(Ls[2], heddata[_sc]['inputpars']['L_z']) \
+                   for _sc in szcens]):
+        raise ValueError('stamps_sl_hdf5: Different slices had different slice dimensions')  
+    L_x = Ls[axis1]
+    L_y = Ls[axis2]
+    length_per_slice = Ls[axis3]
+    # image pixels
+    npix_x = heddata[sc]['inputpars']['npix_x']
+    npix_y = heddata[sc]['inputpars']['npix_y']
+    if not np.all([npix_x == heddata[_sc]['inputpars']['npix_x'] and \
+                   npix_y == heddata[_sc]['inputpars']['npix_y'] \
+                   for _sc in szcens]):
+        raise ValueError('stamps_sl_hdf5: Different slices had different image shapes')  
+    slicexycen = (heddata[sc]['inputpars']['centre'][axis1],\
+                  heddata[sc]['inputpars']['centre'][axis2])
+    if not np.all([np.isclose(slicexycen[0], heddata[_sc]['inputpars']['centre'][axis1]) and \
+                   np.isclose(slicexycen[1], heddata[_sc]['inputpars']['centre'][axis2]) \
+                   for _sc in szcens]):
+        raise ValueError('stamps_sl_hdf5: Different slices had different image centres') 
+    slicezcen = {_sc: heddata[_sc]['inputpars']['centre'][axis3] for _sc in szcens}
+    boxsize = heddata[sc]['cosmopars']['boxsize'] / heddata[sc]['cosmopars']['h']
+    if not np.all([np.isclose(boxsize,\
+                   heddata[_sc]['cosmopars']['boxsize'] / heddata[_sc]['cosmopars']['h']) \
+                   for _sc in szcens]):
+        raise ValueError('stamps_sl_hdf5: Different slices came from different simulation box sizes ')
+    
+    ## setup/initial check
+    centres = np.array(centres)
+    c0 = centres[:, axis1]
+    c1 = centres[:, axis2]
+    c2 = centres[:, axis3]
+  
+    if labels is None:
+        labels = [str(centre) for centre in centres]
+
+    #### find the slice ranges for each centre
+
+    # slice centres
+    szcens = list(szcens)
+    szcens.sort(key=lambda x: slicezcen.get)
+    zcens = [slicezcen[_sc] for _sc in szcens]
+    zcens = np.asarray(zcens)
+    if not (np.isclose(length_per_slice * len(szcens),\
+                      heddata[sc]['cosmopars']['boxsize'] / heddata[sc]['cosmopars']['h']) \
+            and np.allclose(np.diff(zcens)), length_per_slice):
+        raise ValueError('stamps_sl_hdf5: input files are not evenly spaced slices covering the length of the simulation box')
+    if not (np.isclose(L_x, boxsize) and np.isclose(L_y, boxsize)):
+        raise ValueError('The slices do not span the simulation box perpendixular to the line of sight')
+    slice_cenleft_inds = np.asarray(\
+        np.round(c2 / length_per_slice + 0.5 * (numsl % 2), 0) - 1.,\
+        dtype=int) % len(zcens)
+    # odd number of slices  -> centre falls bin with index ind: ind*length_per_slice <= centre < (ind+1)*length_per_slice
+    # even number of slices -> centre/left has ind+1 (bins right edge) closest to centre coordinate in length_per_slice units
+    #
+    # 0r    1r    2r    3r    4r    5r    6r       position (r = length_per_slice)   
+    # |  0  |  1  |  2  |  3  |  4  |  5  |        slice index
+    # -----------------------------------------
+    #       |    *      |   * |
+    #       |           +-----+  -> odd numsl case: centre index = (right edge of position bin)/r  = np.round(c2/r - 0.5, 0) 
+    #       +-----------+  -> even numsl case: centre/left index = (closet position bin edge)/r -1 = np.round(c2/r, 0) -1
+    #
+    # at the periodic boundary: 
+    #  odd case is ok, %len(zcens) takes care of -1/len(zcens) indices that may come out 
+    #  even case should be as well, when using %len(zcens)
+
+    ceninds = (slice_cenleft_inds[:, np.newaxis] -\
+               ((numsl - 1) // 2) + np.arange(numsl)[np.newaxis, :]) \
+              % len(zcens) # numsl/2 should be integer division 
+    fills = np.array(szcens)[ceninds]
+    #fills_dct = {labels[i]: fills[i] for i in range(len(fills))}
+    fills_toloop = list(np.unique(fills)) # eliminate doubles for the total loop
+
+    ## checked selection of slices
+    #print fills_toloop, slice_cenleft_inds, fills.shape
+    #return fills_toloop, slice_cenleft_inds
+
+    # rscales may differ, so the selection may not be the same size for each centre -> cannot use array to store all selections (unless oject array)
+    selections = []
+
+    # square pixels assumed
+    length_per_pixel_x = np.float(L_x) / npix_x
+    length_per_pixel_y = np.float(L_y) / npix_y
+    
+    # convert everything to pixel size coordinates
+    rmax_x = np.array(rscales) * rmax / length_per_pixel_x
+    rmax_y = np.array(rscales) * rmax / length_per_pixel_y
+    pixcens0 = c0 / length_per_pixel_x
+    pixcens1 = c1 / length_per_pixel_y
+    x_pix0 = (slicexycen[0] - 0.5 * L_x) / length_per_pixel_x
+    y_pix0 = (slicexycen[1] - 0.5 * L_y) / length_per_pixel_y
+    
+    # get all indices with pixel centres in radius limits
+    indx0 = (pixcens0 - rmax_x - x_pix0 - 0.5).astype(int)
+    indx1 = (pixcens0 + rmax_x - x_pix0 + 0.5).astype(int) + 1
+    indy0 = (pixcens1 - rmax_y - y_pix0 - 0.5).astype(int)
+    indy1 = (pixcens1 + rmax_y - y_pix0 + 0.5).astype(int) + 1
+    #indxc = (pixcens0 - x_pix0 + 0.5).astype(int)
+    #indyc = (pixcens1 - y_pix0 + 0.5).astype(int)
+    
+    lower_left_corners =  np.array([(indx0  + x_pix0) * length_per_pixel_x % boxsize,\
+                                    (indy0  + y_pix0) * length_per_pixel_y % boxsize]).T
+
+    # get all indices with pixel centres in radius limits
+    #rmaxall = np.max(rminmax)
+    basegrid = [np.indices((indx1[i] - indx0[i],\
+                            indy1[i] - indy0[i]))
+                for i in range(len(c0))]
+    # selections[i] should get all relevant pixels from an image
+    selections = [ ( (basegrid[i][0] + indx0[i]) % npix_x,\
+                     (basegrid[i][1] + indy0[i]) % npix_y )\
+                  for i in range(len(c0))] 
+    del basegrid
+    gc.collect()
+
+    qs = [np.zeros(selection[0].shape) for selection in selections] # set up dict of the right length, initiate to zeros
+    for fill in fills_toloop:
+        with h5py.File(base%fill) as _f:
+            fullim = _f['map'][:]
+            logquantity = bool(_f['Header/inputpars'].attrs['log']) 
+        print('Loaded %s'%fill)
+        # only modify the arrays for which we want to use this slice; avoid for loops by list comprehension (arrays won't work if the selection regions have different sizes)
+        if logquantity:
+            qs = [qs[i] + 10**fullim[selections[i]]  if fill in fills[i] else\
+                  qs[i] for i in range(len(fills))]
+        else:
+            qs = [qs[i] +     fullim[selections[i]]  if fill in fills[i] else\
+                  qs[i] for i in range(len(fills))]
+    
+    if logquantity:
+        qs  = [ np.log10(q) for q in qs]
+
+    dct_out = {labels[i]: qs[i] for i in range(len(selections))}
+    if save is not None:
+        try:
+            with h5py.File(pdir + save + '.hdf5') as fo:
+                for key in dct_out.keys():
+                    fo.create_dataset(str(key), data=dct_out[key])
+                hed = fo.create_group('Header')
+                # map file headers
+                for sc in szcens:
+                    sgrp = hed.create_group(sc)
+                    tmp = sgrp.create_group('inputpars')
+                    for key in heddata[scen]['inputpars']:
+                        tmp.attrs.create(key, heddata[scen]['inputpars'][key])
+                    tmp = sgrp.create_group('inputpars/cosmopars')
+                    for key in heddata[scen]['cosmopars']:
+                        tmp.attrs.create(key, heddata[scen]['cosmopars'][key])
+                    tmp = sgrp.create_group('inputpars/halosel')
+                    for key in heddata[scen]['halosel']:
+                        tmp.attrs.create(key, heddata[scen]['halosel'][key])
+                    tmp = sgrp.create_group('inputpars/misc')
+                    for key in heddata[scen]['misc']:
+                        tmp.attrs.create(key, heddata[scen]['misc'][key])
+                        
+                hed.attrs.create('filename_base', base)
+                hed.attrs.create('filename_fills', szcens)
+                hed.attrs.create('pixels_along_x', npix_x)
+                hed.attrs.create('pixels_along_y', npix_y)
+                hed.attrs.create('size_along_x', L_x)
+                hed.attrs.create('pixel_size_x_cMpc', length_per_pixel_x)
+                hed.attrs.create('pixel_size_y_cMpc', length_per_pixel_y)
+                hed.attrs.create('axis', axis)
+                hed.attrs.create('logvalues', logquantity)
+                hed.attrs.create('radius_max_cMpc', rmax)
+                hed.create_dataset('rscales_size_x_units', data=rscales)
+                hed.create_dataset('labels', data=np.array(labels, dtype=int))
+                hed.create_dataset('centres_cMpc', data=centres)
+                hed.create_dataset('lower_left_corners_cMpc', data=lower_left_corners)
+                
+        # wouldn't want the hdf5-saving part to cost me the data we got
+        except IOError as error:
+            print('Failed to save output: IOError \n%s'%error)
+        except Exception as exp:
+            print('Output save failed for some reason\n%s'%exp)          
+    return dct_out    
 
 #def stamps_sl_from_haloids(base, szcens, L_x, npix_x,\
 #                     rmin_r200c, rmax_r200c,\
