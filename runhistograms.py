@@ -2831,7 +2831,7 @@ if jobind in range(20163, 20181):
      # set minimum distance based on virial radius of halo mass bin
     print('Getting halo radii')
     radii_mhbins = {key: [r200cvals[galids == galid] for galid in galids_dct[key]] for key in galids_dct}
-    maxradii_mhbins = {key: np.max(radii_mstarbins[key]) for key in radii_mhbins} # don't use the maxima since those are determined by outliers
+    maxradii_mhbins = {key: np.max(radii_mhbins[key]) for key in radii_mhbins} # don't use the maxima since those are determined by outliers
     #print('for debug: galids_dct:\n')
     #print(galids_dct)
     #print('\n')
