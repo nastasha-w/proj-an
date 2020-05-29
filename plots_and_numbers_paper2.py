@@ -19,6 +19,8 @@ import os
 
 datadir = '/net/luttero/data2/paper2/'
 mdir    = '/net/luttero/data2/imgs/CGM/plots_paper2/'
+tmdir = '/net/luttero/data2/imgs/CGM/plots_talks/'
+
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -1803,7 +1805,8 @@ def plot_radprof_limited(fontsize=fontsize):
 # Mstar, stellar mass radial profiles, 2d profiles, impact parameters
 # percentiles, covering fractions, CDDF breaks, detection limits, Athena X-IFU
 # detectablility, M*
-def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
+def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True,\
+                       talkversion=False, num=0):
     '''
     var:        main: percenitles in M* bins
                 main-fcov-break for covering fractions at the CDDF break
@@ -1812,6 +1815,7 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
                 using this option will produce some errors, since the masses 
                 are split over two files, and the read-in function will try to 
                 find all masses in both
+    num:        for talk version, add more lines as num increases
     '''
     xlim = None
     units = 'pkpc'
@@ -1853,8 +1857,13 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
     else:
         slm = ''
     
-    imgname = 'radprof_bystellarmass_L0100N1504_27_PtAb_C2Sm_32000pix_T4EOS_6p25slice_zcen-all_{var}{lm}.pdf'.format(var=var, lm=slm)
-    imgname = mdir + imgname        
+    if talkversion:
+        imgname = 'radprof_bystellarmass_L0100N1504_27_PtAb_C2Sm_32000pix_T4EOS_6p25slice_zcen-all_{var}{lm}_talkversion-{num}.pdf'.format(var=var, lm=slm, num=num)
+        imgname = tmdir + imgname        
+        fontsize = 13
+    else:
+        imgname = 'radprof_bystellarmass_L0100N1504_27_PtAb_C2Sm_32000pix_T4EOS_6p25slice_zcen-all_{var}{lm}.pdf'.format(var=var, lm=slm)
+        imgname = mdir + imgname     
     print('Using y value selection (log10 Nmin/cm2 or percentiles): {}'.format(yvals_toplot))
     
     numcols = 3
@@ -2032,6 +2041,9 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True):
             tags = sorted(tags, key=galsetnames_smass.__getitem__)
             var = techvars_touse[vi]
             for ti in range(len(tags)):
+                if talkversion and ti >= num:
+                    continue
+                
                 tag = tags[ti]
                 mkey = galsetnames_smass[tag][1]
                 

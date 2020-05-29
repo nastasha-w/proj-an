@@ -2257,20 +2257,20 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
 
     ## metadata storage format stamp files
     hed = fo.create_group('Header')
-    hed.attrs.create('filename_base', base)
-    hed.attrs.create('filename_fills', szcens)
+    hed.attrs.create('filename_base', np.string_(base))
+    hed.attrs.create('filename_fills', np.string_(szcens))
     hed.attrs.create('pixels_along_x', npix_x)
     hed.attrs.create('pixels_along_y', npix_y)
     hed.attrs.create('size_along_x', L_x)
-    hed.attrs.create('pixel_size_size_x_units', length_per_pixel)
-    hed.attrs.create('axis', axis)
+    hed.attrs.create('pixel_size_x_cMpc', length_per_pixel_x)
+    hed.attrs.create('pixel_size_y_cMpc', length_per_pixel_y)
+    hed.attrs.create('axis', np.string_(axis))
     hed.attrs.create('logvalues', logquantity)
-    hed.attrs.create('radius_min_size_x_units', rmin)
-    hed.attrs.create('radius_max_size_x_units', rmax)
-    hed.create_dataset('rscales_size_x_units', data=rscales)
+    hed.attrs.create('rmax_rscales', rmax)
+    hed.create_dataset('rscales_cMpc', data=rscales)
     hed.create_dataset('labels', data=np.array(labels, dtype=int))
-    hed.create_dataset('centres_size_x_units', data=centres)
-    hed.create_dataset('lower_left_corners_size_x_units', data=lower_left_corners)
+    hed.create_dataset('centres_cMpc', data=centres)
+    hed.create_dataset('lower_left_corners_cMpc', data=lower_left_corners)
 #################################################################
 # plots investigating the pet halos and convergence of profiles #  
 #################################################################
