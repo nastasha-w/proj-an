@@ -2043,7 +2043,9 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True,\
             for ti in range(len(tags)):
                 if talkversion and ti >= num:
                     continue
-                
+                elif talkversion:
+                    print(ti)
+                    print(tags[ti])
                 tag = tags[ti]
                 mkey = galsetnames_smass[tag][1]
                 
