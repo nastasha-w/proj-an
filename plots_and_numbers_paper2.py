@@ -2041,11 +2041,6 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True,\
             tags = sorted(tags, key=galsetnames_smass.__getitem__)
             var = techvars_touse[vi]
             for ti in range(len(tags)):
-                if talkversion and ti >= num:
-                    continue
-                elif talkversion:
-                    print(ti)
-                    print(tags[ti])
                 tag = tags[ti]
                 mkey = galsetnames_smass[tag][1]
                 
@@ -2077,6 +2072,11 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True,\
                 else:
                     yvals_toplot_temp = _yvals_toplot
                 
+                if talkversion and ti >= num:
+                    continue
+                elif talkversion:
+                    print(ti)
+                    print(tags[ti])
                 
                 if ytype == 'perc':
                     if len(yvals_toplot_temp) == 3:
