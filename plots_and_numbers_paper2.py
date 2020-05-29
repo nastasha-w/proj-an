@@ -2076,10 +2076,12 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True,\
                 # techvar 0: other five bins (stellar mass)
                 if talkversion:
                     if lowmass:
-                        checkind = ti + sum([len(techvars[techvars_touse[_ti]]['setnames'])\
-                                             for _ti in range(vi)])
-                        if checkind >= num:
+                        if var == 1 and ti >= num:
                             continue
+                        elif var == 0:
+                            checkind = ti + len(techvars[techvars_touse[1]]['setnames'])
+                            if checkind >= num:
+                                continue
                     elif ti >= num:
                         continue
                 
