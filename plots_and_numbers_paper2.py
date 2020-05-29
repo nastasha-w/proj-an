@@ -2185,7 +2185,7 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True,\
                           columnspacing=1.2, handletextpad=0.5,\
                           frameon=False, ncol=2)
             else:
-                panellabel = '$ > %.1f$'%yvals_toplot_temp[yi]
+                panellabel = '$ > %.1f$'%yvals_toplot_temp[0]
                 ax.text(0.95, 0.95, panellabel, fontsize=fontsize, \
                         verticalalignment='top', horizontalalignment='right',\
                         transform=ax.transAxes)
