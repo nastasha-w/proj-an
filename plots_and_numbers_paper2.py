@@ -4076,7 +4076,7 @@ def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors, fontsize=fontsize,\
         
         ax1.set_ylabel(r'$\log_{10} \, T \; [K]$', fontsize=fontsize)
         ax1.set_xlabel(r'$\log_{10} \, n_{\mathrm{H}} \; [\mathrm{cm}^{-3}]$', fontsize=fontsize)
-        pu.setticks(ax1, fontsize=fontsize, right=False, labelbottom=False)
+        pu.setticks(ax1, fontsize=fontsize, right=False, labelbottom=True)
         
         ax1.axvline(logrhob + np.log10(rho_to_nh), 0., 0.85, color='gray', linestyle='dashed', linewidth=1.5)
         #ax.axvline(logrhoc + np.log10(rho_to_nh * 200. * cosmopars['omegab'] / cosmopars['omegam']), 0., 0.75, color='gray', linestyle='solid', linewidth=1.5)
