@@ -3026,13 +3026,39 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
         numpt   = len(axnl)
         ncols = min(4, numions)
         nrows = ((numions - 1) // ncols + 1) * numpt
+        cheight = 0.5
+        cwidth = 0.0
+        cspace = 0.3
+        wspace = 0.0
+        panelwidth = (figwidth - cwidth - wspace * ncols) / ncols
+        panelheight = 0.8 * panelwidth
+        figheight =  panelheight * nrows + cspace + cheight
+        width_ratios = [panelwidth] * ncols    
+        height_ratios=[panelheight] * nrows + [cspace] + [cheight]
+        
+        fig = plt.figure(figsize=(figwidth, figheight))
+        grid = gsp.GridSpec(nrows=nrows + 2, ncols=ncols, hspace=0.0,\
+                            wspace=wspace,\
+                            width_ratios=width_ratios,\
+                            height_ratios=height_ratios,\
+                            bottom=0.07, top=0.95)
+        axes = np.array([[fig.add_subplot(grid[ii // ncols + ti, ii % ncols])\
+                          for ti in range(numpt)] for ii in range(numions)])
+        cax = fig.add_subplot(grid[nrows + 1, :])
+        cax_below = True
+    else:
+        figwidth = 11.
+        numions = 1 + len(ions)
+        numpt   = len(axnl)
+        ncols = min(4, numions)
+        nrows = ((numions - 1) // ncols + 1) * numpt
         cheight = 0.0
         cspace = 0.0
         cwidth = 0.5
         wspace = 0.0
         panelwidth = (figwidth - cwidth - wspace * ncols) / ncols
         panelheight = 0.8 * panelwidth
-        figheight =  panelheight * nrows + cspace + cheight
+        figheight =  panelheight * nrows 
         width_ratios = [panelwidth] * ncols + [cwidth]   
         height_ratios=[panelheight] * nrows 
         
@@ -3045,32 +3071,6 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
         axes = np.array([[fig.add_subplot(grid[ii // ncols + ti, ii % ncols])\
                           for ti in range(numpt)] for ii in range(numions)])
         cax = fig.add_subplot(grid[:min(nrows, 2), ncols])
-        cax_below = True
-    else:
-        figwidth = 11.
-        numions = 1 + len(ions)
-        numpt   = len(axnl)
-        ncols = min(4, numions)
-        nrows = ((numions - 1) // ncols + 1) * numpt
-        cheight = 0.5
-        cwidth = 0.0
-        cspace = 0.3
-        wspace = 0.0
-        panelwidth = (figwidth - cwidth - wspace * ncols) / ncols
-        panelheight = 0.8 * panelwidth
-        figheight =  panelheight * nrows + cspace + cheight
-        width_ratios = [panelwidth] * ncols    
-        height_ratios=[panelheight] * nrows + [cspace] + cheight
-        
-        fig = plt.figure(figsize=(figwidth, figheight))
-        grid = gsp.GridSpec(nrows=nrows + 2, ncols=ncols, hspace=0.0,\
-                            wspace=wspace,\
-                            width_ratios=width_ratios,\
-                            height_ratios=height_ratios,\
-                            bottom=0.07, top=0.95)
-        axes = np.array([[fig.add_subplot(grid[ii // ncols + ti, ii % ncols])\
-                          for ti in range(numpt)] for ii in range(numions)])
-        cax = fig.add_subplot(grid[nrows + 1, :])
         cax_below = False
     
     # set up color bar (separate to leave white spaces for unused bins)
