@@ -2950,6 +2950,295 @@ def plot3Dprof_ionw(minrshow=minrshow_R200c, ions=('o6', 'o7', 'o8'),\
         
     plt.savefig(outdir + outname, format='pdf', box_inches='tight')
     
+def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
+                     ions=('o6', 'o7', 'o8'),\
+                     fontsize=fontsize,\
+                     Zmw='oxygen',\
+                     talkversion=False, num=0):
+    '''
+    mass, volume, and ion-weighted 3d profiles
+    '''
+    
+    if talkversion:
+        outdir = tmdir
+        outname = 'profiles_allweights_3d_halo_rho_T_Z-{elt}_median_num{num}.pdf'.format(\
+                                                       elt=Zmw, num=num)
+        massslice = np.array([0, 1, 2, 4, 6])
+        fontsize += 1
+        axnl = ('T', 'rho')
+    else:
+        outdir = mdir
+        outname = 'profiles_allweights_3d_halo_rho_T_Z-{elt}_median.pdf'.format(elt=Zmw)
+        massslice = slice(None, None, 2) # subset of halo masses to plot
+        axnl=('T', 'rho', 'Z')
+        
+    weighttypes = ['Mass', 'Volume'] + list(ions)
+    axnl = list(axnl)
+    elts_Z = [Zmw] #['oxygen', 'neon', 'iron']
+    solarZ = ol.solar_abunds_ea
+           
+    percentiles = [50.]
+    linestyles = {'Volume': 'solid',\
+                  'Mass': 'dashed'}
+    linestyles.update({ion: 'solid' for ion in ions})
+    
+    if len(elts_Z) > 1:
+        alphas = {'oxygen': 1.0,\
+                  'neon':   0.7,\
+                  'iron':   0.4,\
+                  }
+    else:
+        alphas = {elts_Z[0]: 1.0}
+    alpha_volw = 0.3
+    alpha = 1.
+    
+    cosmopars = cosmopars_ea_27
+   
+    axlabels = {'T': r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$',\
+                'rho': r'$\log_{10} \, \mathrm{n}(\mathrm{H}) \; [\mathrm{cm}^{-3}]$',\
+                'Z': r'$\log_{10} \, \mathrm{Z} \, / \, \mathrm{Z}_{\odot}$',\
+                #'nion': r'$\log_{10} \, \mathrm{n}(\mathrm{%s}) \; [\mathrm{cm}^{-3}]$'%(wname),\
+                'weight': r'$\log_{10} \, %s(< r) \,/\, %s(< \mathrm{R}_{\mathrm{200c}})$'%('q', 'q') 
+                }
+    clabel = r'$\log_{10} \, \mathrm{M}_{\mathrm{200c}} \; [\mathrm{M}_{\mathrm{200c}}]$'
+    
+    minrstr = str(minrshow)
+    if minrshow_kpc is not None:
+        minrstr += '-and-{}-kpc'.format(minrshow_kpc)
+    saveddata = datadir + 'hists3d_forplot_to2d-1dversions_minr-%s.hdf5'%(minrstr)
+    
+    linewidth = 1.5
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"),\
+               mppe.Stroke(linewidth=linewidth, foreground="w"),\
+               mppe.Normal()]
+    #patheff_thick = [mppe.Stroke(linewidth=linewidth + 1., foreground="black"), mppe.Stroke(linewidth=linewidth + 1., foreground="w"), mppe.Normal()]
+    
+    fig = plt.figure(figsize=(10., 3.5))
+    grid = gsp.GridSpec(nrows=1, ncols=6, hspace=0.0, wspace=0.0,\
+                        width_ratios=[1., 0.3, 1., 0.3, 1., 0.25],\
+                        bottom=0.15, left=0.05)
+    axes = np.array([fig.add_subplot(grid[0, 2*i]) for i in range(3)])
+    cax = fig.add_subplot(grid[0, 5])
+    
+    if talkversion:
+        figwidth = 11.
+        numions = 1 + len(ions)
+        numpt   = len(axnl)
+        ncols = min(4, numions)
+        nrows = ((numions - 1) // ncols + 1) * numpt
+        cheight = 0.0
+        cspace = 0.0
+        cwidth = 0.5
+        wspace = 0.0
+        panelwidth = (figwidth - cwidth - wspace * ncols) / ncols
+        panelheight = 0.8 * panelwidth
+        figheight =  panelheight * nrows + cspace + cheight
+        width_ratios = [panelwidth] * ncols + [cwidth]   
+        height_ratios=[panelheight] * nrows 
+        
+        fig = plt.figure(figsize=(figwidth, figheight))
+        grid = gsp.GridSpec(nrows=nrows, ncols=ncols + 1, hspace=0.0,\
+                            wspace=wspace,\
+                            width_ratios=width_ratios,\
+                            height_ratios=[1.] * nrows,\
+                            bottom=0.07, top=0.95)
+        axes = np.array([[fig.add_subplot(grid[ii // ncols + ti, ii % ncols])\
+                          for ti in range(numpt)] for ii in range(numions)])
+        cax = fig.add_subplot(grid[:min(nrows, 2), ncols])
+        cax_below = True
+    else:
+        figwidth = 11.
+        numions = 1 + len(ions)
+        numpt   = len(axnl)
+        ncols = min(4, numions)
+        nrows = ((numions - 1) // ncols + 1) * numpt
+        cheight = 0.5
+        cwidth = 0.0
+        cspace = 0.3
+        wspace = 0.0
+        panelwidth = (figwidth - cwidth - wspace * ncols) / ncols
+        panelheight = 0.8 * panelwidth
+        figheight =  panelheight * nrows + cspace + cheight
+        width_ratios = [panelwidth] * ncols    
+        height_ratios=[panelheight] * nrows + [cspace] + cheight
+        
+        fig = plt.figure(figsize=(figwidth, figheight))
+        grid = gsp.GridSpec(nrows=nrows + 2, ncols=ncols, hspace=0.0,\
+                            wspace=wspace,\
+                            width_ratios=width_ratios,\
+                            height_ratios=height_ratios,\
+                            bottom=0.07, top=0.95)
+        axes = np.array([[fig.add_subplot(grid[ii // ncols + ti, ii % ncols])\
+                          for ti in range(numpt)] for ii in range(numions)])
+        cax = fig.add_subplot(grid[nrows + 1, :])
+        cax_below = False
+    
+    # set up color bar (separate to leave white spaces for unused bins)
+    massedges = np.array([11., 11.5, 12., 12.5, 13., 13.5, 14.])
+    cmapname = 'rainbow'
+    
+    clist = cm.get_cmap(cmapname, len(massedges))(np.linspace(0.,  1., len(massedges)))
+    ms_sel = massedges[massslice]
+    mnsel = np.array([m not in ms_sel for m in massedges])
+    clist[mnsel] = np.array([1., 1., 1., 1.])
+    keys = sorted(massedges)
+    colordct = {keys[i]: clist[i] for i in range(len(keys))}
+    
+    #print(clist)
+    orientation = 'horizontal' if cax_below else 'vertical'
+    aspect = 1. / 8. if cax_below else 8. 
+    cmap = mpl.colors.ListedColormap(clist[:-1])
+    cmap.set_over(clist[-1])
+    norm = mpl.colors.BoundaryNorm(massedges, cmap.N)
+    cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,\
+                                norm=norm,\
+                                boundaries=np.append(massedges, np.array(massedges[-1] + 1.)),\
+                                ticks=massedges,\
+                                spacing='proportional', extend='max',\
+                                orientation=orientation)
+    # to use 'extend', you must
+    # specify two extra boundaries:
+    # boundaries=[0] + bounds + [13],
+    # extend='both',
+    # ticks=bounds,  # optional
+    cbar.set_label(clabel, fontsize=fontsize)
+    cax.tick_params(labelsize=fontsize - 1)
+    cax.set_aspect(aspect)
+    
+    #cbar, colordct = add_cbar_mass(cax, cmapname='rainbow', massedges=mass_edges_standard,\
+    #                               orientation='vertical', clabel=clabel, fontsize=fontsize, aspect=8.)
+    axplot = {'T': 0,\
+              'rho': 1,\
+              'Z_oxygen': 2,\
+              'Z_neon': 2,\
+              'Z_iron': 2,\
+              }
+    
+    axwplot = {'Mass': 0,\
+               'Volume': 0}
+    axwplot.update({ion: ind for ind, ion in enumerate(ions, 1)})
+    
+    with h5py.File(saveddata, 'r') as df:
+        # read in mass bins
+        masskeys = [_str.decode() for _str in np.array(df['mass_keys'])]
+        massbins = np.array(df['mass_bins'])
+        # use every other mass bin for legibility
+        massbins = sorted(massbins, key=lambda x: x[0])
+        massbins = massbins[massslice]
+        
+        for ii , ion in enumerate(weighttypes):
+            for ti in range(numpt):
+                axn = axnl[ti]
+                ax = axes[axwplot[ion], ti]
+                
+                labelleft = ii % ncols == 0
+                labelbottom = (numions - ii <= ncols and ti == numpt - 1)
+                
+                pu.setticks(ax, top=True, right=True, labelleft=labelleft,\
+                            labelbottom=labelbottom, fontsize=fontsize)
+                if labelleft:
+                    ax.set_ylabel(axlabels[axn], fontsize=fontsize)
+                if labelbottom:
+                    ax.set_xlabel(r'$\log_{10} \, \mathrm{r} \, /\, \mathrm{R}_{\mathrm{200c}}$',\
+                                  fontsize=fontsize)
+                
+                # iterate over the masses to use
+                for Mhrange in massbins:
+                    mind = np.where(np.isclose([float(_mk) for _mk in masskeys], Mhrange[0]))[0][0]
+                    mkey = masskeys[mind]
+        
+                    if axn == 'Z':
+                        if ion in ol.elements_ion.keys():
+                            elt = ol.elements_ion[ion]
+                        else:
+                            elt = Zmw #default
+                        _axn = 'Z_{}'.format(elt)
+                    else:
+                        _axn = axn
+                    if ion in ol.elements_ion.keys():
+                        name = ild.getnicename(ion, mathmode=True)
+                        ax.text(0.95, 0.95, r'$\mathrm{%s}$-weighted'%(name), fontsize=fontsize,\
+                            transform=ax.transAxes, horizontalalignment='right',\
+                            verticalalignment='top', fontweight='normal')
+                    else:
+                        ax.text(0.95, 0.95, r'M/V-weighted', fontsize=fontsize,\
+                            transform=ax.transAxes, horizontalalignment='right',\
+                            verticalalignment='top', fontweight='normal')
+                                 
+                    _hist = np.array(df['%s/%s/%s/hist_rmin'%(ion, mkey, _axn)]) 
+                    _e0 = np.array(df['%s/%s/%s/edges_rmin_0'%(ion, mkey, _axn)])
+                    _e1 = np.array(df['%s/%s/%s/edges_rmin_1'%(ion, mkey, _axn)]) 
+                    _e0[0] = 2. * _e0[1] - _e0[2] # don't want the innermost in in the original extraction
+                    _e0 = _e0[:-1] + 0.5 * np.diff(_e0)   
+                    
+                    alpha = 1.
+                    color = colordct[float(mkey)]
+                    perclines = pu.percentiles_from_histogram(_hist, _e1, axis=1,\
+                                    percentiles=np.array(percentiles) / 100.)
+                    if axn == 'Z':
+                        perclines -= np.log10(solarZ[elt])
+                    
+                    ax.plot(_e0, perclines[0], color=color,\
+                        alpha=alpha, linestyle=linestyles[ion],\
+                        linewidth=linewidth, path_effects=patheff)
+                    
+                    if axn == 'T':
+                        mval = medians_mmin_standardedges[float(mkey)]
+                        ax.axhline(np.log10(T200c_hot(10**mval, cosmopars)),\
+                                                  color=colordct[float(mkey)],\
+                                                  zorder=-1,\
+                                                  linestyle='dotted')
+                        
+                        if ion in ol.elements_ion:
+                            ax.axhline(Tranges_CIE[ion][0],\
+                                       color='black', zorder=-1,\
+                                       linestyle='dotted')
+                            ax.axhline(Tranges_CIE[ion][1],\
+                                       color='black', zorder=-1,\
+                                       linestyle='dotted')
+                            
+                    # add volume-weighted lines to other plots
+                    if ion == 'Volume':
+                        otheraxes = set([axwplot[key] for key in axwplot])
+                        otheraxes -= {axwplot[ion]}
+                        for _ax in list(otheraxes):
+                            _ax.plot(_e0, perclines[0], color=color,\
+                                     alpha=alpha_volw, linestyle=linestyles[ion],\
+                                     linewidth=linewidth, path_effects=None,\
+                                     zorder=-1)
+    # sync y axes:
+    for ti in range(numpt):
+        ylims = np.array([ax.get_ylim() for ax in axes[:, ti]])
+        y0 = np.min(ylims[:, 0])
+        y1 = np.max(ylims[:, 1])
+        [ax.set_ylim(y0, y1) for ax in axes[:, ti]]
+    
+        
+    # legend
+    typehandles = [mlines.Line2D([], [], linestyle=linestyles[key],\
+                                 label='%s-weighted'%(key),\
+                                 path_effects=patheff,\
+                                 linewidth=linewidth,\
+                                 color = 'gray'
+                                 ) for key in ['Mass', 'Volume']]
+    if len(elts_Z) > 1:
+        thandles = [mlines.Line2D([], [], linestyle='solid',\
+                                     label=key,\
+                                     path_effects=patheff,\
+                                     linewidth=linewidth,\
+                                     color='gray',\
+                                     alpha=alphas[key],\
+                                     ) for key in elts_Z]
+    else:
+        thandles = []
+    handles=typehandles + thandles 
+    i2l = axplot['Z'] if 'Z' in axnl else 0
+    axes[0, i2l].legend(handles=handles, fontsize=fontsize,\
+               loc='lower left', bbox_to_anchor=(0.0, 0.0),\
+               frameon=False, ncol=1) #ncol=min(4, len(handles))
+    
+    print(axes[0].get_xlim())
+    plt.savefig(outdir + outname, format='pdf', box_inches='tight')
     
 ########################### halo mass splits ##################################
 
@@ -3715,7 +4004,7 @@ def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors, fontsize=fontsize,\
     
     if talkversion1:
         ions = ['o7', 'o8']
-        outname = mdir + 'ionbals_snap{}_HM01_ionizedmu_v1_num{num}.pdf'.format(snap, num=num)
+        outname = tmdir + 'ionbals_snap{}_HM01_ionizedmu_v1_num{num}.pdf'.format(snap, num=num)
     else:    
         outname = mdir + 'ionbals_snap{}_HM01_ionizedmu.pdf'.format(snap)
     
