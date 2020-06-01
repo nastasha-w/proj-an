@@ -3012,41 +3012,8 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                mppe.Stroke(linewidth=linewidth, foreground="w"),\
                mppe.Normal()]
     #patheff_thick = [mppe.Stroke(linewidth=linewidth + 1., foreground="black"), mppe.Stroke(linewidth=linewidth + 1., foreground="w"), mppe.Normal()]
-    
-    fig = plt.figure(figsize=(10., 3.5))
-    grid = gsp.GridSpec(nrows=1, ncols=6, hspace=0.0, wspace=0.0,\
-                        width_ratios=[1., 0.3, 1., 0.3, 1., 0.25],\
-                        bottom=0.15, left=0.05)
-    axes = np.array([fig.add_subplot(grid[0, 2*i]) for i in range(3)])
-    cax = fig.add_subplot(grid[0, 5])
-    
-    if talkversion:
-        figwidth = 11.
-        numions = 1 + len(ions)
-        numpt   = len(axnl)
-        ncols = min(4, numions)
-        nrows = ((numions - 1) // ncols + 1) * numpt
-        cheight = 0.5
-        cwidth = 0.0
-        cspace = 0.3
-        wspace = 0.0
-        panelwidth = (figwidth - cwidth - wspace * ncols) / ncols
-        panelheight = 0.8 * panelwidth
-        figheight =  panelheight * nrows + cspace + cheight
-        width_ratios = [panelwidth] * ncols    
-        height_ratios=[panelheight] * nrows + [cspace] + [cheight]
         
-        fig = plt.figure(figsize=(figwidth, figheight))
-        grid = gsp.GridSpec(nrows=nrows + 2, ncols=ncols, hspace=0.0,\
-                            wspace=wspace,\
-                            width_ratios=width_ratios,\
-                            height_ratios=height_ratios,\
-                            bottom=0.07, top=0.95)
-        axes = np.array([[fig.add_subplot(grid[ii // ncols + ti, ii % ncols])\
-                          for ti in range(numpt)] for ii in range(numions)])
-        cax = fig.add_subplot(grid[nrows + 1, :])
-        cax_below = True
-    else:
+    if talkversion:
         figwidth = 11.
         numions = 1 + len(ions)
         numpt   = len(axnl)
@@ -3072,6 +3039,33 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                           for ti in range(numpt)] for ii in range(numions)])
         cax = fig.add_subplot(grid[:min(nrows, 2), ncols])
         cax_below = False
+    else:
+        figwidth = 11.
+        numions = 1 + len(ions)
+        numpt   = len(axnl)
+        ncols = min(4, numions)
+        nrows = ((numions - 1) // ncols + 1) * numpt
+        cheight = 0.5
+        cwidth = 0.0
+        cspace = 0.3
+        wspace = 0.0
+        panelwidth = (figwidth - cwidth - wspace * ncols) / ncols
+        panelheight = 0.8 * panelwidth
+        figheight =  panelheight * nrows + cspace + cheight
+        width_ratios = [panelwidth] * ncols    
+        height_ratios=[panelheight] * nrows + [cspace] + [cheight]
+        
+        fig = plt.figure(figsize=(figwidth, figheight))
+        grid = gsp.GridSpec(nrows=nrows + 2, ncols=ncols, hspace=0.0,\
+                            wspace=wspace,\
+                            width_ratios=width_ratios,\
+                            height_ratios=height_ratios,\
+                            bottom=0.07, top=0.95)
+        axes = np.array([[fig.add_subplot(grid[ii // ncols + ti, ii % ncols])\
+                          for ti in range(numpt)] for ii in range(numions)])
+        cax = fig.add_subplot(grid[nrows + 1, :])
+        cax_below = True
+        
     
     # set up color bar (separate to leave white spaces for unused bins)
     massedges = np.array([11., 11.5, 12., 12.5, 13., 13.5, 14.])
@@ -3155,15 +3149,23 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                         _axn = 'Z_{}'.format(elt)
                     else:
                         _axn = axn
+                    if axn == 'Z' and ion in ol.elements_ion:
+                        loc = (0.05, 0.05)
+                        hza = 'left'
+                        vta = 'bottom'
+                    else:
+                        loc = (0.95, 0.95)
+                        hza = 'right'
+                        vta = 'top'
                     if ion in ol.elements_ion.keys():
                         name = ild.getnicename(ion, mathmode=True)
-                        ax.text(0.95, 0.95, r'$\mathrm{%s}$-weighted'%(name), fontsize=fontsize,\
-                            transform=ax.transAxes, horizontalalignment='right',\
-                            verticalalignment='top', fontweight='normal')
+                        ax.text(loc[0], loc[1], r'$\mathrm{%s}$-weighted'%(name), fontsize=fontsize,\
+                            transform=ax.transAxes, horizontalalignment=hza,\
+                            verticalalignment=vta, fontweight='normal')
                     else:
-                        ax.text(0.95, 0.95, r'M/V-weighted', fontsize=fontsize,\
-                            transform=ax.transAxes, horizontalalignment='right',\
-                            verticalalignment='top', fontweight='normal')
+                        ax.text(loc[0], loc[1], r'M/V-weighted', fontsize=fontsize,\
+                            transform=ax.transAxes, horizontalalignment=hza,\
+                            verticalalignment=vta, fontweight='normal')
                                  
                     _hist = np.array(df['%s/%s/%s/hist_rmin'%(ion, mkey, _axn)]) 
                     _e0 = np.array(df['%s/%s/%s/edges_rmin_0'%(ion, mkey, _axn)])
@@ -3232,7 +3234,12 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
     else:
         thandles = []
     handles=typehandles + thandles 
-    i2l = axplot['Z'] if 'Z' in axnl else 0
+    if 'Z' in axnl:
+        keys = np.array(list(axplot.keys()))
+        _key = keys[np.where(['Z' in key for key in keys])[0][0]]
+        i2l = axwplot[_key]
+    else:
+        i2l = 0
     axes[0, i2l].legend(handles=handles, fontsize=fontsize,\
                loc='lower left', bbox_to_anchor=(0.0, 0.0),\
                frameon=False, ncol=1) #ncol=min(4, len(handles))
