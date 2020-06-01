@@ -3047,7 +3047,7 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
         nrows = ((numions - 1) // ncols + 1) * numpt
         cheight = 0.5
         cwidth = 0.0
-        cspace = 0.3
+        cspace = 0.6
         wspace = 0.0
         panelwidth = (figwidth - cwidth - wspace * ncols) / ncols
         panelheight = 0.8 * panelwidth
@@ -3080,7 +3080,7 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
     
     #print(clist)
     orientation = 'horizontal' if cax_below else 'vertical'
-    aspect = 1. / 8. if cax_below else 8. 
+    aspect = 0.1 if cax_below else 8. 
     cmap = mpl.colors.ListedColormap(clist[:-1])
     cmap.set_over(clist[-1])
     norm = mpl.colors.BoundaryNorm(massedges, cmap.N)
@@ -3125,8 +3125,8 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                 axn = axnl[ti]
                 ax = axes[axwplot[ion], ti]
                 
-                labelleft = ii % ncols == 0
-                labelbottom = (numions - ii <= ncols and ti == numpt - 1)
+                labelleft = axwplot[ion] % ncols == 0
+                labelbottom = (numions - axwplot[ion] <= ncols and ti == numpt - 1)
                 
                 pu.setticks(ax, top=True, right=True, labelleft=labelleft,\
                             labelbottom=labelbottom, fontsize=fontsize)
@@ -3149,9 +3149,13 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                         _axn = 'Z_{}'.format(elt)
                     else:
                         _axn = axn
-                    if axn == 'Z' and ion in ol.elements_ion:
+                    if (axn == 'Z' and ion in ol.elements_ion):
                         loc = (0.05, 0.05)
                         hza = 'left'
+                        vta = 'bottom'
+                    elif axn == 'T':
+                        loc = (0.95, 0.05)
+                        hza = 'right'
                         vta = 'bottom'
                     else:
                         loc = (0.95, 0.95)
@@ -3213,6 +3217,8 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
         ylims = np.array([ax.get_ylim() for ax in axes[:, ti]])
         y0 = np.min(ylims[:, 0])
         y1 = np.max(ylims[:, 1])
+        if axnl[ti] == 'Z':
+            y0 = max(y0, -2.8)
         [ax.set_ylim(y0, y1) for ax in axes[:, ti]]
     
         
@@ -3237,7 +3243,7 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
     if 'Z' in axnl:
         keys = np.array(list(axplot.keys()))
         _key = keys[np.where(['Z' in key for key in keys])[0][0]]
-        i2l = axwplot[_key]
+        i2l = axplot[_key]
     else:
         i2l = 0
     axes[0, i2l].legend(handles=handles, fontsize=fontsize,\
