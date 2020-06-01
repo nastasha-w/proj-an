@@ -3132,7 +3132,7 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                 axn = axnl[ti]
                 ax = axes[axwplot[ion], ti]
                 if ti not in yrange_syncs:
-                    yrange_syncs[ti] = {}
+                    yrange_syncs[ti] = []
                 if axwplot[ion] not in yrange_syncs[ti]:
                     yrange_syncs[ti].append(axwplot[ion])
                 
