@@ -3256,7 +3256,7 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
         keys = np.array(list(axplot.keys()))
         _key = keys[np.where(['Z' in key for key in keys])[0][0]]
         i2l = axplot[_key]
-    if 'rho' in axnl:
+    elif 'rho' in axnl:
         keys = np.array(list(axplot.keys()))
         _key = keys[np.where(['rho' in key for key in keys])[0][0]]
         i2l = axplot[_key]
