@@ -3201,8 +3201,8 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                     if ion == 'Volume':
                         otheraxes = set([axwplot[key] for key in axwplot])
                         otheraxes -= {axwplot[ion]}
-                        for _ax in list(otheraxes):
-                            _ax.plot(_e0, perclines[0], color=color,\
+                        for _ii in list(otheraxes):
+                            axes[_ii, ti].plot(_e0, perclines[0], color=color,\
                                      alpha=alpha_volw, linestyle=linestyles[ion],\
                                      linewidth=linewidth, path_effects=None,\
                                      zorder=-1)
