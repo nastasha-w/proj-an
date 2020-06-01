@@ -2977,7 +2977,7 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
         axnl=('T', 'rho', 'Z')
         ions=('o6', 'o7', 'o8')
         
-    weighttypes = ['Mass', 'Volume'] + list(ions)
+    weighttypes = ['Volume', 'Mass'] + list(ions)
     axnl = list(axnl)
     elts_Z = [Zmw] #['oxygen', 'neon', 'iron']
     solarZ = ol.solar_abunds_ea
@@ -3117,7 +3117,6 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                'Volume': 0}
     axwplot.update({ion: ind for ind, ion in enumerate(ions, 1)})
     
-    yrange_syncs = {}
     with h5py.File(saveddata, 'r') as df:
         # read in mass bins
         masskeys = [_str.decode() for _str in np.array(df['mass_keys'])]
@@ -3131,10 +3130,6 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
             for ti in range(numpt):
                 axn = axnl[ti]
                 ax = axes[axwplot[ion], ti]
-                if ti not in yrange_syncs:
-                    yrange_syncs[ti] = []
-                if axwplot[ion] not in yrange_syncs[ti]:
-                    yrange_syncs[ti].append(axwplot[ion])
                 
                 labelleft = axwplot[ion] % ncols == 0
                 labelbottom = (numions - axwplot[ion] <= ncols and ti == numpt - 1)
@@ -3231,13 +3226,12 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                                      zorder=-1)
     # sync y axes:
     for ti in range(numpt):
-        yrange_syncs = np.array(sorted(yrange_syncs[ti]))
-        ylims = np.array([ax.get_ylim() for ax in axes[yrange_syncs, ti]])
+        ylims = np.array([ax.get_ylim() for ax in axes[:, ti]])
         y0 = np.min(ylims[:, 0])
         y1 = np.max(ylims[:, 1])
         if axnl[ti] == 'Z':
             y0 = max(y0, -2.8)
-        [ax.set_ylim(y0, y1) for ax in axes[yrange_syncs, ti]]
+        [ax.set_ylim(y0, y1) for ax in axes[:, ti]]
     
         
     # legend
