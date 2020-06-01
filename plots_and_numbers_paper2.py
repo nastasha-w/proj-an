@@ -2951,7 +2951,6 @@ def plot3Dprof_ionw(minrshow=minrshow_R200c, ions=('o6', 'o7', 'o8'),\
     plt.savefig(outdir + outname, format='pdf', box_inches='tight')
     
 def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
-                     ions=('o6', 'o7', 'o8'),\
                      fontsize=fontsize,\
                      Zmw='oxygen',\
                      talkversion=False, num=0):
@@ -2966,11 +2965,13 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
         massslice = np.array([0, 1, 2, 4, 6])
         fontsize += 1
         axnl = ('T', 'rho')
+        ions=('o7', 'o8')
     else:
         outdir = mdir
         outname = 'profiles_allweights_3d_halo_rho_T_Z-{elt}_median.pdf'.format(elt=Zmw)
         massslice = slice(None, None, 2) # subset of halo masses to plot
         axnl=('T', 'rho', 'Z')
+        ions=('o6', 'o7', 'o8')
         
     weighttypes = ['Mass', 'Volume'] + list(ions)
     axnl = list(axnl)
