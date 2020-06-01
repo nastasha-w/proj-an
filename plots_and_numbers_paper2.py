@@ -2953,19 +2953,23 @@ def plot3Dprof_ionw(minrshow=minrshow_R200c, ions=('o6', 'o7', 'o8'),\
 def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                      fontsize=fontsize,\
                      Zmw='oxygen',\
-                     talkversion=False, num=0):
+                     talkversion=False, talksubversion=1, num=0):
     '''
     mass, volume, and ion-weighted 3d profiles
     '''
     
     if talkversion:
         outdir = tmdir
-        outname = 'profiles_allweights_3d_halo_rho_T_Z-{elt}_median_num{num}.pdf'.format(\
-                                                       elt=Zmw, num=num)
-        massslice = np.array([0, 1, 2, 4, 6])
+        outname = 'profiles_allweights_3d_halo_rho_T_Z-{elt}_median_v{v}_num{num}.pdf'.format(\
+                                                       elt=Zmw, num=num, v=talksubversion)
+        
         fontsize += 1
-        axnl = ('T', 'rho')
-        ions=('o7', 'o8')
+        if talksubversion == 1:
+            massslice = np.array([0, 1, 2, 4, 6])        
+            axnl = ('T', 'rho')
+            ions=('o7', 'o8')
+        else:
+            raise ValueError('invalid talksubversion')
     else:
         outdir = mdir
         outname = 'profiles_allweights_3d_halo_rho_T_Z-{elt}_median.pdf'.format(elt=Zmw)
@@ -3172,7 +3176,13 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                         ax.text(loc[0], loc[1], r'M/V-weighted', fontsize=fontsize,\
                             transform=ax.transAxes, horizontalalignment=hza,\
                             verticalalignment=vta, fontweight='normal')
-                                 
+                    
+                    if talkversion:
+                        mi = np.where([Mhrange == mbin for mbin in massbins])[0][0] 
+                        nmi = len(massbins)
+                        if mi + ti * nmi + (ii * numpt * nmi) >= num:
+                            continue                        
+                    
                     _hist = np.array(df['%s/%s/%s/hist_rmin'%(ion, mkey, _axn)]) 
                     _e0 = np.array(df['%s/%s/%s/edges_rmin_0'%(ion, mkey, _axn)])
                     _e1 = np.array(df['%s/%s/%s/edges_rmin_1'%(ion, mkey, _axn)]) 
