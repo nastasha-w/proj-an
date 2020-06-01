@@ -3047,7 +3047,7 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
         nrows = ((numions - 1) // ncols + 1) * numpt
         cheight = 0.5
         cwidth = 0.0
-        cspace = 0.6
+        cspace = 0.75
         wspace = 0.0
         panelwidth = (figwidth - cwidth - wspace * ncols) / ncols
         panelheight = 0.8 * panelwidth
@@ -3060,7 +3060,7 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                             wspace=wspace,\
                             width_ratios=width_ratios,\
                             height_ratios=height_ratios,\
-                            bottom=0.07, top=0.95)
+                            bottom=0.1, top=0.95)
         axes = np.array([[fig.add_subplot(grid[ii // ncols + ti, ii % ncols])\
                           for ti in range(numpt)] for ii in range(numions)])
         cax = fig.add_subplot(grid[nrows + 1, :])
@@ -3224,7 +3224,7 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
         
     # legend
     typehandles = [mlines.Line2D([], [], linestyle=linestyles[key],\
-                                 label='%s-weighted'%(key),\
+                                 label=key,\
                                  path_effects=patheff,\
                                  linewidth=linewidth,\
                                  color = 'gray'
@@ -3250,7 +3250,6 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                loc='lower left', bbox_to_anchor=(0.0, 0.0),\
                frameon=False, ncol=1) #ncol=min(4, len(handles))
     
-    print(axes[0].get_xlim())
     plt.savefig(outdir + outname, format='pdf', box_inches='tight')
     
 ########################### halo mass splits ##################################
