@@ -3015,7 +3015,7 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
     #patheff_thick = [mppe.Stroke(linewidth=linewidth + 1., foreground="black"), mppe.Stroke(linewidth=linewidth + 1., foreground="w"), mppe.Normal()]
         
     if talkversion:
-        figwidth = 5.5
+        figwidth = 11.
         numions = 1 + len(ions)
         numpt   = len(axnl)
         ncols = min(4, numions)
@@ -3035,7 +3035,7 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                             wspace=wspace,\
                             width_ratios=width_ratios,\
                             height_ratios=[1.] * nrows,\
-                            bottom=0.1, top=0.95)
+                            bottom=0.15, top=0.95)
         axes = np.array([[fig.add_subplot(grid[ii // ncols + ti, ii % ncols])\
                           for ti in range(numpt)] for ii in range(numions)])
         cax = fig.add_subplot(grid[:min(nrows, 2), ncols])
