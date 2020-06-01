@@ -3233,6 +3233,12 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
             y0 = max(y0, -2.8)
         [ax.set_ylim(y0, y1) for ax in axes[:, ti]]
     
+    # sync x axes: (for partially filled in talk version plots)
+    for wi in range(len(axnl) + 1):
+        xlims = np.array([ax.get_xlim() for ax in axes[wi, :]])
+        x0 = np.min(xlims[:, 0])
+        x1 = np.max(xlims[:, 1])
+        [ax.set_xlim(x0, x1) for ax in axes[wi, :]]
         
     # legend
     typehandles = [mlines.Line2D([], [], linestyle=linestyles[key],\
