@@ -3117,8 +3117,9 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
         masskeys = [_str.decode() for _str in np.array(df['mass_keys'])]
         massbins = np.array(df['mass_bins'])
         # use every other mass bin for legibility
-        massbins = sorted(massbins, key=lambda x: x[0])
+        massbins = np.array(sorted(massbins, key=lambda x: x[0]))
         massbins = massbins[massslice]
+        massbins = list(massbins)
         
         for ii , ion in enumerate(weighttypes):
             for ti in range(numpt):
