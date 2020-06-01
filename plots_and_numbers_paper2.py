@@ -4074,7 +4074,7 @@ def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors, fontsize=fontsize,\
         ax1.set_ylim(3.4, 7.65)
         axions = {1: ['o7', 'o8']}
         
-        ax1.set_ylabel(r'$\log_{10} \, T \; [K]$', fontsize=fontsize)
+        ax1.set_ylabel(r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$', fontsize=fontsize)
         ax1.set_xlabel(r'$\log_{10} \, n_{\mathrm{H}} \; [\mathrm{cm}^{-3}]$', fontsize=fontsize)
         pu.setticks(ax1, fontsize=fontsize, right=False, labelbottom=True)
         
@@ -4090,9 +4090,9 @@ def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors, fontsize=fontsize,\
         ax2.set_ylim(3.4, 7.65)
         axions = {1: ['o6', 'o7', 'o8'], 2: ['ne8', 'ne9', 'fe17']}
         
-        ax1.set_ylabel(r'$\log_{10} \, T \; [K]$', fontsize=fontsize)
-        ax2.set_ylabel(r'$\log_{10} \, T \; [K]$', fontsize=fontsize)
-        ax2.set_xlabel(r'$\log_{10} \, n_{\mathrm{H}} \; [\mathrm{cm}^{-3}]$', fontsize=fontsize)
+        ax1.set_ylabel(r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$', fontsize=fontsize)
+        ax2.set_ylabel(r'$\log_{10} \, \amthrm{T} \; [\mathrm{K}]$', fontsize=fontsize)
+        ax2.set_xlabel(r'$\log_{10} \, \mathrm{n}_{\mathrm{H}} \; [\mathrm{cm}^{-3}]$', fontsize=fontsize)
         pu.setticks(ax1, fontsize=fontsize, right=False, labelbottom=False)
         pu.setticks(ax2, fontsize=fontsize, right=False)
         
