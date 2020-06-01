@@ -3689,9 +3689,12 @@ def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus', fontsize=fontsize):
 ################################ Misc #########################################
 
 # ionbal, ion balance, ion tables, ionization tables, Tvir, virial temperature
-def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors, fontsize=fontsize):
+def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors, fontsize=fontsize,\
+                        talkversion1=False, num=0):
     '''
     contour plots for ions balances + shading for halo masses at different Tvir
+    
+    talkversion1: ion balances for only o7 and o8
     '''
     
     if snap == 27:
@@ -3703,9 +3706,18 @@ def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors, fontsize=fontsize):
         cosmopars['a'] = 0.665288  # eagle wiki
         cosmopars['z'] = 1. / cosmopars['a'] - 1. 
         logrhob = np.log10( 3. / (8. * np.pi * c.gravity) * c.hubble**2 * cosmopars['h']**2 * cosmopars['omegab'] / cosmopars['a']**3 )
-        
+    
+    talkversion = talkversion1
+    if talkversion:
+        fontsize += 1
     ions = ['o6', 'ne8', 'o7', 'ne9', 'o8', 'fe17'] #, 'he2'
     ioncolors = _ioncolors.copy()
+    
+    if talkversion1:
+        ions = ['o7', 'o8']
+        outname = mdir + 'ionbals_snap{}_HM01_ionizedmu_v1_num{num}.pdf'.format(snap, num=num)
+    else:    
+        outname = mdir + 'ionbals_snap{}_HM01_ionizedmu.pdf'.format(snap)
     
     #ioncolors.update({'he2': 'darkgoldenrod'})
     Ts = {}
@@ -3732,27 +3744,46 @@ def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors, fontsize=fontsize):
             xs = pu.find_intercepts(bal[-1, :], T, fracv * maxfrac)
             print('Ion %s has maximum CIE fraction %.3f, at log T[K] = %.1f, %s max range is %s'%(ion, maxfrac, Tmax, fracv, str(xs)))
             maxfracs[ion] = maxfrac
-            
-    fig, (ax1, ax2) = plt.subplots(ncols=1, nrows=2, figsize=(5.5, 10.), gridspec_kw={'hspace': 0.})
-    ax1.set_xlim(-8., -1.5)
-    ax1.set_ylim(3.4, 7.65)
-    ax2.set_xlim(-8., -1.5)
-    ax2.set_ylim(3.4, 7.65)
-    axions = {1: ['o6', 'o7', 'o8'], 2: ['ne8', 'ne9', 'fe17']}
     
-    ax1.set_ylabel(r'$\log_{10} \, T \; [K]$', fontsize=fontsize)
-    ax2.set_ylabel(r'$\log_{10} \, T \; [K]$', fontsize=fontsize)
-    ax2.set_xlabel(r'$\log_{10} \, n_{\mathrm{H}} \; [\mathrm{cm}^{-3}]$', fontsize=fontsize)
-    pu.setticks(ax1, fontsize=fontsize, right=False, labelbottom=False)
-    pu.setticks(ax2, fontsize=fontsize, right=False)
-    
-    ax1.axvline(logrhob + np.log10(rho_to_nh), 0., 0.85, color='gray', linestyle='dashed', linewidth=1.5)
-    ax2.axvline(logrhob + np.log10(rho_to_nh), 0., 0.85, color='gray', linestyle='dashed', linewidth=1.5)
-    #ax.axvline(logrhoc + np.log10(rho_to_nh * 200. * cosmopars['omegab'] / cosmopars['omegam']), 0., 0.75, color='gray', linestyle='solid', linewidth=1.5)
-    
+    if talkversion1:
+        fig, ax1 = plt.subplots(ncols=1, nrows=1, figsize=(5.5, 5.), gridspec_kw={'hspace': 0.})
+        ax1.set_xlim(-8., -1.5)
+        ax1.set_ylim(3.4, 7.65)
+        axions = {1: ['o7', 'o8']}
+        
+        ax1.set_ylabel(r'$\log_{10} \, T \; [K]$', fontsize=fontsize)
+        ax1.set_xlabel(r'$\log_{10} \, n_{\mathrm{H}} \; [\mathrm{cm}^{-3}]$', fontsize=fontsize)
+        pu.setticks(ax1, fontsize=fontsize, right=False, labelbottom=False)
+        
+        ax1.axvline(logrhob + np.log10(rho_to_nh), 0., 0.85, color='gray', linestyle='dashed', linewidth=1.5)
+        #ax.axvline(logrhoc + np.log10(rho_to_nh * 200. * cosmopars['omegab'] / cosmopars['omegam']), 0., 0.75, color='gray', linestyle='solid', linewidth=1.5)
+        
+        itlist = zip([ax1], [1])
+    else:
+        fig, (ax1, ax2) = plt.subplots(ncols=1, nrows=2, figsize=(5.5, 10.), gridspec_kw={'hspace': 0.})
+        ax1.set_xlim(-8., -1.5)
+        ax1.set_ylim(3.4, 7.65)
+        ax2.set_xlim(-8., -1.5)
+        ax2.set_ylim(3.4, 7.65)
+        axions = {1: ['o6', 'o7', 'o8'], 2: ['ne8', 'ne9', 'fe17']}
+        
+        ax1.set_ylabel(r'$\log_{10} \, T \; [K]$', fontsize=fontsize)
+        ax2.set_ylabel(r'$\log_{10} \, T \; [K]$', fontsize=fontsize)
+        ax2.set_xlabel(r'$\log_{10} \, n_{\mathrm{H}} \; [\mathrm{cm}^{-3}]$', fontsize=fontsize)
+        pu.setticks(ax1, fontsize=fontsize, right=False, labelbottom=False)
+        pu.setticks(ax2, fontsize=fontsize, right=False)
+        
+        ax1.axvline(logrhob + np.log10(rho_to_nh), 0., 0.85, color='gray', linestyle='dashed', linewidth=1.5)
+        ax2.axvline(logrhob + np.log10(rho_to_nh), 0., 0.85, color='gray', linestyle='dashed', linewidth=1.5)
+        #ax.axvline(logrhoc + np.log10(rho_to_nh * 200. * cosmopars['omegab'] / cosmopars['omegam']), 0., 0.75, color='gray', linestyle='solid', linewidth=1.5)
+       
+        itlist = zip([ax1, ax2], [1, 2])
 
-    for ax, axi in zip([ax1, ax2], [1, 2]):
+    for ax, axi in itlist:
         for ion in axions[axi]:
+            if talkversion:
+                if np.where([ion == _ion for _ion in ions])[0][0] >= num:
+                    continue
             ax.contourf(nHs[ion], Ts[ion], bals[ion].T, colors=ioncolors[ion], alpha=0.1, linewidths=[3.], levels=[0.1 * maxfracs[ion], 1.])
             ax.contour(nHs[ion], Ts[ion], bals[ion].T, colors=ioncolors[ion], linewidths=[2.], levels=[0.1 * maxfracs[ion]], linestyles=['solid'])
         for ion in ions:
@@ -3785,7 +3816,7 @@ def plot_Tvir_ions_nice(snap=27, _ioncolors=ioncolors, fontsize=fontsize):
         handles = [mlines.Line2D([], [], label=ild.getnicename(ion, mathmode=False), color=ioncolors[ion]) for ion in axions[axi]]
         ax.legend(handles=handles, fontsize=fontsize, ncol=3, bbox_to_anchor=(0.0, 1.0), loc='upper left', frameon=False)
 
-    plt.savefig(mdir + 'ionbals_snap{}_HM01_ionizedmu.pdf'.format(snap), format='pdf', bbox_inches='tight')
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 
 # column density equivalent width, coldens, N, EW, N-EW, cog, curve of growth
