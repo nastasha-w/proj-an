@@ -3215,15 +3215,15 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                                        color='black', zorder=-1,\
                                        linestyle='dotted')
                             
-                    # add volume-weighted lines to other plots
-                    if ion == 'Volume':
-                        otheraxes = set([axwplot[key] for key in axwplot])
-                        otheraxes -= {axwplot[ion]}
-                        for _ii in list(otheraxes):
-                            axes[_ii, ti].plot(_e0, perclines[0], color=color,\
-                                     alpha=alpha_volw, linestyle=linestyles[ion],\
-                                     linewidth=linewidth, path_effects=None,\
-                                     zorder=-1)
+                    ## add volume-weighted lines to other plots
+                    #if ion == 'Volume':
+                    #    otheraxes = set([axwplot[key] for key in axwplot])
+                    #    otheraxes -= {axwplot[ion]}
+                    #    for _ii in list(otheraxes):
+                    #        axes[_ii, ti].plot(_e0, perclines[0], color=color,\
+                    #                 alpha=alpha_volw, linestyle=linestyles[ion],\
+                    #                 linewidth=linewidth, path_effects=None,\
+                    #                 zorder=-1)
     # sync y axes:
     for ti in range(numpt):
         ylims = np.array([ax.get_ylim() for ax in axes[:, ti]])
