@@ -1419,6 +1419,7 @@ def plotcddfs_fofvsmask(ion, fontsize=fontsize):
                     path_effects=_pe, linewidth=_lw)
 
         elif pmass == 'all halos':
+            ptext = 'all halo gas'
             divby = 1. 
 
             bins = dct_fofcddf['none']['bins']
@@ -2994,7 +2995,7 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                   }
     else:
         alphas = {elts_Z[0]: 1.0}
-    alpha_volw = 0.3
+    #alpha_volw = 0.3
     alpha = 1.
     
     cosmopars = cosmopars_ea_27
