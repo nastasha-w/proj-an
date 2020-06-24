@@ -3174,7 +3174,7 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                             transform=ax.transAxes, horizontalalignment=hza,\
                             verticalalignment=vta, fontweight='normal')
                     else:
-                        ax.text(loc[0], loc[1], r'M/V-weighted', fontsize=fontsize,\
+                        ax.text(loc[0], loc[1], r'M- or V-weighted', fontsize=fontsize,\
                             transform=ax.transAxes, horizontalalignment=hza,\
                             verticalalignment=vta, fontweight='normal')
                     
@@ -3233,13 +3233,15 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
         if axnl[ti] == 'Z':
             y0 = max(y0, -2.8)
         [ax.set_ylim(y0, y1) for ax in axes[:, ti]]
-    
+        print('y range: {}-{}'.format(y0, y1))
+        
     # sync x axes: (for partially filled in talk version plots)
     for wi in range(len(axnl) + 1):
         xlims = np.array([ax.get_xlim() for ax in axes[wi, :]])
         x0 = np.min(xlims[:, 0])
         x1 = np.max(xlims[:, 1])
         [ax.set_xlim(x0, x1) for ax in axes[wi, :]]
+        print('x range: {}-{}'.format(x0, x1))
         
     # legend
     typehandles = [mlines.Line2D([], [], linestyle=linestyles[key],\
