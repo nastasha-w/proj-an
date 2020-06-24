@@ -3589,7 +3589,8 @@ def readdata_baryonsplits(nHcut=False, nHm2=False, nHorSF=False,\
 
 def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
                         nHcut=False, nHm2=False, nHorSF=False,\
-                        fontsize=fontsize):
+                        fontsize=fontsize,\
+                        talkversion=False, num=0):
     '''
     addedges: radial regions to consider; (0.0, 1.0) or (0.0, 2.0), units R200c
     var: 'Mass' for total mass
@@ -3623,7 +3624,11 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
         print('Defining the ISM as SFR > 0')
         outname = 'masscontr_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb_%s'%(str(addedges[0]), str(addedges[1]), var)
     outname = outname.replace('.', 'p')
-    outname = mdir + outname + '.pdf'
+    if talkversion:
+        outname = tmdir + outname + '_num{num}.pdf'.format(num=num)
+        plotorder = ['baryons', 'ISM', 'stars', 'CGM', r'CGM $5.5 \endash 7$']
+    else:
+        outname = mdir + outname + '.pdf'
     m200cbins = np.array(list(np.arange(11., 13.05, 0.1)) + [13.25, 13.5, 13.75, 14.0, 14.6])
     percentiles = [10., 50., 90.]
     alpha = 0.3
@@ -3685,6 +3690,9 @@ def plot_masscontr_halo(addedges=(0.0, 1.), var='Mass',\
     for label in massdata:
         if label in ['DM', 'total', 'gas-subsum', 'gas', r'CGM $<5.5$', r'CGM $> 7$', 'BHs']:
             continue
+        if talkversion:
+            if label not in plotorder[:num]:
+                continue
         _massdata = massdata[label] / massdata['total']
         _color = colors[label]
         
