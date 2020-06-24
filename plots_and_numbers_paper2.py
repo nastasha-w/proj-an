@@ -2981,8 +2981,15 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
         massslice = slice(None, None, 2) # subset of halo masses to plot
         axnl=('T', 'rho', 'Z')
         ions=('o6', 'o7', 'o8')
+    
+    if talkversion:
+        if talksubversion in [2]:
+            weighttypes = ['Volume'] + list(ions)
+        else:
+            weighttypes = ['Volume', 'Mass'] + list(ions)
+    else:
+        weighttypes = ['Volume', 'Mass'] + list(ions)
         
-    weighttypes = ['Volume', 'Mass'] + list(ions)
     axnl = list(axnl)
     elts_Z = [Zmw] #['oxygen', 'neon', 'iron']
     solarZ = ol.solar_abunds_ea
@@ -3183,9 +3190,14 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                             transform=ax.transAxes, horizontalalignment=hza,\
                             verticalalignment=vta, fontweight='normal')
                     else:
-                        ax.text(loc[0], loc[1], r'M- or V-weighted', fontsize=fontsize,\
-                            transform=ax.transAxes, horizontalalignment=hza,\
-                            verticalalignment=vta, fontweight='normal')
+                        if (not talkversion) or (talkversion and talksubversion not in [2]):    
+                            ax.text(loc[0], loc[1], r'M- or V-weighted', fontsize=fontsize,\
+                               transform=ax.transAxes, horizontalalignment=hza,\
+                                verticalalignment=vta, fontweight='normal')
+                        else:
+                            ax.text(loc[0], loc[1], r'V-weighted', fontsize=fontsize,\
+                                transform=ax.transAxes, horizontalalignment=hza,\
+                                verticalalignment=vta, fontweight='normal')
                     
                     if talkversion:
                         mi = np.where([Mhrange == mbin for mbin in massbins])[0][0] 
@@ -3273,12 +3285,15 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
             print('x range: {}-{}'.format(x0, x1))
         
     # legend
-    typehandles = [mlines.Line2D([], [], linestyle=linestyles[key],\
-                                 label=key,\
-                                 path_effects=patheff,\
-                                 linewidth=linewidth,\
-                                 color = 'gray'
-                                 ) for key in ['Mass', 'Volume']]
+    if 'Mass' in weighttypes and 'Volume' in weighttypes:
+        typehandles = [mlines.Line2D([], [], linestyle=linestyles[key],\
+                                     label=key,\
+                                     path_effects=patheff,\
+                                     linewidth=linewidth,\
+                                     color = 'gray'
+                                     ) for key in ['Mass', 'Volume']]
+    else:
+        typehandles = []
     if len(elts_Z) > 1:
         thandles = [mlines.Line2D([], [], linestyle='solid',\
                                      label=key,\
@@ -3290,19 +3305,20 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
     else:
         thandles = []
     handles=typehandles + thandles 
-    if 'Z' in axnl:
-        keys = np.array(list(axplot.keys()))
-        _key = keys[np.where(['Z' in key for key in keys])[0][0]]
-        i2l = axplot[_key]
-    elif 'rho' in axnl:
-        keys = np.array(list(axplot.keys()))
-        _key = keys[np.where(['rho' in key for key in keys])[0][0]]
-        i2l = axplot[_key]
-    else:
-        i2l = 0
-    axes[0, i2l].legend(handles=handles, fontsize=fontsize,\
-               loc='lower left', bbox_to_anchor=(0.0, 0.0),\
-               frameon=False, ncol=1) #ncol=min(4, len(handles))
+    if len(handles) > 1:
+        if 'Z' in axnl:
+            keys = np.array(list(axplot.keys()))
+            _key = keys[np.where(['Z' in key for key in keys])[0][0]]
+            i2l = axplot[_key]
+        elif 'rho' in axnl:
+            keys = np.array(list(axplot.keys()))
+            _key = keys[np.where(['rho' in key for key in keys])[0][0]]
+            i2l = axplot[_key]
+        else:
+            i2l = 0
+        axes[0, i2l].legend(handles=handles, fontsize=fontsize,\
+                   loc='lower left', bbox_to_anchor=(0.0, 0.0),\
+                   frameon=False, ncol=1) #ncol=min(4, len(handles))
     
     plt.savefig(outdir + outname, format='pdf', box_inches='tight')
     
