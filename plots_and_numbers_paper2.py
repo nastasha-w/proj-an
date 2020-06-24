@@ -2969,6 +2969,10 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
             massslice = np.array([0, 1, 2, 4, 6])        
             axnl = ('T', 'rho')
             ions=('o7', 'o8')
+        if talksubversion == 2:
+            massslice = np.array([0, 2, 4, 6])        
+            axnl = ('T', 'rho')
+            ions=('o7', 'o8')
         else:
             raise ValueError('invalid talksubversion')
     else:
@@ -3045,6 +3049,11 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                           for ti in range(numpt)] for ii in range(numions)])
         cax = fig.add_subplot(grid[:min(nrows, 2), ncols])
         cax_below = False
+        
+        if talksubversion == 2:
+            xrange = (-1.1711011118961887, 0.6561195002074671)
+            yranges = {0: (3.7876171805576546, 7.686688499110875),\
+                       1: (-6.875003876292874, -1.071639440241845)}
     else:
         figwidth = 11.
         numions = 1 + len(ions)
@@ -3202,8 +3211,12 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                         linewidth=linewidth, path_effects=patheff)
                     
                     if axn == 'T':
-                        mval = medians_mmin_standardedges[float(mkey)]
-                        ax.axhline(np.log10(T200c_hot(10**mval, cosmopars)),\
+                        if talkversion and talksubversion in [2] and\
+                            ion in ol.elements_ion.keys():
+                            pass
+                        else:
+                            mval = medians_mmin_standardedges[float(mkey)]
+                            ax.axhline(np.log10(T200c_hot(10**mval, cosmopars)),\
                                                   color=colordct[float(mkey)],\
                                                   zorder=-1,\
                                                   linestyle='dotted')
@@ -3225,23 +3238,39 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                     #                 alpha=alpha_volw, linestyle=linestyles[ion],\
                     #                 linewidth=linewidth, path_effects=None,\
                     #                 zorder=-1)
-    # sync y axes:
-    for ti in range(numpt):
-        ylims = np.array([ax.get_ylim() for ax in axes[:, ti]])
-        y0 = np.min(ylims[:, 0])
-        y1 = np.max(ylims[:, 1])
-        if axnl[ti] == 'Z':
-            y0 = max(y0, -2.8)
-        [ax.set_ylim(y0, y1) for ax in axes[:, ti]]
-        print('y range: {}-{}'.format(y0, y1))
-        
-    # sync x axes: (for partially filled in talk version plots)
-    for wi in range(len(axnl) + 1):
-        xlims = np.array([ax.get_xlim() for ax in axes[wi, :]])
-        x0 = np.min(xlims[:, 0])
-        x1 = np.max(xlims[:, 1])
-        [ax.set_xlim(x0, x1) for ax in axes[wi, :]]
-        print('x range: {}-{}'.format(x0, x1))
+    ## sync axes:
+    if talkversion and talksubversion in [2]:
+        # sync y axes:
+        for ti in range(numpt):
+            y0 = yranges[ti][0]
+            y1 = yranges[ti][1]
+            if axnl[ti] == 'Z':
+                y0 = max(y0, -2.8)
+            [ax.set_ylim(y0, y1) for ax in axes[:, ti]]
+            
+        # sync x axes: (for partially filled in talk version plots)
+        for wi in range(len(axnl) + 1):
+            x0 = xrange[0]
+            x1 = xrange[1]
+            [ax.set_xlim(x0, x1) for ax in axes[wi, :]]
+    else:
+        # sync y axes:
+        for ti in range(numpt):
+            ylims = np.array([ax.get_ylim() for ax in axes[:, ti]])
+            y0 = np.min(ylims[:, 0])
+            y1 = np.max(ylims[:, 1])
+            if axnl[ti] == 'Z':
+                y0 = max(y0, -2.8)
+            [ax.set_ylim(y0, y1) for ax in axes[:, ti]]
+            print('y range: {}-{}'.format(y0, y1))
+            
+        # sync x axes: (for partially filled in talk version plots)
+        for wi in range(len(axnl) + 1):
+            xlims = np.array([ax.get_xlim() for ax in axes[wi, :]])
+            x0 = np.min(xlims[:, 0])
+            x1 = np.max(xlims[:, 1])
+            [ax.set_xlim(x0, x1) for ax in axes[wi, :]]
+            print('x range: {}-{}'.format(x0, x1))
         
     # legend
     typehandles = [mlines.Line2D([], [], linestyle=linestyles[key],\
