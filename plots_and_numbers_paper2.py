@@ -1807,7 +1807,7 @@ def plot_radprof_limited(fontsize=fontsize):
 # percentiles, covering fractions, CDDF breaks, detection limits, Athena X-IFU
 # detectablility, M*
 def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True,\
-                       talkversion=False, num=0):
+                       talkversion=False, talksubversion=1, num=0):
     '''
     var:        main: percenitles in M* bins
                 main-fcov-break for covering fractions at the CDDF break
@@ -1859,7 +1859,11 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True,\
         slm = ''
     
     if talkversion:
-        imgname = 'radprof_bystellarmass_L0100N1504_27_PtAb_C2Sm_32000pix_T4EOS_6p25slice_zcen-all_{var}{lm}_talkversion-{num}.pdf'.format(var=var, lm=slm, num=num)
+        if talksubversion == 1:
+            imgname = 'radprof_bystellarmass_L0100N1504_27_PtAb_C2Sm_32000pix_T4EOS_6p25slice_zcen-all_{var}{lm}_talkversion-{num}.pdf'.format(var=var, lm=slm, num=num)
+        else:
+            imgname = 'radprof_bystellarmass_L0100N1504_27_PtAb_C2Sm_32000pix_T4EOS_6p25slice_zcen-all_{var}{lm}_talkversion{tv}_num{num}.pdf'.format(\
+                        var=var, lm=slm, num=num, tv=talksubversion)
         imgname = tmdir + imgname        
         fontsize = 13
     else:
@@ -2076,16 +2080,31 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True,\
                 # techvar 1: first two lowmass bins 
                 # techvar 0: other five bins (stellar mass)
                 if talkversion:
-                    if lowmass:
-                        if var == 1 and ti >= num:
-                            continue
-                        elif var == 0:
-                            checkind = ti + len(techvars[techvars_touse[1]]['setnames'])
-                            if checkind >= num:
+                    if talksubversion == 1:
+                        if lowmass:
+                            if var == 1 and ti >= num:
                                 continue
-                    elif ti >= num:
-                        continue
-                
+                            elif var == 0:
+                                checkind = ti + len(techvars[techvars_touse[1]]['setnames'])
+                                if checkind >= num:
+                                    continue
+                        elif ti >= num:
+                            continue
+                    elif talksubversion in [2]:
+                        if lowmass:
+                            totnum = len(techvars[techvars_touse[1]]['setnames']) + \
+                                     len(techvars[techvars_touse[0]]['setnames'])
+                            if var == 1:
+                                checkind = ti
+                            elif var == 0:
+                                checkind = ti + len(techvars[techvars_touse[1]]['setnames'])
+                        else:
+                            totnum = len(tags)
+                            checkind = ti
+                        if checkind <= totnum - num:
+                            continue
+                                       
+
                 if ytype == 'perc':
                     if len(yvals_toplot_temp) == 3:
                         yval = yvals_toplot_temp[0]
