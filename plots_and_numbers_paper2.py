@@ -3932,7 +3932,8 @@ def plot_masscontr_ratios_halo(addedges=(0.0, 1.), var='Mass',\
     
 # oxygen split, oxygen fractions, ion fractions, halo ion fractions, 
 # CGM ion fractions 
-def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus', fontsize=fontsize):
+def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus', fontsize=fontsize,\
+                        overplotcie=False):
     '''
     addedges: radial regions to consider; (min, max) units R200c
               min: 0.0, or 0.1, max: 1.0 or 2.0
@@ -3943,6 +3944,8 @@ def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus', fontsize=fontsize):
     filename_in = datadir + 'ionfracs_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb.hdf5'%(str(addedges[0]), str(addedges[1]))
     outname = 'ionfracs_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_PtAb_%s'%(str(addedges[0]), str(addedges[1]), var)
     outname = outname.replace('.', 'p')
+    if overplotcie:
+        outname = outname + '_cieoverplot'
     outname = mdir + outname + '.pdf' 
     m200cbins = np.array(list(np.arange(11., 13.05, 0.1)) + [13.25, 13.5, 13.75, 14.0, 14.6])
     percentiles = [10., 50., 90.]
@@ -4047,6 +4050,10 @@ def plot_ionfracs_halos(addedges=(0.1, 1.), var='focus', fontsize=fontsize):
             cievals = [pu.linterpsolve(iontab[ion]['logTK'], iontab[ion]['ionbal'], Tvir)\
                        for Tvir in np.log10(T200cvals)]   
             ax2.plot(np.log10(T200cvals), cievals, color=_color, linewidth=lw)  
+            if overplotcie:
+                ax.plot(bincens, cievals, color=_color,\
+                         linewidth=lw - 0.5, linestyle='dashed')  
+                ax.set_ylim(1e-4, 1.1)
         else:
             avgs = np.array([np.average(_iondata[bininds == i]) for i in range(1, len(m200cbins))])
             cievals = [pu.linterpsolve(iontab[ion]['logTK'], 10**iontab[ion]['logionbal'], Tvir)\
