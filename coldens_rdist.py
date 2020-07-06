@@ -2218,59 +2218,309 @@ def get_radprof(rqfilenames, halocat, rbins, yvals,\
         
     return ydct
 
-def getprofiles_fromstamps(filenames, rbins, galids,\
-                           xunit='pkpc', ytype='perc', yvals=50.,\
-                           separateprofiles=False,\
-                           outfile=None, grptag=None):
+def getstats(vlist, ytype='perc', yvals=[50.]):
     '''
-    just a skeleton
-    
+    get ytype/yval statistics for each entry of vlist
+    returns a list of vlist-length lists
+    index 0: yval
+    index 1: index in vlist
+    index 0 is left out for ytype 'mean'
+    '''
+    if ytype == 'mean':
+        out = [np.average(vals) for vals in vlist]
+    elif ytype == 'perc':
+        out = [np.percentile(vals, yvals) for vals in vlist]
+        out = [[out[j][i] for j in range(len(vlist))]\
+                for i in range(len(yvals))]
+    elif ytype == 'fcov':
+        out = [[np.sum(np.array(vals) >= yval) for vals in vlist]\
+                for yval in yvals]
+        out = [[float(ysub[i]) / float(len(vlist[i])) for i in range(len(vlist))]\
+                for ysub in out]
+    return out
+
+def getprofiles_fromstamps(filenames, rbins, galids,\
+                           runit='pkpc', ytype='perc', yvals=50.,\
+                           halocat=None,\
+                           separateprofiles=False, uselogvals=True,\
+                           outfile=None, grptag=None):
+    '''    
     input:
     ------
     filenames:   list of hdf5 files containing the stamps. Assumes the groups 
                  are named by their central galaxy ids. A single file is also 
-                 ok.
+                 ok. If a galaxyid is present in more than one file, the first
+                 file in the list is used.
+    rbins:       bin edges for statistics extraction
+    runit:       unit the rbins are given in (string): 'pkpc' or 'R200c'
+    halocat:     halo catalogue (filename; str). Used to look up R200c and halo 
+                 centres
+    galids:      galaxyids to get the profiles from (int or string)
+    ytype:       what kind of statistic to extract (string):
+                 'perc' for percentiles, 'fcov' for covering fractions, or 
+                 'mean' for the average
+    yvals:       if ytype is 'perc' or 'fcov': the values to get the covering
+                 fractions (same units as the map) or percentiles (0-100 range)
+                 for (float)
+                 ignored for ytype 'mean'
+    separateprofiles: (bool) get a profile for each galaxyid (True) or for all
+                 of them together (False)
+    outfile:     (string or None) name of the output file. constructed from the
+                 input filename if None and only one input filename is given
+    grptag:      tag for the autonamed output group for the profile. Useful to
+                 indicate how the galaxy ids were selected
+    uselogvals:  (bool) if True use log y values in the output (and interpret 
+                 type='fcov' yvals as log). Otherwise, non-log y values are 
+                 used in every case. (Just following what's in the input files 
+                 is not an option.) 
+             
+    output:
+    -------
+    profiles stored in outfile matching the format of the hdf5 file profile 
+    retrieval script. Additions to that format include the ytype='mean' option
+    and storing whether the values are log10 or not.
     '''
     if '.' in filenames:
         filenames = [filenames]
     filenames = [ol.pdir + filename if '/' not in filename else filename\
                  for filename in filenames]
     
+    if outfile is None:
+        if len(filenames) > 1:
+            raise ValueError('outfile must e specified if there is more than '+\
+                             'one input file')
+        else:
+            outfile = filenames[0].split('/')[-1]
+            outfile = rdir + 'radprof_' + outfile 
+            
     files = [h5py.File(filename, 'r') for filename in filenames]
+    galids = np.array(sorted([int(galid) for galid in galids]))
+    
+    # halo catalogue data handling
+    if '/' not in halocat:
+        halocat = ol.pdir + halocat
+    with h5py.File(halocat, 'r') as hc:
+        cosmopars = {key: val for key, val in hc['Header/cosmopars'].attrs.items()}
+    
+        # check if cosmopars match (could still be different sim. boxes, but it's worth doing a simple check)
+        for _file in files:
+            fills = _file['Header'].attrs['filename_fills']
+            fills = [fill.decode() for fill in fills]
+            _cps = [{key: val for key, val in \
+                    _file['Header/{fill}/inputpars/cosmopars'.format(fill=fill)].items()}\
+                    for fill in fills]
+            if not np.all([np.all([np.isclose(_cp[key], cosmopars[key]) for key in cosmopars])\
+                           for _cp in _cps]):
+                msg = 'Cosmopars recorded for a slice in file {stamps} did not match those in the halo catalcoge {hc}'
+                raise RuntimeError(msg.format(stamps=_file.filename, hc=halocat))
+        
+        # look up required data for the galaxy ids
+        gid_cat = hc['galaxyid']
+        galaxyids = [int(galid) for galid in galids]
+        inds_gid = np.array([np.where(gid_cat == galid)[0][0] \
+                             for galid in galaxyids])
+        
+        R200c_cMpc = hc['R200c_pkpc'][inds_gid] * (1e-3 / cosmopars['a'])
+        cen_simx_cMpc = hc['Xcom_cMpc'][inds_gid]
+        cen_simy_cMpc = hc['Ycom_cMpc'][inds_gid]
+        cen_simz_cMpc = hc['Zcom_cMpc'][inds_gid]
+        
     # get header info per file
     # get list of galids per file
     # loop over files, contained galids
     # get requested info
     # store info
+    rbins2 = np.array(rbins)**2 # faster than taking sqrt of all the distances
+    if not hasattr(yvals, '__len__'):
+        yvals = [yvals]
+    yvals = np.sorted(yvals)
     
-    for galid in galids:
-        grn = str(galid)
-        fileuse = np.where([grn in file for file in files])[0]
-        if len(fileuse) == 0:
-            raise RuntimeError('Galaxyid {} not found in any file'.format(galid))
-        fileuse = fileuse[0]
+    with h5py.File(outfile, 'a') as fo:
+        if separateprofiles:
+            gn0 = 'galaxy_{galid}'
+        else:
+            # galaxy sets: named galset_<int>
+            galsets = [key if 'galset' in key else None \
+                       for key in fo.keys()]
+            galsets = list(set(galsets) - {None})
+            galsets.sort(key=lambda x: int(x.split('_'))) 
+            anymatch = False
+            for galset in galsets:
+                _galids = fo[galset + '/galaxyid'][:]
+                if len(_galids) == len(galids):
+                    if np.all(_galids == galids):
+                        gn0 = galset
+                        anymatch = True
+                        break
+            if not anymatch:
+                i = 0
+                while 'galset_{i}'.format(i=i) in fo:
+                    i += 1
+                gn0 = 'galset_{i}'.format(i=i)
+                _g = fo.create_group(gn0)
+                _g.create_dataset('galaxyid', data=galids)
         
-        stamp = fileuse[grn][:]
+        outgroup = '{gal}/{runit}_bins'.format(gal=gn0, runit=runit)
         
+        if not separateprofiles:
+            binvlist_all = [[] for i in range(len(rbins2))]
+            
+        for gind_cat, galid in enumerate(list(galids)):
+            grn = str(galid)
+            fileuse = np.where([grn in file for file in files])[0]
+            if len(fileuse) == 0:
+                raise RuntimeError('Galaxyid {} not found in any file'.format(galid))
+            fileuse = fileuse[0]
+            _file = files[fileuse]
+            gind = np.where(int(galid) == _file['selection/galaxyid'])[0][0]
+            
+            stamp = _file[grn][:]
+            # not taken modulo anything, just centre - size, so can be used to 
+            # calculate distance to centre without modulo math
+            llc_cMpc = _file['Header/lower_left_corners_cMpc'][gind]
+            pixsize_cMpc0 = _file['Header'].attrs['pixel_size_x_cMpc']
+            pixsize_cMpc1 = _file['Header'].attrs['pixel_size_y_cMpc']
+            axis = _file['Header'].attrs['axis']
+            logval = _file['Header'].attrs['logvalues']
+            
+            if axis == 'z':
+                cen0 = cen_simx_cMpc[gind_cat]
+                cen1 = cen_simy_cMpc[gind_cat]
+            elif axis == 'x':
+                cen0 = cen_simy_cMpc[gind_cat]
+                cen1 = cen_simz_cMpc[gind_cat]
+            elif axis == 'y':
+                cen0 = cen_simz_cMpc[gind_cat]
+                cen1 = cen_simx_cMpc[gind_cat]
+            
+            pos = np.indices(stamp.shape)
+            pos0 = pos[0]
+            pos1 = pos[1]
+            delta0 = llc_cMpc[0] + (pos0 + 0.5) * pixsize_cMpc0 - cen0
+            delta1 = llc_cMpc[1] + (pos1 + 0.5) * pixsize_cMpc1 - cen1
+            dist2 = delta0**2 + delta1**2
+            
+            if runit == 'R200c':
+                dist2 *= (1. / R200c_cMpc[gind_cat]**2)
+            elif runit == 'pkpc':
+                dist2 *= (1e3 * cosmopars['a'])
+            # check distance coverage of the stamp (assumes centres match approximately)
+            hi0 = stamp.shape[0] // 2
+            hi1 = stamp.shape[1] // 2
+            if rbins2[-1] <= dist2[-1, hi1] and rbins2[-1] <= dist2[hi0, -1]:
+                pass
+            elif rbins2[-2] < dist2[-1, -1]:
+                print('Large radial bins will not include full azimuthal sampling for galaxy {}'.format(galid))
+            else:
+                raise RuntimeError('Large radial bins are entirely unsampled for galaxy {}'.format(galid))
+                
+            dist2 = dist2.flatten()
+            vals = stamp.flatten()
+            if (not uselogvals) and logval:
+                vals = 10**vals
+            elif uselogvals and (not logval):
+                vals = np.log10(vals)
+            inds = np.digitize(dist2, rbins2)
+            vals = stamp.flatten()
+            binvlist = [[vals[inds==i]] for i in range(1, len(rbins2))]
+            #numpix = sum([len(sl) for sl in binvlist])
+            
+                
+            if separateprofiles:
+                profiles = getstats(binvlist, ytype=ytype, yvals=yvals)
+                
+                outgroup = outgroup.format(galid=galid)
+                if outgroup in fo:
+                    g0 = fo[outgroup]
+                else:
+                    g0 = fo.create_group(outgroup)
+                # naming: binset_<index>
+                binsets = list(g0.keys())
+                binsets.sort(key=lambda x: int(x.split('_')[-1])) 
+                bmatch = False
+                for binset in binsets:
+                    bin_edges = g0[binset + '/bin_edges']
+                    if len(bin_edges) == len(rbins):
+                        if np.allclose(bin_edges, rbins):
+                            bmatch = True
+                            bgrp = g0[binset]
+                            break
+                if not bmatch:
+                    i = 0
+                    while 'binset_{i}'.format(i=i) in g0:
+                        i += 1
+                    bgrp = g0.create_group('binset_{i}'.format(i=i))
+                    bgrp.create_dataset('bin_edges', data=rbins)
+                    
+                if ytype == 'mean':
+                    if uselogvals:
+                        dsname = 'mean_log'
+                    else:
+                        dsname = 'mean'
+                    if dsname in bgrp:
+                        pass # already saved
+                    else:
+                        ds = bgrp.create_dataset(dsname, data=np.array(profiles))
+                        ds.attrs.create('logvalues', uselogvals)
+                else:
+                    for ind, yval in enumerate(yvals):
+                        dsname = '{ytype}_{yval}'.format(ytype=ytype, yval=yval)
+                        if dsname in bgrp:
+                            continue
+                        else:
+                             ds = bgrp.create_dataset(dsname, data=np.array(profiles[ind]))
+                             ds.attrs.create('logvalues', uselogvals)
+            else: # not separateprofiles                
+                binvlist_all = [binvlist_all[i] + binvlist[i] for i in range(len(binvlist_all))]
+    
+    if not separateprofiles:
+        profiles = getstats(binvlist_all, ytype=ytype, yvals=yvals)
+        
+        outgroup = outgroup.format(galid=galid)
+        if outgroup in fo:
+            g0 = fo[outgroup]
+        else:
+            g0 = fo.create_group(outgroup)
+        # naming: binset_<index>
+        binsets = list(g0.keys())
+        binsets.sort(key=lambda x: int(x.split('_')[-1])) 
+        bmatch = False
+        for binset in binsets:
+            bin_edges = g0[binset + '/bin_edges']
+            if len(bin_edges) == len(rbins):
+                if np.allclose(bin_edges, rbins):
+                    bmatch = True
+                    bgrp = g0[binset]
+                    break
+        if not bmatch:
+            i = 0
+            while 'binset_{i}'.format(i=i) in g0:
+                i += 1
+            bgrp = g0.create_group('binset_{i}'.format(i=i))
+            bgrp.create_dataset('bin_edges', data=rbins)
+            
+        if ytype == 'mean':
+            if uselogvals:
+                dsname = 'mean_log'
+            else:
+                dsname = 'mean'
+            if dsname in bgrp:
+                pass # already saved
+            else:
+                ds = bgrp.create_dataset(dsname, data=np.array(profiles))
+                ds.attrs.create('logvalues', uselogvals)
+        else:
+            for ind, yval in enumerate(yvals):
+                dsname = '{ytype}_{yval}'.format(ytype=ytype, yval=yval)
+                if dsname in bgrp:
+                    continue
+                else:
+                     ds = bgrp.create_dataset(dsname, data=np.array(profiles[ind]))
+                     ds.attrs.create('logvalues', uselogvals)
     
     [file.close() for file in files]
 
-    ## metadata storage format stamp files
-    hed = fo.create_group('Header')
-    hed.attrs.create('filename_base', np.string_(base))
-    hed.attrs.create('filename_fills', np.string_(szcens))
-    hed.attrs.create('pixels_along_x', npix_x)
-    hed.attrs.create('pixels_along_y', npix_y)
-    hed.attrs.create('size_along_x', L_x)
-    hed.attrs.create('pixel_size_x_cMpc', length_per_pixel_x)
-    hed.attrs.create('pixel_size_y_cMpc', length_per_pixel_y)
-    hed.attrs.create('axis', np.string_(axis))
-    hed.attrs.create('logvalues', logquantity)
-    hed.attrs.create('rmax_rscales', rmax)
-    hed.create_dataset('rscales_cMpc', data=rscales)
-    hed.create_dataset('labels', data=np.array(labels, dtype=int))
-    hed.create_dataset('centres_cMpc', data=centres)
-    hed.create_dataset('lower_left_corners_cMpc', data=lower_left_corners)
+
 #################################################################
 # plots investigating the pet halos and convergence of profiles #  
 #################################################################
