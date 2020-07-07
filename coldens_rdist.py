@@ -768,7 +768,7 @@ def rdists_sl_faster(base, szcens, L_x, npix_x,\
                     ds.attrs.create('units', 'N x 2: radius, value')
                 hed = fo.create_group('Header')
                 hed.attrs.create('filename_base', base)
-                hed.attrs.create('filename_fills', szcens)
+                hed.attrs.create('filename_fills', np.string_(np.array(szcens)))
                 hed.attrs.create('pixels_along_x', npix_x)
                 hed.attrs.create('pixels_along_y', npix_y)
                 hed.attrs.create('size_along_x', L_x)
@@ -1170,7 +1170,7 @@ def stamps_sl(base, szcens, L_x, npix_x,\
                     fo.create_dataset(str(key), data=dct_out[key])
                 hed = fo.create_group('Header')
                 hed.attrs.create('filename_base', base)
-                hed.attrs.create('filename_fills', szcens)
+                hed.attrs.create('filename_fills', np.string_(np.array(szcens)))
                 hed.attrs.create('pixels_along_x', npix_x)
                 hed.attrs.create('pixels_along_y', npix_y)
                 hed.attrs.create('size_along_x', L_x)
@@ -1438,7 +1438,7 @@ def stamps_sl_hdf5(base, szcens, rmax, centres, rscales=1.,\
                         tmp.attrs.create(key, heddata[scen]['misc'][key])
                         
                 hed.attrs.create('filename_base', np.string_(base))
-                hed.attrs.create('filename_fills', np.string_(szcens))
+                hed.attrs.create('filename_fills', np.string_(np.array(szcens)))
                 hed.attrs.create('pixels_along_x', npix_x)
                 hed.attrs.create('pixels_along_y', npix_y)
                 hed.attrs.create('size_along_x', L_x)
@@ -2305,9 +2305,17 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
         # check if cosmopars match (could still be different sim. boxes, but it's worth doing a simple check)
         for _file in files:
             fills = _file['Header'].attrs['filename_fills']
-            fills = [fill.decode() for fill in fills]
+            try:
+                fills = [fill.decode() for fill in fills]
+            except AttributeError:  # parse stringified list of strings, due to error in saving function...
+                fills = fills.decode()
+                if fills[0] == '[' and fills[-1] == ']': # it's a string-saved list -> parse as such
+                    fills = fills[2:-2]
+                    fills = fills.split("', '")
+                else:
+                    raise RuntimeError('filenames_fills in the file Header saved in an unrecognized way:\n{}'.format(fills))
             _cps = [{key: val for key, val in \
-                    _file['Header/{fill}/inputpars/cosmopars'.format(fill=fill)].items()}\
+                    _file['Header/{fill}/inputpars/cosmopars'.format(fill=fill)].attrs.items()}\
                     for fill in fills]
             if not np.all([np.all([np.isclose(_cp[key], cosmopars[key]) for key in cosmopars])\
                            for _cp in _cps]):
@@ -2315,15 +2323,20 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
                 raise RuntimeError(msg.format(stamps=_file.filename, hc=halocat))
         
         # look up required data for the galaxy ids
-        gid_cat = hc['galaxyid']
+        gid_cat = hc['galaxyid'][:]
         galaxyids = [int(galid) for galid in galids]
-        inds_gid = np.array([np.where(gid_cat == galid)[0][0] \
+        inds_gid = np.array([np.where(gid_cat == int(galid))[0][0] \
                              for galid in galaxyids])
         
-        R200c_cMpc = hc['R200c_pkpc'][inds_gid] * (1e-3 / cosmopars['a'])
-        cen_simx_cMpc = hc['Xcom_cMpc'][inds_gid]
-        cen_simy_cMpc = hc['Ycom_cMpc'][inds_gid]
-        cen_simz_cMpc = hc['Zcom_cMpc'][inds_gid]
+        R200c_cMpc = hc['R200c_pkpc'][:] * (1e-3 / cosmopars['a'])
+        cen_simx_cMpc = hc['Xcom_cMpc'][:]
+        cen_simy_cMpc = hc['Ycom_cMpc'][:]
+        cen_simz_cMpc = hc['Zcom_cMpc'][:]
+        
+        R200c_cMpc = R200c_cMpc[inds_gid]
+        cen_simx_cMpc = cen_simx_cMpc[inds_gid]
+        cen_simy_cMpc = cen_simy_cMpc[inds_gid]
+        cen_simz_cMpc = cen_simz_cMpc[inds_gid]
         
     # get header info per file
     # get list of galids per file
@@ -2333,7 +2346,7 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
     rbins2 = np.array(rbins)**2 # faster than taking sqrt of all the distances
     if not hasattr(yvals, '__len__'):
         yvals = [yvals]
-    yvals = np.sorted(yvals)
+    yvals = np.sort(yvals)
     
     with h5py.File(outfile, 'a') as fo:
         if separateprofiles:
@@ -2343,7 +2356,7 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
             galsets = [key if 'galset' in key else None \
                        for key in fo.keys()]
             galsets = list(set(galsets) - {None})
-            galsets.sort(key=lambda x: int(x.split('_'))) 
+            galsets.sort(key=lambda x: int(x.split('_')[-1])) 
             anymatch = False
             for galset in galsets:
                 _galids = fo[galset + '/galaxyid'][:]
@@ -2359,20 +2372,23 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
                 gn0 = 'galset_{i}'.format(i=i)
                 _g = fo.create_group(gn0)
                 _g.create_dataset('galaxyid', data=galids)
+                if grptag is not None:
+                    _g.attrs.create('seltag', np.string_(grptag))
         
-        outgroup = '{gal}/{runit}_bins'.format(gal=gn0, runit=runit)
+        outgroup_base = '{gal}/{runit}_bins'.format(gal=gn0, runit=runit)
         
         if not separateprofiles:
-            binvlist_all = [[] for i in range(len(rbins2))]
+            binvlist_all = [[] for i in range(1, len(rbins2))]
             
         for gind_cat, galid in enumerate(list(galids)):
+            print(galid)
             grn = str(galid)
             fileuse = np.where([grn in file for file in files])[0]
             if len(fileuse) == 0:
                 raise RuntimeError('Galaxyid {} not found in any file'.format(galid))
             fileuse = fileuse[0]
             _file = files[fileuse]
-            gind = np.where(int(galid) == _file['selection/galaxyid'])[0][0]
+            gind = np.where(int(galid) == _file['Header/labels'][:])[0][0]
             
             stamp = _file[grn][:]
             # not taken modulo anything, just centre - size, so can be used to 
@@ -2380,7 +2396,7 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
             llc_cMpc = _file['Header/lower_left_corners_cMpc'][gind]
             pixsize_cMpc0 = _file['Header'].attrs['pixel_size_x_cMpc']
             pixsize_cMpc1 = _file['Header'].attrs['pixel_size_y_cMpc']
-            axis = _file['Header'].attrs['axis']
+            axis = _file['Header'].attrs['axis'].decode()
             logval = _file['Header'].attrs['logvalues']
             
             if axis == 'z':
@@ -2403,10 +2419,12 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
             if runit == 'R200c':
                 dist2 *= (1. / R200c_cMpc[gind_cat]**2)
             elif runit == 'pkpc':
-                dist2 *= (1e3 * cosmopars['a'])
+                dist2 *= (1e3 * cosmopars['a'])**2
             # check distance coverage of the stamp (assumes centres match approximately)
             hi0 = stamp.shape[0] // 2
             hi1 = stamp.shape[1] // 2
+            #print(dist2[-1, -1], dist2[-1, hi1], dist2[hi0, -1])
+            #print(rbins2[-2])
             if rbins2[-1] <= dist2[-1, hi1] and rbins2[-1] <= dist2[hi0, -1]:
                 pass
             elif rbins2[-2] < dist2[-1, -1]:
@@ -2422,18 +2440,23 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
                 vals = np.log10(vals)
             inds = np.digitize(dist2, rbins2)
             vals = stamp.flatten()
-            binvlist = [[vals[inds==i]] for i in range(1, len(rbins2))]
+            binvlist = [list(vals[inds==i]) for i in range(1, len(rbins2))]
             #numpix = sum([len(sl) for sl in binvlist])
             
-                
             if separateprofiles:
+                print('Saving data for {}'.format(galid))
                 profiles = getstats(binvlist, ytype=ytype, yvals=yvals)
                 
-                outgroup = outgroup.format(galid=galid)
+                outgroup = outgroup_base.format(galid=galid)
                 if outgroup in fo:
                     g0 = fo[outgroup]
                 else:
                     g0 = fo.create_group(outgroup)
+                if grptag is not None:
+                    galgrp = outgroup.split('/')[0]
+                    if galgrp not in fo: 
+                        _g = fo.create_group(galgrp)
+                        _g.attrs.create('seltag', np.string_(grptag))
                 # naming: binset_<index>
                 binsets = list(g0.keys())
                 binsets.sort(key=lambda x: int(x.split('_')[-1])) 
@@ -2472,53 +2495,61 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
                              ds.attrs.create('logvalues', uselogvals)
             else: # not separateprofiles                
                 binvlist_all = [binvlist_all[i] + binvlist[i] for i in range(len(binvlist_all))]
-    
-    if not separateprofiles:
-        profiles = getstats(binvlist_all, ytype=ytype, yvals=yvals)
         
-        outgroup = outgroup.format(galid=galid)
-        if outgroup in fo:
-            g0 = fo[outgroup]
-        else:
-            g0 = fo.create_group(outgroup)
-        # naming: binset_<index>
-        binsets = list(g0.keys())
-        binsets.sort(key=lambda x: int(x.split('_')[-1])) 
-        bmatch = False
-        for binset in binsets:
-            bin_edges = g0[binset + '/bin_edges']
-            if len(bin_edges) == len(rbins):
-                if np.allclose(bin_edges, rbins):
-                    bmatch = True
-                    bgrp = g0[binset]
-                    break
-        if not bmatch:
-            i = 0
-            while 'binset_{i}'.format(i=i) in g0:
-                i += 1
-            bgrp = g0.create_group('binset_{i}'.format(i=i))
-            bgrp.create_dataset('bin_edges', data=rbins)
+        if not separateprofiles:
+            binvlist_all = [np.array(vlist) for vlist in binvlist_all]
+            profiles = getstats(binvlist_all, ytype=ytype, yvals=yvals)
             
-        if ytype == 'mean':
-            if uselogvals:
-                dsname = 'mean_log'
+            outgroup = outgroup_base.format(galid=galid)
+            if grptag is not None:
+                galgrp = outgroup.split('/')[0]
+                if galgrp not in fo: 
+                    print('Adding seltag')
+                    _g = fo.create_group(galgrp)
+                    _g.attrs.create('seltag', np.string_(grptag))
+            if outgroup in fo:
+                g0 = fo[outgroup]
             else:
-                dsname = 'mean'
-            if dsname in bgrp:
-                pass # already saved
-            else:
-                ds = bgrp.create_dataset(dsname, data=np.array(profiles))
-                ds.attrs.create('logvalues', uselogvals)
-        else:
-            for ind, yval in enumerate(yvals):
-                dsname = '{ytype}_{yval}'.format(ytype=ytype, yval=yval)
-                if dsname in bgrp:
-                    continue
+                g0 = fo.create_group(outgroup)
+            # naming: binset_<index>
+            binsets = list(g0.keys())
+            binsets.sort(key=lambda x: int(x.split('_')[-1])) 
+            bmatch = False
+            for binset in binsets:
+                bin_edges = g0[binset + '/bin_edges']
+                if len(bin_edges) == len(rbins):
+                    if np.allclose(bin_edges, rbins):
+                        bmatch = True
+                        bgrp = g0[binset]
+                        break
+            if not bmatch:
+                i = 0
+                while 'binset_{i}'.format(i=i) in g0:
+                    i += 1
+                bgrp = g0.create_group('binset_{i}'.format(i=i))
+                bgrp.create_dataset('bin_edges', data=rbins)
+                
+            if ytype == 'mean':
+                if uselogvals:
+                    dsname = 'mean_log'
                 else:
-                     ds = bgrp.create_dataset(dsname, data=np.array(profiles[ind]))
-                     ds.attrs.create('logvalues', uselogvals)
+                    dsname = 'mean'
+                if dsname in bgrp:
+                    pass # already saved
+                else:
+                    ds = bgrp.create_dataset(dsname, data=np.array(profiles))
+                    ds.attrs.create('logvalues', uselogvals)
+            else:
+                for ind, yval in enumerate(yvals):
+                    dsname = '{ytype}_{yval}'.format(ytype=ytype, yval=yval)
+                    if dsname in bgrp:
+                        continue
+                    else:
+                         ds = bgrp.create_dataset(dsname, data=np.array(profiles[ind]))
+                         ds.attrs.create('logvalues', uselogvals)
     
     [file.close() for file in files]
+    return None
 
 
 #################################################################
