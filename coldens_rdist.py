@@ -2381,7 +2381,7 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
             binvlist_all = [[] for i in range(1, len(rbins2))]
             
         for gind_cat, galid in enumerate(list(galids)):
-            print(galid)
+            # print(galid)
             grn = str(galid)
             fileuse = np.where([grn in file for file in files])[0]
             if len(fileuse) == 0:
@@ -2397,8 +2397,8 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
             pixsize_cMpc0 = _file['Header'].attrs['pixel_size_x_cMpc']
             pixsize_cMpc1 = _file['Header'].attrs['pixel_size_y_cMpc']
             axis = _file['Header'].attrs['axis'].decode()
-            logval = _file['Header'].attrs['logvalues']
-            
+            logval = bool(_file['Header'].attrs['logvalues'])
+            #print(logval)
             if axis == 'z':
                 cen0 = cen_simx_cMpc[gind_cat]
                 cen1 = cen_simy_cMpc[gind_cat]
@@ -2439,12 +2439,11 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
             elif uselogvals and (not logval):
                 vals = np.log10(vals)
             inds = np.digitize(dist2, rbins2)
-            vals = stamp.flatten()
             binvlist = [list(vals[inds==i]) for i in range(1, len(rbins2))]
             #numpix = sum([len(sl) for sl in binvlist])
             
             if separateprofiles:
-                print('Saving data for {}'.format(galid))
+                #print('Saving data for {}'.format(galid))
                 profiles = getstats(binvlist, ytype=ytype, yvals=yvals)
                 
                 outgroup = outgroup_base.format(galid=galid)

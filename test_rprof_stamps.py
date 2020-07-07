@@ -144,7 +144,12 @@ def callprofiles():
                            halocat=halocat,\
                            separateprofiles=False, uselogvals=False,\
                            outfile=None, grptag='lomass')
-     
+    crd.getprofiles_fromstamps([teststampfile], rbins3, galids_lo,\
+                           runit='pkpc', ytype='fcov', yvals=[1e-6, 1e-4, 1e-2],\
+                           halocat=halocat,\
+                           separateprofiles=True, uselogvals=False,\
+                           outfile=None, grptag='lomass')
+    
     crd.getprofiles_fromstamps(teststampfile, rbins4, galids_lo,\
                            runit='R200c', ytype='perc', yvals=50.,\
                            halocat=halocat,\
@@ -204,7 +209,7 @@ def gethistdata(ytype, yval, hist, vbins):
         fcov = [pu.linterpsolve(vbins[:-1], cumul_hist[i, :], yval / 100.)\
                 for i in range(cumul_hist.shape[0])]
         fcov = [0. if fc is None else fc for fc in fcov]
-        return fcov
+        return np.log10(fcov)
         
         
 def plottest_radprof():
