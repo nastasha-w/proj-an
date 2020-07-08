@@ -3915,20 +3915,20 @@ if jobind in range(30159, 30177):
                 rbins = rbins_r200c
             if kwargs['separateprofiles']:
                 galids = galids[:10] # just a few examples, don't need the whole set
-            print('Calling getprofiles_fromstamps with:')
-            print(stampname)
-            print('rbins: {}'.format(rbins))
-            if len(galids) > 15:
-                print('galaxyids: {} ... {}'.format(galids[:8],  galids[-7:]))
-            else:
-                print('galaxyids: {}'.format(galids))
-            print(halocat)
-            print('out: {}'.format(outfile))
-            print('grouptag: {}'.format(hmkey))
-            print('\t '.join(['{key}: {val}'.format(key=key, val=kwargs[key])\
-                              for key in kwargs]))
-            print('\n\n')
-            #crd.getprofiles_fromstamps(stampname, rbins, galids,\
-            #               halocat=halocat,\
-            #               outfile=outfile, grptag=hmkey,\
-            #               **kwargs)
+            #print('Calling getprofiles_fromstamps with:')
+            #print(stampname)
+            #print('rbins: {}'.format(rbins))
+            #if len(galids) > 15:
+            #    print('galaxyids: {} ... {}'.format(galids[:8],  galids[-7:]))
+            #else:
+            #    print('galaxyids: {}'.format(galids))
+            #print(halocat)
+            #print('out: {}'.format(outfile))
+            #print('grouptag: {}'.format(hmkey))
+            #print('\t '.join(['{key}: {val}'.format(key=key, val=kwargs[key])\
+            #                  for key in kwargs]))
+            #print('\n\n')
+            crd.getprofiles_fromstamps(stampname, rbins, galids,\
+                           halocat=halocat,\
+                           outfile=outfile, grptag=hmkey,\
+                           **kwargs)
