@@ -3883,7 +3883,7 @@ if jobind in range(30159, 30177):
     mapname = ol.ndir + mapbase.format(line=line)
     stampname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'%((mapname.split('/')[-1][:-5])%('-all'), numsl)
     
-    outfile = stampname[0].split('/')[-1]
+    outfile = stampname.split('/')[-1]
     outfile = ol.pdir + 'radprof/radprof_' + outfile
     
     rbins_r200c = np.arange(0., 2.51, 0.05)
@@ -3918,13 +3918,16 @@ if jobind in range(30159, 30177):
             print('Calling getprofiles_fromstamps with:')
             print(stampname)
             print('rbins: {}'.format(rbins))
-            print('galaxyids: {}'.format(galids))
+            if len(galids) > 15:
+                print('galaxyids: {} ... {}'.format(galids[:8],  galids[-7:]))
+            else:
+                print('galaxyids: {}'.format(galids))
             print(halocat)
             print('out: {}'.format(outfile))
             print('grouptag: {}'.format(hmkey))
             print('\t '.join(['{key}: {val}'.format(key=key, val=kwargs[key])\
                               for key in kwargs]))
-        
+            print('\n\n')
             #crd.getprofiles_fromstamps(stampname, rbins, galids,\
             #               halocat=halocat,\
             #               outfile=outfile, grptag=hmkey,\
