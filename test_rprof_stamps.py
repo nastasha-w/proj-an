@@ -437,10 +437,10 @@ def plottest_radprof():
                         else:
                             ax = _axv
                         if subkey == 'fcov_-6.0':
-                            kwa_r = kwargs['rprof'][bintype]
+                            kwa_r = kwargs['rprof'][bintype].copy()
                             kwa_r['linewidth'] += 0.5
                         else:
-                            kwa_r = kwargs['rprof'][bintype]
+                            kwa_r = kwargs['rprof'][bintype].copy()
                         ax.plot(xplot_s, yplot_s, **kwargs['stamp'][bintype],\
                                 color=colors[subkey])
                         ax.plot(cens_t, prof_t, **kwa_r,\
