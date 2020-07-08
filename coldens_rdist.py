@@ -2417,14 +2417,15 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
             dist2 = delta0**2 + delta1**2
             
             if runit == 'R200c':
-                dist2 *= (1. / R200c_cMpc[gind_cat]**2)
+                R200c = R200c_cMpc[gind_cat]
+                dist2 *= (1. / R200c**2)
             elif runit == 'pkpc':
                 dist2 *= (1e3 * cosmopars['a'])**2
             # check distance coverage of the stamp (assumes centres match approximately)
             hi0 = stamp.shape[0] // 2
             hi1 = stamp.shape[1] // 2
-            #print(dist2[-1, -1], dist2[-1, hi1], dist2[hi0, -1])
-            #print(rbins2[-2])
+            print(dist2[-1, -1], dist2[-1, hi1], dist2[hi0, -1])
+            print(rbins2[-2])
             if rbins2[-1] <= dist2[-1, hi1] and rbins2[-1] <= dist2[hi0, -1]:
                 pass
             elif rbins2[-2] < dist2[-1, -1]:
