@@ -208,6 +208,7 @@ def gethistdata(ytype, yval, hist, vbins):
         cumul_hist = cumul_hist.astype(float) / cumul_hist[:, -1][:, np.newaxis]
         fcov = [pu.linterpsolve(vbins[:-1], cumul_hist[i, :], yval / 100.)\
                 for i in range(cumul_hist.shape[0])]
+        print(fcov)
         fcov = [0. if fc is None else fc for fc in fcov]
         print(fcov)
         return np.log10(fcov)
@@ -436,7 +437,12 @@ def plottest_radprof():
                             ax = _axf
                         else:
                             ax = _axv
-                        ax.plot(xplot_s, yplot_s, **kwargs['stamp'][bintype],\
+                        if subkey == 'fcov_-6.0':
+                            kwa_s = kwargs['stamp'][bintype]
+                            kwa_s['linewidth'] += 0.5
+                        else:
+                            kwa_s = kwargs['stamp'][bintype]
+                        ax.plot(xplot_s, yplot_s, **kwa_s,\
                                 color=colors[subkey])
                         ax.plot(cens_t, prof_t, **kwargs['rprof'][bintype],\
                                 color=colors[subkey])
