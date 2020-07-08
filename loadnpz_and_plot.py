@@ -231,7 +231,7 @@ def save_cddfs_to_hdf5(path, hdf5name):
             try:
                 grp.create_dataset('left_edges', data=data['logedges'])
             except KeyError:
-                print filen
+                print(filen)
                 grp.create_dataset('left_edges', data=data['edges'])
 def imreduce(img, factor, log=True, method = 'average', wimg=None, wlog='auto'):
     """
@@ -240,7 +240,7 @@ def imreduce(img, factor, log=True, method = 'average', wimg=None, wlog='auto'):
     log: whether or not the array contains log data values
     """
     if method not in ['average','waverage','sum']:
-        print "Method must be one of 'average','waverage','sum'"
+        print("Method must be one of 'average', 'waverage', 'sum'")
         return None
     if log:
         inimg = 10**img
@@ -263,7 +263,7 @@ def imreduce(img, factor, log=True, method = 'average', wimg=None, wlog='auto'):
 
     if method == 'waverage':
         if wimg.shape != img.shape:
-            print 'Weight array must have the same shape as image array. Was', wimg.shape, img.shape
+            print('Weight array must have the same shape as image array. Was {}, {}'.format(wimg.shape, img.shape))
             return None
         if wimg == None:
             print('A weighting array wimg must be provided for the weighted average method.\n')
@@ -495,7 +495,7 @@ def mapcompare_fromhalosel(dct, colmap1='viridis', colmap2='cubehelix',\
             slice(int(np.floor( (Ycop - numR200 * R200 / aexp / 1.e3) / sidelength_tot * float(shape[1]) )),\
                    int(np.ceil( (Ycop + numR200 * R200 / aexp / 1.e3) / sidelength_tot * float(shape[1]) )) ),\
             )
-     print slc
+     print(slc)
      if slc[0].start < 0 or slc[1].start < 0 or slc[0].stop >= shape[0] or slc[1].stop >= shape[1]:
          raise RuntimeError('Randomly selected halo region overlaps map edge; galaxy id was %i'%galid)
      
@@ -532,7 +532,7 @@ def mapcompare(dct, colmap1='viridis', colmap2='cubehelix',\
               float(slc[0].stop + 1) / float(img1.shape[0]) * totsize,\
               float(slc[1].start)    / float(img1.shape[1]) * totsize,\
               float(slc[1].stop + 1) / float(img1.shape[1]) * totsize)
-    print extent
+    print(extent)
     img0 = axes[0].imshow(img1[slc].T, origin='lower', interpolation='nearest',\
                extent=extent, vmin=vmin1, vmax=vmax1, cmap=colmap1)
     plt.colorbar(img0, cax=axes[1], extend='min', orientation='vertical')
