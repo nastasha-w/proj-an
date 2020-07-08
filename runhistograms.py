@@ -1,4 +1,4 @@
-c#!/usr/bin/env python2
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
 Created on Thu Mar  8 15:25:03 2018
@@ -3863,7 +3863,7 @@ if jobind in range(30151, 30159): # cosma; CHECK new N-EW FITS
                     rpfilename=rpfilen, galsettag=skey)
         print('Finished %s, full sample, pkpc, fcovs\n'%rqfile)
         
-### single-line if jobind in range(30023, 30029): # cosma
+### single-line emission profiles
 if jobind in range(30159, 30177):
     
     halocat = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'   
