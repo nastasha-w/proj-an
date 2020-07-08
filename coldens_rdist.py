@@ -2305,15 +2305,15 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
         # check if cosmopars match (could still be different sim. boxes, but it's worth doing a simple check)
         for _file in files:
             fills = _file['Header'].attrs['filename_fills']
-            try:
-                fills = [fill.decode() for fill in fills]
-            except AttributeError:  # parse stringified list of strings, due to error in saving function...
+            if fills[0].decode() == '[':  # parse stringified list of strings, due to error in saving function...
                 fills = fills.decode()
                 if fills[0] == '[' and fills[-1] == ']': # it's a string-saved list -> parse as such
                     fills = fills[2:-2]
                     fills = fills.split("', '")
                 else:
                     raise RuntimeError('filenames_fills in the file Header saved in an unrecognized way:\n{}'.format(fills))
+            else: 
+                fills = [fill.decode() for fill in fills]
             print(fills)
             print(type(fills))
             exit()
