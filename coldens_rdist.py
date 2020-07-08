@@ -2424,8 +2424,8 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
             # check distance coverage of the stamp (assumes centres match approximately)
             hi0 = stamp.shape[0] // 2
             hi1 = stamp.shape[1] // 2
-            print(dist2[-1, -1], dist2[-1, hi1], dist2[hi0, -1])
-            print(rbins2[-2])
+            #print(dist2[-1, -1], dist2[-1, hi1], dist2[hi0, -1])
+            #print(rbins2[-2])
             if rbins2[-1] <= dist2[-1, hi1] and rbins2[-1] <= dist2[hi0, -1]:
                 pass
             elif rbins2[-2] < dist2[-1, -1]:
