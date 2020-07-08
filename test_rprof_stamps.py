@@ -204,9 +204,10 @@ def gethistdata(ytype, yval, hist, vbins):
         return np.sum(hist * vcens[np.newaxis, :], axis=1) \
                / np.sum(hist, axis=1)
     elif ytype == 'fcov':
-        cumul_hist =  np.cumsum(hist, axis=1)
-        cumul_hist = cumul_hist.astype(float) / cumul_hist[:, -1][:, np.newaxis]
-        fcov = [pu.linterpsolve(vbins[:-1], cumul_hist[i, :], yval / 100.)\
+        cumul_hist =  np.cumsum(hist[:, ::-1], axis=1)[:, ::-1]
+        cumul_hist = cumul_hist.astype(float) / cumul_hist[:, 0][:, np.newaxis]
+        fcov = [pu.linterpsolve(vbins[:-1], np.append(cumul_hist[i, :], [0.]),\
+                                yval)\
                 for i in range(cumul_hist.shape[0])]
         print(fcov)
         fcov = [0. if fc is None else fc for fc in fcov]
