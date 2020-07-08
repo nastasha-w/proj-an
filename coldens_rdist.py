@@ -2347,8 +2347,6 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
     if not hasattr(yvals, '__len__'):
         yvals = [yvals]
     yvals = np.sort(yvals)
-    print(yvals)
-    exit()
     
     with h5py.File(outfile, 'a') as fo:
         if separateprofiles:
