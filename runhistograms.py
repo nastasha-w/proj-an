@@ -3922,7 +3922,7 @@ if jobind in range(30159, 30177):
             print(halocat)
             print('out: {}'.format(outfile))
             print('grouptag: {}'.format(hmkey))
-            print('\t '.join(['{key: val}'.format(key=key, val=kwargs[key])\
+            print('\t '.join(['{key}: {val}'.format(key=key, val=kwargs[key])\
                               for key in kwargs]))
         
             #crd.getprofiles_fromstamps(stampname, rbins, galids,\
