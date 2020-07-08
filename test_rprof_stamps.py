@@ -209,9 +209,7 @@ def gethistdata(ytype, yval, hist, vbins):
         fcov = [pu.linterpsolve(vbins[:-1], np.append(cumul_hist[i, :], [0.]),\
                                 yval)\
                 for i in range(cumul_hist.shape[0])]
-        print(fcov)
         fcov = [0. if fc is None else fc for fc in fcov]
-        print(fcov)
         return np.log10(fcov)
         
         
@@ -439,13 +437,13 @@ def plottest_radprof():
                         else:
                             ax = _axv
                         if subkey == 'fcov_-6.0':
-                            kwa_s = kwargs['stamp'][bintype]
-                            kwa_s['linewidth'] += 0.5
+                            kwa_r = kwargs['rprof'][bintype]
+                            kwa_r['linewidth'] += 0.5
                         else:
-                            kwa_s = kwargs['stamp'][bintype]
-                        ax.plot(xplot_s, yplot_s, **kwa_s,\
+                            kwa_r = kwargs['rprof'][bintype]
+                        ax.plot(xplot_s, yplot_s, **kwargs['stamp'][bintype],\
                                 color=colors[subkey])
-                        ax.plot(cens_t, prof_t, **kwargs['rprof'][bintype],\
+                        ax.plot(cens_t, prof_t, **kwa_r,\
                                 color=colors[subkey])
             # align plot limits for the pkpc/R200c axes
             pkpc_to_R200c = 1e-3 / cosmopars['a'] / R200c
