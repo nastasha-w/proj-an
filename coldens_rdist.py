@@ -2314,9 +2314,6 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
                     raise RuntimeError('filenames_fills in the file Header saved in an unrecognized way:\n{}'.format(fills))
             else: 
                 fills = [fill.decode() for fill in fills]
-            print(fills)
-            print(type(fills))
-            exit()
             _cps = [{key: val for key, val in \
                     _file['Header/{fill}/inputpars/cosmopars'.format(fill=fill)].attrs.items()}\
                     for fill in fills]
@@ -2350,6 +2347,7 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
     if not hasattr(yvals, '__len__'):
         yvals = [yvals]
     yvals = np.sort(yvals)
+    exit()
     
     with h5py.File(outfile, 'a') as fo:
         if separateprofiles:
