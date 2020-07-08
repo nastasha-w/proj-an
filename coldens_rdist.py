@@ -2314,6 +2314,8 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
                     fills = fills.split("', '")
                 else:
                     raise RuntimeError('filenames_fills in the file Header saved in an unrecognized way:\n{}'.format(fills))
+           print(fills)
+           exit()
             _cps = [{key: val for key, val in \
                     _file['Header/{fill}/inputpars/cosmopars'.format(fill=fill)].attrs.items()}\
                     for fill in fills]
