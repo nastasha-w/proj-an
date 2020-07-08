@@ -3904,7 +3904,7 @@ if jobind in range(30159, 30177):
         
         # hmkeys format: 'geq10.0_le10.5' or 'geq14.0'
         minmass_Msun = 10**(float(hmkey.split('_')[0][3:]))
-        maxdist_pkpc = 3. * cu.R200c_pkpc(minmass_Msun, cosmopars)
+        maxdist_pkpc = 2.5 * cu.R200c_pkpc(minmass_Msun, cosmopars)
         rbins_pkpc = np.arange(0., maxdist_pkpc, 10.)
         
         for kwargs in kwarg_opts:
