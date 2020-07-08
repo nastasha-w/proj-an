@@ -3883,7 +3883,8 @@ if jobind in range(30159, 30177):
     mapname = ol.ndir + mapbase.format(line=line)
     stampname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'%((mapname.split('/')[-1][:-5])%('-all'), numsl)
     print(stampname)
-    return
+    print(halocat)
+    exit()
     outfile = stampname.split('/')[-1]
     outfile = ol.pdir + 'radprof/radprof_' + outfile
     
