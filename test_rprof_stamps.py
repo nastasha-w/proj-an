@@ -209,6 +209,7 @@ def gethistdata(ytype, yval, hist, vbins):
         fcov = [pu.linterpsolve(vbins[:-1], cumul_hist[i, :], yval / 100.)\
                 for i in range(cumul_hist.shape[0])]
         fcov = [0. if fc is None else fc for fc in fcov]
+        print(fcov)
         return np.log10(fcov)
         
         
@@ -417,8 +418,6 @@ def plottest_radprof():
                     for subkey in subkeys:
                         prof_t = s2grp[subkey][:]
                         log_t = bool(s2grp[subkey].attrs['logvalues'])
-                        if not log_t: # plot log here
-                            prof_t = np.log10(prof_t)
                         
                         ytype = subkey.split('_')[0]
                         if ytype == 'mean':
@@ -428,7 +427,9 @@ def plottest_radprof():
                             yval = float(subkey.split('_')[1])
                             if ytype == 'fcov' and not log_t:
                                 yval = np.log10(yval)
-                        
+                        if not log_t or ytype == 'fcov': # plot log here
+                            prof_t = np.log10(prof_t)
+                            
                         yplot_s = gethistdata(ytype, yval, hist, vbins)
                         xplot_s = rcens_s * rnorm
                         if ytype == 'fcov':
@@ -445,8 +446,8 @@ def plottest_radprof():
             xlim_p2 = axf.get_xlim()
             xlim_R1 = axv2.get_xlim()
             xlim_R2 = axf2.get_xlim()
-            print(xlim_p1)
-            print(xlim_R1)
+            #print(xlim_p1)
+            #print(xlim_R1)
             xmin_pkpc = min([xlim_p1[0], xlim_p2[0],\
                              xlim_R1[0] / pkpc_to_R200c,\
                              xlim_R2[0] / pkpc_to_R200c])
