@@ -855,6 +855,7 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                     bins = fi[bpath][:]
                 
                 seltag = galid_smatch[key]
+                print(seltag)
                 if seltag not in ys_out:
                     ys_out[seltag] = {}
                     bins_out[seltag] = {}
