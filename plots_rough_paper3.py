@@ -910,20 +910,38 @@ def plot_radprof1(measure='mean', mmin=10.):
     nrows = (numlines - 1) // ncols + 1
     figwidth = 11. 
     caxwidth = 1.
-    
-    panelwidth = (figwidth - caxwidth) / ncols
+
+    if ncols * nrows - numlines >= 2:
+        cax_right = False
+        _ncols = ncols
+        panelwidth = figwidth / ncols
+        width_ratios = [panelwidth] * ncols
+        c_orientation = 'horizontal'
+        c_aspect = 0.1
+    else:
+        cax_right = True
+        _ncols = ncols
+        panelwidth = (figwidth - caxwidth) / ncols
+        width_ratios = [panelwidth] * ncols + [caxwidth]
+        c_orientation = 'vertical'
+        c_aspect = 10.
+        
     panelheight = panelwidth    
     figheight = panelheight * ncols
     
     fig = plt.figure(figsize=(figwidth, figheight))
-    grid = gsp.GridSpec(ncols=ncols + 1, nrows=nrows, hspace=0.0, wspace=0.0,\
-                        width_ratios=[panelwidth] * ncols + [caxwidth])
+    grid = gsp.GridSpec(ncols=_ncols, nrows=nrows, hspace=0.0, wspace=0.0,\
+                        width_ratios=width_ratios)
     axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(numlines)]
-    if nrows > 3: 
-        csl = slice(nrows // 2 - 1, nrows // 2 + 2, None)
+    if cax_right:
+        if nrows > 3: 
+            csl = slice(nrows // 2 - 1, nrows // 2 + 2, None)
+        else:
+            csl = slice(None, None, None)
+        cax = fig.add_subplot(grid[csl, ncols])
     else:
-        csl = slice(None, None, None)
-    cax = fig.add_subplot(grid[csl, ncols])
+        ind_min = ncols - 1 - (nrows * ncols - numlines)
+        cax = fig.add_subplot(grid[nrows - 1, ind_min:])
     
     labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
     labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
@@ -932,7 +950,8 @@ def plot_radprof1(measure='mean', mmin=10.):
     
     clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
     cbar, colordct = add_cbar_mass(cax, cmapname='rainbow', massedges=medges,\
-             orientation='vertical', clabel=clabel, fontsize=fontsize, aspect=10.)
+             orientation=c_orientation, clabel=clabel, fontsize=fontsize,\
+             aspect=c_aspect)
 
     ykey = ys[0]
     for li, line in enumerate(lines):
@@ -960,12 +979,12 @@ def plot_radprof1(measure='mean', mmin=10.):
     # sync plot ranges
     xlims = [ax.get_xlim() for ax in axes]
     xmin = min([xlim[0] for xlim in xlims])
-    xmax = min([xlim[0] for xlim in xlims])
+    xmax = max([xlim[1] for xlim in xlims])
     [ax.set_xlim(xmin, xmax) for ax in axes]
 
     ylims = [ax.get_ylim() for ax in axes]
     ymin = min([ylim[0] for ylim in ylims])
-    ymax = min([ylim[0] for ylim in ylims])
+    ymax = max([ylim[1] for ylim in ylims])
     [ax.set_ylim(ymin, ymax) for ax in axes]
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
