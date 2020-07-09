@@ -834,8 +834,8 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                     ypart = ytv
                 else:
                     ypart = ytv[0]
-            ypaths = {key: temppaths.format(ds=ypart) for key in temppaths}
-            bpaths = {key: temppaths.format(ds='bin_edges') for key in temppaths}
+            ypaths = {key: temppaths[key].format(ds=ypart) for key in temppaths}
+            bpaths = {key: temppaths[key].format(ds='bin_edges') for key in temppaths}
             
             for key in temppaths:
                 ypath = ypaths[key]
