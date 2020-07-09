@@ -943,7 +943,7 @@ def plot_radprof1(measure='mean', mmin=10.):
         ind_min = ncols - (nrows * ncols - numlines)
         _cax = fig.add_subplot(grid[nrows - 1, ind_min:])
         _cax.axis('off')
-        _l, _b, _w, _h = _cax.bounds
+        _l, _b, _w, _h = (_cax.get_position()).bounds
         margin = panelwidth * 0.1 / figwidth
         cax = fig.add_axes(_l + margin, _b + margin,\
                            _w - 2.* margin, _h - 2. * margin)
