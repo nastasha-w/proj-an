@@ -827,7 +827,7 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
             ykey = ytv
             temppaths = spaths.copy()
             if ytv[0] in ['fcov', 'perc']:
-                ypart = '{}_{}'.format(*tuple(ytv))
+                ypart = '{}_{:.1f}'.format(*tuple(ytv))
             else:
                 if ytv[0] == 'm':
                     ypart = ytv
