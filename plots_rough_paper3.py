@@ -137,6 +137,9 @@ def get_resolution_tables(zvals=[0.01, 0.05, 0.1, 0.2]):
     print(hline)
     print(table)
     print(tabend)
+
+
+### stamp images from total maps
     
 def reducedims(map_in, dims_out, weights_in=None):
     '''
@@ -740,3 +743,221 @@ def plotstamps(filebase, halocat, outname=None, \
         if outname[-4:] != '.pdf':
             outname = outname + '.pdf'
         plt.savefig(outname, format='pdf', bbox_inches='tight')
+        
+
+
+### radial profiles
+def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
+                   binset='binset_0', retlog=True):
+    '''
+    from the coldens_rdist radial profile hdf5 file format: 
+    extract the profiles matching the input criteria
+    
+    input:
+    ------
+    filename: name of the hdf5 file containing the profiles
+    seltag:   list (iterable) of seltag attributes for the galaxy/halo set used
+    ys:       list (iterable) of tuples (iterable) containing ytype 
+              ('mean', 'mean_log', 'perc', or 'fcov') and 
+              yval (threashold for 'fcov', percentile (0-100) for 'perc',\
+              ignored for 'mean' and 'mean_log')
+    runits:   units for the bins: 'pkpc' or 'R200c'
+    separate: get individual profiles for the galaxies in this group (subset
+              contained in this file) if True, otherwise, use the combined 
+              profile 
+    binset:   the name of the binset group ('binset_<number>')
+    retlog:   return log unit values (ignored if log/non-log isn't recorded)
+    
+    output:
+    -------
+    two dictionaries:
+    y dictionary, bin edges dictionary
+    
+    nested dictionaries containing the retrieved values
+    keys are nested, using the input values as keys:
+    seltag: ys: [galaxyid: (if separate)] array of y values or bin edges
+    
+    '''
+    
+    if '/' not in filename:
+        filename = ol.pdir + 'radprof/' + filename
+
+    spath = '{{gal}}/{runit}_bins/{bin}/{{{{ds}}}}'.format(runit=runit, bin=binset)
+        
+    with h5py.File(filename, 'r') as fi:
+        # match groups to seltags
+        gkeys = list(fi.keys())
+        setkeys = [key if 'galset' in key else None for key in gkeys]
+        setkeys = list(set(setkeys) - {None})
+        
+        seltags_f = {key: fi[key].attrs['seltag'].decode()\
+                     if 'seltag' in fi[key].attrs.keys() else None \
+                     for key in setkeys}
+        galsets_seltag = {seltag: list(set([key if seltags_f[key] == seltag else\
+                                            None for key in seltags_f])\
+                                       - {None})\
+                          for seltag in seltags_f}
+        
+        indkeys = list(set(gkeys) - set(setkeys))
+        indgals = [int(key.split('_')[-1]) for key in indkeys]
+        
+        spaths = {}
+        galid_smatch = {}
+        for seltag in seltags:
+            keys_tocheck = galsets_seltag[seltag]
+            if len(keys_tocheck) == 0:
+                raise RuntimeError('No matches found for seltag {}'.format(seltag))
+            
+            if separate: # just pick one; should have the same galaxyids
+                extag = galsets_seltag[0]
+                galids = fi['{gs}/galaxyid'.format(gs=extag)][:]
+                # cross-reference stored galids (should be a smallish number)
+                # and listed set galids
+                galids_use = [galid if galid in indgals else None for galid in galids]
+                galids_use = list(set(galids_use) - {None})
+                spaths.update({galid: spath.format(gal='galaxy_{}'.format(galid))\
+                               for galid in galids_use})
+                galid_smatch.update({galid: seltag for galid in galids_use})
+            else:
+                spaths.update({key: spath.format(gal=key) for key in keys_tocheck})
+                galid_smatch.update({key: seltag for key in keys_tocheck})
+        
+        ys_out = {}
+        bins_out = {}
+        for ytv in ys:
+            ykey = ytv
+            temppaths = spaths.copy()
+            if ytv[0] in ['fcov', 'perc']:
+                ypart = '{}_{}'.format(*tuple(ytv))
+            else:
+                if ytv[0] == 'm':
+                    ypart = ytv
+                else:
+                    ypart = ytv[0]
+            ypaths = {key: temppaths.format(ds=ypart) for key in temppaths}
+            bpaths = {key: temppaths.format(ds='bin_edges') for key in temppaths}
+            
+            for key in temppaths:
+                ypath = ypaths[key]
+                bpath = bpaths[key]
+                if ypath in fi:
+                    vals = fi[ypath][:]
+                    if 'logvalues' in fi[ypath].attrs.keys():
+                        logv_s = bool(fi[ypath].attrs['logvalues'])
+                        if 'fcov' in ypath: # logv_s is for 
+                            if retlog:
+                                vals = np.log10(vals)
+                        else:
+                            if retlog and (not logv_s):
+                                vals = np.log10(vals)
+                            elif (not retlog) and logv_s:
+                                vals = 10**vals
+                    bins = fi[bpath][:]
+                
+                seltag = galid_smatch[key]
+                if seltag not in ys_out:
+                    ys_out[seltag] = {}
+                    bins_out[seltag] = {}
+                if isinstance(key, int):
+                    if ykey not in ys_out[seltag]:
+                        ys_out[seltag][ykey] = {}
+                        bins_out[seltag][ykey] = {}
+                    ys_out[seltag][ykey][key] = vals
+                    bins_out[seltag][ykey][key] = bins
+                else:
+                    ys_out[seltag][ykey] = vals
+                    bins_out[seltag][ykey] = bins
+    return ys_out, bins_out                    
+                    
+                
+def plot_radprof1(measure='mean', mmin=10.):
+    '''
+    plot mean or median radial profiles for each line and halo mass bin
+    
+    input:
+    ------
+    measure:  'mean' or 'median'
+    mmin:     minimum halo mass to show (log10 Msun, 
+              value options: 9.0, 9.5, 10., ... 14.)
+    '''
+    print('Values are calculated from 3.125^2 ckpc^2 pixels in 10 pkpc annuli')
+    print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb, C2 kernel')
+    print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
+    
+    fontsize = 12
+    
+    rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
+    xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
+    ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
+    
+    if measure == 'mean':
+        ys = [('mean',)]
+    else:
+        ys = [('perc', 50.)]
+    outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+                  '_{}.pdf'.format(measure)
+    medges = np.arange(mmin, 14.1, 0.5)
+    seltag_keys = {medges[i]: 'geq{:.1f}_le{:.1f}'.format(medges[i], medges[i + 1])\
+                               if i < len(medges) - 1 else\
+                               'geq{:.1f}'.format(medges[i])\
+                    for i in range(len(medges))}
+    seltags = [seltag_keys[key] for key in seltag_keys]
+    
+    numlines = len(lines)
+    ncols = 4
+    nrows = (numlines - 1) // ncols + 1
+    figwidth = 11. 
+    caxwidth = 1.
+    
+    panelwidth = (figwidth - caxwidth) / ncols
+    panelheight = panelwidth    
+    figheight = panelheight * ncols
+    
+    fig = plt.figure(figsize=(figwidth, figheight))
+    grid = gsp.GridSpec(ncols=ncols + 1, nrows=nrows, hspace=0.0, wspace=0.0,\
+                        width_ratios=[panelwidth] * ncols + [caxwidth])
+    axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(numlines)]
+    cax = fig.add_subplot(grid[:, ncols])
+    labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
+    labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    labelax.set_xlabel(xlabel, fontsize=fontsize)
+    labelax.set_ylabel(ylabel, fontsize=fontsize)
+    
+    clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
+    cbar, colordct = add_cbar_mass(cax, cmapname='rainbow', massedges=medges,\
+             orientation='vertical', clabel=clabel, fontsize=fontsize, aspect=10.)
+
+    ykey = ys[0]
+    for li, line in enumerate(lines):
+        ax = axes[li]
+        labely = li == 0
+        labelx = numlines -1 - li < ncols
+        pu.setticks(ax, fontsize=fontsize, labelleft=labely, labelbottom=labelx)
+
+        filename = rfilebase.format(line=line)
+        yvals, bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
+                                     binset='binset_0', retlog=True)
+        for me in medges:
+            tag = seltag_keys[me]
+            
+            ed = bins[tag][ykey]
+            vals = yvals[tag][ykey]
+            cens = ed[:-1] + 0.5 * np.diff(ed)
+            ax.plot(cens, vals, color=colordct[me], linewidth=2.)
+        
+        ax.text(0.98, 0.98, nicenames_lines[line], fontsize=fontsize,\
+                transform=ax.transAxes, horizontalaligment='right',\
+                verticalalignment='top')
+    # sync plot ranges
+    xlims = [ax.get_xlim() for ax in axes]
+    xmin = min([xlim[0] for xlim in xlims])
+    xmax = min([xlim[0] for xlim in xlims])
+    [ax.set_xlim(xmin, xmax) for ax in axes]
+
+    ylims = [ax.get_ylim() for ax in axes]
+    ymin = min([ylim[0] for ylim in ylims])
+    ymax = min([ylim[0] for ylim in ylims])
+    [ax.set_ylim(ymin, ymax) for ax in axes]
+    
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
+    
