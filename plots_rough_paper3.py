@@ -800,7 +800,7 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
         
         indkeys = list(set(gkeys) - set(setkeys))
         indgals = [int(key.split('_')[-1]) for key in indkeys]
-        print(galsets_seltag)
+        
         spaths = {}
         galid_smatch = {}
         ys_out = {}
@@ -823,8 +823,6 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
             else:
                 spaths.update({key: spath.format(gal=key) for key in keys_tocheck})
                 galid_smatch.update({key: seltag for key in keys_tocheck})
-        print(ys)
-        print(spaths.keys())
         for ytv in ys:
             ykey = ytv
             temppaths = spaths.copy()
@@ -917,7 +915,12 @@ def plot_radprof1(measure='mean', mmin=10.):
     grid = gsp.GridSpec(ncols=ncols + 1, nrows=nrows, hspace=0.0, wspace=0.0,\
                         width_ratios=[panelwidth] * ncols + [caxwidth])
     axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(numlines)]
-    cax = fig.add_subplot(grid[:, ncols])
+    if nrows > 3: 
+        csl = slice(nrows // 2 - 1, nrows // 2 + 2, None)
+    else:
+        csl = slice(None, None, None)
+    cax = fig.add_subplot(grid[csl, ncols])
+    
     labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
     labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
     labelax.set_xlabel(xlabel, fontsize=fontsize)
@@ -937,9 +940,7 @@ def plot_radprof1(measure='mean', mmin=10.):
         filename = rfilebase.format(line=line)
         yvals, bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                                      binset='binset_0', retlog=True)
-        print(yvals)
-        print(bins)
-        print(yvals.keys())
+
         for me in medges:
             tag = seltag_keys[me]
             
@@ -949,7 +950,7 @@ def plot_radprof1(measure='mean', mmin=10.):
             ax.plot(cens, vals, color=colordct[me], linewidth=2.)
         
         ax.text(0.98, 0.98, nicenames_lines[line], fontsize=fontsize,\
-                transform=ax.transAxes, horizontalaligment='right',\
+                transform=ax.transAxes, horizontalalignment='right',\
                 verticalalignment='top')
     # sync plot ranges
     xlims = [ax.get_xlim() for ax in axes]
