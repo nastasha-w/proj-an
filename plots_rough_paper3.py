@@ -56,7 +56,7 @@ nicenames_lines =  {'c5r': 'C V',\
 
 mass_edges_standard = (11., 11.5, 12.0, 12.5, 13.0, 13.5, 14.0)
 fontsize = 12
-mdir = ol.mdir + 'paper3_misc/'
+mdir = ol.mdir + '/data2/imgs/paper3/'
 
 def add_cbar_mass(cax, cmapname='rainbow', massedges=mass_edges_standard,\
              orientation='vertical', clabel=None, fontsize=fontsize, aspect=10.):
@@ -883,6 +883,10 @@ def plot_radprof1(measure='mean', mmin=10.):
     print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
     
     fontsize = 12
+    linewidth = 1.5
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),\
+               mppe.Stroke(linewidth=linewidth, foreground="w"),\
+               mppe.Normal()]
     
     rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
@@ -947,7 +951,8 @@ def plot_radprof1(measure='mean', mmin=10.):
             ed = bins[tag][ykey]
             vals = yvals[tag][ykey]
             cens = ed[:-1] + 0.5 * np.diff(ed)
-            ax.plot(cens, vals, color=colordct[me], linewidth=2.)
+            ax.plot(cens, vals, color=colordct[me], linewidth=2.,\
+                    path_effects=patheff)
         
         ax.text(0.98, 0.98, nicenames_lines[line], fontsize=fontsize,\
                 transform=ax.transAxes, horizontalalignment='right',\
