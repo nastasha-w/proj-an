@@ -836,7 +836,6 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                     ypart = ytv[0]
             ypaths = {key: temppaths[key].format(ds=ypart) for key in temppaths}
             bpaths = {key: temppaths[key].format(ds='bin_edges') for key in temppaths}
-            
             for key in temppaths:
                 ypath = ypaths[key]
                 bpath = bpaths[key]
@@ -937,6 +936,9 @@ def plot_radprof1(measure='mean', mmin=10.):
         filename = rfilebase.format(line=line)
         yvals, bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                                      binset='binset_0', retlog=True)
+        print(yvals)
+        print(bins)
+        print(yvals.keys())
         for me in medges:
             tag = seltag_keys[me]
             
