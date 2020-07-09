@@ -917,7 +917,7 @@ def plot_radprof1(measure='mean', mmin=10.):
         panelwidth = figwidth / ncols
         width_ratios = [panelwidth] * ncols
         c_orientation = 'horizontal'
-        c_aspect = 0.1
+        c_aspect = 0.08
     else:
         cax_right = True
         _ncols = ncols
@@ -940,7 +940,7 @@ def plot_radprof1(measure='mean', mmin=10.):
             csl = slice(None, None, None)
         cax = fig.add_subplot(grid[csl, ncols])
     else:
-        ind_min = ncols - 1 - (nrows * ncols - numlines)
+        ind_min = ncols - (nrows * ncols - numlines)
         cax = fig.add_subplot(grid[nrows - 1, ind_min:])
     
     labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
@@ -956,9 +956,10 @@ def plot_radprof1(measure='mean', mmin=10.):
     ykey = ys[0]
     for li, line in enumerate(lines):
         ax = axes[li]
-        labely = li == 0
+        labely = li % ncols == 0
         labelx = numlines -1 - li < ncols
         pu.setticks(ax, fontsize=fontsize, labelleft=labely, labelbottom=labelx)
+        ax.set_xscale('log')
 
         filename = rfilebase.format(line=line)
         yvals, bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
