@@ -945,8 +945,8 @@ def plot_radprof1(measure='mean', mmin=10.):
         _cax.axis('off')
         _l, _b, _w, _h = (_cax.get_position()).bounds
         margin = panelwidth * 0.1 / figwidth
-        cax = fig.add_axes(_l + margin, _b + margin,\
-                           _w - 2.* margin, _h - 2. * margin)
+        cax = fig.add_axes([_l + margin, _b + margin,\
+                            _w - 2.* margin, _h - 2. * margin])
         
     labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
     labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
