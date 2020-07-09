@@ -941,8 +941,13 @@ def plot_radprof1(measure='mean', mmin=10.):
         cax = fig.add_subplot(grid[csl, ncols])
     else:
         ind_min = ncols - (nrows * ncols - numlines)
-        cax = fig.add_subplot(grid[nrows - 1, ind_min:])
-    
+        _cax = fig.add_subplot(grid[nrows - 1, ind_min:])
+        _cax.axis('off')
+        _l, _b, _w, _h = _cax.bounds
+        margin = panelwidth * 0.1 / figwidth
+        cax = fig.add_axes(_l + margin, _b + margin,\
+                           _w - 2.* margin, _h - 2. * margin)
+        
     labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
     labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
     labelax.set_xlabel(xlabel, fontsize=fontsize)
@@ -983,8 +988,9 @@ def plot_radprof1(measure='mean', mmin=10.):
     xmax = max([xlim[1] for xlim in xlims])
     [ax.set_xlim(xmin, xmax) for ax in axes]
 
+    # three most energetic ions have very low mean SB -> impose limits
     ylims = [ax.get_ylim() for ax in axes]
-    ymin = min([ylim[0] for ylim in ylims])
+    ymin = -10. #min([ylim[0] for ylim in ylims])
     ymax = max([ylim[1] for ylim in ylims])
     [ax.set_ylim(ymin, ymax) for ax in axes]
     
