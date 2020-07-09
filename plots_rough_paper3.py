@@ -793,10 +793,10 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
         seltags_f = {key: fi[key].attrs['seltag'].decode()\
                      if 'seltag' in fi[key].attrs.keys() else None \
                      for key in setkeys}
-        galsets_seltag = {seltag: list(set([key if seltags_f[key] == seltag else\
+        galsets_seltag = {seltags_f[key]: list(set([key if seltags_f[key] == seltags_f[key] else\
                                             None for key in seltags_f])\
                                        - {None})\
-                          for seltag in seltags_f}
+                          for key in seltags_f}
         
         indkeys = list(set(gkeys) - set(setkeys))
         indgals = [int(key.split('_')[-1]) for key in indkeys]
