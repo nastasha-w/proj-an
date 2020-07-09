@@ -803,6 +803,8 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
         
         spaths = {}
         galid_smatch = {}
+        ys_out = {}
+        bins_out = {}
         for seltag in seltags:
             keys_tocheck = galsets_seltag[seltag]
             if len(keys_tocheck) == 0:
@@ -822,8 +824,6 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                 spaths.update({key: spath.format(gal=key) for key in keys_tocheck})
                 galid_smatch.update({key: seltag for key in keys_tocheck})
         
-        ys_out = {}
-        bins_out = {}
         for ytv in ys:
             ykey = ytv
             temppaths = spaths.copy()
