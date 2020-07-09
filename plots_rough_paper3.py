@@ -800,7 +800,7 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
         
         indkeys = list(set(gkeys) - set(setkeys))
         indgals = [int(key.split('_')[-1]) for key in indkeys]
-        
+        print(galsets_seltag)
         spaths = {}
         galid_smatch = {}
         ys_out = {}
@@ -855,7 +855,6 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                     bins = fi[bpath][:]
                 
                 seltag = galid_smatch[key]
-                print(seltag)
                 if seltag not in ys_out:
                     ys_out[seltag] = {}
                     bins_out[seltag] = {}
