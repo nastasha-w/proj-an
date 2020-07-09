@@ -868,7 +868,7 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
     return ys_out, bins_out                    
                     
                 
-def plot_radprof1(measure='mean', mmin=10.):
+def plot_radprof1(measure='mean', mmin=10.5):
     '''
     plot mean or median radial profiles for each line and halo mass bin
     
@@ -990,8 +990,8 @@ def plot_radprof1(measure='mean', mmin=10.):
 
     # three most energetic ions have very low mean SB -> impose limits
     ylims = [ax.get_ylim() for ax in axes]
-    ymin = -10. #min([ylim[0] for ylim in ylims])
-    ymax = max([ylim[1] for ylim in ylims])
+    ymin = -9. #min([ylim[0] for ylim in ylims])
+    ymax = 2. #max([ylim[1] for ylim in ylims])
     [ax.set_ylim(ymin, ymax) for ax in axes]
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
