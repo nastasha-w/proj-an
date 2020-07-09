@@ -835,7 +835,7 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                     ypart = ytv[0]
             ypaths = {key: temppaths[key].format(ds=ypart) for key in temppaths}
             bpaths = {key: temppaths[key].format(ds='bin_edges') for key in temppaths}
-            print(ypaths)
+
             for key in temppaths:
                 ypath = ypaths[key]
                 bpath = bpaths[key]
@@ -853,19 +853,19 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                                 vals = 10**vals
                     bins = fi[bpath][:]
                 
-                seltag = galid_smatch[key]
-                if seltag not in ys_out:
-                    ys_out[seltag] = {}
-                    bins_out[seltag] = {}
-                if isinstance(key, int):
-                    if ykey not in ys_out[seltag]:
-                        ys_out[seltag][ykey] = {}
-                        bins_out[seltag][ykey] = {}
-                    ys_out[seltag][ykey][key] = vals
-                    bins_out[seltag][ykey][key] = bins
-                else:
-                    ys_out[seltag][ykey] = vals
-                    bins_out[seltag][ykey] = bins
+                    seltag = galid_smatch[key]
+                    if seltag not in ys_out:
+                        ys_out[seltag] = {}
+                        bins_out[seltag] = {}
+                    if isinstance(key, int):
+                        if ykey not in ys_out[seltag]:
+                            ys_out[seltag][ykey] = {}
+                            bins_out[seltag][ykey] = {}
+                        ys_out[seltag][ykey][key] = vals
+                        bins_out[seltag][ykey][key] = bins
+                    else:
+                        ys_out[seltag][ykey] = vals
+                        bins_out[seltag][ykey] = bins
     return ys_out, bins_out                    
                     
                 
