@@ -53,6 +53,27 @@ nicenames_lines =  {'c5r': 'C V',\
                     'c6': 'C VI',\
                     'n7': 'N VII',\
                     }
+linecolors = {'c5r':   'darkgoldenrod',\
+              'c6':    'tan',\
+              'n6r':   'mediumvioletred',\
+              'n7':    'fuchsia',\
+              'o7r':   'maroon',\
+              'o7ix':  'firebrick',\
+              'o7iy':  'red',\
+              'o7f':   'tomato',\
+              'o8':    'lightsalmon',\
+              'ne9r':  'gold',\
+              'ne10':  'yellow',\
+              'mg11r': 'dodgerblue',\
+              'mg12':  'aqua',\
+              'si13r': 'navy',\
+              'fe17':  'green',\
+              'fe17-other1': 'olive',\
+              'fe18':  'chartreuse',\
+              'fe19': 'mediumspringgreen',\
+              }
+
+
 
 mass_edges_standard = (11., 11.5, 12.0, 12.5, 13.0, 13.5, 14.0)
 fontsize = 12
@@ -811,7 +832,7 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                 raise RuntimeError('No matches found for seltag {}'.format(seltag))
             
             if separate: # just pick one; should have the same galaxyids
-                extag = galsets_seltag[0]
+                extag = keys_tocheck[0]
                 galids = fi['{gs}/galaxyid'.format(gs=extag)][:]
                 # cross-reference stored galids (should be a smallish number)
                 # and listed set galids
@@ -857,7 +878,7 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                     if seltag not in ys_out:
                         ys_out[seltag] = {}
                         bins_out[seltag] = {}
-                    if isinstance(key, int):
+                    if str(key) != key: # string instance? (hard to test between pytohn 2 and 3 with isinstance)
                         if ykey not in ys_out[seltag]:
                             ys_out[seltag][ykey] = {}
                             bins_out[seltag][ykey] = {}
@@ -872,6 +893,7 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
 def plot_radprof1(measure='mean', mmin=10.5):
     '''
     plot mean or median radial profiles for each line and halo mass bin
+    panels for different lines
     
     input:
     ------
@@ -898,7 +920,7 @@ def plot_radprof1(measure='mean', mmin=10.5):
     else:
         ys = [('perc', 50.)]
     outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
-                  '_{}.pdf'.format(measure)
+                  'halomasscomp_{}.pdf'.format(measure)
     medges = np.arange(mmin, 14.1, 0.5)
     seltag_keys = {medges[i]: 'geq{:.1f}_le{:.1f}'.format(medges[i], medges[i + 1])\
                                if i < len(medges) - 1 else\
@@ -928,7 +950,7 @@ def plot_radprof1(measure='mean', mmin=10.5):
         c_aspect = 10.
         
     panelheight = panelwidth    
-    figheight = panelheight * ncols
+    figheight = panelheight * nrows
     
     fig = plt.figure(figsize=(figwidth, figheight))
     grid = gsp.GridSpec(ncols=_ncols, nrows=nrows, hspace=0.0, wspace=0.0,\
@@ -996,4 +1018,391 @@ def plot_radprof1(measure='mean', mmin=10.5):
     [ax.set_ylim(ymin, ymax) for ax in axes]
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
+    
+
+def plot_radprof2(measure='mean', mmin=10.5):
+    '''
+    plot mean or median radial profiles for each line and halo mass bin
+    panels for different halo masses 
+    
+    input:
+    ------
+    measure:  'mean' or 'median'
+    mmin:     minimum halo mass to show (log10 Msun, 
+              value options: 9.0, 9.5, 10., ... 14.)
+    '''
+    print('Values are calculated from 3.125^2 ckpc^2 pixels in 10 pkpc annuli')
+    print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb, C2 kernel')
+    print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
+    
+    fontsize = 12
+    linewidth = 1.5
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),\
+               mppe.Stroke(linewidth=linewidth, foreground="w"),\
+               mppe.Normal()]
+    lw2 = 2.3
+    pe2 = [mppe.Stroke(linewidth=lw2 + 0.7, foreground="b"),\
+           mppe.Stroke(linewidth=lw2, foreground="w"),\
+           mppe.Normal()]
+    
+    rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
+    xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
+    ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
+    
+    if measure == 'mean':
+        ys = [('mean',)]
+    else:
+        ys = [('perc', 50.)]
+    outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+                  'linecomp_{}.pdf'.format(measure)
+    medges = np.arange(mmin, 14.1, 0.5)
+    seltag_keys = {medges[i]: 'geq{:.1f}_le{:.1f}'.format(medges[i], medges[i + 1])\
+                               if i < len(medges) - 1 else\
+                               'geq{:.1f}'.format(medges[i])\
+                    for i in range(len(medges))}
+    seltags = [seltag_keys[key] for key in seltag_keys]
+    
+    #numlines = len(lines)
+    nummasses = len(medges)
+    ncols = 4
+    nrows = (nummasses - 1) // ncols + 1
+    figwidth = 11. 
+    laxheight = 1.
+    hspace = 0.15
+    wspace = 0.28
+    
+    if ncols * nrows - nummasses >= 2:
+        lax_below = False
+        _nrows = nrows
+        panelwidth = (figwidth - (ncols * wspace))/ ncols
+        width_ratios = [panelwidth] * ncols
+        panelheight = panelwidth    
+        figheight = panelheight * nrows + hspace * (nrows - 1)
+        height_ratios = [panelheight] * nrows 
+        l_bbox_to_anchor = (0.5, 0.0)
+        l_loc = 'lower center'
+        l_ncols = ncols * nrows - nummasses
+    else:
+        lax_below = True
+        _nrows = nrows + 1
+        panelwidth = (figwidth - (ncols * wspace))/ ncols
+        width_ratios = [panelwidth] * ncols 
+        panelheight = panelwidth    
+        figheight = panelheight * ncols + laxheight + hspace * nrows
+        height_ratios = [panelheight] * nrows + [laxheight]
+        l_bbox_to_anchor = (0.5, 0.80)
+        l_loc = 'upper center'
+        l_ncols = ncols 
+    
+    
+    fig = plt.figure(figsize=(figwidth, figheight))
+    grid = gsp.GridSpec(ncols=ncols, nrows=_nrows, hspace=hspace, wspace=wspace,\
+                        width_ratios=width_ratios, height_ratios=height_ratios)
+    axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(nummasses)]
+    if lax_below:
+        lax = fig.add_subplot(grid[nrows, :])
+    else:
+        ind_min = ncols - (nrows * ncols - nummasses)
+        lax = fig.add_subplot(grid[nrows - 1, ind_min:])
+    lax.axis('off')
+        #_l, _b, _w, _h = (_lax.get_position()).bounds
+        #margin = panelwidth * 0.1 / figwidth
+        #lax = fig.add_axes([_l + margin, _b + margin,\
+        #                    _w - 2.* margin, _h - 2. * margin])
+        
+    labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
+    labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    labelax.set_xlabel(xlabel, fontsize=fontsize)
+    labelax.set_ylabel(ylabel, fontsize=fontsize)
+    
+    #clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
+    #cbar, colordct = add_cbar_mass(cax, cmapname='rainbow', massedges=medges,\
+    #         orientation=c_orientation, clabel=clabel, fontsize=fontsize,\
+    #         aspect=c_aspect)
+    
+    ## get lines
+    yvals = {}
+    bins = {}
+    for line in lines:
+        filename = rfilebase.format(line=line)
+        _yvals, _bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
+                                     binset='binset_0', retlog=True)
+        yvals[line] = _yvals
+        bins[line] = _bins
+        
+    ykey = ys[0]
+    for hi, hkey in enumerate(medges):
+        ax = axes[hi]
+        labely = True # hi % ncols == 0
+        labelx = True # nummasses -1 - hi < ncols
+        pu.setticks(ax, fontsize=fontsize, labelleft=labely, labelbottom=labelx)
+        ax.set_xscale('log')
+        
+        mtag = seltag_keys[hkey]
+        
+        _max = -np.inf
+        for line in lines:
+            ed = bins[line][mtag][ykey]
+            vals = yvals[line][mtag][ykey]
+            cens = ed[:-1] + 0.5 * np.diff(ed)
+            ax.plot(cens, vals, color=linecolors[line], linewidth=2.,\
+                    path_effects=patheff, linestyle='dashed')
+            _max = max(_max, np.max(vals))
+        if hi == len(medges) - 1:
+            text = '$\\geq {:.1f}$'.format(hkey)
+        else:
+            text = '${:.1f} \\emdash {:.1f}$'.format(hkey, medges[hi + 1])
+        
+        ax.text(0.98, 0.98, text, fontsize=fontsize,\
+                transform=ax.transAxes, horizontalalignment='right',\
+                verticalalignment='top')
+        # set limits for panels
+        ylim = ax.get_ylim()
+        ymax = _max
+        ymin = max(ylim[0], ymax - 6.)
+        ymax = ymax + 0.05 * (ymax - ymin)
+        ax.set_ylim(ymin, ymax)
+        
+    # sync plot ranges
+    #xlims = [ax.get_xlim() for ax in axes]
+    #xmin = min([xlim[0] for xlim in xlims])
+    #xmax = max([xlim[1] for xlim in xlims])
+    #[ax.set_xlim(xmin, xmax) for ax in axes]
+
+    # three most energetic ions have very low mean SB -> impose limits
+    #ylims = [ax.get_ylim() for ax in axes]
+    #ymin = -9. #min([ylim[0] for ylim in ylims])
+    #ymax = 2. #max([ylim[1] for ylim in ylims])
+    #[ax.set_ylim(ymin, ymax) for ax in axes]
+    
+    ## legend
+    handles = [mlines.Line2D([], [], color=linecolors[line],\
+                             label=nicenames_lines[line],\
+                             path_effects=pe2, linewidth=lw2)\
+               for line in lines]
+    lax.legend(handles=handles, fontsize=fontsize, loc=l_loc,\
+               bbox_to_anchor=l_bbox_to_anchor, ncol=l_ncols)
+    
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
+    
+def plot_radprof3(mmin=10.0, numex=4):
+    '''
+    plot SB mean, median and scatter for lines and halo mass bins
+    panels for differnt bins, different plots for different lines 
+    
+    input:
+    ------
+    numex:    number of individual examples (max 10, but 10 gives very crowded
+              plots)
+    mmin:     minimum halo mass to show (log10 Msun, 
+              value options: 9.0, 9.5, 10., ... 14.)
+    '''
+    
+    print('Values are calculated from 3.125^2 ckpc^2 pixels in 10 pkpc annuli')
+    print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmAb, C2 kernel')
+    print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
+    print('Black is for the stacked samples, colors are random individual galaxies')
+    
+    fontsize = 12
+    linewidth = 1.5
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),\
+               mppe.Stroke(linewidth=linewidth, foreground="w"),\
+               mppe.Normal()]
+    
+    rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
+    xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
+    ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
+    
+    ys = [('mean',), ('perc', 50.), ('perc', 10.), ('perc', 90.)]
+    kwargs_y_stack = {('mean',): {'linestyle': 'dashed', 'linewidth': 2.5,\
+                                  'color': 'black'},\
+                      ('perc', 10.): {'linestyle': 'dotted', 'linewidth': 2.5,\
+                                      'color': 'black'},\
+                      ('perc', 50.): {'linestyle': 'solid', 'linewidth': 2.5,\
+                                      'color': 'black'},\
+                      ('perc', 90.): {'linestyle': 'dotted', 'linewidth': 2.5,\
+                                      'color': 'black'},\
+                     }
+    kwargs_y_indiv = {('mean',): {'linestyle': 'dashed', 'linewidth': linewidth,\
+                                  'path_effects': patheff},\
+                      ('perc', 10.): {'linestyle': 'dotted', 'linewidth': linewidth,\
+                                  'path_effects': patheff},\
+                      ('perc', 50.): {'linestyle': 'solid', 'linewidth': linewidth,\
+                                  'path_effects': patheff},\
+                      ('perc', 90.): {'linestyle': 'dotted', 'linewidth': linewidth,\
+                                  'path_effects': patheff},\
+                     }
+    legtags = {('mean',): 'mean',\
+               ('perc', 50.): 'median',\
+               ('perc', 10.): '$10^{\\mathrm{th}}$ perc.',\
+               ('perc', 90.): '$90^{\\mathrm{th}}$ perc.',\
+               }
+    
+    medges = np.arange(mmin, 14.1, 0.5)
+    seltag_keys = {medges[i]: 'geq{:.1f}_le{:.1f}'.format(medges[i], medges[i + 1])\
+                               if i < len(medges) - 1 else\
+                               'geq{:.1f}'.format(medges[i])\
+                    for i in range(len(medges))}
+    seltags = [seltag_keys[key] for key in seltag_keys]
+    
+    #numlines = len(lines)
+    nummasses = len(medges)
+    ncols = 4
+    nrows = (nummasses - 1) // ncols + 1
+    figwidth = 11. 
+    laxheight = 1.
+    hspace = 0.15
+    wspace = 0.28
+    
+    if ncols * nrows - nummasses >= 2:
+        lax_below = False
+        _nrows = nrows
+        panelwidth = (figwidth - (ncols * wspace)) / ncols
+        width_ratios = [panelwidth] * ncols
+        panelheight = panelwidth    
+        figheight = panelheight * nrows + hspace * (nrows - 1)
+        height_ratios = [panelheight] * nrows 
+        l_bbox_to_anchor = (0.5, 0.0)
+        l_loc = 'lower center'
+        l_ncols = ncols * nrows - nummasses
+    else:
+        lax_below = True
+        _nrows = nrows + 1
+        panelwidth = (figwidth - (ncols * wspace)) / ncols
+        width_ratios = [panelwidth] * ncols 
+        panelheight = panelwidth    
+        figheight = panelheight * ncols + laxheight + hspace * nrows
+        height_ratios = [panelheight] * nrows + [laxheight]
+        l_bbox_to_anchor = (0.5, 0.80)
+        l_loc = 'upper center'
+        l_ncols = ncols 
+    
+    for line in lines:
+        outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+                  'measurecomp_{}.pdf'.format(line)
+                  
+        fig = plt.figure(figsize=(figwidth, figheight))
+        fig.suptitle(nicenames_lines[line], fontsize=fontsize)
+        grid = gsp.GridSpec(ncols=ncols, nrows=_nrows, hspace=hspace, wspace=wspace,\
+                            width_ratios=width_ratios, height_ratios=height_ratios)
+        axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(nummasses)]
+        if lax_below:
+            lax = fig.add_subplot(grid[nrows, :])
+        else:
+            ind_min = ncols - (nrows * ncols - nummasses)
+            lax = fig.add_subplot(grid[nrows - 1, ind_min:])
+        lax.axis('off')
+            #_l, _b, _w, _h = (_lax.get_position()).bounds
+            #margin = panelwidth * 0.1 / figwidth
+            #lax = fig.add_axes([_l + margin, _b + margin,\
+            #                    _w - 2.* margin, _h - 2. * margin])
+            
+        labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
+        labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+        labelax.set_xlabel(xlabel, fontsize=fontsize)
+        labelax.set_ylabel(ylabel, fontsize=fontsize)
+        
+        #clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
+        #cbar, colordct = add_cbar_mass(cax, cmapname='rainbow', massedges=medges,\
+        #         orientation=c_orientation, clabel=clabel, fontsize=fontsize,\
+        #         aspect=c_aspect)
+        
+        ## get lines
+        filename = rfilebase.format(line=line)
+        yvals, bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
+                                     binset='binset_0', retlog=True)
+        yvals_ind, bins_ind = readin_radprof(filename, seltags, ys, runit='pkpc', separate=True,\
+                                     binset='binset_0', retlog=True)
+        
+        for hi, hkey in enumerate(medges):
+            ax = axes[hi]
+            labely = True # hi % ncols == 0
+            labelx = True # nummasses -1 - hi < ncols
+            pu.setticks(ax, fontsize=fontsize, labelleft=labely, labelbottom=labelx)
+            ax.set_xscale('log')
+            
+            mtag = seltag_keys[hkey]
+            
+            _max = -100.
+            
+            # plot the stacked data
+            for ytag in ys:
+                ed = bins[mtag][ytag]
+                vals = yvals[mtag][ytag]
+                cens = ed[:-1] + 0.5 * np.diff(ed)
+                ax.plot(cens, vals, **kwargs_y_stack[ytag])
+                try:
+                    tmax = np.max(vals[np.isfinite(vals)])
+                    _max = max(_max, tmax)
+                except ValueError: # no finite values
+                    pass
+            # scatter range stack
+            ed = bins[mtag][('perc', 10.)]
+            v1 = yvals[mtag][('perc', 10.)]
+            v2 = yvals[mtag][('perc', 90.)]
+            cens = ed[:-1] + 0.5 * np.diff(ed)
+            ax.fill_between(cens, v1, v2, facecolor='black', alpha=0.1,\
+                            edgecolor='none')
+            
+            # plot individual galaxy data
+            gids = list(yvals_ind[mtag][ys[0]].keys())
+            for gi, gid in enumerate(gids[:numex]):
+                for ytag in ys:
+                    ed = bins_ind[mtag][ytag][gid]
+                    vals = yvals_ind[mtag][ytag][gid]
+                    cens = ed[:-1] + 0.5 * np.diff(ed)
+                    color = 'C{}'.format(gi % 10)
+                    ax.plot(cens, vals, color=color, **kwargs_y_indiv[ytag])
+                    try:
+                        tmax = np.max(vals[np.isfinite(vals)])
+                        _max = max(_max, tmax)
+                    except ValueError: # no finite values
+                        pass
+                        
+            if hi == len(medges) - 1:
+                text = '$\\geq {:.1f}$'.format(hkey)
+            else:
+                text = '${:.1f} \\emdash {:.1f}$'.format(hkey, medges[hi + 1])
+            
+            ax.text(0.98, 0.98, text, fontsize=fontsize,\
+                    transform=ax.transAxes, horizontalalignment='right',\
+                    verticalalignment='top')
+            # set limits for panels
+            ylim = ax.get_ylim()
+            ymax = _max
+            ymin = max(ylim[0], ymax - 6.)
+            ymax = ymax + 0.05 * (ymax - ymin)
+            ax.set_ylim(ymin, ymax)
+            
+        # sync plot ranges
+        #xlims = [ax.get_xlim() for ax in axes]
+        #xmin = min([xlim[0] for xlim in xlims])
+        #xmax = max([xlim[1] for xlim in xlims])
+        #[ax.set_xlim(xmin, xmax) for ax in axes]
+    
+        # three most energetic ions have very low mean SB -> impose limits
+        #ylims = [ax.get_ylim() for ax in axes]
+        #ymin = -9. #min([ylim[0] for ylim in ylims])
+        #ymax = 2. #max([ylim[1] for ylim in ylims])
+        #[ax.set_ylim(ymin, ymax) for ax in axes]
+        
+        ## legend
+        handles1 = [mlines.Line2D([], [], **kwargs_y_stack[ytag],\
+                                  label=legtags[ytag] + ' (stack)')\
+                   for ytag in ys]
+        lcs = []
+        line = [[(0, 0)]]
+        for ytag in ys:
+            kwargs = kwargs_y_indiv[ytag].copy()
+            subcols = [mpl.colors.to_rgba('C{}'.format(i)) for i in range(numex)]
+            lc = mcol.LineCollection(line * len(subcols), colors=subcols,\
+                                     label=legtags[ytag] + ' (indiv.)',\
+                                     **kwargs)
+            lcs.append(lc)
+        
+        lax.legend(handles=handles1 + lcs, fontsize=fontsize, loc=l_loc,\
+                   bbox_to_anchor=l_bbox_to_anchor, ncol=l_ncols,\
+                   handler_map={type(lc): pu.HandlerDashedLines()})
+        
+        plt.savefig(outname, format='pdf', bbox_inches='tight')
     
