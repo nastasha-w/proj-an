@@ -958,7 +958,78 @@ class Galaxyselector:
     def getgalid_rnd(self):
         self.galid_dct = getrandomsubset(self.halocat, self.number, selections=self.selections, names=self.names, seed=self.seed, replace=self.replace)
 
-
+    def savedata(self, savename, savepath=None,\
+                 fields=('M200c_Msun', 'R200c_pkpc', 'Mstar_Msun')):
+        '''
+        save data for selected galaxies, along with galaxyid and GalaxySelector 
+        keys, in a text file 
+        
+        input:
+        ------
+        fields:   datasets from the halo catalogue to save
+        savepath: directory in which to store the file (defaults to ol.pdir)
+        savename: name of the text file 
+        '''
+    
+        if savepath is None:
+            savepath = ol.pdir
+        galidsets = self.galids()
+        allids = np.array([gid for key in galidsets for gid in galidsets[key]])
+        allids = np.array(sorted(allids))
+        setnames = {gid: key for key in galidsets for gid in galidsets[key]}
+        setnames = np.array([setnames[gid] for gid in allids])
+        
+        with h5py.File(self.halocat, 'r') as hc:
+            galaxyid = hc['galaxyid'][:]
+            hinds = cu.match(allids, galaxyid, arr2_sorted=False)
+            if np.any(hinds == -1):
+                raise RuntimeError('galaxyids retrieved from the catalogue were somehow not recovered form it')
+            fielddct = {}
+            for field in fields:
+                vals = hc[field][:]
+                vals = vals[hinds]
+                fielddct[field] = vals
+            
+            cosmopars = {key: val for key, val in hc['Header/cosmopars'].attrs.items()}
+            metadata = {key: val for key, val in hc['Header'].attrs.items()}
+        # save data
+        with open(savepath + savename, 'w') as fo:
+            # header
+            fo.write('### Header\n')
+            fo.write('## Galaxyselector parameters\n')
+            fo.write('# halo catalogue: {}\n'.format(self.halocat))
+            fo.write('# number: {}\n'.format(self.number))
+            fo.write('# names: {}\n'.format(self.names))
+            fo.write('# selections: {}\n'.format(self.selections))
+            fo.write('# seed: {}\n'.format(self.seed))
+            fo.write('# replace: {}\n'.format(self.replace))
+            fo.write('## halo catalogue data\n')
+            keys = sorted(list(metadata.keys()))
+            for key in keys:
+                val = metadata[key]
+                try:
+                    val = val.decode()
+                except AttributeError:
+                    pass
+                fo.write('# {key}: {val}\n'.format(key=key, val=val))
+            fo.write('## cosmopars\n')
+            keys = sorted(list(cosmopars.keys()))
+            for key in keys:
+                val = cosmopars[key]
+                fo.write('# {key}: {val}\n'.format(key=key, val=val))
+            fo.write('### Values\n')
+            fillstr = '{setname}\t{galaxyid}\t' + '\t'.join(['{{{}}}'.format(field) \
+                       for field in fields]) + '\n'
+            kwa = {key: key for key in fields}
+            head = fillstr.format(setname='setname', galaxyid='galaxyid', **kwa)
+            fo.write(head)
+            for i, gid in enumerate(allids):
+                kwa = {field: fielddct[field][i] for field in fields}
+                _str = fillstr.format(setname=setnames[i], galaxyid=gid,\
+                                      **kwa)
+                fo.write(_str)
+            
+    
 # L0025N0752Recal, snap 11. Minimum halo mass 10**8 Msun
 halocat_L0025N0752Recal_11 = ol.pdir + 'catalogue_RecalL0025N0752_snap11_aperture30_inclsatellites.hdf5'
 
