@@ -29,6 +29,11 @@ res_arcsec = {'Athena X-IFU': 5.,\
               'Lynx PSF':    1.,\
               'Lynx HDXI pixel':  0.3,\
               }
+fov_arcmin = {'Athena X-IFU': 5.,\
+              'Athena WFI':  40.,\
+              'Lynx HDXI':  22.,\
+              'Lynx X-ray microcalorimeter':  5.,\
+              }
 
 lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
          'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
@@ -138,7 +143,52 @@ def get_resolution_tables(zvals=[0.01, 0.05, 0.1, 0.2]):
     print(table)
     print(tabend)
 
+def get_fov_tables(zvals=[0.01, 0.05, 0.1, 0.2]):
+    ins = sorted(list(fov_arcmin.keys()))
+    nz = len(zvals)
+    zvals = sorted(zvals)
 
+    colhead_dec = 'r@{.}l'    
+    tabstart = '\\begin{{tabular}}{{l r {decl}}}'.format(\
+                      decl=' '.join([colhead_dec] * (nz )))
+    tabend = '\\end{tabular}'
+    hline = '\\hline'
+    tabhead1 = '\\multicolumn{1}{c}{instrument} & ' + \
+               '\\multicolumn{1}{c}{FOV} & ' + \
+               '\\multicolumn{{{nc}}}{{c}}{{$z$}} \\\\'.format(nc=2*nz)
+    tabhead2 = ' & \\multicolumn{1}{c}{arcmin} &' +\
+               ' & '.join(['\\multicolumn{{2}}{{c}}{{{z}}}'.format(\
+                           z=z) for z in zvals]) +\
+               '\\\\'
+    tabline = '{inst} & {fov} & ' + ' & '.join(['{}' for zval in zvals]) + \
+              '\\\\'
+    print(tabline)
+    caption = '\\caption{Field of view (FOV) of various instruments in pkpc at ' +\
+         'different redshifts $z$. ' +\
+         'Calculations assume the same cosmological parameters as used in {\eagle}.}'
+    arcmin_to_rad = np.pi / (180. * 60.)
+    sizes = {inst: {str(zval): cu.ang_diam_distance_cm(zval) \
+                          / c.cm_per_mpc * 1e3 * \
+                          fov_arcmin[inst] * arcmin_to_rad \
+                    for zval in zvals} \
+             for inst in ins}
+    print(sizes['Athena WFI'])
+    sizetab = {inst: [('{:.1f}'.format(sizes[inst][zst])).replace('.', '&')
+                      for zst in sizes[inst]] \
+               for inst in ins}
+    fmtfov_arcmin = {inst: ('{:.0f}'.format(fov_arcmin[inst])).replace('.', '&')\
+                     for inst in ins}
+    table = '\n'.join([tabline.format(*tuple(sizetab[inst]),\
+                                      inst=inst, fov=fmtfov_arcmin[inst])\
+                       for inst in ins])
+    print(caption)
+    print(tabstart)
+    print(tabhead1)
+    print(tabhead2)
+    print(hline)
+    print(table)
+    print(tabend)
+    
 ### stamp images from total maps
     
 def reducedims(map_in, dims_out, weights_in=None):
