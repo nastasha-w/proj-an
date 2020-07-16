@@ -1325,7 +1325,7 @@ def stamps_sl_hdf5(base, szcens, rmax, centres, rscales=1.,\
             and np.allclose(np.diff(zcens), length_per_slice)):
         raise ValueError('stamps_sl_hdf5: input files are not evenly spaced slices covering the length of the simulation box')
     if not (np.isclose(L_x, boxsize) and np.isclose(L_y, boxsize)):
-        raise ValueError('The slices do not span the simulation box perpendixular to the line of sight')
+        raise ValueError('The slices do not span the simulation box perpendicular to the line of sight')
     slice_cenleft_inds = np.asarray(\
         np.round(c2 / length_per_slice + 0.5 * (numsl % 2), 0) - 1.,\
         dtype=int) % len(zcens)

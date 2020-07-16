@@ -3899,7 +3899,6 @@ if jobind in range(30159, 30177):
     
     for hmkey in galids_dct:
         print('Trying halo set %s'%(hmkey))
-        galids = np.copy(galids_dct[hmkey])
         # get max. distance from halo mass range:
         
         # hmkeys format: 'geq10.0_le10.5' or 'geq14.0'
@@ -3912,6 +3911,7 @@ if jobind in range(30159, 30177):
                 rbins = rbins_pkpc
             else:
                 rbins = rbins_r200c
+            galids = np.copy(galids_dct[hmkey])
             if kwargs['separateprofiles']:
                 galids = galids[:10] # just a few examples, don't need the whole set
             #print('Calling getprofiles_fromstamps with:')
