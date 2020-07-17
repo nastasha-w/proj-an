@@ -24,6 +24,13 @@ import cosmo_utils as cu
 import plot_utils as pu
 import make_maps_opts_locs as ol
 
+rho_to_nh = 0.752 / (c.atomw_H * c.u)
+cosmopars_eagle = {'omegab': c.omegabaryon,\
+                   'omegam': c.omega0,\
+                   'omegalambda': c.omegalambda,\
+                   'h': c.hubbleparam,\
+                  }
+
 res_arcsec = {'Athena X-IFU': 5.,\
               'Athena WFI':  3.,\
               'Lynx PSF':    1.,\
@@ -1455,4 +1462,108 @@ def plot_radprof3(mmin=10.0, numex=4):
                    handler_map={type(lc): pu.HandlerDashedLines()})
         
         plt.savefig(outname, format='pdf', bbox_inches='tight')
+        
+
+def plot_emtables(z=0.1):
+    '''
+    contour plots for ions balances + shading for halo masses at different Tvir
+    '''
+      
+    outname = mdir + 'emtables_z{}_HM01_ionizedmu.pdf'.format(str(z).replace('.', 'p'))
+    
+    #ioncolors.update({'he2': 'darkgoldenrod'})
+    Ts = {}
+    Tmaxs = {}
+    nHs = {}
+    vals = {}
+    maxvals = {}
+    
+    # eagle cosmology
+    cosmopars = cosmopars_eagle.copy()
+    cosmopars['z'] = z
+    cosmopars['a'] = 1. / (1. + z)
+    logrhob = np.log10(cu.rhocrit(0.) * c.omegabaryon / (1. + z)**3)
+        
+    fracv = 0.1
+    
+    for line in lines:   
+        em, logTK, lognHcm3 = cu.findiontables(line, z)
+        vals[line] = em
+        nHs[line] = lognHcm3
+        Ts[line] = logTK
+        indmaxfrac = np.argmax(em[-1, :])
+        maxem = em[-1, indmaxfrac]
+        Tmax = logTK[indmaxfrac]
+        Tmaxs[line] = Tmax
+    
+        xs = pu.find_intercepts(em[-1, :], logTK, fracv * maxem)
+        msg = 'Line {line} has maximum emissivity (solar abunds) {maxv:3f}, at log T[K] = {T:.1f}, max range is {rng}'
+        print(msg.format(line=line, maxv=maxem, T=Tmax, rng=str(xs)))
+        maxvals[line] = maxem
+    
+    numpanels = 4
+    fig, axes = plt.subplots(ncols=1, nrows=numpanels, figsize=(5.5, 10.),\
+                             gridspec_kw={'hspace': 0.})
+    xlim = (-8., -1.5)
+    ylim = (3.4, 7.65)
+    [ax.set_xlim(*xlim) for ax in axes]
+    [ax.set_ylim(*ylim) for ax in axes]
+
+    axions = {0: ['c5r', 'c6', 'n6r', 'n7'],\
+              1: ['o7r', 'o7ix', 'o7iy', 'o7f', 'o8'],\
+              2: ['ne9r', 'ne10', 'mg11r', 'mg12', 'si13r'],\
+              3: ['fe17-other1', 'fe19', 'fe17', 'fe18']}
+    axions = {key: sorted(axions[key], key=ol.line_eng_ion.get) for key in axions}
+    
+    xlabel = r'$\log_{10} \, \mathrm{n}_{\mathrm{H}} \; [\mathrm{cm}^{-3}]$'
+    ylabel = r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$'
+    [ax.set_ylabel(ylabel, fontsize=fontsize) for ax in axes]
+    axes[numpanels - 1].set_xlabel(xlabel, fontsize=fontsize)
+    for axi, ax in enumerate(axes):
+        pu.setticks(ax, fontsize=fontsize, right=False,\
+                    labelbottom=(axi == numpanels - 1))
+        
+        ax.axvline(logrhob + np.log10(rho_to_nh), 0., 0.85, color='gray',\
+                   linestyle='dashed', linewidth=1.5)
+     
+        for line in axions[axi]:
+            ax.contourf(nHs[line], Ts[line], vals[line].T, colors=linecolors[line],\
+                        alpha=0.1, linewidths=[3.],\
+                        levels=[0.1 * maxvals[line], maxvals[line]])
+            ax.contour(nHs[line], Ts[line], vals[line].T, colors=linecolors[line],\
+                       linewidths=[2.], levels=[0.1 * maxvals[line]],\
+                       linestyles=['solid'])
+        for line in lines:
+            ax.axhline(Tmaxs[line], 0.95, 1., color=linecolors[line], linewidth=3.)
+            
+        #bal = bals[ion]
+        #maxcol = bal[-1, :]
+        #diffs = bal / maxcol[np.newaxis, :]
+        #diffs[np.logical_and(maxcol[np.newaxis, :] == 0, bal == 0)] = 0.
+        #diffs[np.logical_and(maxcol[np.newaxis, :] == 0, bal != 0)] = bal[np.logical_and(maxcol[np.newaxis, :] == 0, bal != 0)] / 1e-18
+        #diffs = np.abs(np.log10(diffs))
+            
+        #mask = bal < 0.6 * fracv * maxfracs[ion] # 0.6 gets the contours to ~ the edges of the ion regions
+        #diffs[mask] = np.NaN
+
+        #ax.contour(nHs[ion], Ts[ion][np.isfinite(maxcol)], (diffs[:, np.isfinite(maxcol)]).T, levels=[np.log10(ciemargin)], linestyles=['solid'], linewidths=[1.], alphas=0.5, colors=ioncolors[ion])
+
+        axy2 = ax.twinx()
+        ylim = ax.get_ylim()
+        axy2.set_ylim(*ylim)
+        mhalos = np.arange(9.0, 15.1, 0.5)
+        Tvals = np.log10(cu.T200c_hot(10**mhalos, cosmopars))
+        Tlabels = ['%.1f'%mh for mh in mhalos]
+        axy2.set_yticks(Tvals)
+        axy2.set_yticklabels(Tlabels)
+        pu.setticks(axy2, fontsize=fontsize, left=False, right=True, labelleft=False, labelright=True)
+        axy2.minorticks_off()
+        axy2.set_ylabel(r'$\log_{10} \, \mathrm{M_{\mathrm{200c}}} (T_{\mathrm{200c}}) \; [\mathrm{M}_{\odot}]$', fontsize=fontsize)
+    
+        handles = [mlines.Line2D([], [], label=nicenames_lines[line],\
+                                 color=linecolors[line]) for line in axions[axi]]
+        ax.legend(handles=handles, fontsize=fontsize, ncol=3,\
+                  bbox_to_anchor=(0.0, 1.0), loc='upper left', frameon=False)
+
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
     
