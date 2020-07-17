@@ -1487,7 +1487,7 @@ def plot_emtables(z=0.1):
     fracv = 0.1
     
     for line in lines:   
-        em, logTK, lognHcm3 = cu.findiontables(line, z)
+        em, logTK, lognHcm3 = cu.findemtables(line, z)
         vals[line] = em
         nHs[line] = lognHcm3
         Ts[line] = logTK
