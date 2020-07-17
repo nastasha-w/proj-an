@@ -73,7 +73,7 @@ linecolors = {'c5r':   'darkgoldenrod',\
               'o7ix':  'firebrick',\
               'o7iy':  'red',\
               'o7f':   'tomato',\
-              'o8':    'lightsalmon',\
+              'o8':    'orange',\
               'ne9r':  'gold',\
               'ne10':  'yellow',\
               'mg11r': 'dodgerblue',\
@@ -85,11 +85,15 @@ linecolors = {'c5r':   'darkgoldenrod',\
               'fe19': 'mediumspringgreen',\
               }
 
-
+def getoutline(linewidth):
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),\
+               mppe.Stroke(linewidth=linewidth + 0.5, foreground="w"),\
+               mppe.Normal()]
+    return patheff
 
 mass_edges_standard = (11., 11.5, 12.0, 12.5, 13.0, 13.5, 14.0)
 fontsize = 12
-mdir = ol.mdir + '/data2/imgs/paper3/'
+mdir = '/data2/imgs/paper3/'
 
 def add_cbar_mass(cax, cmapname='rainbow', massedges=mass_edges_standard,\
              orientation='vertical', clabel=None, fontsize=fontsize, aspect=10.):
@@ -1487,25 +1491,26 @@ def plot_emtables(z=0.1):
     fracv = 0.1
     
     for line in lines:   
-        em, logTK, lognHcm3 = cu.findemtables(line, z)
+        em, logTK, lognHcm3 = cu.findemtables(ol.elements_ion[line],z) 
+        em = em[:,:,ol.line_nos_ion[line]]
         vals[line] = em
         nHs[line] = lognHcm3
         Ts[line] = logTK
-        indmaxfrac = np.argmax(em[-1, :])
-        maxem = em[-1, indmaxfrac]
+        indmaxfrac = np.argmax(em[:, -1])
+        maxem = em[indmaxfrac, -1]
         Tmax = logTK[indmaxfrac]
         Tmaxs[line] = Tmax
     
-        xs = pu.find_intercepts(em[-1, :], logTK, fracv * maxem)
+        xs = pu.find_intercepts(em[:, -1], logTK, np.log10(fracv) + maxem)
         msg = 'Line {line} has maximum emissivity (solar abunds) {maxv:3f}, at log T[K] = {T:.1f}, max range is {rng}'
         print(msg.format(line=line, maxv=maxem, T=Tmax, rng=str(xs)))
         maxvals[line] = maxem
     
     numpanels = 4
-    fig, axes = plt.subplots(ncols=1, nrows=numpanels, figsize=(5.5, 10.),\
+    fig, axes = plt.subplots(ncols=1, nrows=numpanels, figsize=(5.5, 12.),\
                              gridspec_kw={'hspace': 0.})
     xlim = (-8., -1.5)
-    ylim = (3.4, 7.65)
+    ylim = (3.5, 8.)
     [ax.set_xlim(*xlim) for ax in axes]
     [ax.set_ylim(*ylim) for ax in axes]
 
@@ -1513,28 +1518,54 @@ def plot_emtables(z=0.1):
               1: ['o7r', 'o7ix', 'o7iy', 'o7f', 'o8'],\
               2: ['ne9r', 'ne10', 'mg11r', 'mg12', 'si13r'],\
               3: ['fe17-other1', 'fe19', 'fe17', 'fe18']}
+    lsargs = {'c5r':  {'linestyle': 'solid'},\
+              'c6':   {'linestyle': 'dashed'},\
+              'n6r':  {'linestyle': 'dotted'},\
+              'n7':   {'linestyle': 'dashdot'},\
+              'o7r':  {'linestyle': 'solid'},\
+              'o7ix': {'dashes': [2, 2, 2, 2]},\
+              'o7iy': {'dashes': [6, 2]},\
+              'o7f':  {'linestyle': 'dashdot'},\
+              'o8':   {'linestyle': 'dotted'},\
+              'fe17-other1':  {'linestyle': 'solid'},\
+              'fe19':  {'linestyle': 'dashed'},\
+              'fe17':  {'linestyle': 'dotted'},\
+              'fe18':  {'linestyle': 'dashdot'},\
+              'si13r': {'linestyle': 'solid'},\
+              'ne9r':  {'dashes': [2, 2, 2, 2]},\
+              'ne10':  {'dashes': [6, 2]},\
+              'mg11r': {'linestyle': 'dashdot'},\
+              'mg12':  {'linestyle': 'dotted'},\
+                  }
     axions = {key: sorted(axions[key], key=ol.line_eng_ion.get) for key in axions}
     
     xlabel = r'$\log_{10} \, \mathrm{n}_{\mathrm{H}} \; [\mathrm{cm}^{-3}]$'
     ylabel = r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$'
     [ax.set_ylabel(ylabel, fontsize=fontsize) for ax in axes]
     axes[numpanels - 1].set_xlabel(xlabel, fontsize=fontsize)
+    
+    _lsargs = lsargs.copy()
+    _lsargs = {key: _lsargs[key] if 'linestyle' not in _lsargs[key] else\
+                    {'linestyles': _lsargs[key]['linestyle']}\
+               for key in _lsargs}
     for axi, ax in enumerate(axes):
         pu.setticks(ax, fontsize=fontsize, right=False,\
                     labelbottom=(axi == numpanels - 1))
         
         ax.axvline(logrhob + np.log10(rho_to_nh), 0., 0.85, color='gray',\
                    linestyle='dashed', linewidth=1.5)
-     
         for line in axions[axi]:
-            ax.contourf(nHs[line], Ts[line], vals[line].T, colors=linecolors[line],\
+            ax.contourf(nHs[line], Ts[line], vals[line], colors=linecolors[line],\
                         alpha=0.1, linewidths=[3.],\
-                        levels=[0.1 * maxvals[line], maxvals[line]])
-            ax.contour(nHs[line], Ts[line], vals[line].T, colors=linecolors[line],\
-                       linewidths=[2.], levels=[0.1 * maxvals[line]],\
-                       linestyles=['solid'])
-        for line in lines:
-            ax.axhline(Tmaxs[line], 0.95, 1., color=linecolors[line], linewidth=3.)
+                        levels=[np.log10(fracv) + maxvals[line], maxvals[line] + 100.],\
+                        **lsargs[line])
+            
+            ax.contour(nHs[line], Ts[line], vals[line], colors=linecolors[line],\
+                       linewidths=[2.], levels=[np.log10(fracv) + maxvals[line]],\
+                       **_lsargs[line])
+
+            ax.axhline(Tmaxs[line], 0.92, 1., color=linecolors[line],\
+                       linewidth=3., **lsargs[line])
             
         #bal = bals[ion]
         #maxcol = bal[-1, :]
@@ -1549,21 +1580,159 @@ def plot_emtables(z=0.1):
         #ax.contour(nHs[ion], Ts[ion][np.isfinite(maxcol)], (diffs[:, np.isfinite(maxcol)]).T, levels=[np.log10(ciemargin)], linestyles=['solid'], linewidths=[1.], alphas=0.5, colors=ioncolors[ion])
 
         axy2 = ax.twinx()
-        ylim = ax.get_ylim()
         axy2.set_ylim(*ylim)
         mhalos = np.arange(9.0, 15.1, 0.5)
-        Tvals = np.log10(cu.T200c_hot(10**mhalos, cosmopars))
+        Tvals = np.log10(cu.Tvir_hot(10**mhalos * c.solar_mass,\
+                                     cosmopars=cosmopars))
         Tlabels = ['%.1f'%mh for mh in mhalos]
         axy2.set_yticks(Tvals)
         axy2.set_yticklabels(Tlabels)
-        pu.setticks(axy2, fontsize=fontsize, left=False, right=True, labelleft=False, labelright=True)
+        pu.setticks(axy2, fontsize=fontsize, left=False, right=True,\
+                    labelleft=False, labelright=True)
         axy2.minorticks_off()
-        axy2.set_ylabel(r'$\log_{10} \, \mathrm{M_{\mathrm{200c}}} (T_{\mathrm{200c}}) \; [\mathrm{M}_{\odot}]$', fontsize=fontsize)
+        axy2.set_ylabel(r'$\log_{10} \, \mathrm{M_{\mathrm{200c}}} (T_{\mathrm{200c}}) \; [\mathrm{M}_{\odot}]$',\
+                        fontsize=fontsize)
     
         handles = [mlines.Line2D([], [], label=nicenames_lines[line],\
-                                 color=linecolors[line]) for line in axions[axi]]
-        ax.legend(handles=handles, fontsize=fontsize, ncol=3,\
-                  bbox_to_anchor=(0.0, 1.0), loc='upper left', frameon=False)
+                                 color=linecolors[line], **lsargs[line],\
+                                 linewidth=2.)\
+                   for line in axions[axi]]
+        ax.legend(handles=handles, fontsize=fontsize, ncol=2,\
+                  bbox_to_anchor=(1.0, 0.0), loc='lower right', frameon=False)
+
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
+    
+    
+def plot_emcurves(z=0.1):
+    '''
+    contour plots for ions balances + shading for halo masses at different Tvir
+    '''
+      
+    outname = mdir + 'emcurves_z{}_HM01_ionizedmu.pdf'.format(str(z).replace('.', 'p'))
+    
+    #ioncolors.update({'he2': 'darkgoldenrod'})
+    Ts = {}
+    Tmaxs = {}
+    nHs = {}
+    vals = {}
+    maxvals = {}
+    
+    # eagle cosmology
+    cosmopars = cosmopars_eagle.copy()
+    cosmopars['z'] = z
+    cosmopars['a'] = 1. / (1. + z)
+        
+    fracv = 0.1
+    
+    for line in lines:   
+        em, logTK, lognHcm3 = cu.findemtables(ol.elements_ion[line],z) 
+        em = em[:,:,ol.line_nos_ion[line]]
+        vals[line] = em
+        nHs[line] = lognHcm3
+        Ts[line] = logTK
+        indmaxfrac = np.argmax(em[:, -1])
+        maxem = em[indmaxfrac, -1]
+        Tmax = logTK[indmaxfrac]
+        Tmaxs[line] = Tmax
+    
+        xs = pu.find_intercepts(em[:, -1], logTK, np.log10(fracv) + maxem)
+        msg = 'Line {line} has maximum emissivity (solar abunds) {maxv:3f}, at log T[K] = {T:.1f}, max range is {rng}'
+        print(msg.format(line=line, maxv=maxem, T=Tmax, rng=str(xs)))
+        maxvals[line] = maxem
+    
+    fig, (ax, lax) = plt.subplots(ncols=1, nrows=2, figsize=(11., 5.),\
+                             gridspec_kw={'hspace': 0.25,\
+                                          'height_ratios': [4, 1]})
+    xlim = (5.5, 7.8)
+    ylim = (-29., -23.)
+    ax.set_xlim(*xlim) 
+    ax.set_ylim(*ylim)
+    lax.axis('off')
+    pu.setticks(ax, fontsize=fontsize, top=False, labeltop=False)
+
+    lsargs = {'c5r':  {'linestyle': 'solid'},\
+              'c6':   {'linestyle': 'dashed'},\
+              'n6r':  {'linestyle': 'dotted'},\
+              'n7':   {'linestyle': 'dashdot'},\
+              'o7r':  {'linestyle': 'solid'},\
+              'o7ix': {'dashes': [2, 2, 2, 2]},\
+              'o7iy': {'dashes': [6, 2]},\
+              'o7f':  {'linestyle': 'dashdot'},\
+              'o8':   {'linestyle': 'dotted'},\
+              'fe17-other1':  {'linestyle': 'solid'},\
+              'fe19':  {'linestyle': 'dashed'},\
+              'fe17':  {'linestyle': 'dotted'},\
+              'fe18':  {'linestyle': 'dashdot'},\
+              'si13r': {'linestyle': 'solid'},\
+              'ne9r':  {'dashes': [2, 2, 2, 2]},\
+              'ne10':  {'dashes': [6, 2]},\
+              'mg11r': {'linestyle': 'dashdot'},\
+              'mg12':  {'linestyle': 'dotted'},\
+                  }
+    
+    ylabel = '$\log_{10} \\, \\Lambda \,/\, \\mathrm{n}_{\\mathrm{H}}^{2} \\; [\\mathrm{erg} \\, \\mathrm{cm}^{3}]$'
+    xlabel = r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$'
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    
+    indvals = [] #[-5.]
+    lsargs2 = [\
+               #{'linewidth': 1.5, 'alpha': 1.},\
+               #{'linewidth': 1.0, 'alpha': 0.5},\
+               {'linewidth': 2.5,  'alpha': 1.0},\
+               #{'linewidth': 3.,  'alpha': 0.5},\
+               ]
+    offsets = {line: 0.05 *  (li - 0.5 *len(lines)) / len(lines) \
+               for li, line in enumerate(lines)}
+    for line in lines:
+        # nH values
+        for iv, nH in enumerate(indvals):
+            nhi = np.where(np.isclose(nHs[line], nH))[0][0]
+            emvals = vals[line][:, nhi]
+            kwargs = lsargs[line].copy()
+            kwargs.update(lsargs2[iv])
+            pe = getoutline(kwargs['linewidth'])
+            ax.plot(Ts[line], emvals, color=linecolors[line], path_effects=pe,\
+                    **kwargs)
+        # CIE
+        emvals = vals[line][:, -1]
+        kwargs = lsargs[line].copy()
+        kwargs.update(lsargs2[-1])
+        pe = getoutline(kwargs['linewidth'])
+        
+        ax.plot(Ts[line], emvals, color=linecolors[line],\
+                path_effects=pe, **kwargs)
+        
+        ax.axvline(Tmaxs[line] + offsets[line], 0.92, 1., color=linecolors[line],\
+                   **lsargs[line], linewidth=3.)
+
+    axy2 = ax.twiny()
+    axy2.set_xlim(*xlim)
+    mhalos = np.arange(11.5, 15.1, 0.5)
+    Tvals = np.log10(cu.Tvir_hot(10**mhalos * c.solar_mass,\
+                                 cosmopars=cosmopars))
+    Tlabels = ['%.1f'%mh for mh in mhalos]
+    axy2.set_xticks(Tvals)
+    axy2.set_xticklabels(Tlabels)
+    pu.setticks(axy2, fontsize=fontsize, left=False, right=False,\
+                top=True, bottom=False,\
+                labelleft=False, labelright=False,\
+                labeltop=True, labelbottom=False)
+    axy2.minorticks_off()
+    axy2.set_ylabel(r'$\log_{10} \, \mathrm{M_{\mathrm{200c}}} (T_{\mathrm{200c}}) \; [\mathrm{M}_{\odot}]$',\
+                    fontsize=fontsize)
+    pe = getoutline(2.)
+    handles = [mlines.Line2D([], [], label=nicenames_lines[line],\
+                             color=linecolors[line], **lsargs[line],\
+                             linewidth=2., path_effects=pe)\
+               for line in lines]
+    handles2 = [mlines.Line2D([], [], label='$\\mathrm{{n}}_{{\\mathrm{{H}}}} = {:.0f}$'.format(nH),\
+                             color='black', **lsargs2[iv])\
+               for iv, nH in enumerate(indvals)]
+    handles3 = [mlines.Line2D([], [], label='CIE',\
+                             color='black', **lsargs2[-1])]
+    lax.legend(handles=handles + handles2 + handles3, fontsize=fontsize, ncol=5,\
+              bbox_to_anchor=(0.5, 1.0), loc='upper center', frameon=True)
 
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     

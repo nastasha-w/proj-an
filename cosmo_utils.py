@@ -399,6 +399,9 @@ def Rhalo(Mh, delta=200, ref='rhocrit', z=0., cosmopars=None):
     return Redge
 
 def Tvir_hot(Mh, delta=200, ref='rhocrit', z=0., cosmopars=None):
+    '''
+    Mh in g
+    '''
     mu = 0.59 # about right for ionised (hot) gas, primordial
     Rh = Rhalo(Mh, delta=delta, ref=ref, z=z, cosmopars=cosmopars)
     return (mu * c.protonmass) / (3. * c.boltzmann) * c.gravity * Mh / Rh
