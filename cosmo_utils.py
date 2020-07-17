@@ -16,13 +16,13 @@ import numbers as num # for instance checking
 import make_maps_opts_locs as ol # needed for some ion data
 import eagle_constants_and_units as c
 
-def findemtables(element,zcalc):
-    
+def findemtables(element, zcalc):
+
     #### checks and setup
-    
+
     if not element in ol.elements:
         print("There will be an error somewhere: %s is not included or misspelled. \n" % element)
-    
+
     if zcalc < 0. and zcalc > 1e-4:
         zcalc = 0.0
         zname = ol.zopts[0]
@@ -32,58 +32,58 @@ def findemtables(element,zcalc):
         # only need one table
         zname = ol.zopts[ol.zpoints.index(zcalc)]
         interp = False
-    
+
     elif zcalc <= ol.zpoints[-1]:
         # linear interpolation between two tables
         zarray = np.asarray(ol.zpoints)
-        zname1 = ol.zopts[len(zarray[zarray<zcalc])-1]
-        zname2 = ol.zopts[-len(zarray[zarray>zcalc])]
+        zname1 = ol.zopts[len(zarray[zarray < zcalc]) - 1]
+        zname2 = ol.zopts[-len(zarray[zarray > zcalc])]
         interp = True
     else:
-        print("Chosen z value requires extrapolation. This has not been implemented. \n") 
-        
-    
+        print("Chosen z value requires extrapolation. This has not been implemented. \n")
+
+
     #### read in the tables; interpolate tables in z if needed and possible
-    
+
     if not interp:
-        tablefilename = ol.dir_emtab + zname + '/Tables/' + element + '.hdf5'
+        tablefilename = ol.dir_emtab%zname + element + '.hdf5'
         tablefile = h5py.File(tablefilename, "r")
         #energies = np.array(tablefile.get('header/spectrum/logenergy_ryd'))
         #fluxes = np.array(tablefile.get('header/spectrum/logflux'))
-        logTK =   np.array(tablefile.get('logt'),dtype=np.float32)  
-        logrhocm3 =   np.array(tablefile.get('logd'),dtype=np.float32)
-        lines =   np.array(tablefile.get('lines'),dtype=np.float32)  
-        
-        
+        logTK =     np.array(tablefile.get('logt'),dtype=np.float32)
+        logrhocm3 = np.array(tablefile.get('logd'),dtype=np.float32)
+        lines =     np.array(tablefile.get('lines'),dtype=np.float32)
+
+
         tablefile.close()
-    
+
     if interp: #linear interpolation: 1./(a1-a0) * ( (a1-a)*f0 + (a-a0)*f1 )
-        tablefilename1 = ol.dir_emtab + zname1 + '/Tables/' + element + '.hdf5'
+        tablefilename1 = ol.dir_emtab%zname1 + element + '.hdf5'
         tablefile1 = h5py.File(tablefilename1, "r")
         #energies = np.array(tablefile.get('header/spectrum/logenergy_ryd'))
         #fluxes = np.array(tablefile.get('header/spectrum/logflux'))
-        logTK1 =   np.array(tablefile1.get('logt'),dtype=np.float32)  
-        logrhocm31 =   np.array(tablefile1.get('logd'),dtype=np.float32)
-        lines1 =   np.array(tablefile1.get('lines'),dtype=np.float32) 
-        
+        logTK1 =     np.array(tablefile1.get('logt'),dtype=np.float32)
+        logrhocm31 = np.array(tablefile1.get('logd'),dtype=np.float32)
+        lines1 =     np.array(tablefile1.get('lines'),dtype=np.float32)
+
         tablefile1.close()
-        
-        tablefilename2 = ol.dir_emtab + zname2 + '/Tables/' + element + '.hdf5'
+
+        tablefilename2 = ol.dir_emtab%zname2 + element + '.hdf5'
         tablefile2 = h5py.File(tablefilename2, "r")
         #energies = np.array(tablefile.get('header/spectrum/logenergy_ryd'))
         #fluxes = np.array(tablefile.get('header/spectrum/logflux'))
-        logTK2 =   np.array(tablefile2.get('logt'),dtype=np.float32)  
-        logrhocm32 =   np.array(tablefile2.get('logd'),dtype=np.float32)
-        lines2 =   np.array(tablefile2.get('lines'),dtype=np.float32) 
-        
+        logTK2 =     np.array(tablefile2.get('logt'),dtype=np.float32)
+        logrhocm32 = np.array(tablefile2.get('logd'),dtype=np.float32)
+        lines2 =     np.array(tablefile2.get('lines'),dtype=np.float32)
+
         tablefile2.close()
-        
+
         if (np.all(logTK1 == logTK2) and np.all(logrhocm31 == logrhocm32)):
             print("interpolating 2 emission tables")
             lines = 1./(float(zname2)-float(zname1)) * ( (float(zname2)-zcalc)*lines1 + (zcalc-float(zname1))*lines2 )
             logTK = logTK1
             logrhocm3 = logrhocm31
-        else: 
+        else:
             print("Temperature and density ranges of the two interpolation z tables don't match. \n")
             print("Using nearest z table in stead.")
             if abs(zcalc - float(zname1)) < abs(zcalc - float(zname2)):
@@ -94,18 +94,21 @@ def findemtables(element,zcalc):
                 logTK = logTK2
                 logrhocm3 = logrhocm32
                 lines = lines2
-    
+
     return lines, logTK, logrhocm3
 
            
 # calculate emission using C function (interpolator)
-def find_emdenssq(z,elt,lognH,logT,lineind):
+def find_emdenssq(z, elt, dct_nH_T, lineind):
 
     p_emtable, logTK, lognHcm3 = findemtables(elt,z)
     emtable = p_emtable[:,:,lineind]
+    lognH = dct_nH_T['lognH']
+    logT = dct_nH_T['logT']
     NumPart = len(lognH)
     inlogemission = np.zeros(NumPart,dtype=np.float32)
-    
+
+
     if len(logT) != NumPart:
         print('logrho and logT should have the same length')
         return None
@@ -115,38 +118,39 @@ def find_emdenssq(z,elt,lognH,logT,lineind):
     cfile = ol.c_interpfile
 
     acfile = ct.CDLL(cfile)
-    interpfunction = acfile.interpolate_emdenssq
-
+    interpfunction = acfile.interpolate_2d
+    # ion balance tables are temperature x density x line no.
     interpfunction.argtypes = [np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(NumPart,)),\
                            np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(NumPart,)),\
                            ct.c_longlong , \
                            np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(len(logTK)*len(lognHcm3),)), \
-                           np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(len(lognHcm3),)), \
-                           ct.c_int,\
                            np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(len(logTK),)), \
+                           ct.c_int,\
+                           np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(len(lognHcm3),)), \
                            ct.c_int,\
                            np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(NumPart,))]
 
     # argument conversion
 
-    res = interpfunction(lognH.astype(np.float32),\
-               logT.astype(np.float32),\
+    res = interpfunction(logT.astype(np.float32),\
+               lognH.astype(np.float32),\
                ct.c_longlong(NumPart),\
                np.ndarray.flatten(emtable.astype(np.float32)),\
-               lognHcm3.astype(np.float32),\
-               ct.c_int(len(lognHcm3)),\
                logTK.astype(np.float32),\
                ct.c_int(len(logTK)), \
+               lognHcm3.astype(np.float32),\
+               ct.c_int(len(lognHcm3)),\
                inlogemission \
               )
-    
+
     print("-------------- C interpolation function output finished ----------------------\n")
-    
+
     if res != 0:
         print('Something has gone wrong in the C function: output %s. \n',str(res))
         return None
-        
+
     return inlogemission
+
 
 
 
