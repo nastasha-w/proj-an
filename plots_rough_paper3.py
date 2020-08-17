@@ -546,7 +546,8 @@ def savestamps(center=(25., 25.), diameter=50., resolution=125.):
                          diameter_out=diameter)
 
 
-def plotstamps(filebase, halocat, outname=None, \
+def plotstamps(filebase, halocat,\
+               outname='xraylineem_stamps_boxcorner_L0100N1504_27_test3p5_SmAb_C2Sm_32000pix_6p25slice_zcen3p125_z-projection_noEOS.pdf', \
                groups='stamp0', minhalomass=11.):
     '''
     plot the stamps stored in files filebase, overplotting the halos from 
