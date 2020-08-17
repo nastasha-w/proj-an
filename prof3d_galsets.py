@@ -41,6 +41,13 @@ for ion in ['oxygen', 'neon', 'iron']:
                         'stars-%s'%(ion): {'ptype': 'Nion', 'ion': ion, 'parttype': '4'},\
                         })
 
+lines1 = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
+          'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
+          'c6', 'n7']
+weighttypes.update({'em-{l}'.format(l=line): {'ptype': 'Luminosity',\
+                    'ion': line} \
+                    for line in lines1}) 
+
 def dataname(samplen):
     return tdir + 'halodata_%s.txt'%(samplen)
 
@@ -52,6 +59,8 @@ def files(samplen, weighttype, histtype=None):
     elif histtype == 'rprof':
         return tdir + 'filenames_%s_%s_rprof.txt'%(samplen, weighttype)
     elif histtype.startswith('Zprof'):
+        return tdir + 'filenames_%s_%s_%s.txt'%(samplen, weighttype, histtype)
+    else:
         return tdir + 'filenames_%s_%s_%s.txt'%(samplen, weighttype, histtype)
     
 def combine_hists(h1, h2, e1, e2, rtol=1e-5, atol=1e-8, add=True):
@@ -599,6 +608,159 @@ def genhists_massdist(samplename=None, rbinu='pkpc', idsel=None,\
             
             args = (weighttypes[weighttype]['ptype'], simnum, snapnum, var, axesdct,)
             kwargs = {'simulation': 'eagle', 'excludeSFR': 'T4', 'abunds': 'Pt',\
+                      'sylviasshtables': False, 'allinR200c': True, 'mdef': '200c',\
+                      'L_x': L_x, 'L_y': L_y, 'L_z': L_z, 'centre': cen, 'Ls_in_Mpc': True,\
+                      'misc': None,\
+                      'axbins': axbins, 'logax': logax,\
+                      'name_append': name_append, 'loghist': False}
+            
+            kwargs_extra = weighttypes[weighttype].copy()
+            del kwargs_extra['ptype']
+            kwargs.update(kwargs_extra)
+            
+            # ion, quantity, nameonly,
+            outname = m3.makehistograms_perparticle(*args, nameonly=True, **kwargs)
+            
+            alreadyexists = False
+            if os.path.isfile(outname[0]):
+                with h5py.File(outname[0]) as fo_t:
+                    if outname[1] in fo_t.keys():
+                        alreadyexists = True
+            if alreadyexists:
+                print('For galaxy %i, a histogram already exists; skipping'%(gid))
+            else:
+                m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
+            
+            fdoc.write('%i\t%s\t%s\n'%(gid, outname[0], outname[1]))
+            
+def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
+                            rbinu='R200c', idsel=None,\
+                            weighttype=None,\
+                            logM200min=10.0, axdct='nrprof'):
+    '''
+    generate the histograms for a given sample
+    rbins: used fixed bins in pkpc or in R200c (relevant for stacking)
+    axdct: 'Trprof': T profile
+           'nrprof': n_H profile
+           'Zrprof': Z profile
+           'pds':    n_H, T, Z in course radial bins
+    idsel: project only a subset of galaxies according to the given list
+           useful for testing on a few galaxies
+           ! do not run in  parallel: different processes will try to write to
+           the same list of output files
+    weighttype: determines the weighting of the histogram
+    '''
+    if axdct == 'pds':
+        raise NotImplementedError('pds is just a stub option for future dev.')
+    logname = files(samplename, weighttype, histtype=axdct)
+    
+    if samplename is None:
+        samplename = defaults['sample']
+    fin = dataname(samplename)
+    
+    with open(fin, 'r') as fi:
+        # scan for halo catalogue (only metadata needed for this)
+        headlen = 0
+        halocat = None
+        while True:
+            line = fi.readline()
+            if line == '':
+                if halocat is None:
+                    raise RuntimeError('Reached the end of %s without finding the halo catalogue name'%fin)
+                else:
+                    break
+            elif line.startswith('halocat'):
+                halocat = line.split(':')[1]
+                halocat = halocat.strip()
+                headlen += 1
+            elif ':' in line or line == '\n':
+                headlen += 1
+    
+    with h5py.File(halocat, 'r') as hc:
+        hed = hc['Header']
+        cosmopars = {key: item for key, item in hed['cosmopars'].attrs.items()}
+        simnum = hed.attrs['simnum']
+        snapnum = hed.attrs['snapnum']
+        var = hed.attrs['var']
+        #ap = hed.attrs['subhalo_aperture_size_Mstar_Mbh_SFR_pkpc']
+    
+    galdata_all = pd.read_csv(fin, header=headlen, sep='\t', index_col='galaxyid')
+    if idsel is not None:
+        if isinstance(idsel, slice):
+            galaxyids = np.array(galdata_all.index)[idsel]
+        else:
+            galaxyids = idsel
+    else:
+        galaxyids = np.array(galdata_all.index)
+    
+    axesdct = [{'ptype': 'coords', 'quantity': 'r3D'},\
+              ]
+    nonrbins = []
+    
+    if weighttype.startswith('em'):
+        # gas particle min. SFR:
+        # min. gas density = 57.7 * rho_mean (cosmic mean, using rho_matter * omegab to e safe) = 7.376116060910138e-30
+        # SFR = m_g * A * (M_sun / pc^2)^n * (gamma / G * f_g * P) * (n - 1) / 2
+        # gamma = 5/3, G = newton constant, f_g = 1 (gas fraction), P = total pressure
+        # A = 1.515 × 10−4 M⊙ yr−1 kpc−2, n = 1.4 (n = 2 at nH > 10^3 cm^-3)
+        
+        name_append = ''
+        if axdct == 'nrprof':
+            axesdct.append({'ptype': 'Niondens', 'ion': 'hydrogen'})
+            nonrbins.append(0.1)
+        elif axdct == 'Trprof':
+            axesdct.append({'ptype': 'basic', 'quantity': 'Temperature'})
+            nonrbins.append(0.1)
+        elif axdct == 'Zrprof':
+            line = '-'.join(weighttype.split('-')[1])
+            elt = ol.elements_ion[line]
+            qty = 'SmoothedElementAbundance/{elt}'.format(elt=string.capwords(elt))
+            axesdct.append({'ptype': 'basic', 'quantity': qty})
+            nonrbins.append(0.1)
+        
+        if axdct == 'pds':
+            pass
+        else:
+            # log SF/nonSF gas
+            # minimum float32 value -> cgs units; much smaller than any SFR in the 12 Mpc box
+            minval = 2**-149 * c.solar_mass / c.sec_per_year 
+            nonrbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
+            axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
+            logax = [False, True, False]
+        
+        
+             
+    with open(logname, 'w') as fdoc:
+        fdoc.write('galaxyid\tfilename\tgroupname\n')
+        
+        for gid in galaxyids:
+            R200c = galdata_all.at[gid, 'R200c_cMpc']
+            Xcom = galdata_all.at[gid, 'Xcom_cMpc']
+            Ycom = galdata_all.at[gid, 'Ycom_cMpc']
+            Zcom = galdata_all.at[gid, 'Zcom_cMpc']
+            M200 = galdata_all.at[gid, 'M200c_Msun']
+            if M200 < 10**logM200min:
+                continue
+            
+            if rbinu == 'pkpc':
+                if axdct == 'pds':
+                    pass
+                else:
+                    rbins = np.array([0., 5., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 125., 150., 175., 200., 250., 300., 350., 400., 450., 500.]) * 1e-3 * c.cm_per_mpc
+                    if rbins[-1] < R200c:
+                        rbins = np.append(rbins, [R200c])
+            else:
+                if axdct == 'pds':
+                    pass
+                else:
+                    rbins = np.array([0., 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.25, 1.50, 2., 2.5, 3., 3.5, 4.]) * R200c * c.cm_per_mpc * cosmopars['a']
+            cen = [Xcom, Ycom, Zcom]
+            L_x, L_y, L_z = (2. * rbins[-1] / c.cm_per_mpc / cosmopars['a'],) * 3
+            
+            axbins =  [rbins] + nonrbins
+            
+            args = (weighttypes[weighttype]['ptype'], simnum, snapnum, var, axesdct,)
+            kwargs = {'simulation': 'eagle', 'excludeSFR': 'T4', 'abunds': 'Sm',\
                       'sylviasshtables': False, 'allinR200c': True, 'mdef': '200c',\
                       'L_x': L_x, 'L_y': L_y, 'L_z': L_z, 'centre': cen, 'Ls_in_Mpc': True,\
                       'misc': None,\

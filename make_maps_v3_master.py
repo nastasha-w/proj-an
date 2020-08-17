@@ -49,7 +49,7 @@ version = 3.6 # matches corresponding make_maps version
 #
 # The main function is make_map, but a lot of the functionality written out in
 # previous versions in split into functions here: emission and column density
-# calculations, for example, are done per particle (lumninosity and number of
+# calculations, for example, are done per particle (luminosity and number of
 # ions, respectively), and have a column area / conversion to surface
 # brightness done afterwards. These functions can be used separately to
 # calculate e.g. phase diagrams weighted by ion number etc.
@@ -62,7 +62,7 @@ version = 3.6 # matches corresponding make_maps version
 # changing the rest of the code too much.)
 #
 # a Vardict object keeps track of the particle properties read in or calculated
-# (e.g. temperature or lumninosity). Of course, for single use, this is just
+# (e.g. temperature or luminosity). Of course, for single use, this is just
 # a somewhat overcomplicted way to store variables. However, it is useful for
 # combining more than one function, without having to change the function
 # depending on what else you want to calculate (or fill it with if statements).
@@ -2778,7 +2778,7 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
     vardict.delif('propvol',last=last)
 
     if len(luminosity) > 0:
-        print('Min, max, median of particle lumninosity [1e10 cgs]: %.5e %.5e %.5e' \
+        print('Min, max, median of particle luminosity [1e10 cgs]: %.5e %.5e %.5e' \
             % (np.min(luminosity), np.max(luminosity), np.median(luminosity)))
 
     CGSconv = 1e10
@@ -2791,7 +2791,7 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
 
 def luminosity_to_Sb(vardict, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ion):
     '''
-    converts cgs lumninosity (erg/s) to cgs surface brightness
+    converts cgs luminosity (erg/s) to cgs surface brightness
     (photons/s/cm2/steradian)
     ion needed because conversion depends on the line energy
     
@@ -4681,7 +4681,7 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
         SFRind = '_onlyEOS'
 
     # abundances
-    if ptype in ['Nion', 'Niondens', 'Lumninosity', 'Lumdens']:
+    if ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
         if abunds[0] not in ['Sm','Pt']:
             sabunds = '%smassfracAb'%str(abunds[0])
         else:
@@ -4718,7 +4718,7 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
         elif bensgadget2tables:
             iontableind = '_iontab-bensgagdet2'
         
-    if ptype in ['Nion', 'Niondens', 'Lumninosity', 'Lumdens']:
+    if ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
         resfile = ol.ndir + 'particlehist_%s_%s%s%s_%s_%s_test%s_%s' %(ptype, ion, sparttype, iontableind, ssimnum, snapnum, str(version), sabunds) + boxstring + SFRind
     elif ptype == 'basic':
         resfile = ol.ndir + 'particlehist_%s%s_%s_%s_test%s' %(squantity, sparttype, ssimnum, snapnum, str(version)) + boxstring + SFRind
@@ -5259,7 +5259,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
          - instead of 'coldens' and 'emission', 
            the ion/emission types are 'Nion' and 'Luminosity' (for total number
            of ions or luminosity of the particle, to be used as weights)
-           or 'Niondens' and 'Lumdens' (for the volumn density of emission or 
+           or 'Niondens' and 'Lumdens' (for the volume density of emission or 
            ions, to be used on axes to gauge contributions to surface 
            brightness and column density)
          - ptype 'coords' is an option,
