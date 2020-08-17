@@ -85,9 +85,9 @@ def uncorrectstamps(filename):
             print('correcting {}'.format(sgrp))
             # 'IGM' stamps:
             if 'stamp' in sgrp:
-                fi['{g}/map'.format(g=sgrp)][:] -= np.log10(c.planck)
-            else: # 'CGM stamps' 
-                fi[sgrp][:] += np.log10(c.planck)
+                fi['{g}/map'.format(g=sgrp)][:] += 2 *np.log10(c.planck)
+            #else: # 'CGM stamps' 
+            #    fi[sgrp][:] += np.log10(c.planck)
     print('... done')
 
 def correctfiles_stamps(directory):
