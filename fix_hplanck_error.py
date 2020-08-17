@@ -9,6 +9,9 @@ Use with caution! This just changes maps by a constant factor, and doesn't
 check if the correction has already been applied
 """
 
+#stamps overcorrected: 
+# fe19 for profiles
+# fe19, fe17-other1 for maps
 import numpy as np
 import os
 import h5py
@@ -31,6 +34,15 @@ def correctmap(filename):
         fi['map'][:] -= np.log10(c.planck)
         fi['map'].attrs['max'] -= np.log10(c.planck)
         fi['map'].attrs['minfinite'] -= np.log10(c.planck)
+    print('... done')
+
+def uncorrectmap(filename):
+    print('uncorrecting file {}'.format(filename))
+    with h5py.File(filename, 'a') as fi:
+        print(fi.keys())
+        fi['map'][:] += np.log10(c.planck)
+        fi['map'].attrs['max'] += np.log10(c.planck)
+        fi['map'].attrs['minfinite'] += np.log10(c.planck)
     print('... done')
     
 def correctfiles_maps(directory):
@@ -59,6 +71,24 @@ def correctstamps(filename):
             else: # 'CGM stamps' 
                 fi[sgrp][:] -= np.log10(c.planck)
     print('... done')
+    
+def uncorrectstamps(filename):
+    print('uncorrecting file {}'.format(filename))
+    with h5py.File(filename, 'a') as fi:
+        sgrps = list(fi.keys())
+        # for galaxy stamps
+        if 'Header' in sgrps:
+            sgrps.remove('Header')
+        if 'selection' in sgrps:
+            sgrps.remove('selection')
+        for sgrp in sgrps:
+            print('correcting {}'.format(sgrp))
+            # 'IGM' stamps:
+            if 'stamp' in sgrp:
+                fi['{g}/map'.format(g=sgrp)][:] -= np.log10(c.planck)
+            else: # 'CGM stamps' 
+                fi[sgrp][:] += np.log10(c.planck)
+    print('... done')
 
 def correctfiles_stamps(directory):
     lines = ['fe18', 'fe17-other1', 'fe19']
@@ -78,5 +108,18 @@ def correctall():
     sdir = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/stamps/'
     correctfiles_stamps(sdir)
 
+def undocorr(): # double-corrected some of these maps
+    fnsstamp = ['stamps_emission_fe19_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5',\
+                'emission_fe17-other1_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS_stamps.hdf5',\
+                'emission_fe19_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS_stamps.hdf5',\
+                ]
+    #mdir = '/cosma5/data/dp004/dc-wije1/line_em_abs/temp/'
+    sdir = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/stamps/'
+    
+    for filen in fnsstamp:
+        uncorrectstamps(sdir + filen)
+    
+    
 if __name__ == '__main__':
-    correctall()
+    #correctall()
+    undocorr()
