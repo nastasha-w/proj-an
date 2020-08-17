@@ -16,6 +16,8 @@ import fnmatch
 
 import eagle_constants_and_units as c
 
+donestamps = ['stamps_emission_fe18_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5']
+
 def correctmap(filename):
     print('correcting file {}'.format(filename))
     with h5py.File(filename, 'a') as fi:
@@ -45,7 +47,11 @@ def correctstamps(filename):
             sgrps.remove('selection')
         for sgrp in sgrps:
             print('correcting {}'.format(sgrp))
-            fi[sgrp][:] -= np.log10(c.planck)
+            # 'IGM' stamps:
+            if 'stamp' in sgrp:
+                fi['{g}/map'.format(g=sgrp)][:] -= np.log10(c.planck)
+            else: # 'CGM stamps' 
+                fi[sgrp][:] -= np.log10(c.planck)
     print('... done')
 
 def correctfiles_stamps(directory):
@@ -55,7 +61,7 @@ def correctfiles_stamps(directory):
         files = fnmatch.filter(next(os.walk(directory))[2],\
                                base.format(line=line))
         for file in files:
-            if 'stamp' in file: # not in the pattern match because it can e before of after 'emission' in the names
+            if 'stamp' in file and file not in donestamps: # not in the pattern match because it can e before of after 'emission' in the names
                 correctstamps(directory + file)
 
 def correctall():
