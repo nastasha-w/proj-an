@@ -16,7 +16,10 @@ import fnmatch
 
 import eagle_constants_and_units as c
 
-donestamps = ['stamps_emission_fe18_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5']
+donestamps = ['stamps_emission_fe18_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5',\
+              'stamps_emission_fe17-other1_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5',\
+              'emission_fe18_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS_stamps.hdf5',\
+              ]
 
 def correctmap(filename):
     print('correcting file {}'.format(filename))
@@ -60,6 +63,7 @@ def correctfiles_stamps(directory):
     for line in lines:
         files = fnmatch.filter(next(os.walk(directory))[2],\
                                base.format(line=line))
+        print(files)
         for file in files:
             if 'stamp' in file and file not in donestamps: # not in the pattern match because it can e before of after 'emission' in the names
                 correctstamps(directory + file)
