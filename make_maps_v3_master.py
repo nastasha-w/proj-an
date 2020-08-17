@@ -27,7 +27,7 @@ TODO:
       (can be basic only, initially)
 """
 
-version = 3.5 # matches corresponding make_maps version
+version = 3.6 # matches corresponding make_maps version
 # for 3.4:
 # naming of outputs updated to be more sensible, e.g. cares less about
 # projection axis;
