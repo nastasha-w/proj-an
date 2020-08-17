@@ -7,6 +7,9 @@ Created on Mon Aug 17 11:39:30 2020
 
 Use with caution! This just changes maps by a constant factor, and doesn't
 check if the correction has already been applied
+
+overall maps: should be ok
+IGM image stamps: don't touch, ok now!
 """
 
 #stamps overcorrected: 
@@ -84,8 +87,8 @@ def uncorrectstamps(filename):
         for sgrp in sgrps:
             print('correcting {}'.format(sgrp))
             # 'IGM' stamps:
-            if 'stamp' in sgrp:
-                fi['{g}/map'.format(g=sgrp)][:] += 2 *np.log10(c.planck)
+            #if 'stamp' in sgrp:
+            #    fi['{g}/map'.format(g=sgrp)][:] += 2 *np.log10(c.planck)
             #else: # 'CGM stamps' 
             #    fi[sgrp][:] += np.log10(c.planck)
     print('... done')
