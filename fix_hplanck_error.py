@@ -32,7 +32,7 @@ def correctfiles_maps(directory):
         files = fnmatch.filter(next(os.walk(directory))[2],\
                                base.format(line=line))
         for file in files:
-            correctmap(file)
+            correctmap(directory + file)
 
 def correctstamps(filename):
     print('correcting file {}'.format(filename))
@@ -56,7 +56,7 @@ def correctfiles_stamps(directory):
                                base.format(line=line))
         for file in files:
             if 'stamp' in file: # not in the pattern match because it can e before of after 'emission' in the names
-                correctstamps(file)
+                correctstamps(directory + file)
 
 def correctall():
     sdir = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/stamps/'
