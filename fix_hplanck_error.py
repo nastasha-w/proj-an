@@ -45,7 +45,7 @@ def correctstamps(filename):
             sgrps.remove('selection')
         for sgrp in sgrps:
             print('correcting {}'.format(sgrp))
-            fi['{g}/map'.format(g=sgrp)][:] -= np.log10(c.planck)
+            fi[sgrp][:] -= np.log10(c.planck)
     print('... done')
 
 def correctfiles_stamps(directory):
@@ -59,10 +59,10 @@ def correctfiles_stamps(directory):
                 correctstamps(directory + file)
 
 def correctall():
-    sdir = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/stamps/'
-    mdir = '/cosma5/data/dp004/dc-wije1/line_em_abs/temp/'
+    #mdir = '/cosma5/data/dp004/dc-wije1/line_em_abs/temp/'
+    #correctfiles_maps(mdir) #done
     
-    correctfiles_maps(mdir)
+    sdir = '/cosma5/data/dp004/dc-wije1/line_em_abs/proc/stamps/'
     correctfiles_stamps(sdir)
 
 if __name__ == '__main__':
