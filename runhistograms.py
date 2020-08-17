@@ -3878,6 +3878,8 @@ if jobind in range(30159, 30177):
     lineind = jobind - 30159
     line = lines[lineind]
     numsl = 1
+    print(line)
+    exit()
     
     mapbase = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
     mapname = ol.ndir + mapbase.format(line=line)

@@ -1448,8 +1448,9 @@ def plot_radprof3(mmin=10.0, numex=4):
         #[ax.set_ylim(ymin, ymax) for ax in axes]
         
         ## legend
-        handles1 = [mlines.Line2D([], [], **kwargs_y_stack[ytag],\
-                                  label=legtags[ytag] + ' (stack)')\
+        handles1 = [mlines.Line2D([], [],\
+                                  label=legtags[ytag] + ' (stack)',\
+                                  **kwargs_y_stack[ytag])\
                    for ytag in ys]
         lcs = []
         line = [[(0, 0)]]
