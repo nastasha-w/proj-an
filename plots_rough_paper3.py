@@ -1705,7 +1705,7 @@ def plot_emcurves(z=0.1):
                 path_effects=pe, **kwargs)
         
         ax.axvline(Tmaxs[line] + offsets[line], 0.92, 1., color=linecolors[line],\
-                   **lsargs[line], linewidth=3.)
+                   linewidth=3., **lsargs[line])
 
     axy2 = ax.twiny()
     axy2.set_xlim(*xlim)
@@ -1724,8 +1724,8 @@ def plot_emcurves(z=0.1):
                     fontsize=fontsize)
     pe = getoutline(2.)
     handles = [mlines.Line2D([], [], label=nicenames_lines[line],\
-                             color=linecolors[line], **lsargs[line],\
-                             linewidth=2., path_effects=pe)\
+                             color=linecolors[line],\
+                             linewidth=2., path_effects=pe, **lsargs[line])\
                for line in lines]
     handles2 = [mlines.Line2D([], [], label='$\\mathrm{{n}}_{{\\mathrm{{H}}}} = {:.0f}$'.format(nH),\
                              color='black', **lsargs2[iv])\
