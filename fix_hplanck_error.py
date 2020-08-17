@@ -19,6 +19,7 @@ import eagle_constants_and_units as c
 def correctmap(filename):
     print('correcting file {}'.format(filename))
     with h5py.File(filename, 'a') as fi:
+        print(fi.keys())
         fi['map'][:] -= np.log10(c.planck)
         fi['map'].attrs['max'] -= np.log10(c.planck)
         fi['map'].attrs['minfinite'] -= np.log10(c.planck)
