@@ -1595,8 +1595,8 @@ def plot_emtables(z=0.1):
                         fontsize=fontsize)
     
         handles = [mlines.Line2D([], [], label=nicenames_lines[line],\
-                                 color=linecolors[line], **lsargs[line],\
-                                 linewidth=2.)\
+                                 color=linecolors[line],\
+                                 linewidth=2., **lsargs[line])\
                    for line in axions[axi]]
         ax.legend(handles=handles, fontsize=fontsize, ncol=2,\
                   bbox_to_anchor=(1.0, 0.0), loc='lower right', frameon=False)
