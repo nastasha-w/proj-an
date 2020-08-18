@@ -552,6 +552,8 @@ def plotstamps(filebase, halocat,\
     '''
     plot the stamps stored in files filebase, overplotting the halos from 
     halocat
+    'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS_stamps.hdf5', 
+    'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
     
     input:
     ------
@@ -982,7 +984,10 @@ def plot_radprof1(measure='mean', mmin=10.5):
     else:
         ys = [('perc', 50.)]
     outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
-                  'halomasscomp_{}.pdf'.format(measure)
+                  'halomasscomp_{}'.format(measure)
+    outname = outname.replace('.', 'p')
+    outname = outname + '.pdf'
+    
     medges = np.arange(mmin, 14.1, 0.5)
     seltag_keys = {medges[i]: 'geq{:.1f}_le{:.1f}'.format(medges[i], medges[i + 1])\
                                if i < len(medges) - 1 else\
@@ -1082,7 +1087,7 @@ def plot_radprof1(measure='mean', mmin=10.5):
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     
 
-def plot_radprof2(measure='mean', mmin=10.5):
+def plot_radprof2(measure='mean', mmin=10.0):
     '''
     plot mean or median radial profiles for each line and halo mass bin
     panels for different halo masses 
@@ -1340,7 +1345,7 @@ def plot_radprof3(mmin=10.0, numex=4):
         l_ncols = ncols 
     
     for line in lines:
-        outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+        outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3p5_SmAb_C2Sm_6p25slice_noEOS_to-2R200c_1000_centrals_' +\
                   'measurecomp_{}.pdf'.format(line)
                   
         fig = plt.figure(figsize=(figwidth, figheight))
