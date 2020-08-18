@@ -7,7 +7,9 @@ Created on Fri Apr 24 17:53:54 2020
 """
 
 import numpy as np
+import pandas as pd
 import h5py
+import string
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -1742,4 +1744,627 @@ def plot_emcurves(z=0.1):
               bbox_to_anchor=(0.5, 1.0), loc='upper center', frameon=True)
 
     plt.savefig(outname, format='pdf', bbox_inches='tight')
+
+###############################################################################
+##################### stuff coming from 3D profiles ###########################
+###############################################################################
     
+def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
+    '''
+    plottype: 'all':    L medians and scatter for the different ions (1 panel)
+              'lines':  L distriutions (1 line per panel)
+              'SFfrac': L from SF gas / L total (distriutions, 1 line per panel) 
+    toSB:     convert Luminosities to SB, assuming uniform emission within 
+              the edges (in projection) at z = 0.1
+    '''
+    outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    outname = 'luminosities_{tp}_{mi}-{ma}-R200c'.format(tp=plottype,\
+                            mi=addedges[0], ma=addedges[1])
+    if toSB:
+        outname = outname + '_as-SB'
+    outname = outdir + outname + '.pdf'
+    
+    cosmopars = {'a': 0.9085634947881763,\
+                 'boxsize': 67.77,\
+                 'h': 0.6777,\
+                 'omegab': 0.0482519,\
+                 'omegalambda': 0.693,\
+                 'omegam':  0.307,\
+                 'z': 0.10063854175996956,\
+                 }
+    lsargs = {'c5r':  {'linestyle': 'solid'},\
+              'c6':   {'linestyle': 'dashed'},\
+              'n6r':  {'linestyle': 'dotted'},\
+              'n7':   {'linestyle': 'dashdot'},\
+              'o7r':  {'linestyle': 'solid'},\
+              'o7ix': {'dashes': [2, 2, 2, 2]},\
+              'o7iy': {'dashes': [6, 2]},\
+              'o7f':  {'linestyle': 'dashdot'},\
+              'o8':   {'linestyle': 'dotted'},\
+              'fe17-other1':  {'linestyle': 'solid'},\
+              'fe19':  {'linestyle': 'dashed'},\
+              'fe17':  {'linestyle': 'dotted'},\
+              'fe18':  {'linestyle': 'dashdot'},\
+              'si13r': {'linestyle': 'solid'},\
+              'ne9r':  {'dashes': [2, 2, 2, 2]},\
+              'ne10':  {'dashes': [6, 2]},\
+              'mg11r': {'linestyle': 'dashdot'},\
+              'mg12':  {'linestyle': 'dotted'},\
+                  }
+    
+    filename = ol.pdir + 'luminosities_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_SmAb.hdf5'%(str(addedges[0]), str(addedges[1]))
+    with h5py.File(filename, 'r') as fi:
+        galids_l = fi['galaxyids'][:]
+        lines = [line.decode() for line in fi['lines'][:]]
+        lums = fi['luminosities'][:]
+            
+    file_galdata = '/net/luttero/data2/imgs/CGM/3dprof/halodata_L0100N1504_27_Mh0p5dex_1000.txt'
+    galdata_all = pd.read_csv(file_galdata, header=2, sep='\t', index_col='galaxyid')
+    masses = np.array(galdata_all['M200c_Msun'][galids_l])
+    
+    if plottype == 'all':
+        mbins = np.array(list(np.arange(10., 13.05, 0.1)) + [13.25, 13.5, 13.75, 14.0, 14.6])
+    else:
+        mbins = np.arange(10., 14.6, 0.1)
+    
+    if toSB:
+        rs_in_pkpc = addedges[0] * cu.R200c_pkpc(masses, cosmopars)
+        rs_out_pkpc = addedges[1] * cu.R200c_pkpc(masses, cosmopars)
+        
+        zcalc = cosmopars['z']
+        comdist = cu.comoving_distance_cm(zcalc, cosmopars=cosmopars)
+        longlen = 50. * c.cm_per_mpc
+        if comdist > longlen: # even at larger values, the projection along z-axis = projection along sightline approximation will break down
+            ldist = comdist * (1. + zcalc) # luminosity distance
+            adist = comdist / (1. + zcalc) # angular size distance
+        else:
+            ldist = longlen * (1. + zcalc)
+            adist = longlen / (1. + zcalc)
+
+        # conversion (x, y are axis placeholders and may actually represent different axes in the simulation, as with numpix_x, and numpix_y)
+        angle_in  = rs_in_pkpc * 1e-3 * c.cm_per_mpc / adist
+        angle_out = rs_out_pkpc * 1e-3 * c.cm_per_mpc / adist
+        # solid angle (alpha = radius on circle in rad) = 2 pi (1 - cos(alpha))
+        if cosmopars['z'] >= 0.08: # taylor
+            Omega = np.pi * (angle_out**2 - angle_in**2)
+        else:
+            Omega = 2 * np.pi * (np.cos(angle_in) - np.cos(angle_out))
+        
+        lums = np.sum(lums, axis=2)
+        pnorms = (1. + cosmopars['z']) / np.array([ol.line_eng_ion[line] for line in lines])
+        lums *= pnorms[np.newaxis, :, np.newaxis] / Omega[:, np.newaxis, np.newxis] \
+                / ( 4. * np.pi * ldist**2)
+        lums = np.log10(lums)
+        ylabel = '$ \\langle\\mathrm{SB}\\rangle \\;[\\mathrm{photons} \\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
+    else:
+        lums = np.sum(lums, axis=2)
+        lums = np.log10(lums) - np.log10(1. + cosmopars['z'])
+        ylabel = '$\\mathrm{L}_{\\mathrm{obs}} \\; [\\mathrm{erg} \\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
+    if plottype == 'SFfrac':
+        lums = lums[:, :, 1] / np.sum(lums, axis=2)
+        ylabel = '$\\mathrm{L}_{\\mathrm{SF}} \\, / \\, \\mathrm{L}_{\\mathrm{tot}}$'
+        
+    xlabel = '\\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\odot}]' 
+    
+    bininds = np.digitize(np.log10(masses), mbins)
+    bincen = mbins[:-1] + 0.5 * np.diff(mbins)
+    
+    if plottype == 'all':
+        fig = plt.figure(figsize=(5.5, 6.))
+        grid = gsp.GridSpec(nrows=2, ncols=1,  hspace=0.25, wspace=0.0, \
+                            height_ratios=[5., 1.])
+        ax = fig.add_subplot(grid[0, 0])
+        lax = fig.add_subplot(grid[1, 0]) 
+        
+        ax.set_xlabel(xlabel, fontsize=fontsize)
+        ax.set_ylabel(ylabel, fontsize=fontsize)
+        pu.setticks(ax, fontsize)
+        for li, line in enumerate(lines):
+            med = [np.median(lums[bininds == i, li]) for i in range(1, len(mbins))]
+            ax.plot(bincen, med, color=linecolors[line], label=nicenames_lines[line],\
+                    **lsargs[line])
+        
+        handles, labels = ax.get_legend_handles_labels()
+        lax.legend(handles, labels, fontsize=fontsize, bbox_to_anchor=(0.5, 0.),\
+                   loc='lower center')
+        lax.axis('off')
+    
+    elif plottype in ['lines', 'SFfrac']:
+        panelheight = 3.
+        panelwidth = 3.
+        hspace = 0.
+        wspace = 0.
+        legheight = 2.
+        nlines = len(lines)
+        
+        ncols = 4
+        nrows = (nlines - 1) // ncols + 1
+        figheight = panelheight * nrows + hspace * (nrows - 1) + legheight
+        figwidth = panelwidth * ncols + wspace * (ncols - 1) 
+        height_ratios = [panelheight] * nrows + [legheight]
+        width_ratios = [panelwidth] * ncols
+        
+        fig = plt.figure(figsize=(figwidth, figheight))
+        grid = gsp.GridSpec(nrows=nrows + 1, ncols=ncols, hspace=hspace,\
+                            wspace=wspace, height_ratios=height_ratios,\
+                            width_ratios=width_ratios)
+        axes = [fig.add_subplot(grid[li % ncols, li // ncols])\
+                for li in range(nlines)]
+        lax = fig.add_subplot(grid[nrows, :])
+        
+        alpha = 0.5
+        color = 'black'
+        percv = [2., 10., 50., 90., 98.]
+        
+        for li, line in enumerate(lines):
+            ax = axes[li]
+            labelleft = False
+            labelbottom = False
+            if li % ncols == 0:
+                labelleft = True
+                ax.set_ylabel(ylabel, fontsize=fontsize)
+            if li >= nlines - ncols:
+                labelbottom = True
+                ax.set_xlabel(xlabel, fontsize=fontsize)
+            pu.setticks(ax, fontsize, labelbottom=labelbottom, labelleft=labelleft)
+            ax.text(0.98, 0.98, nicenames_lines[line], fontsize=fontsize,\
+                    horizontalalignment='right', verticalalignment='top',\
+                    transform=ax.transAxes)
+            
+            percs, outliers, xmininds = \
+                pu.get_perc_and_points(np.log10(masses), lums[:, li], mbins,\
+                        percentiles=percv,\
+                        mincount_x=50,\
+                        getoutliers_y=True, getmincounts_x=True,\
+                        x_extremes_only=True)
+            
+            for si in range(len(percv) // 2):
+                ax.fill_between(bincen[xmininds], percs[si][xmininds],\
+                                percs[len(percv) - 1 - si][xmininds],\
+                                color=color, alpha=alpha)
+            if len(percv) % 2 == 1:
+                ax.plot(bincen, percs[len(percv) // 2], color=color)
+            alpha_ol = alpha**((len(percv) - 1) // 2)
+            ax.scatter(outliers[0], outliers[1], color=color, alpha=alpha_ol)
+        # legend
+        handles = [mlines.Line2D([], [], color=color, label='{:.0f}%%'.format(percv[len(percv) // 2]))]
+        handles += [mpatch.Patch(facecolor=color, alpha=alpha**i,\
+                                 label='{:.0f}%%'.format(percv[len(percv) - 1 - i] - percv[i]))\
+                    for i in range((len(percs) - 1) // 2)]
+        lax.axis('off')
+        lax.legend(handles, fontsize=fontsize)
+        
+        # sync lims
+        xlims = [ax.get_xlim() for ax in axes]
+        x0 = np.min([xl[0] for xl in xlims])
+        x1 = np.max([xl[1] for xl in xlims])
+        [ax.set_xlim(x0, x1) for ax in axes]
+        
+        ylims = [ax.get_ylim() for ax in axes]
+        y0 = np.min([yl[0] for yl in ylims])
+        y1 = np.max([yl[1] for yl in ylims])
+        [ax.set_ylim(y0, y1) for ax in axes]
+        
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
+    
+    
+def plot3Dprof_overview(weighttype='Mass'):
+    '''
+    plot: cumulative profile of weight, [ion number density profile], 
+          rho profile, T profile
+    rows show different halo mass ranges
+    '''
+    inclSF = True #False is not implemented in the histogram extraction
+    outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    outname = outdir + 'overview_radprof_L0100N1504_27_Mh0p5dex_1000_%s_%s.pdf'%(weighttype, 'wSF' if inclSF else 'nSF')
+    
+    print('Using parent element metallicity, otherwise, oxygen')
+    
+    fontsize = 12
+    cmap = pu.truncate_colormap(cm.get_cmap('gist_yarg'), minval=0.0, maxval=0.7, n=-1)
+    cmap.set_under(cmap(0.))
+    percentiles = [0.1, 0.50, 0.9]
+    print('Showing percentiles ' + str(percentiles))
+    linestyles = ['dashed', 'solid', 'dashed']
+    
+    rbinu = 'R200c'
+    combmethod = 'addnormed-R200c'
+
+    # snapshot 27
+    cosmopars = {'a': 0.9085634947881763,\
+                 'boxsize': 67.77,\
+                 'h': 0.6777,\
+                 'omegab': 0.0482519,\
+                 'omegalambda': 0.693,\
+                 'omegam':  0.307,\
+                 'z': 0.10063854175996956,\
+                 } # avoid having to read in the halo catalogue just for this; copied from there
+    
+    if weighttype not in ['Mass', 'Volume']:
+        line = '-'.join(weighttype.split('-')[1:])
+    else:
+        line = weighttype
+    wname = nicenames_lines[line]  if line in nicenames_lines else \
+            r'\mathrm{Mass}' if weighttype == 'Mass' else \
+            r'\mathrm{Volume}' if weighttype == 'Volume' else \
+            None
+    wnshort = 'M' if weighttype == 'Mass' else\
+              'V' if weighttype == 'Volume' else\
+              'L'
+    axlabels = {'T': r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$',\
+                'n': r'$\log_{10} \, \mathrm{n}(\mathrm{H}) \; [\mathrm{cm}^{-3}]$',\
+                'Z': r'$\log_{10} \, \mathrm{n}(\mathrm{%s}) \; [\mathrm{cm}^{-3}]$',\
+                'weight': r'$\log_{10} \, \mathrm{%s}(< r) \,/\, \mathrm{%s}(< \mathrm{R}_{\mathrm{200c}})$'%(wnshort, wnshort)
+                }
+    clabel = r'$\log_{10} \, \left\langle %s(< r) \,/\, %s(< \mathrm{R}_{\mathrm{200c}}) \right\rangle \, / \,$'%(wnshort, wnshort) + 'bin size'
+    
+    if weighttype in ol.elements_ion.keys():
+        filename = ol.ndir + 'particlehist_Nion_%s_L0100N1504_27_test3.4_PtAb_T4EOS_galcomb.hdf5'%(line)
+        nprof = 4
+        title = r'$\mathrm{L}(\mathrm{%s})$ and $\mathrm{L}(\mathrm{%s})$-weighted profiles'%(wname, wname)
+        tgrpns = {'T': '3Dradius_Temperature_T4EOS_StarFormationRate_T4EOS',\
+                  'n': '3Dradius_Niondens_hydrogen_SmAb_T4EOS_StarFormationRate_T4EOS',\
+                  'Z': '',\
+                  }
+        axns  = {'r3d':  '3Dradius',\
+                 'T':    'Temperature_T4EOS',\
+                 'n':    'Niondens_hydrogen_SmAb_T4EOS',\
+                 'Z':    'SmoothedElementAbundance-{elt}_T4EOS'.format(string.capwords(ol.elements_ion[line])),\
+                }
+        axnl = ['n', 'T', 'Z']
+    else:
+        if weighttype == 'Volume':
+            filename = ol.ndir + 'particlehist_%s_L0100N1504_27_test3.4_T4EOS_galcomb.hdf5'%('propvol')
+        else:
+            filename = ol.ndir + 'particlehist_%s_L0100N1504_27_test3.4_T4EOS_galcomb.hdf5'%(weighttype)
+        nprof = 4
+        title = r'%s and %s-weighted profiles'%(weighttype, weighttype)
+        tgrpns = {'T': '3Dradius_Temperature_T4EOS_StarFormationRate_T4EOS',\
+                  'n': '3Dradius_Niondens_hydrogen_SmAb_T4EOS_StarFormationRate_T4EOS',\
+                  'Z': '',\
+                  }
+        axns = {'r3d':  '3Dradius',\
+                'T':    'Temperature_T4EOS',\
+                'n':    'Niondens_hydrogen_SmAb_T4EOS',\
+                'Z':    'SmoothedElementAbundance-Oxygen_T4EOS'}
+        axnl = ['T', 'n', 'Z']
+        
+    file_galsin = '/net/luttero/data2/imgs/CGM/3dprof/filenames_L0100N1504_27_Mh0p5dex_1000_%s_%s.txt'%(weighttype, 'nrprof')
+    file_galdata = '/net/luttero/data2/imgs/CGM/3dprof/halodata_L0100N1504_27_Mh0p5dex_1000.txt'
+    
+    # generated randomly once
+    #galids_per_bin = {11.0: [13074219,  3802158,  3978003,  3801075, 13588395, 11396298, 8769997,  12024375, 12044831, 12027193],\
+    #                  11.5: [11599169, 11148475, 10435177,  9938601, 10198004,  9626515, 10925515, 10472334, 13823711, 11382071],\
+    #                  12.0: [17795988,  8880354, 18016380,  8824646,  8976542,  8948515, 8593530,   9225418, 18167602,  8991644],\
+    #                  12.5: [16907882, 16565965, 15934507, 15890726, 16643442, 16530723, 8364907,  14042157, 14837489, 14195766],\
+    #                  13.0: [20009129, 20309020, 19987958, 19462909, 20474648, 19615775, 19488333, 19975482, 20519792, 19784480],\
+    #                  13.5: [18816265, 18781590, 19634930, 18961507, 18927203, 19299051, 6004915,  20943533, 18849993, 21059563],\
+    #                  14.0: [19701410, 10705995, 14978116, 21986362, 21109761, 21242351, 21573587, 21730536, 21379522],\
+    #                 }
+    galids_per_bin = {11.0: [13074219,  3802158,  3978003],\
+                      11.5: [11599169, 11148475, 10435177],\
+                      12.0: [17795988,  8880354, 18016380],\
+                      12.5: [16907882, 16565965, 15934507],\
+                      13.0: [20009129, 20309020, 19987958],\
+                      13.5: [18816265, 18781590, 19634930],\
+                      14.0: [21242351, 10705995, 21242351],\
+                     }
+    
+    mgrpn = 'L0100N1504_27_Mh0p5dex_1000/%s-%s'%(combmethod, rbinu)
+    
+    # read in data: stacked histograms -> process to plottables
+    hists_main = {}
+    edges_main = {}
+    galids_main = {}
+    
+    with h5py.File(filename, 'r') as fi:
+        for profq in tgrpns:
+            tgrpn = tgrpns[profq]
+            grp = fi[tgrpn + '/' + mgrpn]
+            sgrpns = list(grp.keys())
+            massbins = [grpn.split('_')[-1] for grpn in sgrpns]    
+            massbins = [[np.log10(float(val)) for val in binn.split('-')] for binn in massbins]
+            
+            for mi in range(len(sgrpns)):
+                mkey = massbins[mi][0]
+                
+                grp_t = grp[sgrpns[mi]]
+                hist = np.array(grp_t['histogram'])
+                if bool(grp_t['histogram'].attrs['log']):
+                    hist = 10**hist
+                
+                edges = {}
+                axes = {}
+                for axn in axns:
+                   edges[axn] = np.array(grp_t[axns[axn] + '/bins'])
+                   if not bool(grp_t[axns[axn]].attrs['log']):
+                       edges[axn] = np.log10(edges[axn])
+                   axes[axn] = grp_t[axns[axn]].attrs['histogram axis']  
+                
+                edges_main[mkey] = {}
+                hists_main[mkey] = {}
+                
+                # apply normalization consisent with stacking method
+                if rbinu == 'pkpc':
+                    edges['r3d'] += np.log10(c.cm_per_mpc * 1e-3)
+                
+                if combmethod == 'addnormed-R200c':
+                    if rbinu != 'R200c':
+                        raise ValueError('The combination method addnormed-R200c only works with rbin units R200c')
+                    _i = np.where(np.isclose(edges['r3d'], 0.))[0]
+                    if len(_i) != 1:
+                        raise RuntimeError('For addnormed-R200c combination, no or multiple radial edges are close to R200c:\nedges [R200c] were: %s'%(str(edges['r3d'])))
+                    _i = _i[0]
+                    _a = range(len(hist.shape))
+                    _s = [slice(None, None, None) for dummy in _a]
+                    _s[axes['r3d']] = slice(None, _i, None)
+                    norm_t = np.sum(hist[tuple(_s)])
+                hist *= (1. / norm_t)
+                
+                rax = axes['r3d']
+                yax = axes[profq]
+                
+                edges_r = np.copy(edges['r3d'])
+                edges_y = np.copy(edges[profq])
+                
+                hist_t = np.copy(hist)
+                
+                # deal with edge units (r3d is already in R200c units if R200c-stacked)
+                if edges_r[0] == -np.inf: # reset centre bin position
+                    edges_r[0] = 2. * edges_r[1] - edges_r[2] 
+                    
+                sax = range(len(hist_t.shape))
+                sax.remove(rax)
+                sax.remove(yax)
+                hist_t = np.sum(hist_t, axis=tuple(sax))
+                if yax < rax:
+                    hist_t = hist_t.T
+                #hist_t /= (np.diff(edges_r)[:, np.newaxis] * np.diff(edges_y)[np.newaxis, :])
+                
+                hists_main[mkey][profq] = hist_t
+                edges_main[mkey][profq] = [edges_r, edges_y]
+                #print(hist_t.shape)
+                
+                # add in cumulative plot for the weight (from one of the profiles)
+                if profq == 'n':
+                    hist_t = np.copy(hist)
+                    sax = range(len(hist_t.shape))
+                    sax.remove(rax)
+                    hist_t = np.sum(hist_t, axis=tuple(sax))
+                    hist_t = np.cumsum(hist_t)
+                    hists_main[mkey]['weight'] = hist_t
+                    edges_main[mkey]['weight'] = [edges_r[1:]]
+                    
+                
+                galids_main[mkey] = np.array(grp_t['galaxyids'])
+    
+    # read in data: individual galaxies
+    galdata_all = pd.read_csv(file_galdata, header=2, sep='\t', index_col='galaxyid')
+    galname_all = pd.read_csv(file_galsin, header=0, sep='\t', index_col='galaxyid')
+    
+    hists_single = {}
+    edges_single = {}
+    
+    for mbin in galids_per_bin:
+        galids = galids_per_bin[mbin]
+        for galid in galids:
+            filen = galname_all.at[galid, 'filename']
+            if rbinu == 'R200c':
+                Runit = galdata_all.at[galid, 'R200c_cMpc'] * c.cm_per_mpc * cosmopars['a']
+            else:
+                Runit = c.cm_per_mpc * 1e-3 #pkpc
+            
+            with h5py.File(filen, 'r') as fi:
+                for profq in tgrpns:
+                    grpn = tgrpns[profq]
+                    grp_t = fi[grpn]
+                        
+                    hist = np.array(grp_t['histogram'])
+                    if bool(grp_t['histogram'].attrs['log']):
+                        hist = 10**hist
+                        
+                    edges = {}
+                    axes = {}
+                    
+                    for axn in axns:
+                       edges[axn] = np.array(grp_t[axns[axn] + '/bins'])
+                       if axn == 'r3d':
+                           edges[axn] *= (1./ Runit)
+                       if not bool(grp_t[axns[axn]].attrs['log']):
+                           edges[axn] = np.log10(edges[axn])
+                       axes[axn] = grp_t[axns[axn]].attrs['histogram axis']          
+            
+                    if combmethod == 'addnormed-R200c':
+                        if rbinu != 'R200c':
+                            raise ValueError('The combination method addnormed-R200c only works with rbin units R200c')
+                        _i = np.where(np.isclose(edges['r3d'], 0.))[0]
+                        if len(_i) != 1:
+                            raise RuntimeError('For addnormed-R200c combination, no or multiple radial edges are close to R200c:\nedges [R200c] were: %s'%(str(edges['r3d'])))
+                        _i = _i[0]
+                        _a = range(len(hist.shape))
+                        _s = [slice(None, None, None) for dummy in _a]
+                        _s[axes['r3d']] = slice(None, _i, None)
+                        norm_t = np.sum(hist[tuple(_s)])
+                    
+                    hist *= (1. / norm_t)
+                    
+                    hists_single[galid] = {}
+                    edges_single[galid] = {}
+                    
+                    rax = axes['r3d']
+                    yax = axes[profq]
+                    
+                    edges_r = np.copy(edges['r3d'])
+                    edges_y = np.copy(edges[profq])
+                    
+                    hist_t = np.copy(hist)
+                    
+                    # deal with edge units (r3d is already in R200c units if R200c-stacked)
+                    if edges_r[0] == -np.inf: # reset centre bin position
+                        edges_r[0] = 2. * edges_r[1] - edges_r[2] 
+                    if edges_y[0] == -np.inf: # reset centre bin position
+                        edges_y[0] = 2. * edges_y[1] - edges_y[2]
+                    if edges_y[-1] == np.inf: # reset centre bin position
+                        edges_y[-1] = 2. * edges_y[-2] - edges_y[-3]
+                        
+                    sax = range(len(hist_t.shape))
+                    sax.remove(rax)
+                    sax.remove(yax)
+                    hist_t = np.sum(hist_t, axis=tuple(sax))
+                    if yax < rax:
+                        hist_t = hist_t.T
+                    #hist_t /= (np.diff(edges_r)[:, np.newaxis] * np.diff(edges_y)[np.newaxis, :])
+                    
+                    hists_single[galid][profq] = hist_t
+                    edges_single[galid][profq] = [edges_r, edges_y]
+                    
+                    # add in cumulative plot for the weight
+                    if profq == 'n':
+                        hist_t = np.copy(hist)
+                        sax = range(len(hist_t.shape))
+                        sax.remove(rax)
+                        hist_t = np.sum(hist_t, axis=tuple(sax))
+                        hist_t = np.cumsum(hist_t)
+                        hists_single[galid]['weight'] = hist_t
+                        edges_single[galid]['weight'] = [edges_r[1:]]
+            
+    # set up plot grid
+    panelwidth = 3.
+    panelheight = 3.
+    toplabelheight = 0.5
+    caxwidth = 0.5
+    nmassbins = len(hists_main)
+    
+    fig = plt.figure(figsize=(nmassbins * panelwidth + caxwidth, nprof * panelheight + toplabelheight))
+    grid = gsp.GridSpec(nrows=nprof + 1, ncols=nmassbins + 1, hspace=0.0, wspace=0.0, width_ratios=[panelwidth] * nmassbins + [caxwidth], height_ratios=[toplabelheight] + [panelheight] * nprof )
+    axes = np.array([[fig.add_subplot(grid[yi + 1, xi]) for xi in range(nmassbins)] for yi in range(nprof)])
+    cax  = fig.add_subplot(grid[1:, nmassbins])
+    laxes = [fig.add_subplot(grid[0, xi]) for xi in range(nmassbins)]
+    
+    vmax = np.log10(np.max([np.max([np.max(hists_main[mkey][axn]) for axn in axnl]) for mkey in hists_main]))
+    vmin = np.log10(np.min([np.min([np.min(hists_main[mkey][axn]) for axn in axnl]) for mkey in hists_main]))
+    vmin = max(vmin, vmax - 7.)
+    
+    massmins = sorted(list(hists_main.keys()))
+
+    linewidth = 1.
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"),\
+               mppe.Stroke(linewidth=linewidth, foreground="w"),\
+               mppe.Normal()]
+    patheff_thick = [mppe.Stroke(linewidth=linewidth + 1.5, foreground="black"),\
+                     mppe.Stroke(linewidth=linewidth + 1., foreground="w"),\
+                     mppe.Normal()]
+     
+    fig.suptitle(title, fontsize=fontsize + 2)
+    
+    
+    for mi in range(nmassbins):
+        ind = np.where(np.array(massbins)[:, 0] == massmins[mi])[0][0]
+        text = r'$%.1f \, \endash \, %.1f$'%(massbins[ind][0], massbins[ind][1]) #r'$\log_{10} \,$' + binqn + r': 
+        
+        ax = laxes[mi]
+        ax.text(0.5, 0.1, text, fontsize=fontsize, transform=ax.transAxes,\
+                horizontalalignment='center', verticalalignment='bottom')
+        ax.axis('off') 
+        
+    for mi in range(nmassbins):
+        for ti in range(nprof):
+            # where are we
+            ax = axes[ti, mi]
+            labelx = ti == nprof - 1
+            labely = mi == 0
+            
+            if ti == 0:
+                yq = 'weight'
+            else:
+                yq = axnl[ti - 1]
+            mkey = massmins[mi]
+            
+            # set up axis
+            pu.setticks(ax, top=True, left=True, labelleft=labely,\
+                        labelbottom=labelx, fontsize=fontsize)
+            if labelx:
+                ax.set_xlabel(r'$\log_{10} \, \mathrm{r} \, / \, \mathrm{R}_{\mathrm{200c}}$', fontsize=fontsize)
+            if labely:
+                ax.set_ylabel(axlabels[yq], fontsize=fontsize)
+            
+            # plot stacked histogram
+            edges_r = edges_main[mkey][yq][0] 
+            if yq != 'weight':
+                edges_y = edges_main[mkey][yq][1]
+                hist = hists_main[mkey][yq]
+                
+                img, _1, _2 = pu.add_2dplot(ax, hist, [edges_r, edges_y], toplotaxes=(0, 1),\
+                              log=True, usepcolor=True, pixdens=True,\
+                              cmap=cmap, vmin=vmin, vmax=vmax, zorder=-2)
+                perclines = pu.percentiles_from_histogram(hist, edges_y, axis=1, percentiles=np.array(percentiles))
+                mid_r = edges_r[:-1] + 0.5 * np.diff(edges_r)
+                
+                for pi in range(len(percentiles)):
+                    ax.plot(mid_r, perclines[pi], color='white',\
+                            linestyle=linestyles[pi], alpha=1.,\
+                            path_effects=patheff_thick, linewidth=linewidth + 1)
+                
+                mmatch = np.array(list(galids_per_bin.keys()))
+                ind = np.where(np.isclose(mkey, mmatch))[0][0]
+                galids = galids_per_bin[mmatch[ind]]
+                
+                for galidi in range(len(galids)):
+                    galid = galids[galidi]
+                    color = 'C%i'%(galidi % 10)
+                    
+                    hist = hists_single[galid][yq]
+                    edges_r = edges_single[galid][yq][0]
+                    edges_y = edges_single[galid][yq][1]
+                    
+                    perclines = pu.percentiles_from_histogram(hist, edges_y, axis=1, percentiles=np.array(percentiles))
+                    mid_r = edges_r[:-1] + 0.5 * np.diff(edges_r)
+                    
+                    for pi in range(len(percentiles)):
+                        ax.plot(mid_r, perclines[pi], color=color,\
+                                linestyle=linestyles[pi], alpha=1.,\
+                                path_effects=patheff, linewidth=linewidth,\
+                                zorder = -1)
+            else:
+                hist = hists_main[mkey][yq]
+                
+                ax.plot(edges_r, np.log10(hist), color='black',\
+                            linestyle='solid', alpha=1.,\
+                            path_effects=None, linewidth=linewidth + 1.5)
+                
+                mmatch = np.array(list(galids_per_bin.keys()))
+                ind = np.where(np.isclose(mkey, mmatch))[0][0]
+                galids = galids_per_bin[mmatch[ind]]
+                
+                for galidi in range(len(galids)):
+                    galid = galids[galidi]
+                    color = 'C%i'%(galidi % 10)
+                    
+                    hist = hists_single[galid][yq]
+                    edges_r = edges_single[galid][yq][0]
+                    
+                    ax.plot(edges_r, np.log10(hist), color=color,\
+                            linestyle='solid', alpha=1.,\
+                            path_effects=None, linewidth=linewidth + 0.5,\
+                            zorder=-1)
+    # color bar 
+    pu.add_colorbar(cax, img=img, vmin=vmin, vmax=vmax, cmap=cmap,\
+                    clabel=clabel, fontsize=fontsize, orientation='vertical',\
+                    extend='min')
+    cax.set_aspect(10.)
+    
+    # sync y limits on plots
+    for yi in range(nprof):
+        ylims = np.array([axes[yi, mi].get_ylim() for mi in range(nmassbins)])
+        miny = np.min(ylims[:, 0])
+        maxy = np.max(ylims[:, 1])
+        # intended for ion number densities
+        miny = max(miny, maxy - 17.)
+        [[axes[yi, mi].set_ylim(miny, maxy) for mi in range(nmassbins)]]
+    for xi in range(nmassbins):
+        xlims = np.array([axes[i, xi].get_xlim() for i in range(nprof)])
+        minx = np.min(xlims[:, 0])
+        maxx = np.max(xlims[:, 1])
+        [axes[i, xi].set_xlim(minx, maxx) for i in range(nprof)]
+    
+    plt.savefig(outname, format='pdf', box_inches='tight')
