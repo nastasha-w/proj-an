@@ -792,6 +792,7 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
             
             args = (weighttypes[weighttype]['ptype'], simnum, snapnum, var, axesdct,)
             kwargs = {'simulation': 'eagle', 'excludeSFR': 'T4', 'abunds': 'Sm',\
+                      'parttype': '0',\
                       'sylviasshtables': False, 'allinR200c': True, 'mdef': '200c',\
                       'L_x': L_x, 'L_y': L_y, 'L_z': L_z, 'centre': cen, 'Ls_in_Mpc': True,\
                       'misc': None,\
