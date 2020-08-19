@@ -1856,9 +1856,9 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
     bincen = mbins[:-1] + 0.5 * np.diff(mbins)
     
     if plottype == 'all':
-        fig = plt.figure(figsize=(5.5, 8.))
+        fig = plt.figure(figsize=(5.5, 8.5))
         grid = gsp.GridSpec(nrows=2, ncols=1,  hspace=0.25, wspace=0.0, \
-                            height_ratios=[5., 3.])
+                            height_ratios=[5., 3.5])
         ax = fig.add_subplot(grid[0, 0])
         lax = fig.add_subplot(grid[1, 0]) 
         
