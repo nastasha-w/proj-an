@@ -1832,7 +1832,7 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         
         lums = np.sum(lums, axis=2)
         pnorms = (1. + cosmopars['z']) / np.array([ol.line_eng_ion[line] for line in lines])
-        lums *= pnorms[np.newaxis, :, np.newaxis] / Omega[:, np.newaxis, np.newxis] \
+        lums *= pnorms[np.newaxis, :, np.newaxis] / Omega[:, np.newaxis, np.newaxis] \
                 / ( 4. * np.pi * ldist**2)
         lums = np.log10(lums)
         ylabel = '$ \\langle\\mathrm{SB}\\rangle \\;[\\mathrm{photons} \\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
@@ -1856,9 +1856,9 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
     bincen = mbins[:-1] + 0.5 * np.diff(mbins)
     
     if plottype == 'all':
-        fig = plt.figure(figsize=(5.5, 8.5))
+        fig = plt.figure(figsize=(5.5, 9.))
         grid = gsp.GridSpec(nrows=2, ncols=1,  hspace=0.25, wspace=0.0, \
-                            height_ratios=[5., 3.5])
+                            height_ratios=[5., 4.])
         ax = fig.add_subplot(grid[0, 0])
         lax = fig.add_subplot(grid[1, 0]) 
         
@@ -1899,7 +1899,7 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         grid = gsp.GridSpec(nrows=nrows + 1, ncols=ncols, hspace=hspace,\
                             wspace=wspace, height_ratios=height_ratios,\
                             width_ratios=width_ratios)
-        axes = [fig.add_subplot(grid[li % ncols, li // ncols])\
+        axes = [fig.add_subplot(grid[li // ncols, li % ncols])\
                 for li in range(nlines)]
         lax = fig.add_subplot(grid[nrows, :])
         
