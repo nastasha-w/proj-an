@@ -1844,15 +1844,15 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         lums = lums[:, :, 1] / np.sum(lums, axis=2)
         ylabel = '$\\mathrm{L}_{\\mathrm{SF}} \\, / \\, \\mathrm{L}_{\\mathrm{tot}}$'
         
-    xlabel = '\\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\odot}]' 
+    xlabel = '$\\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\odot}]$' 
     
     bininds = np.digitize(np.log10(masses), mbins)
     bincen = mbins[:-1] + 0.5 * np.diff(mbins)
     
     if plottype == 'all':
-        fig = plt.figure(figsize=(5.5, 6.))
+        fig = plt.figure(figsize=(5.5, 8.))
         grid = gsp.GridSpec(nrows=2, ncols=1,  hspace=0.25, wspace=0.0, \
-                            height_ratios=[5., 1.])
+                            height_ratios=[5., 3.])
         ax = fig.add_subplot(grid[0, 0])
         lax = fig.add_subplot(grid[1, 0]) 
         
@@ -1866,7 +1866,7 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         
         handles, labels = ax.get_legend_handles_labels()
         lax.legend(handles, labels, fontsize=fontsize, bbox_to_anchor=(0.5, 0.),\
-                   loc='lower center')
+                   loc='lower center', ncol=2)
         lax.axis('off')
     
     elif plottype in ['lines', 'SFfrac']:
@@ -1932,7 +1932,7 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
                                  label='{:.0f}%%'.format(percv[len(percv) - 1 - i] - percv[i]))\
                     for i in range((len(percs) - 1) // 2)]
         lax.axis('off')
-        lax.legend(handles, fontsize=fontsize)
+        lax.legend(handles, fontsize=fontsize, ncol=4)
         
         # sync lims
         xlims = [ax.get_xlim() for ax in axes]
