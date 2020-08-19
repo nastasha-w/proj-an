@@ -2904,7 +2904,7 @@ elif jobind in range(20217, 20219):
     weighttype = weighttypes[jobind - 20217]
     for axdct in axdcts:
         p3g.genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
-                            rbinu='R200c', idsel=np.array([61712552]),\
+                            rbinu='R200c', idsel=None,\
                             weighttype=weighttype,\
                             logM200min=10.0, axdct=axdct)  
         
