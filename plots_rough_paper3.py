@@ -1904,7 +1904,7 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         lax = fig.add_subplot(grid[nrows, :])
         
         alpha = 0.5
-        color = 'black'
+        color = 'C0'
         percv = [2., 10., 50., 90., 98.]
         
         for li, line in enumerate(lines):
@@ -1946,7 +1946,7 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         handles = [mlines.Line2D([], [], color=color, label='{:.0f}%%'.format(percv[len(percv) // 2]))]
         handles += [mpatch.Patch(facecolor=color, alpha=alpha**i,\
                                  label='{:.0f}%%'.format(percv[len(percv) - 1 - i] - percv[i]))\
-                    for i in range((len(percs) - 1) // 2)]
+                    for i in range((len(percv) - 1) // 2)]
         lax.axis('off')
         lax.legend(handles, fontsize=fontsize, ncol=4)
         
