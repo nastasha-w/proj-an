@@ -1839,9 +1839,12 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         
         minymin = None
     else:
-        lums = np.sum(lums, axis=2)
-        lums = np.log10(lums) - np.log10(1. + cosmopars['z'])
-        ylabel = '$\\mathrm{L}_{\\mathrm{obs}} \\; [\\mathrm{erg} \\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
+        if plottype in ['lines', 'SFfrac']:
+            lums = np.sum(lums, axis=2)
+            lums = np.log10(lums) - np.log10(1. + cosmopars['z'])
+            ylabel = '$\\mathrm{L}_{\\mathrm{obs}} \\; [\\mathrm{erg} \\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
+        else:
+            ylabel = '\\mathrm{L}_{\\mathrm{SF}} \\, / \\, \\mathrm{L}_{\\mathrm{tot}}'
         if plottype in ['all', 'lines']:
             minymin = 28.
         else:
