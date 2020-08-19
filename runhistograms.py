@@ -2891,7 +2891,7 @@ elif jobind in range(20199, 20217):
     p3g.genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
                             rbinu='R200c', idsel=None,\
                             weighttype=weighttype,\
-                            logM200min=10.0, axdct=axdct)  
+                            logM200min=11.0, axdct=axdct)  
 
 elif jobind in range(20217, 20219):
     p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
@@ -2906,7 +2906,7 @@ elif jobind in range(20217, 20219):
         p3g.genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
                             rbinu='R200c', idsel=None,\
                             weighttype=weighttype,\
-                            logM200min=10.0, axdct=axdct)  
+                            logM200min=11.0, axdct=axdct)  
         
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #

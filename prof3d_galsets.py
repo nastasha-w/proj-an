@@ -830,6 +830,7 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
                                     if not (-np.inf == zbins[0] and np.inf == zbins[-1]):
                                         missing = True
                                 if missing:
+                                    print('Removing erroneous hist {}'.format(outname))
                                     del fo_t[outname[1]]
                                 else:
                                     alreadyexists = True
