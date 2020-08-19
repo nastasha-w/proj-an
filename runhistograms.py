@@ -27,6 +27,7 @@ import coldens_rdist as crd
 from loadnpz_and_plot import imreduce
 import selecthalos as sh
 import prof3d_galsets as p3g
+import make_maps_v3_master as m3
 
 if __name__ == '__main__':
     jobind = int(sys.argv[1])
