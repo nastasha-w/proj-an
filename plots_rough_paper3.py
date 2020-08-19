@@ -1941,7 +1941,8 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
             if len(percv) % 2 == 1:
                 ax.plot(bincen, percs[:, len(percv) // 2], color=color)
             alpha_ol = alpha**((len(percv) - 1) // 2)
-            ax.scatter(outliers[0], outliers[1], color=color, alpha=alpha_ol)
+            ax.scatter(outliers[0], outliers[1], color=color, alpha=alpha_ol,\
+                       s=10.)
         # legend
         handles = [mlines.Line2D([], [], color=color, label='{:.0f}%%'.format(percv[len(percv) // 2]))]
         handles += [mpatch.Patch(facecolor=color, alpha=alpha**i,\
