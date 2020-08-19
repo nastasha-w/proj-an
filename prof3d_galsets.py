@@ -1302,13 +1302,10 @@ def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
         
         savelist = np.zeros((len(galids), len(weighttypes), 2), dtype=np.float64) / 0. # initialize as NaN
         
-        for line in weighttypes:  
+        for li, line in enumerate(weighttypes):  
             
             for gind in range(len(galids)):
                 galid = galids[gind]
-                
-                tempsum_sf = {}
-                tempsum_nsf = {}
                 
                 # retrieve data from this histogram for checks
                 igrpn_temp = galnames_all[line].at[galid, 'groupname']   
@@ -1359,12 +1356,11 @@ def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                 addsel_nsf[sfax] = slice(0, 1, None)
                 addsel_sf = list(np.copy(addsel))
                 addsel_sf[sfax] = slice(1, 2, None)
-                tempsum_nsf[line] = np.sum(hist_t[tuple(addsel_nsf)])
-                tempsum_sf[line] = np.sum(hist_t[tuple(addsel_sf)])
+                tempsum_nsf = np.sum(hist_t[tuple(addsel_nsf)])
+                tempsum_sf = np.sum(hist_t[tuple(addsel_sf)])
                 
-            # store the data
-            linesums_galid = np.array([[tempsum_nsf[line], tempsum_sf[line]] for line in weighttypes])
-            savelist[gind, :, :] = linesums_galid
+                savelist[gind, li, 0] = tempsum_nsf
+                savelist[gind, li, 1] = tempsum_sf
                 
         # don't forget the list of galids (galids_bin, and edgedata)
         #print(hists)
