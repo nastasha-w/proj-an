@@ -1836,10 +1836,16 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
                 / ( 4. * np.pi * ldist**2)
         lums = np.log10(lums)
         ylabel = '$ \\langle\\mathrm{SB}\\rangle \\;[\\mathrm{photons} \\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
+        
+        minymin = None
     else:
         lums = np.sum(lums, axis=2)
         lums = np.log10(lums) - np.log10(1. + cosmopars['z'])
         ylabel = '$\\mathrm{L}_{\\mathrm{obs}} \\; [\\mathrm{erg} \\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
+        if plottype in ['all', 'lines']:
+            minymin = 28.
+        else:
+            minymin = 0.
     if plottype == 'SFfrac':
         lums = lums[:, :, 1] / np.sum(lums, axis=2)
         ylabel = '$\\mathrm{L}_{\\mathrm{SF}} \\, / \\, \\mathrm{L}_{\\mathrm{tot}}$'
@@ -1943,6 +1949,8 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         ylims = [ax.get_ylim() for ax in axes]
         y0 = np.min([yl[0] for yl in ylims])
         y1 = np.max([yl[1] for yl in ylims])
+        if minymin is not None:
+            y0 = max(minymin, y0)
         [ax.set_ylim(y0, y1) for ax in axes]
         
     plt.savefig(outname, format='pdf', bbox_inches='tight')
