@@ -1356,9 +1356,9 @@ def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                 addsel = [slice(None, None, None)] * len(edges_t)
                 addsel[rax] = slice(ind1, ind2, None) # left edge ind1 -> start from in ind1, right edge ind2 -> stop after bin ind2 - 1
                 addsel_nsf = list(np.copy(addsel))
-                addsel_nsf[sfax] = [slice(0, 1, None)]
+                addsel_nsf[sfax] = slice(0, 1, None)
                 addsel_sf = list(np.copy(addsel))
-                addsel_sf[sfax] = [slice(1, 2, None)]
+                addsel_sf[sfax] = slice(1, 2, None)
                 tempsum_nsf[line] = np.sum(hist_t[tuple(addsel_nsf)])
                 tempsum_sf[line] = np.sum(hist_t[tuple(addsel_sf)])
                 
