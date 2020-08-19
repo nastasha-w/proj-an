@@ -2881,17 +2881,32 @@ elif jobind in range(20181, 20199):
                             logM200min=10.0, axdct=axdct)  
         
 # redo Z profiles (bug)
-elif jobind in range(20181, 20199):
+elif jobind in range(20199, 20217):
     p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
     weighttype = lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
          'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
-         'c6', 'n7'][jobind - 20181]
+         'c6', 'n7'][jobind - 20199]
     weighttype = 'em-' + weighttype
     axdct = 'Zrprof'
     p3g.genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
                             rbinu='R200c', idsel=None,\
                             weighttype=weighttype,\
                             logM200min=10.0, axdct=axdct)  
+
+elif jobind in range(20217, 20219):
+    metals = ['Carbon', 'Nitrogen', 'Oxygen', 'Neon', 'Magnesium',\
+                  'Iron', 'Silicon']
+    axdcts = ['{elt}-rprof'.format(elt=elt) for elt in metals]
+    axdcts += ['Trprof', 'nrprof']
+    weighttypes = ['Mass', 'Volume']
+    
+    weighttype = weighttypes[jobind - 20217]
+    for axdct in axdcts:
+        p3g.genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
+                            rbinu='R200c', idsel=None,\
+                            weighttype=weighttype,\
+                            logM200min=10.0, axdct=axdct)  
+        
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################
