@@ -739,7 +739,7 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
             _axdct = axdct
         else:
             _axdct = 'Zrprof'
-            elt = string.capwords(elt[1])
+            elt = string.capwords(elt[0])
             print('Using Zprof, elt {}'.format(elt)) 
         
         if _axdct == 'nrprof':
