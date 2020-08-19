@@ -632,7 +632,8 @@ def genhists_massdist(samplename=None, rbinu='pkpc', idsel=None,\
                 m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
             
             fdoc.write('%i\t%s\t%s\n'%(gid, outname[0], outname[1]))
-            
+ 
+           
 def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
                             rbinu='R200c', idsel=None,\
                             weighttype=None,\
@@ -644,11 +645,14 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
            'nrprof': n_H profile
            'Zrprof': Z profile
            'pds':    n_H, T, Z in course radial bins
+           '{elt}-rprof': Smoothed Z profile for and element (for Mass- and 
+           Volume weighttypes)
     idsel: project only a subset of galaxies according to the given list
            useful for testing on a few galaxies
            ! do not run in  parallel: different processes will try to write to
            the same list of output files
     weighttype: determines the weighting of the histogram
+           em-{line}: luminosity weighting
     '''
     if axdct == 'pds':
         raise NotImplementedError('pds is just a stub option for future dev.')
@@ -727,8 +731,35 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
             nonrbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
             axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
             logax = [False, True, False]
+    else: # Mass- or Volume-weighted
+        name_append = ''
+        elt = axdct.split('-')
+        if len(elt) == 1:
+            _axdct = axdct
+        else:
+            _axdct = 'Zrprof'
+            elt = string.capwords(elt[1])
         
+        if _axdct == 'nrprof':
+            axesdct.append({'ptype': 'Niondens', 'ion': 'hydrogen'})
+            nonrbins.append(0.1)
+        elif _axdct == 'Trprof':
+            axesdct.append({'ptype': 'basic', 'quantity': 'Temperature'})
+            nonrbins.append(0.1)
+        elif _axdct == 'Zrprof':
+            qty = 'SmoothedElementAbundance/{elt}'.format(elt=elt)
+            axesdct.append({'ptype': 'basic', 'quantity': qty})
+            nonrbins.append(0.1)
         
+        if _axdct == 'pds':
+            pass
+        else:
+            # log SF/nonSF gas
+            # minimum float32 value -> cgs units; much smaller than any SFR in the 12 Mpc box
+            minval = 2**-149 * c.solar_mass / c.sec_per_year 
+            nonrbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
+            axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
+            logax = [False, True, False]
              
     with open(logname, 'w') as fdoc:
         fdoc.write('galaxyid\tfilename\tgroupname\n')
