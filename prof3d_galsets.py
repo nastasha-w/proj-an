@@ -710,6 +710,7 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
         # A = 1.515 × 10−4 M⊙ yr−1 kpc−2, n = 1.4 (n = 2 at nH > 10^3 cm^-3)
         
         name_append = ''
+        _axdct = axdct
         if axdct == 'nrprof':
             axesdct.append({'ptype': 'Niondens', 'ion': 'hydrogen'})
             nonrbins.append(0.1)
@@ -814,7 +815,26 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
             if os.path.isfile(outname[0]):
                 with h5py.File(outname[0]) as fo_t:
                     if outname[1] in fo_t.keys():
-                        alreadyexists = True
+                        # throw out any remaining incomplete Z range profiles
+                        if _axdct == 'Zprof':
+                            keys = list(fo_t[outname[1]].keys())
+                            zkey = np.where(['ElementAbundance' in key for key in keys])[0]
+                            if len(zkey) == 0:
+                                # something weird here; delete
+                                del fo_t[outname[1]]
+                            else:
+                                zkeys = np.array(keys)[zkey]
+                                missing = False
+                                for key in zkeys:
+                                    zbins = fo_t[outname[1]][key]['bins'][:]
+                                    if not (-np.inf == zbins[0] and np.inf == zbins[-1]):
+                                        missing = True
+                                if missing:
+                                    del fo_t[outname[1]]
+                                else:
+                                    alreadyexists = True
+                        else:
+                            alreadyexists = True
             if alreadyexists:
                 print('For galaxy %i, a histogram already exists; skipping'%(gid))
             else:
