@@ -1805,7 +1805,7 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
     if plottype == 'all':
         mbins = np.array(list(np.arange(10., 13.05, 0.1)) + [13.25, 13.5, 13.75, 14.0, 14.6])
     else:
-        mbins = np.arange(10., 14.6, 0.1)
+        mbins = np.arange(10., 14.65, 0.1)
     
     if toSB:
         rs_in_pkpc = addedges[0] * cu.R200c_pkpc(masses, cosmopars)
@@ -1928,7 +1928,7 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
                         mincount_x=50,\
                         getoutliers_y=True, getmincounts_x=True,\
                         x_extremes_only=True)
-            
+            percs = percs[1:-1]
             for si in range(len(percv) // 2):
                 print(percv)
                 print(percs.shape)
