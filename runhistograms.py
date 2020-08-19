@@ -2894,6 +2894,7 @@ elif jobind in range(20199, 20217):
                             logM200min=10.0, axdct=axdct)  
 
 elif jobind in range(20217, 20219):
+    p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
     metals = ['Carbon', 'Nitrogen', 'Oxygen', 'Neon', 'Magnesium',\
                   'Iron', 'Silicon']
     axdcts = ['{elt}-rprof'.format(elt=elt) for elt in metals]
