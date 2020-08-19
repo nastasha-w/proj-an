@@ -2932,7 +2932,7 @@ elif jobind in range(20219, 20238):
     axbins = [np.array([-np.inf, 0., c.solar_mass] +\
                        list(10**(np.arange(9., 15.5, 0.5)) * c.solar_mass) +\
                        [np.inf]) ,\
-              None]
+              3]
     minval = 2**-149 * c.solar_mass / c.sec_per_year 
     axbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
     axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
@@ -2946,7 +2946,7 @@ elif jobind in range(20219, 20238):
                                L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
                                misc=None,\
                                name_append=None, logax=True, loghist=False,
-                               nameonly=False)
+                               nameonly=False, **kwargs)
     
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
