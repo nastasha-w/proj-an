@@ -1795,7 +1795,7 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
     filename = ol.pdir + 'luminosities_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_SmAb.hdf5'%(str(addedges[0]), str(addedges[1]))
     with h5py.File(filename, 'r') as fi:
         galids_l = fi['galaxyids'][:]
-        lines = [line.decode() for line in fi['lines'][:]]
+        lines = [line.decode() for line in fi['luminosities'].attrs['lines']]
         lums = fi['luminosities'][:]
             
     file_galdata = '/net/luttero/data2/imgs/CGM/3dprof/halodata_L0100N1504_27_Mh0p5dex_1000.txt'
