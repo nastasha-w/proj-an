@@ -684,7 +684,7 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
         hed = hc['Header']
         cosmopars = {key: item for key, item in hed['cosmopars'].attrs.items()}
         simnum = hed.attrs['simnum'].decode()
-        snapnum = hed.attrs['snapnum']
+        snapnum = int(hed.attrs['snapnum'])
         var = hed.attrs['var'].decode()
         #ap = hed.attrs['subhalo_aperture_size_Mstar_Mbh_SFR_pkpc']
     
