@@ -1254,7 +1254,7 @@ def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
     if samplename is None:
         samplename = defaults['sample']
     fdata = dataname(samplename)
-    fnames_line = {line: files(samplename, ion, histtype=histtype) for line in weighttypes}
+    fnames_line = {line: files(samplename, line, histtype=histtype) for line in weighttypes}
     
     with open(fdata, 'r') as fi:
         # scan for halo catalogue (only metadata needed for this)
@@ -1283,7 +1283,8 @@ def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
         #ap = hed.attrs['subhalo_aperture_size_Mstar_Mbh_SFR_pkpc']
     
     galdata_all = pd.read_csv(fdata, header=headlen, sep='\t', index_col='galaxyid')
-    galnames_all = {ion: pd.read_csv(fnames_line[line], header=0, sep='\t', index_col='galaxyid') for line in fnames_line}
+    galnames_all = {line: pd.read_csv(fnames_line[line], header=0, sep='\t', index_col='galaxyid')\
+                    for line in fnames_line}
 
     galids = np.array(galnames_all[weighttypes[0]].index) # galdata may also include non-selected haloes; galnames galaxyids should match
         
