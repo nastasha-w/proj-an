@@ -700,6 +700,7 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
     axesdct = [{'ptype': 'coords', 'quantity': 'r3D'},\
               ]
     nonrbins = []
+    Zbins = np.array([-np.inf] + list(np.arange(-38.0, 0.05, 0.1)) + [np.inf]) 
     
     if weighttype.startswith('em'):
         # gas particle min. SFR:
@@ -720,7 +721,7 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
             elt = ol.elements_ion[line]
             qty = 'SmoothedElementAbundance/{elt}'.format(elt=string.capwords(elt))
             axesdct.append({'ptype': 'basic', 'quantity': qty})
-            nonrbins.append(0.1)
+            nonrbins.append(Zbins)
         
         if axdct == 'pds':
             pass
@@ -752,7 +753,7 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
             qty = 'SmoothedElementAbundance/{elt}'.format(elt=elt)
             #print('Using qty {}'.format(qty))
             axesdct.append({'ptype': 'basic', 'quantity': qty})
-            nonrbins.append(0.1)
+            nonrbins.append(Zbins)
         
         if _axdct == 'pds':
             pass
@@ -1635,3 +1636,15 @@ def extracthists_massdist(samplename='L0100N1504_27_Mh0p5dex_1000',\
             egrp.create_dataset('mass', data=savelist)
             egrp['mass'].attrs.create('info', np.string_('total mass in each component in the given radial range'))
             egrp['mass'].attrs.create('units', np.string_('g'))
+
+def deletesets(filen):
+    '''
+    if something has gone wrong: delete the datasets in one of the listed files
+    '''
+    galname_all = pd.read_csv(filen, header=0, sep='\t', index_col='galaxyid')
+    for gid in galname_all.index:
+        filen = galname_all.at[gid, 'filename']
+        groupn = galname_all.at[gid, 'groupname']
+        with h5py.File(filen, 'a') as fi:
+            del fi[groupn]
+    
