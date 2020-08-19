@@ -2909,7 +2909,7 @@ elif jobind in range(20217, 20219):
                             logM200min=11.0, axdct=axdct)  
 
 # get halo luminosity fraction stats + mass for comparison
-elif jobind in range(20219, 20237):
+elif jobind in range(20219, 20238):
     lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
              'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
              'c6', 'n7', 'Mass']
