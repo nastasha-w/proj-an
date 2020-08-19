@@ -1874,7 +1874,12 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         lax.legend(handles, labels, fontsize=fontsize, bbox_to_anchor=(0.5, 0.),\
                    loc='lower center', ncol=2)
         lax.axis('off')
-    
+        
+        if minymin is not None:
+            y0, y1 = ax.get_ylim()
+            y0 = max(y0, minymin)
+            ax.set_ylim(y0, y1)
+            
     elif plottype in ['lines', 'SFfrac']:
         panelheight = 3.
         panelwidth = 3.
