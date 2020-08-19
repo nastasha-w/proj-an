@@ -2940,7 +2940,7 @@ elif jobind in range(20219, 20238):
     m3.makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                                simulation='eagle',\
                                excludeSFR='T4', abunds='Sm', parttype='0',\
-                               axbins=0.2,\
+                               axbins=axbins,\
                                sylviasshtables=False, bensgadget2tables=False,\
                                allinR200c=True, mdef='200c',\
                                L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
