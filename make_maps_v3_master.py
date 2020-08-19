@@ -5253,7 +5253,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
         but:
          - pytpe 'halo' is an option, 
            with 'Mass' and 'subcat' quantities  
-           'Mass' group particles by parant halo mass (no halo -> halo mass 0.)
+           'Mass' group particles by parent halo mass (no halo -> halo mass 0.)
            'subcat' divides galaxies into central, satellite, and unbound 
            classes
          - instead of 'coldens' and 'emission', 

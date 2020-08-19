@@ -2883,7 +2883,7 @@ elif jobind in range(20181, 20199):
 # redo Z profiles (bug)
 elif jobind in range(20199, 20217):
     p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
-    weighttype = lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
+    weighttype = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
          'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
          'c6', 'n7'][jobind - 20199]
     weighttype = 'em-' + weighttype
@@ -2907,7 +2907,46 @@ elif jobind in range(20217, 20219):
                             rbinu='R200c', idsel=None,\
                             weighttype=weighttype,\
                             logM200min=11.0, axdct=axdct)  
-        
+
+# get halo luminosity fraction stats + mass for comparison
+elif jobind in range(20219, 20237):
+    lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
+             'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
+             'c6', 'n7', 'Mass']
+    wt = lines[jobind - 20219]
+    m3.ol.ndir = '/net/luttero/data2/imgs/paper3/lumfracs/'
+    
+    simnum = 'L0100N1504'
+    snapnum = 27
+    var = 'REFERENCE'
+    if wt == 'Mass':
+        ptype = 'basic'
+        kwargs = {'quantity': wt}
+    else:
+        ptype = 'Luminosity'
+        kwargs = {'ion': wt}
+    
+    axesdct = [{'ptype': 'halo', 'quantity': 'Mass'},\
+               {'ptype': 'halo', 'quantity': 'subcat'}]
+    axbins = [np.array([-np.inf, 0., c.solar_mass] +\
+                       list(10**(np.arange(9., 15.5, 0.5)) * c.solar_mass) +\
+                       [np.inf]) ,\
+              None]
+    minval = 2**-149 * c.solar_mass / c.sec_per_year 
+    axbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
+    axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
+    logax = [False, False, False]
+    m3.makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
+                               simulation='eagle',\
+                               excludeSFR='T4', abunds='Sm', parttype='0',\
+                               axbins=0.2,\
+                               sylviasshtables=False, bensgadget2tables=False,\
+                               allinR200c=True, mdef='200c',\
+                               L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
+                               misc=None,\
+                               name_append=None, logax=True, loghist=False,
+                               nameonly=False)
+    
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################

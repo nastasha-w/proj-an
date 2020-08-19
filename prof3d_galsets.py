@@ -1365,7 +1365,7 @@ def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
         # don't forget the list of galids (galids_bin, and edgedata)
         #print(hists)
         egrp = fo
-        lines = ['-'.split(weight.split('-')[1:]) for weight in weighttypes]
+        lines = ['-'.join(weight.split('-')[1:]) for weight in weighttypes]
         egrp.attrs.create('lines', np.array([np.string_(line) for line in lines]))
         ds = egrp.create_dataset('luminosities', data=savelist)
         ds.attrs.create('units', np.string_('erg/s'))
