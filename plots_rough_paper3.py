@@ -1930,6 +1930,8 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
                         x_extremes_only=True)
             
             for si in range(len(percv) // 2):
+                print(percs.shape)
+                print(len(percv))
                 ax.fill_between(bincen[xmininds], percs[si][xmininds],\
                                 percs[len(percv) - 1 - si][xmininds],\
                                 color=color, alpha=alpha)
