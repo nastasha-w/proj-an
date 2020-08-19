@@ -1224,7 +1224,7 @@ def extracthists_ionfrac(samplename='L0100N1504_27_Mh0p5dex_1000',\
             egrp.create_dataset('fractions', data=savelist)
 
 def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
-              addedges=(0.0, 1.), tdir='/net/luttero/data2/imgs/paper3/3dprof/'):
+              addedges=(0.0, 1.)):
     '''
     generate the histograms for a given sample
     rbinu: used fixed bins in pkpc or in R200c (relevant for stacking)
@@ -1335,7 +1335,7 @@ def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                 except KeyError:
                     raise KeyError('Could not retrieve histogram axis for galaxy %i, file %s'%(galid, ifilen_temp))
                 try:
-                    sfax = edgedata_t['StarFormationRate']['histogram axis']
+                    sfax = edgedata_t['StarFormationRate_T4EOS']['histogram axis']
                 except KeyError:
                     raise KeyError('Could not retrieve SFR axis for galaxy %i, file %s'%(galid, ifilen_temp))
                         
