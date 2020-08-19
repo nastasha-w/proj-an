@@ -1846,7 +1846,6 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
             minymin = 28.
             
     if plottype == 'SFfrac':
-        print(lums.shape)
         lums = lums[:, :, 1] / np.sum(lums, axis=2)
         ylabel = '$\\mathrm{L}_{\\mathrm{SF}} \\, / \\, \\mathrm{L}_{\\mathrm{tot}}$'
         minymin = 0.
@@ -1936,8 +1935,8 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
                 print(xmininds.shape)
                 print(si)
                 print(len(percv) - 1 - si)
-                ax.fill_between(bincen[xmininds], percs[xmininds][si],\
-                                percs[xmininds][len(percv) - 1 - si],\
+                ax.fill_between(bincen[xmininds], percs[xmininds, si],\
+                                percs[xmininds, len(percv) - 1 - si],\
                                 color=color, alpha=alpha)
             if len(percv) % 2 == 1:
                 ax.plot(bincen, percs[:, len(percv) // 2], color=color)
