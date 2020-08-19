@@ -732,6 +732,7 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
             axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
             logax = [False, True, False]
     else: # Mass- or Volume-weighted
+        print('Using M/V case')
         name_append = ''
         elt = axdct.split('-')
         if len(elt) == 1:
@@ -739,6 +740,7 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
         else:
             _axdct = 'Zrprof'
             elt = string.capwords(elt[1])
+            print('Using Zprof, elt {}'.format(elt)) 
         
         if _axdct == 'nrprof':
             axesdct.append({'ptype': 'Niondens', 'ion': 'hydrogen'})
@@ -748,6 +750,7 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
             nonrbins.append(0.1)
         elif _axdct == 'Zrprof':
             qty = 'SmoothedElementAbundance/{elt}'.format(elt=elt)
+            print('Using qty {}'.format(qty))
             axesdct.append({'ptype': 'basic', 'quantity': qty})
             nonrbins.append(0.1)
         
