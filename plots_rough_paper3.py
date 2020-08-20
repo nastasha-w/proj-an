@@ -2186,7 +2186,7 @@ def plot3Dprof_overview(weighttype='Mass'):
                 Runit = c.cm_per_mpc * 1e-3 #pkpc
             
             for profq in tgrpns:
-                filen = (galnames_all[profq].at[galid, 'filename']).decode()
+                filen = (galnames_all[profq].at[galid, 'filename'])
                 with h5py.File(filen, 'r') as fi:
                     grpn = tgrpns[profq]
                     grp_t = fi[grpn]
