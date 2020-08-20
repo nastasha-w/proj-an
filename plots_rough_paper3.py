@@ -2138,7 +2138,7 @@ def plot3Dprof_overview(weighttype='Mass'):
                 if edges_r[0] == -np.inf: # reset centre bin position
                     edges_r[0] = 2. * edges_r[1] - edges_r[2] 
                     
-                sax = range(len(hist_t.shape))
+                sax = list(range(len(hist_t.shape)))
                 sax.remove(rax)
                 sax.remove(yax)
                 hist_t = np.sum(hist_t, axis=tuple(sax))
@@ -2153,7 +2153,7 @@ def plot3Dprof_overview(weighttype='Mass'):
                 # add in cumulative plot for the weight (from one of the profiles)
                 if profq == 'n':
                     hist_t = np.copy(hist)
-                    sax = range(len(hist_t.shape))
+                    sax = list(range(len(hist_t.shape)))
                     sax.remove(rax)
                     hist_t = np.sum(hist_t, axis=tuple(sax))
                     hist_t = np.cumsum(hist_t)
@@ -2192,7 +2192,7 @@ def plot3Dprof_overview(weighttype='Mass'):
                     edges = {}
                     axes = {}
                     
-                    for axn in axns:
+                    for axn in [profq, 'r3d']:
                        edges[axn] = np.array(grp_t[axns[axn] + '/bins'])
                        if axn == 'r3d':
                            edges[axn] *= (1./ Runit)
@@ -2207,7 +2207,7 @@ def plot3Dprof_overview(weighttype='Mass'):
                         if len(_i) != 1:
                             raise RuntimeError('For addnormed-R200c combination, no or multiple radial edges are close to R200c:\nedges [R200c] were: %s'%(str(edges['r3d'])))
                         _i = _i[0]
-                        _a = range(len(hist.shape))
+                        _a = list(range(len(hist.shape)))
                         _s = [slice(None, None, None) for dummy in _a]
                         _s[axes['r3d']] = slice(None, _i, None)
                         norm_t = np.sum(hist[tuple(_s)])
@@ -2233,7 +2233,7 @@ def plot3Dprof_overview(weighttype='Mass'):
                     if edges_y[-1] == np.inf: # reset centre bin position
                         edges_y[-1] = 2. * edges_y[-2] - edges_y[-3]
                         
-                    sax = range(len(hist_t.shape))
+                    sax = list(range(len(hist_t.shape)))
                     sax.remove(rax)
                     sax.remove(yax)
                     hist_t = np.sum(hist_t, axis=tuple(sax))
@@ -2247,7 +2247,7 @@ def plot3Dprof_overview(weighttype='Mass'):
                     # add in cumulative plot for the weight
                     if profq == 'n':
                         hist_t = np.copy(hist)
-                        sax = range(len(hist_t.shape))
+                        sax = list(range(len(hist_t.shape)))
                         sax.remove(rax)
                         hist_t = np.sum(hist_t, axis=tuple(sax))
                         hist_t = np.cumsum(hist_t)
