@@ -2099,14 +2099,11 @@ def plot3Dprof_overview(weighttype='Mass'):
                 
                 edges = {}
                 axes = {}
-                for axn in axns:
-                   print(axn)
-                   print(axns[axn])
-                   print(grp_t.keys())
-                   edges[axn] = np.array(grp_t[axns[axn] + '/bins'])
-                   if not bool(grp_t[axns[axn]].attrs['log']):
-                       edges[axn] = np.log10(edges[axn])
-                   axes[axn] = grp_t[axns[axn]].attrs['histogram axis']  
+                
+                edges[profq] = np.array(grp_t[axns[profq] + '/bins'])
+                if not bool(grp_t[axns[profq]].attrs['log']):
+                    edges[profq] = np.log10(edges[profq])
+                axes[profq] = grp_t[axns[profq]].attrs['histogram axis']  
                 
                 edges_main[mkey] = {}
                 hists_main[mkey] = {}
