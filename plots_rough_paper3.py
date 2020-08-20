@@ -2165,7 +2165,8 @@ def plot3Dprof_overview(weighttype='Mass'):
     
     # read in data: individual galaxies
     galdata_all = pd.read_csv(file_galdata, header=2, sep='\t', index_col='galaxyid')
-    galnames_all = {key: pd.read_csv(file_galsin[key], header=0, sep='\t', index_col='galaxyid')\
+    galnames_all = {key: pd.read_csv(file_galsin[key].decode(), header=0,\
+                                     sep='\t', index_col='galaxyid')\
                     for key in file_galsin}
     
     hists_single = {}
@@ -2180,7 +2181,7 @@ def plot3Dprof_overview(weighttype='Mass'):
                 Runit = c.cm_per_mpc * 1e-3 #pkpc
             
             for profq in tgrpns:
-                filen = galnames_all[profq].at[galid, 'filename']
+                filen = (galnames_all[profq].at[galid, 'filename']).decode()
                 with h5py.File(filen, 'r') as fi:
                     grpn = tgrpns[profq]
                     grp_t = fi[grpn]
