@@ -2399,7 +2399,7 @@ def plot3Dprof_overview(weighttype='Mass'):
         miny = np.min(ylims[:, 0])
         maxy = np.max(ylims[:, 1])
         # for Z and cumulative
-        miny = max(miny, maxy - 7.)
+        miny = max(miny, maxy - 10.)
         [[axes[yi, mi].set_ylim(miny, maxy) for mi in range(nmassbins)]]
     for xi in range(nmassbins):
         xlims = np.array([axes[i, xi].get_xlim() for i in range(nprof)])
