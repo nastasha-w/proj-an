@@ -2047,12 +2047,16 @@ def plot3Dprof_overview(weighttype='Mass'):
                 'Z':    'SmoothedElementAbundance-{elt}_T4EOS'.format(elt=elt)}
         axnl = ['T', 'n', 'Z']
     
-    tdir = '/net/luttero/data2/imgs/CGM/3dprof/'
+    tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
     fbase = 'filenames_L0100N1504_27_Mh0p5dex_1000_%s_%s.txt'
-    file_galsin = {'n': tdir + fbase%(weighttype, 'nrprof'),\
-                   'T': tdir + fbase%(weighttype, 'Trprof'),\
-                   'Z': tdir + fbase%(weighttype, 'Zrprof') if weighttype in ol.elements_ion.keys() else\
-                        tdir + fbase%(weighttype, '{elt}-rprof'.format(elt=elt)),\
+    if weighttype in ol.elements_ion:
+        wt = 'em-' + weighttype
+    else:
+        wt = weighttype
+    file_galsin = {'n': tdir + fbase%(wt, 'nrprof'),\
+                   'T': tdir + fbase%(wt, 'Trprof'),\
+                   'Z': tdir + fbase%(wt, 'Zrprof') if weighttype in ol.elements_ion.keys() else\
+                        tdir + fbase%(wt, '{elt}-rprof'.format(elt=elt)),\
                    }
     print(file_galsin)
     file_galdata = '/net/luttero/data2/imgs/CGM/3dprof/halodata_L0100N1504_27_Mh0p5dex_1000.txt'
