@@ -2948,6 +2948,19 @@ elif jobind in range(20219, 20238):
                                name_append=None, logax=True, loghist=False,
                                nameonly=False, **kwargs)
     
+# stack emission-weighted profiles    
+elif jobind in range(20238, 20256):
+    p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    weighttype = lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
+         'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
+         'c6', 'n7'][jobind - 20181]
+    weighttype = 'em-' + weighttype
+    for axdct in ['Trprof', 'nrprof', 'Zrprof']:    
+        p3g.combhists(samplename='L0100N1504_27_Mh0p5dex_1000', rbinu='R200c',\
+                  idsel=None, weighttype=weighttype,\
+                  binby=('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),\
+                  combmethod='addnormed-R200c', histtype=axdct)
+    
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################

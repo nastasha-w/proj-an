@@ -1976,6 +1976,7 @@ def plot3Dprof_overview(weighttype='Mass'):
     inclSF = True #False is not implemented in the histogram extraction
     outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
     outname = outdir + 'overview_radprof_L0100N1504_27_Mh0p5dex_1000_%s_%s.pdf'%(weighttype, 'wSF' if inclSF else 'nSF')
+    defaultelt = 'Oxygen' #for M, V weighting
     
     print('Using parent element metallicity, otherwise, oxygen')
     
@@ -2012,7 +2013,7 @@ def plot3Dprof_overview(weighttype='Mass'):
               'L'
     axlabels = {'T': r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$',\
                 'n': r'$\log_{10} \, \mathrm{n}(\mathrm{H}) \; [\mathrm{cm}^{-3}]$',\
-                'Z': r'$\log_{10} \, \mathrm{n}(\mathrm{%s}) \; [\mathrm{cm}^{-3}]$',\
+                'Z': r'$\log_{10} \, \mathrm{Z}$',\
                 'weight': r'$\log_{10} \, \mathrm{%s}(< r) \,/\, \mathrm{%s}(< \mathrm{R}_{\mathrm{200c}})$'%(wnshort, wnshort)
                 }
     clabel = r'$\log_{10} \, \left\langle %s(< r) \,/\, %s(< \mathrm{R}_{\mathrm{200c}}) \right\rangle \, / \,$'%(wnshort, wnshort) + 'bin size'
@@ -2020,18 +2021,21 @@ def plot3Dprof_overview(weighttype='Mass'):
     if weighttype in ol.elements_ion.keys():
         filename = ol.ndir + 'particlehist_Nion_%s_L0100N1504_27_test3.4_PtAb_T4EOS_galcomb.hdf5'%(line)
         nprof = 4
+        elt = string.capwords(ol.elements_ion[line])
         title = r'$\mathrm{L}(\mathrm{%s})$ and $\mathrm{L}(\mathrm{%s})$-weighted profiles'%(wname, wname)
         tgrpns = {'T': '3Dradius_Temperature_T4EOS_StarFormationRate_T4EOS',\
                   'n': '3Dradius_Niondens_hydrogen_SmAb_T4EOS_StarFormationRate_T4EOS',\
-                  'Z': '',\
+                  'Z': '3Dradius_SmoothedElementAbundance-{elt}_T4EOS_StarFormationRate_T4EOS'.format(\
+                                                          elt=elt),\
                   }
         axns  = {'r3d':  '3Dradius',\
                  'T':    'Temperature_T4EOS',\
                  'n':    'Niondens_hydrogen_SmAb_T4EOS',\
-                 'Z':    'SmoothedElementAbundance-{elt}_T4EOS'.format(string.capwords(ol.elements_ion[line])),\
+                 'Z':    'SmoothedElementAbundance-{elt}_T4EOS'.format(elt=elt),\
                 }
         axnl = ['n', 'T', 'Z']
     else:
+        elt = defaultelt
         if weighttype == 'Volume':
             filename = ol.ndir + 'particlehist_%s_L0100N1504_27_test3.4_T4EOS_galcomb.hdf5'%('propvol')
         else:
@@ -2040,15 +2044,21 @@ def plot3Dprof_overview(weighttype='Mass'):
         title = r'%s and %s-weighted profiles'%(weighttype, weighttype)
         tgrpns = {'T': '3Dradius_Temperature_T4EOS_StarFormationRate_T4EOS',\
                   'n': '3Dradius_Niondens_hydrogen_SmAb_T4EOS_StarFormationRate_T4EOS',\
-                  'Z': '',\
+                  'Z': '3Dradius_SmoothedElementAbundance-{elt}_T4EOS_StarFormationRate_T4EOS'.format(elt=elt),\
                   }
         axns = {'r3d':  '3Dradius',\
                 'T':    'Temperature_T4EOS',\
                 'n':    'Niondens_hydrogen_SmAb_T4EOS',\
-                'Z':    'SmoothedElementAbundance-Oxygen_T4EOS'}
+                'Z':    'SmoothedElementAbundance-{elt}_T4EOS'.format(elt=elt)}
         axnl = ['T', 'n', 'Z']
-        
-    file_galsin = '/net/luttero/data2/imgs/CGM/3dprof/filenames_L0100N1504_27_Mh0p5dex_1000_%s_%s.txt'%(weighttype, 'nrprof')
+    
+    tdir = '/net/luttero/data2/imgs/CGM/3dprof/'
+    fbase = 'filenames_L0100N1504_27_Mh0p5dex_1000_%s_%s.txt'
+    file_galsin = {'n': tdir + fbase%(weighttype, 'nrprof'),\
+                   'T': tdir + fbase%(weighttype, 'Trprof'),\
+                   'Z': tdir + fbase%(weighttype, 'Zrprof') if weighttype in ol.elements_ion.keys() else\
+                        tdir + fbase%(weighttype, '{elt}-rprof'.format(elt=elt)),\
+                   }
     file_galdata = '/net/luttero/data2/imgs/CGM/3dprof/halodata_L0100N1504_27_Mh0p5dex_1000.txt'
     
     # generated randomly once
@@ -2159,7 +2169,8 @@ def plot3Dprof_overview(weighttype='Mass'):
     
     # read in data: individual galaxies
     galdata_all = pd.read_csv(file_galdata, header=2, sep='\t', index_col='galaxyid')
-    galname_all = pd.read_csv(file_galsin, header=0, sep='\t', index_col='galaxyid')
+    galnames_all = {key: pd.read_csv(file_galsin[key], header=0, sep='\t', index_col='galaxyid')\
+                    for key in file_galsin}
     
     hists_single = {}
     edges_single = {}
@@ -2167,14 +2178,14 @@ def plot3Dprof_overview(weighttype='Mass'):
     for mbin in galids_per_bin:
         galids = galids_per_bin[mbin]
         for galid in galids:
-            filen = galname_all.at[galid, 'filename']
             if rbinu == 'R200c':
                 Runit = galdata_all.at[galid, 'R200c_cMpc'] * c.cm_per_mpc * cosmopars['a']
             else:
                 Runit = c.cm_per_mpc * 1e-3 #pkpc
             
-            with h5py.File(filen, 'r') as fi:
-                for profq in tgrpns:
+            for profq in tgrpns:
+                filen = galnames_all[profq].at[galid, 'filename']
+                with h5py.File(filen, 'r') as fi:
                     grpn = tgrpns[profq]
                     grp_t = fi[grpn]
                         
