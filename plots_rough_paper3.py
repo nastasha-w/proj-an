@@ -1996,7 +1996,7 @@ def plot3Dprof_overview(weighttype='Mass'):
                  } # avoid having to read in the halo catalogue just for this; copied from there
     
     if weighttype not in ['Mass', 'Volume']:
-        line = '-'.join(weighttype.split('-')[1:])
+        line = weighttype
     else:
         line = weighttype
     wname = nicenames_lines[line]  if line in nicenames_lines else \
