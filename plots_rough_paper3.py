@@ -2100,6 +2100,9 @@ def plot3Dprof_overview(weighttype='Mass'):
                 edges = {}
                 axes = {}
                 for axn in axns:
+                   print(axn)
+                   print(axns(axn))
+                   print(grp_t.keys())
                    edges[axn] = np.array(grp_t[axns[axn] + '/bins'])
                    if not bool(grp_t[axns[axn]].attrs['log']):
                        edges[axn] = np.log10(edges[axn])
