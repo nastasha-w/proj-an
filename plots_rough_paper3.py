@@ -1829,11 +1829,12 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
             Omega = np.pi * (angle_out**2 - angle_in**2)
         else:
             Omega = 2 * np.pi * (np.cos(angle_in) - np.cos(angle_out))
-        
+        print(Omega)
         lums = np.sum(lums, axis=2)
         pnorms = (1. + cosmopars['z']) / np.array([ol.line_eng_ion[line] for line in lines])
         lums *= pnorms[np.newaxis, :] / Omega[:, np.newaxis] \
                 / ( 4. * np.pi * ldist**2)
+        print(lums)
         lums = np.log10(lums)
         ylabel = '$ \\langle\\mathrm{SB}\\rangle \\;[\\mathrm{photons} \\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
         
