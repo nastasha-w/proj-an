@@ -2111,8 +2111,10 @@ def plot3Dprof_overview(weighttype='Mass'):
                         edges[axn] = np.log10(edges[axn])
                     axes[axn] = grp_t[axns[axn]].attrs['histogram axis']  
                 
-                edges_main[mkey] = {}
-                hists_main[mkey] = {}
+                if mkey not in edges_main:
+                    edges_main[mkey] = {}
+                if mkey not in hists_main:
+                    hists_main[mkey] = {}
                 
                 # apply normalization consisent with stacking method
                 if rbinu == 'pkpc':
@@ -2220,8 +2222,10 @@ def plot3Dprof_overview(weighttype='Mass'):
                     
                     hist *= (1. / norm_t)
                     
-                    hists_single[galid] = {}
-                    edges_single[galid] = {}
+                    if galid not in hists_single:
+                        hists_single[galid] = {}
+                    if galid not in edges_single:
+                        edges_single[galid] = {}
                     
                     rax = axes['r3d']
                     yax = axes[profq]
