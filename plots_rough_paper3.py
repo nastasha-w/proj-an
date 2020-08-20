@@ -1810,7 +1810,8 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
     if toSB:
         rs_in_pkpc = addedges[0] * cu.R200c_pkpc(masses, cosmopars)
         rs_out_pkpc = addedges[1] * cu.R200c_pkpc(masses, cosmopars)
-        
+        print(rs_in_pkpc)
+        print(rs_out_pkpc)
         zcalc = cosmopars['z']
         comdist = cu.comoving_distance_cm(zcalc, cosmopars=cosmopars)
         longlen = 50. * c.cm_per_mpc
@@ -1820,7 +1821,8 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         else:
             ldist = longlen * (1. + zcalc)
             adist = longlen / (1. + zcalc)
-
+        print(adist)
+        print(ldist)
         # conversion (x, y are axis placeholders and may actually represent different axes in the simulation, as with numpix_x, and numpix_y)
         angle_in  = rs_in_pkpc * 1e-3 * c.cm_per_mpc / adist
         angle_out = rs_out_pkpc * 1e-3 * c.cm_per_mpc / adist
