@@ -2014,7 +2014,7 @@ def plot3Dprof_overview(weighttype='Mass'):
     clabel = r'$\log_{10} \, \left\langle %s(< r) \,/\, %s(< \mathrm{R}_{\mathrm{200c}}) \right\rangle \, / \,$'%(wnshort, wnshort) + 'bin size'
     
     if weighttype in ol.elements_ion.keys():
-        filename = ol.ndir + 'particlehist_Luminosity_{line}_L0100N1504_27_test3.4_PtAb_T4EOS_galcomb.hdf5'.format(line=line)
+        filename = ol.ndir + 'particlehist_Luminosity_{line}_L0100N1504_27_test3.6_SmAb_T4EOS_galcomb.hdf5'.format(line=line)
         nprof = 4
         elt = string.capwords(ol.elements_ion[line])
         title = r'$\mathrm{L}(\mathrm{%s})$ and $\mathrm{L}(\mathrm{%s})$-weighted profiles'%(wname, wname)
@@ -2032,9 +2032,9 @@ def plot3Dprof_overview(weighttype='Mass'):
     else:
         elt = defaultelt
         if weighttype == 'Volume':
-            filename = ol.ndir + 'particlehist_%s_L0100N1504_27_test3.4_T4EOS_galcomb.hdf5'%('propvol')
+            filename = ol.ndir + 'particlehist_%s_L0100N1504_27_test3.6_T4EOS_galcomb.hdf5'%('propvol')
         else:
-            filename = ol.ndir + 'particlehist_%s_L0100N1504_27_test3.4_T4EOS_galcomb.hdf5'%(weighttype)
+            filename = ol.ndir + 'particlehist_%s_L0100N1504_27_test3.6_T4EOS_galcomb.hdf5'%(weighttype)
         nprof = 4
         title = r'%s and %s-weighted profiles'%(weighttype, weighttype)
         tgrpns = {'T': '3Dradius_Temperature_T4EOS_StarFormationRate_T4EOS',\
