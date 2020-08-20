@@ -2058,7 +2058,6 @@ def plot3Dprof_overview(weighttype='Mass'):
                    'Z': tdir + fbase%(wt, 'Zrprof') if weighttype in ol.elements_ion.keys() else\
                         tdir + fbase%(wt, '{elt}-rprof'.format(elt=elt)),\
                    }
-    print(file_galsin)
     file_galdata = '/net/luttero/data2/imgs/CGM/3dprof/halodata_L0100N1504_27_Mh0p5dex_1000.txt'
     
     # generated randomly once
