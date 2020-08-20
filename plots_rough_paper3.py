@@ -1762,6 +1762,7 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
                             mi=addedges[0], ma=addedges[1])
     if toSB:
         outname = outname + '_as-SB'
+    outname = outname.replace('.', 'p')
     outname = outdir + outname + '.pdf'
     
     cosmopars = {'a': 0.9085634947881763,\
