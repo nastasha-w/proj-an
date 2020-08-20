@@ -1973,7 +1973,7 @@ def plot3Dprof_overview(weighttype='Mass'):
     outname = outdir + 'overview_radprof_L0100N1504_27_Mh0p5dex_1000_%s_%s.pdf'%(weighttype, 'wSF' if inclSF else 'nSF')
     defaultelt = 'Oxygen' #for M, V weighting
     
-    print('Using parent element metallicity, otherwise, oxygen')
+    print('Using parent element metallicity, otherwise, {}'.format(defaultelt))
     
     fontsize = 12
     cmap = pu.truncate_colormap(cm.get_cmap('gist_yarg'), minval=0.0, maxval=0.7, n=-1)
@@ -2014,7 +2014,7 @@ def plot3Dprof_overview(weighttype='Mass'):
     clabel = r'$\log_{10} \, \left\langle %s(< r) \,/\, %s(< \mathrm{R}_{\mathrm{200c}}) \right\rangle \, / \,$'%(wnshort, wnshort) + 'bin size'
     
     if weighttype in ol.elements_ion.keys():
-        filename = ol.ndir + 'particlehist_Nion_%s_L0100N1504_27_test3.4_PtAb_T4EOS_galcomb.hdf5'%(line)
+        filename = ol.ndir + 'particlehist_Nion_{line}_L0100N1504_27_test3.4_PtAb_T4EOS_galcomb.hdf5'.format(line=line)
         nprof = 4
         elt = string.capwords(ol.elements_ion[line])
         title = r'$\mathrm{L}(\mathrm{%s})$ and $\mathrm{L}(\mathrm{%s})$-weighted profiles'%(wname, wname)
