@@ -1812,6 +1812,8 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         print(addedges)
         rs_in_pkpc = addedges[0] * cu.R200c_pkpc(masses, cosmopars)
         rs_out_pkpc = addedges[1] * cu.R200c_pkpc(masses, cosmopars)
+        print(masses)
+        print(cu.R200c_pkpc(masses, cosmopars))
         print(rs_in_pkpc)
         print(rs_out_pkpc)
         zcalc = cosmopars['z']
