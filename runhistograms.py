@@ -2960,6 +2960,41 @@ elif jobind in range(20238, 20256):
                   idsel=None, weighttype=weighttype,\
                   binby=('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),\
                   combmethod='addnormed-R200c', histtype=axdct)
+
+# get total luminosities for comparison
+elif jobind in range(20256, 20275):
+    lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
+             'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
+             'c6', 'n7', 'Mass']
+    wt = lines[jobind - 20256]
+    m3.ol.ndir = '/net/luttero/data2/imgs/paper3/lumfracs/'
+    
+    simnum = 'L0100N1504'
+    snapnum = 27
+    var = 'REFERENCE'
+    if wt == 'Mass':
+        ptype = 'basic'
+        kwargs = {'quantity': wt}
+    else:
+        ptype = 'Luminosity'
+        kwargs = {'ion': wt}
+    
+    axesdct = []
+    axbins = []
+    minval = 2**-149 * c.solar_mass / c.sec_per_year 
+    axbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
+    axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
+    logax = [False]
+    m3.makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
+                               simulation='eagle',\
+                               excludeSFR='T4', abunds='Sm', parttype='0',\
+                               axbins=axbins,\
+                               sylviasshtables=False, bensgadget2tables=False,\
+                               allinR200c=True, mdef='200c',\
+                               L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
+                               misc=None,\
+                               name_append=None, logax=True, loghist=False,
+                               nameonly=False, **kwargs)
     
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
