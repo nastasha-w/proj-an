@@ -2144,6 +2144,10 @@ def plot3Dprof_overview(weighttype='Mass'):
                 # deal with edge units (r3d is already in R200c units if R200c-stacked)
                 if edges_r[0] == -np.inf: # reset centre bin position
                     edges_r[0] = 2. * edges_r[1] - edges_r[2] 
+                if edges_y[0] == -np.inf: # reset centre bin position
+                    edges_y[0] = 2. * edges_y[1] - edges_y[2]
+                if edges_y[-1] == np.inf: # reset centre bin position
+                    edges_y[-1] = 2. * edges_y[-2] - edges_y[-3]
                     
                 sax = list(range(len(hist_t.shape)))
                 sax.remove(rax)
@@ -2394,8 +2398,8 @@ def plot3Dprof_overview(weighttype='Mass'):
         ylims = np.array([axes[yi, mi].get_ylim() for mi in range(nmassbins)])
         miny = np.min(ylims[:, 0])
         maxy = np.max(ylims[:, 1])
-        # intended for ion number densities
-        miny = max(miny, maxy - 17.)
+        # for Z and cumulative
+        miny = max(miny, maxy - 7.)
         [[axes[yi, mi].set_ylim(miny, maxy) for mi in range(nmassbins)]]
     for xi in range(nmassbins):
         xlims = np.array([axes[i, xi].get_xlim() for i in range(nprof)])
