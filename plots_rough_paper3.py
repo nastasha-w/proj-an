@@ -1808,14 +1808,10 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         mbins = np.arange(10., 14.65, 0.1)
     
     if toSB:
-        print(masses)
-        print(addedges)
+
         rs_in_pkpc = addedges[0] * cu.R200c_pkpc(masses, cosmopars)
         rs_out_pkpc = addedges[1] * cu.R200c_pkpc(masses, cosmopars)
-        print(masses)
-        print(cu.R200c_pkpc(masses, cosmopars))
-        print(rs_in_pkpc)
-        print(rs_out_pkpc)
+        
         zcalc = cosmopars['z']
         comdist = cu.comoving_distance_cm(zcalc, cosmopars=cosmopars)
         longlen = 50. * c.cm_per_mpc
@@ -1825,8 +1821,6 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         else:
             ldist = longlen * (1. + zcalc)
             adist = longlen / (1. + zcalc)
-        print(adist)
-        print(ldist)
         # conversion (x, y are axis placeholders and may actually represent different axes in the simulation, as with numpix_x, and numpix_y)
         angle_in  = rs_in_pkpc * 1e-3 * c.cm_per_mpc / adist
         angle_out = rs_out_pkpc * 1e-3 * c.cm_per_mpc / adist
@@ -1836,15 +1830,13 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         else:
             Omega = 2 * np.pi * (np.cos(angle_in) - np.cos(angle_out))
         lums = np.sum(lums, axis=2)
-        print(lums)
         pnorms = (1. + cosmopars['z']) / np.array([ol.line_eng_ion[line] for line in lines])
         lums *= pnorms[np.newaxis, :] / Omega[:, np.newaxis] \
                 / ( 4. * np.pi * ldist**2)
-        print(lums)
         lums = np.log10(lums)
         ylabel = '$ \\langle\\mathrm{SB}\\rangle \\;[\\mathrm{photons} \\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
         
-        minymin = None
+        minymin = -11.
     else:
         if plottype in ['lines', 'all']:
             lums = np.sum(lums, axis=2)
