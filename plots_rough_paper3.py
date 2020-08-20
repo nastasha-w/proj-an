@@ -2120,7 +2120,7 @@ def plot3Dprof_overview(weighttype='Mass'):
                     if len(_i) != 1:
                         raise RuntimeError('For addnormed-R200c combination, no or multiple radial edges are close to R200c:\nedges [R200c] were: %s'%(str(edges['r3d'])))
                     _i = _i[0]
-                    _a = range(len(hist.shape))
+                    _a = list(range(len(hist.shape)))
                     _s = [slice(None, None, None) for dummy in _a]
                     _s[axes['r3d']] = slice(None, _i, None)
                     norm_t = np.sum(hist[tuple(_s)])
