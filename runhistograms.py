@@ -2952,7 +2952,7 @@ elif jobind in range(20219, 20238):
     kwargs = _kwargs
     filen, grpn = m3.makehistograms_perparticle(*args, nameonly=True, **kwargs)
     done = False
-    if os.isfile(filen):
+    if os.path.isfile(filen):
         with h5py.File(filen) as fi:
             if grpn in fi:
                 done = True
@@ -3011,7 +3011,7 @@ elif jobind in range(20256, 20275):
     kwargs = _kwargs
     filen, grpn = m3.makehistograms_perparticle(*args, nameonly=True, **kwargs)
     done = False
-    if os.isfile(filen):
+    if os.path.isfile(filen):
         with h5py.File(filen) as fi:
             if grpn in fi:
                 done = True
