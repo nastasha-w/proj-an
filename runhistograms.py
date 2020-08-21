@@ -2946,7 +2946,7 @@ elif jobind in range(20219, 20238):
                   allinR200c=True, mdef='200c',\
                   L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
                   misc=None,\
-                  name_append=None, logax=True, loghist=False,
+                  name_append=None, logax=logax, loghist=False,
                   )
     _kwargs.update(kwargs)
     kwargs = _kwargs
@@ -3005,7 +3005,7 @@ elif jobind in range(20256, 20275):
                   allinR200c=True, mdef='200c',\
                   L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
                   misc=None,\
-                  name_append=None, logax=True, loghist=False,
+                  name_append=None, logax=logax, loghist=False,
                   )
     _kwargs.update(kwargs)
     kwargs = _kwargs
