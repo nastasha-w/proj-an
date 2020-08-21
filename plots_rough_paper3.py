@@ -1971,10 +1971,8 @@ def plot3Dprof_overview(weighttype='Mass', stack='addnormed-R200c'):
     input:
     ------
     stack:      'addnormed-R200c' or 'add'
-                'add': cumulative profile from the stack is averaged 
-                       (total / number of galaxies)
-                       other plots: shading is in cgs units, 
-                                    L in erg/s (rest-frame)
+                'add': shading/cumulative is in cgs units / proper sizes, 
+                       L in erg/s (rest-frame)
     weighttype: 'Mass' or an ion name
     '''
     inclSF = True #False is not implemented in the histogram extraction
@@ -2022,7 +2020,7 @@ def plot3Dprof_overview(weighttype='Mass', stack='addnormed-R200c'):
                 'Z': r'$\log_{10} \, \mathrm{Z}$',\
                 'weight': r'$\log_{10} \, \mathrm{%s}(< r) \,/\, \mathrm{%s}(< \mathrm{R}_{\mathrm{200c}})$'%(wnshort, wnshort) \
                           if combmethod == 'addnormed-R200c' else \
-                          r'\log_{10} \, \mathrm{%s}_{\mathrm{tot}}'%wnshort
+                          r'$\log_{10} \, \mathrm{%s}_{\mathrm{tot}}$'%wnshort
                 }
     if combmethod == 'addnormed-R200c': 
         clabel = r'$\log_{10} \, \left\langle %s(< r) \,/\, %s(< \mathrm{R}_{\mathrm{200c}}) \right\rangle \, / \,$'%(wnshort, wnshort) + 'bin size'
@@ -2240,7 +2238,8 @@ def plot3Dprof_overview(weighttype='Mass', stack='addnormed-R200c'):
                         _s = [slice(None, None, None) for dummy in _a]
                         _s[axes['r3d']] = slice(None, _i, None)
                         norm_t = np.sum(hist[tuple(_s)])
-                    
+                    elif combmethod == 'add':
+                        norm_t = 1.
                     hist *= (1. / norm_t)
                     
                     if galid not in hists_single:
@@ -2384,9 +2383,9 @@ def plot3Dprof_overview(weighttype='Mass', stack='addnormed-R200c'):
                                 zorder = -1)
             else:
                 hist = hists_main[mkey][yq]
-                if combmethod == 'add':
-                    numgal = len(galids_main[mkey])
-                    hist /= float(numgal)
+                #if combmethod == 'add':
+                #    numgal = len(galids_main[mkey])
+                #    hist /= float(numgal)
                     
                 ax.plot(edges_r, np.log10(hist), color='black',\
                             linestyle='solid', alpha=1.,\
