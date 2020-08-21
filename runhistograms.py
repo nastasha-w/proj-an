@@ -2937,16 +2937,25 @@ elif jobind in range(20219, 20238):
     axbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
     axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
     logax = [False, False, False]
-    m3.makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
-                               simulation='eagle',\
-                               excludeSFR='T4', abunds='Sm', parttype='0',\
-                               axbins=axbins,\
-                               sylviasshtables=False, bensgadget2tables=False,\
-                               allinR200c=True, mdef='200c',\
-                               L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
-                               misc=None,\
-                               name_append=None, logax=True, loghist=False,
-                               nameonly=False, **kwargs)
+    
+    args = (ptype, simnum, snapnum, var, axesdct)
+    kwargs = dict(simulation='eagle',\
+                  excludeSFR='T4', abunds='Sm', parttype='0',\
+                  axbins=axbins,\
+                  sylviasshtables=False, bensgadget2tables=False,\
+                  allinR200c=True, mdef='200c',\
+                  L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
+                  misc=None,\
+                  name_append=None, logax=True, loghist=False,
+                  )
+    filen, grpn = m3.makehistograms_perparticle(*args, nameonly=True, **kwargs)
+    done = False
+    if os.isfile(filen):
+        with h5py.File(filen) as fi:
+            if grpn in fi:
+                done = True
+    if not done:
+        m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
     
 # stack emission-weighted profiles    
 elif jobind in range(20238, 20256):
@@ -2985,16 +2994,25 @@ elif jobind in range(20256, 20275):
     axbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
     axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
     logax = [False]
-    m3.makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
-                               simulation='eagle',\
-                               excludeSFR='T4', abunds='Sm', parttype='0',\
-                               axbins=axbins,\
-                               sylviasshtables=False, bensgadget2tables=False,\
-                               allinR200c=True, mdef='200c',\
-                               L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
-                               misc=None,\
-                               name_append=None, logax=True, loghist=False,
-                               nameonly=False, **kwargs)
+    
+    args = (ptype, simnum, snapnum, var, axesdct)
+    kwargs = dict(simulation='eagle',\
+                  excludeSFR='T4', abunds='Sm', parttype='0',\
+                  axbins=axbins,\
+                  sylviasshtables=False, bensgadget2tables=False,\
+                  allinR200c=True, mdef='200c',\
+                  L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
+                  misc=None,\
+                  name_append=None, logax=True, loghist=False,
+                  )
+    filen, grpn = m3.makehistograms_perparticle(*args, nameonly=True, **kwargs)
+    done = False
+    if os.isfile(filen):
+        with h5py.File(filen) as fi:
+            if grpn in fi:
+                done = True
+    if not done:
+        m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
     
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
