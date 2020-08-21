@@ -2939,7 +2939,7 @@ elif jobind in range(20219, 20238):
     logax = [False, False, False]
     
     args = (ptype, simnum, snapnum, var, axesdct)
-    kwargs = dict(simulation='eagle',\
+    _kwargs = dict(simulation='eagle',\
                   excludeSFR='T4', abunds='Sm', parttype='0',\
                   axbins=axbins,\
                   sylviasshtables=False, bensgadget2tables=False,\
@@ -2948,6 +2948,8 @@ elif jobind in range(20219, 20238):
                   misc=None,\
                   name_append=None, logax=True, loghist=False,
                   )
+    _kwargs.update(kwargs)
+    kwargs = _kwargs
     filen, grpn = m3.makehistograms_perparticle(*args, nameonly=True, **kwargs)
     done = False
     if os.isfile(filen):
@@ -2996,7 +2998,7 @@ elif jobind in range(20256, 20275):
     logax = [False]
     
     args = (ptype, simnum, snapnum, var, axesdct)
-    kwargs = dict(simulation='eagle',\
+    _kwargs = dict(simulation='eagle',\
                   excludeSFR='T4', abunds='Sm', parttype='0',\
                   axbins=axbins,\
                   sylviasshtables=False, bensgadget2tables=False,\
@@ -3005,6 +3007,8 @@ elif jobind in range(20256, 20275):
                   misc=None,\
                   name_append=None, logax=True, loghist=False,
                   )
+    _kwargs.update(kwargs)
+    kwargs = _kwargs
     filen, grpn = m3.makehistograms_perparticle(*args, nameonly=True, **kwargs)
     done = False
     if os.isfile(filen):
