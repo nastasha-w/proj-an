@@ -1962,15 +1962,22 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     
     
-def plot3Dprof_overview(weighttype='Mass'):
+def plot3Dprof_overview(weighttype='Mass', stack='addnormed-R200c'):
     '''
     plot: cumulative profile of weight, [ion number density profile], 
           rho profile, T profile
     rows show different halo mass ranges
+    
+    input:
+    ------
+    stack:      'addnormed-R200c' or 'add'
+    weighttype: 'Mass' or an ion name
     '''
     inclSF = True #False is not implemented in the histogram extraction
     outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
-    outname = outdir + 'overview_radprof_L0100N1504_27_Mh0p5dex_1000_%s_%s.pdf'%(weighttype, 'wSF' if inclSF else 'nSF')
+    outname = outdir + 'overview_radprof_L0100N1504_27_Mh0p5dex_1000_{}_{}_{stack}.pdf'.format(\
+                                                                     weighttype, 'wSF' if inclSF else 'nSF',\
+                                                                     stack=stack)
     defaultelt = 'Oxygen' #for M, V weighting
     
     print('Using parent element metallicity, otherwise, {}'.format(defaultelt))
@@ -1983,7 +1990,7 @@ def plot3Dprof_overview(weighttype='Mass'):
     linestyles = ['dashed', 'solid', 'dashed']
     
     rbinu = 'R200c'
-    combmethod = 'addnormed-R200c'
+    combmethod = stack
 
     # snapshot 27
     cosmopars = {'a': 0.9085634947881763,\
