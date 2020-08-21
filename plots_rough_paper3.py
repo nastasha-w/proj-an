@@ -1971,6 +1971,10 @@ def plot3Dprof_overview(weighttype='Mass', stack='addnormed-R200c'):
     input:
     ------
     stack:      'addnormed-R200c' or 'add'
+                'add': cumulative profile from the stack is averaged 
+                       (total / number of galaxies)
+                       other plots: shading is in cgs units, 
+                                    L in erg/s (rest-frame)
     weighttype: 'Mass' or an ion name
     '''
     inclSF = True #False is not implemented in the histogram extraction
@@ -2380,7 +2384,10 @@ def plot3Dprof_overview(weighttype='Mass', stack='addnormed-R200c'):
                                 zorder = -1)
             else:
                 hist = hists_main[mkey][yq]
-                
+                if combmethod == 'add':
+                    numgal = len(galids_main[mkey])
+                    hist /= float(numgal)
+                    
                 ax.plot(edges_r, np.log10(hist), color='black',\
                             linestyle='solid', alpha=1.,\
                             path_effects=None, linewidth=linewidth + 1.5)
