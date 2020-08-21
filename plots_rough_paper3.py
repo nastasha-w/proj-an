@@ -2016,10 +2016,15 @@ def plot3Dprof_overview(weighttype='Mass', stack='addnormed-R200c'):
     axlabels = {'T': r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$',\
                 'n': r'$\log_{10} \, \mathrm{n}(\mathrm{H}) \; [\mathrm{cm}^{-3}]$',\
                 'Z': r'$\log_{10} \, \mathrm{Z}$',\
-                'weight': r'$\log_{10} \, \mathrm{%s}(< r) \,/\, \mathrm{%s}(< \mathrm{R}_{\mathrm{200c}})$'%(wnshort, wnshort)
+                'weight': r'$\log_{10} \, \mathrm{%s}(< r) \,/\, \mathrm{%s}(< \mathrm{R}_{\mathrm{200c}})$'%(wnshort, wnshort) \
+                          if combmethod == 'addnormed-R200c' else \
+                          r'\log_{10} \, \mathrm{%s}_{\mathrm{tot}}'%wnshort
                 }
-    clabel = r'$\log_{10} \, \left\langle %s(< r) \,/\, %s(< \mathrm{R}_{\mathrm{200c}}) \right\rangle \, / \,$'%(wnshort, wnshort) + 'bin size'
-    
+    if combmethod == 'addnormed-R200c': 
+        clabel = r'$\log_{10} \, \left\langle %s(< r) \,/\, %s(< \mathrm{R}_{\mathrm{200c}}) \right\rangle \, / \,$'%(wnshort, wnshort) + 'bin size'
+    else:
+        clabel = r'$\log_{10} \, \mathrm{%s} \, / \,$'%(wnshort) + 'bin size'
+        
     if weighttype in ol.elements_ion.keys():
         filename = ol.ndir + 'particlehist_Luminosity_{line}_L0100N1504_27_test3.6_SmAb_T4EOS_galcomb.hdf5'.format(line=line)
         nprof = 4
