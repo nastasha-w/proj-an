@@ -2137,6 +2137,8 @@ def plot3Dprof_overview(weighttype='Mass', stack='addnormed-R200c'):
                     _s = [slice(None, None, None) for dummy in _a]
                     _s[axes['r3d']] = slice(None, _i, None)
                     norm_t = np.sum(hist[tuple(_s)])
+                elif combmethod == 'add':
+                    norm_t = 1.
                 hist *= (1. / norm_t)
                 
                 rax = axes['r3d']
