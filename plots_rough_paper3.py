@@ -1853,8 +1853,8 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
     xlabel = '$\\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\odot}]$' 
     
     bininds = np.digitize(np.log10(masses), mbins)
-    bincen = mbins[:-1] + 0.5 * np.diff(mbins)
-    
+    bincen = mbins[:-1] + 0.5 * np.diff(mbins) 
+        
     if plottype == 'all':
         fig = plt.figure(figsize=(5.5, 9.))
         grid = gsp.GridSpec(nrows=2, ncols=1,  hspace=0.25, wspace=0.0, \
@@ -1907,6 +1907,9 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         color = 'C0'
         percv = [2., 10., 50., 90., 98.]
         
+        bincen = np.append(0.5 * mbins[0] - 0.5 * mbins[1], bincen)
+        bincen = np.append(bincen, 0.5 * mbins[-1] - 0.5 * mbins[-2])
+        
         for li, line in enumerate(lines):
             ax = axes[li]
             labelleft = False
@@ -1928,10 +1931,10 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
                         mincount_x=50,\
                         getoutliers_y=True, getmincounts_x=True,\
                         x_extremes_only=True)
-            percs = percs[1:-1]
+            #percs = percs[1:-1]
             for si in range(len(percv) // 2):
-                ax.fill_between(bincen[xmininds], percs[xmininds, si],\
-                                percs[xmininds, len(percv) - 1 - si],\
+                ax.fill_between(bincen[xmininds - 1], percs[xmininds - 1, si],\
+                                percs[xmininds - 1, len(percv) - 1 - si],\
                                 color=color, alpha=alpha)
             if len(percv) % 2 == 1:
                 ax.plot(bincen, percs[:, len(percv) // 2], color=color)
@@ -1969,7 +1972,10 @@ def plot_sffrac_corr(addedges=(0., 1.)):
     outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
     outname = 'SFfrac_lum_{mi}-{ma}-R200c'.format(\
                             mi=addedges[0], ma=addedges[1])
-
+    
+    set_minfrac = 1e-15
+    set_minL = 1e-50
+    
     outname = outname.replace('.', 'p')
     outname = outdir + outname + '.pdf'
     
@@ -2006,21 +2012,33 @@ def plot_sffrac_corr(addedges=(0., 1.)):
         galids_l = fi['galaxyids'][:]
         lines = [line.decode() for line in fi.attrs['lines']]
         lums = fi['luminosities'][:]
-            
+    # these are galaxies with M200c < 10^10.25 Msun, stellar mass zero
+    weirdones = np.any(np.isnan(lums), axis=(1, 2))       
     #file_galdata = '/net/luttero/data2/imgs/CGM/3dprof/halodata_L0100N1504_27_Mh0p5dex_1000.txt'
     #galdata_all = pd.read_csv(file_galdata, header=2, sep='\t', index_col='galaxyid')
     #masses = np.array(galdata_all['M200c_Msun'][galids_l])
+    #print(np.log10(masses[weirdones]))
+    lums = lums[np.logical_not(weirdones), :, :]
     
+    # mbins = np.array(list(np.arange(10., 13.05, 0.1)) + [13.25, 13.5, 13.75, 14.0, 14.6])   
+    Ltot = np.sum(lums, axis=2)
+    Ltot[Ltot == 0.] = set_minL
+    Ltot = np.log10(Ltot)
+    print(np.any(np.isnan(Ltot)))
 
-   # mbins = np.array(list(np.arange(10., 13.05, 0.1)) + [13.25, 13.5, 13.75, 14.0, 14.6])
+    sffrac = lums[:, :, 1] / np.sum(lums, axis=2)
+    sffrac[np.logical_and(sffrac == 0., np.sum(lums, axis=2) == 0.)] = set_minfrac
+    sffrac[sffrac == 0.] = set_minfrac
+    sffrac[sffrac < set_minfrac] = set_minfrac # the difference between 1e-15 and 1e-65 really doesn't matter here
+    sffrac = np.log10(sffrac)
+    print(np.any(np.isnan(sffrac)))
     
-    sffrac = np.log10(lums[:, :, 1] / np.sum(lums, axis=2))
-    Ltot = np.log10(np.sum(lums, axis=2))
-    Ltot[Ltot == -np.inf] = 20.
-    sffrac[np.logical_or(sffrac == np.NaN, sffrac == -np.inf)] = 1e-8
     
-    xlabel = '$\\mathrm{L}_{\\mathrm{obs}} \\; [\\mathrm{erg} \\,\\mathrm{s}^{-1}]$'
-    ylabel = '$\\mathrm{L}_{\\mathrm{SF}} \\, / \\, \\mathrm{L}_{\\mathrm{tot}}$'
+    
+    
+    
+    xlabel = '$\\log_{10} \\, \\mathrm{L}_{\\mathrm{rest}} \\; [\\mathrm{erg} \\,\\mathrm{s}^{-1}]$'
+    ylabel = '$\\log_{10} \\, \\mathrm{L}_{\\mathrm{SF}} \\, / \\, \\mathrm{L}_{\\mathrm{tot}}$'
         
     panelheight = 3.
     panelwidth = 3.
@@ -2064,21 +2082,21 @@ def plot_sffrac_corr(addedges=(0., 1.)):
                 horizontalalignment='right', verticalalignment='top',\
                 transform=ax.transAxes)
         
-        minL = np.log10(np.min(np.isfinite(Ltot)))
-        maxL = np.log10(np.max(Ltot))
+        minL = np.min(Ltot)
+        maxL = np.max(Ltot)
+        
         imin = np.floor(minL / deltaL)
         imax = np.ceil(maxL / deltaL)
         Lbins = np.arange(deltaL * (imin - 1), deltaL * (imax + 1.5), deltaL)
-        bincen = Lbins[:-1] + 0.5 * np.diff(Lbins)
-        
+        bincen = np.append(0.5 * Lbins[0] - 0.5 * Lbins[1], Lbins[:-1] + 0.5 * np.diff(Lbins))
+        bincen = np.append(bincen, 0.5 * Lbins[-1] - 0.5 * Lbins[-2]) 
         percs, outliers, xmininds = \
-            pu.get_perc_and_points(np.log10(Ltot), np.log10(sffrac[:, li]),\
+            pu.get_perc_and_points(Ltot[:, li], sffrac[:, li],\
                     Lbins,\
                     percentiles=percv,\
                     mincount_x=50,\
                     getoutliers_y=True, getmincounts_x=True,\
                     x_extremes_only=True)
-        percs = percs[1:-1]
         for si in range(len(percv) // 2):
             ax.fill_between(bincen[xmininds], percs[xmininds, si],\
                             percs[xmininds, len(percv) - 1 - si],\
@@ -2088,13 +2106,16 @@ def plot_sffrac_corr(addedges=(0., 1.)):
         alpha_ol = alpha**((len(percv) - 1) // 2)
         ax.scatter(outliers[0], outliers[1], color=color, alpha=alpha_ol,\
                    s=10.)
+        ax.axhline(np.log10(set_minfrac), color='gray', linestyle='dotted')
+        ax.axvline(np.log10(set_minL), color='gray', linestyle='dotted')
+    
         # legend
         handles = [mlines.Line2D([], [], color=color, label='{:.0f}%%'.format(percv[len(percv) // 2]))]
         handles += [mpatch.Patch(facecolor=color, alpha=alpha**i,\
                                  label='{:.0f}%%'.format(percv[len(percv) - 1 - i] - percv[i]))\
                     for i in range((len(percv) - 1) // 2)]
         lax.axis('off')
-        lax.legend(handles, fontsize=fontsize, ncol=4)
+        #lax.legend(handles, fontsize=fontsize, ncol=4)
         
         # sync lims
         xlims = [ax.get_xlim() for ax in axes]
