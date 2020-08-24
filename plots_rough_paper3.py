@@ -1961,6 +1961,156 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     
+
+def plot_sffrac_corr(addedges=(0., 1.)):
+    '''
+    fraction of L from SF gas as a function of total lumninosity
+    '''
+    outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    outname = 'SFfrac_lum_{mi}-{ma}-R200c'.format(\
+                            mi=addedges[0], ma=addedges[1])
+
+    outname = outname.replace('.', 'p')
+    outname = outdir + outname + '.pdf'
+    
+    cosmopars = {'a': 0.9085634947881763,\
+                 'boxsize': 67.77,\
+                 'h': 0.6777,\
+                 'omegab': 0.0482519,\
+                 'omegalambda': 0.693,\
+                 'omegam':  0.307,\
+                 'z': 0.10063854175996956,\
+                 }
+    lsargs = {'c5r':  {'linestyle': 'solid'},\
+              'c6':   {'linestyle': 'dashed'},\
+              'n6r':  {'linestyle': 'dotted'},\
+              'n7':   {'linestyle': 'dashdot'},\
+              'o7r':  {'linestyle': 'solid'},\
+              'o7ix': {'dashes': [2, 2, 2, 2]},\
+              'o7iy': {'dashes': [6, 2]},\
+              'o7f':  {'linestyle': 'dashdot'},\
+              'o8':   {'linestyle': 'dotted'},\
+              'fe17-other1':  {'linestyle': 'solid'},\
+              'fe19':  {'linestyle': 'dashed'},\
+              'fe17':  {'linestyle': 'dotted'},\
+              'fe18':  {'linestyle': 'dashdot'},\
+              'si13r': {'linestyle': 'solid'},\
+              'ne9r':  {'dashes': [2, 2, 2, 2]},\
+              'ne10':  {'dashes': [6, 2]},\
+              'mg11r': {'linestyle': 'dashdot'},\
+              'mg12':  {'linestyle': 'dotted'},\
+                  }
+    
+    filename = ol.pdir + 'luminosities_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_SmAb.hdf5'%(str(addedges[0]), str(addedges[1]))
+    with h5py.File(filename, 'r') as fi:
+        galids_l = fi['galaxyids'][:]
+        lines = [line.decode() for line in fi.attrs['lines']]
+        lums = fi['luminosities'][:]
+            
+    #file_galdata = '/net/luttero/data2/imgs/CGM/3dprof/halodata_L0100N1504_27_Mh0p5dex_1000.txt'
+    #galdata_all = pd.read_csv(file_galdata, header=2, sep='\t', index_col='galaxyid')
+    #masses = np.array(galdata_all['M200c_Msun'][galids_l])
+    
+
+   # mbins = np.array(list(np.arange(10., 13.05, 0.1)) + [13.25, 13.5, 13.75, 14.0, 14.6])
+    
+    sffrac = np.log10(lums[:, :, 1] / np.sum(lums, axis=2))
+    Ltot = np.log10(np.sum(lums, axis=2))
+    Ltot[Ltot == -np.inf] = 20.
+    sffrac[np.logical_or(sffrac == np.NaN, sffrac == -np.inf)] = 1e-8
+    
+    xlabel = '$\\mathrm{L}_{\\mathrm{obs}} \\; [\\mathrm{erg} \\,\\mathrm{s}^{-1}]$'
+    ylabel = '$\\mathrm{L}_{\\mathrm{SF}} \\, / \\, \\mathrm{L}_{\\mathrm{tot}}$'
+        
+    panelheight = 3.
+    panelwidth = 3.
+    hspace = 0.
+    wspace = 0.
+    legheight = 2.
+    nlines = len(lines)
+    
+    ncols = 4
+    nrows = (nlines - 1) // ncols + 1
+    figheight = panelheight * nrows + hspace * (nrows - 1) + legheight
+    figwidth = panelwidth * ncols + wspace * (ncols - 1) 
+    height_ratios = [panelheight] * nrows + [legheight]
+    width_ratios = [panelwidth] * ncols
+    
+    fig = plt.figure(figsize=(figwidth, figheight))
+    grid = gsp.GridSpec(nrows=nrows + 1, ncols=ncols, hspace=hspace,\
+                        wspace=wspace, height_ratios=height_ratios,\
+                        width_ratios=width_ratios)
+    axes = [fig.add_subplot(grid[li // ncols, li % ncols])\
+            for li in range(nlines)]
+    lax = fig.add_subplot(grid[nrows, :])
+        
+    alpha = 0.5
+    color = 'C0'
+    percv = [2., 10., 50., 90., 98.]
+    deltaL = 0.2
+        
+    for li, line in enumerate(lines):
+        ax = axes[li]
+        labelleft = False
+        labelbottom = False
+        if li % ncols == 0:
+            labelleft = True
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+        if li >= nlines - ncols:
+            labelbottom = True
+            ax.set_xlabel(xlabel, fontsize=fontsize)
+        pu.setticks(ax, fontsize, labelbottom=labelbottom, labelleft=labelleft)
+        ax.text(0.98, 0.98, nicenames_lines[line], fontsize=fontsize,\
+                horizontalalignment='right', verticalalignment='top',\
+                transform=ax.transAxes)
+        
+        minL = np.log10(np.min(np.isfinite(Ltot)))
+        maxL = np.log10(np.max(Ltot))
+        imin = np.floor(minL / deltaL)
+        imax = np.ceil(maxL / deltaL)
+        Lbins = np.arange(deltaL * (imin - 1), deltaL * (imax + 1.5), deltaL)
+        bincen = Lbins[:-1] + 0.5 * np.diff(Lbins)
+        
+        percs, outliers, xmininds = \
+            pu.get_perc_and_points(np.log10(Ltot), np.log10(sffrac[:, li]),\
+                    Lbins,\
+                    percentiles=percv,\
+                    mincount_x=50,\
+                    getoutliers_y=True, getmincounts_x=True,\
+                    x_extremes_only=True)
+        percs = percs[1:-1]
+        for si in range(len(percv) // 2):
+            ax.fill_between(bincen[xmininds], percs[xmininds, si],\
+                            percs[xmininds, len(percv) - 1 - si],\
+                            color=color, alpha=alpha)
+        if len(percv) % 2 == 1:
+            ax.plot(bincen, percs[:, len(percv) // 2], color=color)
+        alpha_ol = alpha**((len(percv) - 1) // 2)
+        ax.scatter(outliers[0], outliers[1], color=color, alpha=alpha_ol,\
+                   s=10.)
+        # legend
+        handles = [mlines.Line2D([], [], color=color, label='{:.0f}%%'.format(percv[len(percv) // 2]))]
+        handles += [mpatch.Patch(facecolor=color, alpha=alpha**i,\
+                                 label='{:.0f}%%'.format(percv[len(percv) - 1 - i] - percv[i]))\
+                    for i in range((len(percv) - 1) // 2)]
+        lax.axis('off')
+        lax.legend(handles, fontsize=fontsize, ncol=4)
+        
+        # sync lims
+        xlims = [ax.get_xlim() for ax in axes]
+        x0 = np.min([xl[0] for xl in xlims])
+        x1 = np.max([xl[1] for xl in xlims])
+        [ax.set_xlim(x0, x1) for ax in axes]
+        
+        ylims = [ax.get_ylim() for ax in axes]
+        y0 = np.min([yl[0] for yl in ylims])
+        y1 = np.max([yl[1] for yl in ylims])
+        #if minymin is not None:
+        #    y0 = max(minymin, y0)
+        [ax.set_ylim(y0, y1) for ax in axes]
+        
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
+    
     
 def plot3Dprof_overview(weighttype='Mass', stack='addnormed-R200c'):
     '''
@@ -2427,3 +2577,189 @@ def plot3Dprof_overview(weighttype='Mass', stack='addnormed-R200c'):
         [axes[i, xi].set_xlim(minx, maxx) for i in range(nprof)]
     
     plt.savefig(outname, format='pdf', box_inches='tight')
+    
+
+def plot_barchart_Ls(simple=False):
+    '''
+    simple: total luminosity fractions for different halo masses (True) or 
+            fractions broken down by SF/nSF and subhalo membership category
+    '''
+    outname = mdir + 'luminosity_total_fractions_z0p1{}.pdf'.format('_simple' if simple else '')
+    ddir = '/net/luttero/data2/imgs/paper3/lumfracs/'
+    print('Numbers in annotations: log10 L [erg/s] rest-frame')
+    
+    # hdf5 group and histogram axis names
+    grn_tot = 'StarFormationRate_T4EOS'
+    grn_halo = 'M200c_halo_allinR200c_subhalo_category_StarFormationRate_T4EOS'
+    axn_sf = 'StarFormationRate_T4EOS'
+    axn_hm = 'M200c_halo_allinR200c'
+    axn_sh = 'subhalo_category'
+    
+    sflabels = {0: 'nSF', 1: 'SF'}
+    shlabels = {0: 'central', 1: 'subhalo', 2: 'unbound'}
+    
+    edges_target = np.arange(9., 15.1, 0.5)
+    mmax_igm = c.solar_mass
+    
+    filebase_L = 'particlehist_Luminosity_{line}_L0100N1504_27_test3.6_SmAb_T4EOS.hdf5'
+    filename_M = 'particlehist_Mass_L0100N1504_27_test3.6_T4EOS.hdf5'
+    
+    filenames = {line: ddir + filebase_L.format(line=line) for line in lines}
+    filenames.update({'Mass': filename_M})
+    
+    labels = nicenames_lines.copy()
+    labels.update({'Mass': 'Mass'})
+    
+    keys = ['Mass'] + lines 
+    
+    data = {}
+    haxes = {}
+    hmedges = {}
+    for key in keys:
+        filen = filenames[key]
+        data[key] = {}
+        haxes[key] = {}
+        with h5py.File(filen, 'r') as fi:
+            data[key]['tot'] = fi[grn_tot]['histogram']
+            data[key]['halo'] = fi[grn_halo]['histogram']
+            haxes[key]['sf'] = fi[grn_halo][axn_sf].attrs['histogram axis']
+            haxes[key]['hm'] = fi[grn_halo][axn_hm].attrs['histogram axis']
+            haxes[key]['sh'] = fi[grn_halo][axn_sh].attrs['histogram axis']
+            hmedges[key] = fi[grn_halo][axn_hm]['bins'][:]
+            
+    
+    fig = plt.figure(figsize=(5.5, 10.))
+    grid = gsp.GridSpec(nrows=2, ncols=1, hspace=0.2, wspace=0.0,\
+                        height_ratios=[8., 1., 1.])
+    ax =  fig.add_subplot(grid[0, 0]) 
+    cax = fig.add_subplot(grid[1, 0])
+        
+    clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
+    c_under = 'brown'
+    c_igm = 'gray'
+    massedges = np.array(edges_target)
+    
+    clist = cm.get_cmap('rainbow', len(massedges))(np.linspace(0.,  1., len(massedges)))
+    keys = sorted(massedges)
+    colors = {keys[i]: clist[i] for i in range(len(keys))}
+    #del _masks
+    
+    #print(clist)
+    cmap = mpl.colors.ListedColormap(clist)
+    #cmap.set_over(clist[-1])
+    cmap.set_under(c_under)
+    norm = mpl.colors.BoundaryNorm(massedges, cmap.N)
+    cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,\
+                                norm=norm,\
+                                boundaries=np.append(np.array(massedges[0] - 1.), massedges),\
+                                ticks=massedges,\
+                                spacing='proportional', extend='min',\
+                                orientation='horizontal')
+    # to use 'extend', you must
+    # specify two extra boundaries:
+    # boundaries=[0] + bounds + [13],
+    # extend='both',
+    # ticks=bounds,  # optional
+    cbar.set_label(clabel, fontsize=fontsize)
+    cax.tick_params(labelsize=fontsize - 1)
+    cax.set_aspect(0.1)
+    
+    colors.update({'lom': c_under, 'igm': c_igm})
+    
+    
+    yc = np.arange(len(keys))  # the label locations
+    width = 0.9  # the width of the bars
+    morder = ['igm', 'lom'] + edges_target + ['over']
+    for ki, key in enumerate(keys):
+
+        # match halo mass edges:
+        edges_in = hmedges[key]
+        edges_t = 10**edges_target * c.solar_mass
+        
+        e_igm = np.where(np.isclose(edges_in, mmax_igm))[0][0]
+        s_igm = slice(0, e_igm, None)
+        
+        e_dct = {edges_target[i]: np.where(np.isclose(edges_in, edges_t))[0][0]\
+                 for i in range(len(edges_target))}
+        s_dct = {edges_target[i]: slice(e_dct[edges_target[i]],\
+                                        e_dct[edges_target[i + 1]], None) \
+                 for i in range(len(edges_target) - 1)}
+        s_dct['igm'] = s_igm
+        s_dct['lom'] = slice(e_igm, e_dct[edges_target[0]], None)
+        s_dct['over'] = slice(e_dct[edges_target[-1]], None, None)
+        
+        # total mass fractions
+        if simple: 
+            _width = width
+            zeropt = ki
+        else:
+            _width = width / 7.
+            zeropt = ki - 3.5 * _width
+        
+        baseslice = [slice(None, None, None)] * len(data['halo'].shape)
+        
+        total = np.sum(data[key]['tot'])
+        
+        # total IGM/ halo mass split
+        cumul = 0.
+        for mk in morder:
+            if mk == 'igm':
+                slices = list(np.copy(baseslice))
+                slices[haxes['hm']] = slice(e_dct['igm'], None, None)
+                current = total - np.sum(data[key]['halo'][tuple(slices)])
+                current /= total
+            else:
+                slices = list(np.copy(baseslice))
+                slices[haxes['hm']] = s_dct[mk]
+                current = np.sum(data[key]['halo'][tuple(slices)])
+                current /= total
+            if mk == 'over':
+                if current == 0.:
+                    pass
+                else:
+                    print('Warning: for {line}, a fraction {} is in masses above max'.format(current, line=key))
+            ax.barh(zeropt, cumul + current, _width, color=colors[mk])
+            cumul += current
+        # annotate
+        text = '{:.1f}'.format(total)
+        ax.text(zeropt, 0.01, text, fontsize=fontsize,\
+                horizontalalignment='left',\
+                verticalalignment='center')
+        if not simple:
+            for sfi in range(2):
+                for shi in range(3):
+                    zeropt += _width
+                    cumul = 0.
+                    for mk in morder:
+                        if mk in ['over', 'igm']:
+                            continue
+                        else:
+                            slices = list(np.copy(baseslice))
+                            slices[haxes['hm']] = s_dct[mk]
+                            slices[haxes['sh']] = shi
+                            slices[haxes['sf']] = sfi
+                            current = np.sum(data[key]['halo'][tuple(slices)])
+                            current /= total
+                        
+                        ax.barh(zeropt, cumul + current, _width, color=colors[mk])
+                        cumul += current
+                        
+                    slices = list(np.copy(baseslice))
+                    slices[haxes['hm']] = slice(e_dct['igm'], None, None)
+                    slices[haxes['sh']] = shi
+                    slices[haxes['sf']] = sfi
+                    subtot = np.sum(data[key]['halo'][tuple(slices)])
+                    text = '{:.1f}'.format(subtot)
+                    text = ', '.join([shlabels[shi], sflabels[sfi]]) + ': ' + text
+                    ax.text(zeropt, 0.99, text, fontsize=fontsize,\
+                            horizontalalignment='left',\
+                            verticalalignment='right')
+                    
+    pu.setticks(ax, fontsize + 1)
+    ax.set_yticks(yc)
+    ax.set_yticklabels([labels[key] for key in keys])
+    ax.set_xlabel('fraction of total')
+
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
+    
+    
