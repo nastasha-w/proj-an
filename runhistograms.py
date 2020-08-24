@@ -3014,7 +3014,12 @@ elif jobind in range(20256, 20275):
     if os.path.isfile(filen):
         with h5py.File(filen) as fi:
             if grpn in fi:
-                done = True
+                grp = fi[grpn]
+                if 'histogram' in grp:
+                    done = True
+                else:
+                    del grp
+                    print('Deleting incomplete data group')
     if not done:
         m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
 
