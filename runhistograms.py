@@ -3012,13 +3012,12 @@ elif jobind in range(20256, 20275):
     filen, grpn = m3.makehistograms_perparticle(*args, nameonly=True, **kwargs)
     done = False
     if os.path.isfile(filen):
-        with h5py.File(filen) as fi:
+        with h5py.File(filen, 'a') as fi:
             if grpn in fi:
-                grp = fi[grpn]
-                if 'histogram' in grp:
+                if 'histogram' in fi[grpn]:
                     done = True
                 else:
-                    del grp
+                    del fi[grpn]
                     print('Deleting incomplete data group')
     if not done:
         m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
@@ -3035,7 +3034,27 @@ elif jobind in range(20275, 20293):
                   idsel=None, weighttype=weighttype,\
                   binby=('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),\
                   combmethod='add', histtype=axdct)
+
+# stack M/V profiles
+elif jobind in range(20293, 20295):
+    p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    metals = ['Carbon', 'Nitrogen', 'Oxygen', 'Neon', 'Magnesium',\
+                  'Iron', 'Silicon']
+    axdcts = ['{elt}-rprof'.format(elt=elt) for elt in metals]
+    axdcts += ['Trprof', 'nrprof']
+    weighttypes = ['Mass', 'Volume']
     
+    weighttype = weighttypes[jobind - 20293]
+    for axdct in axdcts:    
+        p3g.combhists(samplename='L0100N1504_27_Mh0p5dex_1000', rbinu='R200c',\
+                  idsel=None, weighttype=weighttype,\
+                  binby=('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),\
+                  combmethod='add', histtype=axdct)
+        p3g.combhists(samplename='L0100N1504_27_Mh0p5dex_1000', rbinu='R200c',\
+                  idsel=None, weighttype=weighttype,\
+                  binby=('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),\
+                  combmethod='addnormed-R200c', histtype=axdct)
+        
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################
