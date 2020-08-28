@@ -177,14 +177,17 @@ def T200c_hot(M200c, cosmopars):
     R200c = (_M200c / (200. * rhoc))**(1./3.)
     return (mu * c.protonmass) / (3. * c.boltzmann) * c.gravity * _M200c / R200c
 
-def R200c_pkpc(M200c, cosmopars):
-    '''
-    M200c: solar masses
-    '''
-    M200c *= c.solar_mass # to cgs
-    rhoc = (3. / (8. * np.pi * c.gravity) * cu.Hubble(cosmopars['z'], cosmopars=cosmopars)**2) # Hubble(z) will assume an EAGLE cosmology
-    R200c = (M200c / (200. * rhoc))**(1./3.)
-    return R200c / c.cm_per_mpc * 1e3 
+#def R200c_pkpc(M200c, cosmopars):
+#    '''
+#    M200c: solar masses
+#    
+#    bug!! using V = r**3 for reasons of idiocy. 
+#    Thankfully not used in the calculations.
+#    '''
+#    M200c *= c.solar_mass # to cgs
+#    rhoc = (3. / (8. * np.pi * c.gravity) * cu.Hubble(cosmopars['z'], cosmopars=cosmopars)**2) # Hubble(z) will assume an EAGLE cosmology
+#    R200c = (M200c / (200. * rhoc))**(1./3.)
+#    return R200c / c.cm_per_mpc * 1e3 
 
 
 
