@@ -2318,12 +2318,24 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
                         fills = fills.split("', '")
                     elif "' '" in fills:
                         fills = fills.split("' '")
-                        print(fills)
                     elif "''" in fills:
                         fills = fills.split("''")
-                        print(fills)
                     else:
                         raise RuntimeError('filenames_fills in the file Header saved in an unrecognized way:\n{}'.format(fills))
+                    _fills = []
+                    for fill in fills:
+                        if '\n' in fill:
+                            fparts = fill.split('\n')
+                            fparts = [fp.strip() for fp in fparts]
+                            _fills += fparts
+                        elif '\t' in fill:
+                            fparts = fill.split('\t')
+                            fparts = [fp.strip() for fp in fparts]
+                            _fills += fparts
+                        else:
+                             _fills.append(fill)
+                    fills = _fills
+                    print(fills)
                 else:
                     raise RuntimeError('filenames_fills in the file Header saved in an unrecognized way:\n{}'.format(fills))
             else: 
@@ -2339,7 +2351,7 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
                            for _cp in _cps]):
                 msg = 'Cosmopars recorded for a slice in file {stamps} did not match those in the halo catalcoge {hc}'
                 raise RuntimeError(msg.format(stamps=_file.filename, hc=halocat))
-        
+            exit()
         # look up required data for the galaxy ids
         gid_cat = hc['galaxyid'][:]
         galaxyids = [int(galid) for galid in galids]
