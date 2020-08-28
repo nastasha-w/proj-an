@@ -2326,10 +2326,16 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
                     for fill in fills:
                         if '\n' in fill:
                             fparts = fill.split('\n')
+                            fparts = [fp.strip() for fp in fparts]                     
+                            fparts = [fp[1:] if fp[0] == "'" else fp for fp in fparts]
+                            fparts = [fp[:-1] if fp[-1] == "'" else fp for fp in fparts]
                             fparts = [fp.strip() for fp in fparts]
                             _fills += fparts
                         elif '\t' in fill:
                             fparts = fill.split('\t')
+                            fparts = [fp.strip() for fp in fparts]
+                            fparts = [fp[1:] if fp[0] == "'" else fp for fp in fparts]
+                            fparts = [fp[:-1] if fp[-1] == "'" else fp for fp in fparts]
                             fparts = [fp.strip() for fp in fparts]
                             _fills += fparts
                         else:
