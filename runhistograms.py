@@ -4177,3 +4177,77 @@ if jobind in range(30159, 30177):
                            halocat=halocat,\
                            outfile=outfile, grptag=hmkey,\
                            **kwargs)
+            
+
+### single-line emission profiles: log r bins, from bins up to 4 R200c
+if jobind in range(30177, 30195):
+    
+    halocat = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'   
+    galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids()
+    
+    with h5py.File(catname, 'r') as cat:
+        cosmopars = {key: item for key, item in cat['Header/cosmopars'].attrs.items()}
+    
+    lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
+            'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
+            'c6', 'n7']
+    lineind = jobind - 30177
+    line = lines[lineind]
+    numsl = 1
+    
+    mapbase = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
+    mapname = ol.ndir + mapbase.format(line=line)
+    stampname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-4R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'%((mapname.split('/')[-1][:-5])%('-all'), numsl)
+    outfile = stampname.split('/')[-1]
+    outfile = ol.pdir + 'radprof/radprof_' + outfile
+    
+    rbins_r200c = np.arange(0., 2.51, 0.05)
+    yvals_perc = [1., 5., 10., 50., 90., 95., 99.]
+    kwarg_opts = [{'runit': 'pkpc', 'ytype': 'perc', 'yvals': yvals_perc,\
+                   'separateprofiles': False, 'uselogvals': True},\
+                  {'runit': 'pkpc', 'ytype': 'perc', 'yvals': yvals_perc,\
+                   'separateprofiles': True, 'uselogvals': True},\
+                  {'runit': 'pkpc', 'ytype': 'mean', 'yvals': None,\
+                   'separateprofiles': False, 'uselogvals': False},\
+                  {'runit': 'pkpc', 'ytype': 'mean', 'yvals': None,\
+                   'separateprofiles': True, 'uselogvals': False},\
+                  ]
+    
+    for hmkey in galids_dct:
+        print('Trying halo set %s'%(hmkey))
+        # get max. distance from halo mass range:
+        
+        # hmkeys format: 'geq10.0_le10.5' or 'geq14.0'
+        # extracted out to max(R200c in bin)
+        minmass_Msun = 10**(float(hmkey.split('_')[0][3:]))
+        maxdist_pkpc = 4. * 10**0.45 * cu.R200c_pkpc(minmass_Msun, cosmopars)
+        # lin-log bins: lin 10 pkpc up to 100 kpc, then 0.1 dex
+        rbins_lin_pkpc = np.arange(0., 105., 10.)
+        rbins_log_pkpc = 10.**(np.arange(2., np.log10(maxdist_pkpc), 0.1))
+        rbins_pkpc = np.append(rbins_lin_pkpc[:-1], rbins_log_pkpc)
+        
+        for kwargs in kwarg_opts:
+            if kwargs['runit'] == 'pkpc':
+                rbins = rbins_pkpc
+            else:
+                rbins = rbins_r200c
+            galids = np.copy(galids_dct[hmkey])
+            if kwargs['separateprofiles']:
+                galids = galids[:10] # just a few examples, don't need the whole set
+            #print('Calling getprofiles_fromstamps with:')
+            #print(stampname)
+            #print('rbins: {}'.format(rbins))
+            #if len(galids) > 15:
+            #    print('galaxyids: {} ... {}'.format(galids[:8],  galids[-7:]))
+            #else:
+            #    print('galaxyids: {}'.format(galids))
+            #print(halocat)
+            #print('out: {}'.format(outfile))
+            #print('grouptag: {}'.format(hmkey))
+            #print('\t '.join(['{key}: {val}'.format(key=key, val=kwargs[key])\
+            #                  for key in kwargs]))
+            #print('\n\n')
+            crd.getprofiles_fromstamps(stampname, rbins, galids,\
+                           halocat=halocat,\
+                           outfile=outfile, grptag=hmkey,\
+                           **kwargs)
