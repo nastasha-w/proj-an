@@ -2309,13 +2309,19 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
             if fills[0].decode() == '[':  # parse stringified list of strings, due to error in saving function...
                 fills = fills.decode()
                 if fills[0] == '[' and fills[-1] == ']': # it's a string-saved list -> parse as such
+                    print(fills)
+                    print(", " in fills)
+                    print("' '" in fills)
+                    print("''" in fills)
                     fills = fills[2:-2]
                     if "', '" in fills:
                         fills = fills.split("', '")
                     elif "' '" in fills:
                         fills = fills.split("' '")
+                        print(fills)
                     elif "''" in fills:
                         fills = fills.split("''")
+                        print(fills)
                     else:
                         raise RuntimeError('filenames_fills in the file Header saved in an unrecognized way:\n{}'.format(fills))
                 else:
