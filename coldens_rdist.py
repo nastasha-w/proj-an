@@ -2305,6 +2305,7 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
         # check if cosmopars match (could still be different sim. boxes, but it's worth doing a simple check)
         for _file in files:
             fills = _file['Header'].attrs['filename_fills']
+            print(fills)
             if fills[0].decode() == '[':  # parse stringified list of strings, due to error in saving function...
                 fills = fills.decode()
                 if fills[0] == '[' and fills[-1] == ']': # it's a string-saved list -> parse as such
