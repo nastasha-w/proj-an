@@ -1438,7 +1438,7 @@ def stamps_sl_hdf5(base, szcens, rmax, centres, rscales=1.,\
                         tmp.attrs.create(key, heddata[scen]['misc'][key])
                         
                 hed.attrs.create('filename_base', np.string_(base))
-                hed.attrs.create('filename_fills', np.string_(np.array(szcens)))
+                hed.attrs.create('filename_fills', np.array([np.string_(cen) for cen in szcens]))
                 hed.attrs.create('pixels_along_x', npix_x)
                 hed.attrs.create('pixels_along_y', npix_y)
                 hed.attrs.create('size_along_x', L_x)
@@ -2309,7 +2309,14 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
                 fills = fills.decode()
                 if fills[0] == '[' and fills[-1] == ']': # it's a string-saved list -> parse as such
                     fills = fills[2:-2]
-                    fills = fills.split("', '")
+                    if "', '" in fills:
+                        fills = fills.split("', '")
+                    elif "' '" in fills:
+                        fills = fills.split("' '")
+                    elif "''" in fills:
+                        fills = fills.split("''")
+                    else:
+                        raise RuntimeError('filenames_fills in the file Header saved in an unrecognized way:\n{}'.format(fills))
                 else:
                     raise RuntimeError('filenames_fills in the file Header saved in an unrecognized way:\n{}'.format(fills))
             else: 
