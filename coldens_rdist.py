@@ -2351,7 +2351,7 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
                            for _cp in _cps]):
                 msg = 'Cosmopars recorded for a slice in file {stamps} did not match those in the halo catalcoge {hc}'
                 raise RuntimeError(msg.format(stamps=_file.filename, hc=halocat))
-            exit()
+                
         # look up required data for the galaxy ids
         gid_cat = hc['galaxyid'][:]
         galaxyids = [int(galid) for galid in galids]
