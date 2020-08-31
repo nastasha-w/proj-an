@@ -3111,7 +3111,63 @@ if jobind in range(20295, 20313):
                          numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
                          axis='z', velspace=False, offset_los=0., stamps=True,\
                          trackprogress=True)
-
+# try number 3
+if jobind in range(20313, 20331): 
+    szcens = [str(i) for i in np.arange(16)/16. * 100. + 100./32.]
+    L_x = 100.
+    npix_x = 32000
+    rmin_r200c = 0.
+    rmax_r200c = 4.5
+    
+    catname = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    with h5py.File(catname, 'r') as cat:
+        r200cvals = np.array(cat['R200c_pkpc'])
+        galids = np.array(cat['galaxyid'])
+        cosmopars = {key: item for key, item in cat['Header/cosmopars'].attrs.items()}
+        
+    # select 1500 halos randomly in  0.5 dex Mstar bins (trying to do everything just gives memory errors)
+    print('Getting galaxy ids')
+    galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids() 
+    # set minimum distance based on virial radius of halo mass bin;
+    # factor 1.1 is a margin
+    print('Getting halo radii')
+    maxradii_mhbins = {key: 1.1 * cu.R200c_pkpc(10**14.6, cosmopars) if key == 'geq14.0'\
+                            else 1.1 * cu.R200c_pkpc(10**(float(key.split('_')[1][2:])), cosmopars)\
+                       for key in galids_dct} 
+    #print('for debug: galids_dct:\n')
+    #print(galids_dct)
+    #print('\n')
+    print('Matching radii to Mhalo bins...')
+    allids = [gid for key in galids_dct.keys() for gid in galids_dct[key]]
+    gkeys = list(galids_dct.keys())
+    keymatch = [gkeys[np.where([gid in galids_dct[key] for key in gkeys])[0][0]] for gid in allids]
+    mindist_pkpc = rmax_r200c * np.array([maxradii_mhbins[gkey] for gkey in keymatch])
+    print('... done')
+    #print('for debug: allids')
+    #print(allids)
+    #print('\n')
+    selection = [('galaxyid', np.array(allids))]
+    
+    lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
+            'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
+            'c6', 'n7']
+    lineind = jobind - 20313
+    line = lines[lineind]
+    numsl = 1
+    
+    basename = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
+    filenames = {line: ol.ndir + basename.format(line=line) for line in lines}
+    filename = filenames[line]
+    outname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min4R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'%((filename.split('/')[-1][:-5])%('-all'), numsl)
+    
+    print('Calling rdists_sl_from_selection')
+    crd.rdists_sl_from_selection(filename, szcens, 'dontusethis', 'alsonotthis',\
+                         np.NaN, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=True,\
+                         trackprogress=True)
         
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
