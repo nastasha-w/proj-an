@@ -4220,7 +4220,7 @@ if jobind in range(30177, 30195):
         # hmkeys format: 'geq10.0_le10.5' or 'geq14.0'
         # extracted out to max(R200c in bin)
         minmass_Msun = 10**(float(hmkey.split('_')[0][3:]))
-        maxdist_pkpc = 4. * 10**0.45 * cu.R200c_pkpc(minmass_Msun, cosmopars)
+        maxdist_pkpc = 4. * cu.R200c_pkpc(minmass_Msun * 10**0.45, cosmopars)
         # lin-log bins: lin 10 pkpc up to 100 kpc, then 0.1 dex
         rbins_lin_pkpc = np.arange(0., 105., 10.)
         rbins_log_pkpc = 10.**(np.arange(2., np.log10(maxdist_pkpc), 0.1))
