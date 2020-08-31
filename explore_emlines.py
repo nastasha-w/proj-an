@@ -417,3 +417,100 @@ def print_linetable(z, lines=None, rangemin=0.1, latex=True):
         print('\\end{tabular}')
 
 
+def print_linetable_minimal(z, lines=None, latex=False):
+    '''
+    print line data (ions and energies only) using redshift z tables
+    
+    inputs:
+    -------
+    z         redshift (float)
+    lines     list of lines. Default list (None) is from Chartlotte's thesis
+    latex     print as a latex table (bool).
+    
+    outputs:
+    --------
+    list of lines and list of indices selected
+    prints a LaTeX-ready table of the lines, their wavelengths, and 
+      temperature ranges
+    '''
+    
+    zname = ol.zopts[0]
+    if lines is None:
+        lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r',\
+          'fe17', 'fe17-other1', 'fe18', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f',\
+          'o8', 'c6', 'n7']
+    
+    elements = list(set(ol.elements_ion[line] for line in lines))
+    eltnums = {'carbon': 6, 'nitrogen': 7, 'oxygen': 8, 'neon': 10,\
+               'magnesium': 12, 'silicon': 14, 'iron': 26}
+    elements.sort(key=eltnums.get)
+    
+    # ion, wavelength, energy, max. em, Tmax, Trange
+    if latex:
+        topline = '\\begin{tabular}{l l l l l c}'
+        header = 'ion & $\\mathrm{E}_{\\mathrm{rest}}$ &' + \
+                 '& $\\mathrm{E}_{\\mathrm{obs}}$ \\\\'
+        header2 = ' & keV & keV \\\\'
+        print(topline)
+        print('\\hline')
+        print(header)
+        print(header2)          
+        print('\\hline')
+        
+        fillstr = '{ion} & {Erest} & {Eobs} \\\\'
+    else:
+        header = 'ion \t E_rest \t E_obs'
+        header2 = ' \t keV \t keV'
+        print(header)
+        print(header2)          
+        fillstr = '{ion} \t {Erest} \t {Eobs}'
+    
+    for elt in elements:
+        tablefilename = ol.dir_emtab%zname + elt + '.hdf5'
+        with h5py.File(tablefilename, "r") as tablefile:
+            lines_all = [line.decode() for line in tablefile['lambda'][:]] 
+            wls_A = np.array([parse_linename_lambda(line) for line in lines_all]) 
+        wls_keV = c.planck * c.c / (wls_A * 1e-8) / (c.ev_to_erg * 1e3)
+        
+        lines_elt = np.array(lines)[np.array([ol.elements_ion[line] == elt\
+                                              for line in lines])]
+        lsel = np.array([ol.line_nos_ion[line] for line in lines_elt])
+        
+        wls_keV = wls_keV[lsel]
+        _lines = np.array(lines_all)[lsel]
+        
+        numdig_wl = 4
+        if latex:
+            ionfmt = '\\ion{{{elt}}}{{{num}}}'
+        else:
+            ionfmt = '{elt} {num}'
+        for li in range(len(_lines)):
+            # ion, wavelength, energy, max. em, Tmax, Trange
+            elt_num = parse_linename_ion(_lines[li])
+            ionname = ionfmt.format(elt=elt_num[0],\
+                              num=(ild.arabic_to_roman[elt_num[1]]).lower())
+
+            E_keV = wls_keV[li]
+            toround = (numdig_wl) - int(np.log10(E_keV) + 1.) # int applies floor, 4 sig. digits
+            Ename = str(np.round(E_keV, toround))
+            if len(Ename) > numdig_wl + 1 and Ename[-2:] == '.0':
+                Ename = Ename[:-2]
+            if '.' in Ename and len(Ename) < numdig_wl + 1:
+                Ename = Ename + '0' * (numdig_wl + 1 - len(Ename))
+            if Ename.startswith('0.') and len(Ename) < numdig_wl + 2:
+                Ename = Ename + '0' * (numdig_wl + 2 - len(Ename))
+                
+            Eobs_keV = wls_keV[li] / (1. + z)
+            toround = (numdig_wl) - int(np.log10(Eobs_keV) + 1.) # int applies floor, 4 sig. digits
+            Eobsname = str(np.round(Eobs_keV, toround))
+            if len(Eobsname) > numdig_wl + 1 and Eobsname[-2:] == '.0':
+                Eobsname = Eobsname[:-2]
+            if '.' in Ename and len(Ename) < numdig_wl + 1:
+                Eobsname = Eobsname + '0' * (numdig_wl + 1 - len(Eobsname))
+            if Eobsname.startswith('0.') and len(Eobsname) < numdig_wl + 2:
+                Eobsname = Eobsname + '0' * (numdig_wl + 2 - len(Eobsname))
+                
+            print(fillstr.format(ion=ionname, Erest=Ename, Eobs=Eobsname))
+    if latex:
+        print('\\hline')    
+        print('\\end{tabular}')
