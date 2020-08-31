@@ -3117,7 +3117,7 @@ if jobind in range(20313, 20331):
     L_x = 100.
     npix_x = 32000
     rmin_r200c = 0.
-    rmax_r200c = 4.5
+    rmax_r200c = 4.2
     
     catname = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
     with h5py.File(catname, 'r') as cat:
