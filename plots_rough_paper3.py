@@ -152,8 +152,8 @@ line_Trange = {'c5r':   (5.7, 6.3),\
                }
 
 def getoutline(linewidth):
-    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),\
-               mppe.Stroke(linewidth=linewidth + 0.5, foreground="w"),\
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"),\
+               mppe.Stroke(linewidth=linewidth + 0.5, foreground="white"),\
                mppe.Normal()]
     return patheff
 
@@ -2292,6 +2292,98 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         if minymin is not None:
             y0 = max(minymin, y0)
         [ax.set_ylim(y0, y1) for ax in axes]
+        
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
+
+def plot_luminosities_nice(addedges=(0., 1.)):
+    '''
+    '''
+    
+    outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    outname = 'luminosities_nice_{mi}-{ma}-R200c'.format(\
+                            mi=addedges[0], ma=addedges[1])
+    outname = outname.replace('.', 'p')
+    outname = outdir + outname + '.pdf'
+    
+    cosmopars = {'a': 0.9085634947881763,\
+                 'boxsize': 67.77,\
+                 'h': 0.6777,\
+                 'omegab': 0.0482519,\
+                 'omegalambda': 0.693,\
+                 'omegam':  0.307,\
+                 'z': 0.10063854175996956,\
+                 }
+    lsargs = lineargs.copy()
+    linewidth = 2.
+    patheff = getoutline(linewidth)
+    linesets = [['c5r', 'n6r', 'o7r', 'ne9r', 'mg11r', 'si13r'],\
+                ['c6', 'n7', 'o8', 'ne10', 'mg12'],\
+                ['o7r', 'o7ix', 'o7iy', 'o7f'],\
+                ['fe17', 'fe17-other1', 'fe18', 'fe19'],\
+                ]
+    linelabels = nicenames_lines.copy()
+    linelabels['fe17-other1'] = 'Fe XVII\n(15.10 A)'
+    linelabels['fe17'] = 'Fe XVII\n(17.05 A)'
+    
+    filename = ol.pdir + 'luminosities_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_SmAb.hdf5'%(str(addedges[0]), str(addedges[1]))
+    with h5py.File(filename, 'r') as fi:
+        galids_l = fi['galaxyids'][:]
+        lines = [line.decode() for line in fi.attrs['lines']]
+        lums = fi['luminosities'][:]
+            
+    file_galdata = '/net/luttero/data2/imgs/CGM/3dprof/halodata_L0100N1504_27_Mh0p5dex_1000.txt'
+    galdata_all = pd.read_csv(file_galdata, header=2, sep='\t', index_col='galaxyid')
+    masses = np.array(galdata_all['M200c_Msun'][galids_l])
+    
+    mbins = np.array(list(np.arange(11., 13.05, 0.1)) + [13.25, 13.5, 13.75, 14.0, 14.6])
+
+    lums = np.sum(lums, axis=2)
+    lums = np.log10(lums) - np.log10(1. + cosmopars['z'])
+    ylabel = '$\\mathrm{L}_{\\mathrm{obs}} \\; [\\mathrm{erg} \\,\\mathrm{s}^{-1}]$'
+    ylim = (32.1, 42)
+             
+    xlabel = '$\\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\odot}]$' 
+    
+    bininds = np.digitize(np.log10(masses), mbins)
+    bincen = mbins[:-1] + 0.5 * np.diff(mbins) 
+    
+    ncols = 1
+    nrows = len(linesets)
+    fig = plt.figure(figsize=(5.5, 12.))
+    grid = gsp.GridSpec(nrows=nrows, ncols=ncols, hspace=0.0, wspace=0.0)
+    axes = [fig.add_subplot(grid[i, 0]) for i in range(nrows)]
+    
+    for axi, ax in enumerate(axes):
+        lineset = linesets[axi]
+        labelx = axi >= len(linesets) - ncols
+        labely = axi % ncols == 0
+        if labelx:
+            ax.set_xlabel(xlabel, fontsize=fontsize)
+        if labely:
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+        pu.setticks(ax, fontsize, labelleft=labely, labelbottom=labelx)
+        ax.grid(b=True
+                )
+        for li, line in enumerate(lines):
+            if line not in lineset:
+                continue
+            med = [np.median(lums[bininds == i, li]) for i in range(1, len(mbins))]
+            ax.plot(bincen, med, label=linelabels[line], linewidth=linewidth,\
+                    path_effects=patheff, **lsargs[line])
+            
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(handles, labels, fontsize=fontsize, bbox_to_anchor=(1.0, 0.),\
+                  loc='lower right', ncol=2)     
+    # sync lims
+    xlims = [ax.get_xlim() for ax in axes]
+    x0 = np.min([xl[0] for xl in xlims])
+    x1 = np.max([xl[1] for xl in xlims])
+    [ax.set_xlim(x0, x1) for ax in axes]
+    
+    #ylims = [ax.get_ylim() for ax in axes]
+    #y0 = np.min([yl[0] for yl in ylims])
+    #y1 = np.max([yl[1] for yl in ylims])
+    [ax.set_ylim(*ylim) for ax in axes]
         
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     
