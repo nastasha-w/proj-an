@@ -321,8 +321,9 @@ def print_linetable(z, lines=None, rangemin=0.1, latex=True):
     if latex:
         topline = '\\begin{tabular}{l l l l l c}'
         header = 'ion & $\\lambda$ & E &' + \
-                 '$\\max \\, \\Lambda \,\\mathrm{n}_\\mathrm{H}^{-2} \\mathrm{V}^{-1}$' +\
-                 ' & $\\mathrm{T}_{\\mathrm{peak}}$ & $\\mathrm{T}_{0.1 \\times \\mathrm{peak}}$ \\\\'
+                 '$\\max \\, \\Lambda \,\\mathrm{{n}}_\\mathrm{{H}}^{{-2}} \\mathrm{V}^{{-1}}$' +\
+                 ' & $\\mathrm{{T}}_{{\\mathrm{{peak}}}}$ & $\\mathrm{{T}}_{{{rmin} \\times \\mathrm{{peak}}}}$ \\\\'
+        header = header.format(rmin=rangemin)
         header2 = ' & $\\Ang$ & keV & $\\log_{10} \\, \\mathrm{erg} \\, \\mathrm{cm}^{3}$' + \
                   ' & $\\log_{10}$~K & \\ $\\log_{10}$~K \\\\'
         print(topline)
@@ -335,7 +336,7 @@ def print_linetable(z, lines=None, rangemin=0.1, latex=True):
     else:
         header = 'ion \t wavelength \t E \t' + \
                  ' max Lambda * nH**-2 * V**-1 ' +\
-                 '\t T(peak) \t T(0.1 * peak)'
+                 '\t T(peak) \t T({rmin} * peak)'.format(rmin=rangemin)
         header2 = ' \t A \t keV \t log10 erg * cm**-3 * s**-1' + \
                   ' \t log10 K \t log10 K'
         print(header)
