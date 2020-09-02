@@ -135,7 +135,7 @@ lineargs_sets =\
              'fe17':  {'linestyle': 'dotted',  'color': _c1.yellow},\
              'fe18':  {'linestyle': 'dashdot', 'color': _c1.red},\
               }
-lineargs_sets = {key: lineargs_sets.update({'dashes': None, 'linestyle': 'solid'})\
+lineargs_sets = {key: lineargs_sets[key].update({'dashes': None, 'linestyle': 'solid'})\
                  for key in lineargs_sets}
 # Tmax: direct values (0.05 dex spacing), copied by hand from table
 line_Tmax = {'c5r':    5.95,\
