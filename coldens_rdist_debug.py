@@ -84,6 +84,7 @@ def test_inputsettings(galdata, cosmopars):
     # the plots anyway
     del galids_dct['geq9.0_le9.5']
     del galids_dct['geq9.5_le10.0']
+    del galids_dct['geq10.0_le10.5']
     # set minimum distance based on virial radius of halo mass bin;
     # factor 1.1 is a margin
     print('Getting halo radii')
