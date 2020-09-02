@@ -2400,7 +2400,7 @@ def plot_luminosities_nice(addedges=(0., 1.)):
             #sl = slice(lsi, None, cycle) # avoid overlapping error bars
             ax.errorbar(bincen, med, yerr=ud,\
                         linewidth=linewidth, path_effects=patheff,\
-                        errorevery=(lsi, cycle)
+                        errorevery=(lsi, cycle),\
                         **lsargs[line])
             
         handles, labels = ax.get_legend_handles_labels()
