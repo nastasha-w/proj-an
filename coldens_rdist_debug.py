@@ -183,6 +183,7 @@ def test_stampsize(galdata, cosmopars):
     pixsize_pkpc = 100. * 1e3 * cosmopars['a'] / 32000.
 
     gid_fails = []
+    allids = np.array(allids)
     for line in lines:
         print('Checking {line}'.format(line=line))
         with h5py.File(fdir + fbase.format(line=line)) as fi:
@@ -194,7 +195,7 @@ def test_stampsize(galdata, cosmopars):
                 print('{} / {} missing, from mass bins'.format(\
                       len(present) - np.sum(present), len(present)))
                 print(np.array(keymatch)[np.logical_not(present)])
-            print('starting galaxyid loop')
+                
             for gid in np.random.choice(galids, size=20):
                 storeddims = fi[str(gid)].shape
                 mind = (min(storeddims) // 2) * pixsize_pkpc
