@@ -17,6 +17,7 @@ import h5py
 
 import cosmo_utils as cu
 import make_maps_opts_locs as ol
+import selecthalos as sh
 
 def get_galdata():
     fin = ol.pdir + 'halodata_L0100N1504_27_Mh0p5dex_1000.txt'
@@ -67,16 +68,94 @@ def test_r200c(galdata, cosmopars):
             print(fill.format(R200c=R200c, R200c_cu=R200c_cu, M200c=np.log10(M200c)))
     return res
 
+def test_inputsettings(galdata, cosmopars):
+    '''
+    test the input max. radii for stamps in runhistograms
+    '''
+    print('Testing the assignment of max. radii to galaxyids')
+    
+    ## from runhistograms.py
+    rmax_r200c = 4.
+    
+    # select 1500 halos randomly in  0.5 dex Mstar bins (trying to do everything just gives memory errors)
+    print('Getting galaxy ids')
+    galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids() 
+    # set minimum distance based on virial radius of halo mass bin;
+    # factor 1.1 is a margin
+    print('Getting halo radii')
+    maxradii_mhbins = {key: 1.1 * cu.R200c_pkpc(10**14.6, cosmopars) if key == 'geq14.0'\
+                            else 1.1 * cu.R200c_pkpc(10**(float(key.split('_')[1][2:])), cosmopars)\
+                       for key in galids_dct} 
+    #print('for debug: galids_dct:\n')
+    #print(galids_dct)
+    #print('\n')
+    print('Matching radii to Mhalo bins...')
+    allids = [gid for key in galids_dct.keys() for gid in galids_dct[key]]
+    gkeys = list(galids_dct.keys())
+    keymatch = [gkeys[np.where([gid in galids_dct[key] for key in gkeys])[0][0]] for gid in allids]
+    mindist_pkpc = rmax_r200c * np.array([maxradii_mhbins[gkey] for gkey in keymatch])
+    
+    ## testing part
+    R200c_pkpc = galdata['R200c_cMpc'][np.array(allids)] * 1e3 * cosmopars['a']
+    t1 = np.all(mindist_pkpc >= rmax_r200c * R200c_pkpc)
+    if not t1:
+        print('Individual galaxies are assigned too small R200c')
+    # set by hand for test
+    mbindata = {'geq10.0_le10.5': 10.5,\
+                'geq10.5_le11.0': 11.0,\
+                'geq11.0_le11.5': 11.5,\
+                'geq11.5_le12.0': 12.0,\
+                'geq12.0_le12.5': 12.5,\
+                'geq12.5_le13.0': 13.0,\
+                'geq13.0_le13.5': 13.5,\
+                'geq13.5_le14.0': 14.0,\
+                'geq14.0':        14.6,\
+                'geq9.0_le9.5':    9.5,\
+                'geq9.5_le10.0':  10.0,\
+                }
+    minrad_mbins = {key: rmax_r200c * cu.R200c_pkpc(10**mbindata[key])\
+                    for key in mbindata}
+    ed = np.arange(9., 14.1, 0.5)
+    matchbin = {(10**ed[i], 10**ed[i + 1]): 'geq{:.1f}_le{:.1f}'.format(ed[i], ed[i+1])\
+                for i in range(len(ed) - 1)}
+    matchbin.update({(10**ed[-1], np.inf): 'geq{:.1f}'.format(ed[-1])})
 
+    M200c_Msun = galdata['M200c_Msun'][np.array(allids)]    
+    minR200c_bins = np.ones(len(allids)) * np.NaN
+    for key in matchbin:
+        sel = M200c_Msun >= key[0]
+        sel &= M200c_Msun < key[1]
+        minrad = minrad_mbins[matchbin[key]]
+        minR200c_bins[sel] = minrad
+    if np.any(np.isnan(minR200c_bins)):
+        raise RuntimeError('Some galaxies were not assigned minimum test radii')
+    t2 = np.all(mindist_pkpc >= minR200c_bins)
+    if not t2:
+        print('Galaxies are assigned R200c too small for their M200c bins')
+    res = t1 & t2
+    if res:
+        print('test passed')
+    else:
+        print('test failed')
+    return res
+    
+    
 def main():
     galdata, cosmopars = get_galdata()
     
     res_cu = test_r200c(galdata, cosmopars)
     print('\n\n')
+    res_rh = test_inputsettings(galdata, cosmopars)
+    print('\n\n')
     
-    if np.all([res_cu]):
+    if np.all([res_cu, res_rh]):
         print('All tests passed')
-
+    else:
+        if not res_cu:
+            print('cosmo_utils.R200c_pkpc failed')
+        if not res_rh:
+            print('runhistograms stamp radii setting failed')
+            
 if __name__ == '__main__':
     main()
     
