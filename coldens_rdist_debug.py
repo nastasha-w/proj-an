@@ -228,7 +228,7 @@ def main():
     res_st = test_stampsize(galdata, cosmopars)
     print('\n\n')
     
-    if np.all([res_cu, res_rh]):
+    if np.all([res_cu, res_rh, res_st]):
         print('All tests passed')
     else:
         if not res_cu:

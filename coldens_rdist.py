@@ -839,11 +839,11 @@ def rdists_sl_from_haloids(base, szcens, L_x, npix_x,\
         if trackprogress:
             print('Succeded in opening halo catalogue hdf5 file')
         z = fi['Header/cosmopars'].attrs['z']
-        R200c_cMpc = np.array(fi['R200c_pkpc']) / 1e3 * (1. + z)
+        R200c_cMpc = np.array(fi['R200c_pkpc']) * 1e-3 * (1. + z)
         if mindist_pkpc is None:
             mindist_cMpc = 0.
         else:
-            mindist_cMpc = mindist_pkpc / 1e3 * (1. + z)
+            mindist_cMpc = mindist_pkpc * 1e-3 * (1. + z)
         centres_cMpc = np.array([np.array(fi['Xcop_cMpc']), np.array(fi['Ycop_cMpc']), np.array(fi['Zcop_cMpc'])]).T
         ids   = np.array(fi['galaxyid'])
         cosmopars = {key: item for (key, item) in fi['Header/cosmopars'].attrs.items()}
