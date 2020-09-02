@@ -2008,7 +2008,7 @@ def plot_emcurves(z=0.1):
     
     ncols = 2
     nrows = (len(linesets) - 1) // ncols + 1
-    fig = plt.figure(figsize=(5.5, 4.5))
+    fig = plt.figure(figsize=(11., 7.))
     grid = gsp.GridSpec(nrows=nrows, ncols=ncols,  hspace=0.45, wspace=0.0)
     axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(len(linesets))]
     
