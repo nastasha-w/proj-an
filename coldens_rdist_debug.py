@@ -184,6 +184,7 @@ def test_stampsize(galdata, cosmopars):
 
     gid_fails = []
     for line in lines:
+        print('Checking {line}'.format(line=line))
         with h5py.File(fdir + fbase.format(line=line)) as fi:
             galids = fi['selection/galaxyid']
             present = np.array([gid in galids for gid in allids])
@@ -193,18 +194,19 @@ def test_stampsize(galdata, cosmopars):
                 print('{} / {} missing, from mass bins'.format(\
                       len(present) - np.sum(present), len(present)))
                 print(np.array(keymatch)[np.logical_not(present)])
-            for gid in galids:
+            print('starting galaxyid loop')
+            for gid in np.random.choice(galids, size=20):
                 storeddims = fi[str(gid)].shape
                 mind = (min(storeddims) // 2) * pixsize_pkpc
                 target = mindist_pkpc[np.where(gid == allids)[0][0]]
                 if mind < target:
                     passed = False
                     if gid not in gid_fails:
-                        print('galaxy {gid}, {line}: target size {tar} larger than stored {mind}'.format(\
+                        print('  galaxy {gid}, {line}: target size {tar} larger than stored {mind}'.format(\
                               tar=target, mind=mind, gid=gid, line=line))
                         gid_fails.append(gid)
                 if gid in gid_fails and mind >= target:
-                    print('galaxy {gid}, {line} is ok: target size {tar}, stored {mind}'.format(\
+                    print('  galaxy {gid}, {line} is ok: target size {tar}, stored {mind}'.format(\
                               tar=target, mind=mind, gid=gid, line=line))
     if passed:
         print('test passed')
