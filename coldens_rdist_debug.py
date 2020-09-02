@@ -80,6 +80,10 @@ def test_inputsettings(galdata, cosmopars):
     # select 1500 halos randomly in  0.5 dex Mstar bins (trying to do everything just gives memory errors)
     print('Getting galaxy ids')
     galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids() 
+    # there seem to be issues with these bins and they aren't going to be in
+    # the plots anyway
+    del galids_dct['geq9.0_le9.5']
+    del galids_dct['geq9.5_le10.0']
     # set minimum distance based on virial radius of halo mass bin;
     # factor 1.1 is a margin
     print('Getting halo radii')
@@ -113,7 +117,7 @@ def test_inputsettings(galdata, cosmopars):
                 'geq9.0_le9.5':    9.5,\
                 'geq9.5_le10.0':  10.0,\
                 }
-    minrad_mbins = {key: rmax_r200c * cu.R200c_pkpc(10**mbindata[key])\
+    minrad_mbins = {key: rmax_r200c * cu.R200c_pkpc(10**mbindata[key], cosmopars)\
                     for key in mbindata}
     ed = np.arange(9., 14.1, 0.5)
     matchbin = {(10**ed[i], 10**ed[i + 1]): 'geq{:.1f}_le{:.1f}'.format(ed[i], ed[i+1])\
