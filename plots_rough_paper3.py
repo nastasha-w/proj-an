@@ -2397,6 +2397,8 @@ def plot_luminosities_nice(addedges=(0., 1.)):
             ud[1, :] = ud[1, :] - med
             lsi = np.where([l == line for l in lineset])[0][0]
             cycle = len(lineset)
+            print(lsi)
+            print(cycle)
             #sl = slice(lsi, None, cycle) # avoid overlapping error bars
             ax.errorbar(bincen, med, yerr=ud,\
                         linewidth=linewidth, path_effects=patheff,\
