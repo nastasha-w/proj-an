@@ -2008,7 +2008,7 @@ def plot_emcurves(z=0.1):
     
     ncols = 2
     nrows = (len(linesets) - 1) // ncols + 1
-    fig = plt.figure(figsize=(11., 7.))
+    fig = plt.figure(figsize=(5.5, 4.5))
     grid = gsp.GridSpec(nrows=nrows, ncols=ncols,  hspace=0.45, wspace=0.0)
     axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(len(linesets))]
     
@@ -2024,7 +2024,12 @@ def plot_emcurves(z=0.1):
     xlabel = r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$'
     xlabel2 = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}}(\\mathrm{T}_{\\mathrm{200c}}) \\; [\\mathrm{M}_{\\odot}]$'
     
-    indvals = [] #[-5.]
+    labelax = fig.add_subplot(grid[:, :], frameon=False)
+    labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    #labelax.set_xlabel(xlabel, fontsize=fontsize)
+    labelax.set_ylabel(ylabel, fontsize=fontsize)
+    
+    #indvals = [] #[-5.]
     lsargs2 = [\
                #{'linewidth': 1.5, 'alpha': 1.},\
                #{'linewidth': 1.0, 'alpha': 0.5},\
