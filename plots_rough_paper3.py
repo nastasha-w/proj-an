@@ -2397,11 +2397,12 @@ def plot_luminosities_nice(addedges=(0., 1.)):
             ud[1, :] = ud[1, :] - med
             lsi = np.where([l == line for l in lineset])[0][0]
             cycle = len(lineset)
-            print(lsi)
-            print(cycle)
+            #print(lsi)
+            #print(cycle)
             sl = slice(lsi, None, cycle) # avoid overlapping error bars
             ax.errorbar(bincen[sl], med[sl], yerr=ud[:, sl],\
-                        linewidth=linewidth, path_effects=patheff,\
+                        linewidth=linewidth, linestyle=None,\
+                        path_effects=patheff,\
                         **lsargs[line])
             
         handles, labels = ax.get_legend_handles_labels()
