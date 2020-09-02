@@ -2401,7 +2401,7 @@ def plot_luminosities_nice(addedges=(0., 1.)):
             #print(cycle)
             sl = slice(lsi, None, cycle) # avoid overlapping error bars
             _lsargs = lsargs[line].copy()
-            _lsargs['linestyle'] = None
+            _lsargs['linestyle'] = 'none'
             ax.errorbar(bincen[sl], med[sl], yerr=ud[:, sl],\
                         linewidth=linewidth,\
                         path_effects=patheff,\
