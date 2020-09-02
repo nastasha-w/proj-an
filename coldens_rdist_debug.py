@@ -186,7 +186,7 @@ def test_stampsize(galdata, cosmopars):
     for line in lines:
         print('Checking {line}'.format(line=line))
         with h5py.File(fdir + fbase.format(line=line)) as fi:
-            galids = fi['selection/galaxyid']
+            galids = fi['selection/galaxyid'][:]
             present = np.array([gid in galids for gid in allids])
             if not np.all(present):
                 passed = False
