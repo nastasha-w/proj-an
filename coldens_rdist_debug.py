@@ -53,7 +53,7 @@ def test_r200c(galdata, cosmopars):
     
     R200c_pkpc_cu = cu.R200c_pkpc(M200c_Msun, cosmopars)
     
-    res = np.allclose(R200c_pkpc, R200c_pkpc_cu)
+    res = np.allclose(R200c_pkpc, R200c_pkpc_cu, rtol=1e-4)
     if res:
         print('passed, using masses {}--{} log10 Msun'.format(\
               np.log10(np.min(M200c_Msun)), np.log10(np.max(M200c_Msun))))
@@ -71,8 +71,11 @@ def test_r200c(galdata, cosmopars):
 def main():
     galdata, cosmopars = get_galdata()
     
-    test_r200c(galdata, cosmopars)
+    res_cu = test_r200c(galdata, cosmopars)
     print('\n\n')
+    
+    if np.all([res_cu]):
+        print('All tests passed')
 
 if __name__ == '__main__':
     main()
