@@ -2337,14 +2337,10 @@ def plot_luminosities_nice(addedges=(0., 1.)):
                  'omegam':  0.307,\
                  'z': 0.10063854175996956,\
                  }
-    lsargs = lineargs.copy()
+    lsargs = lineargs_sets.copy()
     linewidth = 2.
     patheff = getoutline(linewidth)
-    linesets = [['c5r', 'n6r', 'o7r', 'ne9r', 'mg11r', 'si13r'],\
-                ['c6', 'n7', 'o8', 'ne10', 'mg12'],\
-                ['o7r', 'o7ix', 'o7iy', 'o7f'],\
-                ['fe17', 'fe17-other1', 'fe18', 'fe19'],\
-                ]
+
     linelabels = nicenames_lines.copy()
     linelabels['fe17-other1'] = 'Fe XVII\n(15.10 A)'
     linelabels['fe17'] = 'Fe XVII\n(17.05 A)'
@@ -2392,8 +2388,20 @@ def plot_luminosities_nice(addedges=(0., 1.)):
             if line not in lineset:
                 continue
             med = [np.median(lums[bininds == i, li]) for i in range(1, len(mbins))]
-            ax.plot(bincen, med, label=linelabels[line], linewidth=linewidth,\
-                    path_effects=patheff, **lsargs[line])
+            #ax.plot(bincen, med, label=linelabels[line], linewidth=linewidth,\
+            #        path_effects=patheff, **lsargs[line])
+            
+            ud = [np.percentile(lums[bininds == i, li], [10., 90.]) for i in range(1, len(mbins))]
+            ud = np.array(ud).T
+            ud[0, :] = med - ud[0, :]
+            ud[1, :] = ud[1, :] - med
+            lsi = np.where([l == line for l in lineset])[0][0]
+            cycle = len(lineset)
+            #sl = slice(lsi, None, cycle) # avoid overlapping error bars
+            ax.errorbar(bincen, med, yerr=ud,\
+                        linewidth=linewidth, path_effects=patheff,\
+                        errorevery=(lsi, cycle)
+                        **lsargs[line])
             
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(handles, labels, fontsize=fontsize, bbox_to_anchor=(1.0, 0.),\
