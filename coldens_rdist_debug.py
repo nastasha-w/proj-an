@@ -45,6 +45,9 @@ def test_r200c(galdata, cosmopars):
     test whether cosmo_utils R200c_pkpc does what it should
     
     input: output from get_galdata
+    
+    conclusion: this works, even though a previous version did not (not used 
+                paper 2 calculations, at least)
     '''
     print('Testing cosmo_utils R200c_pkpc')
     gids = np.random.choice(galdata.index, size=20, replace=False)
@@ -71,6 +74,11 @@ def test_r200c(galdata, cosmopars):
 def test_inputsettings(galdata, cosmopars):
     '''
     test the input max. radii for stamps in runhistograms
+    
+    conclusion: there may be some issues with M200c < 10**10.5 Msun halos
+                just leave these out; they won't be in the plots anyway, since
+                they produce basically no soft X-ray line emission
+    other than that, the input radii seem to be fine
     '''
     print('Testing the assignment of max. radii to galaxyids')
     
@@ -144,13 +152,77 @@ def test_inputsettings(galdata, cosmopars):
         print('test failed')
     return res
     
+def test_stampsize(galdata, cosmopars):
+    '''
+    test if the (stored) output stamps are as large as they should be
+    '''
+    print('Testing whether the stored stamps are the size they should be')
+    passed = True
     
+    rmax_r200c = 4.
+    
+    galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids() 
+    maxradii_mhbins = {key: 1.1 * cu.R200c_pkpc(10**14.6, cosmopars) if key == 'geq14.0'\
+                            else 1.1 * cu.R200c_pkpc(10**(float(key.split('_')[1][2:])), cosmopars)\
+                       for key in galids_dct} 
+    # there seem to be issues with these bins and they aren't going to be in
+    # the plots anyway
+    #del galids_dct['geq9.0_le9.5']
+    #del galids_dct['geq9.5_le10.0']
+    #del galids_dct['geq10.0_le10.5']
+    allids = [gid for key in galids_dct.keys() for gid in galids_dct[key]]
+    gkeys = list(galids_dct.keys())
+    keymatch = [gkeys[np.where([gid in galids_dct[key] for key in gkeys])[0][0]] for gid in allids]
+    mindist_pkpc = rmax_r200c * np.array([maxradii_mhbins[gkey] for gkey in keymatch])
+    
+    fbase = 'stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min4R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
+    fdir = ol.pdir + 'stamps/'
+    lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
+             'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
+             'c6', 'n7']
+    pixsize_pkpc = 100. * 1e3 * cosmopars['a'] / 32000.
+
+    gid_fails = []
+    for line in lines:
+        with h5py.File(fdir + fbase.format(line=line)) as fi:
+            galids = fi['selection/galaxyid']
+            present = np.array([gid in galids for gid in allids])
+            if not np.all(present):
+                passed = False
+                print('Some input galaxy ids were missing from the stamp file')
+                print('{} / {} missing, from mass bins'.format(\
+                      len(present) - np.sum(present), len(present)))
+                print(np.array(keymatch)[np.logical_not(present)])
+            for gid in galids:
+                storeddims = fi[str(gid)].shape
+                mind = (min(storeddims) // 2) * pixsize_pkpc
+                target = mindist_pkpc[np.where(gid == allids)[0][0]]
+                if mind < target:
+                    passed = False
+                    if gid not in gid_fails:
+                        print('galaxy {gid}, {line}: target size {tar} larger than stored {mind}'.format(\
+                              tar=target, mind=mind, gid=gid, line=line))
+                        gid_fails.append(gid)
+                if gid in gid_fails and mind >= target:
+                    print('galaxy {gid}, {line} is ok: target size {tar}, stored {mind}'.format(\
+                              tar=target, mind=mind, gid=gid, line=line))
+    if passed:
+        print('test passed')
+    else:
+        print('test failed, on galaxies:\n{}'.format(gid_fails))
+        print('in halo mass bins:\n{}'.format(\
+              [keymatch[np.where(gid == allids)[0][0]] for gid in gid_fails]))
+    return passed
+                
 def main():
     galdata, cosmopars = get_galdata()
     
+    print('\n\n')
     res_cu = test_r200c(galdata, cosmopars)
     print('\n\n')
     res_rh = test_inputsettings(galdata, cosmopars)
+    print('\n\n')
+    res_st = test_stampsize(galdata, cosmopars)
     print('\n\n')
     
     if np.all([res_cu, res_rh]):
@@ -160,6 +232,8 @@ def main():
             print('cosmo_utils.R200c_pkpc failed')
         if not res_rh:
             print('runhistograms stamp radii setting failed')
+        if not res_st:
+            print('extracted stamp radii were too small')
             
 if __name__ == '__main__':
     main()

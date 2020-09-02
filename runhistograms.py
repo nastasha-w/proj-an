@@ -3128,6 +3128,11 @@ if jobind in range(20313, 20331):
     # select 1500 halos randomly in  0.5 dex Mstar bins (trying to do everything just gives memory errors)
     print('Getting galaxy ids')
     galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids() 
+    # there seem to be issues with these bins and they aren't going to be in
+    # the plots anyway
+    del galids_dct['geq9.0_le9.5']
+    del galids_dct['geq9.5_le10.0']
+    del galids_dct['geq10.0_le10.5']
     # set minimum distance based on virial radius of halo mass bin;
     # factor 1.1 is a margin
     print('Getting halo radii')
@@ -3158,7 +3163,7 @@ if jobind in range(20313, 20331):
     basename = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
     filenames = {line: ol.ndir + basename.format(line=line) for line in lines}
     filename = filenames[line]
-    outname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min4R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'%((filename.split('/')[-1][:-5])%('-all'), numsl)
+    outname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min4R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'%((filename.split('/')[-1][:-5])%('-all'), numsl)
     
     print('Calling rdists_sl_from_selection')
     crd.rdists_sl_from_selection(filename, szcens, 'dontusethis', 'alsonotthis',\
