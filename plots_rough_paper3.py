@@ -2405,7 +2405,7 @@ def plot_luminosities_nice(addedges=(0., 1.)):
             ax.errorbar(bincen[sl], med[sl], yerr=ud[:, sl],\
                         linewidth=linewidth,\
                         path_effects=patheff,\
-                        **_lsargs[line])
+                        **_lsargs)
             
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(handles, labels, fontsize=fontsize, bbox_to_anchor=(1.0, 0.),\
