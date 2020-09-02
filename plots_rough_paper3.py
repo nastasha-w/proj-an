@@ -1971,6 +1971,7 @@ def plot_emcurves(z=0.1):
     '''
       
     outname = mdir + 'emcurves_z{}_HM01_ionizedmu.pdf'.format(str(z).replace('.', 'p'))
+    fontsize = 10
     
     #ioncolors.update({'he2': 'darkgoldenrod'})
     Ts = {}
@@ -2009,7 +2010,7 @@ def plot_emcurves(z=0.1):
     ncols = 2
     nrows = (len(linesets) - 1) // ncols + 1
     fig = plt.figure(figsize=(5.5, 4.5))
-    grid = gsp.GridSpec(nrows=nrows, ncols=ncols,  hspace=0.45, wspace=0.0)
+    grid = gsp.GridSpec(nrows=nrows, ncols=ncols, hspace=0.5, wspace=0.0)
     axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(len(linesets))]
     
     lsargs = lineargs_sets.copy()
@@ -2044,8 +2045,8 @@ def plot_emcurves(z=0.1):
         ax.set_ylim(*ylim)
         
         labely = axi % ncols == 0
-        if labely:
-            ax.set_ylabel(ylabel, fontsize=fontsize)
+        #if labely:
+        #    ax.set_ylabel(ylabel, fontsize=fontsize)
         ax.set_xlabel(xlabel, fontsize=fontsize)
         pu.setticks(ax, fontsize=fontsize, top=False, labeltop=False, labelleft=labely)
         _lines = linesets[axi]
