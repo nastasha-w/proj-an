@@ -2388,8 +2388,8 @@ def plot_luminosities_nice(addedges=(0., 1.)):
             if line not in lineset:
                 continue
             med = [np.median(lums[bininds == i, li]) for i in range(1, len(mbins))]
-            #ax.plot(bincen, med, label=linelabels[line], linewidth=linewidth,\
-            #        path_effects=patheff, **lsargs[line])
+            ax.plot(bincen, med, label=linelabels[line], linewidth=linewidth,\
+                    path_effects=patheff, **lsargs[line])
             
             ud = [np.percentile(lums[bininds == i, li], [10., 90.]) for i in range(1, len(mbins))]
             ud = np.array(ud).T
@@ -2399,8 +2399,8 @@ def plot_luminosities_nice(addedges=(0., 1.)):
             cycle = len(lineset)
             print(lsi)
             print(cycle)
-            #sl = slice(lsi, None, cycle) # avoid overlapping error bars
-            ax.errorbar(bincen, med, yerr=ud,\
+            sl = slice(lsi, None, cycle) # avoid overlapping error bars
+            ax.errorbar(bincen[sl], med[sl], yerr=ud[:, sl],\
                         linewidth=linewidth, path_effects=patheff,\
                         errorevery=(lsi, cycle),\
                         **lsargs[line])
