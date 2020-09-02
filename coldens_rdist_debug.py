@@ -196,11 +196,9 @@ def test_stampsize(galdata, cosmopars):
                       len(present) - np.sum(present), len(present)))
                 print(np.array(keymatch)[np.logical_not(present)])
                 
-            for gid in np.random.choice(galids, size=20):
+            for gid in np.random.choice(allids, size=20):
                 storeddims = fi[str(gid)].shape
                 mind = (min(storeddims) // 2) * pixsize_pkpc
-                print(allids)
-                print(gid in allids)
                 target = mindist_pkpc[np.where(gid == allids)[0][0]]
                 if mind < target:
                     passed = False
