@@ -2400,10 +2400,12 @@ def plot_luminosities_nice(addedges=(0., 1.)):
             #print(lsi)
             #print(cycle)
             sl = slice(lsi, None, cycle) # avoid overlapping error bars
+            _lsargs = lsargs[line].copy()
+            _lsargs['linestyle'] = None
             ax.errorbar(bincen[sl], med[sl], yerr=ud[:, sl],\
-                        linewidth=linewidth, linestyle=None,\
+                        linewidth=linewidth,\
                         path_effects=patheff,\
-                        **lsargs[line])
+                        **_lsargs[line])
             
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(handles, labels, fontsize=fontsize, bbox_to_anchor=(1.0, 0.),\
