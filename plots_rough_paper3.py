@@ -110,6 +110,33 @@ lineargs =  {'c5r':  {'linestyle': 'solid',   'color': _c1.blue},\
              'fe17':  {'linestyle': 'dotted',  'color': _c1.grey},\
              'fe18':  {'linestyle': 'dashdot', 'color': _c1.grey},\
               }
+linesets = [['c5r', 'n6r', 'o7r', 'ne9r', 'mg11r', 'si13r'],\
+            ['c6', 'n7', 'o8', 'ne10', 'mg12'],\
+            ['o7r', 'o7ix', 'o7iy', 'o7f'],\
+            ['fe17', 'fe17-other1', 'fe18', 'fe19'],\
+            ]
+lineargs_sets =\
+            {'c5r':  {'linestyle': 'solid',   'color': _c1.blue},\
+             'c6':   {'linestyle': 'dashed',  'color': _c1.blue},\
+             'n6r':  {'linestyle': 'solid',   'color': _c1.cyan},\
+             'n7':   {'linestyle': 'dashed',  'color': _c1.cyan},\
+             'o7r':  {'linestyle': 'solid',   'color': _c1.green},\
+             'o7ix': {'linestyle': 'dashdot', 'color': _c1.blue},\
+             'o7iy': {'dashes': [6, 2],       'color': _c1.yellow},\
+             'o7f':  {'linestyle': 'dotted',  'color': _c1.red},\
+             'o8':   {'linestyle': 'dashed',  'color': _c1.green},\
+             'ne9r':  {'linestyle': 'solid',  'color': _c1.yellow},\
+             'ne10':  {'linestyle': 'dashed', 'color': _c1.yellow},\
+             'mg11r': {'linestyle': 'solid',  'color': _c1.red},\
+             'mg12':  {'linestyle': 'dashed', 'color': _c1.red},\
+             'si13r': {'linestyle': 'solid',  'color': _c1.purple},\
+             'fe17-other1':  {'dashes': [6, 2], 'color': _c1.green},\
+             'fe19':  {'dashes': [2, 2, 2, 2], 'color': _c1.blue},\
+             'fe17':  {'linestyle': 'dotted',  'color': _c1.yellow},\
+             'fe18':  {'linestyle': 'dashdot', 'color': _c1.red},\
+              }
+lineargs_sets = {key: lineargs_sets.update({'dashes': None, 'linestyle': solid})\
+                 for key in lineargs_sets}
 # Tmax: direct values (0.05 dex spacing), copied by hand from table
 line_Tmax = {'c5r':    5.95,\
               'c6':    6.15,\
@@ -1976,19 +2003,13 @@ def plot_emcurves(z=0.1):
         print(msg.format(line=line, maxv=maxem, T=Tmax, rng=str(xs)))
         maxvals[line] = maxem
     
-    linesets = [['c5r', 'n6r', 'o7r', 'ne9r', 'mg11r', 'si13r'],\
-                ['c6', 'n7', 'o8', 'ne10', 'mg12'],\
-                ['o7r', 'o7ix', 'o7iy', 'o7f'],\
-                ['fe17', 'fe17-other1', 'fe18', 'fe19'],\
-                ]
-    
     ncols = 2
     nrows = (len(linesets) - 1) // ncols + 1
     fig = plt.figure(figsize=(11., 7.))
     grid = gsp.GridSpec(nrows=nrows, ncols=ncols,  hspace=0.45, wspace=0.0)
     axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(len(linesets))]
     
-    lsargs = lineargs.copy()
+    lsargs = lineargs_sets.copy()
     linelabels = nicenames_lines.copy()
     linelabels['fe17-other1'] = 'Fe XVII\n(15.10 A)'
     linelabels['fe17'] = 'Fe XVII\n(17.05 A)'
