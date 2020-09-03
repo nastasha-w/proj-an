@@ -338,6 +338,10 @@ def test_input_stampsize(galdata, cosmopars):
 
     #gid_fails = []
     allids = np.array(allids)
+    _a = np.argsort(allids)
+    mindist_pkpc = mindist_pkpc[_a]
+    allids = allids[_a]
+    
     for line in lines[:1]: # doesn't seem to dpeend on the line, and there is no clear reason it should
         print('Checking {line}'.format(line=line))
         with h5py.File(fdir + fbase.format(line=line)) as fi:
@@ -353,7 +357,7 @@ def test_input_stampsize(galdata, cosmopars):
             rmax_rscales = fi['Header'].attrs['rmax_rscales']
             rscales_cMpc = fi['Header/rscales_cMpc'][:]
             rtarget_cMpc = rmax_rscales * rscales_cMpc
-            reorder = np.array([np.where(gid == allids)[0][0] for gid in galids])
+            reorder = np.array([np.where(gid == galids)[0][0] for gid in allids])
             rtarget_cMpc = rtarget_cMpc[reorder]
             if not np.all(galids[reorder] == allids):
                 raise RuntimeError('comparing different galaxies in array comps.')
