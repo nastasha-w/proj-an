@@ -14,7 +14,8 @@ they get stored as input into stamps_sl_hdf5 (code inspection).
 However, mindist_pkpc seems to be calculated correctly in runhistograms, and
 calculated right in rdists_sl_from_haloids.
 
-
+Issue found: selecthalos took the galaxyid selection and returned the ids in 
+a different order, so they didn't match mindist_pkpc as they should
 
 """
 
@@ -185,7 +186,7 @@ def test_stampsize(galdata, cosmopars):
     
     # those didn't work
     #fbase = 'stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min4R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
-    fbase = 'stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min4R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+    fbase = 'stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
     fdir = ol.pdir + 'stamps/'
     lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
              'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
@@ -340,7 +341,7 @@ def test_input_stampsize(galdata, cosmopars):
     
     # those didn't work
     #fbase = 'stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min4R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
-    fbase = 'stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min4R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+    fbase = 'stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
     fdir = ol.pdir + 'stamps/'
     lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
              'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
