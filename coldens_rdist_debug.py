@@ -175,7 +175,9 @@ def test_stampsize(galdata, cosmopars):
     keymatch = [gkeys[np.where([gid in galids_dct[key] for key in gkeys])[0][0]] for gid in allids]
     mindist_pkpc = rmax_r200c * np.array([maxradii_mhbins[gkey] for gkey in keymatch])
     
-    fbase = 'stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min4R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
+    # those didn't work
+    #fbase = 'stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min4R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
+    fbase = 'stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min4R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
     fdir = ol.pdir + 'stamps/'
     lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
              'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
