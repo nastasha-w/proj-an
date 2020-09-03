@@ -297,8 +297,9 @@ def test_rdists_sl_from_haloids(galdata, cosmopars):
         print('test passed')
     else:
         print('test failed:')
-        print('targets: {}'.format(ref_mindist))
-        print('used:    {}'.format(rmax_r200c * R200c))
+        fails = np.where(rmax_r200c * R200c < ref_mindist)
+        print('targets: {}'.format(ref_mindist[fails]))
+        print('used:    {}'.format(rmax_r200c[fails] * R200c[fails]))
     return passed
     
 def main():
