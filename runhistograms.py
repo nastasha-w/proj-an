@@ -3111,13 +3111,13 @@ if jobind in range(20295, 20313):
                          numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
                          axis='z', velspace=False, offset_los=0., stamps=True,\
                          trackprogress=True)
-# try number 3
+# try number 3/4/5
 if jobind in range(20313, 20331): 
     szcens = [str(i) for i in np.arange(16)/16. * 100. + 100./32.]
     L_x = 100.
     npix_x = 32000
     rmin_r200c = 0.
-    rmax_r200c = 4.
+    rmax_r200c = 3.5
     
     catname = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
     with h5py.File(catname, 'r') as cat:
@@ -3163,7 +3163,7 @@ if jobind in range(20313, 20331):
     basename = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
     filenames = {line: ol.ndir + basename.format(line=line) for line in lines}
     filename = filenames[line]
-    outname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min4R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'%((filename.split('/')[-1][:-5])%('-all'), numsl)
+    outname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'%((filename.split('/')[-1][:-5])%('-all'), numsl)
     
     print('Calling rdists_sl_from_selection')
     crd.rdists_sl_from_selection(filename, szcens, 'dontusethis', 'alsonotthis',\
