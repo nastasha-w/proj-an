@@ -225,7 +225,7 @@ def test_rdists_sl_from_haloids(galdata, cosmopars):
     '''
     print('Testing radius parsing rdists_sl_from_haloids')
     
-    catname = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    catname = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
     
     rmax_r200c = 4.
     
@@ -309,8 +309,9 @@ def main():
     print('\n\n')
     res_rh = test_inputsettings(galdata, cosmopars)
     print('\n\n')
-    res_st = test_stampsize(galdata, cosmopars)
-    print('\n\n')
+    #res_st = test_stampsize(galdata, cosmopars)
+    #print('\n\n')
+    res_st = False
     res_ps = test_rdists_sl_from_haloids(galdata, cosmopars)
     print('\n\n')
     
