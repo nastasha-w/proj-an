@@ -92,7 +92,7 @@ def test_inputsettings(galdata, cosmopars):
     print('Testing the assignment of max. radii to galaxyids')
     
     ## from runhistograms.py
-    rmax_r200c = 4.
+    rmax_r200c = 3.5
     
     # select 1500 halos randomly in  0.5 dex Mstar bins (trying to do everything just gives memory errors)
     print('Getting galaxy ids')
@@ -168,7 +168,7 @@ def test_stampsize(galdata, cosmopars):
     print('Testing whether the stored stamps are the size they should be')
     passed = True
     
-    rmax_r200c = 4.
+    rmax_r200c = 3.5
     
     galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids() 
     maxradii_mhbins = {key: 1.1 * cu.R200c_pkpc(10**14.6, cosmopars) if key == 'geq14.0'\
@@ -238,7 +238,7 @@ def test_rdists_sl_from_haloids(galdata, cosmopars):
     
     catname = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
     
-    rmax_r200c = 4.
+    rmax_r200c = 3.5
     
     galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids() 
     maxradii_mhbins = {key: 1.1 * cu.R200c_pkpc(10**14.6, cosmopars) if key == 'geq14.0'\
@@ -323,7 +323,7 @@ def test_input_stampsize(galdata, cosmopars):
     print('Testing whether the stored target stamp size are what they should be')
     passed = True
     
-    rmax_r200c = 4.
+    rmax_r200c = 3.5
     
     galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids() 
     maxradii_mhbins = {key: 1.1 * cu.R200c_pkpc(10**14.6, cosmopars) if key == 'geq14.0'\
