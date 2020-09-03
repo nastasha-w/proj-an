@@ -222,6 +222,8 @@ def test_stampsize(galdata, cosmopars):
 def test_rdists_sl_from_haloids(galdata, cosmopars):
     '''
     test whether input distances are processed as expected
+    
+    conclusion: works, allowing fp-level deviations from targets
     '''
     print('Testing radius parsing rdists_sl_from_haloids')
     
@@ -301,7 +303,71 @@ def test_rdists_sl_from_haloids(galdata, cosmopars):
         print('targets: {}'.format(ref_mindist[fails]))
         print('used:    {}'.format(rmax_r200c[fails] * R200c[fails]))
     return passed
+
+def test_input_stampsize(galdata, cosmopars):
+    '''
+    test if the (stored) rscales * rmax are what they should be
+    '''
+    print('Testing whether the stored target stamp size are what they should be')
+    passed = True
     
+    rmax_r200c = 4.
+    
+    galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids() 
+    maxradii_mhbins = {key: 1.1 * cu.R200c_pkpc(10**14.6, cosmopars) if key == 'geq14.0'\
+                            else 1.1 * cu.R200c_pkpc(10**(float(key.split('_')[1][2:])), cosmopars)\
+                       for key in galids_dct} 
+    # there seem to be issues with these bins and they aren't going to be in
+    # the plots anyway
+    #del galids_dct['geq9.0_le9.5']
+    #del galids_dct['geq9.5_le10.0']
+    #del galids_dct['geq10.0_le10.5']
+    allids = [gid for key in galids_dct.keys() for gid in galids_dct[key]]
+    gkeys = list(galids_dct.keys())
+    keymatch = [gkeys[np.where([gid in galids_dct[key] for key in gkeys])[0][0]] for gid in allids]
+    mindist_pkpc = rmax_r200c * np.array([maxradii_mhbins[gkey] for gkey in keymatch])
+    
+    # those didn't work
+    #fbase = 'stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min4R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
+    fbase = 'stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min4R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+    fdir = ol.pdir + 'stamps/'
+    lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
+             'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
+             'c6', 'n7']
+    #pixsize_pkpc = 100. * 1e3 * cosmopars['a'] / 32000.
+
+    #gid_fails = []
+    allids = np.array(allids)
+    for line in lines[:1]:
+        print('Checking {line}'.format(line=line))
+        with h5py.File(fdir + fbase.format(line=line)) as fi:
+            galids = fi['selection/galaxyid'][:]
+            present = np.array([gid in galids for gid in allids])
+            if not np.all(present):
+                passed = False
+                print('Some input galaxy ids were missing from the stamp file')
+                print('{} / {} missing, from mass bins'.format(\
+                      len(present) - np.sum(present), len(present)))
+                print(np.array(keymatch)[np.logical_not(present)])
+            
+            rmax_rscales = fi['Header'].attrs['rmax_rscales']
+            rscales_cMpc = fi['Header/rscales_cMpc'][:]
+            rtarget_cMpc = rmax_rscales * rscales_cMpc
+            reorder = np.array([np.where(gid == allids)[0][0] for gid in galids])
+            rtarget_cMpc = rtarget_cMpc[reorder]
+            
+            if np.all(rtarget_cMpc >= (1. - 1e-7) * mindist_pkpc * 1e3 * cosmopars['a']):
+                print('Stored target sizes match what they should be')
+            else:
+                passed = False
+                print('Stored target sizes were too small:')
+                fails = np.where(rtarget_cMpc < (1. - 1e-7) * mindist_pkpc * 1e3 * cosmopars['a'])
+                print('target: {}'.format(mindist_pkpc[fails] * 1e3 * cosmopars['a']))
+                print('stored: {}'.format(rtarget_cMpc))
+                
+    return passed
+
+
 def main():
     galdata, cosmopars = get_galdata()
     
