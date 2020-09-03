@@ -307,6 +307,8 @@ def test_rdists_sl_from_haloids(galdata, cosmopars):
 def test_input_stampsize(galdata, cosmopars):
     '''
     test if the (stored) rscales * rmax are what they should be
+    
+    conclusion: they are not, 
     '''
     print('Testing whether the stored target stamp size are what they should be')
     passed = True
@@ -338,9 +340,6 @@ def test_input_stampsize(galdata, cosmopars):
 
     #gid_fails = []
     allids = np.array(allids)
-    _a = np.argsort(allids)
-    mindist_pkpc = mindist_pkpc[_a]
-    allids = allids[_a]
     
     for line in lines[:1]: # doesn't seem to dpeend on the line, and there is no clear reason it should
         print('Checking {line}'.format(line=line))
@@ -359,6 +358,7 @@ def test_input_stampsize(galdata, cosmopars):
             rtarget_cMpc = rmax_rscales * rscales_cMpc
             reorder = np.array([np.where(gid == galids)[0][0] for gid in allids])
             rtarget_cMpc = rtarget_cMpc[reorder]
+            
             if not np.all(galids[reorder] == allids):
                 raise RuntimeError('comparing different galaxies in array comps.')
             
