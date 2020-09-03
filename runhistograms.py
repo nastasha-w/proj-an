@@ -4245,6 +4245,9 @@ if jobind in range(30177, 30195):
     
     halocat = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'   
     galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids()
+    del galids_dct['geq9.0_le9.5']
+    del galids_dct['geq9.5_le10.0']
+    del galids_dct['geq10.0_le10.5']
     
     with h5py.File(catname, 'r') as cat:
         cosmopars = {key: item for key, item in cat['Header/cosmopars'].attrs.items()}
