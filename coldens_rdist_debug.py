@@ -218,7 +218,89 @@ def test_stampsize(galdata, cosmopars):
         print('in halo mass bins:\n{}'.format(\
               [keymatch[np.where(gid == allids)[0][0]] for gid in gid_fails]))
     return passed
-                
+
+def test_rdists_sl_from_haloids(galdata, cosmopars):
+    '''
+    test whether input distances are processed as expected
+    '''
+    print('Testing radius parsing rdists_sl_from_haloids')
+    
+    catname = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    
+    rmax_r200c = 4.
+    
+    galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids() 
+    maxradii_mhbins = {key: 1.1 * cu.R200c_pkpc(10**14.6, cosmopars) if key == 'geq14.0'\
+                            else 1.1 * cu.R200c_pkpc(10**(float(key.split('_')[1][2:])), cosmopars)\
+                       for key in galids_dct} 
+    # there seem to be issues with these bins and they aren't going to be in
+    # the plots anyway
+    #del galids_dct['geq9.0_le9.5']
+    #del galids_dct['geq9.5_le10.0']
+    #del galids_dct['geq10.0_le10.5']
+    allids = [gid for key in galids_dct.keys() for gid in galids_dct[key]]
+    gkeys = list(galids_dct.keys())
+    keymatch = [gkeys[np.where([gid in galids_dct[key] for key in gkeys])[0][0]] for gid in allids]
+    mindist_pkpc = rmax_r200c * np.array([maxradii_mhbins[gkey] for gkey in keymatch])
+    ref_mindist_pkpc = np.copy(mindist_pkpc)
+    
+    galids = np.array(allids)
+    ## from rdists_sl_from_haloids
+    with h5py.File(catname, 'r') as fi:
+        z = fi['Header/cosmopars'].attrs['z']
+        R200c_cMpc = np.array(fi['R200c_pkpc']) * 1e-3 * (1. + z)
+        if mindist_pkpc is None:
+            mindist_cMpc = 0.
+        else:
+            mindist_cMpc = mindist_pkpc * 1e-3 * (1. + z)
+        #centres_cMpc = np.array([np.array(fi['Xcop_cMpc']), np.array(fi['Ycop_cMpc']), np.array(fi['Zcop_cMpc'])]).T
+        ids   = np.array(fi['galaxyid'])
+        cosmopars = {key: item for (key, item) in fi['Header/cosmopars'].attrs.items()}
+        #boxsize = cosmopars['boxsize'] / cosmopars['h']
+        
+        ## unused in this case
+        #if velspace:    
+        #    vpec = np.array(fi['V%spec_kmps'%axname]) * 1e5 # cm/s
+        #    vpec *= 1. / (cu.Hubble(cosmopars['z'], cosmopars=cosmopars) * cu.c.cm_per_mpc * cosmopars['a']) # cm/s -> H.f. cMpc  
+        #    centres_cMpc[:, Axis3] += vpec 
+        #    centres_cMpc[:, Axis3] %= boxsize
+        #
+        #if offset_los != 0.:
+        #    centres_cMpc[:, Axis3] += offset_los
+        #    centres_cMpc[:, Axis3] %= boxsize
+    
+    if isinstance(galids, str):
+        if galids == 'all':
+            halos = ids
+            R200c = R200c_cMpc
+            #centres = centres_cMpc
+        else:
+            raise ValueError('galids should be an iterable of galaxy ids or "all", not %s'%galids)
+    else:
+        inds = np.array([np.where(ids == galid)[0][0] for galid in galids])
+        halos = ids[inds]
+        R200c = R200c_cMpc[inds]
+        #centres = centres_cMpc[inds, :]
+    
+    adjustscale = rmax_r200c * R200c < mindist_cMpc
+    if np.sum(adjustscale) > 0:
+        rmax_r200c = np.ones(len(halos)) * rmax_r200c 
+        if hasattr(mindist_cMpc, '__len__'):
+            _mindist_cMpc = mindist_cMpc[adjustscale]
+        else:
+            _mindist_cMpc = mindist_cMpc            
+        rmax_r200c[adjustscale] = _mindist_cMpc / R200c[adjustscale]
+    
+    ref_mindist = ref_mindist_pkpc * 1e-3 / cosmopars['a']
+    passed = np.all(rmax_r200c * R200c >= ref_mindist)
+    if passed:
+        print('test passed')
+    else:
+        print('test failed:')
+        print('targets: {}'.format(ref_mindist))
+        print('used:    {}'.format(rmax_r200c * R200c))
+    return passed
+    
 def main():
     galdata, cosmopars = get_galdata()
     
@@ -229,8 +311,10 @@ def main():
     print('\n\n')
     res_st = test_stampsize(galdata, cosmopars)
     print('\n\n')
+    res_ps = test_rdists_sl_from_haloids(galdata, cosmopars)
+    print('\n\n')
     
-    if np.all([res_cu, res_rh, res_st]):
+    if np.all([res_cu, res_rh, res_st, res_ps]):
         print('All tests passed')
     else:
         if not res_cu:
@@ -239,7 +323,8 @@ def main():
             print('runhistograms stamp radii setting failed')
         if not res_st:
             print('extracted stamp radii were too small')
-            
+        if not res_ps:
+            print('rdists_sl_from_haloids parsed the radii incorrectly')    
 if __name__ == '__main__':
     main()
     
