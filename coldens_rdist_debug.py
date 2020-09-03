@@ -6,7 +6,15 @@ Created on Wed Sep  2 13:11:08 2020
 @author: Nastasha
 
 Something keeps stopping my radial profiles from stamps going out as far as 
-I want. This script is to figure out what. For use on cosma
+I want. This script is to figure out what. For use on cosma.
+
+It seems the stored rscales * rmax in the stamps hdf5 file are too small, and
+they get stored as input into stamps_sl_hdf5 (code inspection).
+
+However, mindist_pkpc seems to be calculated correctly in runhistograms, and
+calculated right in rdists_sl_from_haloids.
+
+
 
 """
 
@@ -308,7 +316,8 @@ def test_input_stampsize(galdata, cosmopars):
     '''
     test if the (stored) rscales * rmax are what they should be
     
-    conclusion: they are not, 
+    conclusion: they are not, and the difference seems to be consistent with 
+                previously found differences
     '''
     print('Testing whether the stored target stamp size are what they should be')
     passed = True
@@ -367,7 +376,7 @@ def test_input_stampsize(galdata, cosmopars):
             else:
                 passed = False
                 fails = np.where(rtarget_cMpc < (1. - 1e-7) * mindist_pkpc * 1e-3 / cosmopars['a'])
-                print('Stored target sizes were too small {} / {}:'.format(\
+                print('Stored target sizes were too small ({} / {}):'.format(\
                       len(rmax_rscales) - len(fails[0]), len(rmax_rscales)))
                 print('target: {}'.format(mindist_pkpc[fails] * 1e-3 / cosmopars['a']))
                 print('stored: {}'.format(rtarget_cMpc[fails]))
@@ -383,11 +392,12 @@ def main():
     print('\n\n')
     res_rh = test_inputsettings(galdata, cosmopars)
     print('\n\n')
-    #res_st = test_stampsize(galdata, cosmopars)
-    #print('\n\n')
-    res_st = False
-    #res_ps = test_rdists_sl_from_haloids(galdata, cosmopars)
-    res_ps = True
+    res_st = test_stampsize(galdata, cosmopars)
+    print('\n\n')
+    #res_st = False
+    res_ps = test_rdists_sl_from_haloids(galdata, cosmopars)
+    #res_ps = True
+    print('\n\n')
     res_in = test_input_stampsize(galdata, cosmopars)
     print('\n\n')
     
