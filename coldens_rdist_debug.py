@@ -356,12 +356,12 @@ def test_input_stampsize(galdata, cosmopars):
             reorder = np.array([np.where(gid == allids)[0][0] for gid in galids])
             rtarget_cMpc = rtarget_cMpc[reorder]
             
-            if np.all(rtarget_cMpc >= (1. - 1e-7) * mindist_pkpc * 1e3 * cosmopars['a']):
+            if np.all(rtarget_cMpc >= (1. - 1e-7) * mindist_pkpc * 1e-3 / cosmopars['a']):
                 print('Stored target sizes match what they should be')
             else:
                 passed = False
                 print('Stored target sizes were too small:')
-                fails = np.where(rtarget_cMpc < (1. - 1e-7) * mindist_pkpc * 1e3 * cosmopars['a'])
+                fails = np.where(rtarget_cMpc < (1. - 1e-7) * mindist_pkpc * 1e-3 / cosmopars['a'])
                 print('target: {}'.format(mindist_pkpc[fails] * 1e3 * cosmopars['a']))
                 print('stored: {}'.format(rtarget_cMpc))
                 
