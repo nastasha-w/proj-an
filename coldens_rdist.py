@@ -930,12 +930,16 @@ def rdists_sl_from_selection(base, szcens, L_x, npix_x,\
     if np.any([sel[0] == 'galaxyid' for sel in selection]):
         si = np.where([sel[0] == 'galaxyid' for sel in selection])[0][0]
         gids_in = selection[si][1]
-        subset = np.array([gid in galids for gid in gids_in])
+        subset = np.array([gid in galids[0] for gid in gids_in])
         gids_sel = gids_in[subset]
-        if set(gids_sel) != set(galids):
+        if set(gids_sel) != set(galids[0]):
+            if set(gids_sel).issubset(galids[0]):
+                print('galaxy ids missing from the intended subset selection')
+            else:
+                print('galaxy ids selected contradict selection criteria')
             raise RuntimeError('rdists_sl_from_selection: something has gone wrong in the halo selection')
-        order = np.array([np.where(gid == galids)[0][0] for gid in gids_sel])
-        galids = galids[order]
+        order = np.array([np.where(gid == galids[0])[0][0] for gid in gids_sel])
+        galids[0] = galids[0][order]
         
     if trackprogress:
         print('applying selection')
