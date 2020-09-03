@@ -292,7 +292,7 @@ def test_rdists_sl_from_haloids(galdata, cosmopars):
         rmax_r200c[adjustscale] = _mindist_cMpc / R200c[adjustscale]
     
     ref_mindist = ref_mindist_pkpc * 1e-3 / cosmopars['a']
-    passed = np.all(rmax_r200c * R200c >= ref_mindist)
+    passed = np.all(rmax_r200c * R200c >= ref_mindist * (1. - 1e-7)) # allow fp error diffs
     if passed:
         print('test passed')
     else:
