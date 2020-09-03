@@ -360,9 +360,10 @@ def test_input_stampsize(galdata, cosmopars):
                 print('Stored target sizes match what they should be')
             else:
                 passed = False
-                print('Stored target sizes were too small:')
                 fails = np.where(rtarget_cMpc < (1. - 1e-7) * mindist_pkpc * 1e-3 / cosmopars['a'])
-                print('target: {}'.format(mindist_pkpc[fails] * 1e3 * cosmopars['a']))
+                print('Stored target sizes were too small {} / {}:'.format(\
+                      len(rmax_rscales) - len(fails[0]), len(rmax_rscales)))
+                print('target: {}'.format(mindist_pkpc[fails] * 1e-3 / cosmopars['a']))
                 print('stored: {}'.format(rtarget_cMpc))
                 
     return passed
