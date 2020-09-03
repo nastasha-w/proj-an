@@ -4258,7 +4258,7 @@ if jobind in range(30177, 30195):
     
     mapbase = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
     mapname = ol.ndir + mapbase.format(line=line)
-    stampname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'%((mapname.split('/')[-1][:-5])%('-all'), numsl)
+    stampname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'%((mapname.split('/')[-1][:-5])%('-all'), numsl)
     outfile = stampname.split('/')[-1]
     outfile = ol.pdir + 'radprof/radprof_' + outfile
     
