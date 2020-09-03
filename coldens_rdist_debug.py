@@ -338,7 +338,7 @@ def test_input_stampsize(galdata, cosmopars):
 
     #gid_fails = []
     allids = np.array(allids)
-    for line in lines[:1]:
+    for line in lines[:1]: # doesn't seem to dpeend on the line, and there is no clear reason it should
         print('Checking {line}'.format(line=line))
         with h5py.File(fdir + fbase.format(line=line)) as fi:
             galids = fi['selection/galaxyid'][:]
@@ -379,10 +379,12 @@ def main():
     #res_st = test_stampsize(galdata, cosmopars)
     #print('\n\n')
     res_st = False
-    res_ps = test_rdists_sl_from_haloids(galdata, cosmopars)
+    #res_ps = test_rdists_sl_from_haloids(galdata, cosmopars)
+    res_ps = True
+    res_in = test_input_stampsize(galdata, cosmopars)
     print('\n\n')
     
-    if np.all([res_cu, res_rh, res_st, res_ps]):
+    if np.all([res_cu, res_rh, res_st, res_ps, res_in]):
         print('All tests passed')
     else:
         if not res_cu:
@@ -392,7 +394,9 @@ def main():
         if not res_st:
             print('extracted stamp radii were too small')
         if not res_ps:
-            print('rdists_sl_from_haloids parsed the radii incorrectly')    
+            print('rdists_sl_from_haloids parsed the radii incorrectly')  
+        if not res_in:
+            print('stored max. radii in stamps do not match target inputs')  
 if __name__ == '__main__':
     main()
     
