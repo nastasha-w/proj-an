@@ -370,7 +370,7 @@ def test_input_stampsize(galdata, cosmopars):
                 print('Stored target sizes were too small {} / {}:'.format(\
                       len(rmax_rscales) - len(fails[0]), len(rmax_rscales)))
                 print('target: {}'.format(mindist_pkpc[fails] * 1e-3 / cosmopars['a']))
-                print('stored: {}'.format(rtarget_cMpc))
+                print('stored: {}'.format(rtarget_cMpc[fails]))
                 
     return passed
 
