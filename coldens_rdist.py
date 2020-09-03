@@ -924,7 +924,19 @@ def rdists_sl_from_selection(base, szcens, L_x, npix_x,\
     if trackprogress:
         print('getting galaxy ids (selecthalos)')
     galids = sh.gethaloselections(catname, selections=[selection], names=[0])
-    
+    # selecthalos does not necessarily return things in the input order
+    # if galaxyids are input, preserve their order (first instance of galaxyid)
+    # neceassary for proper operation of mindist_pkpc as an array
+    if np.any([sel[0] == 'galaxyid' for sel in selection]):
+        si = np.where([sel[0] == 'galaxyid' for sel in selection])[0][0]
+        gids_in = selection[si][1]
+        subset = np.array([gid in galids for gid in gids_in])
+        gids_sel = gids_in[subset]
+        if set(gids_sel) != set(galids):
+            raise RuntimeError('rdists_sl_from_selection: something has gone wrong in the halo selection')
+        order = np.array([np.where(gid == galids)[0][0] for gid in gids_sel])
+        galids = galids[order]
+        
     if trackprogress:
         print('applying selection')
     if selection is not None and outname is not None:
