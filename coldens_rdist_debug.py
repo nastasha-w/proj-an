@@ -355,6 +355,8 @@ def test_input_stampsize(galdata, cosmopars):
             rtarget_cMpc = rmax_rscales * rscales_cMpc
             reorder = np.array([np.where(gid == allids)[0][0] for gid in galids])
             rtarget_cMpc = rtarget_cMpc[reorder]
+            if not np.all(galids[reorder] == allids):
+                raise RuntimeError('comparing different galaxies in array comps.')
             
             if np.all(rtarget_cMpc >= (1. - 1e-7) * mindist_pkpc * 1e-3 / cosmopars['a']):
                 print('Stored target sizes match what they should be')
