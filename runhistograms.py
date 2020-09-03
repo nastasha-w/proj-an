@@ -4240,7 +4240,7 @@ if jobind in range(30159, 30177):
                            **kwargs)
             
 
-### single-line emission profiles: log r bins, from bins up to 4 R200c
+### single-line emission profiles: log r bins, from bins up to 3.5 R200c
 if jobind in range(30177, 30195):
     
     halocat = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'   
@@ -4258,7 +4258,7 @@ if jobind in range(30177, 30195):
     
     mapbase = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
     mapname = ol.ndir + mapbase.format(line=line)
-    stampname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min4R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'%((mapname.split('/')[-1][:-5])%('-all'), numsl)
+    stampname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'%((mapname.split('/')[-1][:-5])%('-all'), numsl)
     outfile = stampname.split('/')[-1]
     outfile = ol.pdir + 'radprof/radprof_' + outfile
     
@@ -4281,7 +4281,7 @@ if jobind in range(30177, 30195):
         # hmkeys format: 'geq10.0_le10.5' or 'geq14.0'
         # extracted out to max(R200c in bin)
         minmass_Msun = 10**(float(hmkey.split('_')[0][3:]))
-        maxdist_pkpc = 4. * cu.R200c_pkpc(minmass_Msun, cosmopars)
+        maxdist_pkpc = 3.5 * cu.R200c_pkpc(minmass_Msun * 10**0.5, cosmopars)
         # lin-log bins: lin 10 pkpc up to 100 kpc, then 0.1 dex
         rbins_lin_pkpc = np.arange(0., 105., 10.)
         rbins_log_pkpc = 10.**(np.arange(2., np.log10(maxdist_pkpc), 0.1))

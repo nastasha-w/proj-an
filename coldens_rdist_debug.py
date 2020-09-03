@@ -17,6 +17,7 @@ calculated right in rdists_sl_from_haloids.
 Issue found: selecthalos took the galaxyid selection and returned the ids in 
 a different order, so they didn't match mindist_pkpc as they should
 
+fixed -> only a few very minor undershoots (<~ 0.001 relative)
 """
 
 import os
