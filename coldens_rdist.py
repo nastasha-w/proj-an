@@ -2356,9 +2356,9 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
                     raise RuntimeError('filenames_fills in the file Header saved in an unrecognized way:\n{}'.format(fills))
             else: 
                 fills = [fill.decode() for fill in fills]
-            for fill in fills:
-                st = 'Header/{fill}/inputpars/cosmopars'.format(fill=fill)
-                print('For {fill}, cosmopars found {}'.format(st in _file, fill=fill))
+            #for fill in fills:
+            #    st = 'Header/{fill}/inputpars/cosmopars'.format(fill=fill)
+            #    print('For {fill}, cosmopars found {}'.format(st in _file, fill=fill))
             
             _cps = [{key: val for key, val in \
                     _file['Header/{fill}/inputpars/cosmopars'.format(fill=fill)].attrs.items()}\
@@ -2444,6 +2444,7 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
             pixsize_cMpc1 = _file['Header'].attrs['pixel_size_y_cMpc']
             axis = _file['Header'].attrs['axis'].decode()
             logval = bool(_file['Header'].attrs['logvalues'])
+            period = cosmopars['boxsize'] / cosmopars['h']
             #print(logval)
             if axis == 'z':
                 cen0 = cen_simx_cMpc[gind_cat]
@@ -2458,8 +2459,10 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
             pos = np.indices(stamp.shape)
             pos0 = pos[0]
             pos1 = pos[1]
-            delta0 = llc_cMpc[0] + (pos0 + 0.5) * pixsize_cMpc0 - cen0
-            delta1 = llc_cMpc[1] + (pos1 + 0.5) * pixsize_cMpc1 - cen1
+            delta0 = (llc_cMpc[0] + (pos0 + 0.5) * pixsize_cMpc0 - cen0 \
+                      + 0.5 * period) % period - 0.5 * period
+            delta1 = (llc_cMpc[1] + (pos1 + 0.5) * pixsize_cMpc1 - cen1 \
+                      + 0.5 * period) % period - 0.5 * period
             dist2 = delta0**2 + delta1**2
             
             if runit == 'R200c':

@@ -4291,6 +4291,7 @@ if jobind in range(30177, 30195):
         rbins_pkpc = np.append(rbins_lin_pkpc[:-1], rbins_log_pkpc)
         
         for kwargs in kwarg_opts:
+            print('Using kwargs {}'.format(kwargs))
             if kwargs['runit'] == 'pkpc':
                 rbins = rbins_pkpc
             else:
