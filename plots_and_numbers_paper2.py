@@ -1850,6 +1850,11 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True,\
         ytype='fcov'
         yvals_toplot = obslims
         yvals_toplot.update(obslims_lynxxgs)
+    elif var == 'main-fcov-obs-Jukka':
+        highlightcrit = None
+        ytype='fcov'
+        yvals_toplot = obslims
+        yvals_toplot.update({'o6': [13.]})
     if lowmass:
         techvars_touse = [0, 1]
     else:
@@ -5525,6 +5530,9 @@ def calc_covfrac_radius(fc=0.5, limset='break'):
     elif limset == 'obs_lynxxgs':
         lims = obslims_lynxxgs
         ions = ['o7', 'ne9', 'o8', 'fe17']
+    elif limset == 'Jukka':
+        lims = {'o6': [13.]}
+        ions = ['o6']
 
     Ms_edges = np.array([8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.7], dtype=np.float32)
 
