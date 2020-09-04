@@ -3111,13 +3111,13 @@ if jobind in range(20295, 20313):
                          numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
                          axis='z', velspace=False, offset_los=0., stamps=True,\
                          trackprogress=True)
-# try number 3
+# try number 3/4/5
 if jobind in range(20313, 20331): 
     szcens = [str(i) for i in np.arange(16)/16. * 100. + 100./32.]
     L_x = 100.
     npix_x = 32000
     rmin_r200c = 0.
-    rmax_r200c = 4.
+    rmax_r200c = 3.5
     
     catname = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
     with h5py.File(catname, 'r') as cat:
@@ -3163,7 +3163,7 @@ if jobind in range(20313, 20331):
     basename = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
     filenames = {line: ol.ndir + basename.format(line=line) for line in lines}
     filename = filenames[line]
-    outname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min4R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'%((filename.split('/')[-1][:-5])%('-all'), numsl)
+    outname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'%((filename.split('/')[-1][:-5])%('-all'), numsl)
     
     print('Calling rdists_sl_from_selection')
     crd.rdists_sl_from_selection(filename, szcens, 'dontusethis', 'alsonotthis',\
@@ -3173,7 +3173,7 @@ if jobind in range(20313, 20331):
                          numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
                          axis='z', velspace=False, offset_los=0., stamps=True,\
                          trackprogress=True)
-        
+ 
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################
@@ -4240,11 +4240,14 @@ if jobind in range(30159, 30177):
                            **kwargs)
             
 
-### single-line emission profiles: log r bins, from bins up to 4 R200c
+### single-line emission profiles: log r bins, from bins up to 3.5 R200c
 if jobind in range(30177, 30195):
     
     halocat = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'   
     galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids()
+    del galids_dct['geq9.0_le9.5']
+    del galids_dct['geq9.5_le10.0']
+    del galids_dct['geq10.0_le10.5']
     
     with h5py.File(catname, 'r') as cat:
         cosmopars = {key: item for key, item in cat['Header/cosmopars'].attrs.items()}
@@ -4258,7 +4261,7 @@ if jobind in range(30177, 30195):
     
     mapbase = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
     mapname = ol.ndir + mapbase.format(line=line)
-    stampname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min4R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'%((mapname.split('/')[-1][:-5])%('-all'), numsl)
+    stampname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'%((mapname.split('/')[-1][:-5])%('-all'), numsl)
     outfile = stampname.split('/')[-1]
     outfile = ol.pdir + 'radprof/radprof_' + outfile
     
@@ -4281,7 +4284,7 @@ if jobind in range(30177, 30195):
         # hmkeys format: 'geq10.0_le10.5' or 'geq14.0'
         # extracted out to max(R200c in bin)
         minmass_Msun = 10**(float(hmkey.split('_')[0][3:]))
-        maxdist_pkpc = 4. * cu.R200c_pkpc(minmass_Msun, cosmopars)
+        maxdist_pkpc = 3.5 * cu.R200c_pkpc(minmass_Msun * 10**0.5, cosmopars)
         # lin-log bins: lin 10 pkpc up to 100 kpc, then 0.1 dex
         rbins_lin_pkpc = np.arange(0., 105., 10.)
         rbins_log_pkpc = 10.**(np.arange(2., np.log10(maxdist_pkpc), 0.1))
