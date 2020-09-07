@@ -1810,7 +1810,8 @@ def plot_radprof_limited(fontsize=fontsize):
 # percentiles, covering fractions, CDDF breaks, detection limits, Athena X-IFU
 # detectablility, M*
 def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True,\
-                       talkversion=False, talksubversion=1, num=0):
+                       talkversion=False, talksubversion=1, num=0,
+                       fmt='pdf'):
     '''
     var:        main: percenitles in M* bins
                 main-fcov-break for covering fractions at the CDDF break
@@ -2245,9 +2246,12 @@ def plot_radprof_mstar(var='main', fontsize=fontsize, lowmass=True,\
                    fontsize=fontsize, ncol=2, loc='lower center',\
                    bbox_to_anchor=(0.5, 0.))
         lax.axis('off')
-
-    plt.savefig(imgname, format='pdf', bbox_inches='tight')
-    
+    if fmt == 'pdf':
+        plt.savefig(imgname, format='pdf', bbox_inches='tight')
+    elif fmt == 'png':
+        imgname = imgname.replace('.pdf', '.' + fmt)
+        plt.savefig(imgname, format=fmt, bbox_inches='tight', dpi=600)
+        
 # 2d radprof, zev, radial profiles, redshift evolution
 def plot_radprof_zev(fontsize=fontsize):
     '''
