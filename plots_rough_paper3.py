@@ -1835,8 +1835,8 @@ def plot_radprof4():
     ys = [('mean',), ('perc', 50.)]
     ykey_mean = ('mean',)
     ykey_median = ('perc', 50.)
-    ls_mean = 'solid'
-    ls_median = 'dashed'
+    ls_mean = 'dotted'
+    ls_median = 'solid'
     mmin = 11.
     
     outname = mdir + 'radprof2d_10pkpc-0.1dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
@@ -1895,13 +1895,14 @@ def plot_radprof4():
         _cax = fig.add_subplot(grid[nrows - 1, ind_min:])
         _cax.axis('off')
         _l, _b, _w, _h = (_cax.get_position()).bounds
-        wmargin = panelwidth * 0.04 / figwidth
+        wmargin = panelwidth * 0.1 / figwidth
         hmargin = panelheight * 0.15 / figheight
-        lspace = 0.45 * panelwidth / figwidth
-        cax = fig.add_axes([_l + 2. * wmargin + lspace, _b + hmargin,\
-                            _w - lspace - 2.* wmargin, _h - 2. * hmargin])
-        lax = fig.add_axes([_l + wmargin, _b + hmargin,\
-                            lspace, _h - 2. * hmargin])
+        lspace = 0.3 * panelheight / figheight
+        cspace = _h - 2. * hmargin - lspace
+        cax = fig.add_axes([_l + wmargin + lspace, _b + hmargin,\
+                            _w - 2.* wmargin, cspace])
+        lax = fig.add_axes([_l + wmargin, _b  + hmargin + cspace,\
+                            _w - 2. * wmargin, lspace])
         lax.axis('off')
     labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
     labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
@@ -1968,8 +1969,8 @@ def plot_radprof4():
             handles = [mlines.Line2D([],[], label=label, color='black', ls=ls,\
                                      linewidth=2.) \
                        for ls, label in zip([ls_mean, ls_median], ['mean', 'median'])]
-            lax.legend(handles=handles, fontsize=fontsize - 1, loc='upper center',\
-                      bbox_to_anchor=(0.5, 1.), handlelength=1.5)
+            lax.legend(handles=handles, fontsize=fontsize, loc='upper center',\
+                      bbox_to_anchor=(0.5, 1.), handlelength=2.)
         
         
     # sync plot ranges
