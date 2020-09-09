@@ -4324,7 +4324,7 @@ if jobind in range(30177, 30195):
                            **kwargs)
             
 ### single-line emission profiles: larger log r bins, from bins up to 3.5 R200c
-if jobind in range(30177, 30195):
+if jobind in range(30195, 30212):
     
     halocat = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'   
     galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids()
@@ -4338,7 +4338,7 @@ if jobind in range(30177, 30195):
     lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
             'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
             'c6', 'n7']
-    lineind = jobind - 30177
+    lineind = jobind - 30195
     line = lines[lineind]
     numsl = 1
     
