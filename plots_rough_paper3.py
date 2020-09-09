@@ -1952,7 +1952,7 @@ def plot_radprof4():
         linelabel = ild.getnicename(ion)
         eng = '{:.4f} eV'.format(ol.line_eng_ion[line] / c.ev_to_erg)
         linelabel = linelabel + '\n' + eng
-        ax.text(0.98, 0.98, nicenames_lines[line], fontsize=fontsize,\
+        ax.text(0.98, 0.98, linelabel, fontsize=fontsize,\
                 transform=ax.transAxes, horizontalalignment='right',\
                 verticalalignment='top')
         if li == 0:
