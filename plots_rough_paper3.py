@@ -1928,7 +1928,10 @@ def plot_radprof4():
             
             # indicate R200c
             mmin = 10**me
-            mmax = 10**medges[mi + 1] if mi < len(medges) else 10**14.53 # max mass in 
+            if mi < len(medges):
+                mmax = 10**medges[mi + 1]
+            else:
+                mmax = 10**14.53 # max mass in the box at z=0.1
             rs = cu.R200c_pkpc(np.array([mmin, mmax]), cosmopars)
             ax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.3, color=colordct[me])
             
