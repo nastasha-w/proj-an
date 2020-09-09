@@ -1919,7 +1919,8 @@ def plot_radprof4():
         labelx = numlines -1 - li < ncols
         pu.setticks(ax, fontsize=fontsize, labelleft=labely, labelbottom=labelx)
         ax.set_xscale('log')
-
+        ax.grid(b=True)
+        
         filename = rfilebase.format(line=line)
         yvals, bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                                      binset='binset_0', retlog=True)
@@ -1928,12 +1929,12 @@ def plot_radprof4():
             tag = seltag_keys[me]
             
             # plot profiles
-            for ykey, ls in zip([ykey_mean, ykey_median], [ls_mean, ls_median]):
+            for ykey, ls, zo in zip([ykey_mean, ykey_median], [ls_mean, ls_median], [0, 1]):
                 ed = bins[tag][ykey]
                 vals = yvals[tag][ykey]
                 cens = ed[:-1] + 0.5 * np.diff(ed)
                 ax.plot(cens, vals, color=colordct[me], linewidth=2.,\
-                        path_effects=patheff, linestyle=ls)
+                        path_effects=patheff, linestyle=ls, zorder=zo)
             
             # indicate R200c
             mmin = 10**me
@@ -1942,7 +1943,7 @@ def plot_radprof4():
             else:
                 mmax = 10**14.53 # max mass in the box at z=0.1
             rs = cu.R200c_pkpc(np.array([mmin, mmax]), cosmopars)
-            ax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.2, color=colordct[me])
+            ax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1, color=colordct[me])
         
         # might not work for generic lines
         ion = line.split('-')[0]
@@ -1954,21 +1955,21 @@ def plot_radprof4():
         lead = int(np.ceil(np.log10(ev)))
         appr = str(np.round(ev, numdig - lead))
         if '.' in appr:
-            if len(appr) < numdig + 2: # trailing zeros after decimal point cut off
-                appr = appr + '0' * (numdig + 2 - len(appr))
-            elif len(appr) >= numdig + 2 and appr[-2:] == '.0':
+            if len(appr) < numdig + 1: # trailing zeros after decimal point cut off
+                appr = appr + '0' * (numdig + 1 - len(appr))
+            elif len(appr) >= numdig + 2 and appr[-2:] == '.0': # .0 added to floats: remove
                 appr = appr[:-2]
         eng = '{} eV'.format(appr)
         linelabel =  eng + '\n' + linelabel 
-        ax.text(0.98, 0.98, linelabel, fontsize=fontsize,\
+        ax.text(0.98, 0.97, linelabel, fontsize=fontsize,\
                 transform=ax.transAxes, horizontalalignment='right',\
                 verticalalignment='top')
         if li == 0:
             handles = [mlines.Line2D([],[], label=label, color='black', ls=ls,\
                                      linewidth=2.) \
                        for ls, label in zip([ls_mean, ls_median], ['mean', 'median'])]
-            lax.legend(handles=handles, fontsize=fontsize - 1, loc='center',\
-                      bbox_to_anchor=(0.5, 0.5), handlelength=1.5)
+            lax.legend(handles=handles, fontsize=fontsize - 1, loc='upper center',\
+                      bbox_to_anchor=(0.5, 1.), handlelength=1.5)
         
         
     # sync plot ranges
