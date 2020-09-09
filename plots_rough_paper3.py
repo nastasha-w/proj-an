@@ -1419,7 +1419,6 @@ def plot_radprof2(measure='mean', mmin=10.0, rbinning=0):
     outname = outname.replace('.', 'p')
     outname = outname + '.pdf'
     
-    rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
     
@@ -1568,7 +1567,7 @@ def plot_radprof2(measure='mean', mmin=10.0, rbinning=0):
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     
-def plot_radprof3(mmin=10.0, numex=4):
+def plot_radprof3(mmin=10.0, numex=4, rbinning=0):
     '''
     plot SB mean, median and scatter for lines and halo mass bins
     panels for differnt bins, different plots for different lines 
@@ -1579,6 +1578,8 @@ def plot_radprof3(mmin=10.0, numex=4):
               plots)
     mmin:     minimum halo mass to show (log10 Msun, 
               value options: 9.0, 9.5, 10., ... 14.)
+    rbinning: 0 -> 10 pkpc bins
+              1 -> 10 pkpc bins up to 100 pkpc, then 0.1 dex bins
     '''
     
     print('Values are calculated from 3.125^2 ckpc^2 pixels in 10 pkpc annuli')
@@ -1592,7 +1593,11 @@ def plot_radprof3(mmin=10.0, numex=4):
                mppe.Stroke(linewidth=linewidth, foreground="w"),\
                mppe.Normal()]
     
-    rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
+    if rbinning == 0:
+        rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
+    elif rbinning == 1:
+        rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+   
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
     
@@ -1661,8 +1666,14 @@ def plot_radprof3(mmin=10.0, numex=4):
         l_ncols = ncols 
     
     for line in lines:
-        outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3p5_SmAb_C2Sm_6p25slice_noEOS_to-2R200c_1000_centrals_' +\
-                  'measurecomp_{}.pdf'.format(line)
+        if rbinning == 0:
+            outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+                          'measurecomp_{}'.format(line)
+        elif rbinning == 1:
+            outname = mdir + 'radprof2d_10pkpc-0.1dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+                          'measurecomp_{}'.format(line)
+        outname = outname.replace('.', 'p')
+        outname = outname + '.pdf'  
                   
         fig = plt.figure(figsize=(figwidth, figheight))
         fig.suptitle(nicenames_lines[line], fontsize=fontsize)
