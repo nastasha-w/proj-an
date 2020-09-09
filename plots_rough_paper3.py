@@ -1882,18 +1882,26 @@ def plot_radprof4():
     if cax_right:
         if nrows > 3: 
             csl = slice(nrows // 2 - 1, nrows // 2 + 2, None)
+            lsl = slice(0, 1, None)
+        elif nrows > 1:
+            csl = slice(1, None, None)
+            lsl = slice(0, 1, None)
         else:
-            csl = slice(None, None, None)
+            raise RuntimeError('Could not find a place for the legend and color bar at the right of the plot (1 row)')
         cax = fig.add_subplot(grid[csl, ncols])
+        lax = fig.add_subplot(grid[lsl, ncols])
     else:
         ind_min = ncols - (nrows * ncols - numlines)
         _cax = fig.add_subplot(grid[nrows - 1, ind_min:])
         _cax.axis('off')
         _l, _b, _w, _h = (_cax.get_position()).bounds
         margin = panelwidth * 0.1 / figwidth
-        cax = fig.add_axes([_l + margin, _b + margin,\
-                            _w - 2.* margin, _h - 2. * margin])
-        
+        lspace = 0.5 * panelwidth
+        cax = fig.add_axes([_l + 2. * margin + lspace, _b + margin,\
+                            _w - lspace - 3.* margin, _h - 2. * margin])
+        lax = fig.add_axes([_l + margin, _b + margin,\
+                            lspace, _h - 2. * margin])
+        lax.axis('off')
     labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
     labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
     labelax.set_xlabel(xlabel, fontsize=fontsize)
@@ -1933,7 +1941,7 @@ def plot_radprof4():
             else:
                 mmax = 10**14.53 # max mass in the box at z=0.1
             rs = cu.R200c_pkpc(np.array([mmin, mmax]), cosmopars)
-            ax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.3, color=colordct[me])
+            ax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.2, color=colordct[me])
         
         # might not work for generic lines
         ion = line.split('-')[0]
@@ -1950,7 +1958,7 @@ def plot_radprof4():
             handles = [mlines.Line2D([],[], label=label, color='black', ls=ls,\
                                      linewidth=2.) \
                        for ls, label in zip([ls_mean, ls_median], ['mean', 'median'])]
-            ax.legend(handles=handles, fontsize=fontsize, loc='lower left',\
+            lax.legend(handles=handles, fontsize=fontsize, loc='lower left',\
                       bbox_to_anchor=(0., 0.))
         
         
