@@ -665,7 +665,7 @@ def savestamps(center=(25., 25.), diameter=50., resolution=125.):
     basename = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5'
     for line in lines:
         if line == 'ne10':
-            filen_in = 'emission_ne10_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5'
+            filen_in = 'emission_ne10_L0100N1504_27_test3.6_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5'
         else:
             filen_in = basename.format(line=line)
         make_and_save_stamps(filen_in, filen_weight=None,\
