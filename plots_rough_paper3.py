@@ -1968,7 +1968,7 @@ def plot_radprof4():
                                      linewidth=2.) \
                        for ls, label in zip([ls_mean, ls_median], ['mean', 'median'])]
             lax.legend(handles=handles, fontsize=fontsize - 1, loc='center',\
-                      bbox_to_anchor=(0.5, 0.5), handellength=1.5)
+                      bbox_to_anchor=(0.5, 0.5), handlelength=1.5)
         
         
     # sync plot ranges
