@@ -1896,7 +1896,7 @@ def plot_radprof4():
         _cax.axis('off')
         _l, _b, _w, _h = (_cax.get_position()).bounds
         margin = panelwidth * 0.1 / figwidth
-        lspace = 0.5 * panelwidth
+        lspace = 0.5 * panelwidth / figwidth
         cax = fig.add_axes([_l + 2. * margin + lspace, _b + margin,\
                             _w - lspace - 3.* margin, _h - 2. * margin])
         lax = fig.add_axes([_l + margin, _b + margin,\
