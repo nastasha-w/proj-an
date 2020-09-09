@@ -1899,7 +1899,7 @@ def plot_radprof4():
         hmargin = panelheight * 0.15 / figheight
         lspace = 0.45 * panelwidth / figwidth
         cax = fig.add_axes([_l + 2. * wmargin + lspace, _b + hmargin,\
-                            _w - lspace - 3.* wmargin, _h - 2. * hmargin])
+                            _w - lspace - 2.* wmargin, _h - 2. * hmargin])
         lax = fig.add_axes([_l + wmargin, _b + hmargin,\
                             lspace, _h - 2. * hmargin])
         lax.axis('off')
@@ -1947,11 +1947,19 @@ def plot_radprof4():
         # might not work for generic lines
         ion = line.split('-')[0]
         while not ion[-1].isdigit():
-            ion = ion[:-1]
-            
+            ion = ion[:-1]            
         linelabel = ild.getnicename(ion)
-        eng = '{:.4f} eV'.format(ol.line_eng_ion[line] / c.ev_to_erg)
-        linelabel = linelabel + '\n' + eng
+        ev = ol.line_eng_ion[line] / c.ev_to_erg
+        numdig = 4
+        lead = int(np.ceil(np.log10(ev)))
+        appr = str(np.round(ev, numdig - lead))
+        if '.' in appr:
+            if len(appr) < numdig + 2: # trailing zeros after decimal point cut off
+                appr = appr + '0' * (numdig + 2 - len(appr))
+            elif len(appr) >= numdig + 2 and appr[-2:] == '.0':
+                appr = appr[:-2]
+        eng = '{} eV'.format(appr)
+        linelabel =  eng + '\n' + linelabel 
         ax.text(0.98, 0.98, linelabel, fontsize=fontsize,\
                 transform=ax.transAxes, horizontalalignment='right',\
                 verticalalignment='top')
@@ -1959,8 +1967,8 @@ def plot_radprof4():
             handles = [mlines.Line2D([],[], label=label, color='black', ls=ls,\
                                      linewidth=2.) \
                        for ls, label in zip([ls_mean, ls_median], ['mean', 'median'])]
-            lax.legend(handles=handles, fontsize=fontsize - 1, loc='lower left',\
-                      bbox_to_anchor=(0., 0.))
+            lax.legend(handles=handles, fontsize=fontsize - 1, loc='center',\
+                      bbox_to_anchor=(0.5, 0.5), handellength=1.5)
         
         
     # sync plot ranges
