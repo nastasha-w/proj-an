@@ -1335,7 +1335,7 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
     labelax.set_ylabel(ylabel, fontsize=fontsize)
     
     clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
-    cbar, colordct = add_cbar_mass(cax, cmapname='rainbow', massedges=medges,\
+    cbar, colordct = add_cbar_mass(cax, massedges=medges,\
              orientation=c_orientation, clabel=clabel, fontsize=fontsize,\
              aspect=c_aspect)
 
