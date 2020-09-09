@@ -1235,7 +1235,7 @@ def readin_3dprof_stacked(filename, Zelt='oxygen', weight='Mass',\
                 galids_main[mkey] = np.array(grp_t['galaxyids'])
     return hists_main, edges_main, galids_main
 
-def plot_radprof1(measure='mean', mmin=10.5, rbinning=0):
+def plot_radprof1(measure='mean', mmin=11., rbinning=0):
     '''
     plot mean or median radial profiles for each line and halo mass bin
     panels for different lines
@@ -1261,7 +1261,7 @@ def plot_radprof1(measure='mean', mmin=10.5, rbinning=0):
     if rbinning == 0:
         rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
     elif rbinning == 1:
-        rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-4R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
+        rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
     
