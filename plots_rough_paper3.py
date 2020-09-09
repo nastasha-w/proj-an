@@ -696,7 +696,7 @@ def plotstamps(filebase=None, halocat=None,\
         halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
     if filebase is None:
         filebase = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS_stamps.hdf5'
-    
+        filen_ne10 = 'emission_ne10_L0100N1504_27_test3.6_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS_stamps.hdf5'
     marklength = 10. #cMpc
     vmin = -12. # log10 photons / cm2 / s / sr 
     vtrans = -2.5
@@ -718,7 +718,10 @@ def plotstamps(filebase=None, halocat=None,\
     cosmoparss = {}
     snapshots = {}
     for line in lines:
-        filen = filebase.format(line=line)
+        if line == 'ne10':
+            filen = filen_ne10
+        else:
+            filen = filebase.format(line=line)
         try:
             with h5py.File(filen, 'r') as ft:
                 if groups[line] not in ft:
