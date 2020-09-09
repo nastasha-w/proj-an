@@ -1934,8 +1934,12 @@ def plot_radprof4():
                 mmax = 10**14.53 # max mass in the box at z=0.1
             rs = cu.R200c_pkpc(np.array([mmin, mmax]), cosmopars)
             ax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.3, color=colordct[me])
-            
+        
+        # might not work for generic lines
         ion = line.split('-')[0]
+        while not ion[-1].isdigit():
+            ion = ion[:-1]
+            
         linelabel = ild.getnicename(ion)
         eng = '{:.4f} eV'.format(ol.line_eng_ion[line] / c.ev_to_erg)
         linelabel = linelabel + '\n' + eng
