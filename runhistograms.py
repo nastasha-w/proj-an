@@ -3160,9 +3160,12 @@ if jobind in range(20313, 20331):
     line = lines[lineind]
     numsl = 1
     
-    basename = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
-    filenames = {line: ol.ndir + basename.format(line=line) for line in lines}
-    filename = filenames[line]
+    if line == 'ne10':
+        filename = ol.ndir + 'emission_ne10_L0100N1504_27_test3.6_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
+    else:
+        basename = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
+        filenames = {line: ol.ndir + basename.format(line=line) for line in lines}
+        filename = filenames[line]
     outname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'%((filename.split('/')[-1][:-5])%('-all'), numsl)
     
     print('Calling rdists_sl_from_selection')
