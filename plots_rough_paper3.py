@@ -1378,7 +1378,7 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     
 
-def plot_radprof2(measure='mean', mmin=10.0):
+def plot_radprof2(measure='mean', mmin=10.0, rbinning=0):
     '''
     plot mean or median radial profiles for each line and halo mass bin
     panels for different halo masses 
@@ -1388,6 +1388,8 @@ def plot_radprof2(measure='mean', mmin=10.0):
     measure:  'mean' or 'median'
     mmin:     minimum halo mass to show (log10 Msun, 
               value options: 9.0, 9.5, 10., ... 14.)
+    rbinning: 0 -> 10 pkpc bins
+              1 -> 10 pkpc bins out to 100 pkpc, then 0.1 dex bins
     '''
     print('Values are calculated from 3.125^2 ckpc^2 pixels in 10 pkpc annuli')
     print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb, C2 kernel')
@@ -1403,6 +1405,20 @@ def plot_radprof2(measure='mean', mmin=10.0):
            mppe.Stroke(linewidth=lw2, foreground="w"),\
            mppe.Normal()]
     
+    if rbinning == 0:
+        rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
+    elif rbinning == 1:
+        rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+   
+    if rbinning == 0:
+        outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+                      'halomasscomp_{}'.format(measure)
+    elif rbinning == 1:
+        outname = mdir + 'radprof2d_10pkpc-0.1dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+                      'halomasscomp_{}'.format(measure)
+    outname = outname.replace('.', 'p')
+    outname = outname + '.pdf'
+    
     rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
@@ -1411,8 +1427,16 @@ def plot_radprof2(measure='mean', mmin=10.0):
         ys = [('mean',)]
     else:
         ys = [('perc', 50.)]
-    outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
-                  'linecomp_{}.pdf'.format(measure)
+        
+    if rbinning == 0:
+        outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+                      'linecomp_{}'.format(measure)
+    elif rbinning == 1:
+        outname = mdir + 'radprof2d_10pkpc-0.1dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+                      'linecomp_{}'.format(measure)
+    outname = outname.replace('.', 'p')
+    outname = outname + '.pdf'              
+    
     medges = np.arange(mmin, 14.1, 0.5)
     seltag_keys = {medges[i]: 'geq{:.1f}_le{:.1f}'.format(medges[i], medges[i + 1])\
                                if i < len(medges) - 1 else\
@@ -1503,8 +1527,8 @@ def plot_radprof2(measure='mean', mmin=10.0):
             ed = bins[line][mtag][ykey]
             vals = yvals[line][mtag][ykey]
             cens = ed[:-1] + 0.5 * np.diff(ed)
-            ax.plot(cens, vals, color=linecolors[line], linewidth=2.,\
-                    path_effects=patheff, linestyle='dashed')
+            ax.plot(cens, vals, linewidth=2.,\
+                    path_effects=patheff, **lineargs[line])
             _max = max(_max, np.max(vals))
         if hi == len(medges) - 1:
             text = '$\\geq {:.1f}$'.format(hkey)
@@ -1534,9 +1558,10 @@ def plot_radprof2(measure='mean', mmin=10.0):
     #[ax.set_ylim(ymin, ymax) for ax in axes]
     
     ## legend
-    handles = [mlines.Line2D([], [], color=linecolors[line],\
+    handles = [mlines.Line2D([], [],\
                              label=nicenames_lines[line],\
-                             path_effects=pe2, linewidth=lw2)\
+                             path_effects=pe2, linewidth=lw2,
+                             **lineargs[line])\
                for line in lines]
     lax.legend(handles=handles, fontsize=fontsize, loc=l_loc,\
                bbox_to_anchor=l_bbox_to_anchor, ncol=l_ncols)
