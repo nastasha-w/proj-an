@@ -1895,12 +1895,13 @@ def plot_radprof4():
         _cax = fig.add_subplot(grid[nrows - 1, ind_min:])
         _cax.axis('off')
         _l, _b, _w, _h = (_cax.get_position()).bounds
-        margin = panelwidth * 0.1 / figwidth
-        lspace = 0.5 * panelwidth / figwidth
-        cax = fig.add_axes([_l + 2. * margin + lspace, _b + margin,\
-                            _w - lspace - 3.* margin, _h - 2. * margin])
-        lax = fig.add_axes([_l + margin, _b + margin,\
-                            lspace, _h - 2. * margin])
+        wmargin = panelwidth * 0.04 / figwidth
+        hmargin = panelheight * 0.15 / figheight
+        lspace = 0.45 * panelwidth / figwidth
+        cax = fig.add_axes([_l + 2. * wmargin + lspace, _b + hmargin,\
+                            _w - lspace - 3.* wmargin, _h - 2. * hmargin])
+        lax = fig.add_axes([_l + wmargin, _b + hmargin,\
+                            lspace, _h - 2. * hmargin])
         lax.axis('off')
     labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
     labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
@@ -1958,7 +1959,7 @@ def plot_radprof4():
             handles = [mlines.Line2D([],[], label=label, color='black', ls=ls,\
                                      linewidth=2.) \
                        for ls, label in zip([ls_mean, ls_median], ['mean', 'median'])]
-            lax.legend(handles=handles, fontsize=fontsize, loc='lower left',\
+            lax.legend(handles=handles, fontsize=fontsize - 1, loc='lower left',\
                       bbox_to_anchor=(0., 0.))
         
         
