@@ -27,6 +27,7 @@ import eagle_constants_and_units as c
 import cosmo_utils as cu
 import plot_utils as pu
 import make_maps_opts_locs as ol
+import ion_line_data as ild
 
 rho_to_nh = 0.752 / (c.atomw_H * c.u)
 cosmopars_eagle = {'omegab': c.omegabaryon,\
@@ -34,6 +35,14 @@ cosmopars_eagle = {'omegab': c.omegabaryon,\
                    'omegalambda': c.omegalambda,\
                    'h': c.hubbleparam,\
                   }
+cosmopars_27 = {'a': 0.9085634947881763,\
+                'boxsize': 67.77,\
+                'h': 0.6777,\
+                'omegab': 0.0482519,\
+                'omegalambda': 0.693,\
+                'omegam':  0.307,\
+                'z': 0.10063854175996956,\
+                }
 
 res_arcsec = {'Athena X-IFU': 5.,\
               'Athena WFI':  3.,\
@@ -1378,7 +1387,7 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     
 
-def plot_radprof2(measure='mean', mmin=10.0, rbinning=0):
+def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
     '''
     plot mean or median radial profiles for each line and halo mass bin
     panels for different halo masses 
@@ -1801,7 +1810,157 @@ def plot_radprof3(mmin=10.0, numex=4, rbinning=0):
         
         plt.savefig(outname, format='pdf', bbox_inches='tight')
         
+def plot_radprof4():
+    '''
+    plot mean and median profiles for the different lines in different halo 
+    mass bins
+    '''
+    
+    print('Values are calculated from 3.125^2 ckpc^2 pixels in 10 pkpc annuli')
+    print('up to 100 pkpc, then 0.1 dex bins up to ~3.5 R200c')
+    print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb, C2 kernel')
+    print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
+    
+    fontsize = 12
+    linewidth = 1.5
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),\
+               mppe.Stroke(linewidth=linewidth, foreground="w"),\
+               mppe.Normal()]
+    
+    rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+    cosmopars = cosmopars_27 # for virial radius indicators
+    xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
+    ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
+    
+    ys = [('mean',), ('perc', 50.)]
+    ykey_mean = ('mean',)
+    ykey_median = ('perc', 50.)
+    ls_mean = 'solid'
+    ls_median = 'dashed'
+    mmin = 11.
+    
+    outname = mdir + 'radprof2d_10pkpc-0.1dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+                      'halomasscomp_mean-median'
+    outname = outname.replace('.', 'p')
+    outname = outname + '.pdf'
+    
+    medges = np.arange(mmin, 14.1, 0.5)
+    seltag_keys = {medges[i]: 'geq{:.1f}_le{:.1f}'.format(medges[i], medges[i + 1])\
+                               if i < len(medges) - 1 else\
+                               'geq{:.1f}'.format(medges[i])\
+                    for i in range(len(medges))}
+    seltags = [seltag_keys[key] for key in seltag_keys]
+    
+    numlines = len(lines)
+    ncols = 4
+    nrows = (numlines - 1) // ncols + 1
+    figwidth = 11. 
+    caxwidth = 1.
 
+    if ncols * nrows - numlines >= 2:
+        cax_right = False
+        _ncols = ncols
+        panelwidth = figwidth / ncols
+        width_ratios = [panelwidth] * ncols
+        c_orientation = 'horizontal'
+        c_aspect = 0.08
+    else:
+        cax_right = True
+        _ncols = ncols
+        panelwidth = (figwidth - caxwidth) / ncols
+        width_ratios = [panelwidth] * ncols + [caxwidth]
+        c_orientation = 'vertical'
+        c_aspect = 10.
+        
+    panelheight = panelwidth    
+    figheight = panelheight * nrows
+    
+    fig = plt.figure(figsize=(figwidth, figheight))
+    grid = gsp.GridSpec(ncols=_ncols, nrows=nrows, hspace=0.0, wspace=0.0,\
+                        width_ratios=width_ratios)
+    axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(numlines)]
+    if cax_right:
+        if nrows > 3: 
+            csl = slice(nrows // 2 - 1, nrows // 2 + 2, None)
+        else:
+            csl = slice(None, None, None)
+        cax = fig.add_subplot(grid[csl, ncols])
+    else:
+        ind_min = ncols - (nrows * ncols - numlines)
+        _cax = fig.add_subplot(grid[nrows - 1, ind_min:])
+        _cax.axis('off')
+        _l, _b, _w, _h = (_cax.get_position()).bounds
+        margin = panelwidth * 0.1 / figwidth
+        cax = fig.add_axes([_l + margin, _b + margin,\
+                            _w - 2.* margin, _h - 2. * margin])
+        
+    labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
+    labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    labelax.set_xlabel(xlabel, fontsize=fontsize)
+    labelax.set_ylabel(ylabel, fontsize=fontsize)
+    
+    clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
+    cbar, colordct = add_cbar_mass(cax, massedges=medges,\
+             orientation=c_orientation, clabel=clabel, fontsize=fontsize,\
+             aspect=c_aspect)
+
+    for li, line in enumerate(lines):
+        ax = axes[li]
+        labely = li % ncols == 0
+        labelx = numlines -1 - li < ncols
+        pu.setticks(ax, fontsize=fontsize, labelleft=labely, labelbottom=labelx)
+        ax.set_xscale('log')
+
+        filename = rfilebase.format(line=line)
+        yvals, bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
+                                     binset='binset_0', retlog=True)
+
+        for mi, me in enumerate(medges):
+            tag = seltag_keys[me]
+            
+            # plot profiles
+            for ykey, ls in zip([ykey_mean, ykey_median], [ls_mean, ls_median]):
+                ed = bins[tag][ykey]
+                vals = yvals[tag][ykey]
+                cens = ed[:-1] + 0.5 * np.diff(ed)
+                ax.plot(cens, vals, color=colordct[me], linewidth=2.,\
+                        path_effects=patheff, linestyle=ls)
+            
+            # indicate R200c
+            mmin = 10**me
+            mmax = 10**medges[mi + 1] if mi < len(medges) else 10**14.53 # max mass in 
+            rs = cu.R200c_pkpc(np.array([mmin, mmax]), cosmopars)
+            ax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.3, color=colordct[me])
+            
+        ion = line.split('-')[0]
+        linelabel = ild.getnicename(ion)
+        eng = '{:.4f} eV'.format(ol.line_eng_ion[line] / c.ev_to_erg)
+        linelabel = linelabel + '\n' + eng
+        ax.text(0.98, 0.98, nicenames_lines[line], fontsize=fontsize,\
+                transform=ax.transAxes, horizontalalignment='right',\
+                verticalalignment='top')
+        if li == 0:
+            handles = [mlines.Line2D([],[], label=label, color='black', ls=ls,\
+                                     linewidth=2.) \
+                       for ls, label in zip([ls_mean, ls_median], ['mean', 'median'])]
+            ax.legend(handles=handles, fontsize=fontsize, loc='lower left',\
+                      bbox_to_anchor=(0., 0.))
+        
+        
+    # sync plot ranges
+    xlims = [ax.get_xlim() for ax in axes]
+    xmin = min([xlim[0] for xlim in xlims])
+    xmax = max([xlim[1] for xlim in xlims])
+    [ax.set_xlim(xmin, xmax) for ax in axes]
+
+    # three most energetic ions have very low mean SB -> impose limits
+    ylims = [ax.get_ylim() for ax in axes]
+    ymin = -5. #min([ylim[0] for ylim in ylims])
+    ymax = 2. #max([ylim[1] for ylim in ylims])
+    [ax.set_ylim(ymin, ymax) for ax in axes]
+    
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
+    
 def plot_emtables(z=0.1):
     '''
     contour plots for ions balances + shading for halo masses at different Tvir
@@ -2161,14 +2320,8 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
     outname = outname.replace('.', 'p')
     outname = outdir + outname + '.pdf'
     
-    cosmopars = {'a': 0.9085634947881763,\
-                 'boxsize': 67.77,\
-                 'h': 0.6777,\
-                 'omegab': 0.0482519,\
-                 'omegalambda': 0.693,\
-                 'omegam':  0.307,\
-                 'z': 0.10063854175996956,\
-                 }
+    cosmopars = cosmopars_27
+    
     lsargs = {'c5r':  {'linestyle': 'solid'},\
               'c6':   {'linestyle': 'dashed'},\
               'n6r':  {'linestyle': 'dotted'},\
