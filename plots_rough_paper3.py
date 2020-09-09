@@ -1899,7 +1899,7 @@ def plot_radprof4():
         hmargin = panelheight * 0.15 / figheight
         lspace = 0.3 * panelheight / figheight
         cspace = _h - 2. * hmargin - lspace
-        cax = fig.add_axes([_l + wmargin + lspace, _b + hmargin,\
+        cax = fig.add_axes([_l + wmargin, _b + hmargin,\
                             _w - 2.* wmargin, cspace])
         lax = fig.add_axes([_l + wmargin, _b  + hmargin + cspace,\
                             _w - 2. * wmargin, lspace])
@@ -1930,7 +1930,7 @@ def plot_radprof4():
             tag = seltag_keys[me]
             
             # plot profiles
-            for ykey, ls, zo in zip([ykey_mean, ykey_median], [ls_mean, ls_median], [0, 1]):
+            for ykey, ls, zo in zip([ykey_mean, ykey_median], [ls_mean, ls_median], [5, 6]):
                 ed = bins[tag][ykey]
                 vals = yvals[tag][ykey]
                 cens = ed[:-1] + 0.5 * np.diff(ed)
