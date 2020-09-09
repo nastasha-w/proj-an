@@ -1928,7 +1928,7 @@ def plot_radprof4():
             
             # indicate R200c
             mmin = 10**me
-            if mi < len(medges):
+            if mi < len(medges) - 1:
                 mmax = 10**medges[mi + 1]
             else:
                 mmax = 10**14.53 # max mass in the box at z=0.1
