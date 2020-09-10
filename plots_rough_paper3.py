@@ -1261,7 +1261,8 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
     mmin:     minimum halo mass to show (log10 Msun, 
               value options: 9.0, 9.5, 10., ... 14.)
     rbinning: 0 -> 10 pkpc bins
-              1 -> 10 pkpkc bins to 100 pkpc, then 0.1 dex ins
+              1 -> 10 pkpc bins to 100 pkpc, then 0.1 dex ins
+              2 -> 0.25 dex bins starting at 10 kpc
     '''
     print('Values are calculated from 3.125^2 ckpc^2 pixels in 10 pkpc annuli')
     print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb, C2 kernel')
@@ -1277,6 +1278,8 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
         rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
     elif rbinning == 1:
         rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+    elif rbinning == 2:
+        rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
     
@@ -1288,9 +1291,19 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
     if rbinning == 0:
         outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
                       'halomasscomp_{}'.format(measure)
+        checkbins = [0., 10., 20.]
+        binset = 'binset_0'
     elif rbinning == 1:
         outname = mdir + 'radprof2d_10pkpc-0.1dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
                       'halomasscomp_{}'.format(measure)
+        checkbins = [0., 10., 20.]
+        binset = 'binset_0'
+    elif rbinning == 1:
+        outname = mdir + 'radprof2d_0.25dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+                      'halomasscomp_{}'.format(measure)
+        checkbins = [0., 10., 10**1.25]
+        binset = 'binset_1'
+    checkbins = np.array(checkbins)
     outname = outname.replace('.', 'p')
     outname = outname + '.pdf'
     
@@ -1364,12 +1377,15 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
 
         filename = rfilebase.format(line=line)
         yvals, bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
-                                     binset='binset_0', retlog=True)
+                                     binset=binset, retlog=True)
 
         for me in medges:
             tag = seltag_keys[me]
             
             ed = bins[tag][ykey]
+            if not np.allclose(ed[:len(checkbins)], checkbins):
+                raise RuntimeError('binset {bs} did not reflect the targeted bins for line {line}, mass {tag}'.format(\
+                                   bs=binset, line=line, tag=tag))
             vals = yvals[tag][ykey]
             cens = ed[:-1] + 0.5 * np.diff(ed)
             ax.plot(cens, vals, color=colordct[me], linewidth=2.,\
