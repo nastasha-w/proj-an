@@ -1449,17 +1449,17 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
     
     if rbinning == 0:
         rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
+        binset = 'binset_0'
+        checkbins = [0., 10., 20.]
     elif rbinning == 1:
         rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
-   
-    if rbinning == 0:
-        outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
-                      'halomasscomp_{}'.format(measure)
-    elif rbinning == 1:
-        outname = mdir + 'radprof2d_10pkpc-0.1dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
-                      'halomasscomp_{}'.format(measure)
-    outname = outname.replace('.', 'p')
-    outname = outname + '.pdf'
+        binset = 'binset_0'
+        checkbins = [0., 10., 20.]
+    elif rbinning == 2:
+        rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+        binset = 'binset_1'
+        checkbins = [0., 10., 10**0.25]
+    checkbins = np.array(checkbins)
     
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
@@ -1475,6 +1475,10 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
     elif rbinning == 1:
         outname = mdir + 'radprof2d_10pkpc-0.1dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
                       'linecomp_{}'.format(measure)
+    elif rbinning == 1:
+        outname = mdir + 'radprof2d_0.25dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+                      'linecomp_{}'.format(measure)
+                      
     outname = outname.replace('.', 'p')
     outname = outname + '.pdf'              
     
@@ -1548,8 +1552,10 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
     bins = {}
     for line in lines:
         filename = rfilebase.format(line=line)
+        if line == 'ne10':
+            filename = filename.replace('test3.5', 'test3.6')
         _yvals, _bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
-                                     binset='binset_0', retlog=True)
+                                     binset=binset, retlog=True)
         yvals[line] = _yvals
         bins[line] = _bins
         
@@ -1566,6 +1572,10 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
         _max = -np.inf
         for line in lines:
             ed = bins[line][mtag][ykey]
+            if not np.allclose(ed[:len(checkbins)], checkbins):
+                raise ValueError('Did not retrieve the right bins for {line}, {mtag}'.format(\
+                                 line=line, mtag=mtag))
+            
             vals = yvals[line][mtag][ykey]
             cens = ed[:-1] + 0.5 * np.diff(ed)
             ax.plot(cens, vals, linewidth=2.,\
@@ -1637,9 +1647,18 @@ def plot_radprof3(mmin=10.0, numex=4, rbinning=0):
     
     if rbinning == 0:
         rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
+        binset = 'binset_0'
+        checkbins = [0., 10., 20.]
     elif rbinning == 1:
         rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
-   
+        binset = 'binset_0'
+        checkbins = [0., 10., 20.]
+    elif rbinning == 2:
+        rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+        binset = 'binset_1'
+        checkbins = [0., 10., 10**0.25]
+    checkbins = np.array(checkbins)
+    
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
     
@@ -1712,7 +1731,10 @@ def plot_radprof3(mmin=10.0, numex=4, rbinning=0):
             outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
                           'measurecomp_{}'.format(line)
         elif rbinning == 1:
-            outname = mdir + 'radprof2d_10pkpc-0.1dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+            outname = mdir + 'radprof2d_10pkpc-0.1dex-annuli_L0100N1504_27_test3.x_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+                          'measurecomp_{}'.format(line)
+        elif rbinning == 2:
+            outname = mdir + 'radprof2d_0.25dex-annuli_L0100N1504_27_test3.x_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
                           'measurecomp_{}'.format(line)
         outname = outname.replace('.', 'p')
         outname = outname + '.pdf'  
@@ -1745,10 +1767,12 @@ def plot_radprof3(mmin=10.0, numex=4, rbinning=0):
         
         ## get lines
         filename = rfilebase.format(line=line)
+        if line == 'ne10':
+            filename = filename.replace('test3.5', 'test3.6')
         yvals, bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
-                                     binset='binset_0', retlog=True)
+                                     binset=binset, retlog=True)
         yvals_ind, bins_ind = readin_radprof(filename, seltags, ys, runit='pkpc', separate=True,\
-                                     binset='binset_0', retlog=True)
+                                     binset=binset, retlog=True)
         
         for hi, hkey in enumerate(medges):
             ax = axes[hi]
@@ -1764,6 +1788,9 @@ def plot_radprof3(mmin=10.0, numex=4, rbinning=0):
             # plot the stacked data
             for ytag in ys:
                 ed = bins[mtag][ytag]
+                if not np.allclose(ed[:len(checkbins)], checkbins):
+                    raise RuntimeError('The correct bins were not retrieved for {line} {mtag} {ytag}'.format(\
+                                       line=line, mtag=mtag, ytag=ytag))
                 vals = yvals[mtag][ytag]
                 cens = ed[:-1] + 0.5 * np.diff(ed)
                 ax.plot(cens, vals, **kwargs_y_stack[ytag])
@@ -1849,8 +1876,8 @@ def plot_radprof4():
     mass bins
     '''
     
-    print('Values are calculated from 3.125^2 ckpc^2 pixels in 10 pkpc annuli')
-    print('up to 100 pkpc, then 0.1 dex bins up to ~3.5 R200c')
+    print('Values are calculated from 3.125^2 ckpc^2 pixels')
+    print('in annuli of 0-10 pkpc, then 0.25 dex bins up to ~3.5 R200c')
     print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb, C2 kernel')
     print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
     
@@ -1861,6 +1888,8 @@ def plot_radprof4():
                mppe.Normal()]
     
     rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+    binset = 'binset_1'
+    checkbins = np.array([0., 10., 10**0.25])
     cosmopars = cosmopars_27 # for virial radius indicators
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
@@ -1872,7 +1901,7 @@ def plot_radprof4():
     ls_median = 'solid'
     mmin = 11.
     
-    outname = mdir + 'radprof2d_10pkpc-0.1dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+    outname = mdir + 'radprof2d_0.25dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
                       'halomasscomp_mean-median'
     outname = outname.replace('.', 'p')
     outname = outname + '.pdf'
@@ -1956,8 +1985,10 @@ def plot_radprof4():
         ax.grid(b=True)
         
         filename = rfilebase.format(line=line)
+        if line == 'ne10':
+            filename = filename.replace('test3.5', 'test3.6')
         yvals, bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
-                                     binset='binset_0', retlog=True)
+                                     binset=binset, retlog=True)
 
         for mi, me in enumerate(medges):
             tag = seltag_keys[me]
@@ -1965,6 +1996,9 @@ def plot_radprof4():
             # plot profiles
             for ykey, ls, zo in zip([ykey_mean, ykey_median], [ls_mean, ls_median], [5, 6]):
                 ed = bins[tag][ykey]
+                if not np.allclose(ed[len(checkbins)], checkbins):
+                    raise RuntimeError('correct bins were not retrieved for {line} {mtag} {ykey}'.format(\
+                                       line=line, mtag=tag, ykey=ykey))
                 vals = yvals[tag][ykey]
                 cens = ed[:-1] + 0.5 * np.diff(ed)
                 ax.plot(cens, vals, color=colordct[me], linewidth=2.,\
