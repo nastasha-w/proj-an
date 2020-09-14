@@ -1298,7 +1298,7 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
                       'halomasscomp_{}'.format(measure)
         checkbins = [0., 10., 20.]
         binset = 'binset_0'
-    elif rbinning == 1:
+    elif rbinning == 2:
         outname = mdir + 'radprof2d_0.25dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
                       'halomasscomp_{}'.format(measure)
         checkbins = [0., 10., 10**1.25]
@@ -1376,12 +1376,23 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
         ax.set_xscale('log')
 
         filename = rfilebase.format(line=line)
+        if line == 'ne10':
+            filename = filename.replace('test3.5', 'test3.6')
+        print(filename)
+        import os
+        print(os.path.isfile(filename))
+        print(seltags)
+        print(ys)
+        print(binset)
         yvals, bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                                      binset=binset, retlog=True)
-
+        if line == 'n7':
+            print(yvals)
+            print(bins)
         for me in medges:
             tag = seltag_keys[me]
-            
+            print(bins.keys())
+            print(tag in bins)
             ed = bins[tag][ykey]
             if not np.allclose(ed[:len(checkbins)], checkbins):
                 raise RuntimeError('binset {bs} did not reflect the targeted bins for line {line}, mass {tag}'.format(\
