@@ -302,11 +302,11 @@ def comoving_distance_cm(z, cosmopars=None): # assumes Omega_k = 0
     com = np.trapz(1./integrand(zi_arr),x=zi_arr)
     return com * c.c/(c.hubble*hpar)
 
-def ang_diam_distance_cm(z):
-    return comoving_distance_cm(z)/(1.+z)
+def ang_diam_distance_cm(z, cosmopars=None):
+    return comoving_distance_cm(z, cosmopars=cosmopars)/(1.+z)
 
-def lum_distance_cm(z):
-    return comoving_distance_cm(z)*(1.+z)
+def lum_distance_cm(z, cosmopars=None):
+    return comoving_distance_cm(z, cosmopars=cosmopars)*(1.+z)
 
 def Hubble(z, cosmopars=None):
     if cosmopars is None:

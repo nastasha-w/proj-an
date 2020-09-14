@@ -124,6 +124,11 @@ linesets = [['c5r', 'n6r', 'o7r', 'ne9r', 'mg11r', 'si13r'],\
             ['o7r', 'o7ix', 'o7iy', 'o7f'],\
             ['fe17', 'fe17-other1', 'fe18', 'fe19'],\
             ]
+lineset_names = ['He $\\alpha$ (r)',\
+                 'Lyman $\\alpha$',\
+                 'O VII He $\\alpha$',\
+                 'Fe L-shell',\
+                 ]
 lineargs_sets =\
             {'c5r':  {'linestyle': 'solid',   'color': _c1.blue},\
              'c6':   {'linestyle': 'dashed',  'color': _c1.blue},\
@@ -2631,13 +2636,27 @@ def plot_luminosities_nice(addedges=(0., 1.)):
     linelabels = nicenames_lines.copy()
     linelabels['fe17-other1'] = 'Fe XVII\n(15.10 A)'
     linelabels['fe17'] = 'Fe XVII\n(17.05 A)'
+            
+    ylabel = '$\\log_{10} \\, \\mathrm{L} \\; [\\mathrm{photons} \\,/\\, 100\\,\\mathrm{ks} \\,/\\, \\mathrm{m}^{2}]$'
+    time = 1e5 #s
+    Aeff = 1e4 # cm^2 
+    ylim = (-3., 4.5)
+             
+    xlabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\odot}]$' 
     
     filename = ol.pdir + 'luminosities_halos_L0100N1504_27_Mh0p5dex_1000_%s-%s-R200c_SmAb.hdf5'%(str(addedges[0]), str(addedges[1]))
     with h5py.File(filename, 'r') as fi:
         galids_l = fi['galaxyids'][:]
         lines = [line.decode() for line in fi.attrs['lines']]
         lums = fi['luminosities'][:]
-            
+        cosmopars = {key: val for key, val in fi['Header/cosmopars'].attrs.items()}
+        
+        ldist = cu.lum_distance_cm(cosmopars['z'], cosmopars=cosmopars)
+        print(ldist)
+        l_to_flux = 1. / (4 * np.pi * ldist**2) * (1. + cosmopars['z']) # photon flux -> compensate for flux decrease due to redshifting in ldist
+        Erest = np.array([ol.line_eng_ion[line] for line in lines])
+        lums *= 1./ (Erest[np.newaxis, :, np.newaxis]) * l_to_flux * Aeff * time
+        
     file_galdata = '/net/luttero/data2/imgs/CGM/3dprof/halodata_L0100N1504_27_Mh0p5dex_1000.txt'
     galdata_all = pd.read_csv(file_galdata, header=2, sep='\t', index_col='galaxyid')
     masses = np.array(galdata_all['M200c_Msun'][galids_l])
@@ -2645,14 +2664,14 @@ def plot_luminosities_nice(addedges=(0., 1.)):
     mbins = np.array(list(np.arange(11., 13.05, 0.1)) + [13.25, 13.5, 13.75, 14.0, 14.6])
 
     lums = np.sum(lums, axis=2)
-    lums = np.log10(lums) - np.log10(1. + cosmopars['z'])
-    ylabel = '$\\mathrm{L}_{\\mathrm{obs}} \\; [\\mathrm{erg} \\,\\mathrm{s}^{-1}]$'
-    ylim = (32.1, 42)
-             
-    xlabel = '$\\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\odot}]$' 
+    lums = np.log10(lums)
     
     bininds = np.digitize(np.log10(masses), mbins)
     bincen = mbins[:-1] + 0.5 * np.diff(mbins) 
+    
+    _linesets = list(np.copy(linesets))
+    _linesets[3] = list(np.copy(linesets[3]))
+    _linesets[3] = [_linesets[3][2], _linesets[3][3], linesets[3][0], linesets[3][1]]
     
     ncols = 1
     nrows = len(linesets)
@@ -2660,22 +2679,32 @@ def plot_luminosities_nice(addedges=(0., 1.)):
     grid = gsp.GridSpec(nrows=nrows, ncols=ncols, hspace=0.0, wspace=0.0)
     axes = [fig.add_subplot(grid[i, 0]) for i in range(nrows)]
     
+    labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
+    labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    labelax.set_xlabel(xlabel, fontsize=fontsize)
+    labelax.set_ylabel(ylabel, fontsize=fontsize)
+    
     for axi, ax in enumerate(axes):
-        lineset = linesets[axi]
+        lineset = _linesets[axi]
+        linesetlabel = lineset_names[axi]
+        
         labelx = axi >= len(linesets) - ncols
         labely = axi % ncols == 0
-        if labelx:
-            ax.set_xlabel(xlabel, fontsize=fontsize)
-        if labely:
-            ax.set_ylabel(ylabel, fontsize=fontsize)
+        #if labelx:
+        #    ax.set_xlabel(xlabel, fontsize=fontsize)
+        #if labely:
+        #    ax.set_ylabel(ylabel, fontsize=fontsize)
         pu.setticks(ax, fontsize, labelleft=labely, labelbottom=labelx)
         ax.grid(b=True
                 )
-        for li, line in enumerate(lines):
-            if line not in lineset:
-                continue
+        for line in lineset:
+            li = np.where([line == _l for _l in lines])[0][0]
+            label = linelabels[line]
+            if axi == 0 and label == 'O VII (r)':
+                label = 'O VII'
+            
             med = [np.median(lums[bininds == i, li]) for i in range(1, len(mbins))]
-            ax.plot(bincen, med, label=linelabels[line], linewidth=linewidth,\
+            ax.plot(bincen, med, label=label, linewidth=linewidth,\
                     path_effects=patheff, **lsargs[line])
             
             ud = [np.percentile(lums[bininds == i, li], [10., 90.]) for i in range(1, len(mbins))]
@@ -2695,8 +2724,21 @@ def plot_luminosities_nice(addedges=(0., 1.)):
                         **_lsargs)
             
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles, labels, fontsize=fontsize, bbox_to_anchor=(1.0, 0.),\
-                  loc='lower right', ncol=2)     
+        isplit = len(handles) // 2
+        h1 = handles[:isplit]
+        h2 = handles[isplit:]
+        fc = (1., 1., 1., 0.)
+        l1 = ax.legend(handles=h2, fontsize=fontsize, bbox_to_anchor=(1.0, 0.),\
+                  loc='lower right', ncol=1, facecolor=fc)  
+        l2 = ax.legend(handles=h1, fontsize=fontsize, bbox_to_anchor=(0.0, 1.0),\
+                  loc='upper left', ncol=1, title=linesetlabel,\
+                  facecolor=fc)  
+        l2.get_title().set_fontsize(fontsize)
+        ax.add_artist(l1)
+        #ax.add_artist(l2) # otherwise, it's plotted twice -> less transparent
+        #ax.text(0.02, 0.98, linesetlabel, fontsize=fontsize,\
+        #        verticalalignment='top', horizontalalignment='left',\
+        #        transform=ax.transAxes)
     # sync lims
     xlims = [ax.get_xlim() for ax in axes]
     x0 = np.min([xl[0] for xl in xlims])
