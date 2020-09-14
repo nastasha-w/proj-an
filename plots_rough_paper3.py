@@ -204,6 +204,7 @@ def getoutline(linewidth):
 mass_edges_standard = (11., 11.5, 12.0, 12.5, 13.0, 13.5, 14.0)
 fontsize = 12
 mdir = '/net/luttero/data2/imgs/paper3/'
+tmdir = '/net/luttero/data2/imgs/paper3/img_talks/'
 
 def getsamplemedianmass():
     mass_edges = mass_edges_standard
@@ -1267,7 +1268,7 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
               value options: 9.0, 9.5, 10., ... 14.)
     rbinning: 0 -> 10 pkpc bins
               1 -> 10 pkpc bins to 100 pkpc, then 0.1 dex ins
-              2 -> 0.25 dex bins starting at 10 kpc
+              2 -> 0.25 dex bins starting at 10 kpc (smallest bin is 0-10 kpc)
     '''
     print('Values are calculated from 3.125^2 ckpc^2 pixels in 10 pkpc annuli')
     print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb, C2 kernel')
@@ -1383,21 +1384,21 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
         filename = rfilebase.format(line=line)
         if line == 'ne10':
             filename = filename.replace('test3.5', 'test3.6')
-        print(filename)
-        import os
-        print(os.path.isfile(filename))
-        print(seltags)
-        print(ys)
-        print(binset)
+        #print(filename)
+        #import os
+        #print(os.path.isfile(filename))
+        #print(seltags)
+        #print(ys)
+        #print(binset)
         yvals, bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                                      binset=binset, retlog=True)
-        if line == 'n7':
-            print(yvals)
-            print(bins)
+        #if line == 'n7':
+        #    print(yvals)
+        #    print(bins)
         for me in medges:
             tag = seltag_keys[me]
-            print(bins.keys())
-            print(tag in bins)
+            #print(bins.keys())
+            #print(tag in bins)
             ed = bins[tag][ykey]
             if not np.allclose(ed[:len(checkbins)], checkbins):
                 raise RuntimeError('binset {bs} did not reflect the targeted bins for line {line}, mass {tag}'.format(\
@@ -1437,6 +1438,7 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
               value options: 9.0, 9.5, 10., ... 14.)
     rbinning: 0 -> 10 pkpc bins
               1 -> 10 pkpc bins out to 100 pkpc, then 0.1 dex bins
+              2 -> 0.25 dex bins starting at 10 kpc (smallest bin is 0-10 kpc)
     '''
     print('Values are calculated from 3.125^2 ckpc^2 pixels in 10 pkpc annuli')
     print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb, C2 kernel')
@@ -1463,7 +1465,7 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
     elif rbinning == 2:
         rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
         binset = 'binset_1'
-        checkbins = [0., 10., 10**0.25]
+        checkbins = [0., 10., 10**1.25]
     checkbins = np.array(checkbins)
     
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
@@ -1480,7 +1482,7 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
     elif rbinning == 1:
         outname = mdir + 'radprof2d_10pkpc-0.1dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
                       'linecomp_{}'.format(measure)
-    elif rbinning == 1:
+    elif rbinning == 2:
         outname = mdir + 'radprof2d_0.25dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
                       'linecomp_{}'.format(measure)
                       
@@ -1578,8 +1580,11 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
         for line in lines:
             ed = bins[line][mtag][ykey]
             if not np.allclose(ed[:len(checkbins)], checkbins):
+                print(ed[:len(checkbins)])
+                print(checkbins)
                 raise ValueError('Did not retrieve the right bins for {line}, {mtag}'.format(\
                                  line=line, mtag=mtag))
+                
             
             vals = yvals[line][mtag][ykey]
             cens = ed[:-1] + 0.5 * np.diff(ed)
@@ -1624,7 +1629,7 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     
-def plot_radprof3(mmin=10.0, numex=4, rbinning=0):
+def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
     '''
     plot SB mean, median and scatter for lines and halo mass bins
     panels for differnt bins, different plots for different lines 
@@ -1637,6 +1642,7 @@ def plot_radprof3(mmin=10.0, numex=4, rbinning=0):
               value options: 9.0, 9.5, 10., ... 14.)
     rbinning: 0 -> 10 pkpc bins
               1 -> 10 pkpc bins up to 100 pkpc, then 0.1 dex bins
+              2 -> 0.25 dex bins starting at 10 kpc (smallest bin is 0-10 kpc)
     '''
     
     print('Values are calculated from 3.125^2 ckpc^2 pixels in 10 pkpc annuli')
@@ -1661,7 +1667,7 @@ def plot_radprof3(mmin=10.0, numex=4, rbinning=0):
     elif rbinning == 2:
         rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
         binset = 'binset_1'
-        checkbins = [0., 10., 10**0.25]
+        checkbins = [0., 10., 10**1.25]
     checkbins = np.array(checkbins)
     
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
@@ -1875,26 +1881,32 @@ def plot_radprof3(mmin=10.0, numex=4, rbinning=0):
         
         plt.savefig(outname, format='pdf', bbox_inches='tight')
         
-def plot_radprof4():
+def plot_radprof4(talkversion=False, slidenum=0):
     '''
     plot mean and median profiles for the different lines in different halo 
     mass bins
+    
+    talkversion: fewer emission lines, add curves one at a time
     '''
     
     print('Values are calculated from 3.125^2 ckpc^2 pixels')
-    print('in annuli of 0-10 pkpc, then 0.25 dex bins up to ~3.5 R200c')
+    print('for means: in annuli of 0-10 pkpc, then 0.25 dex bins up to ~3.5 R200c')
+    print('for medians: in annuli of 10 pkpc up to 100 pkpc, then 0.1 dex bins up to ~3.5 R200c')
     print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb, C2 kernel')
     print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
     
-    fontsize = 12
+    if talkversion:
+        fontsize = 14
+    else:
+        fontsize = 12
     linewidth = 1.5
     patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),\
                mppe.Stroke(linewidth=linewidth, foreground="w"),\
                mppe.Normal()]
     
     rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
-    binset = 'binset_1'
-    checkbins = np.array([0., 10., 10**0.25])
+    binset_mean = 'binset_1'
+    binset_median = 'binset_0'
     cosmopars = cosmopars_27 # for virial radius indicators
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
@@ -1906,9 +1918,13 @@ def plot_radprof4():
     ls_median = 'solid'
     mmin = 11.
     
-    outname = mdir + 'radprof2d_0.25dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
-                      'halomasscomp_mean-median'
+    outname = 'radprof2d_0.25dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+              'halomasscomp_mean-median'
     outname = outname.replace('.', 'p')
+    if talkversion:
+        outname = tmdir + outname + '_talkversion_{}'.format(slidenum)
+    else:
+        outname = mdir + outname
     outname = outname + '.pdf'
     
     medges = np.arange(mmin, 14.1, 0.5)
@@ -1918,12 +1934,24 @@ def plot_radprof4():
                     for i in range(len(medges))}
     seltags = [seltag_keys[key] for key in seltag_keys]
     
-    numlines = len(lines)
-    ncols = 4
-    nrows = (numlines - 1) // ncols + 1
-    figwidth = 11. 
-    caxwidth = 1.
-
+    if talkversion:
+        _lines = ['c6', 'o7r', 'o8', 'mg12']
+        numlines = len(_lines)
+        fontsize = 14
+        
+        ncols = 3
+        nrows = (numlines - 1) // ncols + 1
+        figwidth = 11. 
+        caxwidth = 1.
+        
+    else:
+        _lines = list(np.copy(lines))
+        numlines = len(_lines)
+        ncols = 4
+        nrows = (numlines - 1) // ncols + 1
+        figwidth = 11. 
+        caxwidth = 1.
+    
     if ncols * nrows - numlines >= 2:
         cax_right = False
         _ncols = ncols
@@ -1981,7 +2009,7 @@ def plot_radprof4():
              orientation=c_orientation, clabel=clabel, fontsize=fontsize,\
              aspect=c_aspect)
 
-    for li, line in enumerate(lines):
+    for li, line in enumerate(_lines):
         ax = axes[li]
         labely = li % ncols == 0
         labelx = numlines -1 - li < ncols
@@ -1992,18 +2020,29 @@ def plot_radprof4():
         filename = rfilebase.format(line=line)
         if line == 'ne10':
             filename = filename.replace('test3.5', 'test3.6')
-        yvals, bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
-                                     binset=binset, retlog=True)
-
+        yvals, bins = readin_radprof(filename, seltags, [ykey_mean], runit='pkpc', separate=False,\
+                                     binset=binset_mean, retlog=True)
+        _yvals, _bins = readin_radprof(filename, seltags, [ykey_median], runit='pkpc', separate=False,\
+                                     binset=binset_median, retlog=True)
+        for tag in yvals:
+            bins[tag].update(_bins[tag])
+            yvals[tag].update(_yvals[tag])
         for mi, me in enumerate(medges):
             tag = seltag_keys[me]
             
             # plot profiles
             for ykey, ls, zo in zip([ykey_mean, ykey_median], [ls_mean, ls_median], [5, 6]):
+                if talkversion:
+                    if ykey == ykey_mean:
+                        yi = 1
+                    elif ykey == ykey_median:
+                        yi = 0
+                    else:
+                        yi = 2 
+                    ncomp = 1 + li * len(medges) * len(ys) + yi * len(medges) + mi
+                    if ncomp > slidenum:
+                        continue
                 ed = bins[tag][ykey]
-                if not np.allclose(ed[len(checkbins)], checkbins):
-                    raise RuntimeError('correct bins were not retrieved for {line} {mtag} {ykey}'.format(\
-                                       line=line, mtag=tag, ykey=ykey))
                 vals = yvals[tag][ykey]
                 cens = ed[:-1] + 0.5 * np.diff(ed)
                 ax.plot(cens, vals, color=colordct[me], linewidth=2.,\
@@ -2049,11 +2088,17 @@ def plot_radprof4():
     xlims = [ax.get_xlim() for ax in axes]
     xmin = min([xlim[0] for xlim in xlims])
     xmax = max([xlim[1] for xlim in xlims])
+    if talkversion:
+        xmin = 4.
+        xmax = 4.5e3
     [ax.set_xlim(xmin, xmax) for ax in axes]
 
     # three most energetic ions have very low mean SB -> impose limits
     ylims = [ax.get_ylim() for ax in axes]
-    ymin = -5. #min([ylim[0] for ylim in ylims])
+    if talkversion:
+        ymin = -4.9 #min([ylim[0] for ylim in ylims])
+    else:
+        ymin = -5.0
     ymax = 2. #max([ylim[1] for ylim in ylims])
     [ax.set_ylim(ymin, ymax) for ax in axes]
     
@@ -2611,13 +2656,20 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
         
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
-def plot_luminosities_nice(addedges=(0., 1.)):
+def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
     '''
     '''
     
     outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
     outname = 'luminosities_nice_{mi}-{ma}-R200c'.format(\
                             mi=addedges[0], ma=addedges[1])
+    if talkversion:
+        outdir = tmdir
+        outname = outname + 'talkversion_{}'.format(slidenum)
+        fontsize = 14
+    else:
+        outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+        fontsize = 12
     outname = outname.replace('.', 'p')
     outname = outdir + outname + '.pdf'
     
@@ -2673,11 +2725,21 @@ def plot_luminosities_nice(addedges=(0., 1.)):
     _linesets[3] = list(np.copy(linesets[3]))
     _linesets[3] = [_linesets[3][2], _linesets[3][3], linesets[3][0], linesets[3][1]]
     
-    ncols = 1
-    nrows = len(linesets)
-    fig = plt.figure(figsize=(5.5, 12.))
-    grid = gsp.GridSpec(nrows=nrows, ncols=ncols, hspace=0.0, wspace=0.0)
-    axes = [fig.add_subplot(grid[i, 0]) for i in range(nrows)]
+    if talkversion:
+        ncols = 2
+        figsize = (11., 7.)
+        nrows = (len(linesets) - 1) // ncols + 1
+        fig = plt.figure(figsize=figsize)
+        grid = gsp.GridSpec(nrows=nrows, ncols=ncols, hspace=0.0, wspace=0.0)
+        axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(len(linesets))]
+        
+    else:
+        ncols = 1
+        figsize = (5.5, 12.)
+        nrows = len(linesets)
+        fig = plt.figure(figsize=figsize)
+        grid = gsp.GridSpec(nrows=nrows, ncols=ncols, hspace=0.0, wspace=0.0)
+        axes = [fig.add_subplot(grid[i, 0]) for i in range(nrows)]
     
     labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
     labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
@@ -2697,12 +2759,18 @@ def plot_luminosities_nice(addedges=(0., 1.)):
         pu.setticks(ax, fontsize, labelleft=labely, labelbottom=labelx)
         ax.grid(b=True
                 )
-        for line in lineset:
+        _labels = {}
+        for _li, line in enumerate(lineset):
             li = np.where([line == _l for _l in lines])[0][0]
             label = linelabels[line]
             if axi == 0 and label == 'O VII (r)':
                 label = 'O VII'
-            
+            _labels[line] = label
+            if talkversion:
+                ncomp = 1 + _li + np.sum([len(_linesets[_axi]) for _axi in range(axi)])
+                if ncomp > slidenum:
+                    continue
+                
             med = [np.median(lums[bininds == i, li]) for i in range(1, len(mbins))]
             ax.plot(bincen, med, label=label, linewidth=linewidth,\
                     path_effects=patheff, **lsargs[line])
@@ -2723,7 +2791,11 @@ def plot_luminosities_nice(addedges=(0., 1.)):
                         path_effects=patheff,\
                         **_lsargs)
             
-        handles, labels = ax.get_legend_handles_labels()
+        #handles, labels = ax.get_legend_handles_labels()
+        handles = [mlines.Line2D([], [], linewidth=linewidth,\
+                    path_effects=patheff, label=_labels[line],\
+                    **lsargs[line])\
+                   for line in lineset]
         isplit = len(handles) // 2
         h1 = handles[:isplit]
         h2 = handles[isplit:]
@@ -2743,6 +2815,9 @@ def plot_luminosities_nice(addedges=(0., 1.)):
     xlims = [ax.get_xlim() for ax in axes]
     x0 = np.min([xl[0] for xl in xlims])
     x1 = np.max([xl[1] for xl in xlims])
+    if talkversion:
+        x0 = 10.8
+        x1 = 14.45
     [ax.set_xlim(x0, x1) for ax in axes]
     
     #ylims = [ax.get_ylim() for ax in axes]
