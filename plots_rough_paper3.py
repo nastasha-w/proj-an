@@ -2025,7 +2025,8 @@ def plot_radprof4(talkversion=False, slidenum=0):
     l2ax.spines['bottom'].set_visible(False)
     l2ax.spines['left'].set_visible(False)
     l2ax.set_ylabel(y2label, fontsize=fontsize)
-    l2ax.axis('off')
+    #l2ax.yaxis.set_label_position('right')
+    #l2ax.axis('off')
     
     
     clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
