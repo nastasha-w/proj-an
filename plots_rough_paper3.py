@@ -225,8 +225,18 @@ medianmasses = {11.0: 11.197684653627299,\
                 13.5: 13.666537415167888,\
                 14.0: 14.235991474257528,\
                 }
+arcmin_to_rad = np.pi / (180. * 60.)
 
-    
+def pkpc_to_arcmin(r_pkpc, z, cosmopars=None):
+    da = cu.ang_diam_distance_cm(z, cosmopars=cosmopars) 
+    angle = r_pkpc * c.cm_per_mpc * 1e-3 / da
+    return angle / arcmin_to_rad
+
+def arcmin_to_pkpc(angle_arcmin, z, cosmopars=None):
+    da = cu.ang_diam_distance_cm(z, cosmopars=cosmopars) 
+    r_pkpc = angle_arcmin * arcmin_to_rad  * da / (1e-3 * c.cm_per_mpc)
+    return r_pkpc
+
 def add_cbar_mass(cax, massedges=mass_edges_standard,\
              orientation='vertical', clabel=None, fontsize=fontsize, aspect=10.):
     '''
@@ -1910,6 +1920,11 @@ def plot_radprof4(talkversion=False, slidenum=0):
     cosmopars = cosmopars_27 # for virial radius indicators
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
+    y2label = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{m}^{-2}(100 \\,\\mathrm{ks})^{-1}(10\\,\\mathrm{arcmin})^{-2}]$'
+    right_over_left = 1e4 * 1e5 * ((10. * np.pi**2 / 60.**2 / 180**2))
+    # right_over_left = (ph / cm**2 / s / sr)  /  (ph / m**2 / 100 ks / 10 arcmin^2)
+    # right_over_left = m**2 / cm**2 * 100 ks / s * 10 arcmin**2 / rad**2 
+    # value ratio is inverse of unit ratio
     
     ys = [('mean',), ('perc', 50.)]
     ykey_mean = ('mean',)
@@ -2003,19 +2018,30 @@ def plot_radprof4(talkversion=False, slidenum=0):
     labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
     labelax.set_xlabel(xlabel, fontsize=fontsize)
     labelax.set_ylabel(ylabel, fontsize=fontsize)
+    l2ax = labelax.twinx()
+    l2ax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    l2ax.set_ylabel(y2label, fontsize=fontsize)
+    
     
     clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
     cbar, colordct = add_cbar_mass(cax, massedges=medges,\
              orientation=c_orientation, clabel=clabel, fontsize=fontsize,\
              aspect=c_aspect)
-
+    
+    axes2 =[]
     for li, line in enumerate(_lines):
         ax = axes[li]
         labely = li % ncols == 0
         labelx = numlines -1 - li < ncols
-        pu.setticks(ax, fontsize=fontsize, labelleft=labely, labelbottom=labelx)
+        labelright = (li % ncols == ncols - 1) or (li == len(axes) - 1)
+        pu.setticks(ax, fontsize=fontsize, labelleft=labely, labelbottom=labelx,\
+                    right=False)
         ax.set_xscale('log')
         ax.grid(b=True)
+        ax2 = ax.twinx()
+        pu.setticks(ax2, fontsize=fontsize, left=False, right=True, bottom=False,\
+                    top=False, labelright=labelright)
+        axes2.append(ax2)
         
         filename = rfilebase.format(line=line)
         if line == 'ne10':
@@ -2101,6 +2127,8 @@ def plot_radprof4(talkversion=False, slidenum=0):
         ymin = -5.0
     ymax = 2. #max([ylim[1] for ylim in ylims])
     [ax.set_ylim(ymin, ymax) for ax in axes]
+    [ax.set_ylim(ymin * right_over_left, ymax * right_over_left)\
+     for ax in axes2]
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     
