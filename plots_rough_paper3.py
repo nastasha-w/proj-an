@@ -2020,6 +2020,10 @@ def plot_radprof4(talkversion=False, slidenum=0):
     labelax.set_ylabel(ylabel, fontsize=fontsize)
     l2ax = labelax.twinx()
     l2ax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    l2ax.spines['right'].set_visible(False)
+    l2ax.spines['top'].set_visible(False)
+    l2ax.spines['bottom'].set_visible(False)
+    l2ax.spines['left'].set_visible(False)
     l2ax.set_ylabel(y2label, fontsize=fontsize)
     l2ax.axis('off')
     
