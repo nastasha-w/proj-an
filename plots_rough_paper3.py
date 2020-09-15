@@ -2021,6 +2021,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
     l2ax = labelax.twinx()
     l2ax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
     l2ax.set_ylabel(y2label, fontsize=fontsize)
+    l2ax.axis('off')
     
     
     clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
@@ -2040,7 +2041,8 @@ def plot_radprof4(talkversion=False, slidenum=0):
         ax.grid(b=True)
         ax2 = ax.twinx()
         pu.setticks(ax2, fontsize=fontsize, left=False, right=True, bottom=False,\
-                    top=False, labelright=labelright)
+                    top=False, labelright=labelright, labelleft=False, labeltop=False,\
+                    labelbottom=False)
         axes2.append(ax2)
         
         filename = rfilebase.format(line=line)
@@ -2127,7 +2129,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
         ymin = -5.0
     ymax = 2. #max([ylim[1] for ylim in ylims])
     [ax.set_ylim(ymin, ymax) for ax in axes]
-    [ax.set_ylim(ymin * right_over_left, ymax * right_over_left)\
+    [ax.set_ylim(ymin + np.log10(right_over_left), ymax + np.log10(right_over_left))\
      for ax in axes2]
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
