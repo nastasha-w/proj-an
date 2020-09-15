@@ -1920,7 +1920,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
     cosmopars = cosmopars_27 # for virial radius indicators
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
-    y2label = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{m}^{-2}(100 \\,\\mathrm{ks})^{-1}(10\\,\\mathrm{arcmin})^{-2}]$'
+    y2label = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{m}^{-2}(100 \\,\\mathrm{ks})^{-1}(10\\,\\mathrm{arcmin}^{2})^{-1}]$'
     right_over_left = 1e4 * 1e5 * ((10. * np.pi**2 / 60.**2 / 180**2))
     # right_over_left = (ph / cm**2 / s / sr)  /  (ph / m**2 / 100 ks / 10 arcmin^2)
     # right_over_left = m**2 / cm**2 * 100 ks / s * 10 arcmin**2 / rad**2 
