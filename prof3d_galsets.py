@@ -1499,10 +1499,17 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                         base = 'SmoothedElementAbundance-{elt}_T4EOS'
                         if histtype == 'Zrprof':
                             _line = '-'.join(line.split('-')[1:]) # 'em-o7r', 'em-fer17-other1'
-                            elt = string.capwords(ol.elements_ion[_line])
+                            try:
+                                elt = string.capwords(ol.elements_ion[_line])
+                            except KeyError as err:
+                                print('tried to retrieve element for line {line}, histtype {ht}, weight {wt}'.format(\
+                                      line=_line, weight=line, ht=histtype))
+                                print('from file {fl}, galaxy id {gid}'.format(\
+                                      fl=ifilen_temp, gid=galid))
+                                raise err
                         else:
                             elt = histtype.split('-')[0] # 'Carbon-rprof'
-                        print(elt)
+                        #print(elt)
                         axname_toaverage = base.format(elt=elt)
                         
                     try:
@@ -1596,8 +1603,9 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                 base = 'SmoothedElementAbundance-{elt}'
                 units = 'log10 mass fraction'
                 if histtype == 'Zrprof':
-                    line = '-'.join(weight.split('-')[1:]) # 'em-o7r', 'em-fer17-other1'
-                    elt = string.capwords(ol.elements_ion[line])
+                    #line = '-'.join(weight.split('-')[1:]) # 'em-o7r', 'em-fer17-other1'
+                    #elt = string.capwords(ol.elements_ion[line])
+                    elt = 'parent'
                 else:
                     elt = histtype.split('-')[0] # 'Carbon-rprof'
                 dsname = base.format(elt=elt)
