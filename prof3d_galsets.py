@@ -1375,7 +1375,7 @@ def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                                            np.string_('star-forming')]))
 
 def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
-              addedges=(0.0, 1.), weight='Luminosity'):
+              addedges=(0.0, 1.), weight='Luminosity', logM200min=11.0):
     '''
     generate the histograms for a given sample
     rbinu: used fixed bins in pkpc or in R200c (relevant for stacking)
@@ -1437,7 +1437,7 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                     for histtype in histtypes}
 
     galids = np.array(galnames_all[histtypes[0]][weighttypes[0]].index) # galdata may also include non-selected haloes; galnames galaxyids should match
-        
+    galids = galids[galdata_all.loc[galids, 'M200c_Msun'] > 10**logM200min]
     # axis data attributes that are allowed to differ between summed histograms
     neqlist = ['number of particles',\
                'number of particles > max value',\
@@ -1453,11 +1453,12 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
         savelist = np.zeros((len(galids), len(weighttypes), 2), dtype=np.float64) / 0. # initialize as NaN
         
         for histtype in histtypes:
+            print('starting {}'.format(histtype))
             savetot = histtype == 'nrprof' # one that exists for all the weights
             if savetot:
                 savelist_tot = np.zeros((len(galids), len(weighttypes), 2), dtype=np.float64) / 0. # initialize as NaN
-            for li, line in enumerate(weighttypes):  
-                
+            for li, line in enumerate(weighttypes): 
+                print('starting {}'.format(line))
                 for gind in range(len(galids)):
                     galid = galids[gind]
                     
@@ -1554,11 +1555,11 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                     if avlog:
                         av_nsf = np.log10(av_nsf)
                         av_sf  = np.log10(av_sf)
-                    print(tempsum_sf)
-                    print(tempsum_nsf)
-                    print(av_sf)
-                    print(av_nsf)
-                    print('')
+                    #print(tempsum_sf)
+                    #print(tempsum_nsf)
+                    #print(av_sf)
+                    #print(av_nsf)
+                    #print('')
                     savelist[gind, li, 0] = av_nsf
                     savelist[gind, li, 1] = av_sf
                     
