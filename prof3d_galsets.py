@@ -1541,7 +1541,7 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                         avcens[-1] = avedges[-2] + 0.5 * (avedges[-2] - avedges[-3])
                     if avlog:
                         avcens = 10**avcens
-                    sumaxes = len(hist_t.shape)
+                    sumaxes = list(range(len(hist_t.shape)))
                     sumaxes.remove(avax)
                     sumaxes = tuple(sumaxes)
                     shapeav = [np.newaxis] * len(hist_t.shape)
