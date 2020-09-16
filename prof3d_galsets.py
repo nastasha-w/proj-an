@@ -1541,16 +1541,16 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                         avcens[-1] = avedges[-2] + 0.5 * (avedges[-2] - avedges[-3])
                     if avlog:
                         avcens = 10**avcens
-                    sumaxes = list(range(len(hist_t.shape)))
-                    sumaxes.remove(avax)
-                    sumaxes = tuple(sumaxes)
+                    #sumaxes = list(range(len(hist_t.shape)))
+                    #sumaxes.remove(avax)
+                    #sumaxes = tuple(sumaxes)
                     shapeav = [np.newaxis] * len(hist_t.shape)
                     shapeav[avax] = slice(None, None, None)
                     shapeav = tuple(shapeav)
-                    av_nsf = np.sum(hist_t[tuple(addsel_nsf)] * avcens[shapeav],\
-                                    axis=sumaxes) / tempsum_nsf
-                    av_sf  = np.sum(hist_t[tuple(addsel_sf)] * avcens[shapeav],\
-                                    axis=sumaxes) / tempsum_sf  
+                    av_nsf = np.sum(hist_t[tuple(addsel_nsf)] * avcens[shapeav]\
+                                    ) / tempsum_nsf
+                    av_sf  = np.sum(hist_t[tuple(addsel_sf)] * avcens[shapeav]\
+                                    ) / tempsum_sf  
                     if avlog:
                         av_nsf = np.log10(av_nsf)
                         av_sf  = np.log10(av_sf)
