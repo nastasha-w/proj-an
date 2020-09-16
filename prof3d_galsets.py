@@ -1506,7 +1506,7 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                         
                     try:
                         avax = edgedata_t[axname_toaverage]['histogram axis']
-                        avlog = edgedata_t[axname_toaverage]['log']
+                        avlog = bool(edgedata_t[axname_toaverage]['log'])
                     except KeyError:
                         raise KeyError('Could not retrieve axis to average %s for galaxy %i, file %s'%(axname_toaverage, galid, ifilen_temp))
                     if rbinu == 'R200c':                    
