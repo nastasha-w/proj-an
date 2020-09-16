@@ -1374,6 +1374,240 @@ def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
         ds.attrs.create('axis2', np.array([np.string_('non-star-forming'),\
                                            np.string_('star-forming')]))
 
+def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
+              addedges=(0.0, 1.), weight='Luminosity'):
+    '''
+    generate the histograms for a given sample
+    rbinu: used fixed bins in pkpc or in R200c (relevant for stacking)
+     
+    weight:  'Luminosity': luminosities for the different lines
+             'Mass':       gas mass (incl. the different metals for Z)
+             'Volume':     gas volume (incl. the different metals for Z)
+    '''
+    rbinu = 'R200c'
+    if weight == 'Luminosity':
+        outname = ol.pdir + 'luminosity-weighted-nH-T-Z_halos_%s_%s-%s-%s_SmAb.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)
+        weighttypes = ['em-{l}'.format(l=line) for line in lines1]
+        histtypes = ['nrprof', 'Trprof', 'Zrprof'] 
+    elif weight in ['Mass', 'Volume']:
+        outname = ol.pdir + '{weight}-weighted-nH-T-Z_halos_%s_%s-%s-%s_SmAb.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)
+        outname.format(weight=weight.lower())
+        weighttypes = [weight]
+        metals = ['Carbon', 'Nitrogen', 'Oxygen', 'Neon', 'Magnesium',\
+                  'Iron', 'Silicon']
+        axdcts = ['{elt}-rprof'.format(elt=elt) for elt in metals]
+        histtypes = ['nrprof', 'Trprof'] + axdcts 
+    
+    if samplename is None:
+        samplename = defaults['sample']
+    fdata = dataname(samplename)
+    fnames_histtype_line = {histtype: {line: files(samplename, line, histtype=histtype)\
+                                       for line in weighttypes}\
+                            for histtype in histtypes}
+    
+    with open(fdata, 'r') as fi:
+        # scan for halo catalogue (only metadata needed for this)
+        headlen = 0
+        halocat = None
+        while True:
+            line = fi.readline()
+            if line == '':
+                if halocat is None:
+                    raise RuntimeError('Reached the end of %s without finding the halo catalogue name'%(fdata))
+                else:
+                    break
+            elif line.startswith('halocat'):
+                halocat = line.split(':')[1]
+                halocat = halocat.strip()
+                headlen += 1
+            elif ':' in line or line == '\n':
+                headlen += 1
+    
+    with h5py.File(halocat, 'r') as hc:
+        hed = hc['Header']
+        cosmopars = {key: item for key, item in hed['cosmopars'].attrs.items()}
+        #simnum = hed.attrs['simnum']
+        #snapnum = hed.attrs['snapnum']
+        #var = hed.attrs['var']
+        #ap = hed.attrs['subhalo_aperture_size_Mstar_Mbh_SFR_pkpc']
+    
+    galdata_all = pd.read_csv(fdata, header=headlen, sep='\t', index_col='galaxyid')
+    galnames_all = {histtype: {line: pd.read_csv(fnames_histtype_line[histtype][line], header=0, sep='\t', index_col='galaxyid')\
+                               for line in fnames_histtype_line[histtype]}\
+                    for histtype in histtypes}
+
+    galids = np.array(galnames_all[weighttypes[0]].index) # galdata may also include non-selected haloes; galnames galaxyids should match
+        
+    # axis data attributes that are allowed to differ between summed histograms
+    neqlist = ['number of particles',\
+               'number of particles > max value',\
+               'number of particles < min value',\
+               'number of particles with finite values']
+    
+    with h5py.File(outname, 'a') as fo:
+        csp = fo.create_group('Header/cosmopars')
+        for key in cosmopars:
+            csp.attrs.create(key, cosmopars[key])
+        fo.create_dataset('galaxyids', data=galids)
+        
+        savelist = np.zeros((len(galids), len(weighttypes), 2), dtype=np.float64) / 0. # initialize as NaN
+        
+        for histtype in histtypes:
+            savetot = histtype == 'nrprof' # one that exists for all the weights
+            if savetot:
+                savelist_tot = np.zeros((len(galids), len(weighttypes), 2), dtype=np.float64) / 0. # initialize as NaN
+            for li, line in enumerate(weighttypes):  
+                
+                for gind in range(len(galids)):
+                    galid = galids[gind]
+                    
+                    # retrieve data from this histogram for checks
+                    igrpn_temp = galnames_all[histtype][line].at[galid, 'groupname']   
+                    ifilen_temp = galnames_all[histtype][line].at[galid, 'filename']   
+                    
+                    with h5py.File(ifilen_temp, 'r') as fit:
+                        igrp_t = fit[igrpn_temp]
+                        hist_t = np.array(igrp_t['histogram'])
+        
+                        if bool(igrp_t['histogram'].attrs['log']):
+                            hist_t = 10**hist_t
+                        #wtsum_t = igrp_t['histogram'].attrs['sum of weights'] # includes stuff outside the maximum radial bin
+                        edges_t = [np.array(igrp_t['binedges/Axis%i'%i]) for i in range(len(hist_t.shape))]
+                        edgekeys_t = list(igrp_t.keys())
+                        edgekeys_t.remove('histogram')
+                        edgekeys_t.remove('binedges')
+                        edgedata_t = {}
+                        for ekey in edgekeys_t: 
+                            edgedata_t[ekey] =  {akey: item for akey, item in igrp_t[ekey].attrs.items()}
+                            for akey in neqlist:
+                                del edgedata_t[ekey][akey]
+                    try:
+                        rax = edgedata_t['3Dradius']['histogram axis']
+                    except KeyError:
+                        raise KeyError('Could not retrieve histogram axis for galaxy %i, file %s'%(galid, ifilen_temp))
+                    try:
+                        sfax = edgedata_t['StarFormationRate_T4EOS']['histogram axis']
+                    except KeyError:
+                        raise KeyError('Could not retrieve SFR axis for galaxy %i, file %s'%(galid, ifilen_temp))
+                    
+                    if histtype == 'Trprof':
+                        axname_toaverage = 'Temperature_T4EOS'
+                    elif histtype == 'nrprof':
+                        axname_toaverage = 'Niondens_hydrogen_SmAb_T4EOS'
+                    else:
+                        base = 'SmoothedElementAbundance-{elt}_T4EOS'
+                        if histtype == 'Zrprof':
+                            line = '-'.join(weight.split('-')[1:]) # 'em-o7r', 'em-fer17-other1'
+                            elt = string.capwords(ol.elements_ion[line])
+                        else:
+                            elt = histtype.split('-')[0] # 'Carbon-rprof'
+                        axname_toaverage = base.format(elt=elt)
+                        
+                    try:
+                        avax = edgedata_t[axname_toaverage]['histogram axis']
+                        avlog = edgedata_t[axname_toaverage]['log']
+                    except KeyError:
+                        raise KeyError('Could not retrieve axis to average %s for galaxy %i, file %s'%(axname_toaverage, galid, ifilen_temp))
+                    if rbinu == 'R200c':                    
+                        R200c = galdata_all.at[galid, 'R200c_cMpc']
+                        R200c *= c.cm_per_mpc * cosmopars['a']              
+                        edges_t[rax] *= (1. / R200c)
+                    
+                    try:
+                        ind1 = np.where(np.isclose(edges_t[rax], addedges[0]))[0][0]
+                    except IndexError:
+                        raise RuntimeError('Could not find a histogram edge matching %f for galaxy %i, ion %s'%(addedges[0], galid, ion))
+                    try:
+                        ind2 = np.where(np.isclose(edges_t[rax], addedges[1]))[0][0]
+                    except IndexError:
+                        raise RuntimeError('Could not find a histogram edge matching %f for galaxy %i, ion %s'%(addedges[1], galid, ion))
+                    
+                    addsel = [slice(None, None, None)] * len(edges_t)
+                    addsel[rax] = slice(ind1, ind2, None) # left edge ind1 -> start from in ind1, right edge ind2 -> stop after bin ind2 - 1
+                    addsel_nsf = list(np.copy(addsel))
+                    addsel_nsf[sfax] = slice(0, 1, None)
+                    addsel_sf = list(np.copy(addsel))
+                    addsel_sf[sfax] = slice(1, 2, None)
+                    tempsum_nsf = np.sum(hist_t[tuple(addsel_nsf)])
+                    tempsum_sf = np.sum(hist_t[tuple(addsel_sf)])
+                        
+                    if savetot:
+                        savelist_tot[gind, li, 0] = tempsum_nsf
+                        savelist_tot[gind, li, 1] = tempsum_sf
+                    
+                    avedges = edges_t[avax]
+                    avcens = 0.5 * (avedges[:-1] + avedges[1:])
+                    if avedges[-1] == np.inf:
+                        avcens[-1] = avedges[-2] + 0.5 * (avedges[-2] - avedges[-3])
+                    if avlog:
+                        avcens = 10**avcens
+                    sumaxes = len(hist_t.shape)
+                    sumaxes.remove(avax)
+                    sumaxes = tuple(sumaxes)
+                    shapeav = [np.newaxis] * len(hist_t.shape)
+                    shapeav[avax] = slice(None, None, None)
+                    shapeav = tuple(shapeav)
+                    av_nsf = np.sum(hist_t[tuple(addsel_nsf)] * avcens[shapeav],\
+                                    axis=sumaxes) / tempsum_nsf
+                    av_sf  = np.sum(hist_t[tuple(addsel_sf)] * avcens[shapeav],\
+                                    axis=sumaxes) / tempsum_sf  
+                    if avlog:
+                        av_nsf = np.log10(av_nsf)
+                        av_sf  = np.log10(av_sf)
+                    savelist[gind, li, 0] = av_nsf
+                    savelist[gind, li, 1] = av_sf
+                    
+            # don't forget the list of galids (galids_bin, and edgedata)
+            #print(hists)
+            if savetot:
+                egrp = fo
+                if weight == 'Luminosity':
+                    lines = ['-'.join(weight.split('-')[1:]) for weight in weighttypes]
+                    units = 'erg/s'
+                else:
+                    lines = weighttypes
+                    if histtype == 'Mass':
+                        units = 'g'
+                    elif histtype == 'Volume':
+                        units = 'cm**-3'
+                egrp.attrs.create('weight', np.array([np.string_(line) for line in lines]))
+                
+                ds = egrp.create_dataset('weight_total', data=savelist)
+                ds.attrs.create('units', np.string_(units))
+                ds.attrs.create('axis0', np.string_('galaxyid'))
+                ds.attrs.create('axis1', np.string_('weight'))
+                ds.attrs.create('axis2', np.array([np.string_('non-star-forming'),\
+                                                   np.string_('star-forming')]))
+        
+            if histtype == 'Trprof':
+                dsname = 'Temperature_T4EOS'
+                units = 'log10 K'
+            elif histtype == 'nrprof':
+                dsname = 'Niondens_hydrogen_SmAb'
+                units = 'log10 cm**-3'
+            else:
+                base = 'SmoothedElementAbundance-{elt}'
+                units = 'log10 mass fraction'
+                if histtype == 'Zrprof':
+                    line = '-'.join(weight.split('-')[1:]) # 'em-o7r', 'em-fer17-other1'
+                    elt = string.capwords(ol.elements_ion[line])
+                else:
+                    elt = histtype.split('-')[0] # 'Carbon-rprof'
+                dsname = base.format(elt=elt)
+            egrp = fo
+            if weight == 'Luminosity':
+                lines = ['-'.join(weight.split('-')[1:]) for weight in weighttypes]
+            else:
+                lines = weighttypes
+            #egrp.attrs.create('weight', np.array([np.string_(line) for line in lines]))
+            
+            ds = egrp.create_dataset(dsname, data=savelist)
+            ds.attrs.create('units', np.string_(units))
+            ds.attrs.create('axis0', np.string_('galaxyid'))
+            ds.attrs.create('axis1', np.string_('weight'))
+            ds.attrs.create('axis2', np.array([np.string_('non-star-forming'),\
+                                               np.string_('star-forming')]))
+        
 def addhalomasses_hists_ionfrac(samplename='L0100N1504_27_Mh0p5dex_1000',\
               addedges=(0.1, 1.)):
     rbinu='R200c'
