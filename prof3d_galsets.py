@@ -1391,7 +1391,7 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
         histtypes = ['Zrprof', 'nrprof', 'Trprof'] 
     elif weight in ['Mass', 'Volume']:
         outname = ol.pdir + '{weight}-weighted-nH-T-Z_halos_%s_%s-%s-%s_SmAb.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)
-        outname.format(weight=weight.lower())
+        outname = outname.format(weight=weight.lower())
         weighttypes = [weight]
         metals = ['Carbon', 'Nitrogen', 'Oxygen', 'Neon', 'Magnesium',\
                   'Iron', 'Silicon']
