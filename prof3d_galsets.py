@@ -1388,7 +1388,7 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
     if weight == 'Luminosity':
         outname = ol.pdir + 'luminosity-weighted-nH-T-Z_halos_%s_%s-%s-%s_SmAb.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)
         weighttypes = ['em-{l}'.format(l=line) for line in lines1]
-        histtypes = ['nrprof', 'Trprof', 'Zrprof'] 
+        histtypes = ['Zrprof', 'nrprof', 'Trprof'] 
     elif weight in ['Mass', 'Volume']:
         outname = ol.pdir + '{weight}-weighted-nH-T-Z_halos_%s_%s-%s-%s_SmAb.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)
         outname.format(weight=weight.lower())
@@ -1502,6 +1502,7 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                             elt = string.capwords(ol.elements_ion[line])
                         else:
                             elt = histtype.split('-')[0] # 'Carbon-rprof'
+                        print(elt)
                         axname_toaverage = base.format(elt=elt)
                         
                     try:
