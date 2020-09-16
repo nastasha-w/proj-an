@@ -1580,9 +1580,9 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                     units = 'erg/s'
                 else:
                     lines = weighttypes
-                    if histtype == 'Mass':
+                    if weight == 'Mass':
                         units = 'g'
-                    elif histtype == 'Volume':
+                    elif weight == 'Volume':
                         units = 'cm**-3'
                 egrp.attrs.create('weight', np.array([np.string_(line) for line in lines]))
                 
