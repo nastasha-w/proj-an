@@ -1586,7 +1586,7 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                         units = 'cm**-3'
                 egrp.attrs.create('weight', np.array([np.string_(line) for line in lines]))
                 
-                ds = egrp.create_dataset('weight_total', data=savelist)
+                ds = egrp.create_dataset('weight_total', data=savelist_tot)
                 ds.attrs.create('units', np.string_(units))
                 ds.attrs.create('axis0', np.string_('galaxyid'))
                 ds.attrs.create('axis1', np.string_('weight'))
