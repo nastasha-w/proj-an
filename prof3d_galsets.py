@@ -1498,8 +1498,8 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                     else:
                         base = 'SmoothedElementAbundance-{elt}_T4EOS'
                         if histtype == 'Zrprof':
-                            line = '-'.join(weight.split('-')[1:]) # 'em-o7r', 'em-fer17-other1'
-                            elt = string.capwords(ol.elements_ion[line])
+                            _line = '-'.join(line.split('-')[1:]) # 'em-o7r', 'em-fer17-other1'
+                            elt = string.capwords(ol.elements_ion[_line])
                         else:
                             elt = histtype.split('-')[0] # 'Carbon-rprof'
                         print(elt)
