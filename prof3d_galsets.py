@@ -1436,7 +1436,7 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                                for line in fnames_histtype_line[histtype]}\
                     for histtype in histtypes}
 
-    galids = np.array(galnames_all[weighttypes[0]].index) # galdata may also include non-selected haloes; galnames galaxyids should match
+    galids = np.array(galnames_all[histtypes[0]][weighttypes[0]].index) # galdata may also include non-selected haloes; galnames galaxyids should match
         
     # axis data attributes that are allowed to differ between summed histograms
     neqlist = ['number of particles',\
