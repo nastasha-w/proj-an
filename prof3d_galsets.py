@@ -1554,6 +1554,11 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                     if avlog:
                         av_nsf = np.log10(av_nsf)
                         av_sf  = np.log10(av_sf)
+                    print(tempsum_sf)
+                    print(tempsum_nsf)
+                    print(av_sf)
+                    print(av_nsf)
+                    print('')
                     savelist[gind, li, 0] = av_nsf
                     savelist[gind, li, 1] = av_sf
                     
