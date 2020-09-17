@@ -4751,7 +4751,7 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                         _wvals = wvals[gsel]
                         if np.any(np.isnan(_avvals)):
                             raise RuntimeError('Found NaN averages with non-zero weights: {wt}, {yq}, M200c: {mmin}-{mmax}'.format(\
-                                           wt=weight, yq=dsname, mmin=ckmey, mmax=mmax))
+                                           wt=weight, yq=dsname, mmin=cmkey, mmax=mmax))
                         
                         edges_r = _edges[mkey][yq][0] 
                         remin = np.where(np.isclose(edges_r, np.log10(addedges[0])))[0][0]\
