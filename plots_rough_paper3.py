@@ -4662,6 +4662,8 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
     galdataf = mdir + '3dprof/' + 'halodata_L0100N1504_27_Mh0p5dex_1000.txt'
     galdata_all = pd.read_csv(galdataf, header=2, sep='\t', index_col='galaxyid')
     
+    print(axweights)
+    print(nrprof)
     for mi in axweights:
         for ti in range(nprof):
             # where are we
