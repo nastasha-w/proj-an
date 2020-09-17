@@ -4713,26 +4713,26 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                         sfax -= 1
                     avunits = fi[dsname].attrs['units'].decode()
                     if 'log10' in avunits:
-                        print('log units {}'.format(yq))
-                        print(np.any(np.isnan(avvals)))
-                        print(np.any(np.isnan(avvals[wvals != 0.])))
+                        #print('log units {}'.format(yq))
+                        #print(np.any(np.isnan(avvals)))
+                        #print(np.any(np.isnan(avvals[wvals != 0.])))
                         avvals[wvals == 0.] = -np.inf # will be 0./0. = np.NaN otherwise -> set to zero
                         avvals = np.log10(np.sum(10**avvals * wvals, axis=sfax)\
                                           / np.sum(wvals, axis=sfax))
                         wvals = np.sum(wvals, axis=sfax)
                         avvals[wvals == 0.] = -np.inf
-                        print(np.any(np.isnan(avvals)))
-                        print(np.any(np.isnan(avvals[wvals != 0.])))
+                        #print(np.any(np.isnan(avvals)))
+                        #print(np.any(np.isnan(avvals[wvals != 0.])))
                     else:
-                        print(np.any(np.isnan(avvals)))
-                        print(np.any(np.isnan(avvals[wvals != 0.])))
+                        #print(np.any(np.isnan(avvals)))
+                        #print(np.any(np.isnan(avvals[wvals != 0.])))
                         avvals[wvals == 0.] = 0.
                         avvals = np.sum(avvals * wvals, axis=sfax)\
                                         / np.sum(wvals, axis=sfax)
                         wvals = np.sum(wvals, axis=sfax)
                         avvals[wvals == 0.] = 0.
-                        print(np.any(np.isnan(avvals)))
-                        print(np.any(np.isnan(avvals[wvals != 0.])))
+                        #print(np.any(np.isnan(avvals)))
+                        #print(np.any(np.isnan(avvals[wvals != 0.])))
                     logmasses =  np.array(np.log10(galdata_all.loc[_galids, 'M200c_Msun']))
                     
                 for cmb in combmethods: # combmethods = ['add', 'addnormed-R200c']
