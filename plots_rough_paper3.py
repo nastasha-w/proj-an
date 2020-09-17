@@ -4709,7 +4709,7 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                         wvals = 10**wvals
                         
                     avvals = fi[dsname][tuple(sel)]
-                    avvals[weights == 0.] = 0. # will be 0./0. = np.NaN otherwise
+                    avvals[wvals == 0.] = 0. # will be 0./0. = np.NaN otherwise
                     if np.any(np.isnan(avvals)):
                         raise RuntimeError('Found NaN averages with non-zero weights: {wt}, {yq}'.format(\
                                            wt=weight, yq=dsname))
