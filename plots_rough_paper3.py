@@ -4433,3 +4433,396 @@ def plot_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
         [axes[i, xi].set_xlim(minx, maxx) for i in range(nprof)]
     
     plt.savefig(outname, format='pdf', box_inches='tight')
+    
+def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
+    '''
+    plot: compare L-weighted and unweighted average quantities from histogram
+          combinations and extracted in prof3d_galsets
+    
+    input:
+    ------
+    weightset: int, which set of weight to plot. Always: M/V weighted and 
+               some ions from the same element
+    '''
+    
+    inclSF = True #False is not implemented in the histogram extraction
+    outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    outname = outdir + 'totLw_L0100N1504_27_Mh0p5dex_1000_0-1-R200c_{}_set{ws}.pdf'.format('wSF' if inclSF else 'nSF',\
+                                                          ws=weightset)
+    addedges = (0., 1.)
+    # for halo mass selections
+    massslice = M200cslice
+    #minrshow = np.log10(0.1) # log10 R200c
+    
+    weightsets = {1: ['c5r', 'c6'],\
+                  2: ['n6r', 'n7'],\
+                  3: ['ne9r', 'ne10'],\
+                  4: ['mg11r', 'mg12'],\
+                  5: ['si13r'],\
+                  6: ['o7r', 'o8'],\
+                  7: ['o7ix', 'o7iy', 'o7f'],\
+                  8: ['fe17', 'fe17-other1', 'fe18', 'fe19'],\
+                  }
+    
+    ws = weightsets[weightset]
+    weights = ['Mass', 'Volume'] + ws
+    axweights = {0: ['Mass', 'Volume']}
+    axweights.update({i + 1: [ws[i]] for i in range(len(ws))})
+    elt = string.capwords(ol.elements_ion[ws[0]])
+    Zsol = ol.solar_abunds_ea[ol.elements_ion[ws[0]]]
+    print('Using {elt} metallicity, solar value {Zsol}'.format(elt=elt,\
+          Zsol=Zsol))
+    
+    fontsize = 12
+    percentile = 0.50
+    rbinu = 'R200c'
+    combmethods = ['add', 'addnormed-R200c']
+    print('Showing percentile ' + str(percentile))
+    alphas = {'add': 0.4,\
+              'addnormed-R200c': 1.,\
+              }
+    linestyles = {weight: 'solid' for weight in weights}
+    linestyles.update({'Volume': 'dashed'})
+    title = 'weighted medians from stacked histograms'
+
+    # snapshot 27
+    cosmopars = {'a': 0.9085634947881763,\
+                 'boxsize': 67.77,\
+                 'h': 0.6777,\
+                 'omegab': 0.0482519,\
+                 'omegalambda': 0.693,\
+                 'omegam':  0.307,\
+                 'z': 0.10063854175996956,\
+                 } # avoid having to read in the halo catalogue just for this; copied from there
+    
+    axlabels = {'T': r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$',\
+                'n': r'$\log_{10} \, \mathrm{n}(\mathrm{H}) \; [\mathrm{cm}^{-3}]$',\
+                'Z': r'$\log_{10} \, \mathrm{Z} \; [\mathrm{Z}_{\odot}]$',\
+                'weight': r'$\log_{10} \, \mathrm{\Sigma}(< r) \,/\, \mathrm{\Sigma}(< \mathrm{R}_{\mathrm{200c}})$',\
+                }
+    axnl = {0: 'n', 1: 'T', 2: 'Z'}
+    
+    filebase_line = 'particlehist_Luminosity_{line}_L0100N1504_27_test3.6_SmAb_T4EOS_galcomb.hdf5'
+    filebase_basic = 'particlehist_{qt}_L0100N1504_27_test3.6_T4EOS_galcomb.hdf5'
+    filenames = {weight: ol.ndir + filebase_line.format(line=weight)\
+                 if weight in ol.elements_ion.keys() else\
+                 ol.ndir + filebase_basic.format(\
+                   qt='propvol' if weight == 'Volume' else weight)\
+                 for weight in weights}
+    # read in data: stacked histograms -> process to plottables
+    hists = {}
+    edges = {}
+    for cbm in combmethods:
+        hists[cbm] = {}
+        edges[cbm] = {}
+        for weight in weights:
+            hists[cbm][weight], edges[cbm][weight], _ =\
+            readin_3dprof_stacked(filenames[weight], Zelt=elt, weight=weight,\
+                          combmethod=cbm, rbinu=rbinu,\
+                          )
+        
+    # set up plot grid
+    panelwidth = 3.
+    panelheight = 3.
+    toplabelheight = 0.0
+    #nmassbins = len(hists[combmethods[0]][weights[0]])
+    nprof = 3
+    
+    fig = plt.figure(figsize=(len(axweights) * panelwidth,\
+                              nprof * panelheight + toplabelheight))
+    grid = gsp.GridSpec(nrows=nprof, ncols=len(axweights),\
+                        hspace=0.0, wspace=0.0,\
+                        width_ratios=[panelwidth] * len(axweights),\
+                        height_ratios=[panelheight] * nprof )
+    axes = np.array([[fig.add_subplot(grid[yi, xi])\
+                      for xi in range(len(axweights))]\
+                      for yi in range(nprof)])
+    
+
+    massedges = np.array([11., 11.5, 12., 12.5, 13., 13.5, 14.])
+    massedges.sort()
+    massincl = massedges[massslice]
+    #massexcl = np.array([ed not in massincl for ed in massedges])
+
+    linewidth = 1.
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"),\
+               mppe.Stroke(linewidth=linewidth, foreground="w"),\
+               mppe.Normal()]
+    linewidth_thick = 2.
+    patheff_thick = [mppe.Stroke(linewidth=linewidth_thick + 0.5, foreground="black"),\
+                     mppe.Stroke(linewidth=linewidth_thick, foreground="w"),\
+                     mppe.Normal()]
+     
+    fig.suptitle(title, fontsize=fontsize + 2)
+    
+    ## from stacked histograms
+    for mi in axweights:
+        for ti in range(nprof):
+            # where are we
+            ax = axes[ti, mi]
+            labelx = ti == nprof - 1
+            labely = mi == 0
+            yq = axnl[ti]
+            _weights = axweights[mi]
+            
+            # set up axis
+            pu.setticks(ax, top=True, left=True, labelleft=labely,\
+                        labelbottom=labelx, fontsize=fontsize)
+            ax.grid(b=True)            
+            if labelx:
+                ax.set_xlabel(r'$\log_{10} \, \mathrm{M}_{\mathrm{200c}} [\mathrm{M}_{\odot}$', fontsize=fontsize)
+            if labely:
+                ax.set_ylabel(axlabels[yq], fontsize=fontsize)
+            
+            # plot stacked histogram
+            for weight in _weights:
+                for cmb in combmethods:
+
+                    _hists = hists[cmb][weight]
+                    _edges = edges[cmb][weight]
+                    mkeys = _hists.keys()
+                    
+                    xpoints = []
+                    ypoints = []
+                    for mkey in mkeys:
+                        keymatch = np.isclose(massincl, mkey)
+                        if not np.any(keymatch):
+                            continue
+                        cmkey = massincl[np.where(keymatch)[0][0]]
+                        xpoints.append(cmkey + 0.25)
+                        
+                        edges_r = _edges[mkey][yq][0] 
+                        remin = np.where(np.isclose(edges_r, np.log10(addedges[0])))[0][0]\
+                                if addedges[0] > 0. else 0
+                        remax = np.where(np.isclose(edges_r, np.log10(addedges[1])))[0][0]
+                        
+                        edges_y = _edges[mkey][yq][1]
+                        hist = _hists[mkey][yq]
+                        hist = np.sum(hist[remin:remax, :], axis=0)
+                        if yq == 'Z':
+                            edges_y -= np.log10(Zsol)
+                        if edges_y[-1] == np.inf:
+                            edges_y[-1] = edges_y[-2] * 2. - edges_y[-3] 
+                        cens_y = 0.5 * (edges_y[:-1] + edges_y[1:])
+                        # compare to averages
+                        av = np.log10(np.sum(10**cens_y * hist) / np.sum(hist))
+                        #percv = pu.percentiles_from_histogram(hist[np.newaxis, :], edges_y, axis=1,\
+                        #                                      percentiles=np.array([percentile]))
+                        ypoints.append(av)
+                    
+                    xpoints = np.array(xpoints)
+                    ypoints = np.array(ypoints)
+                    xs = np.argsort(xpoints)
+                    ypoints = ypoints[xs]
+                    xpoints = xpoints[xs]
+                        
+                    ax.plot(xpoints, ypoints, color='black',\
+                            linestyle=linestyles[weight], alpha=alphas[cmb],\
+                            path_effects=patheff_thick, linewidth=linewidth_thick)
+                    
+                    # add CIE T indicators
+                    if weight in line_Tmax and yq == 'T':
+                        Tcen = line_Tmax[weight]
+                        Tran = line_Trange[weight]
+                        ax.axhline(Tcen, color='red', linestyle='solid',\
+                                   linewidth=linewidth)
+                        ax.axhline(Tran[0], color='red', linestyle='dotted',\
+                                   linewidth=linewidth)
+                        ax.axhline(Tran[1], color='red', linestyle='dotted',\
+                                   linewidth=linewidth)
+                    # add Tvir indicator
+                    elif weight == 'Mass' and yq == 'T':
+                        xvals = 10**xpoints # M200c [Msun]
+                        Tv = cu.Tvir(xvals, cosmopars=cosmopars, mu=0.59)
+                        ax.plot(xpoints, np.log10(Tv), color='blue',\
+                                linestyle='solid', linewidth=linewidth)
+                        
+            if ti == 0 and len(_weights) > 1:
+                handles = [mlines.Line2D([], [], linestyle=linestyles[weight],\
+                                         color='black', alpha=1., linewidth=linewidth_thick,\
+                                         label=weight) for weight in _weights]
+                labels = [weight[0] for weight in _weights]
+                ax.legend(handles, labels, fontsize=fontsize, bbox_to_anchor=(0., 1.),\
+                          loc='upper left')
+            elif ti == 0:
+                ax.text(0.05, 0.95, _weights[0], fontsize=fontsize,\
+                        horizontalalignment='left', verticalalignment='top',\
+                        transform=ax.transAxes)
+            if ti == 0 and mi == 1:
+                handles = [mlines.Line2D([], [], linestyle='solid', color='black',\
+                                         alpha=alphas[cmb], linewidth=linewidth_thick,\
+                                         label=cmb) for cmb in combmethods]
+                labels = ['add' if cmb == 'add' else\
+                          'norm.' if cmb == 'addnormed-R200c' else\
+                          cmb for cmb in combmethods]
+                ax.legend(handles, labels, fontsize=fontsize, bbox_to_anchor=(1., 0.),\
+                          loc='lower right')
+                
+    ## from collated individual halo values
+    galdataf = mdir + '3dprof/' + 'halodata_L0100N1504_27_Mh0p5dex_1000.txt'
+    galdata_all = pd.read_csv(galdataf, header=2, sep='\t', index_col='galaxyid')
+    
+    for mi in axweights:
+        for ti in range(nprof):
+            # where are we
+            ax = axes[ti, mi]
+            labelx = ti == nprof - 1
+            labely = mi == 0
+            yq = axnl[ti] # 'n', 'T', or 'Z'
+            _weights = axweights[mi]
+
+            # plot stacked histogram
+            dsname_w = 'weight_total'
+            if yq == 'T':
+                dsname = 'Temperature_T4EOS'
+            elif yq == 'n':
+                dsname = 'Niondens_hydrogen_SmAb' 
+            else:
+                dsname = 'SmoothedElementAbundance-{elt}'
+            for weight in _weights: # ['Mass', 'Volume'] + line labels
+                
+                # read-in data for the hdf5 files
+                if weight in ['Mass', 'Volume']:
+                    _filen = ol.pdir + '{wt}-weighted-nH-T-Z_halos_L0100N1504_27_Mh0p5dex_1000_0.0-1.0-R200c_SmAb.hdf5'
+                    _filen = _filen.format(wt=weight.lower())
+                    wkey = weight
+                    dsname = dsname.format(elt=elt)
+                else:
+                    _filen = ol.pdir + 'luminosity-weighted-nH-T-Z_halos_L0100N1504_27_Mh0p5dex_1000_0.0-1.0-R200c_SmAb.hdf5'
+                    wkey = 'em-' + weight
+                    dsname = dsname.format(elt='parent')
+                #galax = 0
+                weightax = 1
+                sfax = 2
+                
+                with h5py.File(_filen, 'r') as fi:
+                    _galids = fi['galaxyids'][:]
+                    
+                    wcols = np.array([wt.decode() for wt in fi.attrs['weight']])
+                    wind = np.where(wcols == wkey)[0][0]
+                    sel = [slice(None, None, None)] * 3
+                    sel[weightax] = wind
+                    
+                    weights = fi[dsname_w][tuple(sel)]
+                    wunits = fi[dsname_w].attrs['units'].decode()
+                    if 'log' in wunits:
+                        weights = 10**weights
+                        
+                    avvals = fi[dsname][tuple(sel)]
+                    avvals[weights == 0.] = 0. # will be 0./0. = np.NaN otherwise
+                    if np.any(np.isnan(avvals)):
+                        raise RuntimeError('Found NaN averages with non-zero weights: {wt}, {yq}'.format(\
+                                           wt=weight, yq=dsname))
+                    if sfax > weightax:
+                        sfax -= 1
+                    avunits = fi[dsname].attrs['units'].decode()
+                    if 'log10' in avunits:
+                        print('log units {}'.format(yq))
+                        avvals = np.log10(np.sum(10**avvals * weights, axis=sfax)\
+                                          / np.sum(weights, axis=sfax))
+                    else:
+                        avvals = np.sum(avvals * weights, axis=sfax)\
+                                        / np.sum(weights, axis=sfax)
+                    
+                    logmasses =  np.array(np.log10(galdata_all.loc[_galids, 'M200c_Msun']))
+                    
+                for cmb in combmethods: # combmethods = ['add', 'addnormed-R200c']
+                    # elt = parent element, capitalized
+                    
+                    _hists = hists[cmb][weight]
+                    _edges = edges[cmb][weight]
+                    mkeys = _hists.keys()
+                    
+                    xpoints = []
+                    ypoints = []
+                    for mkey in mkeys:
+                        keymatch = np.isclose(massincl, mkey)
+                        if not np.any(keymatch):
+                            continue
+                        mi = np.where(keymatch)[0][0]
+                        cmkey = massincl[mi] # log10 min. mass for the bin
+                        xpoints.append(cmkey + 0.25)
+                        if np.isclose(cmkey, massedges[-1]):
+                            mmax = np.inf
+                        else:
+                            mmax = massedges[np.where(np.isclose(massedges, cmkey))[0][0] + 1]
+                        gsel = np.logical_and(logmasses >= cmkey, logmasses < mmax)
+                        
+                        _avvals = avvals[gsel]
+                        _weights = weights[gsel]
+                        
+                        edges_r = _edges[mkey][yq][0] 
+                        remin = np.where(np.isclose(edges_r, np.log10(addedges[0])))[0][0]\
+                                if addedges[0] > 0. else 0
+                        remax = np.where(np.isclose(edges_r, np.log10(addedges[1])))[0][0]
+                        
+                        if yq == 'Z':
+                            _avvals -= np.log10(Zsol)
+                        
+                        if cmb == 'add':
+                            if 'log10' in avunits:
+                                av = np.log10(np.sum(10**_avvals * _weights)\
+                                              / np.sum(_weights))
+                            else:
+                                av = np.sum(_avvals * _weights)\
+                                            / np.sum(_weights)
+                        else:
+                            if 'log10' in avunits:
+                                av = np.log10(np.sum(10**_avvals) / len(_avvals))
+                            else:
+                                av = np.sum(_avvals) / len(_avvals)
+                                            
+                        ypoints.append(av)
+                    
+                    xpoints = np.array(xpoints)
+                    ypoints = np.array(ypoints)
+                    xs = np.argsort(xpoints)
+                    ypoints = ypoints[xs]
+                    xpoints = xpoints[xs]
+                        
+                    ax.plot(xpoints, ypoints, color='green',\
+                            linestyle=linestyles[weight], alpha=alphas[cmb] * 0.7,\
+                            path_effects=patheff_thick, linewidth=linewidth_thick)
+                    
+                        
+            if ti == 0 and mi == 2:
+                handles = [mlines.Line2D([], [], linestyle='solid', color='black',\
+                                         linewidth=linewidth_thick,\
+                                         label='hist.'),\
+                           mlines.Line2D([], [], linestyle='solid', color='green',\
+                                         linewidth=linewidth_thick,\
+                                         label='indiv.'),\
+                           ]
+                #labels = ['add' if cmb == 'add' else\
+                #          'norm.' if cmb == 'addnormed-R200c' else\
+                #          cmb for cmb in combmethods]
+                ax.legend(handles=handles, fontsize=fontsize, bbox_to_anchor=(1., 0.),\
+                          loc='lower right')
+                
+    # sync y limits on plots
+    for yi in range(nprof):
+        if axnl[yi] == 'T':
+            y0min = 3.5
+            y1max = 8.
+        elif axnl[yi] == 'n':
+            y0min = -6.5
+            y1max = 0.
+        elif axnl[yi] == 'Z':
+            y0min = -2.5
+            y1max = 0.8
+        elif axnl[yi] == 'weight':
+            y0min = -2.5
+            y1max = 1.
+        ylims = np.array([axes[yi, mi].get_ylim() for mi in range(len(axweights))])
+        miny = max(np.min(ylims[:, 0]), y0min)
+        maxy = min(np.max(ylims[:, 1]), y1max)
+        # for Z and cumulative
+        miny = max(miny, maxy - 10.)
+        [[axes[yi, mi].set_ylim(miny, maxy) for mi in range(len(axweights))]]
+    for xi in range(len(axweights)):
+        xlims = np.array([axes[i, xi].get_xlim() for i in range(nprof)])
+        minx = np.min(xlims[:, 0])
+        maxx = np.max(xlims[:, 1])
+        [axes[i, xi].set_xlim(minx, maxx) for i in range(nprof)]
+    
+    plt.savefig(outname, format='pdf', box_inches='tight')
