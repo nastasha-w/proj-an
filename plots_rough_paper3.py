@@ -4711,9 +4711,6 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                         
                     avvals = fi[dsname][tuple(sel)]
                     avvals[wvals == 0.] = 0. # will be 0./0. = np.NaN otherwise
-                    if np.any(np.isnan(avvals)):
-                        raise RuntimeError('Found NaN averages with non-zero weights: {wt}, {yq}'.format(\
-                                           wt=weight, yq=dsname))
                     if sfax > weightax:
                         sfax -= 1
                     avunits = fi[dsname].attrs['units'].decode()
@@ -4752,6 +4749,9 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                         
                         _avvals = avvals[gsel]
                         _wvals = wvals[gsel]
+                        if np.any(np.isnan(_avvals)):
+                            raise RuntimeError('Found NaN averages with non-zero weights: {wt}, {yq}, M200c: {mmin}-{mmax}'.format(\
+                                           wt=weight, yq=dsname, mmin=ckmey, mmax=mmax))
                         
                         edges_r = _edges[mkey][yq][0] 
                         remin = np.where(np.isclose(edges_r, np.log10(addedges[0])))[0][0]\
