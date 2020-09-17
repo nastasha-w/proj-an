@@ -4723,6 +4723,7 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                     else:
                         avvals = np.sum(avvals * weights, axis=sfax)\
                                         / np.sum(weights, axis=sfax)
+                    weights = np.sum(weights, axis=sfax)
                     
                     logmasses =  np.array(np.log10(galdata_all.loc[_galids, 'M200c_Msun']))
                     
