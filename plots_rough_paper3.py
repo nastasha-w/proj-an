@@ -4705,10 +4705,10 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                     sel = [slice(None, None, None)] * 3
                     sel[weightax] = wind
                     
-                    weights = fi[dsname_w][tuple(sel)]
+                    wvals = fi[dsname_w][tuple(sel)]
                     wunits = fi[dsname_w].attrs['units'].decode()
                     if 'log' in wunits:
-                        weights = 10**weights
+                        wvals = 10**wvals
                         
                     avvals = fi[dsname][tuple(sel)]
                     avvals[weights == 0.] = 0. # will be 0./0. = np.NaN otherwise
@@ -4720,12 +4720,12 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                     avunits = fi[dsname].attrs['units'].decode()
                     if 'log10' in avunits:
                         print('log units {}'.format(yq))
-                        avvals = np.log10(np.sum(10**avvals * weights, axis=sfax)\
-                                          / np.sum(weights, axis=sfax))
+                        avvals = np.log10(np.sum(10**avvals * wvals, axis=sfax)\
+                                          / np.sum(wvals, axis=sfax))
                     else:
-                        avvals = np.sum(avvals * weights, axis=sfax)\
-                                        / np.sum(weights, axis=sfax)
-                    weights = np.sum(weights, axis=sfax)
+                        avvals = np.sum(avvals * wvals, axis=sfax)\
+                                        / np.sum(wvals, axis=sfax)
+                    wvals = np.sum(wvals, axis=sfax)
                     
                     logmasses =  np.array(np.log10(galdata_all.loc[_galids, 'M200c_Msun']))
                     
@@ -4752,7 +4752,7 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                         gsel = np.logical_and(logmasses >= cmkey, logmasses < mmax)
                         
                         _avvals = avvals[gsel]
-                        _weights = weights[gsel]
+                        _wvals = wvals[gsel]
                         
                         edges_r = _edges[mkey][yq][0] 
                         remin = np.where(np.isclose(edges_r, np.log10(addedges[0])))[0][0]\
@@ -4764,11 +4764,11 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                         
                         if cmb == 'add':
                             if 'log10' in avunits:
-                                av = np.log10(np.sum(10**_avvals * _weights)\
-                                              / np.sum(_weights))
+                                av = np.log10(np.sum(10**_avvals * _wvals)\
+                                              / np.sum(_wvals))
                             else:
-                                av = np.sum(_avvals * _weights)\
-                                            / np.sum(_weights)
+                                av = np.sum(_avvals * _wvals)\
+                                            / np.sum(_wvals)
                         else:
                             if 'log10' in avunits:
                                 av = np.log10(np.sum(10**_avvals) / len(_avvals))
