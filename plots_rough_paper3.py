@@ -4447,7 +4447,7 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
     
     inclSF = True #False is not implemented in the histogram extraction
     outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
-    outname = outdir + 'totLw_L0100N1504_27_Mh0p5dex_1000_0-1-R200c_{}_set{ws}.pdf'.format('wSF' if inclSF else 'nSF',\
+    outname = outdir + 'totLw-comp_L0100N1504_27_Mh0p5dex_1000_0-1-R200c_{}_set{ws}.pdf'.format('wSF' if inclSF else 'nSF',\
                                                           ws=weightset)
     addedges = (0., 1.)
     # for halo mass selections
