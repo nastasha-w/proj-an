@@ -4741,8 +4741,8 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                         keymatch = np.isclose(massincl, mkey)
                         if not np.any(keymatch):
                             continue
-                        mi = np.where(keymatch)[0][0]
-                        cmkey = massincl[mi] # log10 min. mass for the bin
+                        massi = np.where(keymatch)[0][0]
+                        cmkey = massincl[massi] # log10 min. mass for the bin
                         xpoints.append(cmkey + 0.25)
                         if np.isclose(cmkey, massedges[-1]):
                             mmax = np.inf
@@ -4782,8 +4782,12 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                     ypoints = ypoints[xs]
                     xpoints = xpoints[xs]
                         
+                    if linestyles[weight] == 'solid':
+                        ls = 'dotted'
+                    elif linestyles[weight] == 'dashed':
+                        ls = 'dashdot'
                     ax.plot(xpoints, ypoints, color='green',\
-                            linestyle=linestyles[weight], alpha=alphas[cmb] * 0.7,\
+                            linestyle=ls, alpha=alphas[cmb] * 0.7,\
                             path_effects=patheff_thick, linewidth=linewidth_thick)
                     
                         
