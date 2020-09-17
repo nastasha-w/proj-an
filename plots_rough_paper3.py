@@ -4750,6 +4750,7 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                         _avvals = avvals[gsel]
                         _wvals = wvals[gsel]
                         if np.any(np.isnan(_avvals)):
+                            print('{} NaN values found'.format(np.sum(np.isnan(_avvals))))
                             raise RuntimeError('Found NaN averages with non-zero weights: {wt}, {yq}, M200c: {mmin}-{mmax}'.format(\
                                            wt=weight, yq=dsname, mmin=cmkey, mmax=mmax))
                         
