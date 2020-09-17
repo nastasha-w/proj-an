@@ -4054,7 +4054,6 @@ def plot3Dprof_v1(weightset=1, M200cslice=(None, None, None)):
    
     for mi in axweights:
         for ti in range(nprof):
-            print(axweights)
             # where are we
             ax = axes[ti, mi]
             labelx = ti == nprof - 1
@@ -4665,6 +4664,7 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
     
     for mi in axweights:
         for ti in range(nprof):
+            print(axweights)
             # where are we
             ax = axes[ti, mi]
             labelx = ti == nprof - 1
