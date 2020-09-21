@@ -1268,7 +1268,7 @@ def plotstampzooms_perline(line='all'):
     fig = plt.figure(figsize=(figwidth, figheight))
     grid = gsp.GridSpec(ncols=ncols, nrows=1, hspace=0.0, wspace=0.0,\
                         width_ratios=width_ratios)
-    axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(len(groups))]
+    axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(len(groups[line]))]
         
     cax1  = fig.add_subplot(grid[0, 3])
     cax2  = fig.add_subplot(grid[0, 4])
@@ -1277,7 +1277,7 @@ def plotstampzooms_perline(line='all'):
     clabel_hmass = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
     cbar, colordct = add_cbar_mass(cax2, massedges=mass_edges_standard,\
              orientation='horizontal', clabel=clabel_hmass, fontsize=fontsize, aspect=0.1)
-    print('Max value in maps: {}'.format(max([np.max(maps[line]) for line in _lines])))
+    print('Max value in maps: {}'.format(max([np.max(maps[line][grn]) for line in _lines for grn in groups[line]])))
     
     cmap_img = cmap
     cmap_img.set_under(cmap_img(0.))
@@ -1656,7 +1656,8 @@ def plotstampzooms_overview():
     clabel_hmass = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
     cbar, colordct = add_cbar_mass(cax2, massedges=mass_edges_standard,\
              orientation='horizontal', clabel=clabel_hmass, fontsize=fontsize, aspect=0.1)
-    print('Max value in maps: {}'.format(max([np.max(maps[line]) for line in _lines])))
+    print('Max value in maps: {}'.format(max([np.max(maps[line][grn])\
+          for line in _lines for grn in groups[line]])))
     
     cmap_img = cmap
     cmap_img.set_under(cmap_img(0.))
