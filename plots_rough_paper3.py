@@ -1508,6 +1508,7 @@ def plotstampzooms_overview():
     rsc_zbig = 1.
     line_focus = 'o8'
     lines_med = ['o7r', 'c5r', 'fe17']
+    sliceshift_y = 10. # zoom region overlaps edge -> shift y coordinates up
     
     filebase = ol.pdir + 'stamps/' + 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen21.875_z-projection_noEOS_stamps.hdf5'
     
@@ -1656,7 +1657,7 @@ def plotstampzooms_overview():
     _x0 = margin / figwidth
     _y0 = margin / figheight
     _x1 = 1. - _x0
-    _y1 = 1. - _y1
+    _y1 = 1. - _y0
     
     #[left, bottom, width, height]
     # focus lines: top row
@@ -1750,6 +1751,10 @@ def plotstampzooms_overview():
                       extents[line][grn][0][1] + margin]
             yrange = [extents[line][grn][1][0] - margin,\
                       extents[line][grn][1][1] + margin]
+            if grn == grn_slice:
+                posy += sliceshift_y
+                yrange = [y + sliceshift_y for y in yrange]
+                
             hsel = np.ones(len(posx), dtype=bool)
             cosmopars = cosmoparss[line][grn]
             boxsize = cosmopars['boxsize'] / cosmopars['h'] 
