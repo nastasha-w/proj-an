@@ -1768,7 +1768,7 @@ def plotstampzooms_overview():
             hsel = np.ones(len(posx), dtype=bool)
             cosmopars = cosmoparss[line][grn]
             boxsize = cosmopars['boxsize'] / cosmopars['h'] 
-            #hsel &= cu.periodic_sel(posz, zrange, boxsize)
+            hsel &= cu.periodic_sel(posz, zrange, boxsize)
             if xrange[1] - xrange[0] < boxsize:
                 hsel &= cu.periodic_sel(posx, xrange, boxsize)
             if yrange[1] - yrange[0] < boxsize:
@@ -1871,91 +1871,91 @@ def plotstampzooms_overview():
                     path_effects=patheff_text, horizontalalignment='center',\
                     verticalalignment='bottom', color='black')
             
-            if grn == grn_zsmall: # add dotted circles for haloes just over the slice edges
-                posx = pos[axis1]
-                posy = pos[axis2]
-                posz = pos[axis3]
-                
-                zrange1 = [depths[line][grn][1],  depths[line][grn][1] + margin]
-                zrange2 = [depths[line][grn][0] - margin, depths[line][grn][0]]
-                xrange = [extents[line][grn][0][0] - margin,\
-                          extents[line][grn][0][1] + margin]
-                yrange = [extents[line][grn][1][0] - margin,\
-                          extents[line][grn][1][1] + margin]
-                          
-                hsel = np.ones(len(posx), dtype=bool)
-                _hsel = cu.periodic_sel(posz, zrange1, boxsize)
-                _hsel |=  cu.periodic_sel(posz, zrange2, boxsize)
-                hsel &= _hsel
-                if xrange[1] - xrange[0] < boxsize:
-                    hsel &= cu.periodic_sel(posx, xrange, boxsize)
-                if yrange[1] - yrange[0] < boxsize:
-                    hsel &= cu.periodic_sel(posy, yrange, boxsize)
-                    
-                posx = posx[hsel]
-                posy = posy[hsel]
-                posz = posz[hsel]
-                ms = masses[hsel]
-                rd = radii[hsel]
-                
-                # haloes are not just generally close to the edges, but within r200c of them
-                hsel =  np.abs((posz + 0.5 * boxsize - depths[line][grn][1]) % boxsize - 0.5 * boxsize) < rd
-                hsel &= np.abs((posz + 0.5 * boxsize - depths[line][grn][0]) % boxsize - 0.5 * boxsize) < rd
-                
-                posx = posx[hsel]
-                posy = posy[hsel]
-                posz = posz[hsel]
-                ms = ms[hsel]
-                rd = rd[hsel]
-                
-                # add periodic repetitions if the plotted edges are periodic
-                if xrange[1] - xrange[0] > boxsize - 2. * margin or\
-                   yrange[1] - yrange[0] > boxsize - 2. * margin:
-                   _p = cu.pad_periodic([posx, posy], margin, boxsize, additional=[ms, rd])
-                   
-                   posx = _p[0][0]
-                   posy = _p[0][1]
-                   ms = _p[1][0]
-                   rd = _p[1][1]
-                elif xrange[0] < 0. or yrange[0] < 0. or\
-                     xrange[1] > boxsize or yrange[1] > boxsize:
-                   _m = []
-                   if xrange[0] < 0.:
-                       _m.append(np.abs(xrange[0]))
-                   if yrange[0] < 0.:
-                       _m.append(np.abs(yrange[0]))    
-                   if xrange[1] > boxsize:
-                       _m.append(xrange[1] - boxsize)
-                   if yrange[1] > boxsize:
-                       _m.append(yrange[1] - boxsize)
-                   _margin = margin + max(_m)
-                   _p = cu.pad_periodic([posx, posy], _margin, boxsize, additional=[ms, rd])
-                   
-                   posx = _p[0][0]
-                   posy = _p[0][1]
-                   ms = _p[1][0]
-                   rd = _p[1][1]
-                
-                me = np.array(sorted(list(colordct.keys())) + [17.])
-                mi = np.max(np.array([np.searchsorted(me, ms) - 1,\
-                                      np.zeros(len(ms), dtype=np.int)]),\
-                            axis=0)
-                colors = np.array([colordct[me[i]] for i in mi])
-                
-                patches = [mpatch.Circle((posx[ind], posy[ind]), scaler200 * rd[ind]) \
-                           for ind in range(len(posx))] # x, y axes only
-            
-                patheff = [mppe.Stroke(linewidth=1.2, foreground="black"),\
-                               mppe.Stroke(linewidth=0.7, foreground="white"),\
-                               mppe.Normal()] 
-                collection = mcol.PatchCollection(patches)
-                collection.set(edgecolor=colors, facecolor='none', linewidth=0.7,\
-                               path_effects=patheff, linestyle='dotted')
-                ylim = ax.get_ylim()
-                xlim = ax.get_xlim()
-                ax.add_collection(collection)
-                ax.set_xlim(*xlim)
-                ax.set_ylim(*ylim)
+#            if grn == grn_zsmall: # add dotted circles for haloes just over the slice edges
+#                posx = pos[axis1]
+#                posy = pos[axis2]
+#                posz = pos[axis3]
+#                
+#                zrange1 = [depths[line][grn][1],  depths[line][grn][1] + margin]
+#                zrange2 = [depths[line][grn][0] - margin, depths[line][grn][0]]
+#                xrange = [extents[line][grn][0][0] - margin,\
+#                          extents[line][grn][0][1] + margin]
+#                yrange = [extents[line][grn][1][0] - margin,\
+#                          extents[line][grn][1][1] + margin]
+#                          
+#                hsel = np.ones(len(posx), dtype=bool)
+#                _hsel = cu.periodic_sel(posz, zrange1, boxsize)
+#                _hsel |=  cu.periodic_sel(posz, zrange2, boxsize)
+#                hsel &= _hsel
+#                if xrange[1] - xrange[0] < boxsize:
+#                    hsel &= cu.periodic_sel(posx, xrange, boxsize)
+#                if yrange[1] - yrange[0] < boxsize:
+#                    hsel &= cu.periodic_sel(posy, yrange, boxsize)
+#                    
+#                posx = posx[hsel]
+#                posy = posy[hsel]
+#                posz = posz[hsel]
+#                ms = masses[hsel]
+#                rd = radii[hsel]
+#                
+#                # haloes are not just generally close to the edges, but within r200c of them
+#                hsel =  np.abs((posz + 0.5 * boxsize - depths[line][grn][1]) % boxsize - 0.5 * boxsize) < rd
+#                hsel &= np.abs((posz + 0.5 * boxsize - depths[line][grn][0]) % boxsize - 0.5 * boxsize) < rd
+#                
+#                posx = posx[hsel]
+#                posy = posy[hsel]
+#                posz = posz[hsel]
+#                ms = ms[hsel]
+#                rd = rd[hsel]
+#                
+#                # add periodic repetitions if the plotted edges are periodic
+#                if xrange[1] - xrange[0] > boxsize - 2. * margin or\
+#                   yrange[1] - yrange[0] > boxsize - 2. * margin:
+#                   _p = cu.pad_periodic([posx, posy], margin, boxsize, additional=[ms, rd])
+#                   
+#                   posx = _p[0][0]
+#                   posy = _p[0][1]
+#                   ms = _p[1][0]
+#                   rd = _p[1][1]
+#                elif xrange[0] < 0. or yrange[0] < 0. or\
+#                     xrange[1] > boxsize or yrange[1] > boxsize:
+#                   _m = []
+#                   if xrange[0] < 0.:
+#                       _m.append(np.abs(xrange[0]))
+#                   if yrange[0] < 0.:
+#                       _m.append(np.abs(yrange[0]))    
+#                   if xrange[1] > boxsize:
+#                       _m.append(xrange[1] - boxsize)
+#                   if yrange[1] > boxsize:
+#                       _m.append(yrange[1] - boxsize)
+#                   _margin = margin + max(_m)
+#                   _p = cu.pad_periodic([posx, posy], _margin, boxsize, additional=[ms, rd])
+#                   
+#                   posx = _p[0][0]
+#                   posy = _p[0][1]
+#                   ms = _p[1][0]
+#                   rd = _p[1][1]
+#                
+#                me = np.array(sorted(list(colordct.keys())) + [17.])
+#                mi = np.max(np.array([np.searchsorted(me, ms) - 1,\
+#                                      np.zeros(len(ms), dtype=np.int)]),\
+#                            axis=0)
+#                colors = np.array([colordct[me[i]] for i in mi])
+#                
+#                patches = [mpatch.Circle((posx[ind], posy[ind]), scaler200 * rd[ind]) \
+#                           for ind in range(len(posx))] # x, y axes only
+#            
+#                patheff = [mppe.Stroke(linewidth=1.2, foreground="black"),\
+#                               mppe.Stroke(linewidth=0.7, foreground="white"),\
+#                               mppe.Normal()] 
+#                collection = mcol.PatchCollection(patches)
+#                collection.set(edgecolor=colors, facecolor='none', linewidth=0.7,\
+#                               path_effects=patheff, linestyle='dotted')
+#                ylim = ax.get_ylim()
+#                xlim = ax.get_xlim()
+#                ax.add_collection(collection)
+#                ax.set_xlim(*xlim)
+#                ax.set_ylim(*ylim)
                     
             
             if grn == grn_slice:
