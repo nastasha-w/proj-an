@@ -1188,7 +1188,7 @@ def plotstampzooms_perline(line='all'):
                               line=line, filen=filen, grp=grn))
                         continue
                     grp = ft[grn] 
-                    maps[line] = grp['map'][:]
+                    maps[line][grn] = grp['map'][:]
                     cosmopars = {key: val for key, val in \
                         grp['Header_in/inputpars/cosmopars'].attrs.items()}
                     cosmoparss[line][grn] = cosmopars
@@ -1226,10 +1226,10 @@ def plotstampzooms_perline(line='all'):
                         extents[line][grn] = np.array([[0., extent_x],\
                                                        [0., extent_y]])
                     depths[line][grn] = (centre[axis3] - 0.5 * Ls[axis3], centre[axis3] + 0.5 * Ls[axis3]) 
-                    resolutions[line][grn] = ((extents[line][0][1] - extents[line][0][0])\
-                                               * 1e3 * cosmopars['a'] / maps[line].shape[0],\
-                                              (extents[line][1][1] - extents[line][1][0])\
-                                               * 1e3 * cosmopars['a'] / maps[line].shape[1])
+                    resolutions[line][grn] = ((extents[line][grn][0][1] - extents[line][grn][0][0])\
+                                               * 1e3 * cosmopars['a'] / maps[line][grn].shape[0],\
+                                              (extents[line][grn][1][1] - extents[line][grn][1][0])\
+                                               * 1e3 * cosmopars['a'] / maps[line][grn].shape[1])
                 
         except IOError:
             print('Could not find the file for {line}: {filen}.'.format(\
@@ -1523,7 +1523,7 @@ def plotstampzooms_overview():
                               line=line, filen=filen, grp=grn))
                         continue
                     grp = ft[grn] 
-                    maps[line] = grp['map'][:]
+                    maps[line][grn] = grp['map'][:]
                     cosmopars = {key: val for key, val in \
                         grp['Header_in/inputpars/cosmopars'].attrs.items()}
                     cosmoparss[line][grn] = cosmopars
@@ -1561,10 +1561,10 @@ def plotstampzooms_overview():
                         extents[line][grn] = np.array([[0., extent_x],\
                                                        [0., extent_y]])
                     depths[line][grn] = (centre[axis3] - 0.5 * Ls[axis3], centre[axis3] + 0.5 * Ls[axis3]) 
-                    resolutions[line][grn] = ((extents[line][0][1] - extents[line][0][0])\
-                                               * 1e3 * cosmopars['a'] / maps[line].shape[0],\
-                                              (extents[line][1][1] - extents[line][1][0])\
-                                               * 1e3 * cosmopars['a'] / maps[line].shape[1])
+                    resolutions[line][grn] = ((extents[line][grn][0][1] - extents[line][grn][0][0])\
+                                               * 1e3 * cosmopars['a'] / maps[line][grn].shape[0],\
+                                              (extents[line][grn][1][1] - extents[line][grn][1][0])\
+                                               * 1e3 * cosmopars['a'] / maps[line][grn].shape[1])
                 
         except IOError:
             print('Could not find the file for {line}: {filen}.'.format(\
