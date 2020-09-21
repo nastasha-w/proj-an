@@ -1665,7 +1665,7 @@ def plotstampzooms_overview():
     axes[line_focus][grn_slice] = fig.add_axes([_x0 + _ps0_l, _y1 - _ps1_l, _ps0_l, _ps1_l])
     axes[line_focus][grn_zsmall] = fig.add_axes([_x0 + 2. * _ps0_l, _y1 - _ps1_m, _ps0_m, _ps1_m])
     # right column: medium-panel lines
-    for li, line in enumerate(lines_med):
+    for li, line in enumerate([line_focus] + lines_med):
         bottom = _y1 - (li + 1.) * _ps1_m
         axes[line][grn_zsmall] = fig.add_axes([_x0 + 2. * _ps0_l, bottom, _ps0_m, _ps1_m])
     # block: small panel lines
@@ -1676,7 +1676,7 @@ def plotstampzooms_overview():
         col = li % ncol_small
         row = li // ncol_small
         left = _x0 + col * _ps0_s
-        bottom = _y1 - _ps0_l - (row + 1.) * _ps1_s
+        bottom = _y1 - _ps1_l - (row + 1.) * _ps1_s
         axes[line][grn_zsmall] = fig.add_axes([left, bottom, _ps0_s, _ps1_s])
     # lower right: color bars
     texth = 0.3
