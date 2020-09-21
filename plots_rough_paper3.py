@@ -1508,7 +1508,7 @@ def plotstampzooms_overview():
     rsc_zbig = 1.
     line_focus = 'o8'
     lines_med = ['o7r', 'c5r', 'fe17']
-    sliceshift_y = 10. # zoom region overlaps edge -> shift y coordinates up
+    sliceshift_y = 15. # zoom region overlaps edge -> shift y coordinates up
     
     filebase = ol.pdir + 'stamps/' + 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen21.875_z-projection_noEOS_stamps.hdf5'
     
@@ -1664,7 +1664,7 @@ def plotstampzooms_overview():
     # focus lines: top row
     axes[line_focus][grn_zbig]  = fig.add_axes([_x0, _y1 - _ps1_l, _ps0_l, _ps1_l])
     axes[line_focus][grn_slice] = fig.add_axes([_x0 + _ps0_l, _y1 - _ps1_l, _ps0_l, _ps1_l])
-    axes[line_focus][grn_zsmall] = fig.add_axes([_x0 + 2. * _ps0_l, _y1 - _ps1_m, _ps0_m, _ps1_m])
+    #axes[line_focus][grn_zsmall] = fig.add_axes([_x0 + 2. * _ps0_l, _y1 - _ps1_m, _ps0_m, _ps1_m])
     # right column: medium-panel lines
     for li, line in enumerate([line_focus] + lines_med):
         bottom = _y1 - (li + 1.) * _ps1_m
@@ -1682,7 +1682,7 @@ def plotstampzooms_overview():
     # lower right: color bars
     _ht = _ps1_s
     bottom = _y0
-    left = _x0 + (1. + len(slines) % ncol_small) * _ps0_s
+    left = _x0 + (len(slines) % ncol_small) * _ps0_s
     width =  0.5 * (_x1 - 3. * _x0 - left)
     cax1  = fig.add_axes([left, bottom, width, _ht])
     cax2  = fig.add_axes([left + width + 2. * _x0, bottom, width, _ht])
@@ -1847,8 +1847,17 @@ def plotstampzooms_overview():
             if marklength > 2.5 * xr:
                 print('Marklength {} is too large for the plotted range'.format(marklength))
                 continue
-            xs = xlim[0] + 0.1 * xr
-            ypos = ylim[0] + 0.07 * yr
+            if line == line_focus and grn != grn_zsmall:
+                y_this = _ps1_l
+                x_this = _ps0_l
+            elif line in lines_med + [line_focus]:
+                y_this == _ps1_m
+                x_this == _ps0_m
+            else:
+                y_this == _ps1_s
+                x_this == _ps0_s
+            xs = xlim[0] + 0.1 * xr * _ps0_l / x_this
+            ypos = ylim[0] + 0.07 * yr * _ps1_l / y_this
             xcen = xs + 0.5 * marklength
             
             patheff = [mppe.Stroke(linewidth=3.0, foreground="white"),\
@@ -1856,7 +1865,8 @@ def plotstampzooms_overview():
                        mppe.Normal()] 
             ax.plot([xs, xs + marklength], [ypos, ypos], color='black',\
                     path_effects=patheff, linewidth=2)
-            ax.text(xcen, ypos + 0.01 * yr, mtext, fontsize=fontsize,\
+            ax.text(xcen, ypos + 0.01 * yr * _ps1_l / y_this,\
+                    mtext, fontsize=fontsize,\
                     path_effects=patheff_text, horizontalalignment='center',\
                     verticalalignment='bottom', color='black')
             
@@ -1898,7 +1908,7 @@ def plotstampzooms_overview():
                     xi = 1
                 else:
                     xi = 0
-                ylow = ylim[1] - (ylim[1] - ylim[0]) * (_ps1_s / _ps1_l)
+                ylow = ylim[1] - (ylim[1] - ylim[0]) * (_ps1_m / _ps1_l)
                 ax.plot([square_small[0][xi], xlim[xi]], [square_small[1][0], ylow],\
                         color='black', path_effects=_patheff,\
                         linewidth=lw_square)
