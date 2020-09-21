@@ -1100,11 +1100,11 @@ def savestamps_v2():
     basename = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5'
     
     # sets:
-    kwargss = [{'center':(50., 50.), 'diameter_out':100., 'resolution':250.,\
+    kwargss = [{'center_out':(50., 50.), 'diameter_out':100., 'resolution':250.,\
                 'group_out': 'slice'},\
-               {'center':(57.5, 4.5), 'diameter_out':25., 'resolution':62.5,\
+               {'center_out':(57.5, 4.5), 'diameter_out':25., 'resolution':62.5,\
                 'group_out': 'zoom1_big'},\
-               {'center':(64.5, 29.5), 'diameter_out':12., 'resolution':31.25,\
+               {'center_out':(64.5, 29.5), 'diameter_out':12., 'resolution':31.25,\
                 'group_out': 'zoom1_small'},\
               ]
                 
