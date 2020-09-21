@@ -1097,7 +1097,7 @@ def savestamps_v2():
     gets stamps for an example region in the box for the different lines 
     '''
     # slice 3
-    basename = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen15.625_z-projection_noEOS.hdf5'
+    basename = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen21.875_z-projection_noEOS.hdf5'
     
     # sets:
     kwargss = [{'center_out':(50., 50.), 'diameter_out':100., 'resolution_out':250.,\
@@ -1133,7 +1133,7 @@ def plotstampzooms_perline(line='all'):
     rsc_zsmall = 1.
     rsc_zbig = 1.
     
-    filebase = ol.pdir + 'stamps/' + 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen15.625_z-projection_noEOS_stamps.hdf5'
+    filebase = ol.pdir + 'stamps/' + 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen21.875_z-projection_noEOS_stamps.hdf5'
     filebase = filebase.format(line=line)
     if line == 'ne10':
         filebase = filebase.replace('test3.5', 'test3.6')
@@ -1362,9 +1362,9 @@ def plotstampzooms_perline(line='all'):
            ms = _p[1][0]
            rd = _p[1][1]
            
-           print(posx)
-           print(posy)
-           print(rd)
+           #print(posx)
+           #print(posy)
+           #print(rd)
         elif xrange[0] < 0. or yrange[0] < 0. or\
              xrange[1] > boxsize or yrange[1] > boxsize:
            _m = []
@@ -1509,7 +1509,7 @@ def plotstampzooms_overview():
     line_focus = 'o8'
     lines_med = ['o7r', 'c5r', 'fe17']
     
-    filebase = ol.pdir + 'stamps/' + 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen15.625_z-projection_noEOS_stamps.hdf5'
+    filebase = ol.pdir + 'stamps/' + 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen21.875_z-projection_noEOS_stamps.hdf5'
     
     grn_slice = 'slice'
     grn_zsmall = 'zoom1_small'
