@@ -1342,8 +1342,10 @@ def plotstampzooms_perline(line='all'):
         cosmopars = cosmoparss[line][grn]
         boxsize = cosmopars['boxsize'] / cosmopars['h'] 
         hsel &= cu.periodic_sel(posz, zrange, boxsize)
-        hsel &= cu.periodic_sel(posx, xrange, boxsize)
-        hsel &= cu.periodic_sel(posy, yrange, boxsize)
+        if xrange[1] - xrange(0) < boxsize:
+            hsel &= cu.periodic_sel(posx, xrange, boxsize)
+        if yrange[1] - yrange(0) < boxsize:
+            hsel &= cu.periodic_sel(posy, yrange, boxsize)
         
         posx = posx[hsel]
         posy = posy[hsel]
@@ -1750,8 +1752,10 @@ def plotstampzooms_overview():
             cosmopars = cosmoparss[line][grn]
             boxsize = cosmopars['boxsize'] / cosmopars['h'] 
             hsel &= cu.periodic_sel(posz, zrange, boxsize)
-            hsel &= cu.periodic_sel(posx, xrange, boxsize)
-            hsel &= cu.periodic_sel(posy, yrange, boxsize)
+            if xrange[1] - xrange(0) < boxsize:
+                hsel &= cu.periodic_sel(posx, xrange, boxsize)
+            if yrange[1] - yrange(0) < boxsize:
+                hsel &= cu.periodic_sel(posy, yrange, boxsize)
             
             posx = posx[hsel]
             posy = posy[hsel]
