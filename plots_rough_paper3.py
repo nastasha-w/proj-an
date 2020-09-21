@@ -1680,7 +1680,7 @@ def plotstampzooms_overview():
         bottom = _y1 - _ps1_l - (row + 1.) * _ps1_s
         axes[line][grn_zsmall] = fig.add_axes([left, bottom, _ps0_s, _ps1_s])
     # lower right: color bars
-    texth = 0.3
+    texth = 0.3 / figheight
     _ht = 0.5 * _ps0_s - texth
     bottom = _y0
     left = _x0 + (1. + len(slines) % ncol_small) * _ps0_s
