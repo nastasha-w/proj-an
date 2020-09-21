@@ -1172,17 +1172,18 @@ def plotstampzooms_perline(line='all'):
     cosmoparss = {}
     snapshots = {}
     for line in [line]:
+        maps[line] = {}
+        extents[line] = {}
+        depths[line] = {}
+        paxes[line] = {}
+        resolutions[line] = {}
+        cosmoparss[line] = {}
+        snapshots[line] = {}
         filen = filebase
         try:
             with h5py.File(filen, 'r') as ft:
+                
                 for grn in groups[line]:
-                    maps[line] = {}
-                    extents[line] = {}
-                    depths[line] = {}
-                    paxes[line] = {}
-                    resolutions[line] = {}
-                    cosmoparss[line] = {}
-                    snapshots[line] = {}
                     if grn not in ft:
                         print('Could not find the group {grp} for {line}: {filen}.'.format(\
                               line=line, filen=filen, grp=grn))
@@ -1508,19 +1509,20 @@ def plotstampzooms_overview():
     cosmoparss = {}
     snapshots = {}
     for line in lines:
+        maps[line] = {}
+        extents[line] = {}
+        depths[line] = {}
+        paxes[line] = {}
+        resolutions[line] = {}
+        cosmoparss[line] = {}
+        snapshots[line] = {}
+                    
         filen = filebase.format(line=line)
         if line == 'ne10':
             filen = filen.replace('test3.5', 'test3.6')
         try:
             with h5py.File(filen, 'r') as ft:
                 for grn in groups[line]:
-                    maps[line] = {}
-                    extents[line] = {}
-                    depths[line] = {}
-                    paxes[line] = {}
-                    resolutions[line] = {}
-                    cosmoparss[line] = {}
-                    snapshots[line] = {}
                     if grn not in ft:
                         print('Could not find the group {grp} for {line}: {filen}.'.format(\
                               line=line, filen=filen, grp=grn))
