@@ -1359,6 +1359,10 @@ def plotstampzooms_perline(line='all'):
            posy = _p[0][1]
            ms = _p[1][0]
            rd = _p[1][1]
+           
+           print(posx)
+           print(posy)
+           print(rd)
         elif xrange[0] < 0. or yrange[0] < 0. or\
              xrange[1] > boxsize or yrange[1] > boxsize:
            _m = []
@@ -1781,8 +1785,6 @@ def plotstampzooms_overview():
                posy = _p[0][1]
                ms = _p[1][0]
                rd = _p[1][1]
-            print(posx)
-            print(posy)
             
             me = np.array(sorted(list(colordct.keys())) + [17.])
             mi = np.max(np.array([np.searchsorted(me, ms) - 1,\
