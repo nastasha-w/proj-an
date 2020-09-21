@@ -1333,7 +1333,7 @@ def plotstampzooms_perline(line='all'):
         posy = pos[axis2]
         posz = pos[axis3]
         margin = np.max(radii)
-        zrange = depths[line]
+        zrange = depths[line][grn]
         xrange = [extents[line][grn][0][0] - margin,\
                   extents[line][grn][0][1] + margin]
         yrange = [extents[line][grn][1][0] - margin,\
@@ -1711,7 +1711,7 @@ def plotstampzooms_overview():
             posy = pos[axis2]
             posz = pos[axis3]
             margin = np.max(radii)
-            zrange = depths[line]
+            zrange = depths[line][grn]
             xrange = [extents[line][grn][0][0] - margin,\
                       extents[line][grn][0][1] + margin]
             yrange = [extents[line][grn][1][0] - margin,\
