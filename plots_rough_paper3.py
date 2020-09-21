@@ -1680,13 +1680,12 @@ def plotstampzooms_overview():
         bottom = _y1 - _ps1_l - (row + 1.) * _ps1_s
         axes[line][grn_zsmall] = fig.add_axes([left, bottom, _ps0_s, _ps1_s])
     # lower right: color bars
-    texth = 0.3 / figheight
-    _ht = 0.5 * _ps0_s - texth
+    _ht = _ps1_s
     bottom = _y0
     left = _x0 + (1. + len(slines) % ncol_small) * _ps0_s
-    width = _x1 - margin - left
-    cax1  = fig.add_axes([left, bottom + texth, width, _ht])
-    cax2  = fig.add_axes([left, bottom + 2. * texth + _ht, width, _ht])
+    width =  0.5 * (_x1 - 3. * margin - left)
+    cax1  = fig.add_axes([left, bottom, width, _ht])
+    cax2  = fig.add_axes([left + width + 2. * margin, bottom, width, _ht])
    
     clabel_img = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{ph.} \\, \\mathrm{cm}^{-2} \\mathrm{s}^{-1} \\mathrm{sr}^{-1}]$'
     clabel_hmass = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
@@ -1742,10 +1741,16 @@ def plotstampzooms_overview():
             posz = pos[axis3]
             
             if grn == grn_slice:
-                posy = np.copy(posy)
-                posy += sliceshift_y
-                extents[line][grn][1][0] += sliceshift_y
-                extents[line][grn][1][1] += sliceshift_y
+                _deltay = extents[line][grn][1][1] - extents[line][grn][1][0]
+                _npixy = maps[line][grn].shape[1]
+                nshift = int(sliceshift_y / _deltay * _npixy + 0.5)
+                shift_y = nshift * (_deltay / _npixy)
+                print('Shifting slice map by {shifty}'.format(shifty=shift_y))
+                maps[line][grn] = np.roll(maps[line][grn], nshift)
+                #posy = np.copy(posy)
+                #posy -= sliceshift_y
+                extents[line][grn][1][0] -= sliceshift_y
+                extents[line][grn][1][1] -= sliceshift_y
             
             margin = np.max(radii)
             zrange = depths[line][grn]
