@@ -1905,8 +1905,8 @@ def plotstampzooms_overview():
                 posx = posx[hsel]
                 posy = posy[hsel]
                 posz = posz[hsel]
-                ms = masses[hsel]
-                rd = radii[hsel]
+                ms = ms[hsel]
+                rd = rd[hsel]
                 
                 # add periodic repetitions if the plotted edges are periodic
                 if xrange[1] - xrange[0] > boxsize - 2. * margin or\
