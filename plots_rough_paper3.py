@@ -1520,7 +1520,9 @@ def plotstampzooms_overview():
     groups = {line: [grn_zsmall] for line in lines}
     groups[line_focus] = groups_all
         
-    outname = ol.mdir + '' 
+    outname = ol.mdir + 'emission_overview_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen21.875_z-projection_noEOS_stamps' 
+    outname.replace('.', 'p')
+    outname = outname + '.hdf5'
     
     minhalomass = 11.
     halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
