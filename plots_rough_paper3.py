@@ -1781,6 +1781,8 @@ def plotstampzooms_overview():
                posy = _p[0][1]
                ms = _p[1][0]
                rd = _p[1][1]
+            print(posx)
+            print(posy)
             
             me = np.array(sorted(list(colordct.keys())) + [17.])
             mi = np.max(np.array([np.searchsorted(me, ms) - 1,\
