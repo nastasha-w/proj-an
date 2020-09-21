@@ -1249,7 +1249,7 @@ def plotstampzooms_perline(line='all'):
         print(groups)
         print(snapshots)
         print(line)
-        if not np.all(snapnum == np.array([snapshots[line][grn] for grn in groups])):
+        if not np.all(snapnum == np.array([snapshots[line][grn] for grn in groups[line]])):
             raise RuntimeError('Stamp snapshots do not match halo catalogue snapshot')
         masses = np.log10(hc['M200c_Msun'][:])
         radii = hc['R200c_pkpc'] / cosmopars['a'] * 1e-3
@@ -1585,8 +1585,6 @@ def plotstampzooms_overview():
     with h5py.File(halocat, 'r') as hc:
         snapnum = hc['Header'].attrs['snapnum']
         cosmopars = {key: val for key, val in hc['Header/cosmopars'].attrs.items()}
-        print(groups)
-        print(snapshots)
         if not np.all(snapnum == np.array([snapshots[line][grn] for line in _lines for grn in groups[line]])):
             raise RuntimeError('Stamp snapshots do not match halo catalogue snapshot')
         masses = np.log10(hc['M200c_Msun'][:])
