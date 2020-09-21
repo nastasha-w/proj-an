@@ -747,3 +747,42 @@ def periodic_sel(array, edges, period):
         out = array >= edges[0]
         out |= array < edges[1]
     return out
+
+def pad_periodic(pos, margin, period, additional=None):
+    '''
+    add perioidc repetitions to the pos arrays for values within margin of the
+    edges, as well as to additional 
+    
+    input:
+    ------
+    pos:     positions, shape (number of dimesions, number of points)
+    margin:  distance from the edges (0, boxsize) to include in repetitions
+    period:  the periodic of the volume
+    additional: other arrays for which to duplicate values (without adding/
+             subtracting the box size); second dimension sould match pos
+    '''
+    
+    pos = np.array(pos)
+    pos %= period
+    ndims = pos.shape[0]
+    if additional is not None:
+        additional = np.array(additional)
+    
+    for i in range(ndims):
+        e0 = pos[i] < margin
+        e1 = pos[i] > period - margin
+        diff = np.zeros((ndims, 1))
+        diff[i, :] = period
+        a2 = pos[:, e1] - diff
+        pos = np.append(pos, pos[:, e0] + diff, axis=1)
+        pos = np.append(pos, a2, axis=1)
+        if additional is not None:
+            _a2 = additional[:, e1]
+            additional = np.append(additional, additional[:, e0], axis=1)
+            additional = np.append(additional, _a2, axis=1)
+    
+    if additional is None:
+        out = pos
+    else:
+        out = (pos, additional)
+    return out
