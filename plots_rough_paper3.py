@@ -1037,9 +1037,9 @@ def explore_halopos(halocat=None, minhalomass=11., simslice=(0, 16)):
              orientation='vertical', clabel=clabel_hmass,\
              fontsize=fontsize, aspect=10.)
 
-    ax.tick_params(top=False, bottom=False, left=True, right=True,\
-                  labeltop=False, labelbottom=False, labelleft=False,\
-                  labelright=False)
+    ax.tick_params(top=True, bottom=True, left=True, right=True,\
+                  labeltop=False, labelbottom=True, labelleft=True,\
+                  labelright=False, direction='in', labelsize=fontsize -1)
     ax.set_xlabel('X [cMpc]')
     ax.set_ylabel('Y [cMpc]')
     ax.set_xlim(*tuple(extent[0]))    
