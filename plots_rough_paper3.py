@@ -1872,6 +1872,9 @@ def plotstampzooms_overview():
                     verticalalignment='bottom', color='black')
             
             if grn == grn_zsmall: # add dotted circles for haloes just over the slice edges
+                posx = pos[axis1]
+                posy = pos[axis2]
+                posz = pos[axis3]
                 
                 zrange1 = [depths[line][grn][1],  depths[line][grn][1] + margin]
                 zrange2 = [depths[line][grn][0] - margin, depths[line][grn][0]]
