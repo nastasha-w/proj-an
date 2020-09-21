@@ -1276,7 +1276,7 @@ def plotstampzooms_perline(line='all'):
     clabel_img = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{ph.} \\, \\mathrm{cm}^{-2} \\mathrm{s}^{-1} \\mathrm{sr}^{-1}]$'
     clabel_hmass = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
     cbar, colordct = add_cbar_mass(cax2, massedges=mass_edges_standard,\
-             orientation='horizontal', clabel=clabel_hmass, fontsize=fontsize, aspect=0.1)
+             orientation='vertical', clabel=clabel_hmass, fontsize=fontsize, aspect=10.)
     print('Max value in maps: {}'.format(max([np.max(maps[line][grn]) for line in _lines for grn in groups[line]])))
     
     cmap_img = cmap
@@ -1339,7 +1339,7 @@ def plotstampzooms_perline(line='all'):
         yrange = [extents[line][grn][1][0] - margin,\
                   extents[line][grn][1][1] + margin]
         hsel = np.ones(len(posx), dtype=bool)
-        cosmopars = cosmoparss[line]
+        cosmopars = cosmoparss[line][grn]
         boxsize = cosmopars['boxsize'] / cosmopars['h'] 
         hsel &= cu.periodic_sel(posz, zrange, boxsize)
         hsel &= cu.periodic_sel(posx, xrange, boxsize)
@@ -1450,10 +1450,10 @@ def plotstampzooms_perline(line='all'):
             ax.plot([square_small[0][xi], xlim[xi]], [square_small[1][0], ylim[0]])
             ax.plot([square_small[0][xi], xlim[xi]], [square_small[1][1], ylim[1]])
 
-    plt.colorbar(img, cax=cax1, orientation='horizontal', extend='both')
+    plt.colorbar(img, cax=cax1, orientation='vertical', extend='both')
     cax1.set_xlabel(clabel_img, fontsize=fontsize)
     cax1.tick_params(labelsize=fontsize - 1, which='both')
-    cax1.set_aspect(0.1)   
+    cax1.set_aspect(10.)   
     
     print('Halos indicated at {rs} x R200c'.format(rs=scaler200))
 
@@ -1717,7 +1717,7 @@ def plotstampzooms_overview():
             yrange = [extents[line][grn][1][0] - margin,\
                       extents[line][grn][1][1] + margin]
             hsel = np.ones(len(posx), dtype=bool)
-            cosmopars = cosmoparss[line]
+            cosmopars = cosmoparss[line][grn]
             boxsize = cosmopars['boxsize'] / cosmopars['h'] 
             hsel &= cu.periodic_sel(posz, zrange, boxsize)
             hsel &= cu.periodic_sel(posx, xrange, boxsize)
