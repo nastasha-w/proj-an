@@ -1359,6 +1359,24 @@ def plotstampzooms_perline(line='all'):
            posy = _p[0][1]
            ms = _p[1][0]
            rd = _p[1][1]
+        elif xrange[0] < 0. or yrange[0] < 0. or\
+             xrange[1] > boxsize or yrange[1] > boxsize:
+           _m = []
+           if xrange[0] < 0.:
+               _m.append(np.abs(xrange[0]))
+           if yrange[0] < 0.:
+               _m.append(np.abs(yrange[0]))    
+           if xrange[1] > boxsize:
+               _m.append(xrange[1] - boxsize)
+           if yrange[1] > boxsize:
+               _m.append(yrange[1] - boxsize)
+           _margin = margin + max(_m)
+           _p = cu.pad_periodic([posx, posy], _margin, boxsize, additional=[ms, rd])
+           
+           posx = _p[0][0]
+           posy = _p[0][1]
+           ms = _p[1][0]
+           rd = _p[1][1]
         
         me = np.array(sorted(list(colordct.keys())) + [17.])
         mi = np.max(np.array([np.searchsorted(me, ms) - 1,\
@@ -1740,6 +1758,24 @@ def plotstampzooms_overview():
             if xrange[1] - xrange[0] > boxsize - 2. * margin or\
                yrange[1] - yrange[0] > boxsize - 2. * margin:
                _p = cu.pad_periodic([posx, posy], margin, boxsize, additional=[ms, rd])
+               
+               posx = _p[0][0]
+               posy = _p[0][1]
+               ms = _p[1][0]
+               rd = _p[1][1]
+            elif xrange[0] < 0. or yrange[0] < 0. or\
+                 xrange[1] > boxsize or yrange[1] > boxsize:
+               _m = []
+               if xrange[0] < 0.:
+                   _m.append(np.abs(xrange[0]))
+               if yrange[0] < 0.:
+                   _m.append(np.abs(yrange[0]))    
+               if xrange[1] > boxsize:
+                   _m.append(xrange[1] - boxsize)
+               if yrange[1] > boxsize:
+                   _m.append(yrange[1] - boxsize)
+               _margin = margin + max(_m)
+               _p = cu.pad_periodic([posx, posy], _margin, boxsize, additional=[ms, rd])
                
                posx = _p[0][0]
                posy = _p[0][1]
