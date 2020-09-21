@@ -982,7 +982,112 @@ def plotstamps(filebase=None, halocat=None,\
         if outname[-4:] != '.pdf':
             outname = outname + '.pdf'
         plt.savefig(outname, format='pdf', bbox_inches='tight')
+
+
+def explore_halopos(halocat=None, minhalomass=11., simslice=(0, 16)):
+    '''
+    plot the stamps stored in files filebase, overplotting the halos from 
         
+    input:
+    ------
+    halocat:   (str) halo catalogue for overplotting halos. Assumed to be in 
+               ol.pdir if no path is given.
+    minhalomass: (float) minimum halo mass to plot (log10 solar masses)
+    simslice:  tuple (slice index, number of slices), ints 
+    
+    '''        
+    if halocat is None:
+        halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    scaler200 = 2. # show radii at this times R200c
+
+    axis1 = 0
+    axis2 = 1
+    axis3 = 2
+    
+
+    # get halo catalogue data for overplotting
+    if '/' not in halocat:
+        halocat = ol.pdir + halocat
+    with h5py.File(halocat, 'r') as hc:
+        cosmopars = {key: val for key, val in hc['Header/cosmopars'].attrs.items()}
+
+        masses = np.log10(hc['M200c_Msun'][:])
+        radii = hc['R200c_pkpc'] / cosmopars['a'] * 1e-3
+        pos = np.array([hc['Xcom_cMpc'][:],\
+                        hc['Ycom_cMpc'][:],\
+                        hc['Zcom_cMpc'][:]])
+        msel = masses >= minhalomass
+        masses = masses[msel]
+        radii = radii[msel]
+        pos = pos[:, msel]
+    
+    extent = [[0., cosmopars['boxsize']/ cosmopars['h']]] * 2
+    deltaz = cosmopars['boxsize'] / cosmopars['h'] / simslice[1]
+    depth = [deltaz * simslice[0],  deltaz * (simslice[0] + 1)]
+    
+    fig = plt.figure(figsize=(5.5, 5.))
+    grid = gsp.GridSpec(ncols=2, nrows=1, hspace=0.2, wspace=0.0,\
+                        width_ratios=[5., 0.5],\
+                        height_ratios=[1.])
+    ax = fig.add_subplot(grid[0, 0])
+    cax = fig.add_subplot(grid[0, 1])
+
+    clabel_hmass = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
+    cbar, colordct = add_cbar_mass(cax, massedges=mass_edges_standard,\
+             orientation='horizontal', clabel=clabel_hmass,\
+             fontsize=fontsize, aspect=0.1)
+
+    
+
+    ax.tick_params(top=False, bottom=False, left=True, right=True,\
+                  labeltop=False, labelbottom=False, labelleft=False,\
+                  labelright=False)
+    ax.set_xlabel('X [cMpc]')
+    ax.set_ylabel('Y [cMpc]')
+        
+    posx = pos[axis1]
+    posy = pos[axis2]
+    posz = pos[axis3]
+    margin = np.max(radii)
+    zrange = depth
+    xrange = [extent[0][0] - margin,\
+              extent[0][1] + margin]
+    yrange = [extent[1][0] - margin,\
+              extent[1][1] + margin]
+    hsel = np.ones(len(posx), dtype=bool)
+
+    boxsize = cosmopars['boxsize'] / cosmopars['h'] 
+    hsel &= cu.periodic_sel(posz, zrange, boxsize)
+    hsel &= cu.periodic_sel(posx, xrange, boxsize)
+    hsel &= cu.periodic_sel(posy, yrange, boxsize)
+        
+    posx = posx[hsel]
+    posy = posy[hsel]
+    ms = masses[hsel]
+    rd = radii[hsel]
+        
+    me = np.array(sorted(list(colordct.keys())) + [17.])
+    mi = np.max(np.array([np.searchsorted(me, ms) - 1,\
+                          np.array([0] * len(ms))]),\
+                axis=0)
+    colors = np.array([colordct[me[i]] for i in mi])
+        
+    patches = [mpatch.Circle((posx[ind], posy[ind]), scaler200 * rd[ind]) \
+               for ind in range(len(posx))] # x, y axes only
+
+    patheff = [mppe.Stroke(linewidth=1.2, foreground="black"),\
+                   mppe.Stroke(linewidth=0.7, foreground="white"),\
+                   mppe.Normal()] 
+    collection = mcol.PatchCollection(patches)
+    collection.set(edgecolor=colors, facecolor='none', linewidth=0.7,\
+                   path_effects=patheff)
+    ylim = ax.get_ylim()
+    xlim = ax.get_xlim()
+    ax.add_collection(collection)
+    ax.set_xlim(*xlim)
+    ax.set_ylim(*ylim)
+    
+    print('Halos indicated at {rs} x R200c'.format(rs=scaler200))
 
 
 ### radial profiles
