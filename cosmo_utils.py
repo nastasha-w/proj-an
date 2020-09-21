@@ -737,7 +737,8 @@ def periodic_sel(array, edges, period):
     array = np.array(array)
     period = float(period)
     array %= period
-    edges = np.array(edges) % period
+    edges = np.array(edges)
+    edges %= period
     
     if edges[0] <= edges[1]:
         out = array >= edges[0]

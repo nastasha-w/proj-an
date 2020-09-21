@@ -1020,7 +1020,6 @@ def explore_halopos(halocat=None, minhalomass=11., simslice=(0, 16)):
         masses = masses[msel]
         radii = radii[msel]
         pos = pos[:, msel]
-    
     extent = [[0., cosmopars['boxsize']/ cosmopars['h']]] * 2
     deltaz = cosmopars['boxsize'] / cosmopars['h'] / simslice[1]
     depth = [deltaz * simslice[0],  deltaz * (simslice[0] + 1)]
@@ -1045,9 +1044,9 @@ def explore_halopos(halocat=None, minhalomass=11., simslice=(0, 16)):
     ax.set_xlim(*tuple(extent[0]))    
     ax.set_ylim(*tuple(extent[1]))  
     
-    posx = pos[axis1]
-    posy = pos[axis2]
-    posz = pos[axis3]
+    posx = pos[axis1, :]
+    posy = pos[axis2, :]
+    posz = pos[axis3, :]
     margin = np.max(radii)
     zrange = depth
     xrange = [extent[0][0] - margin,\
@@ -1055,11 +1054,15 @@ def explore_halopos(halocat=None, minhalomass=11., simslice=(0, 16)):
     yrange = [extent[1][0] - margin,\
               extent[1][1] + margin]
     hsel = np.ones(len(posx), dtype=bool)
-
     boxsize = cosmopars['boxsize'] / cosmopars['h'] 
-    hsel &= cu.periodic_sel(posz, zrange, boxsize)
-    hsel &= cu.periodic_sel(posx, xrange, boxsize)
-    hsel &= cu.periodic_sel(posy, yrange, boxsize)
+ 
+    if zrange[1] - zrange[0] < boxsize:
+        hsel &= cu.periodic_sel(posz, zrange, boxsize)
+    if xrange[1] - xrange[0] < boxsize:
+        hsel &= cu.periodic_sel(posx, xrange, boxsize)
+    if yrange[1] - yrange[0] < boxsize:
+        hsel &= cu.periodic_sel(posy, yrange, boxsize)
+    
         
     posx = posx[hsel]
     posy = posy[hsel]
@@ -1089,6 +1092,32 @@ def explore_halopos(halocat=None, minhalomass=11., simslice=(0, 16)):
     
     print('Halos indicated at {rs} x R200c'.format(rs=scaler200))
 
+def savestamps_v2():
+    '''
+    gets stamps for an example region in the box for the different lines 
+    '''
+    # slice 3
+    basename = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5'
+    
+    # sets:
+    kwargss = [{'center':(50., 50.), 'diameter':100., 'resolution':250.,\
+                'group_out': 'slice'},\
+               {'center':(57.5, 4.5), 'diameter':25., 'resolution':62.5,\
+                'group_out': 'zoom1_big'},\
+               {'center':(64.5, 29.5), 'diameter':12., 'resolution':31.25,\
+                'group_out': 'zoom1_small'},\
+              ]
+                
+    for line in lines:
+        if line == 'ne10':
+            filen_in = basename.format(line=line)
+            filen_in = filen_in.replace('test3.5', 'test3.6')
+        else:
+            filen_in = basename.format(line=line)
+        for kwargs in kwargss:
+            make_and_save_stamps(filen_in, filen_weight=None,\
+                         filen_out=None, **kwargs)
+        
 
 ### radial profiles
 def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
