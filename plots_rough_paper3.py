@@ -1683,9 +1683,9 @@ def plotstampzooms_overview():
     _ht = _ps1_s
     bottom = _y0
     left = _x0 + (1. + len(slines) % ncol_small) * _ps0_s
-    width =  0.5 * (_x1 - 3. * margin - left)
+    width =  0.5 * (_x1 - 3. * _x0 - left)
     cax1  = fig.add_axes([left, bottom, width, _ht])
-    cax2  = fig.add_axes([left + width + 2. * margin, bottom, width, _ht])
+    cax2  = fig.add_axes([left + width + 2. * _x0, bottom, width, _ht])
    
     clabel_img = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{ph.} \\, \\mathrm{cm}^{-2} \\mathrm{s}^{-1} \\mathrm{sr}^{-1}]$'
     clabel_hmass = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
