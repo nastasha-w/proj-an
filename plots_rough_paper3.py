@@ -1246,9 +1246,9 @@ def plotstampzooms_perline(line='all'):
     with h5py.File(halocat, 'r') as hc:
         snapnum = hc['Header'].attrs['snapnum']
         cosmopars = {key: val for key, val in hc['Header/cosmopars'].attrs.items()}
-        print(groups)
-        print(snapshots)
-        print(line)
+        #print(groups)
+        #print(snapshots)
+        #print(line)
         if not np.all(snapnum == np.array([snapshots[line][grn] for grn in groups[line]])):
             raise RuntimeError('Stamp snapshots do not match halo catalogue snapshot')
         masses = np.log10(hc['M200c_Msun'][:])
@@ -1282,7 +1282,7 @@ def plotstampzooms_perline(line='all'):
     cmap_img = cmap
     cmap_img.set_under(cmap_img(0.))
     
-    for grn in groups:
+    for grn in groups[line]:
         if grn == grn_slice:
             ax = axes[1]
             direction_big = 'right'
@@ -1297,6 +1297,9 @@ def plotstampzooms_perline(line='all'):
             ax = axes[2]
             marklength = marklength_z 
             scaler200 = rsc_zbig
+        else:
+            raise RuntimeError('group {grn} not in list {grps} for line {line}'.format(\
+                               grn=grn, grps=[grn_slice, grn_zsmall, grn_zbig], line=line))
         #labelbottom = li > len(_lines) - ncols - 1
         #labeltop = li < ncols 
         #labelleft = li % ncols == 0
