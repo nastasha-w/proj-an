@@ -1641,9 +1641,10 @@ def plotstampzooms_overview():
     panelsize_med = (panelsize_large + 3. * panelsize_small) / 4.
     margin = 0.2
     ncol_small = 4
+    nrows_small = (len(lines) - len(lines_med) - 2) // ncol_small + 1
     
     figwidth =  2. * panelsize_large + 1. * panelsize_med + 2. * margin
-    figheight = 1. * panelsize_large + 4. * panelsize_small + 2. * margin
+    figheight = 1. * panelsize_large + nrows_small * panelsize_small + 2. * margin
     
     fig = plt.figure(figsize=(figwidth, figheight))
     
@@ -1684,7 +1685,7 @@ def plotstampzooms_overview():
     bottom = _y0
     left = _x0 + (1. + len(slines) % ncol_small) * _ps0_s
     width = _x1 - margin - left
-    cax1  = fig.add_axes([left, bottom + texth, width, _ht - texth])
+    cax1  = fig.add_axes([left, bottom + texth, width, _ht])
     cax2  = fig.add_axes([left, bottom + 2. * texth + _ht, width, _ht])
    
     clabel_img = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{ph.} \\, \\mathrm{cm}^{-2} \\mathrm{s}^{-1} \\mathrm{sr}^{-1}]$'
