@@ -1523,7 +1523,7 @@ def plotstampzooms_overview():
         
     outname = ol.mdir + 'emission_overview_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen21.875_z-projection_noEOS_stamps' 
     outname.replace('.', 'p')
-    outname = outname + '.hdf5'
+    outname = outname + '.pdf'
     
     minhalomass = 11.
     halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
@@ -1737,25 +1737,29 @@ def plotstampzooms_overview():
                           labeltop=False, labelbottom=False, labelleft=False,\
                           labelright=False)
             
-            ax.set_facecolor(cmap_img(0.))    
-            img = ax.imshow(maps[line][grn].T, origin='lower', interpolation='nearest',\
-                      extent=(extents[line][grn][0][0], extents[line][grn][0][1],\
-                              extents[line][grn][1][0], extents[line][grn][1][1]),\
-                      cmap=cmap_img, vmin=vmin, vmax=vmax) 
-            
             posx = pos[axis1]
             posy = pos[axis2]
             posz = pos[axis3]
+            
+            if grn == grn_slice:
+                posy = np.copy(posy)
+                posy += sliceshift_y
+                extents[line][grn][1][0] += sliceshift_y
+                extents[line][grn][1][1] += sliceshift_y
+            
             margin = np.max(radii)
             zrange = depths[line][grn]
             xrange = [extents[line][grn][0][0] - margin,\
                       extents[line][grn][0][1] + margin]
             yrange = [extents[line][grn][1][0] - margin,\
                       extents[line][grn][1][1] + margin]
-            if grn == grn_slice:
-                posy += sliceshift_y
-                yrange = [y + sliceshift_y for y in yrange]
                 
+            ax.set_facecolor(cmap_img(0.))    
+            img = ax.imshow(maps[line][grn].T, origin='lower', interpolation='nearest',\
+                      extent=(extents[line][grn][0][0], extents[line][grn][0][1],\
+                              extents[line][grn][1][0], extents[line][grn][1][1]),\
+                      cmap=cmap_img, vmin=vmin, vmax=vmax) 
+                      
             hsel = np.ones(len(posx), dtype=bool)
             cosmopars = cosmoparss[line][grn]
             boxsize = cosmopars['boxsize'] / cosmopars['h'] 
