@@ -1847,15 +1847,16 @@ def plotstampzooms_overview():
             if marklength > 2.5 * xr:
                 print('Marklength {} is too large for the plotted range'.format(marklength))
                 continue
+            
             if line == line_focus and grn != grn_zsmall:
                 y_this = _ps1_l
                 x_this = _ps0_l
             elif line in lines_med + [line_focus]:
-                y_this == _ps1_m
-                x_this == _ps0_m
+                y_this = _ps1_m
+                x_this = _ps0_m
             else:
-                y_this == _ps1_s
-                x_this == _ps0_s
+                y_this = _ps1_s
+                x_this = _ps0_s
             xs = xlim[0] + 0.1 * xr * _ps0_l / x_this
             ypos = ylim[0] + 0.07 * yr * _ps1_l / y_this
             xcen = xs + 0.5 * marklength
