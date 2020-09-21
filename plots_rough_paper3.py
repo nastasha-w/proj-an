@@ -1222,7 +1222,7 @@ def plotstampzooms_perline(line='all'):
                     
                     if bool(grp['map'].attrs['subregion']):
                         extents[line][grn] = np.array([np.array(grp['map'].attrs['edges_axis0_cMpc']),\
-                                                       np.array(grp['map'].attrs['edges_axis0_cMpc'])])
+                                                       np.array(grp['map'].attrs['edges_axis1_cMpc'])])
                     else:
                         extents[line][grn] = np.array([[0., extent_x],\
                                                        [0., extent_y]])
@@ -1440,15 +1440,23 @@ def plotstampzooms_perline(line='all'):
                 xi = 1
             else:
                 xi = 0
-            ax.plot([square_big[0][xi], xlim[xi]], [square_big[1][0], ylim[0]])
-            ax.plot([square_big[0][xi], xlim[xi]], [square_big[1][1], ylim[1]])
+            ax.plot([square_big[0][xi], xlim[xi]], [square_big[1][0], ylim[0]],\
+                        color='black', path_effects=_patheff,\
+                        linewidth=lw_square)
+            ax.plot([square_big[0][xi], xlim[xi]], [square_big[1][1], ylim[1]],\
+                        color='black', path_effects=_patheff,\
+                        linewidth=lw_square)
             
             if direction_small == 'right':
                 xi = 1
             else:
                 xi = 0
-            ax.plot([square_small[0][xi], xlim[xi]], [square_small[1][0], ylim[0]])
-            ax.plot([square_small[0][xi], xlim[xi]], [square_small[1][1], ylim[1]])
+            ax.plot([square_small[0][xi], xlim[xi]], [square_small[1][0], ylim[0]],\
+                        color='black', path_effects=_patheff,\
+                        linewidth=lw_square)
+            ax.plot([square_small[0][xi], xlim[xi]], [square_small[1][1], ylim[1]],\
+                        color='black', path_effects=_patheff,\
+                        linewidth=lw_square)
 
     plt.colorbar(img, cax=cax1, orientation='vertical', extend='both')
     cax1.set_xlabel(clabel_img, fontsize=fontsize)
@@ -1564,7 +1572,7 @@ def plotstampzooms_overview():
                     
                     if bool(grp['map'].attrs['subregion']):
                         extents[line][grn] = np.array([np.array(grp['map'].attrs['edges_axis0_cMpc']),\
-                                                       np.array(grp['map'].attrs['edges_axis0_cMpc'])])
+                                                       np.array(grp['map'].attrs['edges_axis1_cMpc'])])
                     else:
                         extents[line][grn] = np.array([[0., extent_x],\
                                                        [0., extent_y]])
@@ -1818,16 +1826,24 @@ def plotstampzooms_overview():
                     xi = 1
                 else:
                     xi = 0
-                ax.plot([square_big[0][xi], xlim[xi]], [square_big[1][0], ylim[0]])
-                ax.plot([square_big[0][xi], xlim[xi]], [square_big[1][1], ylim[1]])
+                ax.plot([square_big[0][xi], xlim[xi]], [square_big[1][0], ylim[0]],\
+                        color='black', path_effects=_patheff,\
+                        linewidth=lw_square)
+                ax.plot([square_big[0][xi], xlim[xi]], [square_big[1][1], ylim[1]],\
+                        color='black', path_effects=_patheff,\
+                        linewidth=lw_square)
                 
                 if direction_small == 'right':
                     xi = 1
                 else:
                     xi = 0
                 ylow = ylim[1] - (ylim[1] - ylim[0]) * (_ps1_s / _ps1_l)
-                ax.plot([square_small[0][xi], xlim[xi]], [square_small[1][0], ylow])
-                ax.plot([square_small[0][xi], xlim[xi]], [square_small[1][1], ylim[1]])
+                ax.plot([square_small[0][xi], xlim[xi]], [square_small[1][0], ylow],\
+                        color='black', path_effects=_patheff,\
+                        linewidth=lw_square)
+                ax.plot([square_small[0][xi], xlim[xi]], [square_small[1][1], ylim[1]],\
+                        color='black', path_effects=_patheff,\
+                        linewidth=lw_square)
             elif line == line_focus:
                 lw_square = 1.2
                 _patheff = [mppe.Stroke(linewidth=1.5, foreground="white"),\
