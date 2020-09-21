@@ -1142,7 +1142,9 @@ def plotstampzooms_perline(line='all'):
     grn_zbig   = 'zoom1_big'
     groups = [grn_slice, grn_zsmall, grn_zbig]
     
-    outname = ol.mdir + '' 
+    outname = mdir + filebase.split('/')[-1]
+    outname = outname[:-5].replace('.', 'p')
+    outname = outname + '.pdf'
     
     minhalomass = 11.
     halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
