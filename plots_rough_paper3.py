@@ -1034,17 +1034,17 @@ def explore_halopos(halocat=None, minhalomass=11., simslice=(0, 16)):
 
     clabel_hmass = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
     cbar, colordct = add_cbar_mass(cax, massedges=mass_edges_standard,\
-             orientation='horizontal', clabel=clabel_hmass,\
-             fontsize=fontsize, aspect=0.1)
-
-    
+             orientation='vertical', clabel=clabel_hmass,\
+             fontsize=fontsize, aspect=10.)
 
     ax.tick_params(top=False, bottom=False, left=True, right=True,\
                   labeltop=False, labelbottom=False, labelleft=False,\
                   labelright=False)
     ax.set_xlabel('X [cMpc]')
     ax.set_ylabel('Y [cMpc]')
-        
+    ax.set_xlim(*tuple(extent[0]))    
+    ax.set_ylim(*tuple(extent[1]))  
+    
     posx = pos[axis1]
     posy = pos[axis2]
     posz = pos[axis3]
