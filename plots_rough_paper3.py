@@ -1116,7 +1116,7 @@ def savestamps_v2():
         else:
             filen_in = basename.format(line=line)
         for kwargs in kwargss:
-            print(kwargss)
+            print(kwargs)
             make_and_save_stamps(filen_in, filen_weight=None,\
                          filen_out=None, **kwargs)
         
@@ -1456,7 +1456,392 @@ def plotstampzooms_perline(line='all'):
         plt.savefig(outname, format='pdf', bbox_inches='tight')
     
     
+def plotstampzooms_overview():
+    '''
+    overview of the different emission lines on large scales
+    '''
+    # all -> recusive calls for all lines
+
+    rsc_slice = 2.
+    rsc_zsmall = 1.
+    rsc_zbig = 1.
+    line_focus = 'o8'
+    lines_med = ['o7r', 'c5r', 'fe17']
     
+    filebase = ol.pdir + 'stamps/' + 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen15.625_z-projection_noEOS_stamps.hdf5'
+    
+    grn_slice = 'slice'
+    grn_zsmall = 'zoom1_small'
+    grn_zbig   = 'zoom1_big'
+    groups_all = [grn_slice, grn_zsmall, grn_zbig]
+    
+    
+    groups = {line: [grn_zsmall] for line in lines}
+    groups[line_focus] = groups_all
+        
+    outname = ol.mdir + '' 
+    
+    minhalomass = 11.
+    halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    
+    marklength_slice = 10. #cMpc
+    marklength_z = 2. # cMpc
+    
+    vmin = -12. # log10 photons / cm2 / s / sr 
+    vtrans = -2.5
+    vmax = 1.0
+    scaler200 = 2. # show radii at this times R200c
+    cmap = pu.paste_cmaps(['gist_yarg', 'plasma'], [vmin, vtrans, vmax],\
+                          trunclist=[[0.0, 0.5], [0.2, 1.0]])
+    
+
+    maps = {}
+    extents = {}
+    depths = {}
+    paxes = {}
+    resolutions = {}
+    cosmoparss = {}
+    snapshots = {}
+    for line in lines:
+        filen = filebase.format(line=line)
+        if line == 'ne10':
+            filen = filen.replace('test3.5', 'test3.6')
+        try:
+            with h5py.File(filen, 'r') as ft:
+                for grn in groups[line]:
+                    maps[line] = {}
+                    extents[line] = {}
+                    depths[line] = {}
+                    paxes[line] = {}
+                    resolutions[line] = {}
+                    cosmoparss[line] = {}
+                    snapshots[line] = {}
+                    if grn not in ft:
+                        print('Could not find the group {grp} for {line}: {filen}.'.format(\
+                              line=line, filen=filen, grp=grn))
+                        continue
+                    grp = ft[grn] 
+                    maps[line] = grp['map'][:]
+                    cosmopars = {key: val for key, val in \
+                        grp['Header_in/inputpars/cosmopars'].attrs.items()}
+                    cosmoparss[line][grn] = cosmopars
+                    L_x = grp['Header_in/inputpars'].attrs['L_x'] 
+                    L_y = grp['Header_in/inputpars'].attrs['L_y']
+                    L_z = grp['Header_in/inputpars'].attrs['L_z']
+                    centre = np.array(grp['Header_in/inputpars'].attrs['centre'])
+                    LsinMpc = bool(grp['Header_in/inputpars'].attrs['LsinMpc'])
+                    Ls = np.array([L_x, L_y, L_z])
+                    if not LsinMpc:
+                        Ls /= cosmopars['h']
+                        centre /= cosmopars['h']
+                    axis = grp['Header_in/inputpars'].attrs['axis'].decode()
+                    if axis == 'z':
+                        axis1 = 0
+                        axis2 = 1
+                        axis3 = 2
+                    elif axis == 'y':
+                        axis1 = 2
+                        axis2 = 0
+                        axis3 = 1
+                    elif axis == 'x':
+                        axis1 = 1
+                        axis2 = 2
+                        axis3 = 0
+                    paxes[line][grn] = (axis1, axis2, axis3)
+                    extent_x = Ls[axis1]
+                    extent_y = Ls[axis2]
+                    snapshots[line][grn] = grp['Header_in/inputpars'].attrs['snapnum']
+                    
+                    if bool(grp['map'].attrs['subregion']):
+                        extents[line][grn] = np.array([np.array(grp['map'].attrs['edges_axis0_cMpc']),\
+                                                       np.array(grp['map'].attrs['edges_axis0_cMpc'])])
+                    else:
+                        extents[line][grn] = np.array([[0., extent_x],\
+                                                       [0., extent_y]])
+                    depths[line][grn] = (centre[axis3] - 0.5 * Ls[axis3], centre[axis3] + 0.5 * Ls[axis3]) 
+                    resolutions[line][grn] = ((extents[line][0][1] - extents[line][0][0])\
+                                               * 1e3 * cosmopars['a'] / maps[line].shape[0],\
+                                              (extents[line][1][1] - extents[line][1][0])\
+                                               * 1e3 * cosmopars['a'] / maps[line].shape[1])
+                
+        except IOError:
+            print('Could not find the file for {line}: {filen}.'.format(\
+                  line=line, filen=filen))
+    
+    print('Using map resolutions:\n{res}'.format(res=resolutions))
+    #_lines = sorted(maps.keys(), key=ol.line_eng_ion.get)
+    _lines = sorted(maps.keys(), key=ol.line_eng_ion.get)
+    
+    # get halo catalogue data for overplotting
+    if '/' not in halocat:
+        halocat = ol.pdir + halocat
+    with h5py.File(halocat, 'r') as hc:
+        snapnum = hc['Header'].attrs['snapnum']
+        cosmopars = {key: val for key, val in hc['Header/cosmopars'].attrs.items()}
+        if not np.all(snapnum == np.array([snapshots[line][grn] for line in _lines for grn in groups])):
+            raise RuntimeError('Stamp snapshots do not match halo catalogue snapshot')
+        masses = np.log10(hc['M200c_Msun'][:])
+        radii = hc['R200c_pkpc'] / cosmopars['a'] * 1e-3
+        pos = np.array([hc['Xcom_cMpc'][:],\
+                        hc['Ycom_cMpc'][:],\
+                        hc['Zcom_cMpc'][:]])
+        msel = masses >= minhalomass
+        masses = masses[msel]
+        radii = radii[msel]
+        pos = pos[:, msel]
+    
+    # this is all very fine-tuned by hand
+    panelsize_large = 3.
+    panelsize_small = panelsize_large * 0.5
+    panelsize_med = (panelsize_large + 3. * panelsize_small) / 4.
+    margin = 0.2
+    ncol_small = 4
+    
+    figwidth =  2. * panelsize_large + 1. * panelsize_med + 2. * margin
+    figheight = 1. * panelsize_large + 4. * panelsize_small + 2. * margin
+    
+    fig = plt.figure(figsize=(figwidth, figheight))
+    
+    axes = {line: {} for line in _lines}
+    _ps0_l = panelsize_large / figwidth
+    _ps1_l = panelsize_large / figheight
+    _ps0_s = panelsize_small / figwidth
+    _ps1_s = panelsize_small / figheight
+    _ps0_m = panelsize_med / figwidth
+    _ps1_m = panelsize_med / figheight
+    _x0 = margin / figwidth
+    _y0 = margin / figheight
+    _x1 = 1. - _x0
+    _y1 = 1. - _y1
+    
+    #[left, bottom, width, height]
+    # focus lines: top row
+    axes[line_focus][grn_zbig]  = fig.add_axes([_x0, _y1 - _ps1_l, _ps0_l, _ps1_l])
+    axes[line_focus][grn_slice] = fig.add_axes([_x0 + _ps0_l, _y1 - _ps1_l, _ps0_l, _ps1_l])
+    axes[line_focus][grn_zsmall] = fig.add_axes([_x0 + 2. * _ps0_l, _y1 - _ps1_m, _ps0_m, _ps1_m])
+    # right column: medium-panel lines
+    for li, line in enumerate(lines_med):
+        bottom = _y1 - (li + 1.) * _ps1_m
+        axes[line][grn_zsmall] = fig.add_axes([_x0 + 2. * _ps0_l, bottom, _ps0_m, _ps1_m])
+    # block: small panel lines
+    slines = list(np.copy(_lines)) 
+    for line in lines_med + [line_focus]:
+        slines.remove(line)
+    for li, line in enumerate(slines):
+        col = li % ncol_small
+        row = li // ncol_small
+        left = _x0 + col * _ps0_s
+        bottom = _y1 - _ps0_l - (row + 1.) * _ps1_s
+        axes[line][grn_zsmall] = fig.add_axes([left, bottom, _ps0_s, _ps1_s])
+    # lower right: color bars
+    texth = 0.3
+    _ht = 0.5 * _ps0_s - texth
+    bottom = _y0
+    left = _x0 + (1. + len(slines) % ncol_small) * _ps0_s
+    width = _x1 - margin - left
+    cax1  = fig.add_axes([left, bottom + texth, width, _ht - texth])
+    cax2  = fig.add_axes([left, bottom + 2. * texth + _ht, width, _ht])
+   
+    clabel_img = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{ph.} \\, \\mathrm{cm}^{-2} \\mathrm{s}^{-1} \\mathrm{sr}^{-1}]$'
+    clabel_hmass = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
+    cbar, colordct = add_cbar_mass(cax2, massedges=mass_edges_standard,\
+             orientation='horizontal', clabel=clabel_hmass, fontsize=fontsize, aspect=0.1)
+    print('Max value in maps: {}'.format(max([np.max(maps[line]) for line in _lines])))
+    
+    cmap_img = cmap
+    cmap_img.set_under(cmap_img(0.))
+
+    for line in _lines:
+        _groups = groups[line]
+        for grn in _groups:
+            ax = axes[line][grn]
+                
+            if grn == grn_slice:
+                direction_big = 'left'
+                direction_small = 'right'
+                marklength = marklength_slice
+                scaler200 = rsc_slice
+            elif grn == grn_zsmall:
+                marklength = marklength_z 
+                scaler200 = rsc_zsmall
+            elif grn == grn_zbig:
+                marklength = marklength_z 
+                scaler200 = rsc_zbig
+            #labelbottom = li > len(_lines) - ncols - 1
+            #labeltop = li < ncols 
+            #labelleft = li % ncols == 0
+            #labelright = li % ncols == ncols - 1
+            #ax.tick_params(labelsize=fontsize - 1,  direction='in',\
+            #               labelbottom=labelbottom, labeltop=labeltop,\
+            #               labelleft=labelleft, labelright=labelright,\
+            #               top=labeltop, left=labelleft, bottom=labelbottom,\
+            #               right=labelright)
+            #lbase = '{ax} [cMpc]'
+            #axis1 = paxes[line][0]
+            #axis2 = paxes[line][1]
+            #axis3 = paxes[line][2]
+            #if labelbottom:
+            #    xl = lbase.format(ax=['X', 'Y', 'Z'][axis1])
+            #    ax.set_xlabel(xl, fontsize=fontsize)
+            #if labelleft:
+            #    yl = lbase.format(ax=['X', 'Y', 'Z'][axis2])
+            #    ax.set_ylabel(yl, fontsize=fontsize)
+            ax.tick_params(top=False, bottom=False, left=False, right=False,\
+                          labeltop=False, labelbottom=False, labelleft=False,\
+                          labelright=False)
+            
+            ax.set_facecolor(cmap_img(0.))    
+            img = ax.imshow(maps[line][grn].T, origin='lower', interpolation='nearest',\
+                      extent=(extents[line][grn][0][0], extents[line][grn][0][1],\
+                              extents[line][grn][1][0], extents[line][grn][1][1]),\
+                      cmap=cmap_img, vmin=vmin, vmax=vmax) 
+            
+            posx = pos[axis1]
+            posy = pos[axis2]
+            posz = pos[axis3]
+            margin = np.max(radii)
+            zrange = depths[line]
+            xrange = [extents[line][grn][0][0] - margin,\
+                      extents[line][grn][0][1] + margin]
+            yrange = [extents[line][grn][1][0] - margin,\
+                      extents[line][grn][1][1] + margin]
+            hsel = np.ones(len(posx), dtype=bool)
+            cosmopars = cosmoparss[line]
+            boxsize = cosmopars['boxsize'] / cosmopars['h'] 
+            hsel &= cu.periodic_sel(posz, zrange, boxsize)
+            hsel &= cu.periodic_sel(posx, xrange, boxsize)
+            hsel &= cu.periodic_sel(posy, yrange, boxsize)
+            
+            posx = posx[hsel]
+            posy = posy[hsel]
+            ms = masses[hsel]
+            rd = radii[hsel]
+            
+            # add periodic repetitions if the plotted edges are periodic
+            if xrange[1] - xrange[0] > boxsize - 2. * margin or\
+               yrange[1] - yrange[0] > boxsize - 2. * margin:
+               _p = cu.pad_periodic([posx, posy], margin, boxsize, additional=[ms, rd])
+               
+               posx = _p[0][0]
+               posy = _p[0][1]
+               ms = _p[1][0]
+               rd = _p[1][1]
+            
+            me = np.array(sorted(list(colordct.keys())) + [17.])
+            mi = np.max(np.array([np.searchsorted(me, ms) - 1,\
+                                  np.zeros(len(ms), dtype=np.int)]),\
+                        axis=0)
+            colors = np.array([colordct[me[i]] for i in mi])
+            
+            patches = [mpatch.Circle((posx[ind], posy[ind]), scaler200 * rd[ind]) \
+                       for ind in range(len(posx))] # x, y axes only
+        
+            patheff = [mppe.Stroke(linewidth=1.2, foreground="black"),\
+                           mppe.Stroke(linewidth=0.7, foreground="white"),\
+                           mppe.Normal()] 
+            collection = mcol.PatchCollection(patches)
+            collection.set(edgecolor=colors, facecolor='none', linewidth=0.7,\
+                           path_effects=patheff)
+            ylim = ax.get_ylim()
+            xlim = ax.get_xlim()
+            ax.add_collection(collection)
+            ax.set_xlim(*xlim)
+            ax.set_ylim(*ylim)
+            
+            patheff_text = [mppe.Stroke(linewidth=2.0, foreground="white"),\
+                            mppe.Stroke(linewidth=0.4, foreground="black"),\
+                            mppe.Normal()]        
+            ltext = nicenames_lines[line]
+            ax.text(0.95, 0.95, ltext, fontsize=fontsize, path_effects=patheff_text,\
+                    horizontalalignment='right', verticalalignment='top',\
+                    transform=ax.transAxes, color='black')
+    
+            mtext = str(marklength)
+            if mtext[-2:] == '.0':
+                mtext = mtext[:-2]
+            mtext = mtext + ' cMpc'
+            xlim = ax.get_xlim()
+            ylim = ax.get_ylim()
+            xr = xlim[1] - xlim[0]
+            yr = ylim[1] - ylim[0]
+            if marklength > 2.5 * xr:
+                print('Marklength {} is too large for the plotted range'.format(marklength))
+                continue
+            xs = xlim[0] + 0.1 * xr
+            ypos = ylim[0] + 0.07 * yr
+            xcen = xs + 0.5 * marklength
+            
+            patheff = [mppe.Stroke(linewidth=3.0, foreground="white"),\
+                       mppe.Stroke(linewidth=2.0, foreground="black"),\
+                       mppe.Normal()] 
+            ax.plot([xs, xs + marklength], [ypos, ypos], color='black',\
+                    path_effects=patheff, linewidth=2)
+            ax.text(xcen, ypos + 0.01 * yr, mtext, fontsize=fontsize,\
+                    path_effects=patheff_text, horizontalalignment='center',\
+                    verticalalignment='bottom', color='black')
+            
+            if grn == grn_slice:
+                square_big = extents[line][grn_zbig]
+                square_small = extents[line][grn_zsmall]
+                lw_square = 1.2
+                _patheff = [mppe.Stroke(linewidth=1.5, foreground="white"),\
+                           mppe.Stroke(linewidth=lw_square, foreground="black"),\
+                           mppe.Normal()] 
+                
+                _lx = [square_big[0][0], square_big[0][0], square_big[0][1],\
+                       square_big[0][1], square_big[0][0]]
+                _ly = [square_big[1][0], square_big[1][1], square_big[1][1],\
+                       square_big[1][0], square_big[1][0]]
+                ax.plot(_lx, _ly, color='black', path_effects=_patheff,\
+                        linewidth=lw_square)
+                _lx = [square_small[0][0], square_small[0][0], square_small[0][1],\
+                       square_small[0][1], square_small[0][0]]
+                _ly = [square_small[1][0], square_small[1][1], square_small[1][1],\
+                       square_small[1][0], square_small[1][0]]
+                ax.plot(_lx, _ly, color='black', path_effects=_patheff,\
+                        linewidth=lw_square)
+                
+                xlim = ax.get_xlim()
+                ylim = ax.get_ylim()
+                if direction_big == 'right':
+                    xi = 1
+                else:
+                    xi = 0
+                ax.plot([square_big[0][xi], xlim[xi]], [square_big[1][0], ylim[0]])
+                ax.plot([square_big[0][xi], xlim[xi]], [square_big[1][1], ylim[1]])
+                
+                if direction_small == 'right':
+                    xi = 1
+                else:
+                    xi = 0
+                ylow = ylim[1] - (ylim[1] - ylim[0]) * (_ps1_s / _ps1_l)
+                ax.plot([square_small[0][xi], xlim[xi]], [square_small[1][0], ylow])
+                ax.plot([square_small[0][xi], xlim[xi]], [square_small[1][1], ylim[1]])
+            elif line == line_focus:
+                lw_square = 1.2
+                _patheff = [mppe.Stroke(linewidth=1.5, foreground="white"),\
+                           mppe.Stroke(linewidth=lw_square, foreground="black"),\
+                           mppe.Normal()] 
+                _lx = [xlim[0], xlim[0], xlim[1], xlim[1], xlim[0]]
+                _ly = [ylim[0], ylim[1], ylim[1], ylim[0], ylim[0]]
+                ax.plot(_lx, _ly, color='black', path_effects=_patheff,\
+                        linewidth=lw_square)
+                
+    plt.colorbar(img, cax=cax1, orientation='horizontal', extend='both')
+    cax1.set_xlabel(clabel_img, fontsize=fontsize)
+    cax1.tick_params(labelsize=fontsize - 1, which='both')
+    cax1.set_aspect(0.1)   
+    
+    print('Halos indicated at {rs} x R200c'.format(rs=scaler200))
+
+    if outname is not None:
+        if '/' not in outname:
+            outname = mdir + outname
+        if outname[-4:] != '.pdf':
+            outname = outname + '.pdf'
+        plt.savefig(outname, format='pdf', bbox_inches='tight')
+        
+        
 ### radial profiles
 def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                    binset='binset_0', retlog=True):
