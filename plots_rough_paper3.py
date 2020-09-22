@@ -263,7 +263,8 @@ def add_cbar_mass(cax, massedges=mass_edges_standard,\
     # boundaries=[0] + bounds + [13],
     # extend='both',
     # ticks=bounds,  # optional
-    cbar.set_label(clabel, fontsize=fontsize)
+    if clabel is not None:
+        cbar.set_label(clabel, fontsize=fontsize)
     cax.tick_params(labelsize=fontsize - 1)
     cax.set_aspect(aspect)
     
@@ -1517,12 +1518,11 @@ def plotstampzooms_overview():
     grn_zbig   = 'zoom1_big'
     groups_all = [grn_slice, grn_zsmall, grn_zbig]
     
-    
     groups = {line: [grn_zsmall] for line in lines}
     groups[line_focus] = groups_all
         
     outname = ol.mdir + 'emission_overview_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen21.875_z-projection_noEOS_stamps' 
-    outname.replace('.', 'p')
+    outname = outname.replace('.', 'p')
     outname = outname + '.pdf'
     
     minhalomass = 11.
@@ -1532,12 +1532,11 @@ def plotstampzooms_overview():
     marklength_z = 2. # cMpc
     
     vmin = -12. # log10 photons / cm2 / s / sr 
-    vtrans = -2.5
+    vtrans = -1.5
     vmax = 1.0
     scaler200 = 2. # show radii at this times R200c
     cmap = pu.paste_cmaps(['gist_yarg', 'plasma'], [vmin, vtrans, vmax],\
-                          trunclist=[[0.0, 0.5], [0.2, 1.0]])
-    
+                          trunclist=[[0.0, 0.5], [0.35, 1.0]])
 
     maps = {}
     extents = {}
@@ -1636,6 +1635,10 @@ def plotstampzooms_overview():
         pos = pos[:, msel]
     
     # this is all very fine-tuned by hand
+    patheff_text = [mppe.Stroke(linewidth=2.0, foreground="white"),\
+                            mppe.Stroke(linewidth=0.4, foreground="black"),\
+                            mppe.Normal()]  
+    
     panelsize_large = 3.
     panelsize_small = panelsize_large * 0.5
     panelsize_med = (panelsize_large + 3. * panelsize_small) / 4.
@@ -1680,23 +1683,45 @@ def plotstampzooms_overview():
         bottom = _y1 - _ps1_l - (row + 1.) * _ps1_s
         axes[line][grn_zsmall] = fig.add_axes([left, bottom, _ps0_s, _ps1_s])
     # lower right: color bars
-    _ht = _ps1_s
+    #_ht = _ps1_s
+    #bottom = _y0
+    #left = _x0 + (len(slines) % ncol_small) * _ps0_s
+    #width =  0.5 * (_x1 - 3. * _x0 - left)
+    #cax1  = fig.add_axes([left + 0.5 * _x0, bottom, width, _ht])
+    #cax2  = fig.add_axes([left + width + _x0, bottom, width, _ht])
+    # lower right: color bars
+    texth  = _y0
+    _ht = (_ps1_s - _y0) * 0.5 - texth
     bottom = _y0
     left = _x0 + (len(slines) % ncol_small) * _ps0_s
-    width =  0.5 * (_x1 - 3. * _x0 - left)
-    cax1  = fig.add_axes([left + 0.5 * _x0, bottom, width, _ht])
-    cax2  = fig.add_axes([left + width + _x0, bottom, width, _ht])
-   
+    _width = _x1 - left - 2. * _x0
+    width = min(_width, 2. * _ps0_s)
+    left = left + 0.5 * (_width - width)
+    cax1  = fig.add_axes([left + _x0, bottom + texth, width, _ht])
+    cax2  = fig.add_axes([left + _x0, bottom + 2. * texth + _ht, width, _ht])
+    c_aspect = 1./10.
+    clabel_over_bar = True 
+    
     clabel_img = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{ph.} \\, \\mathrm{cm}^{-2} \\mathrm{s}^{-1} \\mathrm{sr}^{-1}]$'
     clabel_hmass = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
+    if clabel_over_bar:
+        _cl = None
+    else:
+        _cl = clabel_hmass
     cbar, colordct = add_cbar_mass(cax2, massedges=mass_edges_standard,\
-             orientation='horizontal', clabel=clabel_hmass, fontsize=fontsize, aspect=0.1)
+             orientation='horizontal', clabel=_cl, fontsize=fontsize,\
+             aspect=c_aspect)
+    if clabel_over_bar:
+        cax2.text(0.5, 0.5, clabel_hmass, fontsize=fontsize,\
+                  path_effects=patheff_text, transform=cax2.transAxes,\
+                  verticalalignment='center', horizontalalignment='center')
     print('Max value in maps: {}'.format(max([np.max(maps[line][grn])\
           for line in _lines for grn in groups[line]])))
     
     cmap_img = cmap
     cmap_img.set_under(cmap_img(0.))
-
+    cmap_img.set_bad(cmap_img(0.))
+    
     for line in _lines:
         _groups = groups[line]
         for grn in _groups:
@@ -1760,7 +1785,9 @@ def plotstampzooms_overview():
                       extents[line][grn][1][1] + margin]
                 
             ax.set_facecolor(cmap_img(0.))    
-            img = ax.imshow(maps[line][grn].T, origin='lower', interpolation='nearest',\
+            _img = maps[line][grn]
+            _img[_img < vmin] = vmin # avoid weird outlines at img ~ vmin in image
+            img = ax.imshow(_img.T, origin='lower', interpolation='nearest',\
                       extent=(extents[line][grn][0][0], extents[line][grn][0][1],\
                               extents[line][grn][1][0], extents[line][grn][1][1]),\
                       cmap=cmap_img, vmin=vmin, vmax=vmax) 
@@ -1800,6 +1827,7 @@ def plotstampzooms_overview():
                if yrange[1] > boxsize:
                    _m.append(yrange[1] - boxsize)
                _margin = margin + max(_m)
+               print(_margin)
                _p = cu.pad_periodic([posx, posy], _margin, boxsize, additional=[ms, rd])
                
                posx = _p[0][0]
@@ -1828,9 +1856,6 @@ def plotstampzooms_overview():
             ax.set_xlim(*xlim)
             ax.set_ylim(*ylim)
             
-            patheff_text = [mppe.Stroke(linewidth=2.0, foreground="white"),\
-                            mppe.Stroke(linewidth=0.4, foreground="black"),\
-                            mppe.Normal()]        
             ltext = nicenames_lines[line]
             ax.text(0.95, 0.95, ltext, fontsize=fontsize, path_effects=patheff_text,\
                     horizontalalignment='right', verticalalignment='top',\
@@ -1871,91 +1896,92 @@ def plotstampzooms_overview():
                     path_effects=patheff_text, horizontalalignment='center',\
                     verticalalignment='bottom', color='black')
             
-#            if grn == grn_zsmall: # add dotted circles for haloes just over the slice edges
-#                posx = pos[axis1]
-#                posy = pos[axis2]
-#                posz = pos[axis3]
-#                
-#                zrange1 = [depths[line][grn][1],  depths[line][grn][1] + margin]
-#                zrange2 = [depths[line][grn][0] - margin, depths[line][grn][0]]
-#                xrange = [extents[line][grn][0][0] - margin,\
-#                          extents[line][grn][0][1] + margin]
-#                yrange = [extents[line][grn][1][0] - margin,\
-#                          extents[line][grn][1][1] + margin]
-#                          
-#                hsel = np.ones(len(posx), dtype=bool)
-#                _hsel = cu.periodic_sel(posz, zrange1, boxsize)
-#                _hsel |=  cu.periodic_sel(posz, zrange2, boxsize)
-#                hsel &= _hsel
-#                if xrange[1] - xrange[0] < boxsize:
-#                    hsel &= cu.periodic_sel(posx, xrange, boxsize)
-#                if yrange[1] - yrange[0] < boxsize:
-#                    hsel &= cu.periodic_sel(posy, yrange, boxsize)
-#                    
-#                posx = posx[hsel]
-#                posy = posy[hsel]
-#                posz = posz[hsel]
-#                ms = masses[hsel]
-#                rd = radii[hsel]
-#                
-#                # haloes are not just generally close to the edges, but within r200c of them
-#                hsel =  np.abs((posz + 0.5 * boxsize - depths[line][grn][1]) % boxsize - 0.5 * boxsize) < rd
-#                hsel &= np.abs((posz + 0.5 * boxsize - depths[line][grn][0]) % boxsize - 0.5 * boxsize) < rd
-#                
-#                posx = posx[hsel]
-#                posy = posy[hsel]
-#                posz = posz[hsel]
-#                ms = ms[hsel]
-#                rd = rd[hsel]
-#                
-#                # add periodic repetitions if the plotted edges are periodic
-#                if xrange[1] - xrange[0] > boxsize - 2. * margin or\
-#                   yrange[1] - yrange[0] > boxsize - 2. * margin:
-#                   _p = cu.pad_periodic([posx, posy], margin, boxsize, additional=[ms, rd])
-#                   
-#                   posx = _p[0][0]
-#                   posy = _p[0][1]
-#                   ms = _p[1][0]
-#                   rd = _p[1][1]
-#                elif xrange[0] < 0. or yrange[0] < 0. or\
-#                     xrange[1] > boxsize or yrange[1] > boxsize:
-#                   _m = []
-#                   if xrange[0] < 0.:
-#                       _m.append(np.abs(xrange[0]))
-#                   if yrange[0] < 0.:
-#                       _m.append(np.abs(yrange[0]))    
-#                   if xrange[1] > boxsize:
-#                       _m.append(xrange[1] - boxsize)
-#                   if yrange[1] > boxsize:
-#                       _m.append(yrange[1] - boxsize)
-#                   _margin = margin + max(_m)
-#                   _p = cu.pad_periodic([posx, posy], _margin, boxsize, additional=[ms, rd])
-#                   
-#                   posx = _p[0][0]
-#                   posy = _p[0][1]
-#                   ms = _p[1][0]
-#                   rd = _p[1][1]
-#                
-#                me = np.array(sorted(list(colordct.keys())) + [17.])
-#                mi = np.max(np.array([np.searchsorted(me, ms) - 1,\
-#                                      np.zeros(len(ms), dtype=np.int)]),\
-#                            axis=0)
-#                colors = np.array([colordct[me[i]] for i in mi])
-#                
-#                patches = [mpatch.Circle((posx[ind], posy[ind]), scaler200 * rd[ind]) \
-#                           for ind in range(len(posx))] # x, y axes only
-#            
-#                patheff = [mppe.Stroke(linewidth=1.2, foreground="black"),\
-#                               mppe.Stroke(linewidth=0.7, foreground="white"),\
-#                               mppe.Normal()] 
-#                collection = mcol.PatchCollection(patches)
-#                collection.set(edgecolor=colors, facecolor='none', linewidth=0.7,\
-#                               path_effects=patheff, linestyle='dotted')
-#                ylim = ax.get_ylim()
-#                xlim = ax.get_xlim()
-#                ax.add_collection(collection)
-#                ax.set_xlim(*xlim)
-#                ax.set_ylim(*ylim)
+            if grn in [grn_zsmall, grn_zbig]: # add dotted circles for haloes just over the slice edges
+                posx = pos[axis1]
+                posy = pos[axis2]
+                posz = pos[axis3]
+                margin = np.max(radii) # cMpc
+                
+                zrange1 = [depths[line][grn][1],  depths[line][grn][1] + margin]
+                zrange2 = [depths[line][grn][0] - margin, depths[line][grn][0]]
+                xrange = [extents[line][grn][0][0] - margin,\
+                          extents[line][grn][0][1] + margin]
+                yrange = [extents[line][grn][1][0] - margin,\
+                          extents[line][grn][1][1] + margin]
+                          
+                hsel = np.ones(len(posx), dtype=bool)
+                _hsel = cu.periodic_sel(posz, zrange1, boxsize)
+                _hsel |=  cu.periodic_sel(posz, zrange2, boxsize)
+                hsel &= _hsel
+                if xrange[1] - xrange[0] < boxsize:
+                    hsel &= cu.periodic_sel(posx, xrange, boxsize)
+                if yrange[1] - yrange[0] < boxsize:
+                    hsel &= cu.periodic_sel(posy, yrange, boxsize)
+                    
+                posx = posx[hsel]
+                posy = posy[hsel]
+                posz = posz[hsel]
+                ms = masses[hsel]
+                rd = radii[hsel]
+                
+                # haloes are not just generally close to the edges, but within r200c of them
+                hsel =  np.abs((posz + 0.5 * boxsize - depths[line][grn][1]) % boxsize - 0.5 * boxsize) < rd
+                hsel &= np.abs((posz + 0.5 * boxsize - depths[line][grn][0]) % boxsize - 0.5 * boxsize) < rd
+                
+                posx = posx[hsel]
+                posy = posy[hsel]
+                posz = posz[hsel]
+                ms = ms[hsel]
+                rd = rd[hsel]
+                
+                # add periodic repetitions if the plotted edges are periodic
+                if xrange[1] - xrange[0] > boxsize - 2. * margin or\
+                   yrange[1] - yrange[0] > boxsize - 2. * margin:
+                   _p = cu.pad_periodic([posx, posy], margin, boxsize, additional=[ms, rd])
+                   
+                   posx = _p[0][0]
+                   posy = _p[0][1]
+                   ms = _p[1][0]
+                   rd = _p[1][1]
+                elif xrange[0] < 0. or yrange[0] < 0. or\
+                     xrange[1] > boxsize or yrange[1] > boxsize:
+                   _m = []
+                   if xrange[0] < 0.:
+                       _m.append(np.abs(xrange[0]))
+                   if yrange[0] < 0.:
+                       _m.append(np.abs(yrange[0]))    
+                   if xrange[1] > boxsize:
+                       _m.append(xrange[1] - boxsize)
+                   if yrange[1] > boxsize:
+                       _m.append(yrange[1] - boxsize)
+                   _margin = margin + max(_m)
+                   _p = cu.pad_periodic([posx, posy], _margin, boxsize, additional=[ms, rd])
+                   
+                   posx = _p[0][0]
+                   posy = _p[0][1]
+                   ms = _p[1][0]
+                   rd = _p[1][1]
+                
+                me = np.array(sorted(list(colordct.keys())) + [17.])
+                mi = np.max(np.array([np.searchsorted(me, ms) - 1,\
+                                      np.zeros(len(ms), dtype=np.int)]),\
+                            axis=0)
+                colors = np.array([colordct[me[i]] for i in mi])
+                
+                patches = [mpatch.Circle((posx[ind], posy[ind]), scaler200 * rd[ind]) \
+                           for ind in range(len(posx))] # x, y axes only
+            
+                patheff = [mppe.Stroke(linewidth=1.2, foreground="black"),\
+                               mppe.Stroke(linewidth=0.7, foreground="white"),\
+                               mppe.Normal()] 
+                collection = mcol.PatchCollection(patches)
+                collection.set(edgecolor=colors, facecolor='none', linewidth=0.7,\
+                               path_effects=patheff, linestyle='dotted')
+                ylim = ax.get_ylim()
+                xlim = ax.get_xlim()
+                ax.add_collection(collection)
+                ax.set_xlim(*xlim)
+                ax.set_ylim(*ylim)
                     
             
             if grn == grn_slice:
@@ -2014,9 +2040,14 @@ def plotstampzooms_overview():
                         linewidth=lw_square)
                 
     plt.colorbar(img, cax=cax1, orientation='horizontal', extend='both')
-    cax1.set_xlabel(clabel_img, fontsize=fontsize)
+    if clabel_over_bar:
+        cax1.text(0.5, 0.5, clabel_img, fontsize=fontsize,\
+                  path_effects=patheff_text, transform=cax1.transAxes,\
+                  verticalalignment='center', horizontalalignment='center')
+    else:
+        cax1.set_xlabel(clabel_img, fontsize=fontsize)
     cax1.tick_params(labelsize=fontsize - 1, which='both')
-    cax1.set_aspect(0.1)   
+    cax1.set_aspect(c_aspect)   
     
     print('Halos indicated at {rs} x R200c'.format(rs=scaler200))
 
@@ -4099,6 +4130,7 @@ def plot3Dprof_overview(weighttype='Mass', stack='addnormed-R200c'):
     fontsize = 12
     cmap = pu.truncate_colormap(cm.get_cmap('gist_yarg'), minval=0.0, maxval=0.7, n=-1)
     cmap.set_under(cmap(0.))
+    cmap.set_bad(cmap(0.))
     percentiles = [0.1, 0.50, 0.9]
     print('Showing percentiles ' + str(percentiles))
     linestyles = ['dashed', 'solid', 'dashed']
