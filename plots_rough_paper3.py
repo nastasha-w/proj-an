@@ -195,6 +195,16 @@ line_Trange = {'c5r':   (5.7, 6.3),\
                'fe19':  (6.7, 7.2),\
                }
 
+atomnums = {'hydrogen': 1,\
+            'helium': 2,\
+            'carbon': 6,\
+            'nitrogen': 7,\
+            'oxygen': 8,\
+            'magnesium': 12,\
+            'silicon': 14,\
+            'iron': 26,\
+            }
+
 def getoutline(linewidth):
     patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"),\
                mppe.Stroke(linewidth=linewidth + 0.5, foreground="white"),\
@@ -3514,7 +3524,8 @@ def plot_emcurves(z=0.1):
             kwargs.update(lsargs2[-1])
             pe = getoutline(kwargs['linewidth'])
             
-            ax.plot(Ts[line], emvals,\
+            ax.plot(Ts[line] * 1. / (atomnums[ol.elements_ion[line]])**2,\
+                    emvals / ol.solar_abunds_sb[ol.elements_ion[line]],\
                     path_effects=pe, **kwargs)
             
             ax.axvline(Tmaxs[line], 0.92, 1.,\
