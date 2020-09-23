@@ -3527,9 +3527,9 @@ def plot_emcurves(z=0.1):
             
             
             if 'o7r' in _lines: # E \propto (Z-2)**2 (screened charge) for He-like
-                zscale = 2. * np.log10(atomnums[ol.elements_ion[line]] - 2)
-            elif 'o8' in _lines:
                 zscale = 2. * np.log10(atomnums[ol.elements_ion[line]] - 1)
+            elif 'o8' in _lines:
+                zscale = 2. * np.log10(atomnums[ol.elements_ion[line]])
             else:
                 zscale = 0.
             ax.plot(Ts[line] - zscale,\
