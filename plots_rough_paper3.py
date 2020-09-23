@@ -3475,8 +3475,8 @@ def plot_emcurves(z=0.1):
     linelabels['fe17-other1'] = 'Fe XVII\n(15.10 A)'
     linelabels['fe17'] = 'Fe XVII\n(17.05 A)'
     
-    #xlim = (5.3, 8.5)
-    #ylim = (-28., -23.)
+    xlim = (5.3, 8.5)
+    ylim = (-28., -23.)
     
     ylabel = '$\log_{10} \\, \\Lambda \,/\, \\mathrm{n}_{\\mathrm{H}}^{2} \\,/\\, \\mathrm{V} \\; [\\mathrm{erg} \\, \\mathrm{cm}^{3} \\mathrm{s}^{-1}]$'
     xlabel = r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$'
@@ -3498,8 +3498,8 @@ def plot_emcurves(z=0.1):
     #           for li, line in enumerate(lines)}
     
     for axi, ax in enumerate(axes):
-        #ax.set_xlim(*xlim)
-        #ax.set_ylim(*ylim)
+        ax.set_xlim(*xlim)
+        ax.set_ylim(*ylim)
         
         labely = axi % ncols == 0
         if labely:
@@ -3526,19 +3526,21 @@ def plot_emcurves(z=0.1):
             pe = getoutline(kwargs['linewidth'])
             
             
-            if 'o7r' in _lines: # E \propto (Z-2)**2 (screened charge) for He-like
-                zscale = 2. * np.log10(atomnums[ol.elements_ion[line]] - 2)
-            elif 'o8' in _lines:
-                zscale = 2. * np.log10(atomnums[ol.elements_ion[line]] - 1)
-            else:
-                zscale = 0.
-            ax.plot(Ts[line] - zscale,\
-                    emvals - np.log10(ol.solar_abunds_sb[ol.elements_ion[line]]),\
+            #if 'o7r' in _lines: # E \propto (Z-2)**2 (screened charge) for He-like
+            #    zscale = 2. * np.log10(atomnums[ol.elements_ion[line]] - 2)
+            #elif 'o8' in _lines:
+            #    zscale = 2. * np.log10(atomnums[ol.elements_ion[line]] - 1)
+            #else:
+            #    zscale = 0.
+            #- np.log10(ol.solar_abunds_sb[ol.elements_ion[line]])
+            #- zscale
+            ax.plot(Ts[line],\
+                    emvals,\
                     path_effects=pe, **kwargs)
             
             ax.axvline(Tmaxs[line], 0.92, 1.,\
                        linewidth=3., **lsargs[line])
-        xlim = ax.get_xlim()
+        #xlim = ax.get_xlim()
         axy2 = ax.twiny()
         axy2.set_xlim(*xlim)
         mhalos = np.arange(11.5, 15.1, 0.5)
