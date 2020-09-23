@@ -3525,7 +3525,7 @@ def plot_emcurves(z=0.1):
             kwargs.update(lsargs2[-1])
             pe = getoutline(kwargs['linewidth'])
             
-            ax.plot(Ts[line] * 1. / (atomnums[ol.elements_ion[line]])**2,\
+            ax.plot(Ts[line] - 2. * np.log10(atomnums[ol.elements_ion[line]]),\
                     emvals - np.log10(ol.solar_abunds_sb[ol.elements_ion[line]]),\
                     path_effects=pe, **kwargs)
             
