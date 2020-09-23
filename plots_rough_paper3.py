@@ -3526,12 +3526,12 @@ def plot_emcurves(z=0.1):
             pe = getoutline(kwargs['linewidth'])
             
             ax.plot(Ts[line] * 1. / (atomnums[ol.elements_ion[line]])**2,\
-                    emvals / ol.solar_abunds_sb[ol.elements_ion[line]],\
+                    emvals - np.log10(ol.solar_abunds_sb[ol.elements_ion[line]]),\
                     path_effects=pe, **kwargs)
             
             ax.axvline(Tmaxs[line], 0.92, 1.,\
                        linewidth=3., **lsargs[line])
-    
+        xlim = ax.get_xlim()
         axy2 = ax.twiny()
         axy2.set_xlim(*xlim)
         mhalos = np.arange(11.5, 15.1, 0.5)
