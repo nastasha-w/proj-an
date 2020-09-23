@@ -200,6 +200,7 @@ atomnums = {'hydrogen': 1,\
             'carbon': 6,\
             'nitrogen': 7,\
             'oxygen': 8,\
+            'neon': 10,\
             'magnesium': 12,\
             'silicon': 14,\
             'iron': 26,\
