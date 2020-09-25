@@ -25,6 +25,7 @@ import string
 import h5py
 
 import eagle_constants_and_units as c
+import make_maps_opts_locs as ol
 
 elements_ion = {'c1': 'carbon', 'c2': 'carbon', 'c3': 'carbon',\
                 'c4': 'carbon', 'c5': 'carbon', 'c6': 'carbon',\
@@ -85,6 +86,30 @@ roman_to_arabic = {'I':      1,\
                    'XXVI':   26}
 arabic_to_roman = {roman_to_arabic[key]: key for key in roman_to_arabic.keys()}
 
+atomnumber_elt = {'hydrogen': 1,\
+                   'helium': 2,\
+                   'lithium': 3,\
+                   'beryllium': 4,\
+                   'boron': 5,\
+                   'carbon': 6,\
+                   'nitrogen': 7,\
+                   'oxygen': 8,\
+                   'fluorine': 9,\
+                   'neon': 10,\
+                   'sodium': 11,\
+                   'magnesium': 12,\
+                   'aluminum': 13,\
+                   'silicon': 14,\
+                   'phosphorus': 15,\
+                   'sulfur': 16,\
+                   'chlorine': 17,\
+                   'argon': 18,\
+                   'potassium': 19,\
+                   'calcium': 20,\
+                   'iron': 26}
+
+elt_atomnumber = {atomnumber_elt[key]: key for key in atomnumber_elt}
+
 def getnicename(ion, mathmode=False):
     if 'ssh' in ion:
         if ion == 'hneutralssh':
@@ -132,6 +157,45 @@ def get_elt_state(ion):
     elt = abbr_to_element[string.capwords(_elt)]
     state = int(_state)
     return elt, state
+
+def printabundancetable(elts):
+    '''
+    print the solar abundances of elts in LaTeX table form
+    '''
+    numfmt = 'r@{$\\times$}l'
+    tstart = '\\begin{{tabular}}{{l {numfmt} {numfmt} l }}'.format(numfmt=numfmt)
+    head1 = 'element & \\multicolumn{4}{c}{metallicity} ' + \
+            '& source \\\\'
+    head2 = ' & \\multicolumn{2}{c}{$n_{\\mathrm{elt}} \\,/\\, n_{\\mathrm{H}}$}' +\
+            ' & \\multicolumn{2}{c}{$\\rho_{\\mathrm{elt}} \\,/\\, \\rho_{\\mathrm{tot}}$} \\\\'
+    hline = '\\hline'
+    fillstr = '{elt} & ${num_sb:.2f}$&$10^{{{exp_sb}}}$ & ' + \
+              '${num_ea:.2f}$&$10^{{{exp_ea}}}$ & {src_sb} \\\\'
+    tend = '\\end{tabular}'
+    
+    print(tstart)
+    print(hline)
+    print(head1)
+    print(head2)
+    print(hline)
+    for elt in elts:
+        en = element_to_abbr[elt]
+        
+        val_sb = ol.solar_abunds_sb[elt]
+        src_sb = ol.sources_abunds_sb[elt]
+        exp_sb = int(np.floor(np.log10(val_sb)))
+        num_sb = val_sb / (10** exp_sb)
+        
+        val_ea = ol.solar_abunds_ea[elt]
+        exp_ea = int(np.floor(np.log10(val_ea)))
+        num_ea = val_ea / (10** exp_ea)
+        
+        line = fillstr.format(elt=en, num_sb=num_sb, exp_sb=exp_sb,\
+                              num_ea=num_ea, exp_ea=exp_ea,\
+                              src_sb=src_sb)
+        print(line)
+    print(hline)
+    print(tend)
 
 # using api.types. to get it to work on cosma (different pandas version)
 # and using list specifier because this dtype setup seems to only be possible by another route entirely in pandas 0.19 on luttero

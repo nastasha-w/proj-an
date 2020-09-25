@@ -3475,7 +3475,7 @@ def plot_emcurves(z=0.1):
     linelabels['fe17-other1'] = 'Fe XVII\n(15.10 A)'
     linelabels['fe17'] = 'Fe XVII\n(17.05 A)'
     
-    xlim = (5.3, 8.5)
+    fxlim = (5.3, 8.5)
     ylim = (-28., -23.)
     
     ylabel = '$\log_{10} \\, \\Lambda \,/\, \\mathrm{n}_{\\mathrm{H}}^{2} \\,/\\, \\mathrm{V} \\; [\\mathrm{erg} \\, \\mathrm{cm}^{3} \\mathrm{s}^{-1}]$'

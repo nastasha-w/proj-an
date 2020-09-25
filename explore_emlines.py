@@ -7,6 +7,7 @@ Created on Thu Aug 13 15:48:47 2020
 """
 
 import numpy as np
+import pandas as pd
 import h5py
 import matplotlib.pyplot as plt
 import string
@@ -16,6 +17,8 @@ import cosmo_utils as cu
 import make_maps_opts_locs as ol
 import plot_utils as pu
 import ion_line_data as ild
+
+datadir_TOP = '/Users/Nastasha/phd/tables/opacity_project/'
 
 def parse_linename_lambda(name):
     '''
@@ -38,8 +41,24 @@ def parse_linename_ion(name):
     eltpart = name[:2].strip()
     stagepart = int(name[2:4])
     return (eltpart, stagepart)
-    
-    
+
+def ion_from_line(line):
+    '''
+    get ion in 'o7', 'fe17' format from line in 'o7r', 'o8', 'fe17-other1' 
+    format
+    '''
+    # match the ion
+    ion = ''
+    while not line[0].isdigit():
+        ion += line[0]
+        line = line[1:]
+    while line[0].isdigit():
+        ion += line[0]
+        if len(line) == 1:
+            break
+        line = line[1:]
+    return ion
+
 def findbrightlines(z, keVmin=0.3, logemmin=-25.5, Tmin=5., Tmax=7.,\
                     rangemin=0.1):
     '''
@@ -515,3 +534,206 @@ def print_linetable_minimal(z, lines=None, latex=False):
     if latex:
         print('\\hline')    
         print('\\end{tabular}')
+        
+ 
+def readin_TOPfile(filen, NZ, NE):
+    '''
+    read in the data from filen, return rows matching NE and NZ
+    
+    input:
+    ------
+    filen:  string, name of the file
+    NZ:     atom numbers to match (int), corresponding to 
+    NE:     electron numbers to match (NE, NZ pairs are matched)
+    '''
+    columns_use = ['NZ', 'NE', 'iSLP', 'jSLP', 'iLV', 'jLV', 'gF', 'WL(A)']
+    # 'i' is kind of useless
+    # WL(A) and gF are both useful for cross-matching level2.dat and TOP  
+    
+    # select the NE values that might go with the NZ in this file (one per element)
+    _NZ_NE = [(NZ[i], NE[i]) for i in range(len(NZ))]
+    _NZ_NE = list(set(_NZ_NE))
+    NZvals = list(set([_e[0] for _e in _NZ_NE]))
+    elts = [ild.elt_atomnumber[_NZ] for _NZ in NZvals]
+    esel = np.array([elt in filen for elt in elts])
+    if not np.any(esel):
+        raise ValueError('file {} does not contain any element {}'.format(filen, NZvals))
+    
+    _NZ = np.array(NZvals)[esel][0]
+    _NE = set(_ze[1] if _ze[0] == _NZ else None for _ze in _NZ_NE)
+    _NE -= {None}
+    _NE = np.array(list(_NE))
+    
+    start_sepions = '# ions:'
+    start_commentline = ' ===='
+    kwargs_readcsv = {'header': 0,\
+                      'usecols': columns_use,\
+                      'skiprows': [0, 2],\
+                      'skipfooter': 1,\
+                      'delim_whitespace': True,\
+                      'engine':'python',\
+                      }
+    with open(filen) as _f:
+        line1 = _f.readline()
+        if line1.startswith(start_sepions):
+            iterate_ions = True
+        elif line1.startswith(start_commentline):
+            iterate_ions = False
+        else:
+            raise RuntimeError('file {} in unrecognized format:\n{}'.format(filen, line1))
+
+    if iterate_ions:
+        first = True
+        base = '.'.join(filen.split('.')[:-1]) + '{NE}.txt'
+        for __NE in _NE:
+            _filen = base.format(NE=__NE)
+            if first:
+                df = pd.read_csv(_filen, **kwargs_readcsv)
+                if not np.all(df['NZ'] == _NZ):
+                    raise ValueError('Error retrieving data: file {filen} contained data on elements other than {NZ}'.format(\
+                             filen=_filen, NZ=_NZ))
+                if not np.all(df['NE'] == __NE):
+                    raise ValueError('Error retrieving data: file {filen} contained data on ion stages other than {NE}'.format(\
+                             filen=_filen, NE=__NE))
+                first = False
+            else:
+                _df = pd.read_csv(_filen, **kwargs_readcsv)
+                if not np.all(_df['NZ'] == _NZ):
+                    raise ValueError('Error retrieving data: file {filen} contained data on elements other than {NZ}'.format(\
+                             filen=_filen, NZ=_NZ))
+                if not np.all(_df['NE'] == __NE):
+                    raise ValueError('Error retrieving data: file {filen} contained data on ion stages other than {NE}'.format(\
+                             filen=_filen, NE=__NE))
+                df = pd.concat([df, _df], ignore_index=True, copy=False)
+    else:
+        df = pd.read_csv(filen, **kwargs_readcsv)
+        if not np.all(df['NZ'] == _NZ):
+            raise ValueError('Error retrieving data: file {filen} contained data on elements other than {NZ}'.format(\
+                             filen=filen, NZ=_NZ))
+        df = df[np.any(df['NE'][:, np.newaxis] == _NE[np.newaxis, :], axis=1)]
+    return df
+
+def get_TOP_transitions(ions, wavelen_A, wavelen_tol=1e-4):
+    '''
+    retrieve the transitions from the Opacity Project database corresponding 
+    to a set of ions
+    
+    Not matching gF for now, since the CLOUDY tables give either gF or A for
+    different lines. Can still be used as a by-eye tiebreaker
+    
+    input:
+    ------
+    ions:           list/array of strings; ion names in 'o7', 'fe17' format
+    wavelen_A:      wavelengths of the transitions (list/array of floats)
+    wavelen_tol:    the relative tolerance for matching wavelengths
+    
+    output:
+    -------
+    transitions:   list of strings containing the transitions in TOP 
+                   spectroscopic format
+                   if multiple matches are found within in wavenumber tolerance,
+                   the list will contain a tuple of those transitions
+    '''
+    
+    elt_stage = [ild.get_elt_state(ion) for ion in ions]
+    atomnums = [ild.atomnumber_elt[es[0]] for es in elt_stage]
+    # TOP lists transitions by how many ions are left, not ion stage
+    electronnums = [atomnums[i] + 1 - es[1] for i, es in enumerate(elt_stage)] 
+    
+    eltlist = list(set([es[0] for es in elt_stage]))
+    
+    ## read in files for the different elements:
+    filen_base = datadir_TOP + 'transitions_{elt}.txt'
+
+    first = True
+    for elt in eltlist:
+        filen = filen_base.format(elt=elt)
+        if first:
+            linedata = readin_TOPfile(filen, atomnums, electronnums)
+            first = False
+        else:
+            _ld = readin_TOPfile(filen, atomnums, electronnums)
+            linedata = pd.concat([linedata, _ld], ignore_index=True, copy=False)
+    
+    ## cross-match NE, NZ, lambda
+    matches = []
+    first = True
+    for wl, NZ, NE, ion in zip(wavelen_A, atomnums, electronnums, ions):
+        match = np.isclose(wl, linedata['WL(A)'], rtol=wavelen_tol) &\
+                (linedata['NZ'] == NZ) & (linedata['NE'] == NE)
+        wmatch = np.where(match)[0]
+        matches.append(wmatch)
+        if first:
+            alldata = linedata.loc[match].copy()
+            alldata['WL(A)_in'] = np.ones(len(wmatch)) * wl
+            alldata['ion'] = [ion] * len(wmatch)
+            first = False
+        else:
+            _df = linedata.loc[match].copy()
+            _df['WL(A)_in'] = np.ones(len(wmatch)) * wl
+            _df['ion'] = [ion] * len(wmatch)
+            alldata = pd.concat([alldata, _df], ignore_index=True, copy=False)
+        
+    ## get electron configs for the matched lines
+    filen = datadir_TOP + 'econfig.txt'
+    with open(filen) as _f:
+        _f.readline()
+        head = _f.readline()
+        breaks = [0]
+        spaceprev = True
+        for i in range(len(head)):
+            if head[i] == ' ': 
+                if not spaceprev:
+                    breaks.append(i)
+                spaceprev = True
+            else:
+                spaceprev = False
+        breaks[-1] = len(head)  
+    colspecs = [(breaks[i] + 1, breaks[i+1]) for i in range(len(breaks) - 1)]      
+    edata = pd.read_fwf(filen, colspecs=colspecs,\
+                        skiprows=[0, 2], skipfooter=1)
+    
+    alldata = pd.merge(alldata, edata, on=['NE', 'NZ', 'iLV', 'iSLP'],\
+                       how='left')
+    alldata = pd.merge(alldata, edata, left_on=['NE', 'NZ', 'jLV', 'jSLP'],\
+                       right_on=['NE', 'NZ', 'iLV', 'iSLP'],\
+                       how='left', suffixes=('-i', '-j'))
+    del alldata['i-i']
+    del alldata['i-j']
+    del alldata['iSLP-j']
+    del alldata['iLV-j']
+    renamef = lambda x: 'jCONF' if x == 'iCONF-j'\
+                        else x[:-2] if x[-2:] in ['-i', '-j']\
+                        else x
+    alldata = alldata.rename(axis='columns', mapper=renamef)
+    return alldata
+        
+def get_transition_data(lines):
+    
+    ions = [ion_from_line(line) for line in lines]
+    
+    zname = ol.zopts[0]
+    elts = [ol.elements_ion[line] for line in lines]
+    cloudy_inds = np.array([ol.line_nos_ion[line] for line in lines])
+    
+    cloudy_lines = np.empty(len(lines), dtype='<U20')
+    cloudy_wls   = np.NaN * np.ones(len(lines))
+    eltlist, ioninds = np.unique(elts, return_inverse=True)
+    
+    for eltn, elt in enumerate(eltlist):
+        tablefilename = ol.dir_emtab%zname + elt + '.hdf5'
+        _inds = cloudy_inds[ioninds == eltn]
+        
+        with h5py.File(tablefilename, "r") as tablefile:
+            _lines = np.array([line.decode() for line in tablefile['lambda']])[_inds]
+            _wls_A = np.array([parse_linename_lambda(line) for line in _lines])
+        cloudy_lines[ioninds == eltn] = _lines
+        cloudy_wls[ioninds == eltn] = _wls_A
+    print(cloudy_lines)
+    opdata = get_TOP_transitions(ions, cloudy_wls, wavelen_tol=1e-2)    
+    inmatch = np.array([np.where(opdata.loc[i, 'WL(A)_in'] == cloudy_wls)[0][0]\
+                      for i in range(len(opdata))])
+    opdata['CLOUDY_name'] = cloudy_lines[inmatch]
+    print(opdata)
+
+
