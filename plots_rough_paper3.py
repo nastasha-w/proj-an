@@ -55,13 +55,14 @@ fov_arcmin = {'Athena X-IFU': 5.,\
               'Lynx X-ray microcalorimeter':  5.,\
               }
 
-lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
+lines = ['c5r', 'n6r', 'n6-actualr', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
          'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
          'c6', 'n7']
 
 lines = sorted(lines, key=ol.line_eng_ion.get)
 nicenames_lines =  {'c5r': 'C V',\
-                    'n6r': 'N VI',\
+                    'n6r': 'N VI (f)',\
+                    'n6-actualr': 'N VI',\
                     'ne9r': 'Ne IX',\
                     'ne10': 'Ne X',\
                     'mg11r': 'Mg XI',\
@@ -71,8 +72,8 @@ nicenames_lines =  {'c5r': 'C V',\
                     'fe17-other1': 'Fe XVII (15.10 A)',\
                     'fe19': 'Fe XIX',\
                     'o7r': 'O VII (r)',\
-                    'o7ix': 'O VII (x)',\
-                    'o7iy': 'O VII (y)',\
+                    'o7ix': 'O VII (i)',\
+                    'o7iy': 'O VII (ix)',\
                     'o7f': 'O VII (f)',\
                     'o8': 'O VIII',\
                     'fe17': 'Fe XVII (17.05 A)',\
@@ -82,6 +83,7 @@ nicenames_lines =  {'c5r': 'C V',\
 linecolors = {'c5r':   'darkgoldenrod',\
               'c6':    'tan',\
               'n6r':   'mediumvioletred',\
+              'n6-actualr': 'purple',\
               'n7':    'fuchsia',\
               'o7r':   'maroon',\
               'o7ix':  'firebrick',\
@@ -102,7 +104,8 @@ linecolors = {'c5r':   'darkgoldenrod',\
 _c1 = tc.tol_cset('bright') # tip: don't use 'wine' and 'green' in the same plot (muted scheme)
 lineargs =  {'c5r':  {'linestyle': 'solid',   'color': _c1.blue},\
              'c6':   {'linestyle': 'dashed',  'color': _c1.blue},\
-             'n6r':  {'linestyle': 'solid',   'color': _c1.cyan},\
+             'n6r':  {'linestyle': 'dotted',  'color': _c1.cyan},\
+             'n6-actualr':  {'linestyle': 'solid',   'color': _c1.cyan},\
              'n7':   {'linestyle': 'dashed',  'color': _c1.cyan},\
              'o7r':  {'linestyle': 'solid',   'color': _c1.green},\
              'o7ix': {'linestyle': 'dashdot', 'color': _c1.green},\
@@ -119,7 +122,7 @@ lineargs =  {'c5r':  {'linestyle': 'solid',   'color': _c1.blue},\
              'fe17':  {'linestyle': 'dotted',  'color': _c1.grey},\
              'fe18':  {'linestyle': 'dashdot', 'color': _c1.grey},\
               }
-linesets = [['c5r', 'n6r', 'o7r', 'ne9r', 'mg11r', 'si13r'],\
+linesets = [['c5r', 'n6r', 'n6-actualr', 'o7r', 'ne9r', 'mg11r', 'si13r'],\
             ['c6', 'n7', 'o8', 'ne10', 'mg12'],\
             ['o7r', 'o7ix', 'o7iy', 'o7f'],\
             ['fe17', 'fe17-other1', 'fe18', 'fe19'],\
@@ -132,7 +135,8 @@ lineset_names = ['He $\\alpha$ (r)',\
 lineargs_sets =\
             {'c5r':  {'linestyle': 'solid',   'color': _c1.blue},\
              'c6':   {'linestyle': 'dashed',  'color': _c1.blue},\
-             'n6r':  {'linestyle': 'solid',   'color': _c1.cyan},\
+             'n6r':  {'linestyle': 'dotted',  'color': _c1.cyan},\
+             'n6-actualr':  {'linestyle': 'solid',   'color': _c1.cyan},\
              'n7':   {'linestyle': 'dashed',  'color': _c1.cyan},\
              'o7r':  {'linestyle': 'solid',   'color': _c1.green},\
              'o7ix': {'linestyle': 'dashdot', 'color': _c1.blue},\
@@ -158,6 +162,7 @@ for key in lineargs_sets:
 line_Tmax = {'c5r':    5.95,\
               'c6':    6.15,\
               'n6r':   6.15,\
+              'n6-actualr': 6.15,\
               'n7':    6.3,\
               'o7r':   6.3,\
               'o7ix':  6.35,\
@@ -178,6 +183,7 @@ line_Tmax = {'c5r':    5.95,\
 line_Trange = {'c5r':   (5.7, 6.3),\
                'c6':    (5.9, 6.8),\
                'n6r':   (5.9, 6.5),\
+               'n6-actualr': (5.9, 6.5),\
                'n7':    (6.1, 7.0),\
                'o7r':   (6.0, 6.7),\
                'o7ix':  (6.0, 6.7),\
@@ -1122,7 +1128,7 @@ def savestamps_v2():
                 
     for line in lines:
         print(line)
-        if line == 'ne10':
+        if line in ['ne10', 'n6-actualr']:
             filen_in = basename.format(line=line)
             filen_in = filen_in.replace('test3.5', 'test3.6')
         else:
@@ -2477,7 +2483,7 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
         ax.set_xscale('log')
 
         filename = rfilebase.format(line=line)
-        if line == 'ne10':
+        if line in ['ne10', 'n6-actualr']:
             filename = filename.replace('test3.5', 'test3.6')
         #print(filename)
         #import os
@@ -2654,7 +2660,7 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
     bins = {}
     for line in lines:
         filename = rfilebase.format(line=line)
-        if line == 'ne10':
+        if line in ['ne10', 'n6-actualr']:
             filename = filename.replace('test3.5', 'test3.6')
         _yvals, _bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                                      binset=binset, retlog=True)
@@ -2873,7 +2879,7 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
         
         ## get lines
         filename = rfilebase.format(line=line)
-        if line == 'ne10':
+        if line in ['ne10', 'n6-actualr']:
             filename = filename.replace('test3.5', 'test3.6')
         yvals, bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                                      binset=binset, retlog=True)
@@ -3136,7 +3142,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
         axes2.append(ax2)
         
         filename = rfilebase.format(line=line)
-        if line == 'ne10':
+        if line in ['ne10', 'n6-actualr']:
             filename = filename.replace('test3.5', 'test3.6')
         yvals, bins = readin_radprof(filename, seltags, [ykey_mean], runit='pkpc', separate=False,\
                                      binset=binset_mean, retlog=True)
@@ -3471,11 +3477,13 @@ def plot_emcurves(z=0.1):
     axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(len(linesets))]
     
     lsargs = lineargs_sets.copy()
+    if 'n6r' in lsargs:
+        lsargs['n6r'].update({'linestyle': 'dotted'})
     linelabels = nicenames_lines.copy()
     linelabels['fe17-other1'] = 'Fe XVII\n(15.10 A)'
     linelabels['fe17'] = 'Fe XVII\n(17.05 A)'
     
-    fxlim = (5.3, 8.5)
+    xlim = (5.3, 8.5)
     ylim = (-28., -23.)
     
     ylabel = '$\log_{10} \\, \\Lambda \,/\, \\mathrm{n}_{\\mathrm{H}}^{2} \\,/\\, \\mathrm{V} \\; [\\mathrm{erg} \\, \\mathrm{cm}^{3} \\mathrm{s}^{-1}]$'
@@ -3522,7 +3530,7 @@ def plot_emcurves(z=0.1):
             # CIE
             emvals = vals[line][:]
             kwargs = lsargs[line].copy()
-            kwargs.update(lsargs2[-1])
+            kwargs.update(lsargs2[-1])                
             pe = getoutline(kwargs['linewidth'])
             
             

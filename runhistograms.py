@@ -3346,9 +3346,12 @@ if jobind == 20336:
     selection = [('galaxyid', np.array(allids))]
     
     line = 'n6-actualr'
+    lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
+            'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
+            'c6', 'n7', 'n6-actualr']
     numsl = 1
     
-    if line in ['ne10', 'n6actualr']:
+    if line in ['ne10', 'n6-actualr']:
         filename = ol.ndir + 'emission_{line}_L0100N1504_27_test3.6_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
         filename = filename.format(line=line)
     else:
