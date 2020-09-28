@@ -44,9 +44,12 @@ for ion in ['oxygen', 'neon', 'iron']:
 lines1 = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
           'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
           'c6', 'n7']
+lines2 = ['c5r', 'n6r', 'n6-actualr', 'ne9r', 'ne10', 'mg11r', 'mg12',\
+          'si13r', 'fe18', 'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f',\
+          'o8', 'fe17', 'c6', 'n7']
 weighttypes.update({'em-{l}'.format(l=line): {'ptype': 'Luminosity',\
                     'ion': line} \
-                    for line in lines1}) 
+                    for line in lines2}) 
 
 def dataname(samplen):
     return tdir + 'halodata_%s.txt'%(samplen)
@@ -1248,7 +1251,7 @@ def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
     '''
     rbinu = 'R200c'
     outname = ol.pdir + 'luminosities_halos_%s_%s-%s-%s_SmAb.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)
-    weighttypes = ['em-{l}'.format(l=line) for line in lines1]
+    weighttypes = ['em-{l}'.format(l=line) for line in lines2]
     histtype = 'nrprof' 
     
     if samplename is None:
@@ -1387,7 +1390,7 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
     rbinu = 'R200c'
     if weight == 'Luminosity':
         outname = ol.pdir + 'luminosity-weighted-nH-T-Z_halos_%s_%s-%s-%s_SmAb.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)
-        weighttypes = ['em-{l}'.format(l=line) for line in lines1]
+        weighttypes = ['em-{l}'.format(l=line) for line in lines2]
         histtypes = ['Zrprof', 'nrprof', 'Trprof'] 
     elif weight in ['Mass', 'Volume']:
         outname = ol.pdir + '{weight}-weighted-nH-T-Z_halos_%s_%s-%s-%s_SmAb.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)

@@ -3176,7 +3176,202 @@ if jobind in range(20313, 20331):
                          numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
                          axis='z', velspace=False, offset_los=0., stamps=True,\
                          trackprogress=True)
- 
+
+### add n6-actualr to previous profiles
+elif jobind == 20331:
+    p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    weighttype = 'n6-actualr'
+    weighttype = 'em-' + weighttype
+    for axdct in ['Trprof', 'nrprof', 'Zrprof']:
+        p3g.genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
+                            rbinu='R200c', idsel=None,\
+                            weighttype=weighttype,\
+                            logM200min=10.0, axdct=axdct)     
+
+# get halo luminosity fraction stats + mass for comparison
+elif jobind == 20332:
+    wt = 'n6-actualr'
+    m3.ol.ndir = '/net/luttero/data2/imgs/paper3/lumfracs/'
+    
+    simnum = 'L0100N1504'
+    snapnum = 27
+    var = 'REFERENCE'
+    if wt == 'Mass':
+        ptype = 'basic'
+        kwargs = {'quantity': wt}
+    else:
+        ptype = 'Luminosity'
+        kwargs = {'ion': wt}
+    
+    axesdct = [{'ptype': 'halo', 'quantity': 'Mass'},\
+               {'ptype': 'halo', 'quantity': 'subcat'}]
+    axbins = [np.array([-np.inf, 0., c.solar_mass] +\
+                       list(10**(np.arange(9., 15.5, 0.5)) * c.solar_mass) +\
+                       [np.inf]) ,\
+              3]
+    minval = 2**-149 * c.solar_mass / c.sec_per_year 
+    axbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
+    axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
+    logax = [False, False, False]
+    
+    args = (ptype, simnum, snapnum, var, axesdct)
+    _kwargs = dict(simulation='eagle',\
+                  excludeSFR='T4', abunds='Sm', parttype='0',\
+                  axbins=axbins,\
+                  sylviasshtables=False, bensgadget2tables=False,\
+                  allinR200c=True, mdef='200c',\
+                  L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
+                  misc=None,\
+                  name_append=None, logax=logax, loghist=False,
+                  )
+    _kwargs.update(kwargs)
+    kwargs = _kwargs
+    filen, grpn = m3.makehistograms_perparticle(*args, nameonly=True, **kwargs)
+    done = False
+    if os.path.isfile(filen):
+        with h5py.File(filen) as fi:
+            if grpn in fi:
+                done = True
+    if not done:
+        m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
+
+# stack emission-weighted profiles    
+elif jobind == 20333:
+    p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    weighttype = 'n6-actualr'
+    weighttype = 'em-' + weighttype
+    for axdct in ['Trprof', 'nrprof', 'Zrprof']:    
+        p3g.combhists(samplename='L0100N1504_27_Mh0p5dex_1000', rbinu='R200c',\
+                  idsel=None, weighttype=weighttype,\
+                  binby=('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),\
+                  combmethod='addnormed-R200c', histtype=axdct)
+
+# get total luminosities for comparison
+elif jobind == 20334:
+    wt = 'n6-actualr'
+    m3.ol.ndir = '/net/luttero/data2/imgs/paper3/lumfracs/'
+    
+    simnum = 'L0100N1504'
+    snapnum = 27
+    var = 'REFERENCE'
+    if wt == 'Mass':
+        ptype = 'basic'
+        kwargs = {'quantity': wt}
+    else:
+        ptype = 'Luminosity'
+        kwargs = {'ion': wt}
+    
+    axesdct = []
+    axbins = []
+    minval = 2**-149 * c.solar_mass / c.sec_per_year 
+    axbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
+    axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
+    logax = [False]
+    
+    args = (ptype, simnum, snapnum, var, axesdct)
+    _kwargs = dict(simulation='eagle',\
+                  excludeSFR='T4', abunds='Sm', parttype='0',\
+                  axbins=axbins,\
+                  sylviasshtables=False, bensgadget2tables=False,\
+                  allinR200c=True, mdef='200c',\
+                  L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
+                  misc=None,\
+                  name_append=None, logax=logax, loghist=False,
+                  )
+    _kwargs.update(kwargs)
+    kwargs = _kwargs
+    filen, grpn = m3.makehistograms_perparticle(*args, nameonly=True, **kwargs)
+    done = False
+    if os.path.isfile(filen):
+        with h5py.File(filen, 'a') as fi:
+            if grpn in fi:
+                if 'histogram' in fi[grpn]:
+                    done = True
+                else:
+                    del fi[grpn]
+                    print('Deleting incomplete data group')
+    if not done:
+        m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
+
+# alt. 3D stack
+elif jobind == 20335:
+    p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    weighttype = 'n6-actualr'
+    weighttype = 'em-' + weighttype
+    for axdct in ['Trprof', 'nrprof', 'Zrprof']:    
+        p3g.combhists(samplename='L0100N1504_27_Mh0p5dex_1000', rbinu='R200c',\
+                  idsel=None, weighttype=weighttype,\
+                  binby=('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),\
+                  combmethod='add', histtype=axdct)
+
+if jobind == 20336: 
+    szcens = [str(i) for i in np.arange(16)/16. * 100. + 100./32.]
+    L_x = 100.
+    npix_x = 32000
+    rmin_r200c = 0.
+    rmax_r200c = 3.5
+    
+    catname = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    with h5py.File(catname, 'r') as cat:
+        r200cvals = np.array(cat['R200c_pkpc'])
+        galids = np.array(cat['galaxyid'])
+        cosmopars = {key: item for key, item in cat['Header/cosmopars'].attrs.items()}
+        
+    # select 1500 halos randomly in  0.5 dex Mstar bins (trying to do everything just gives memory errors)
+    print('Getting galaxy ids')
+    galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids() 
+    # there seem to be issues with these bins and they aren't going to be in
+    # the plots anyway
+    del galids_dct['geq9.0_le9.5']
+    del galids_dct['geq9.5_le10.0']
+    del galids_dct['geq10.0_le10.5']
+    # set minimum distance based on virial radius of halo mass bin;
+    # factor 1.1 is a margin
+    print('Getting halo radii')
+    maxradii_mhbins = {key: 1.1 * cu.R200c_pkpc(10**14.6, cosmopars) if key == 'geq14.0'\
+                            else 1.1 * cu.R200c_pkpc(10**(float(key.split('_')[1][2:])), cosmopars)\
+                       for key in galids_dct} 
+    #print('for debug: galids_dct:\n')
+    #print(galids_dct)
+    #print('\n')
+    print('Matching radii to Mhalo bins...')
+    allids = [gid for key in galids_dct.keys() for gid in galids_dct[key]]
+    gkeys = list(galids_dct.keys())
+    keymatch = [gkeys[np.where([gid in galids_dct[key] for key in gkeys])[0][0]] for gid in allids]
+    mindist_pkpc = rmax_r200c * np.array([maxradii_mhbins[gkey] for gkey in keymatch])
+    print('... done')
+    #print('for debug: allids')
+    #print(allids)
+    #print('\n')
+    selection = [('galaxyid', np.array(allids))]
+    
+    line = 'n6-actualr'
+    numsl = 1
+    
+    if line in ['ne10', 'n6actualr']:
+        filename = ol.ndir + 'emission_{line}_L0100N1504_27_test3.6_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
+        filename = filename.format(line=line)
+    else:
+        basename = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
+        filenames = {line: ol.ndir + basename.format(line=line) for line in lines}
+        filename = filenames[line]
+    outname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'%((filename.split('/')[-1][:-5])%('-all'), numsl)
+    
+    print('Calling rdists_sl_from_selection')
+    crd.rdists_sl_from_selection(filename, szcens, 'dontusethis', 'alsonotthis',\
+                         np.NaN, rmax_r200c,\
+                         catname,\
+                         selection, np.inf, outname=outname,\
+                         numsl=numsl, npix_y=None, logquantity=True, mindist_pkpc=mindist_pkpc,\
+                         axis='z', velspace=False, offset_los=0., stamps=True,\
+                         trackprogress=True)
+
+### also redo for n6-actualr:
+# - p3g.extracthists_luminosity()
+# - p3g.extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
+#              addedges=(0.0, 1.), weight='Luminosity', logM200min=11.0)
+# - rad. prof. at end of this file
+
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################
@@ -4344,6 +4539,158 @@ if jobind in range(30195, 30213):
     
     if line == 'ne10':
         mapname = 'emission_ne10_L0100N1504_27_test3.6_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
+    else:
+        mapbase = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
+        mapname = ol.ndir + mapbase.format(line=line)
+    stampname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'%((mapname.split('/')[-1][:-5])%('-all'), numsl)
+    outfile = stampname.split('/')[-1]
+    outfile = ol.pdir + 'radprof/radprof_' + outfile
+    
+    rbins_r200c = np.arange(0., 2.51, 0.05)
+    yvals_perc = [1., 5., 10., 50., 90., 95., 99.]
+    kwarg_opts = [{'runit': 'pkpc', 'ytype': 'perc', 'yvals': yvals_perc,\
+                   'separateprofiles': False, 'uselogvals': True},\
+                  {'runit': 'pkpc', 'ytype': 'perc', 'yvals': yvals_perc,\
+                   'separateprofiles': True, 'uselogvals': True},\
+                  {'runit': 'pkpc', 'ytype': 'mean', 'yvals': None,\
+                   'separateprofiles': False, 'uselogvals': False},\
+                  {'runit': 'pkpc', 'ytype': 'mean', 'yvals': None,\
+                   'separateprofiles': True, 'uselogvals': False},\
+                  ]
+    
+    for hmkey in galids_dct:
+        print('Trying halo set %s'%(hmkey))
+        # get max. distance from halo mass range:
+        
+        # hmkeys format: 'geq10.0_le10.5' or 'geq14.0'
+        # extracted out to max(R200c in bin)
+        minmass_Msun = 10**(float(hmkey.split('_')[0][3:]))
+        maxdist_pkpc = 3.5 * cu.R200c_pkpc(minmass_Msun * 10**0.5, cosmopars)
+        # lin-log bins: lin 10 pkpc up to 100 kpc, then 0.1 dex
+        rbins_log_pkpc = 10.**(np.arange(1., np.log10(maxdist_pkpc), 0.25))
+        rbins_pkpc = np.append([0.], rbins_log_pkpc)
+        
+        for kwargs in kwarg_opts:
+            print('Using kwargs {}'.format(kwargs))
+            if kwargs['runit'] == 'pkpc':
+                rbins = rbins_pkpc
+            else:
+                rbins = rbins_r200c
+            galids = np.copy(galids_dct[hmkey])
+            if kwargs['separateprofiles']:
+                galids = galids[:10] # just a few examples, don't need the whole set
+            #print('Calling getprofiles_fromstamps with:')
+            #print(stampname)
+            #print('rbins: {}'.format(rbins))
+            #if len(galids) > 15:
+            #    print('galaxyids: {} ... {}'.format(galids[:8],  galids[-7:]))
+            #else:
+            #    print('galaxyids: {}'.format(galids))
+            #print(halocat)
+            #print('out: {}'.format(outfile))
+            #print('grouptag: {}'.format(hmkey))
+            #print('\t '.join(['{key}: {val}'.format(key=key, val=kwargs[key])\
+            #                  for key in kwargs]))
+            #print('\n\n')
+            crd.getprofiles_fromstamps(stampname, rbins, galids,\
+                           halocat=halocat,\
+                           outfile=outfile, grptag=hmkey,\
+                           **kwargs)
+
+#### n6-actualr profiles
+# single-line emission profiles: log r bins, from bins up to 3.5 R200c
+if jobind == 30213:
+    
+    halocat = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'   
+    galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids()
+    del galids_dct['geq9.0_le9.5']
+    del galids_dct['geq9.5_le10.0']
+    del galids_dct['geq10.0_le10.5']
+    
+    with h5py.File(catname, 'r') as cat:
+        cosmopars = {key: item for key, item in cat['Header/cosmopars'].attrs.items()}
+    
+    line = 'n6-actualr'
+    numsl = 1
+    
+    if line in ['ne10', 'n6-actualr']:
+        mapname = 'emission_{line}_L0100N1504_27_test3.6_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
+        mapname = mapname.format(line=line) 
+    else:
+        mapbase = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
+        mapname = ol.ndir + mapbase.format(line=line)
+    stampname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'%((mapname.split('/')[-1][:-5])%('-all'), numsl)
+    outfile = stampname.split('/')[-1]
+    outfile = ol.pdir + 'radprof/radprof_' + outfile
+    
+    rbins_r200c = np.arange(0., 2.51, 0.05)
+    yvals_perc = [1., 5., 10., 50., 90., 95., 99.]
+    kwarg_opts = [{'runit': 'pkpc', 'ytype': 'perc', 'yvals': yvals_perc,\
+                   'separateprofiles': False, 'uselogvals': True},\
+                  {'runit': 'pkpc', 'ytype': 'perc', 'yvals': yvals_perc,\
+                   'separateprofiles': True, 'uselogvals': True},\
+                  {'runit': 'pkpc', 'ytype': 'mean', 'yvals': None,\
+                   'separateprofiles': False, 'uselogvals': False},\
+                  {'runit': 'pkpc', 'ytype': 'mean', 'yvals': None,\
+                   'separateprofiles': True, 'uselogvals': False},\
+                  ]
+    
+    for hmkey in galids_dct:
+        print('Trying halo set %s'%(hmkey))
+        # get max. distance from halo mass range:
+        
+        # hmkeys format: 'geq10.0_le10.5' or 'geq14.0'
+        # extracted out to max(R200c in bin)
+        minmass_Msun = 10**(float(hmkey.split('_')[0][3:]))
+        maxdist_pkpc = 3.5 * cu.R200c_pkpc(minmass_Msun * 10**0.5, cosmopars)
+        # lin-log bins: lin 10 pkpc up to 100 kpc, then 0.1 dex
+        rbins_lin_pkpc = np.arange(0., 105., 10.)
+        rbins_log_pkpc = 10.**(np.arange(2., np.log10(maxdist_pkpc), 0.1))
+        rbins_pkpc = np.append(rbins_lin_pkpc[:-1], rbins_log_pkpc)
+        
+        for kwargs in kwarg_opts:
+            print('Using kwargs {}'.format(kwargs))
+            if kwargs['runit'] == 'pkpc':
+                rbins = rbins_pkpc
+            else:
+                rbins = rbins_r200c
+            galids = np.copy(galids_dct[hmkey])
+            if kwargs['separateprofiles']:
+                galids = galids[:10] # just a few examples, don't need the whole set
+            #print('Calling getprofiles_fromstamps with:')
+            #print(stampname)
+            #print('rbins: {}'.format(rbins))
+            #if len(galids) > 15:
+            #    print('galaxyids: {} ... {}'.format(galids[:8],  galids[-7:]))
+            #else:
+            #    print('galaxyids: {}'.format(galids))
+            #print(halocat)
+            #print('out: {}'.format(outfile))
+            #print('grouptag: {}'.format(hmkey))
+            #print('\t '.join(['{key}: {val}'.format(key=key, val=kwargs[key])\
+            #                  for key in kwargs]))
+            #print('\n\n')
+            crd.getprofiles_fromstamps(stampname, rbins, galids,\
+                           halocat=halocat,\
+                           outfile=outfile, grptag=hmkey,\
+                           **kwargs)
+
+if jobind == 30214:
+    halocat = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'   
+    galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids()
+    del galids_dct['geq9.0_le9.5']
+    del galids_dct['geq9.5_le10.0']
+    del galids_dct['geq10.0_le10.5']
+    
+    with h5py.File(catname, 'r') as cat:
+        cosmopars = {key: item for key, item in cat['Header/cosmopars'].attrs.items()}
+    
+    line = 'n6-actualr'
+    numsl = 1
+    
+    if line in ['ne10', 'n6-actualr']:
+        mapname = 'emission_{}_L0100N1504_27_test3.6_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
+        mapname = mapname.format(line=line)
     else:
         mapbase = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
         mapname = ol.ndir + mapbase.format(line=line)
