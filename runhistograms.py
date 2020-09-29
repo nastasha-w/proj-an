@@ -3186,7 +3186,7 @@ elif jobind == 20331:
         p3g.genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
                             rbinu='R200c', idsel=None,\
                             weighttype=weighttype,\
-                            logM200min=10.0, axdct=axdct)     
+                            logM200min=11.0, axdct=axdct)     
 
 # get halo luminosity fraction stats + mass for comparison
 elif jobind == 20332:
