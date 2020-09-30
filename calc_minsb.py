@@ -260,7 +260,7 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
     specs_norm1 = 0.5 * (1. + erf((E_pos[:, np.newaxis] - grid[np.newaxis, :])\
                                     / E_width[:, np.newaxis]))
     specs_norm1 = specs_norm1[:, :-1] - specs_norm1[:, 1:]
-    print(np.sum(specs_norm1, axis=1))
+    #print(np.sum(specs_norm1, axis=1))
     
     # get count spectra
     counts_norm1 = np.array([resp.get_outspec(spec) for spec in specs_norm1])
@@ -289,7 +289,8 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
     
     counts_norm1_extr = np.array([np.sum(counts[_slice]) for counts, _slice in zip(counts_norm1, ranges)])
     bkg_extr = np.array([np.sum(bkg[_slice]) for _slice in ranges])
-
+    print(counts_norm1_extr)
+    print(bkg_extr)
     # extract the min. SB
     _minsb = minsb(nsigma, bkg_extr, counts_norm1_extr, area_texp)
     
