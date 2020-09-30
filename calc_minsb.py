@@ -294,16 +294,16 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
     # extract the min. SB
     _minsb = minsb(nsigma, bkg_extr, counts_norm1_extr, area_texp)
     
-    # check: plot in/out spectra
-    for li in range(len(E_rest)):
-        plt.plot(E_cen, _minsb[li] * specs_norm1[li] * resp.aeff * area_texp * arcmin2,\
-                 label='min. det. input spectrum (using Aeff)')
-        plt.plot(E_cen, _minsb[li] * counts_norm1[li] * area_texp * arcmin2, label='min. det count spectrum')
-        plt.plot(E_cen, bkg * area_texp * arcmin2, label='background')
-        plt.plot(E_cen[ranges[li]], _minsb[li] * counts_norm1[li][ranges[li]] * area_texp * arcmin2,\
-                 linestyle='dotted', label='extracted min. det count spectrum')
-        plt.axvline(E_pos[li], label='line energy (redshift)')
-        plt.legend()
-        plt.show()
+    ## check: plot in/out spectra
+    #for li in range(len(E_rest)):
+    #    plt.plot(E_cen, _minsb[li] * specs_norm1[li] * resp.aeff * area_texp * arcmin2,\
+    #             label='min. det. input spectrum (using Aeff)')
+    #    plt.plot(E_cen, _minsb[li] * counts_norm1[li] * area_texp * arcmin2, label='min. det count spectrum')
+    #    plt.plot(E_cen, bkg * area_texp * arcmin2, label='background')
+    #    plt.plot(E_cen[ranges[li]], _minsb[li] * counts_norm1[li][ranges[li]] * area_texp * arcmin2,\
+    #             linestyle='dotted', label='extracted min. det count spectrum')
+    #    plt.axvline(E_pos[li], label='line energy (redshift)')
+    #    plt.legend()
+    #    plt.show()
     return _minsb
     
