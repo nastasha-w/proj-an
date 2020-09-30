@@ -202,7 +202,7 @@ def getdata_xifu():
     
     # documentation: bkg is for 1 arcmin**2, backgrounds scale with 
     # solid angle \propto detector area
-    extr_area_file = 1. * (np.pi / (180. * 60.))**2 # 1 arcmin**2 -> steradian 
+    extr_area_file = 1. * arcmin2 #* (np.pi / (180. * 60.))**2 # 1 arcmin**2 -> steradian 
     with fits.open(ddir_xifu + filename_bkg_xifu) as hdu:
         channel_bkg = hdu[1].data['CHANNEL'] 
         rate_bkg = hdu[1].data['RATE']  # counts / s / channel
@@ -260,6 +260,7 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
     specs_norm1 = 0.5 * (1. + erf((E_pos[:, np.newaxis] - grid[np.newaxis, :])\
                                     / E_width[:, np.newaxis]))
     specs_norm1 = specs_norm1[:, :-1] - specs_norm1[:, 1:]
+    specs_norm1 /= arcmin2 # to photons/s/cm**2/arcmin2
     
     # get count spectra
     counts_norm1 = np.array([resp.get_outspec(spec) for spec in specs_norm1])
@@ -282,20 +283,19 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
                       for tar, cen in zip(E_pos, cenchan)]
     else:
         extr_range *= 1e-3 # eV to keV
-        mins = np.argmin(np.abs(E_cen[np.newaxis, :]  - E_pos[:, np.newaxis] + extr_range), axis=1)
-        maxs = np.argmin(np.abs(E_cen[np.newaxis, :]  - E_pos[:, np.newaxis] - extr_range), axis=1)
+        mins = np.argmin(np.abs(E_lo[np.newaxis, :]  - E_pos[:, np.newaxis] + extr_range), axis=1)
+        maxs = np.argmin(np.abs(E_hi[np.newaxis, :]  - E_pos[:, np.newaxis] - extr_range), axis=1)
         ranges = [slice(_min, _max + 1) for _min, _max in zip(mins, maxs)]
     
     counts_norm1_extr = np.array([np.sum(counts[_slice]) for counts, _slice in zip(counts_norm1, ranges)])
     bkg_extr = np.array([np.sum(bkg[_slice]) for _slice in ranges])
 
     # extract the min. SB
-    area_texp *= arcmin2
     _minsb = minsb(nsigma, bkg_extr, counts_norm1_extr, area_texp)
     
     # check: plot in/out spectra
     for li in range(len(E_rest)):
-        plt.plot(E_cen, _minsb[li] * specs_norm1[li] * resp.aeff * area_texp,\
+        plt.plot(E_cen, _minsb[li] * specs_norm1[li] * resp.aeff * area_texp * arcmin2,\
                  label='min. det. input spectrum (using Aeff)')
         plt.plot(E_cen, _minsb[li] * counts_norm1[li], label='min. det count spectrum')
         plt.plot(E_cen, bkg, label='background')
