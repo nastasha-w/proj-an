@@ -64,7 +64,7 @@ def minsb(nsigma, bkg_rate, counts_norm1, deltat_times_solidangle):
     
     deltat_times_solidangle *= arcmin2
     sb = nsigma**2 / (2. * deltat_times_solidangle * counts_norm1)
-    sb *= (1. + (1. + bkg_rate * deltat_times_solidangle / nsigma**2)**0.5)
+    sb *= (1. + (1. + 4. * bkg_rate * deltat_times_solidangle / nsigma**2)**0.5)
     return sb
 
 class Responses:
