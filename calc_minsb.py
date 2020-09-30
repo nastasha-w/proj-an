@@ -289,8 +289,8 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
     
     counts_norm1_extr = np.array([np.sum(counts[_slice]) for counts, _slice in zip(counts_norm1, ranges)])
     bkg_extr = np.array([np.sum(bkg[_slice]) for _slice in ranges])
-    print(counts_norm1_extr)
-    print(bkg_extr)
+    #print(counts_norm1_extr)
+    #print(bkg_extr)
     # extract the min. SB
     _minsb = minsb(nsigma, bkg_extr, counts_norm1_extr, area_texp)
     
@@ -298,9 +298,9 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
     for li in range(len(E_rest)):
         plt.plot(E_cen, _minsb[li] * specs_norm1[li] * resp.aeff * area_texp * arcmin2,\
                  label='min. det. input spectrum (using Aeff)')
-        plt.plot(E_cen, _minsb[li] * counts_norm1[li], label='min. det count spectrum')
-        plt.plot(E_cen, bkg, label='background')
-        plt.plot(E_cen[ranges[li]], _minsb[li] * counts_norm1[li][ranges[li]],\
+        plt.plot(E_cen, _minsb[li] * counts_norm1[li] * area_texp * arcmin2, label='min. det count spectrum')
+        plt.plot(E_cen, bkg * area_texp * arcmin2, label='background')
+        plt.plot(E_cen[ranges[li]], _minsb[li] * counts_norm1[li][ranges[li]] * area_texp * arcmin2,\
                  linestyle='dotted', label='extracted min. det count spectrum')
         plt.axvline(E_pos, label='line energy (redshift)')
         plt.legend()
