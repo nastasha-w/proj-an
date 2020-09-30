@@ -285,7 +285,7 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
         ranges = [slice(_min, _max + 1) for _min, _max in zip(mins, maxs)]
     
     counts_norm1_extr = np.array([np.sum(counts[_slice]) for counts, _slice in zip(counts_norm1, ranges)])
-    bkg_extr = np.array([np.sum(counts[_slice]) for counts, _slice in zip(bkg, ranges)])
+    bkg_extr = np.array([np.sum(bkg[_slice]) for _slice in ranges])
 
     # extract the min. SB
     area_texp *= arcmin2
