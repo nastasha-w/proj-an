@@ -260,7 +260,6 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
     specs_norm1 = 0.5 * (1. + erf((E_pos[:, np.newaxis] - grid[np.newaxis, :])\
                                     / E_width[:, np.newaxis]))
     specs_norm1 = specs_norm1[:, :-1] - specs_norm1[:, 1:]
-    specs_norm1 /= arcmin2 # to photons/s/cm**2/arcmin2
     
     # get count spectra
     counts_norm1 = np.array([resp.get_outspec(spec) for spec in specs_norm1])
