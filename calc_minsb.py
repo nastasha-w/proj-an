@@ -263,6 +263,7 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
     
     # get count spectra
     counts_norm1 = np.array([resp.get_outspec(spec) for spec in specs_norm1])
+    print(np.sum(counts_norm1, axis=1))
     #channels = resp.channel_rmf
     bkg = get_bkg(resp.channel_rmf)
     E_lo = resp.E_lo_rmf
@@ -297,6 +298,7 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
         plt.plot(E_cen, _minsb[li] * specs_norm1[li] * resp.aeff * area_texp,\
                  label='min. det. input spectrum (using Aeff)')
         plt.plot(E_cen, _minsb[li] * counts_norm1[li], label='min. det count spectrum')
+        plt.plot(E_cen, bkg, label='background')
         plt.plot(E_cen[ranges[li]], _minsb[li] * counts_norm1[li][ranges[li]],\
                  linestyle='dotted', label='extracted min. det count spectrum')
         plt.axvline(E_pos, label='line energy (redshift)')
