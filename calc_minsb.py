@@ -302,7 +302,7 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
         plt.plot(E_cen, bkg * area_texp * arcmin2, label='background')
         plt.plot(E_cen[ranges[li]], _minsb[li] * counts_norm1[li][ranges[li]] * area_texp * arcmin2,\
                  linestyle='dotted', label='extracted min. det count spectrum')
-        plt.axvline(E_pos, label='line energy (redshift)')
+        plt.axvline(E_pos[li], label='line energy (redshift)')
         plt.legend()
         plt.show()
     return _minsb
