@@ -12,11 +12,14 @@ import numpy as np
 #import pandas as pd
 from astropy.io import fits
 from scipy.interpolate import interp1d
+from scipy.special import erf
 # sherpa: for reading in and using rmf data here. Requires python >=3.5
 from sherpa.astro.data import DataRMF
 
 import eagle_constants_and_units as c 
 import make_maps_opts_locs as ol
+
+import matplotlib.pyplot as plt
 
 arcmin2 = 1. * (np.pi / (180. * 60.))**2 # 1 arcmin**2 in steradian
 
@@ -40,27 +43,29 @@ def nsigma(sb, bkg, solidangle, aeff, deltat):
     '''
     return sb * (solidangle * aeff * deltat / (sb + bkg))**0.5
 
-def minsb(nsigma, bkg, solidangle, aeff, deltat):
+def minsb(nsigma, bkg_rate, counts_norm1, deltat_times_solidangle):
     '''
     minimum surface brightness for detection
     
     parameters:
     -----------
-    nsigma:     detection significance required (sigma) 
-    bkg:        (equivalent) surface brightness of backgrounds 
-                (astro/local/instrumental; photons / cm2 / s / sr)
-    solidangle: extraction area for the observation (sr)
-    aeff:       effective area (cm2)
-    deltat:     observing time (s)
+    nsigma:       detection significance required (sigma) 
+    bkg_rate:     background rate (counts / s / sr)
+                  (astro/local/instrumental)
+    counts_norm1: count rate (counts / s / sr) for an input rate of 
+                  1 photon / s / cm**2 / sr           
+    solidangle:   extraction area for the observation (sr)
+    deltat:       observing time (s)
     
     returns:
     --------
     minimum surface brightness (photons / cm2 / s / sr)
     '''
     
-    _c2 = nsigma**2 / (solidangle * aeff * deltat)
-    sbmin = 0.5 * (_c2 + (_c2 + 4 * _c2**0.5 * bkg)**0.5)
-    return sbmin
+    deltat_times_solidangle *= arcmin2
+    sb = nsigma**2 / (2. * deltat_times_solidangle * counts_norm1)
+    sb *= (1. + (1. + bkg_rate * deltat_times_solidangle / nsigma**2)**0.5)
+    return sb
 
 class Responses:
     '''
@@ -206,3 +211,95 @@ def getdata_xifu():
                        copy=True, fill_value=np.NaN)
     
     return resp, get_bkg
+
+def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
+                  nsigma=5., area_texp=1e5, instrument='athena-xifu',\
+                  extr_range=2.5):
+    '''
+    calculate the minimum surface brightness (photons / cm**2 / s / sr) of a 
+    Gaussian emission line for detection
+    
+    parameters:
+    -----------
+    E_rest:         rest-frame energy (keV); float or 1D-array of floats
+    linewidth_kmps: width of the gaussian line (b parameter); km/s
+    z:              redshift of the lines (float)
+    nsigma:         required detection significance (sigma; float)
+    area_texp:      solid angle to extract the emission from (arcmin**2) 
+                    times the exposure time (s); float
+    instrument:     'athena-xifu'
+    extr_range:     range around the input energy to extract the counts
+                    float: range in eV (will be rounded to whole channels)
+                    int:   number of channels
+        
+    returns:
+    --------
+    _minSB:         array of minimum SB values (photons / cm**2 / s / sr)
+    E_pos:          redshifted energies of the lines
+    '''
+    
+    if instrument == 'athena-xifu':
+        resp, get_bkg = getdata_xifu()
+    else:
+        raise ValueError('{} is not a valid instrument option'.format(instrument))
+    
+    # setup input spectra
+    if not hasattr(E_rest, '__len__'):
+        E_rest = np.array([E_rest])
+    
+    grid_emin = resp.E_lo_arf 
+    grid_emax = resp.E_hi_arf
+    if np.all(grid_emin[1:] == grid_emax[:-1]):
+        grid = np.append(grid_emin, grid_emax[-1])
+    else:
+        raise RuntimeError('E_lo_arf and E_hi_erf grids do not match')
+    # line profile \propto exp(-(Delta v / b)**2)
+    # erf to integrate properly over the response spacing for narrow lines
+    E_pos = E_rest / (1. + z)
+    E_width = E_pos * linewidth_kmps * 1e5 / c.c
+    specs_norm1 = 0.5 * (1. + erf((E_pos[:, np.newaxis] - grid[np.newaxis, :])\
+                                    / E_width[:, np.newaxis]))
+    specs_norm1 = specs_norm1[:, :-1] - specs_norm1[:, 1:]
+    
+    # get count spectra
+    counts_norm1 = np.array([resp.get_outspec(spec) for spec in specs_norm1])
+    #channels = resp.channel_rmf
+    bkg = get_bkg(resp.channel_rmf)
+    E_lo = resp.E_lo_rmf
+    E_hi = resp.E_hi_rmf
+    E_cen = 0.5 * (E_lo + E_hi)
+    
+    if isinstance(extr_range, int):
+        cenchan = np.argmin(np.abs(E_pos[:, np.newaxis] - E_cen[np.newaxis, :]), axis=1)
+        offset = extr_range // 2
+        if extr_range % 2 == 1:
+            ranges = [slice(cen - offset, cen + offset + 1) for cen in cenchan]
+        else:
+            ranges = [slice(cen - offset, cen + offset) if\
+                      np.abs(E_cen[cen - offset] - tar) <  np.abs(E_cen[cen + offset] - tar) else\
+                      slice(cen - offset - 1, cen + offset - 1)\
+                      for tar, cen in zip(E_pos, cenchan)]
+    else:
+        mins = np.argmin(np.abs(E_cen[np.newaxis, :]  - E_pos[:, np.newaxis] + extr_range), axis=1)
+        maxs = np.argmin(np.abs(E_cen[np.newaxis, :]  - E_pos[:, np.newaxis] - extr_range), axis=1)
+        ranges = [slice(_min, _max + 1) for _min, _max in zip(mins, maxs)]
+    
+    counts_norm1_extr = np.array([np.sum(counts[_slice]) for counts, _slice in zip(counts_norm1, ranges)])
+    bkg_extr = np.array([np.sum(counts[_slice]) for counts, _slice in zip(bkg, ranges)])
+
+    # extract the min. SB
+    area_texp *= arcmin2
+    _minsb = minsb(nsigma, bkg_extr, counts_norm1_extr, area_texp)
+    
+    # check: plot in/out spectra
+    for li in range(len(E_rest)):
+        plt.plot(E_cen, _minsb[li] * specs_norm1[li] * resp.aeff * area_texp,\
+                 label='min. det. input spectrum (using Aeff)')
+        plt.plot(E_cen, _minsb[li] * counts_norm1[li], label='min. det count spectrum')
+        plt.plot(E_cen[ranges[li]], _minsb[li] * counts_norm1[li][ranges[li]],\
+                 linestyle='dotted', label='extracted min. det count spectrum')
+        plt.axvline(E_pos, label='line energy (redshift)')
+        plt.legend()
+        plt.show()
+    return _minsb
+    
