@@ -280,6 +280,7 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
                       slice(cen - offset - 1, cen + offset - 1)\
                       for tar, cen in zip(E_pos, cenchan)]
     else:
+        extr_range *= 1e-3 # eV to keV
         mins = np.argmin(np.abs(E_cen[np.newaxis, :]  - E_pos[:, np.newaxis] + extr_range), axis=1)
         maxs = np.argmin(np.abs(E_cen[np.newaxis, :]  - E_pos[:, np.newaxis] - extr_range), axis=1)
         ranges = [slice(_min, _max + 1) for _min, _max in zip(mins, maxs)]
