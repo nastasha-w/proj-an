@@ -1290,7 +1290,7 @@ def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                     for line in fnames_line}
 
     galids = np.array(galnames_all[weighttypes[0]].index) # galdata may also include non-selected haloes; galnames galaxyids should match
-    logM200c = np.log10(galdata_all.loc['M200c_Msun', galids])
+    logM200c = np.log10(galdata_all.loc[galids, 'M200c_Msun'])
     numhaloes = np.sum(logM200c >= logM200min) 
     
     # axis data attributes that are allowed to differ between summed histograms
