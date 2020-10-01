@@ -1313,10 +1313,10 @@ def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                 # retrieve data from this histogram for checks
                 igrpn_temp = galnames_all[line].at[galid, 'groupname']   
                 ifilen_temp = galnames_all[line].at[galid, 'filename']  
-                if line in ['n6-actualr', 'ne10']:
-                    ifilen_temp = ifilen_temp.replace('test3.5', 'test3.6')
-                else:
-                    ifilen_temp = ifilen_temp.replace('test3.6', 'test3.5')
+                #if line in ['n6-actualr', 'ne10']:
+                #    ifilen_temp = ifilen_temp.replace('test3.5', 'test3.6')
+                #else:
+                #    ifilen_temp = ifilen_temp.replace('test3.6', 'test3.5')
                 
                 with h5py.File(ifilen_temp, 'r') as fit:
                     igrp_t = fit[igrpn_temp]
@@ -1472,10 +1472,10 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                     # retrieve data from this histogram for checks
                     igrpn_temp = galnames_all[histtype][line].at[galid, 'groupname']   
                     ifilen_temp = galnames_all[histtype][line].at[galid, 'filename']   
-                    if line in ['n6-actualr', 'ne10']:
-                        ifilen_temp = ifilen_temp.replace('test3.5', 'test3.6')
-                    else:
-                        ifilen_temp = ifilen_temp.replace('test3.6', 'test3.5')
+                    #if line in ['n6-actualr', 'ne10']:
+                    #    ifilen_temp = ifilen_temp.replace('test3.5', 'test3.6')
+                    #else:
+                    #    ifilen_temp = ifilen_temp.replace('test3.6', 'test3.5')
                     with h5py.File(ifilen_temp, 'r') as fit:
                         igrp_t = fit[igrpn_temp]
                         hist_t = np.array(igrp_t['histogram'])
