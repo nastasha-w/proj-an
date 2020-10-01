@@ -3373,7 +3373,7 @@ if jobind == 20336:
 # - p3g.extracthists_luminosity()
 # - p3g.extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
 #              addedges=(0.0, 1.), weight='Luminosity', logM200min=11.0)
-# - rad. prof. at end of this file
+# x rad. prof. at end of this file
 
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
