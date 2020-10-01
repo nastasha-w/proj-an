@@ -1290,8 +1290,7 @@ def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                     for line in fnames_line}
 
     galids = np.array(galnames_all[weighttypes[0]].index) # galdata may also include non-selected haloes; galnames galaxyids should match
-    logM200c = np.log10(galdata_all.loc[galids, 'M200c_Msun'])
-    numhaloes = np.sum(logM200c >= logM200min) 
+    galids = galids[galdata_all.loc[galids, 'M200c_Msun'] > 10**logM200min]
     
     # axis data attributes that are allowed to differ between summed histograms
     neqlist = ['number of particles',\
@@ -1305,18 +1304,19 @@ def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
             csp.attrs.create(key, cosmopars[key])
         fo.create_dataset('galaxyids', data=galids)
         
-        savelist = np.ones((numhaloes, len(weighttypes), 2), dtype=np.float64) * np.NaN # initialize as NaN
+        savelist = np.ones((len(galids), len(weighttypes), 2), dtype=np.float64) * np.NaN # initialize as NaN
         
         for li, line in enumerate(weighttypes):  
             
             for gind in range(len(galids)):
                 galid = galids[gind]
-                logM200c = np.log10(galdata_all.at[galid, 'M200c_Msun'])
-                if logM200c < logM200min:
-                    continue
                 # retrieve data from this histogram for checks
                 igrpn_temp = galnames_all[line].at[galid, 'groupname']   
-                ifilen_temp = galnames_all[line].at[galid, 'filename']   
+                ifilen_temp = galnames_all[line].at[galid, 'filename']  
+                if line in ['n6-actualr', 'ne10']:
+                    ifilen_temp = ifilen_temp.replace('test3.5', 'test3.6')
+                else:
+                    ifilen_temp = ifilen_temp.replace('test3.6', 'test3.5')
                 
                 with h5py.File(ifilen_temp, 'r') as fit:
                     igrp_t = fit[igrpn_temp]
@@ -1472,7 +1472,10 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                     # retrieve data from this histogram for checks
                     igrpn_temp = galnames_all[histtype][line].at[galid, 'groupname']   
                     ifilen_temp = galnames_all[histtype][line].at[galid, 'filename']   
-                    
+                    if line in ['n6-actualr', 'ne10']:
+                        ifilen_temp = ifilen_temp.replace('test3.5', 'test3.6')
+                    else:
+                        ifilen_temp = ifilen_temp.replace('test3.6', 'test3.5')
                     with h5py.File(ifilen_temp, 'r') as fit:
                         igrp_t = fit[igrpn_temp]
                         hist_t = np.array(igrp_t['histogram'])
