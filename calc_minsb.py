@@ -27,6 +27,8 @@ ddir_xifu = ol.dir_instrumentfiles + 'athena_x-ifu/cost-constrained_2020-09-28/'
 filename_resp_xifu = 'responses/XIFU_CC_BASELINECONF_2018_10_10'
 filename_bkg_xifu  = 'backgrounds/TotalBKG1arcmin2.pha'
 
+mdir = '/net/luttero/data2/imgs/paper3/minSB/'
+
 def nsigma(sb, bkg, solidangle, aeff, deltat):
     '''
     detection significance (based on signal/noise), assuming no systematic 
@@ -164,6 +166,8 @@ class Responses:
         _out = self.rmf.apply_rmf(inspec * self.aeff)
         return _out
 
+    def get_wabs_correction(self):
+        pass
 
 def getdata_xifu():
     '''
@@ -306,4 +310,31 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
     #    plt.legend()
     #    plt.show()
     return _minsb
+
+
+def explorepars_omegat_extr():
+    extr = [1.25, 2.5, 5.]
+    omegat = [1e5, 1e6, 1e7]
+    label = '{omegat:.0e} am2*s, {extr:.2f} eV'
+    title = 'Varying $\\Delta \\Omega \\times \\mathrm{t}_{\\mathrm{exp}}$ and the $\\Delta$E range for line measurment'
+    fontsize = 12
     
+    kwargs_extr = [{'color': 'red'}, {'color': 'orange'}, {'color': 'green'},\
+                   {'color': 'blue'}]
+    kwargs_omegat = [{'linestyle': 'dotted'}, {'linestyle': 'dashed'},\
+                     {'linestyle': 'solid'}]
+    Egrid = np.linspace(0.3, 2.0, 170)
+    
+    for kw1, _extr in zip(kwargs_extr, extr):
+        for kw2, _omegat in zip(kwargs_omegat, omegat):
+            kwargs = kw1.copy()
+            kwargs.update(kw2)
+            y = getminSB_grid(Egrid, area_texp=_omegat, extr_range=_extr)
+            
+            plt.plot(Egrid, np.log10(y), label=label.format(omegat=_omegat, extr=_extr),\
+                     **kwargs)
+    plt.title(title, fontsize=fontsize)
+    plt.xlabel('line energy (keV)', fontsize=fontsize)
+    plt.ylabel('log10 min. SB [photons / s / cm**2 / sr]', fontsize=fontsize)
+    plt.legend(fontsize=fontsize)
+    plt.savefig(mdir + 'minSB_x-ifu_varying_omegatexp_spec-extr.pdf', bbox_inches='tight')        
