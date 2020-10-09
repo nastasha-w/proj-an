@@ -6,6 +6,29 @@ Created on Mon Sep 28 15:19:56 2020
 @author: wijers
 
 calculate minimum surface brightnesses for different instruments
+sherpa package, including xspec, requires python >= 3.5 and HEADAS 
+environment variable set
+
+getting xspec to work with sherpa just did not work. The regular sherpa
+parts seem to though.
+
+# luttero:
+# setenv HEADAS /software/heasoft/current/x86_64-pc-linux-gnu-libc2.17
+# # flex package is only installed for me (--user)
+# Python 3.7.9, pip3 explicitly
+# sherpa setup.cfg, xspec section
+#xspec_version = 12.10.1
+#xspec_lib_dirs = /software/heasoft/current/x86_64-pc-linux-gnu-libc2.17/lib
+#xspec_include_dirs = /software/heasoft/current/x86_64-pc-linux-gnu-libc2.17/include
+#xspec_libraries = XSFunctions XSModel XSUtil XS hdsp_6.25
+##cfitsio_lib_dirs = None
+#cfitsio_libraries = cfitsio
+##ccfits_lib_dirs = None
+#ccfits_libraries = CCfits_2.5
+##wcslib_lib_dirs = None
+#wcslib_libraries = wcs-5.19.1
+##gfortran_lib_dirs = None
+##gfortran_libraries = gfortran
 """
 
 import numpy as np
@@ -14,6 +37,7 @@ from astropy.io import fits
 from scipy.interpolate import interp1d
 from scipy.special import erf
 # sherpa: for reading in and using rmf data here. Requires python >=3.5
+from sherpa.astro import xspec
 from sherpa.astro.data import DataRMF
 
 import eagle_constants_and_units as c 
@@ -169,6 +193,169 @@ class Responses:
     def get_wabs_correction(self):
         pass
 
+
+class InstrumentModel:
+    '''
+    class containing instrument repsonses and backgrounds, and functions to 
+    calculate minimum observable SBs from there
+    '''
+    
+    def __init__(self, instrument='athena-xifu',\
+                 rmf_fn=None, arf_fn=None, bkg_fn=None):
+        '''
+        set up the response files and background for an instrument. Defaults 
+        for the responses and backgrounds are used if not given.
+        
+        parameters
+        ----------
+        instrument:    name of the instrument (sets defaults and info like the 
+                       solid angle covered by the background model)
+                       (string, options: 'athena-xifu')
+        rmf_fn:        .rmf response file name 
+                       (string, incl. full path and file extension, or None for
+                       instrument default)
+        arf_fn:        .arf response file name 
+                       (string, incl. full path and file extension, or None for
+                       instrument default)
+        bkg_fn:        background levels file name 
+                       (string, incl. full path and file extension, or None for
+                       instrument default)
+                       
+        instrument is not checked for consistency with the response files and
+        background
+        '''
+        self.instrument = instrument
+        
+        if self.instrument == 'athena-xifu':
+            if rmf_fn is None:
+                self.rmf_fn = ddir_xifu + filename_resp_xifu + '.rmf'
+            else:
+                self.rmf_fn = rmf_fn
+            if arf_fn is None:
+                self.arf_fn = ddir_xifu + filename_resp_xifu + '.arf'
+            else:
+                self.arf_fn = arf_fn
+            self.responses = Responses(arf_fn=self.arf_fn, rmf_fn=self.rmf_fn)
+            
+            if bkg_fn is None:
+                self.bkg_fn = ddir_xifu + filename_bkg_xifu
+            self.extr_area_file_sr = 1. * arcmin2 #* (np.pi / (180. * 60.))**2 # 1 arcmin**2 -> steradian 
+            
+            with fits.open(self.bkg_fn) as hdu:
+                self.channel_bkg = hdu[1].data['CHANNEL'] 
+                self.rate_bkg = hdu[1].data['RATE']  # counts / s / channel
+            
+            self.get_bkg = interp1d(self.channel_bkg,\
+                                    self.rate_bkg / self.extr_area_file_sr,\
+                                    kind='linear', copy=True,\
+                                    fill_value=np.NaN)
+            
+        else:
+            raise ValueError('{} is not a valid or implemented instrument'.format(self.instrument))
+            #self.rmf_fn = rmf_fn
+            #self.arf_fn = arf_fn
+            #self.bkg_fn = bkg_fn
+            #self.responses = Responses(arf_fn=self.arf_fn, rmf_fn=self.rmf_fn)
+        
+        self.setup_Egrid()
+        
+    def setup_Egrid(self):
+        if np.all(self.responses.E_lo_arf[1:] == self.responses.E_hi_arf[:-1]):
+            self.Egrid = np.append(self.responses.E_lo_arf, self.responses.E_hi_arf[-1])
+        else:
+            raise RuntimeError('E_lo_arf and E_hi_erf grids do not match')
+            
+    def getminSB_grid(self, E_rest, linewidth_kmps=100., z=0.0,\
+                      nsigma=5., area_texp=1e5, extr_range=2.5):
+        '''
+        calculate the minimum surface brightness (photons / cm**2 / s / sr) of 
+        a Gaussian emission line for detection
+        
+        parameters:
+        -----------
+        E_rest:         rest-frame energy (keV); float or 1D-array of floats
+        linewidth_kmps: width of the gaussian line (b parameter); km/s
+        z:              redshift of the lines (float)
+        nsigma:         required detection significance (sigma; float)
+        area_texp:      solid angle to extract the emission from (arcmin**2) 
+                        times the exposure time (s); float
+        extr_range:     range around the input energy to extract the counts
+                        float: range in eV (will be rounded to whole channels)
+                        int:   number of channels
+            
+        returns:
+        --------
+        _minSB:         array of minimum SB values (photons / cm**2 / s / sr)
+        E_pos:          redshifted energies of the lines
+        '''
+                
+        # setup input spectra
+        if not hasattr(E_rest, '__len__'):
+            E_rest = np.array([E_rest])
+        
+        # line profile \propto exp(-(Delta v / b)**2)
+        # erf to integrate properly over the response spacing for narrow lines
+        E_pos = E_rest / (1. + z)
+        E_width = E_pos * linewidth_kmps * 1e5 / c.c
+        specs_norm1 = 0.5 * (1. + erf((E_pos[:, np.newaxis] -\
+                                       self.Egrid[np.newaxis, :])\
+                                      / E_width[:, np.newaxis]))
+        specs_norm1 = specs_norm1[:, :-1] - specs_norm1[:, 1:]
+        #print(np.sum(specs_norm1, axis=1))
+        
+        # get count spectra
+        counts_norm1 = np.array([self.responses.get_outspec(spec)\
+                                 for spec in specs_norm1])
+        
+        #channels = resp.channel_rmf
+        bkg = self.get_bkg(self.responses.channel_rmf)
+        E_cen = 0.5 * (self.responses.E_lo_rmf + self.responses.E_hi_rmf)
+        
+        if isinstance(extr_range, int):
+            cenchan = np.argmin(np.abs(E_pos[:, np.newaxis] -\
+                                       E_cen[np.newaxis, :]),\
+                                axis=1)
+            offset = extr_range // 2
+            if extr_range % 2 == 1:
+                ranges = [slice(cen - offset, cen + offset + 1)\
+                          for cen in cenchan]
+            else:
+                ranges = [slice(cen - offset, cen + offset) if\
+                          np.abs(E_cen[cen - offset] - tar) < \
+                          np.abs(E_cen[cen + offset] - tar) else\
+                          slice(cen - offset - 1, cen + offset - 1)\
+                          for tar, cen in zip(E_pos, cenchan)]
+        else:
+            extr_range *= 1e-3 # eV to keV
+            mins = np.argmin(np.abs(self.responses.E_lo_rmf[np.newaxis, :]\
+                                    - E_pos[:, np.newaxis] + extr_range),\
+                             axis=1)
+            maxs = np.argmin(np.abs(self.responses.E_hi_rmf[np.newaxis, :]\
+                                    - E_pos[:, np.newaxis] - extr_range),\
+                             axis=1)
+            ranges = [slice(_min, _max + 1) for _min, _max in zip(mins, maxs)]
+        
+        counts_norm1_extr = np.array([np.sum(counts[_slice])\
+                            for counts, _slice in zip(counts_norm1, ranges)])
+        bkg_extr = np.array([np.sum(bkg[_slice]) for _slice in ranges])
+        #print(counts_norm1_extr)
+        #print(bkg_extr)
+        # extract the min. SB
+        _minsb = minsb(nsigma, bkg_extr, counts_norm1_extr, area_texp)
+        
+        ## check: plot in/out spectra
+        #for li in range(len(E_rest)):
+        #    plt.plot(E_cen, _minsb[li] * specs_norm1[li] * resp.aeff * area_texp * arcmin2,\
+        #             label='min. det. input spectrum (using Aeff)')
+        #    plt.plot(E_cen, _minsb[li] * counts_norm1[li] * area_texp * arcmin2, label='min. det count spectrum')
+        #    plt.plot(E_cen, bkg * area_texp * arcmin2, label='background')
+        #    plt.plot(E_cen[ranges[li]], _minsb[li] * counts_norm1[li][ranges[li]] * area_texp * arcmin2,\
+        #             linestyle='dotted', label='extracted min. det count spectrum')
+        #    plt.axvline(E_pos[li], label='line energy (redshift)')
+        #    plt.legend()
+        #    plt.show()
+        return _minsb
+        
 def getdata_xifu():
     '''
     get effective area and backgrounds from the X-IFU
@@ -311,6 +498,17 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
     #    plt.show()
     return _minsb
 
+def get_galabs():
+    '''
+    from the  McCammon et al. (2002) diffuse X-ray background model, based on
+    high galactic latitude observations
+    '''
+    nH = 0.018 # units 10^22 cm^-2
+    md = xspec.XSwabs('galabs')
+    md.nH.set(nH)
+    Egrid = np.linespace(0.1, 12.5, 1000)
+    vals = md(Egrid[:-1], Egrid[1:]) 
+    return Egrid, vals
 
 def explorepars_omegat_extr():
     extr = [1.25, 2.5, 5.]
