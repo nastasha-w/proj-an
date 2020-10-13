@@ -54,8 +54,8 @@ ddir_xifu = ol.dir_instrumentfiles + 'athena_x-ifu/cost-constrained_2020-09-28/'
 filename_resp_xifu = 'responses/XIFU_CC_BASELINECONF_2018_10_10'
 filename_bkg_xifu  = 'backgrounds/TotalBKG1arcmin2.pha'
 
-ddir_bkg_xifu = mdir
-filename_bkg_xifu = 'norm_1ph_per_keVcm2s_wabs-0.018.txt'
+ddir_galabs_xifu = mdir
+filename_galabs_xifu = 'norm_1ph_per_keVcm2s_wabs-0.018.txt'
 
 
 def nsigma(sb, bkg, solidangle, aeff, deltat):
@@ -267,6 +267,7 @@ class InstrumentModel:
         if np.all(self.responses.E_lo_arf[1:] == self.responses.E_hi_arf[:-1]):
             self.Egrid = np.append(self.responses.E_lo_arf,\
                                    self.responses.E_hi_arf[-1])
+
         else:
             raise RuntimeError('E_lo_arf and E_hi_arf grids do not match')
             
@@ -312,9 +313,10 @@ class InstrumentModel:
                                       / E_width[:, np.newaxis]))
         specs_norm1 = specs_norm1[:, :-1] - specs_norm1[:, 1:]
         #print(np.sum(specs_norm1, axis=1))
+        E_cen = 0.5 * (self.responses.E_lo_rmf + self.responses.E_hi_rmf)
         if incl_galabs:
-            absfrac = 1. / self.get_galabs(self.Egrid)
-            specs_norm1 *= absfrac
+            absfrac = self.get_galabs(E_cen)
+            specs_norm1 *= absfrac[np.newaxis, :]
         
         # get count spectra
         counts_norm1 = np.array([self.responses.get_outspec(spec)\
@@ -322,7 +324,6 @@ class InstrumentModel:
         
         #channels = resp.channel_rmf
         bkg = self.get_bkg(self.responses.channel_rmf)
-        E_cen = 0.5 * (self.responses.E_lo_rmf + self.responses.E_hi_rmf)
         
         if isinstance(extr_range, int):
             cenchan = np.argmin(np.abs(E_pos[:, np.newaxis] -\
@@ -374,6 +375,9 @@ class InstrumentModel:
         from the  McCammon et al. (2002) diffuse X-ray background model, using
         wabs (xspec model) for the galactic  absorption, with a hydrogen 
         column of 1.8e20 cm**-2 (0.018 parameter value)
+
+        minimum energy (~0.1 keV) is above X-IFU minimum, but high enough, 
+        really
         
         Returns
         -------
@@ -381,7 +385,7 @@ class InstrumentModel:
                      input energy (keV) (scipy interp1d object)
 
         '''
-        _fn = ddir_bkg_xifu + 'norm_1ph_per_keVcm2s_wabs-0.018.txt'
+        _fn = ddir_galabs_xifu + filename_galabs_xifu
         _kwargs = {'header': None,\
                    'names': ['E_keV', 'DeltaE_keV', 'absfrac'],\
                    'skiprows': 3,\
@@ -389,7 +393,7 @@ class InstrumentModel:
         _df = pd.read_csv(_fn, **_kwargs)
         get_galabs = interp1d(_df['E_keV'], _df['absfrac'],\
                               kind='linear', copy=True,\
-                              fill_value=np.NaN)
+                              fill_value=(1e-10, 1.), bounds_error=False)
         return get_galabs
         
         
