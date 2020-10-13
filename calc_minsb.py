@@ -10,7 +10,7 @@ sherpa package, including xspec, requires python >= 3.5 and HEADAS
 environment variable set
 
 getting xspec to work with sherpa just did not work. The regular sherpa
-parts seem to though.
+parts seem to though. -> use xspec model table instead
 
 # luttero:
 # setenv HEADAS /software/heasoft/current/x86_64-pc-linux-gnu-libc2.17
@@ -32,13 +32,14 @@ parts seem to though.
 """
 
 import numpy as np
-#import pandas as pd
+import pandas as pd
 from astropy.io import fits
 from scipy.interpolate import interp1d
 from scipy.special import erf
 # sherpa: for reading in and using rmf data here. Requires python >=3.5
-from sherpa.astro import xspec
+#from sherpa.astro import xspec
 from sherpa.astro.data import DataRMF
+
 
 import eagle_constants_and_units as c 
 import make_maps_opts_locs as ol
@@ -47,11 +48,15 @@ import matplotlib.pyplot as plt
 
 arcmin2 = 1. * (np.pi / (180. * 60.))**2 # 1 arcmin**2 in steradian
 
+mdir = '/net/luttero/data2/imgs/paper3/minSB/'
+
 ddir_xifu = ol.dir_instrumentfiles + 'athena_x-ifu/cost-constrained_2020-09-28/'
 filename_resp_xifu = 'responses/XIFU_CC_BASELINECONF_2018_10_10'
 filename_bkg_xifu  = 'backgrounds/TotalBKG1arcmin2.pha'
 
-mdir = '/net/luttero/data2/imgs/paper3/minSB/'
+ddir_bkg_xifu = mdir
+filename_bkg_xifu = 'norm_1ph_per_keVcm2s_wabs-0.018.txt'
+
 
 def nsigma(sb, bkg, solidangle, aeff, deltat):
     '''
@@ -175,24 +180,21 @@ class Responses:
 
     def get_outspec(self, inspec):
         '''
-        parameters:
-        -----------
+        Parameters
+        ----------
         inspec: input spectrum in units photons / cm**2 / s / sr, in bins 
                 matching the energy chanels E_lo_arf and E_hi_arf
                 numpy array, float
         
-        returns:
-        --------
+        Returns
+        -------
         recorded count rate spectrum, excluding backgrounds, no noise added
         units counts / s / sr, in the spectrum channels
         numpy array, float
         '''
         _out = self.rmf.apply_rmf(inspec * self.aeff)
         return _out
-
-    def get_wabs_correction(self):
-        pass
-
+    
 
 class InstrumentModel:
     '''
@@ -206,7 +208,7 @@ class InstrumentModel:
         set up the response files and background for an instrument. Defaults 
         for the responses and backgrounds are used if not given.
         
-        parameters
+        Parameters
         ----------
         instrument:    name of the instrument (sets defaults and info like the 
                        solid angle covered by the background model)
@@ -249,6 +251,8 @@ class InstrumentModel:
                                     self.rate_bkg / self.extr_area_file_sr,\
                                     kind='linear', copy=True,\
                                     fill_value=np.NaN)
+                
+            self.get_galabs = self._getgalabs_xifu()
             
         else:
             raise ValueError('{} is not a valid or implemented instrument'.format(self.instrument))
@@ -261,18 +265,20 @@ class InstrumentModel:
         
     def setup_Egrid(self):
         if np.all(self.responses.E_lo_arf[1:] == self.responses.E_hi_arf[:-1]):
-            self.Egrid = np.append(self.responses.E_lo_arf, self.responses.E_hi_arf[-1])
+            self.Egrid = np.append(self.responses.E_lo_arf,\
+                                   self.responses.E_hi_arf[-1])
         else:
             raise RuntimeError('E_lo_arf and E_hi_erf grids do not match')
             
     def getminSB_grid(self, E_rest, linewidth_kmps=100., z=0.0,\
-                      nsigma=5., area_texp=1e5, extr_range=2.5):
+                      nsigma=5., area_texp=1e5, extr_range=2.5,\
+                      incl_galabs=False):
         '''
         calculate the minimum surface brightness (photons / cm**2 / s / sr) of 
         a Gaussian emission line for detection
         
-        parameters:
-        -----------
+        Parameters
+        ----------
         E_rest:         rest-frame energy (keV); float or 1D-array of floats
         linewidth_kmps: width of the gaussian line (b parameter); km/s
         z:              redshift of the lines (float)
@@ -282,9 +288,13 @@ class InstrumentModel:
         extr_range:     range around the input energy to extract the counts
                         float: range in eV (will be rounded to whole channels)
                         int:   number of channels
+        incl_galabs:    include the effect of absorption by our Galaxy (bool)
+                        (minimum surface brightnesses at the instrument are 
+                        adjusted for galactic absorption to estimate the
+                        required intrinsic (but redshifted) flux)
             
-        returns:
-        --------
+        Returns
+        -------
         _minSB:         array of minimum SB values (photons / cm**2 / s / sr)
         E_pos:          redshifted energies of the lines
         '''
@@ -302,6 +312,9 @@ class InstrumentModel:
                                       / E_width[:, np.newaxis]))
         specs_norm1 = specs_norm1[:, :-1] - specs_norm1[:, 1:]
         #print(np.sum(specs_norm1, axis=1))
+        if incl_galabs:
+            absfrac = 1. / self.get_galabs(self.Egrid)
+            specs_norm1 *= absfrac
         
         # get count spectra
         counts_norm1 = np.array([self.responses.get_outspec(spec)\
@@ -355,6 +368,30 @@ class InstrumentModel:
         #    plt.legend()
         #    plt.show()
         return _minsb
+        
+    def _getgalabs_xifu(self):
+        '''
+        from the  McCammon et al. (2002) diffuse X-ray background model, using
+        wabs (xspec model) for the galactic  absorption, with a hydrogen 
+        column of 1.8e20 cm**-2 (0.018 parameter value)
+        
+        Returns
+        -------
+        get_galabs:  function that returns the absorber flux fraction at the
+                     input energy (keV) (scipy interp1d object)
+
+        '''
+        _fn = ddir_bkg_xifu + 'norm_1ph_per_keVcm2s_wabs-0.018.txt'
+        _kwargs = {'header': None,\
+                   'names': ['E_keV', 'DeltaE_keV', 'absfrac'],\
+                   'skiprows': 3,\
+                   'sep': ' '}
+        _df = pd.read_csv(_fn, **_kwargs)
+        get_galabs = interp1d(_df['E_keV'], _df['absfrac'],\
+                              kind='linear', copy=True,\
+                              fill_value=np.NaN)
+        return get_galabs
+        
         
 def getdata_xifu():
     '''
@@ -498,17 +535,17 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
     #    plt.show()
     return _minsb
 
-def get_galabs():
-    '''
-    from the  McCammon et al. (2002) diffuse X-ray background model, based on
-    high galactic latitude observations
-    '''
-    nH = 0.018 # units 10^22 cm^-2
-    md = xspec.XSwabs('galabs')
-    md.nH.set(nH)
-    Egrid = np.linespace(0.1, 12.5, 1000)
-    vals = md(Egrid[:-1], Egrid[1:]) 
-    return Egrid, vals
+#def get_galabs():
+#    '''
+#    from the  McCammon et al. (2002) diffuse X-ray background model, based on
+#    high galactic latitude observations
+#    '''
+#    nH = 0.018 # units 10^22 cm^-2
+#    md = xspec.XSwabs('galabs')
+#    md.nH.set(nH)
+#    Egrid = np.linespace(0.1, 12.5, 1000)
+#    vals = md(Egrid[:-1], Egrid[1:]) 
+#    return Egrid, vals
 
 def explorepars_omegat_extr():
     extr = [1.25, 2.5, 5.]
