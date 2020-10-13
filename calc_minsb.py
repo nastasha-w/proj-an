@@ -37,7 +37,7 @@ from astropy.io import fits
 from scipy.interpolate import interp1d
 from scipy.special import erf
 # sherpa: for reading in and using rmf data here. Requires python >=3.5
-from sherpa.astro import xspec
+#from sherpa.astro import xspec
 from sherpa.astro.data import DataRMF
 
 import eagle_constants_and_units as c 
@@ -263,7 +263,7 @@ class InstrumentModel:
         if np.all(self.responses.E_lo_arf[1:] == self.responses.E_hi_arf[:-1]):
             self.Egrid = np.append(self.responses.E_lo_arf, self.responses.E_hi_arf[-1])
         else:
-            raise RuntimeError('E_lo_arf and E_hi_erf grids do not match')
+            raise RuntimeError('E_lo_arf and E_hi_arf grids do not match')
             
     def getminSB_grid(self, E_rest, linewidth_kmps=100., z=0.0,\
                       nsigma=5., area_texp=1e5, extr_range=2.5):
