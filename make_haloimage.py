@@ -289,10 +289,10 @@ def plotimgs(names, R200c, M200c, galid):
             
         cax.tick_params(labelsize=fontsize - 1)
         cax.set_aspect(0.1)
-        plt.colorbar(img, cax=cax, extend=extend, orientation='horizontal')
-        cax.set_xlabel(clabel, fontsize=fontsize)
         locator = ticker.MaxNLocator(nbins=4)
-        cax.xaxis.set_major_locator(locator)
+        plt.colorbar(img, cax=cax, extend=extend, orientation='horizontal',\
+                     ticks=locator)
+        cax.set_xlabel(clabel, fontsize=fontsize)
         
         ax.tick_params(left=False, bottom=False, labelbottom=False,\
                        labelleft=False)
