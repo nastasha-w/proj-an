@@ -159,6 +159,9 @@ def getimgs(cen, size, sizemargin=2.):
 
 def plotimgs(names):
     
+    while None in names:
+        names.remove(None)
+    
     fontsize = 12
     maptypes = ['Mass', 'Temperature', 'coldens_o7', 'emission_o7r']
     
