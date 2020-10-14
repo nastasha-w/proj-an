@@ -318,7 +318,7 @@ def plotimgs(names, R200c, M200c, galid):
             lenline = 250. * 1e-3 / cosmopars['a'] / (xlim[1] - xlim[0])
             _text = '250 pkpc'
             
-            ax.plot([0.05, 0.05 + len_100pkpc], [0.05, 0.05],\
+            ax.plot([0.05, 0.05 + lenline], [0.05, 0.05],\
                     color='white', linewidth=0.7, path_effects=patheff,\
                     transform=ax.transAxes)
             ax.text(0.05 + 0.5 * lenline, 0.06, _text,\
