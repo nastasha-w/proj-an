@@ -8,6 +8,8 @@ Created on Wed Oct 14 16:25:12 2020
 
 import numpy as np
 import h5py
+import sys
+import os
 
 import matplotlib.pyplot as plt
 
@@ -84,11 +86,28 @@ def selecthalo(logM200c, _halocat=halocat, margin=0.05, randomseed=None):
     return galid, m200c, [cenx, ceny, cenz], R200
 
 def getimgs(cen, size, sizemargin=2.):
-    
+    '''
+    get images of a halo in a number of properties (see listed arguments)
+
+    Parameters
+    ----------
+    cen : list of 3 floats
+        halo centre [cMpc].
+    size : float
+        halo size [cMpc].
+    sizemargin : float, optional
+        radius of the projected cube in units of the size. The default is 2..
+
+    Returns
+    -------
+    names : list of strings
+        the names of the files containing the images.
+
+    '''
     simnum = 'L0100N1504'
     snapnum = 27
     centre = cen
-    L_z = size * sizemargin
+    L_z = size * sizemargin * 2. # radius
     L_x = L_y = L_z
     npix_x = 400
     npix_y = npix_x
@@ -119,9 +138,24 @@ def getimgs(cen, size, sizemargin=2.):
         
         name = m3.make_map(*args, nameonly=True, **kwargs)
         names.append(name)
-        m3.make_map(*args, nameonly=False **kwargs)
+        if not os.path.isfile(name): 
+            m3.make_map(*args, nameonly=False **kwargs)
     
     print('Done creating images:')
     print(names)
-        
+    return names    
+
+if __name__ == '__main__':
+    args = sys.argv
+    
+    m200_tar = sys.argv[1]
+    if len(sys.argv) > 2:
+        randomseed = int(sys.argv[2])
+    else:
+        randomseed = 0
+    out = selecthalo(m200_tar, _halocat=halocat, margin=0.05,\
+                     randomseed=randomseed)
+    galid, m200c, cen, R200 = out
+    
+    filens = getimgs(cen, R200, sizemargin=2.)
     
