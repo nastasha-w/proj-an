@@ -278,7 +278,7 @@ def plotimgs(names):
         img = ax.imshow(_map.T, origin='lower', interpolation='nearest',\
                         extent=extent, vmin=vmin, vmax=vmax)
             
-        plt.colorbar(img=img, cax=cax, extend=extend, orientation='horizontal')
+        plt.colorbar(img, cax=cax, extend=extend, orientation='horizontal')
         cax.set_xlabel(clabel, fontsize=fontsize)
         cax.tick_params(labelsize=fontsize - 1)
         
