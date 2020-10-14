@@ -299,7 +299,7 @@ def plotimgs(names, R200c, M200c, galid):
                         mppe.Stroke(linewidth=0.4, foreground="black"),\
                         mppe.Normal()]  
         if mi == 0:
-            ax.text(2.**-0.5 * R200, 2.**-0.5 * R200,\
+            ax.text(2.**-0.5 * R200c, 2.**-0.5 * R200c,\
                     '$\\mathrm{R}_{\\mathrm{200c}}$',\
                     fontsize=fontsize, verticalalignment='bottom',\
                     horizontalalignment='left',\
