@@ -240,9 +240,6 @@ def plotimgs(names, R200c, M200c, galid):
             vmax = np.inf
             cmap = cm.get_cmap('viridis')
             units = c.solar_mass / (c.cm_per_mpc * 1e-3)**2
-            print(_min)
-            print(_max)
-            print(np.log10(units))
         elif mt == 'Temperature':
             clabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
             vmin = -np.inf
@@ -257,13 +254,13 @@ def plotimgs(names, R200c, M200c, galid):
             units = c.atomw_H * c.u / 0.752
         elif mt == 'coldens_o7':
             clabel = '$\\log_{10} \\, \\mathrm{N}(\mathrm{O\\,VII}) \\; [\\mathrm{cm}^{-2}]$'
-            vmin = 14.
+            vmin = 14.5
             vmax = np.inf
             cmap = cm.get_cmap('magma')          
             units = 1.
         elif mt == 'emission_o7r':
             clabel = '$\\log_{10} \\, \\mathrm{SB}(\mathrm{O\\,VII \, r}) \\; [\\mathrm{ph} \\,/\\,\\mathrm{s} \\, \\mathrm{cm}^{2} \\mathrm{sr}]$'
-            vmin = -3.5
+            vmin = -2.5
             vmax = np.inf
             cmap = cm.get_cmap('inferno')
             
@@ -292,12 +289,10 @@ def plotimgs(names, R200c, M200c, galid):
             
         cax.tick_params(labelsize=fontsize - 1)
         cax.set_aspect(0.1)
-        locator = ticker.MaxNLocator(nbins=4)
-        cax.xaxis.set_major_locator(locator)
-        
         plt.colorbar(img, cax=cax, extend=extend, orientation='horizontal')
         cax.set_xlabel(clabel, fontsize=fontsize)
-        
+        locator = ticker.MaxNLocator(nbins=4)
+        cax.xaxis.set_major_locator(locator)
         
         ax.tick_params(left=False, bottom=False, labelbottom=False,\
                        labelleft=False)
