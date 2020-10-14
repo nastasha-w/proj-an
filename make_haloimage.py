@@ -314,7 +314,7 @@ def plotimgs(names, R200c, M200c, galid):
                     horizontalalignment='left', transform=ax.transAxes,\
                     path_effects=patheff_text)
         if mi == 1:
-             ax.text(2.**-0.5 * R200c, 2.**-0.5 * R200c,\
+            ax.text(2.**-0.5 * R200c, 2.**-0.5 * R200c,\
                     '$\\mathrm{R}_{\\mathrm{200c}}$',\
                     fontsize=fontsize, verticalalignment='bottom',\
                     horizontalalignment='left',\
