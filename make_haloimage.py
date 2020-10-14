@@ -247,7 +247,7 @@ def plotimgs(names, R200c, M200c, galid):
             vmin = -np.inf
             vmax = np.inf
             cmap = cm.get_cmap('inferno')
-            units = c.atmow_H * c.u / 0.752
+            units = c.atomw_H * c.u / 0.752
         elif mt == 'coldens_o7':
             clabel = '$\\log_{10} \\, \\mathrm{N}(\mathrm{O\\,VII}) \\; [\\mathrm{cm}^{-2}]$'
             vmin = -np.inf
