@@ -204,8 +204,8 @@ def plotimgs(names):
         
         with h5py.File(fn, 'r') as mf:
             _map = mf['map'][:]
-            _min = mf.attrs['minfinite']
-            _max = mf.attrs['max']
+            _min = mf['map'].attrs['minfinite']
+            _max = mf['map'].attrs['max']
             cosmopars = {key: val for key, val \
                          in mf['Header/inputpars/cosmopars'].attrs.items()}
             log = bool(mf['Header/inputpars'].attrs('log'))
