@@ -17,6 +17,7 @@ import matplotlib.patches as mpatch
 import matplotlib.collections as mcol
 import matplotlib.patheffects as mppe
 import matplotlib.cm as cm
+import matplotlib.ticker as ticker
 
 import make_maps_v3_master as m3
 import eagle_constants_and_units as c
@@ -246,7 +247,7 @@ def plotimgs(names, R200c, M200c, galid):
             clabel = '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{-3}]$'
             vmin = -np.inf
             vmax = np.inf
-            cmap = cm.get_cmap('inferno')
+            cmap = cm.get_cmap('viridis')
             units = c.atomw_H * c.u / 0.752
         elif mt == 'coldens_o7':
             clabel = '$\\log_{10} \\, \\mathrm{N}(\mathrm{O\\,VII}) \\; [\\mathrm{cm}^{-2}]$'
@@ -258,7 +259,7 @@ def plotimgs(names, R200c, M200c, galid):
             clabel = '$\\log_{10} \\, \\mathrm{SB}(\mathrm{O\\,VII \, r}) \\; [\\mathrm{ph} \\,/\\,\\mathrm{s} \\, \\mathrm{cm}^{2} \\mathrm{sr}]$'
             vmin = -np.inf
             vmax = np.inf
-            cmap = cm.get_cmap('cubehelix')
+            cmap = cm.get_cmap('inferno')
             
             units = 1.
             
@@ -287,6 +288,9 @@ def plotimgs(names, R200c, M200c, galid):
         cax.set_aspect(0.1)
         plt.colorbar(img, cax=cax, extend=extend, orientation='horizontal')
         cax.set_xlabel(clabel, fontsize=fontsize)
+        
+        locator = ticker.MaxNLocator(nbins=5)
+        cax.xaxis.set_major_locator(locator)
         
         ax.tick_params(left=False, bottom=False, labelbottom=False,\
                        labelleft=False)
