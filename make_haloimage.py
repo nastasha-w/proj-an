@@ -163,7 +163,7 @@ def plotimgs(names, R200c, M200c, galid):
         names.remove(None)
     
     fontsize = 12
-    maptypes = ['Mass', 'Temperature', 'coldens_o7', 'emission_o7r']
+    maptypes = ['Density', 'Temperature', 'coldens_o7', 'emission_o7r']
     
     ncols = 4
     nrows = (len(maptypes) - 1) // ncols + 1
@@ -171,7 +171,7 @@ def plotimgs(names, R200c, M200c, galid):
     
     panelwidth = figwidth / ncols
     panelheight = panelwidth
-    cheight = 0.3
+    cheight = 0.5
     height_ratios = [panelheight, cheight] * nrows
     
     figheight = sum(height_ratios)
@@ -283,10 +283,10 @@ def plotimgs(names, R200c, M200c, galid):
         img = ax.imshow(_map.T, origin='lower', interpolation='nearest',\
                         extent=extent, vmin=vmin, vmax=vmax, cmap=cmap)
             
-        cax.set_xlabel(clabel, fontsize=fontsize)
         cax.tick_params(labelsize=fontsize - 1)
         cax.set_aspect(0.1)
         plt.colorbar(img, cax=cax, extend=extend, orientation='horizontal')
+        cax.set_xlabel(clabel, fontsize=fontsize)
         
         ax.tick_params(left=False, bottom=False, labelbottom=False,\
                        labelleft=False)
