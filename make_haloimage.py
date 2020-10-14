@@ -67,7 +67,7 @@ def selecthalo(logM200c, _halocat=halocat, margin=0.05, randomseed=None):
         close = np.where(np.abs(m200c - logM200c) < margin)[0]
         if len(close) < 1:
             raise RuntimeError('No haloes in the selected mass range')
-        numpy.random.seed(seed=randomseed)
+        np.random.seed(seed=randomseed)
         ind = np.random.choice(close)
         m200c = m200c[ind]
         galid = galid[ind]
