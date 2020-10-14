@@ -132,7 +132,7 @@ def getimgs(cen, size, sizemargin=2.):
     
     names = []
     for argset in argsets:
-        args = firstargs + argsets[0]
+        args = firstargs + argset[0]
         kwargs = kwargs_all.copy()
         kwargs.update(argset[1])
         
