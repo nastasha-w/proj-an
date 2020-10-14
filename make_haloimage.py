@@ -49,7 +49,7 @@ def selecthalo(logM200c, _halocat=halocat, margin=0.05):
     
     if '/' not in _halocat:
         _halocat = ol.pdir + _halocat
-    with h5py.File(_halocat) as hc:
+    with h5py.File(_halocat, 'r') as hc:
         boxdata = {key: val for key, val in hc['Header'].attrs.items()}
         cosmopars = {key: val for key, val in\
                      hc['Header/cosmopars'].attrs.items()}
