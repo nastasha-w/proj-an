@@ -113,7 +113,7 @@ def getimgs(cen, size, sizemargin=2.):
     npix_y = npix_x
     firstargs = (simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y)
     
-    kwargs_all = {'exlcudeSFRW': 'T4',\
+    kwargs_all = {'excludeSFRW': 'T4',\
                   'var': 'REFERENCE',\
                   'axis': 'z',\
                   'periodic': False,\
