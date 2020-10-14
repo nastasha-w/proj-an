@@ -157,7 +157,7 @@ def getimgs(cen, size, sizemargin=2.):
     print(names)
     return names    
 
-def plotimgs(names):
+def plotimgs(names, R200c, m200c, galid):
     
     while None in names:
         names.remove(None)
@@ -171,7 +171,7 @@ def plotimgs(names):
     
     panelwidth = figwidth / ncols
     panelheight = panelwidth
-    cheight = 0.7
+    cheight = 0.3
     height_ratios = [panelheight, cheight] * nrows
     
     figheight = sum(height_ratios)
@@ -228,7 +228,7 @@ def plotimgs(names):
             #pixsize_1_cMpc = _l1 / float(mf['Header/inputpars'].attrs('npix_y'))
             
         if mt == 'Mass':
-            clabel = '$\\log_{10} \\Sigma_{\\mathrm{gas}} \\; [\\mathrm{M}_{\\mathrm{odot}} \\,/\\, \\mathrm{pkpc}**2]$'
+            clabel = '$\\log_{10} \\Sigma_{\\mathrm{gas}} \\; [\\mathrm{M}_{\\mathrm{\\odot}} \\,/\\, \\mathrm{pkpc}^{2}]$'
             vmin = -np.inf
             vmax = np.inf
             cmap = cm.get_cmap('viridis')
@@ -252,7 +252,7 @@ def plotimgs(names):
             cmap = cm.get_cmap('magma')          
             units = 1.
         elif mt == 'emission_o7r':
-            clabel = '$\\log_{10} \\, \\mathrm{L}(\mathrm{O\\,VII}) \\; [\\mathrm{ph} \\,/\\,\\mathrm{s} \\, \\mathrm{cm}^{2} \\mathrm{sr}]$'
+            clabel = '$\\log_{10} \\, \\mathrm{SB}(\mathrm{O\\,VII \, r}) \\; [\\mathrm{ph} \\,/\\,\\mathrm{s} \\, \\mathrm{cm}^{2} \\mathrm{sr}]$'
             vmin = -np.inf
             vmax = np.inf
             cmap = cm.get_cmap('cubehelix')
@@ -276,15 +276,40 @@ def plotimgs(names):
             extend = 'neither'
             
         img = ax.imshow(_map.T, origin='lower', interpolation='nearest',\
-                        extent=extent, vmin=vmin, vmax=vmax)
+                        extent=extent, vmin=vmin, vmax=vmax, cmap=cmap)
             
-        plt.colorbar(img, cax=cax, extend=extend, orientation='horizontal')
         cax.set_xlabel(clabel, fontsize=fontsize)
         cax.tick_params(labelsize=fontsize - 1)
+        cax.set_aspect(0.1)
+        plt.colorbar(img, cax=cax, extend=extend, orientation='horizontal')
         
+        ax.tick_params(left=False, bottom=False, labelbottom=False,\
+                       labelleft=False)
+        patches = [mpatch.Circle((0., 0.), R200)] # x, y axes only
+    
+        patheff = [mppe.Stroke(linewidth=1.2, foreground="black"),\
+                   mppe.Stroke(linewidth=0.7, foreground="white"),\
+                   mppe.Normal()] 
+        collection = mcol.PatchCollection(patches)
+        collection.set(edgecolor='white', facecolor='none', linewidth=0.7,\
+                       path_effects=patheff)    
+        ax.add_collection(collection)
         
-            
-            
+        patheff_text = [mppe.Stroke(linewidth=2.0, foreground="white"),\
+                        mppe.Stroke(linewidth=0.4, foreground="black"),\
+                        mppe.Normal()]  
+        if mi == 0:
+            ax.text(2.**-0.5 * R200, 2.**-0.5 * R200,\
+                    '$\\mathrm{R}_{\\mathrm{200c}}$',\
+                    fontsize=fontsize, verticalalignment='bottom',\
+                    horizontalalignment='left',\
+                    path_effects=patheff_text)
+            ax.text(0.05, 0.95,\
+                    '$\\log_{{10}} \\mathrm{{M}}_{{\\mathrm{{200c}}}} / \\mathrm{{M}}_{{\\odot}} = {m200c:.1f}$'.format(m200c=m200c),\
+                    fontsize=fontsize, verticalalignment='top',\
+                    horizontalalignment='left', transform=ax.transAxes,\
+                    path_effects=patheff_text)
+        
             
             
 
@@ -301,4 +326,5 @@ if __name__ == '__main__':
     galid, m200c, cen, R200 = out
     
     filens = getimgs(cen, R200, sizemargin=2.)
+    plotimgs(filens, R200, m200c, galid)
     
