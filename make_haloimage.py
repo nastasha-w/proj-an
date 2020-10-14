@@ -12,6 +12,11 @@ import sys
 import os
 
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gsp
+import matplotlib.oatch as mpatch
+import matplotlib.collections as mcol
+import matplotlib.patheffects as mppe
+import matplotlib.cm as cm
 
 import make_maps_v3_master as m3
 import eagle_constants_and_units as c
@@ -154,10 +159,32 @@ def getimgs(cen, size, sizemargin=2.):
 
 def plotimgs(names):
     
+    fontsize = 12
     maptypes = ['Mass', 'Temperature', 'coldens_o7', 'emission_o7r']
     
+    ncols = 4
+    nrows = (len(maptypes) - 1) // ncols + 1
+    figwidth = 11. 
     
-    for mt in maptypes:
+    panelwidth = figwidth / ncols
+    panelheight = panelwidth
+    cheight = 0.7
+    height_ratios = [panelheight, cheight] * nrows
+    
+    figheight = sum(height_ratios)
+    fig = plt.figure(figsize=(figwidth, figheight))
+    grid = gsp.GridSpec(ncols=ncols, nrows=nrows * 2, hspace=0.0, wspace=0.0,\
+                        width_ratios=[panelwidth] * ncols,\
+                        height_ratios=height_ratios)
+    axes = [fig.add_subplot(grid[2 * (i // ncols), i % ncols]) \
+            for i in range(len(maptypes))]
+    caxes = [fig.add_subplot(grid[2 * (i // ncols) + 1, i % ncols]) \
+            for i in range(len(maptypes))]
+    
+    for mi, mt in enumerate(maptypes):
+        ax = axes[mi]
+        cax = caxes[mi]
+        
         match = [name.startswith(mt) for name in names]
         match = np.where(match)[0]
         if len(match) == 0:
@@ -178,22 +205,22 @@ def plotimgs(names):
             _max = mf.attrs['max']
             cosmopars = {key: val for key, val \
                          in mf['Header/inputpars/cosmopars'].attrs.items()}
-            log = bool(mf['Header/inputpars'].attrs(log))
+            log = bool(mf['Header/inputpars'].attrs('log'))
             if not log:
                 _map = np.log10(_map)
             
-            #axis = mf['Header/inputpars'].attrs['axis'].decode()
-            #if axis == 'z':
-            #    l0 = 'x'
-            #    l1 = 'y'
-            #elif axis == 'x':
-            #    l0 = 'y'
-            #    l1 = 'z'
-            #elif axis == 'y':
-            #    l0 = 'z'
-            #    l1 = 'x'
-            #_l0 = mf['Header/inputpars'].attrs('L_{ax}'.format(ax=l0))
-            #_l1 = mf['Header/inputpars'].attrs('L_{ax}'.format(ax=l1))
+            axis = mf['Header/inputpars'].attrs['axis'].decode()
+            if axis == 'z':
+                l0 = 'x'
+                l1 = 'y'
+            elif axis == 'x':
+                l0 = 'y'
+                l1 = 'z'
+            elif axis == 'y':
+                l0 = 'z'
+                l1 = 'x'
+            _l0 = mf['Header/inputpars'].attrs('L_{ax}'.format(ax=l0))
+            _l1 = mf['Header/inputpars'].attrs('L_{ax}'.format(ax=l1))
             #pixsize_0_cMpc = _l0 / float(mf['Header/inputpars'].attrs('npix_x'))
             #pixsize_1_cMpc = _l1 / float(mf['Header/inputpars'].attrs('npix_y'))
             
@@ -202,12 +229,56 @@ def plotimgs(names):
             vmin = -np.inf
             vmax = np.inf
             cmap = cm.get_cmap('viridis')
+            units = c.solar_mass / (c.cm_per_mpc * 1e-3)**2        
+        elif mt == 'Temperature':
+            clabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
+            vmin = -np.inf
+            vmax = np.inf
+            cmap = cm.get_cmap('plasma')
+            units = 1.     
+        elif mt == 'Density':
+            clabel = '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{-3}]$'
+            vmin = -np.inf
+            vmax = np.inf
+            cmap = cm.get_cmap('inferno')
+            units = c.atmow_H * c.u / 0.752
+        elif mt == 'coldens_o7':
+            clabel = '$\\log_{10} \\, \\mathrm{N}(\mathrm{O\\,VII}) \\; [\\mathrm{cm}^{-2}]$'
+            vmin = -np.inf
+            vmax = np.inf
+            cmap = cm.get_cmap('magma')          
+            units = 1.
+        elif mt == 'emission_o7r':
+            clabel = '$\\log_{10} \\, \\mathrm{L}(\mathrm{O\\,VII}) \\; [\\mathrm{ph} \\,/\\,\\mathrm{s} \\, \\mathrm{cm}^{2} \\mathrm{sr}]$'
+            vmin = -np.inf
+            vmax = np.inf
+            cmap = cm.get_cmap('cubehelix')
             
-            units = c.solar_mass / (c.cm_per_mpc * 1e-3)**2
-        
+            units = 1.
+            
         _map -= np.log10(units)
         vmin = max(vmin, _min)
-        vmax = min(vamx, _max)
+        vmax = min(vmax, _max)
+        extent = (-0.5 * _l0, 0.5*_l0, -0.5*_l1, 0.5*_l1)
+        cmap.set_under(cmap(0.))
+        cmap.set_over(cmap(1.))
+        if _min < vmin or np.any(np.logical_not(np.isfinite(_map))):
+            if _max > vmax:
+                extend = 'both'
+            else:
+                extend = 'min'
+        elif _max > vmax:
+            extend = 'max'
+        else:
+            extend = 'neither'
+            
+        img = ax.imshow(_map.T, origin='lower', interpolation='nearest',\
+                        extent=extent, vmin=vmin, vmax=vmax)
+            
+        plt.colorbar(img=img, cax=cax, extend=extend, orientation='horizontal')
+        cax.set_xlabel(clabel, fontsize=fontsize)
+        cax.tick_params(labelsize=fontsize - 1)
+        
         
             
             
