@@ -157,7 +157,7 @@ def getimgs(cen, size, sizemargin=2.):
     print(names)
     return names    
 
-def plotimgs(names, R200c, m200c, galid):
+def plotimgs(names, R200c, M200c, galid):
     
     while None in names:
         names.remove(None)
@@ -285,8 +285,8 @@ def plotimgs(names, R200c, m200c, galid):
         
         ax.tick_params(left=False, bottom=False, labelbottom=False,\
                        labelleft=False)
-        patches = [mpatch.Circle((0., 0.), R200)] # x, y axes only
-    
+
+        patches = [mpatch.Circle((0., 0.), R200c)] # x, y axes only
         patheff = [mppe.Stroke(linewidth=1.2, foreground="black"),\
                    mppe.Stroke(linewidth=0.7, foreground="white"),\
                    mppe.Normal()] 
@@ -305,7 +305,7 @@ def plotimgs(names, R200c, m200c, galid):
                     horizontalalignment='left',\
                     path_effects=patheff_text)
             ax.text(0.05, 0.95,\
-                    '$\\log_{{10}} \\mathrm{{M}}_{{\\mathrm{{200c}}}} / \\mathrm{{M}}_{{\\odot}} = {m200c:.1f}$'.format(m200c=m200c),\
+                    '$\\log_{{10}} \\mathrm{{M}}_{{\\mathrm{{200c}}}} / \\mathrm{{M}}_{{\\odot}} = {M200c:.1f}$'.format(M200c=M200c),\
                     fontsize=fontsize, verticalalignment='top',\
                     horizontalalignment='left', transform=ax.transAxes,\
                     path_effects=patheff_text)
