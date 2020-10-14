@@ -353,4 +353,7 @@ if __name__ == '__main__':
     
     filens = getimgs(cen, R200, sizemargin=2.)
     plotimgs(filens, R200, m200c, galid)
+    print('Made image for galaxy {}'.format(galid))
+    print('Saved in {}'.format(mdir))
+    
     
