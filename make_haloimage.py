@@ -336,8 +336,8 @@ def plotimgs(names, R200c, M200c, galid):
                     transform=ax.transAxes, verticalalignment='bottom',\
                     horizontalalignment='center')
     
-    outname = 'galaxy{}_nH_T_o7_o7r.pdf'.format(galid)
-    plt.savefig(mdir + outname, format='pdf', bbox_inches='tight')
+    outname = 'galaxy{}_nH_T_o7_o7r.eps'.format(galid)
+    plt.savefig(mdir + outname, format='eps', bbox_inches='tight')
 
 if __name__ == '__main__':
     args = sys.argv
