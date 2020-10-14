@@ -251,13 +251,13 @@ def plotimgs(names, R200c, M200c, galid):
             units = c.atomw_H * c.u / 0.752
         elif mt == 'coldens_o7':
             clabel = '$\\log_{10} \\, \\mathrm{N}(\mathrm{O\\,VII}) \\; [\\mathrm{cm}^{-2}]$'
-            vmin = -np.inf
+            vmin = 14.
             vmax = np.inf
             cmap = cm.get_cmap('magma')          
             units = 1.
         elif mt == 'emission_o7r':
             clabel = '$\\log_{10} \\, \\mathrm{SB}(\mathrm{O\\,VII \, r}) \\; [\\mathrm{ph} \\,/\\,\\mathrm{s} \\, \\mathrm{cm}^{2} \\mathrm{sr}]$'
-            vmin = -np.inf
+            vmin = -3.5
             vmax = np.inf
             cmap = cm.get_cmap('inferno')
             
