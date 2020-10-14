@@ -18,7 +18,7 @@ import make_maps_opts_locs as ol
 
 halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
 
-def selecthalo(logM200c, _halocat=halocat, margin=0.05):
+def selecthalo(logM200c, _halocat=halocat, margin=0.05, randomseed=None):
     '''
     selects a random halo in the target mass range and prints basic data about
     it
@@ -35,6 +35,9 @@ def selecthalo(logM200c, _halocat=halocat, margin=0.05):
         the maximum difference with the target halo mass allowed (in log10 
         Msun). A rondom halo is selected within this range.
         The default is 0.05.
+    randomseed: int, optional
+        seed for the random number generator.
+        The default is None.
 
     Raises
     ------
@@ -43,8 +46,14 @@ def selecthalo(logM200c, _halocat=halocat, margin=0.05):
 
     Returns
     -------
-    None.
-
+    galid: string
+        the galaxy ID (EAGLE online halo catalogue)
+    m200c: float
+        the mass M200c of the selected halo (log10 Msun)
+    centre: list of 3 floats
+        the halo centre (central galaxy centre of mass) in cMpc
+    R200:
+        the halo size R200c in cMpc
     '''
     
     if '/' not in _halocat:
@@ -58,6 +67,7 @@ def selecthalo(logM200c, _halocat=halocat, margin=0.05):
         close = np.where(np.abs(m200c - logM200c) < margin)[0]
         if len(close) < 1:
             raise RuntimeError('No haloes in the selected mass range')
+        numpy.random.seed(seed=randomseed)
         ind = np.random.choice(close)
         m200c = m200c[ind]
         galid = galid[ind]
@@ -71,7 +81,7 @@ def selecthalo(logM200c, _halocat=halocat, margin=0.05):
     print('Center [{}, {}, {}] cMpc, R200c {R200c} cMpc'.format(\
           cenx, ceny, cenz, R200c=R200))
     print(boxdata)
-    return None
+    return galid, m200c, [cenx, ceny, cenz], R200
 
 def getimgs(cen, size, sizemargin=2.):
     
