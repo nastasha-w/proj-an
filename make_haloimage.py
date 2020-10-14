@@ -315,13 +315,13 @@ def plotimgs(names, R200c, M200c, galid):
         
         if mi == 1:
             xlim = ax.get_xlim()
-            len_100pkpc = 100. * 1e-3 / cosmopars['a'] / (xlim[1] - xlim[0])
-            _text = '100 pkpc'
+            len_250pkpc = 250. * 1e-3 / cosmopars['a'] / (xlim[1] - xlim[0])
+            _text = '250 pkpc'
             
             ax.plot([0.05, 0.05 + len_100pkpc], [0.05, 0.05],\
-                    color='white', path_effects=patheff,\
+                    color='white', linewidth=0.7, path_effects=patheff,\
                     transform=ax.transAxes)
-            ax.text(0.05 + 0.5 * len_100pkpc, 0.055, _text,\
+            ax.text(0.05 + 0.5 * len_100pkpc, 0.06, _text,\
                     fontsize=fontsize, path_effects=patheff_text,\
                     transform=ax.transAxes, verticalalignment='bottom',\
                     horizontalalignment='center')
