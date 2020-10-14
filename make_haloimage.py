@@ -342,7 +342,7 @@ def plotimgs(names, R200c, M200c, galid):
 if __name__ == '__main__':
     args = sys.argv
     
-    m200_tar = sys.argv[1]
+    m200_tar = float(sys.argv[1])
     if len(sys.argv) > 2:
         randomseed = int(sys.argv[2])
     else:
