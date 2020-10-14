@@ -187,7 +187,13 @@ def plotimgs(names, R200c, M200c, galid):
     
     for mi, mt in enumerate(maptypes):
         ax = axes[mi]
-        cax = caxes[mi]
+        _cax = caxes[mi]
+        _cax.axis('off')
+        _l, _b, _w, _h = (_cax.get_position()).bounds
+        margin = panelwidth * 0.07 / figwidth
+        cax = fig.add_axes([_l + margin, _b,\
+                            _w - 2.* margin, _h])
+        
         
         match = [(name.split('/')[-1]).startswith(mt) for name in names]
         match = np.where(match)[0]
@@ -286,11 +292,12 @@ def plotimgs(names, R200c, M200c, galid):
             
         cax.tick_params(labelsize=fontsize - 1)
         cax.set_aspect(0.1)
+        locator = ticker.MaxNLocator(nbins=4)
+        cax.xaxis.set_major_locator(locator)
+        
         plt.colorbar(img, cax=cax, extend=extend, orientation='horizontal')
         cax.set_xlabel(clabel, fontsize=fontsize)
         
-        locator = ticker.MaxNLocator(nbins=4)
-        cax.xaxis.set_major_locator(locator)
         
         ax.tick_params(left=False, bottom=False, labelbottom=False,\
                        labelleft=False)
