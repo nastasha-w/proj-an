@@ -289,7 +289,7 @@ def plotimgs(names, R200c, M200c, galid):
         plt.colorbar(img, cax=cax, extend=extend, orientation='horizontal')
         cax.set_xlabel(clabel, fontsize=fontsize)
         
-        locator = ticker.MaxNLocator(nbins=5)
+        locator = ticker.MaxNLocator(nbins=4)
         cax.xaxis.set_major_locator(locator)
         
         ax.tick_params(left=False, bottom=False, labelbottom=False,\
@@ -308,26 +308,26 @@ def plotimgs(names, R200c, M200c, galid):
                         mppe.Stroke(linewidth=0.4, foreground="black"),\
                         mppe.Normal()]  
         if mi == 0:
-            ax.text(2.**-0.5 * R200c, 2.**-0.5 * R200c,\
-                    '$\\mathrm{R}_{\\mathrm{200c}}$',\
-                    fontsize=fontsize, verticalalignment='bottom',\
-                    horizontalalignment='left',\
-                    path_effects=patheff_text)
             ax.text(0.05, 0.95,\
                     '$\\log_{{10}} \\mathrm{{M}}_{{\\mathrm{{200c}}}} / \\mathrm{{M}}_{{\\odot}} = {M200c:.1f}$'.format(M200c=M200c),\
                     fontsize=fontsize, verticalalignment='top',\
                     horizontalalignment='left', transform=ax.transAxes,\
                     path_effects=patheff_text)
-        
         if mi == 1:
+             ax.text(2.**-0.5 * R200c, 2.**-0.5 * R200c,\
+                    '$\\mathrm{R}_{\\mathrm{200c}}$',\
+                    fontsize=fontsize, verticalalignment='bottom',\
+                    horizontalalignment='left',\
+                    path_effects=patheff_text)
+                 
             xlim = ax.get_xlim()
             lenline = 250. * 1e-3 / cosmopars['a'] / (xlim[1] - xlim[0])
             _text = '250 pkpc'
             
-            ax.plot([0.05, 0.05 + lenline], [0.05, 0.05],\
+            ax.plot([0.1, 0.1 + lenline], [0.05, 0.05],\
                     color='white', linewidth=0.7, path_effects=patheff,\
                     transform=ax.transAxes)
-            ax.text(0.05 + 0.5 * lenline, 0.06, _text,\
+            ax.text(0.1 + 0.5 * lenline, 0.06, _text,\
                     fontsize=fontsize, path_effects=patheff_text,\
                     transform=ax.transAxes, verticalalignment='bottom',\
                     horizontalalignment='center')
