@@ -188,7 +188,7 @@ def plotimgs(names):
         ax = axes[mi]
         cax = caxes[mi]
         
-        match = [name.startswith(mt) for name in names]
+        match = [(name.split('/')[-1]).startswith(mt) for name in names]
         match = np.where(match)[0]
         if len(match) == 0:
             raise RuntimeError('{} map not found for names {}'.format(\
