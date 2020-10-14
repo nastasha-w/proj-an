@@ -122,12 +122,12 @@ def getimgs(cen, size, sizemargin=2.):
                   'saveres': True,\
                   'ompproj': True}
     
-    argsets = [('basic',), {'quantityW': 'Mass', 'ptypeQ': 'basic',\
-                            'quantityQ': 'Temperature'},\
-               ('basic',), {'quantityW': 'Mass', 'ptypeQ': 'basic',\
-                            'quantityQ': 'Density'},\
-               ('coldens',), {'ionW': 'o7', 'abunds': 'Pt'},\
-               ('emission',), {'ionW': 'o7r', 'abunds': 'Sm'},\
+    argsets = [[('basic',), {'quantityW': 'Mass', 'ptypeQ': 'basic',\
+                            'quantityQ': 'Temperature'}],\
+               [('basic',), {'quantityW': 'Mass', 'ptypeQ': 'basic',\
+                            'quantityQ': 'Density'}],\
+               [('coldens',), {'ionW': 'o7', 'abunds': 'Pt'}],\
+               [('emission',), {'ionW': 'o7r', 'abunds': 'Sm'}],\
                ]
     
     names = []
