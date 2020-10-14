@@ -26,6 +26,8 @@ import make_maps_opts_locs as ol
 
 halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
 
+mdir = '/net/luttero/data2/imgs/pretty/'
+
 def selecthalo(logM200c, _halocat=halocat, margin=0.05, randomseed=None):
     '''
     selects a random halo in the target mass range and prints basic data about
@@ -333,7 +335,9 @@ def plotimgs(names, R200c, M200c, galid):
                     fontsize=fontsize, path_effects=patheff_text,\
                     transform=ax.transAxes, verticalalignment='bottom',\
                     horizontalalignment='center')
-            
+    
+    outname = 'galaxy{}_nH_T_o7_o7r.pdf'.format(galid)
+    plt.savefig(mdir + outname, format='pdf', bbox_inches='tight')
 
 if __name__ == '__main__':
     args = sys.argv
