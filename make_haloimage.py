@@ -127,8 +127,8 @@ def getimgs(cen, size, sizemargin=2.):
                             'quantityQ': 'Temperature'}],\
                [('basic',), {'quantityW': 'Mass', 'ptypeQ': 'basic',\
                             'quantityQ': 'Density'}],\
-               [('coldens',), {'ionW': 'o7', 'abunds': 'Pt'}],\
-               [('emission',), {'ionW': 'o7r', 'abunds': 'Sm'}],\
+               [('coldens',), {'ionW': 'o7', 'abundsW': 'Pt'}],\
+               [('emission',), {'ionW': 'o7r', 'abundsW': 'Sm'}],\
                ]
     
     names = []
@@ -151,6 +151,68 @@ def getimgs(cen, size, sizemargin=2.):
     print('Done creating images:')
     print(names)
     return names    
+
+def plotimgs(names):
+    
+    maptypes = ['Mass', 'Temperature', 'coldens_o7', 'emission_o7r']
+    
+    
+    for mt in maptypes:
+        match = [name.startswith(mt) for name in names]
+        match = np.where(match)[0]
+        if len(match) == 0:
+            raise RuntimeError('{} map not found for names {}'.format(\
+                                mt, names))
+        elif len(match) > 1:
+            fns = [names[i] for i in match]
+            if not np.all([fn == fns[0] for fn in fns]):
+                raise RuntimeError('{} map has mltiple options: {}'.format(\
+                                    mt, fns))
+            fn = fns[0]
+        else:
+            fn = names[match[0]]
+        
+        with h5py.File(fn, 'r') as mf:
+            _map = mf['map'][:]
+            _min = mf.attrs['minfinite']
+            _max = mf.attrs['max']
+            cosmopars = {key: val for key, val \
+                         in mf['Header/inputpars/cosmopars'].attrs.items()}
+            log = bool(mf['Header/inputpars'].attrs(log))
+            if not log:
+                _map = np.log10(_map)
+            
+            #axis = mf['Header/inputpars'].attrs['axis'].decode()
+            #if axis == 'z':
+            #    l0 = 'x'
+            #    l1 = 'y'
+            #elif axis == 'x':
+            #    l0 = 'y'
+            #    l1 = 'z'
+            #elif axis == 'y':
+            #    l0 = 'z'
+            #    l1 = 'x'
+            #_l0 = mf['Header/inputpars'].attrs('L_{ax}'.format(ax=l0))
+            #_l1 = mf['Header/inputpars'].attrs('L_{ax}'.format(ax=l1))
+            #pixsize_0_cMpc = _l0 / float(mf['Header/inputpars'].attrs('npix_x'))
+            #pixsize_1_cMpc = _l1 / float(mf['Header/inputpars'].attrs('npix_y'))
+            
+        if mt == 'Mass':
+            clabel = '$\\log_{10} \\Sigma_{\\mathrm{gas}} \\; [\\mathrm{M}_{\\mathrm{odot}} \\,/\\, \\mathrm{pkpc}**2]$'
+            vmin = -np.inf
+            vmax = np.inf
+            cmap = cm.get_cmap('viridis')
+            
+            units = c.solar_mass / (c.cm_per_mpc * 1e-3)**2
+        
+        _map -= np.log10(units)
+        vmin = max(vmin, _min)
+        vmax = min(vamx, _max)
+        
+            
+            
+            
+            
 
 if __name__ == '__main__':
     args = sys.argv
