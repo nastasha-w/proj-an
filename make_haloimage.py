@@ -208,7 +208,7 @@ def plotimgs(names):
             _max = mf['map'].attrs['max']
             cosmopars = {key: val for key, val \
                          in mf['Header/inputpars/cosmopars'].attrs.items()}
-            log = bool(mf['Header/inputpars'].attrs('log'))
+            log = bool(mf['Header/inputpars'].attrs['log'])
             if not log:
                 _map = np.log10(_map)
             
@@ -222,8 +222,8 @@ def plotimgs(names):
             elif axis == 'y':
                 l0 = 'z'
                 l1 = 'x'
-            _l0 = mf['Header/inputpars'].attrs('L_{ax}'.format(ax=l0))
-            _l1 = mf['Header/inputpars'].attrs('L_{ax}'.format(ax=l1))
+            _l0 = mf['Header/inputpars'].attrs['L_{ax}'.format(ax=l0)]
+            _l1 = mf['Header/inputpars'].attrs['L_{ax}'.format(ax=l1)]
             #pixsize_0_cMpc = _l0 / float(mf['Header/inputpars'].attrs('npix_x'))
             #pixsize_1_cMpc = _l1 / float(mf['Header/inputpars'].attrs('npix_y'))
             
