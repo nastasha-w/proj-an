@@ -232,7 +232,7 @@ def plotimgs(names, R200c, M200c, galid):
             vmin = -np.inf
             vmax = np.inf
             cmap = cm.get_cmap('viridis')
-            units = c.solar_mass / (c.cm_per_mpc * 1e-3)**2    
+            units = c.solar_mass / (c.cm_per_mpc * 1e-3)**2
             print(_min)
             print(_max)
             print(np.log10(units))
@@ -263,6 +263,8 @@ def plotimgs(names, R200c, M200c, galid):
             units = 1.
             
         _map -= np.log10(units)
+        _min -= np.log10(units)
+        _max -= np.log10(units)
         vmin = max(vmin, _min)
         vmax = min(vmax, _max)
         extent = (-0.5 * _l0, 0.5*_l0, -0.5*_l1, 0.5*_l1)
