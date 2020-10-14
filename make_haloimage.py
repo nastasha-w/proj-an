@@ -13,7 +13,7 @@ import os
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gsp
-import matplotlib.patch as mpatch
+import matplotlib.patches as mpatch
 import matplotlib.collections as mcol
 import matplotlib.patheffects as mppe
 import matplotlib.cm as cm
