@@ -43,19 +43,38 @@ from sherpa.astro.data import DataRMF
 
 import eagle_constants_and_units as c 
 import make_maps_opts_locs as ol
+import tol_colors as tc
 
 import matplotlib.pyplot as plt
 
 arcmin2 = 1. * (np.pi / (180. * 60.))**2 # 1 arcmin**2 in steradian
 
+## paths
+# save images to:
 mdir = '/net/luttero/data2/imgs/paper3/minSB/'
 
+# response files and backgrounds:
 ddir_xifu = ol.dir_instrumentfiles + 'athena_x-ifu/cost-constrained_2020-09-28/'
 filename_resp_xifu = 'responses/XIFU_CC_BASELINECONF_2018_10_10'
 filename_bkg_xifu  = 'backgrounds/TotalBKG1arcmin2.pha'
 
 ddir_galabs_xifu = mdir
 filename_galabs_xifu = 'norm_1ph_per_keVcm2s_wabs-0.018.txt'
+
+# .arf files from SOXS; may need updating
+full_lynx_mucal_hires_rmf = ol.dir_instrumentfiles + 'lynx/mucal/xrs_mucal_0.3eV.rmf'
+full_lynx_mucal_hires_arf = '/net/luttero/data2/soxs_responses/xrs_mucal_3x10_0.3eV.arf'
+full_lynx_mucal_main_rmf = ol.dir_instrumentfiles + 'lynx/mucal/xrs_mucal_3.0eV.rmf'
+full_lynx_mucal_main_arf = '/net/luttero/data2/soxs_responses/xrs_mucal_3x10_3.0eV.arf'
+
+# multiple background files
+basedir_bkg_lynx = ol.dir_instrumentfiles + 'lynx/mucal/'
+lynx_mucal_hires_bkg_cxb = 'bg_cxb_lxm.fits'
+lynx_mucal_main_bkg_cxb = 'bg_cxb_lxmmain.fits'
+lynx_mucal_hires_bkg_gal = 'bg_gal_lxm.fits'
+lynx_mucal_main_bkg_gal = 'bg_gal_lxmmain.fits'
+lynx_mucal_hires_bkg_part = 'bg_part_lxm.fits'
+lynx_mucal_main_bkg_part = 'bg_part_lxmmain.fits'
 
 
 def nsigma(sb, bkg, solidangle, aeff, deltat):
@@ -172,10 +191,10 @@ class Responses:
         but arf/rmf channels definitely should match for the way they are 
         combined here.
         '''
-        if not (np.all(self.E_min_rmf == self.E_lo_arf) and\
-                np.all(self.E_max_rmf == self.E_hi_arf) and\
-                np.all(self.E_min_rmf == self.E_lo_rmf) and\
-                np.all(self.E_max_rmf == self.E_hi_rmf)):
+        if not (np.allclose(self.E_lo_rmf, self.E_lo_arf) and\
+                np.allclose(self.E_hi_rmf,self.E_hi_arf)):
+            #np.all(self.E_min_rmf == self.E_lo_rmf) and\
+            #np.all(self.E_max_rmf == self.E_hi_rmf)):
             raise RuntimeError('Energy channels in the .arf and .rmf files do not match')
 
     def get_outspec(self, inspec):
@@ -212,7 +231,10 @@ class InstrumentModel:
         ----------
         instrument:    name of the instrument (sets defaults and info like the 
                        solid angle covered by the background model)
-                       (string, options: 'athena-xifu')
+                       string, options: 'athena-xifu'
+                                        'lynx-lxm-main' 
+                                        'lynx-lxm-uhr' -> Ultra High Resolution
+                                        
         rmf_fn:        .rmf response file name 
                        (string, incl. full path and file extension, or None for
                        instrument default)
@@ -253,7 +275,52 @@ class InstrumentModel:
                                     fill_value=np.NaN)
                 
             self.get_galabs = self._getgalabs_xifu()
+        
+        elif instrument.startswith('lynx'):
+            if instrument == 'lynx-lxm-uhr':
+                self.rmf_fn = full_lynx_mucal_hires_rmf
+                self.arf_fn = full_lynx_mucal_hires_arf
+                
+                self.bkg_fn1 = basedir_bkg_lynx + lynx_mucal_hires_bkg_cxb
+                self.bkg_fn2 = basedir_bkg_lynx + lynx_mucal_hires_bkg_gal
+                self.bkg_fn3 = basedir_bkg_lynx + lynx_mucal_hires_bkg_part
+                self.extr_area_file_sr = 1. * arcmin2 
+            elif instrument == 'lynx-lxm-main':
+                self.rmf_fn = full_lynx_mucal_main_rmf
+                self.arf_fn = full_lynx_mucal_main_arf
+                
+                self.bkg_fn1 = basedir_bkg_lynx + lynx_mucal_main_bkg_cxb
+                self.bkg_fn2 = basedir_bkg_lynx + lynx_mucal_main_bkg_gal
+                self.bkg_fn3 = basedir_bkg_lynx + lynx_mucal_main_bkg_part
+                self.extr_area_file_sr = 25. * arcmin2 
+                
+            if rmf_fn is not None:
+                self.rmf_fn = rmf_fn
+            if arf_fn is not None:
+                self.arf_fn = arf_fn
+            self.responses = Responses(arf_fn=self.arf_fn, rmf_fn=self.rmf_fn)
             
+            if bkg_fn is not None:
+                self.bkg_fn1 = bkg_fn.format(comp='cxb')
+                self.bkg_fn2 = bkg_fn.format(comp='gal')
+                self.bkg_fn3 = bkg_fn.format(comp='part')
+            
+            _bkg = np.zeros(len(self.responses.channel_rmf), dtype=np.float)
+            for fn in [self.bkg_fn1, self.bkg_fn2, self.bkg_fn3]:
+                with fits.open(self.bkg_fn1) as hdu:
+                    texp_s = hdu[1].header['EXPOSURE']
+                    channels = hdu[1].data['PHA']
+                    bc = np.bincount(channels,\
+                                     minlength=self.responses.channel_rmf[-1] + 1)
+                    bc = bc[self.responses.channel_rmf[0]:]
+                    _bkg += bc.astype(float) / texp_s 
+            
+            self.get_bkg = interp1d(self.responses.channel_rmf,\
+                                    _bkg / self.extr_area_file_sr,\
+                                    kind='linear', copy=True,\
+                                    fill_value=np.NaN)
+            # placeholder!
+            self.get_galabs = self._getgalabs_xifu()
         else:
             raise ValueError('{} is not a valid or implemented instrument'.format(self.instrument))
             #self.rmf_fn = rmf_fn
@@ -312,8 +379,13 @@ class InstrumentModel:
                                        self.Egrid[np.newaxis, :])\
                                       / E_width[:, np.newaxis]))
         specs_norm1 = specs_norm1[:, :-1] - specs_norm1[:, 1:]
+        if not np.allclose(np.sum(specs_norm1, axis=1), 1.):
+            msg = 'Spectra not normalized to 1 over {} -- {} keV (obs)'
+            msg.format(self.responses.E_lo_arf[0], self.responses.E_hi_arf[-1])
+            raise RuntimeError(msg)
+            
         #print(np.sum(specs_norm1, axis=1))
-        E_cen = 0.5 * (self.responses.E_lo_rmf + self.responses.E_hi_rmf)
+        E_cen = 0.5 * (self.responses.E_lo_arf + self.responses.E_hi_arf)
         if incl_galabs:
             absfrac = self.get_galabs(E_cen)
             specs_norm1 *= absfrac[np.newaxis, :]
@@ -347,7 +419,7 @@ class InstrumentModel:
             maxs = np.argmin(np.abs(self.responses.E_hi_rmf[np.newaxis, :]\
                                     - E_pos[:, np.newaxis] - extr_range),\
                              axis=1)
-            ranges = [slice(_min, _max + 1) for _min, _max in zip(mins, maxs)]
+            ranges = [slice(_min, _max) for _min, _max in zip(mins, maxs)]
         
         counts_norm1_extr = np.array([np.sum(counts[_slice])\
                             for counts, _slice in zip(counts_norm1, ranges)])
@@ -577,3 +649,89 @@ def explorepars_omegat_extr():
     plt.ylabel('log10 min. SB [photons / s / cm**2 / sr]', fontsize=fontsize)
     plt.legend(fontsize=fontsize)
     plt.savefig(mdir + 'minSB_x-ifu_varying_omegatexp_spec-extr.pdf', bbox_inches='tight')        
+
+def plot_minSB():
+    names = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr']
+    labels = {'athena-xifu': 'X-IFU',\
+              'lynx-lxm-main': 'LXM-main',\
+              'lynx-lxm-uhr': 'LXM_UHR',\
+              }
+    cset = tc.tol_cset('vibrant')
+    colors = {'athena-xifu': cset.blue,\
+              'lynx-lxm-main': cset.orange,\
+              'lynx-lxm-uhr': cset.red,\
+              }
+    extr_ranges = {'athena-xifu': [1.5, 2.5, 3.5],\
+                   'lynx-lxm-main': [2.0, 3.0, 4.0],\
+                   'lynx-lxm-uhr': [1.0, 2.0, 3.0],\
+                   }
+    alphas = [1., 0.8, 0.4]
+    fig = plt.figure(figsize=(5.5, 5.))
+    ax = fig.gca()
+    fontsize = 12
+    exptimes = [1e5, 1e6, 1e7]
+    linestyles = ['solid', 'dashed', 'dotted']
+    addl = '{omegat:.0e} am2 s, $\\Delta$E = {deltae:.1f} eV'
+    
+    for isn in names:
+        ins = InstrumentModel(instrument=isn)
+        if isn == 'lynx-lxm-uhr':
+            Egrid = np.arange(0.1, 0.9, 0.01)
+        else:
+            Egrid = np.arange(0.1, 3., 0.01)
+        
+        for et, ls in zip(exptimes, linestyles):
+            for erng, alpha in zip(extr_ranges[isn], alphas):
+                aeff = ins.getminSB_grid(Egrid, linewidth_kmps=100., z=0.0,\
+                              nsigma=5., area_texp=et, extr_range=erng,\
+                              incl_galabs=False)
+                label = labels[isn] + addl.format(omegat=et, deltae=erng)
+                ax.plot(Egrid, aeff, label=label, color=colors[isn],\
+                        linestyle=ls, alpha=alpha)
+            
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('E [keV]', fontsize=fontsize)
+    ax.set_ylabel('$\\mathrm{A}_{\\mathrm{eff}} \\; [\\mathrm{cm}^{2}]$',\
+                  fontsize=fontsize)
+    ax.legend(fontsize=fontsize-2)
+    
+
+def plot_Aeff_galabs():
+    names = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr']
+    labels = {'athena-xifu': 'X-IFU',\
+              'lynx-lxm-main': 'LXM-main',\
+              'lynx-lxm-uhr': 'LXM-UHR',\
+              }
+    cset = tc.tol_cset('vibrant')
+    colors = {'athena-xifu': cset.blue,\
+              'lynx-lxm-main': cset.orange,\
+              'lynx-lxm-uhr': cset.red,\
+              }
+    fig = plt.figure(figsize=(5.5, 5.))
+    ax = fig.gca()
+    fontsize = 12
+    
+    for isn in names:
+        ins = InstrumentModel(instrument=isn)
+        Egrid = 0.5 * (ins.Egrid[:-1] + ins.Egrid[1:]) 
+        
+        aeff = ins.responses.get_Aeff(Egrid)
+        label = labels[isn] 
+        ax.plot(Egrid, aeff, label=label, color=colors[isn], linewidth=2)
+         
+        if isn == 'athena-xifu':
+            absfrac = ins.get_galabs(Egrid)
+            ax.plot(Egrid, absfrac * 1e4, color='black',\
+                    label='wabs * 1e4 $\\mathrm{cm}^{2}$')
+            
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('E [keV]', fontsize=fontsize)
+    ax.set_ylabel('$\\mathrm{A}_{\\mathrm{eff}} \\; [\\mathrm{cm}^{2}]$',\
+                  fontsize=fontsize)
+    xlim = ax.get_xlim()
+    ax.set_xlim(0.1, xlim[1])
+    ax.set_ylim(1., 3e4)
+    ax.legend(fontsize=fontsize)
+
