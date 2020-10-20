@@ -76,6 +76,15 @@ lynx_mucal_main_bkg_gal = 'bg_gal_lxmmain.fits'
 lynx_mucal_hires_bkg_part = 'bg_part_lxm.fits'
 lynx_mucal_main_bkg_part = 'bg_part_lxmmain.fits'
 
+# simple set for XRISM
+ddir_xrism_resolve = ol.dir_instrumentfiles + 'xrism/resolve/specfiles_v002/'
+filename_arf_xrism_resolve = 'resolve_flt_spec_noGV_20190611.arf' # for a constant SB over pi*5*5 arcmin area (circle), not 3x3 arcmin2 FOV
+filename_bkg_nonxray_xrism_resolve = 'resolve_h5ev_2019a_rslnxb.pha'
+filename_rmf_xrism_resolve = 'resolve_h5ev_2019a.rmf'
+filename_bkg_xray_xrism_resolve = mdir + 'bkgmodel_astro_aurora_2020-10-20_resolve_h5ev_2019a.fak'
+area_resolve_xraybkg = 1. * arcmin2
+area_resolve_arf = np.pi * 5.**2 * arcmin2
+texp_resolve_xraykg = 1e6
 
 def nsigma(sb, bkg, solidangle, aeff, deltat):
     '''
@@ -123,15 +132,17 @@ class Responses:
     to estimate the detection limits for an instrument
     '''
     
-    def __init__(self, arf_fn, rmf_fn=None):
+    def __init__(self, arf_fn, rmf_fn=None, setmin_E_keV=1e-10):
         '''
         parameters:
         ------
         arf_fn:  the name of the .arf file ('.arf' is appended if not included)
-        rmf_fn:  the name of the .rmf file (default: arf file name with the\
-                  extension replaced)
-        
+        rmf_fn:  the name of the .rmf file (default: arf file name with the
+                 extension replaced)
+        setmin_E_keV: the minimum energy to assume if ENERG_LO is zero; 
+                 a value of 0. will cause a sherpa error 
         '''
+        self.setmin_E_keV = setmin_E_keV
         
         self.arf_fn = arf_fn
         if self.arf_fn[-4:] != '.arf':
@@ -146,6 +157,8 @@ class Responses:
             self.E_hi_arf = _hdu[1].data['ENERG_HI'] # keV
             self.aeff = _hdu[1].data['SPECRESP'] # cm**2
         self.E_cen_arf = 0.5 * (self.E_lo_arf + self.E_hi_arf)
+        #if self.E_lo_arf[0] == 0.:
+        #    self.E_lo_arf[0] = self.setmin_E_keV
         
         self.get_Aeff = interp1d(self.E_cen_arf, self.aeff, kind='linear',\
                                  copy=True, fill_value=0.)
@@ -161,16 +174,26 @@ class Responses:
         get a sherpa.astro.data.DataRMF object from a fits .rmf file 
         '''
         with fits.open(filename) as _hdu:
-            self.channel_rmf = _hdu[1].data['CHANNEL'] 
-            self.E_min_rmf = _hdu[1].data['E_min']  #KeV
-            self.E_max_rmf = _hdu[1].data['E_max']
+            self.channel_rmf = _hdu['EBOUNDS'].data['CHANNEL'] 
+            self.E_min_rmf = _hdu['EBOUNDS'].data['E_min']  #KeV
+            self.E_max_rmf = _hdu['EBOUNDS'].data['E_max']
             
-            self.E_lo_rmf = _hdu[2].data['ENERG_LO'] # same as E_min in checked file
-            self.E_hi_rmf = _hdu[2].data['ENERG_HI'] # same as E_max in checked file
-            _n_grp =  _hdu[2].data['N_GRP']
-            _f_chan = _hdu[2].data['F_CHAN']
-            _n_chan = _hdu[2].data['N_CHAN']
-            _matrix = _hdu[2].data['MATRIX']
+            # different files use different fits extension names for this
+            keyopts = ['MATRIX', 'SPECRESP MATRIX']
+            for key in keyopts:
+                if key in _hdu:
+                    break
+            if key not in _hdu:
+                raise RuntimeError('Could not find the response matrix extension in file {}'.format(filename))
+                
+            self.E_lo_rmf = _hdu[key].data['ENERG_LO'] # same as E_min in checked file
+            self.E_hi_rmf = _hdu[key].data['ENERG_HI'] # same as E_max in checked file
+            #if self.E_lo_rmf[0] == 0.:
+            #    self.E_lo_rmf[0] = self.setmin_E_keV
+            _n_grp =  _hdu[key].data['N_GRP']
+            _f_chan = _hdu[key].data['F_CHAN']
+            _n_chan = _hdu[key].data['N_CHAN']
+            _matrix = _hdu[key].data['MATRIX']
             _header_dct = {key: val for key, val in _hdu[2].header.items()}
             # name, detchans, energ_lo, energ_hi, n_grp, f_chan, n_chan, matrix,\
             # offset=1, e_min=None, e_max=None, header=None, ethresh=None
@@ -181,6 +204,7 @@ class Responses:
                                      _matrix.flatten(),\
                                      e_min=self.E_min_rmf,\
                                      e_max=self.E_max_rmf,\
+                                     ethresh=self.setmin_E_keV,\
                                      header=_header_dct)
         return _rmf_container
     
@@ -234,6 +258,7 @@ class InstrumentModel:
                        string, options: 'athena-xifu'
                                         'lynx-lxm-main' 
                                         'lynx-lxm-uhr' -> Ultra High Resolution
+                                        'xrism-resolve'
                                         
         rmf_fn:        .rmf response file name 
                        (string, incl. full path and file extension, or None for
@@ -246,7 +271,7 @@ class InstrumentModel:
                        instrument default)
                        
         instrument is not checked for consistency with the response files and
-        background
+        background; galactic absorption uses the x-ifu paper model: wabs 
         '''
         self.instrument = instrument
         
@@ -285,6 +310,7 @@ class InstrumentModel:
                 self.bkg_fn2 = basedir_bkg_lynx + lynx_mucal_hires_bkg_gal
                 self.bkg_fn3 = basedir_bkg_lynx + lynx_mucal_hires_bkg_part
                 self.extr_area_file_sr = 1. * arcmin2 
+                
             elif instrument == 'lynx-lxm-main':
                 self.rmf_fn = full_lynx_mucal_main_rmf
                 self.arf_fn = full_lynx_mucal_main_arf
@@ -321,6 +347,46 @@ class InstrumentModel:
                                     fill_value=np.NaN)
             # placeholder!
             self.get_galabs = self._getgalabs_xifu()
+            
+        elif self.instrument == 'xrism-resolve':
+            if rmf_fn is None:
+                self.rmf_fn = ddir_xrism_resolve + filename_rmf_xrism_resolve
+            else:
+                self.rmf_fn = rmf_fn
+            if arf_fn is None:
+                self.arf_fn = ddir_xrism_resolve + filename_arf_xrism_resolve
+            else:
+                self.arf_fn = arf_fn
+            self.responses = Responses(arf_fn=self.arf_fn, rmf_fn=self.rmf_fn)
+            
+            if bkg_fn is None:
+                self.bkg_fn1 = ddir_xrism_resolve + filename_bkg_nonxray_xrism_resolve
+                self.extr_area_fn1_sr = area_resolve_arf
+                
+                self.bkg_fn2 = filename_bkg_xray_xrism_resolve
+                self.extr_area_fn2_sr = area_resolve_xraybkg
+            else:
+                raise ValueError('Non-standard background files are not an option for XRISM Resolve given extraction area issues')
+            
+            _bkg = np.zeros(len(self.responses.channel_rmf), dtype=np.float)
+            with fits.open(self.bkg_fn1) as hdu:
+                self.channel_bkg = hdu[1].data['CHANNEL'] 
+                self.rate_bkg = hdu[1].data['COUNTS']  # counts / channel, no rate data
+                texp = hdu[1].header['EXPOSURE'] # in s
+                _bkg += self.rate_bkg / self.extr_area_fn1_sr / texp
+                
+            with fits.open(self.bkg_fn2) as hdu:
+                self.channel_bkg = hdu[1].data['CHANNEL'] 
+                self.rate_bkg = hdu[1].data['RATE']  # counts / s / channel
+                _bkg += self.rate_bkg / self.extr_area_fn2_sr        
+            
+            self.get_bkg = interp1d(self.responses.channel_rmf,\
+                                    _bkg,\
+                                    kind='linear', copy=True,\
+                                    fill_value=np.NaN)
+                
+            self.get_galabs = self._getgalabs_xifu()
+        
         else:
             raise ValueError('{} is not a valid or implemented instrument'.format(self.instrument))
             #self.rmf_fn = rmf_fn
@@ -381,7 +447,7 @@ class InstrumentModel:
         specs_norm1 = specs_norm1[:, :-1] - specs_norm1[:, 1:]
         if not np.allclose(np.sum(specs_norm1, axis=1), 1.):
             msg = 'Spectra not normalized to 1 over {} -- {} keV (obs)'
-            msg.format(self.responses.E_lo_arf[0], self.responses.E_hi_arf[-1])
+            msg = msg.format(self.responses.E_lo_arf[0], self.responses.E_hi_arf[-1])
             raise RuntimeError(msg)
             
         #print(np.sum(specs_norm1, axis=1))
@@ -623,10 +689,21 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
 #    vals = md(Egrid[:-1], Egrid[1:]) 
 #    return Egrid, vals
 
-def explorepars_omegat_extr():
-    extr = [1.25, 2.5, 5.]
+def explorepars_omegat_extr(instrument):
+    
+    extr_ranges = {'athena-xifu': [4, 7, 10],\
+                   'lynx-lxm-main': [3, 5, 7],\
+                   'lynx-lxm-uhr': [17, 33, 50],\
+                   'xrism-resolve': [8, 10, 12],\
+                   }
+    # 0.3 - 2 keV
+    delta_E_chan = {'lynx-lxm-main': 0.6,\
+                    'lynx-lxm-uhr': 0.06,\
+                    'athena-xifu': 0.36,\
+                    'xrism-resolve': 0.5}
+    extr = extr_ranges[instrument]
     omegat = [1e5, 1e6, 1e7]
-    label = '{omegat:.0e} am2*s, {extr:.2f} eV'
+    label = '{omegat:.0e} am2*s, {extr:.1f} eV'
     title = 'Varying $\\Delta \\Omega \\times \\mathrm{t}_{\\mathrm{exp}}$ and the $\\Delta$E range for line measurment'
     fontsize = 12
     
@@ -634,36 +711,46 @@ def explorepars_omegat_extr():
                    {'color': 'blue'}]
     kwargs_omegat = [{'linestyle': 'dotted'}, {'linestyle': 'dashed'},\
                      {'linestyle': 'solid'}]
-    Egrid = np.linspace(0.3, 2.0, 170)
+    Egrid = np.linspace(0.3, 2.0, 10)
+    im = InstrumentModel(instrument=instrument)
+    if instrument == 'lynx-lxm-uhr':
+        _max = im.responses.E_hi_arf[-1]
+        Egrid = np.arange(0.3, _max - 0.05, 0.01)
     
     for kw1, _extr in zip(kwargs_extr, extr):
         for kw2, _omegat in zip(kwargs_omegat, omegat):
             kwargs = kw1.copy()
             kwargs.update(kw2)
-            y = getminSB_grid(Egrid, area_texp=_omegat, extr_range=_extr)
+            y = im.getminSB_grid(Egrid, area_texp=_omegat, extr_range=_extr,\
+                                 linewidth_kmps=100.)
             
-            plt.plot(Egrid, np.log10(y), label=label.format(omegat=_omegat, extr=_extr),\
+            _xtrl = _extr * delta_E_chan[instrument] if isinstance(_extr, int)\
+                    else _extr
+            plt.plot(Egrid, np.log10(y), label=label.format(omegat=_omegat,\
+                                                            extr=_xtrl),\
                      **kwargs)
     plt.title(title, fontsize=fontsize)
     plt.xlabel('line energy (keV)', fontsize=fontsize)
     plt.ylabel('log10 min. SB [photons / s / cm**2 / sr]', fontsize=fontsize)
     plt.legend(fontsize=fontsize)
-    plt.savefig(mdir + 'minSB_x-ifu_varying_omegatexp_spec-extr.pdf', bbox_inches='tight')        
+    plt.savefig(mdir + 'minSB_{instr}_varying_omegatexp_spec-extr.pdf'.format(instr=instrument), bbox_inches='tight')        
 
 def plot_minSB():
-    names = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr']
+    names = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr']#, 'xrism-resolve']
     labels = {'athena-xifu': 'X-IFU',\
               'lynx-lxm-main': 'LXM-main',\
-              'lynx-lxm-uhr': 'LXM_UHR',\
+              'lynx-lxm-uhr': 'LXM-UHR',\
+              'xrism-resolve': 'XRISM-R',\
               }
     cset = tc.tol_cset('vibrant')
     colors = {'athena-xifu': cset.blue,\
               'lynx-lxm-main': cset.orange,\
               'lynx-lxm-uhr': cset.red,\
-              }
+              'xrism-resolve': cset.teal}
     extr_ranges = {'athena-xifu': [1.5, 2.5, 3.5],\
                    'lynx-lxm-main': [2.0, 3.0, 4.0],\
                    'lynx-lxm-uhr': [1.0, 2.0, 3.0],\
+                   'xrism-resolve': [4.0, 5.0, 6.0],\
                    }
     alphas = [1., 0.8, 0.4]
     fig = plt.figure(figsize=(5.5, 5.))
@@ -698,16 +785,18 @@ def plot_minSB():
     
 
 def plot_Aeff_galabs():
-    names = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr']
+    names = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr', 'xrism-resolve']
     labels = {'athena-xifu': 'X-IFU',\
               'lynx-lxm-main': 'LXM-main',\
               'lynx-lxm-uhr': 'LXM-UHR',\
+              'xrism-resolve': 'XRISM-R',\
               }
     cset = tc.tol_cset('vibrant')
     colors = {'athena-xifu': cset.blue,\
               'lynx-lxm-main': cset.orange,\
               'lynx-lxm-uhr': cset.red,\
-              }
+              'xrism-resolve': cset.teal}
+    
     fig = plt.figure(figsize=(5.5, 5.))
     ax = fig.gca()
     fontsize = 12
