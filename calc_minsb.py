@@ -194,11 +194,25 @@ class Responses:
             _f_chan = _hdu[key].data['F_CHAN']
             _n_chan = _hdu[key].data['N_CHAN']
             _matrix = _hdu[key].data['MATRIX']
-            _flatmat = np.concatenate(_matrix) # flatten only works on rectangular arrays
+            detchans = _hdu[key].header['DETCHANS']
+            if len(_matrix.shape) == 1: # attempt to tell a _VLF object from a normal ndarray. might fail with diagonal matrices
+                # this is a dodgy attempt to replicate the rectangular, zero-padded arrays with variable _n_chan that don't cause sherpa errors
+                _f_chan = np.concatenate(_f_chan)
+                _n_chan = np.concatenate(_n_chan)
+                _dummy = list(_matrix)
+                target = np.max(_n_chan)
+                _dummy = [arr if len(arr) == target else\
+                          np.append(arr, np.zeros(target - len(arr),\
+                                                  dtype=arr.dtype))\
+                          for arr in _dummy]
+                
+                _flatmat = np.concatenate(_dummy) # flatten only works on rectangular arrays
+            else:
+                _flatmat = _matrix.flatten()
             _header_dct = {key: val for key, val in _hdu[2].header.items()}
             # name, detchans, energ_lo, energ_hi, n_grp, f_chan, n_chan, matrix,\
             # offset=1, e_min=None, e_max=None, header=None, ethresh=None
-            _rmf_container = DataRMF(filename, len(self.channel_rmf),\
+            _rmf_container = DataRMF(filename, detchans,\
                                      self.E_lo_rmf,\
                                      self.E_hi_rmf,\
                                      _n_grp, _f_chan, _n_chan,\
