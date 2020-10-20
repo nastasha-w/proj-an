@@ -194,6 +194,7 @@ class Responses:
             _f_chan = _hdu[key].data['F_CHAN']
             _n_chan = _hdu[key].data['N_CHAN']
             _matrix = _hdu[key].data['MATRIX']
+            _flatmat = np.concatenate(_matrix) # flatten only works on rectangular arrays
             _header_dct = {key: val for key, val in _hdu[2].header.items()}
             # name, detchans, energ_lo, energ_hi, n_grp, f_chan, n_chan, matrix,\
             # offset=1, e_min=None, e_max=None, header=None, ethresh=None
@@ -201,7 +202,7 @@ class Responses:
                                      self.E_lo_rmf,\
                                      self.E_hi_rmf,\
                                      _n_grp, _f_chan, _n_chan,\
-                                     _matrix.flatten(),\
+                                     _flatmat,\
                                      e_min=self.E_min_rmf,\
                                      e_max=self.E_max_rmf,\
                                      ethresh=self.setmin_E_keV,\
@@ -711,7 +712,7 @@ def explorepars_omegat_extr(instrument):
                    {'color': 'blue'}]
     kwargs_omegat = [{'linestyle': 'dotted'}, {'linestyle': 'dashed'},\
                      {'linestyle': 'solid'}]
-    Egrid = np.linspace(0.3, 2.0, 10)
+    Egrid = np.linspace(0.3, 2.0, 10) # 170
     im = InstrumentModel(instrument=instrument)
     if instrument == 'lynx-lxm-uhr':
         _max = im.responses.E_hi_arf[-1]
