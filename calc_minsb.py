@@ -885,7 +885,7 @@ def checkvals_lynx_lxm_uhr():
                              np.array(df['fluxconv_cts_per_s']),\
                              omegat)
         minSB_nastasha = im.getminSB_grid(Egrid, linewidth_kmps=linewidth_kmps,\
-                                      z=0.0, nsigma=nsogma, area_texp=omegat,\
+                                      z=0.0, nsigma=nsigma, area_texp=omegat,\
                                       extr_range=DeltaE,\
                                       incl_galabs=False)
         minSB_nastasha /= arcmin2
