@@ -114,7 +114,7 @@ def minsb(nsigma, bkg_rate, counts_norm1, deltat_times_solidangle):
                   (astro/local/instrumental)
     counts_norm1: count rate (counts / s / sr) for an input rate of 
                   1 photon / s / cm**2 / sr           
-    solidangle:   extraction area for the observation (sr)
+    solidangle:   extraction area for the observation (arcmin**2)
     deltat:       observing time (s)
     
     returns:
@@ -453,8 +453,9 @@ class InstrumentModel:
         area_texp:      solid angle to extract the emission from (arcmin**2) 
                         times the exposure time (s); float
         extr_range:     range around the input energy to extract the counts
-                        float: range in eV (will be rounded to whole channels)
-                        int:   number of channels
+                        float: range in eV (will be rounded to whole channels;
+                               half width)
+                        int:   number of channels (full width)
         incl_galabs:    include the effect of absorption by our Galaxy (bool)
                         (minimum surface brightnesses at the instrument are 
                         adjusted for galactic absorption to estimate the
@@ -878,8 +879,8 @@ def checkvals_lynx_lxm_uhr():
     im = InstrumentModel(instrument='lynx-lxm-uhr')
     labelbase = '{}, {omegat:.0e} am2*s'
     
-    DeltaE = 4. # eV; +- 2 eV
-    linewidth_kmps = 2. # something small; comparing to a delta function
+    DeltaE = 0.2 # eV; +- 0.2 eV
+    linewidth_kmps = 10. # something small; comparing to a delta function
     
     for omegat, color in zip(deltat_times_solidangles,\
                              ['red', 'green', 'blue']):
