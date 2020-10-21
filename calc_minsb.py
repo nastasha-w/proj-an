@@ -879,7 +879,7 @@ def checkvals_lynx_lxm_uhr():
     labelbase = '{}, {omegat:.0e} am2*s'
     
     DeltaE = 4. # eV; +- 2 eV
-    linewidth_kmps = 10. # something small; comparing to a delta function
+    linewidth_kmps = 2. # something small; comparing to a delta function
     
     for omegat, color in zip(deltat_times_solidangles,\
                              ['red', 'green', 'blue']):
