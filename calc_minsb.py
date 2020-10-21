@@ -743,6 +743,8 @@ def explorepars_omegat_extr(instrument):
     label = '{omegat:.0e} am2*s, {extr:.1f} eV'
     title = 'Varying $\\Delta \\Omega \\times \\mathrm{t}_{\\mathrm{exp}}$ and the $\\Delta$E range for line measurment'
     fontsize = 12
+    fig = plt.figure(figsize=(5.5, 5.))
+    ax = fig.gca()
     
     kwargs_extr = [{'color': 'red'}, {'color': 'orange'}, {'color': 'green'},\
                    {'color': 'blue'}]
@@ -763,16 +765,16 @@ def explorepars_omegat_extr(instrument):
             
             _xtrl = _extr * delta_E_chan[instrument] if isinstance(_extr, int)\
                     else _extr
-            plt.plot(Egrid, np.log10(y), label=label.format(omegat=_omegat,\
+            ax.plot(Egrid, np.log10(y), label=label.format(omegat=_omegat,\
                                                             extr=_xtrl),\
                      **kwargs)
-    plt.title(title, fontsize=fontsize)
-    plt.xlabel('line energy (keV)', fontsize=fontsize)
-    plt.ylabel('log10 min. SB [photons / s / cm**2 / sr]', fontsize=fontsize)
+    ax.set_title(title, fontsize=fontsize)
+    ax.set_xlabel('line energy (keV)', fontsize=fontsize)
+    ax.set_ylabel('log10 min. SB [photons / s / cm**2 / sr]', fontsize=fontsize)
     ax.tick_params(which='both', direction='in', top=True, right=True,\
                    left=True, bottom=True)
     ax.grid(b=True)
-    plt.legend(fontsize=fontsize)
+    ax.legend(fontsize=fontsize - 2)
     plt.savefig(mdir + 'minSB_{instr}_varying_omegatexp_spec-extr.pdf'.format(instr=instrument), bbox_inches='tight')        
 
 def plot_minSB():
