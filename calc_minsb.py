@@ -389,7 +389,7 @@ class InstrumentModel:
             self.responses.aeff *= area_resolve_arf / area_resolve_detector
             
             self.get_Aeff = interp1d(self.responses.E_cen_arf,\
-                                     self.repsonses.aeff, kind='linear',\
+                                     self.responses.aeff, kind='linear',\
                                      copy=True, fill_value=0.)
                 
             if bkg_fn is None:
