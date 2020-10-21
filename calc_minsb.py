@@ -140,9 +140,6 @@ class Responses:
         rmf_fn:  the name of the .rmf file (default: arf file name with the
                  extension replaced) 
         '''
-        self.rmf = read_rmf(self.rmf_fn, ethreash=self.setmin_E_keV)
-        with fits.open(self.rmf_fn) as _hdu:
-            self.channel_rmf = _hdu['EBOUNDS'].data['CHANNEL'] 
         
         self.arf_fn = arf_fn
         if self.arf_fn[-4:] != '.arf':
@@ -151,6 +148,10 @@ class Responses:
             self.rmf_fn = self.arf_fn[:-4] + '.rmf'
         else:
             self.rmf_fn = rmf_fn
+            
+        self.rmf = read_rmf(self.rmf_fn, ethreash=self.setmin_E_keV)
+        with fits.open(self.rmf_fn) as _hdu:
+            self.channel_rmf = _hdu['EBOUNDS'].data['CHANNEL'] 
         
         with fits.open(self.arf_fn) as _hdu:
             self.E_lo_arf = _hdu[1].data['ENERG_LO'] # keV
