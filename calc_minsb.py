@@ -165,7 +165,7 @@ class Responses:
         self.get_Aeff = interp1d(self.E_cen_arf, self.aeff, kind='linear',\
                                  copy=True, fill_value=0.)
         
-        self.rmf = read_rmf(self.rmf_fn, ethreash=self.setmin_E_kev)
+        self.rmf = read_rmf(self.rmf_fn, ethreash=self.setmin_E_keV)
         with fits.open(self.rmf_fn) as _hdu:
             self.channel_rmf = _hdu['EBOUNDS'].data['CHANNEL'] 
         self.check_compat()
