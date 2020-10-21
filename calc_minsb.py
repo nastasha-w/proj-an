@@ -883,7 +883,8 @@ def checkvals_lynx_lxm_uhr():
     
     for omegat, color in zip(deltat_times_solidangles,\
                              ['red', 'green', 'blue']):
-        minSB_alexey = minsb(nsigma, np.array(df['bkg_cts_per_s_arcmin2']),\
+        minSB_alexey = minsb(nsigma,\
+                             np.array(df['bkg_cts_per_s_arcmin2']) / arcmin2,\
                              np.array(df['fluxconv_cts_per_s']),\
                              omegat)
         minSB_nastasha = im.getminSB_grid(Egrid, linewidth_kmps=linewidth_kmps,\
