@@ -84,7 +84,8 @@ filename_rmf_xrism_resolve = 'resolve_h5ev_2019a.rmf'
 filename_bkg_xray_xrism_resolve = mdir + 'bkgmodel_astro_aurora_2020-10-20_resolve_h5ev_2019a.fak'
 area_resolve_xraybkg = 1. * arcmin2
 area_resolve_arf = np.pi * 5.**2 * arcmin2
-texp_resolve_xraykg = 1e6
+area_resolve_detector = 2.9**2 * arcmin2
+texp_resolve_xraybkg = 1e6
 
 def nsigma(sb, bkg, solidangle, aeff, deltat):
     '''
@@ -169,59 +170,60 @@ class Responses:
         
     # from a quick test, it seems to conserve normalization (the arf handles 
     # that part), and seems to indeed have a ~2.5 eV FWHM at lower energies 
-    def get_rmf(self, filename):
-        '''
-        get a sherpa.astro.data.DataRMF object from a fits .rmf file 
-        '''
-        with fits.open(filename) as _hdu:
-            self.channel_rmf = _hdu['EBOUNDS'].data['CHANNEL'] 
-            self.E_min_rmf = _hdu['EBOUNDS'].data['E_min']  #KeV
-            self.E_max_rmf = _hdu['EBOUNDS'].data['E_max']
-            
-            # different files use different fits extension names for this
-            keyopts = ['MATRIX', 'SPECRESP MATRIX']
-            for key in keyopts:
-                if key in _hdu:
-                    break
-            if key not in _hdu:
-                raise RuntimeError('Could not find the response matrix extension in file {}'.format(filename))
-                
-            self.E_lo_rmf = _hdu[key].data['ENERG_LO'] # same as E_min in checked file
-            self.E_hi_rmf = _hdu[key].data['ENERG_HI'] # same as E_max in checked file
-            #if self.E_lo_rmf[0] == 0.:
-            #    self.E_lo_rmf[0] = self.setmin_E_keV
-            _n_grp =  _hdu[key].data['N_GRP']
-            _f_chan = _hdu[key].data['F_CHAN']
-            _n_chan = _hdu[key].data['N_CHAN']
-            _matrix = _hdu[key].data['MATRIX']
-            detchans = _hdu[key].header['DETCHANS']
-            if len(_matrix.shape) == 1: # attempt to tell a _VLF object from a normal ndarray. might fail with diagonal matrices
-                # this is a dodgy attempt to replicate the rectangular, zero-padded arrays with variable _n_chan that don't cause sherpa errors
-                _f_chan = np.concatenate(_f_chan)
-                _n_chan = np.concatenate(_n_chan)
-                _dummy = list(_matrix)
-                target = np.max(_n_chan)
-                _dummy = [arr if len(arr) == target else\
-                          np.append(arr, np.zeros(target - len(arr),\
-                                                  dtype=arr.dtype))\
-                          for arr in _dummy]
-                
-                _flatmat = np.concatenate(_dummy) # flatten only works on rectangular arrays
-            else:
-                _flatmat = _matrix.flatten()
-            _header_dct = {key: val for key, val in _hdu[2].header.items()}
-            # name, detchans, energ_lo, energ_hi, n_grp, f_chan, n_chan, matrix,\
-            # offset=1, e_min=None, e_max=None, header=None, ethresh=None
-            _rmf_container = DataRMF(filename, detchans,\
-                                     self.E_lo_rmf,\
-                                     self.E_hi_rmf,\
-                                     _n_grp, _f_chan, _n_chan,\
-                                     _flatmat,\
-                                     e_min=self.E_min_rmf,\
-                                     e_max=self.E_max_rmf,\
-                                     ethresh=self.setmin_E_keV,\
-                                     header=_header_dct)
-        return _rmf_container
+    ## deprectated for the sherpa get_rmf function that /does/ work.
+    #def get_rmf(self, filename):
+    #    '''
+    #    get a sherpa.astro.data.DataRMF object from a fits .rmf file 
+    #    '''
+    #    with fits.open(filename) as _hdu:
+    #        self.channel_rmf = _hdu['EBOUNDS'].data['CHANNEL'] 
+    #        self.E_min_rmf = _hdu['EBOUNDS'].data['E_min']  #KeV
+    #        self.E_max_rmf = _hdu['EBOUNDS'].data['E_max']
+    #        
+    #        # different files use different fits extension names for this
+    #        keyopts = ['MATRIX', 'SPECRESP MATRIX']
+    #        for key in keyopts:
+    #            if key in _hdu:
+    #                break
+    #        if key not in _hdu:
+    #            raise RuntimeError('Could not find the response matrix extension in file {}'.format(filename))
+    #            
+    #        self.E_lo_rmf = _hdu[key].data['ENERG_LO'] # same as E_min in checked file
+    #        self.E_hi_rmf = _hdu[key].data['ENERG_HI'] # same as E_max in checked file
+    #        #if self.E_lo_rmf[0] == 0.:
+    #        #    self.E_lo_rmf[0] = self.setmin_E_keV
+    #        _n_grp =  _hdu[key].data['N_GRP']
+    #        _f_chan = _hdu[key].data['F_CHAN']
+    #        _n_chan = _hdu[key].data['N_CHAN']
+    #        _matrix = _hdu[key].data['MATRIX']
+    #        detchans = _hdu[key].header['DETCHANS']
+    #        if len(_matrix.shape) == 1: # attempt to tell a _VLF object from a normal ndarray. might fail with diagonal matrices
+    #            # this is a dodgy attempt to replicate the rectangular, zero-padded arrays with variable _n_chan that don't cause sherpa errors
+    #            _f_chan = np.concatenate(_f_chan)
+    #            _n_chan = np.concatenate(_n_chan)
+    #            _dummy = list(_matrix)
+    #            target = np.max(_n_chan)
+    #            _dummy = [arr if len(arr) == target else\
+    #                      np.append(arr, np.zeros(target - len(arr),\
+    #                                              dtype=arr.dtype))\
+    #                      for arr in _dummy]
+    #            
+    #            _flatmat = np.concatenate(_dummy) # flatten only works on rectangular arrays
+    #        else:
+    #            _flatmat = _matrix.flatten()
+    #        _header_dct = {key: val for key, val in _hdu[2].header.items()}
+    #        # name, detchans, energ_lo, energ_hi, n_grp, f_chan, n_chan, matrix,\
+    #        # offset=1, e_min=None, e_max=None, header=None, ethresh=None
+    #        _rmf_container = DataRMF(filename, detchans,\
+    #                                 self.E_lo_rmf,\
+    #                                 self.E_hi_rmf,\
+    #                                 _n_grp, _f_chan, _n_chan,\
+    #                                 _flatmat,\
+    #                                 e_min=self.E_min_rmf,\
+    #                                 e_max=self.E_max_rmf,\
+    #                                 ethresh=self.setmin_E_keV,\
+    #                                 header=_header_dct)
+    #    return _rmf_container
     
     def check_compat(self):
         '''
@@ -374,9 +376,25 @@ class InstrumentModel:
                 self.arf_fn = arf_fn
             self.responses = Responses(arf_fn=self.arf_fn, rmf_fn=self.rmf_fn)
             
+            # XRISM/Suzaku responses: .arf 
+            # Aurora
+            # The arf files for extended sources are normalized to convert 
+            # “counts per second per entire Resolve field of view” 
+            # to phot/s/cm2 per 25*pi arcmin2
+            #area_resolve_xraybkg = 1. * arcmin2
+            #area_resolve_arf = np.pi * 5.**2 * arcmin2
+            #area_resolve_detector = 2.9**2 * arcmin2
+            
+            # 'correct' arf to units I need
+            self.responses.aeff *= area_resolve_arf / area_resolve_detector
+            
+            self.get_Aeff = interp1d(self.responses.E_cen_arf,\
+                                     self.repsonses.aeff, kind='linear',\
+                                     copy=True, fill_value=0.)
+                
             if bkg_fn is None:
                 self.bkg_fn1 = ddir_xrism_resolve + filename_bkg_nonxray_xrism_resolve
-                self.extr_area_fn1_sr = area_resolve_arf
+                self.extr_area_fn1_sr = area_resolve_detector
                 
                 self.bkg_fn2 = filename_bkg_xray_xrism_resolve
                 self.extr_area_fn2_sr = area_resolve_xraybkg
