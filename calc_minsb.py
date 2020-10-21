@@ -38,8 +38,8 @@ from scipy.interpolate import interp1d
 from scipy.special import erf
 # sherpa: for reading in and using rmf data here. Requires python >=3.5
 #from sherpa.astro import xspec
-from sherpa.astro.data import DataRMF
-
+#from sherpa.astro.data import DataRMF
+from sherpa.astro.io import read_rmf
 
 import eagle_constants_and_units as c 
 import make_maps_opts_locs as ol
@@ -132,15 +132,13 @@ class Responses:
     to estimate the detection limits for an instrument
     '''
     
-    def __init__(self, arf_fn, rmf_fn=None, setmin_E_keV=1e-10):
+    def __init__(self, arf_fn, rmf_fn=None):
         '''
         parameters:
         ------
         arf_fn:  the name of the .arf file ('.arf' is appended if not included)
         rmf_fn:  the name of the .rmf file (default: arf file name with the
-                 extension replaced)
-        setmin_E_keV: the minimum energy to assume if ENERG_LO is zero; 
-                 a value of 0. will cause a sherpa error 
+                 extension replaced) 
         '''
         self.setmin_E_keV = setmin_E_keV
         
@@ -163,7 +161,9 @@ class Responses:
         self.get_Aeff = interp1d(self.E_cen_arf, self.aeff, kind='linear',\
                                  copy=True, fill_value=0.)
         
-        self.rmf = self.get_rmf(self.rmf_fn)
+        self.rmf = read_rmf(self.rmf_fn)
+        with fits.open(self.rmf_fn) as _hdu:
+            self.channel_rmf = _hdu['EBOUNDS'].data['CHANNEL'] 
         self.check_compat()
         
         
@@ -230,8 +230,8 @@ class Responses:
         but arf/rmf channels definitely should match for the way they are 
         combined here.
         '''
-        if not (np.allclose(self.E_lo_rmf, self.E_lo_arf) and\
-                np.allclose(self.E_hi_rmf,self.E_hi_arf)):
+        if not (np.allclose(self.rmf.energ_lo, self.E_lo_arf) and\
+                np.allclose(self.rmf.energ_hi, self.E_hi_arf)):
             #np.all(self.E_min_rmf == self.E_lo_rmf) and\
             #np.all(self.E_max_rmf == self.E_hi_rmf)):
             raise RuntimeError('Energy channels in the .arf and .rmf files do not match')
@@ -346,7 +346,7 @@ class InstrumentModel:
                 self.bkg_fn2 = bkg_fn.format(comp='gal')
                 self.bkg_fn3 = bkg_fn.format(comp='part')
             
-            _bkg = np.zeros(len(self.responses.channel_rmf), dtype=np.float)
+            _bkg = np.zeros(self.responses.rmf.detchans, dtype=np.float)
             for fn in [self.bkg_fn1, self.bkg_fn2, self.bkg_fn3]:
                 with fits.open(self.bkg_fn1) as hdu:
                     texp_s = hdu[1].header['EXPOSURE']
@@ -383,7 +383,7 @@ class InstrumentModel:
             else:
                 raise ValueError('Non-standard background files are not an option for XRISM Resolve given extraction area issues')
             
-            _bkg = np.zeros(len(self.responses.channel_rmf), dtype=np.float)
+            _bkg = np.zeros(self.responses.rmf.detchans, dtype=np.float)
             with fits.open(self.bkg_fn1) as hdu:
                 self.channel_bkg = hdu[1].data['CHANNEL'] 
                 self.rate_bkg = hdu[1].data['COUNTS']  # counts / channel, no rate data
@@ -462,7 +462,8 @@ class InstrumentModel:
         specs_norm1 = specs_norm1[:, :-1] - specs_norm1[:, 1:]
         if not np.allclose(np.sum(specs_norm1, axis=1), 1.):
             msg = 'Spectra not normalized to 1 over {} -- {} keV (obs)'
-            msg = msg.format(self.responses.E_lo_arf[0], self.responses.E_hi_arf[-1])
+            msg = msg.format(self.responses.E_lo_arf[0],\
+                             self.responses.E_hi_arf[-1])
             raise RuntimeError(msg)
             
         #print(np.sum(specs_norm1, axis=1))
