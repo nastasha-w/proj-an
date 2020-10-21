@@ -884,7 +884,7 @@ def checkvals_lynx_lxm_uhr():
         minSB_alexey = minsb(nsigma, np.array(df['bkg_cts_per_s_arcmin2']),\
                              np.array(df['fluxconv_cts_per_s']),\
                              omegat)
-        minSB_nastasha = im.get_minSB(Egrid, linewidth_kmps=linewidth_kmps,\
+        minSB_nastasha = im.getminSB_grid(Egrid, linewidth_kmps=linewidth_kmps,\
                                       z=0.0, nsigma=nsogma, area_texp=omegat,\
                                       extr_range=DeltaE,\
                                       incl_galabs=False)
