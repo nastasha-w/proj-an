@@ -132,19 +132,17 @@ class Responses:
     to estimate the detection limits for an instrument
     '''
     
-    def __init__(self, arf_fn, rmf_fn=None, setmin_E_keV=1e-10):
+    def __init__(self, arf_fn, rmf_fn=None):
         '''
         parameters:
         ------
         arf_fn:  the name of the .arf file ('.arf' is appended if not included)
         rmf_fn:  the name of the .rmf file (default: arf file name with the
                  extension replaced) 
-        setmin_E_keV: float
-                 minimum energy to replace 0. by in the rmf and arf bounds
-                 (using 0. generate errors, and arf and rmf bounds must match)
-            
         '''
-        self.setmin_E_keV = setmin_E_keV
+        self.rmf = read_rmf(self.rmf_fn, ethreash=self.setmin_E_keV)
+        with fits.open(self.rmf_fn) as _hdu:
+            self.channel_rmf = _hdu['EBOUNDS'].data['CHANNEL'] 
         
         self.arf_fn = arf_fn
         if self.arf_fn[-4:] != '.arf':
@@ -160,14 +158,11 @@ class Responses:
             self.aeff = _hdu[1].data['SPECRESP'] # cm**2
         self.E_cen_arf = 0.5 * (self.E_lo_arf + self.E_hi_arf)
         if self.E_lo_arf[0] == 0.:
-            self.E_lo_arf[0] = self.setmin_E_keV
+            self.E_lo_arf[0] = self.rmf.ethresh
         
         self.get_Aeff = interp1d(self.E_cen_arf, self.aeff, kind='linear',\
                                  copy=True, fill_value=0.)
         
-        self.rmf = read_rmf(self.rmf_fn, ethreash=self.setmin_E_keV)
-        with fits.open(self.rmf_fn) as _hdu:
-            self.channel_rmf = _hdu['EBOUNDS'].data['CHANNEL'] 
         self.check_compat()
         
         
