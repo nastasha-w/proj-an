@@ -903,9 +903,10 @@ def checkvals_lynx_lxm_uhr():
                    label=labelbase.format('model', omegat=omegat))
     
     ax.set_xlabel('E [keV]', fontsize=fontsize)
-    ax.set_ylabel('min. SB $[\\mathrm{photons} \\, \\mathrm{s}^{-1} \\mathrm{cm}^{-2} \\mathrm{arcmin}^{-2}]$')    
+    ax.set_ylabel('min. SB $[\\mathrm{photons} \\, \\mathrm{s}^{-1} \\mathrm{cm}^{-2} \\mathrm{sr}^{-2}]$',\
+                  fontsize=fontsize)    
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.legend(fontsize=fontsize)
+    ax.legend(fontsize=fontsize - 2)
     ax.set_ylim(0.8 * ymin, 1.2 * ymax)
     plt.savefig(mdir + 'minSB_check_Alexeys-table_vs_arf-rmf-bkg-model.pdf')
