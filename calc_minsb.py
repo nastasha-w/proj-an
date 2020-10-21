@@ -786,7 +786,7 @@ def plot_minSB():
               'xrism-resolve': cset.teal}
     extr_ranges = {'athena-xifu': [1.5, 2.5, 3.5],\
                    'lynx-lxm-main': [2.0, 3.0, 4.0],\
-                   'lynx-lxm-uhr': [1.0, 2.0, 3.0],\
+                   'lynx-lxm-uhr': [0.1, 0.2, 0.3],\
                    'xrism-resolve': [4.0, 5.0, 6.0],\
                    }
     alphas = [1., 0.8, 0.4]
@@ -880,7 +880,7 @@ def checkvals_lynx_lxm_uhr():
     labelbase = '{}, {omegat:.0e} am2*s'
     
     DeltaE = 0.2 # eV; +- 0.2 eV
-    linewidth_kmps = 10. # something small; comparing to a delta function
+    linewidth_kmps = 2. # something small; comparing to a delta function
     
     for omegat, color in zip(deltat_times_solidangles,\
                              ['red', 'green', 'blue']):
