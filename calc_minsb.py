@@ -729,7 +729,7 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
 def explorepars_omegat_extr(instrument):
     
     extr_ranges = {'athena-xifu': [4, 7, 10],\
-                   'lynx-lxm-main': [3, 5, 7],\
+                   'lynx-lxm-main': [3, 5, 7, 9, 11],\
                    'lynx-lxm-uhr': [6, 7, 8, 10, 15],\
                    'xrism-resolve': [15, 20, 25],\
                    }
