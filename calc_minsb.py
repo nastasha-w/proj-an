@@ -858,3 +858,44 @@ def plot_Aeff_galabs():
     ax.set_ylim(1., 3e4)
     ax.legend(fontsize=fontsize)
 
+
+def checkvals_lynx_lxm_uhr():
+    nsigma = 5.
+    deltat_times_solidangles = [1e5, 1e6, 1e7]
+    
+    # read in Axeley's data as a baseline
+    dfn = '/net/luttero/data2/instrument_data/lynx/mucal/maintable.dat'
+    df = pd.read_csv(dfn, comment='#', sep='   ')
+    #E_obs_keV  fluxconv_cts_per_s  bkg_cts_per_s_arcmin2
+    Egrid = np.array(df['E_obs_keV'])
+    
+    fig = plt.figure(figsize=(5.5, 5.))
+    ax = fig.gca()
+    fontsize = 12
+    
+    im = InstrumentModel(instrument='lynx-lxm-uhr')
+    labelbase = '{}, {omegat:.0e} am2*s'
+    
+    DeltaE = 4. # eV; +- 2 eV
+    linewidth_kmps = 10. # something small; comparing to a delta function
+    
+    for omegat, color in zip(deltat_times_solidangles, ['red', 'green', 'blue'])
+        minSB_alexey = minsb(nsigma, np.array(df['bkg_cts_per_s_arcmin2']),\
+                             np.array(df['fluxconv_cts_per_s']),\
+                             omegat)
+        minSB_nastasha = im.get_minSB(Egrid, linewidth_kmps=linewidth_kmps,\
+                                      z=0.0, nsigma=nsogma, area_texp=omegat,\
+                                      extr_range=DeltaE,\
+                                      incl_galabs=False)
+        minSB_nastasha /= arcmin2
+        
+        ax.scatter(Egrid, minSB_alexey, marker='.', color=color,\
+                   label=labelbase.format('table', omegat=omegat))
+        ax.scatter(Egrid, minSB_nastasha, marker='o', color=color,\
+                   label=labelbase.format('model', omegat=omegat))
+    
+    ax.set_xlabel('E [keV]', fontsize=fontsize)
+    ax.set_ylabel('min. SB $[\\mathrm{photons} \\, \\mathrm{s}^{-1} \\mathrm{cm}^{-2} \\mathrm{arcmin}^{-2}]$')    
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.legend(fontsize=fontsize)
