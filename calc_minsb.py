@@ -882,6 +882,8 @@ def checkvals_lynx_lxm_uhr():
     DeltaE = 0.2 # eV; +- 0.2 eV
     linewidth_kmps = 2. # something small; comparing to a delta function
     
+    ymin = np.inf
+    ymax = -np.inf
     for omegat, color in zip(deltat_times_solidangles,\
                              ['red', 'green', 'blue']):
         minSB_alexey = minsb(nsigma,\
@@ -892,6 +894,8 @@ def checkvals_lynx_lxm_uhr():
                                       z=0.0, nsigma=nsigma, area_texp=omegat,\
                                       extr_range=DeltaE,\
                                       incl_galabs=False)
+        ymin = min([ymin, np.min(minSB_alexey), np.min(minSB_nastasha)])
+        ymax = max([ymax, np.max(minSB_alexey), np.max(minSB_nastasha)])
         
         ax.scatter(Egrid, minSB_alexey, marker='.', color=color,\
                    label=labelbase.format('table', omegat=omegat))
@@ -903,3 +907,5 @@ def checkvals_lynx_lxm_uhr():
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.legend(fontsize=fontsize)
+    ax.set_ylim(0.8 * ymin, 1.2 * ymax)
+    plt.savefig(mdir + 'minSB_check_Alexeys-table_vs_arf-rmf-bkg-model.pdf')
