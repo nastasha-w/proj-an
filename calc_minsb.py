@@ -486,6 +486,8 @@ class InstrumentModel:
             
         #print(np.sum(specs_norm1, axis=1))
         E_cen = 0.5 * (self.responses.E_lo_arf + self.responses.E_hi_arf)
+        E_cenchan = 0.5 * (self.responses.rmf.e_min +\
+                           self.responses.rmf.e_max)
         if incl_galabs:
             absfrac = self.get_galabs(E_cen)
             specs_norm1 *= absfrac[np.newaxis, :]
@@ -499,7 +501,7 @@ class InstrumentModel:
         
         if isinstance(extr_range, int):
             cenchan = np.argmin(np.abs(E_pos[:, np.newaxis] -\
-                                       E_cen[np.newaxis, :]),\
+                                       E_cenchan[np.newaxis, :]),\
                                 axis=1)
             offset = extr_range // 2
             if extr_range % 2 == 1:
@@ -513,10 +515,10 @@ class InstrumentModel:
                           for tar, cen in zip(E_pos, cenchan)]
         else:
             extr_range *= 1e-3 # eV to keV
-            mins = np.argmin(np.abs(self.responses.E_lo_rmf[np.newaxis, :]\
+            mins = np.argmin(np.abs(self.responses.rmf.e_min[np.newaxis, :]\
                                     - E_pos[:, np.newaxis] + extr_range),\
                              axis=1)
-            maxs = np.argmin(np.abs(self.responses.E_hi_rmf[np.newaxis, :]\
+            maxs = np.argmin(np.abs(self.responses.rmf.e_max[np.newaxis, :]\
                                     - E_pos[:, np.newaxis] - extr_range),\
                              axis=1)
             ranges = [slice(_min, _max) for _min, _max in zip(mins, maxs)]
