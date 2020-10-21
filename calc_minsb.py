@@ -740,7 +740,6 @@ def explorepars_omegat_extr(instrument):
                     'xrism-resolve': 0.5}
     extr = extr_ranges[instrument]
     omegat = [1e5, 1e6, 1e7]
-    label = '{omegat:.0e} am2*s, {extr:.1f} eV'
     title = 'Varying $\\Delta \\Omega \\times \\mathrm{t}_{\\mathrm{exp}}$ and the $\\Delta$E range for line measurment'
     fontsize = 12
     fig = plt.figure(figsize=(5.5, 5.))
@@ -755,7 +754,9 @@ def explorepars_omegat_extr(instrument):
     if instrument == 'lynx-lxm-uhr':
         _max = im.responses.E_hi_arf[-1]
         Egrid = np.arange(0.3, _max - 0.05, 0.01)
-    
+        label = '{omegat:.0e} am2*s, {extr:.2f} eV'
+    else:
+        label = '{omegat:.0e} am2*s, {extr:.1f} eV'
     for kw1, _extr in zip(kwargs_extr, extr):
         for kw2, _omegat in zip(kwargs_omegat, omegat):
             kwargs = kw1.copy()
