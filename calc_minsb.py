@@ -350,7 +350,7 @@ class InstrumentModel:
             
             _bkg = np.zeros(self.responses.rmf.detchans, dtype=np.float)
             for fn in [self.bkg_fn1, self.bkg_fn2, self.bkg_fn3]:
-                with fits.open(self.bkg_fn1) as hdu:
+                with fits.open(fn) as hdu:
                     texp_s = hdu[1].header['EXPOSURE']
                     channels = hdu[1].data['PHA']
                     bc = np.bincount(channels,\
