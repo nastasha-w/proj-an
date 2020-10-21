@@ -730,7 +730,7 @@ def explorepars_omegat_extr(instrument):
     
     extr_ranges = {'athena-xifu': [4, 7, 10],\
                    'lynx-lxm-main': [3, 5, 7],\
-                   'lynx-lxm-uhr': [6, 7, 8, 9],\
+                   'lynx-lxm-uhr': [6, 7, 8, 9, 10],\
                    'xrism-resolve': [15, 20, 25],\
                    }
     # 0.3 - 2 keV
@@ -746,7 +746,7 @@ def explorepars_omegat_extr(instrument):
     ax = fig.gca()
     
     kwargs_extr = [{'color': 'red'}, {'color': 'orange'}, {'color': 'green'},\
-                   {'color': 'blue'}]
+                   {'color': 'blue'}, {'color': 'purple'}]
     kwargs_omegat = [{'linestyle': 'dotted'}, {'linestyle': 'dashed'},\
                      {'linestyle': 'solid'}]
     Egrid = np.linspace(0.3, 2.0, 10) # 170
