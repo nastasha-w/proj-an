@@ -149,7 +149,7 @@ class Responses:
         else:
             self.rmf_fn = rmf_fn
             
-        self.rmf = read_rmf(self.rmf_fn, ethreash=self.setmin_E_keV)
+        self.rmf = read_rmf(self.rmf_fn)
         with fits.open(self.rmf_fn) as _hdu:
             self.channel_rmf = _hdu['EBOUNDS'].data['CHANNEL'] 
         
