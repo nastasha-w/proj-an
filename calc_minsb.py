@@ -909,6 +909,7 @@ def checkvals_lynx_lxm_uhr():
     ax.set_yscale('log')
     ax.legend(fontsize=fontsize - 2)
     ax.set_ylim(0.2 * ymin, 1.2 * ymax)
-    ax.tick_params(direction='in', top=True, right=True)
+    ax.tick_params(which='both', direction='in', top=True, right=True,\
+                   left=True, bottom=True)
     ax.grid(b=True)
     plt.savefig(mdir + 'minSB_check_Alexeys-table_vs_arf-rmf-bkg-model.pdf')
