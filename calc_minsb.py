@@ -879,7 +879,8 @@ def checkvals_lynx_lxm_uhr():
     DeltaE = 4. # eV; +- 2 eV
     linewidth_kmps = 10. # something small; comparing to a delta function
     
-    for omegat, color in zip(deltat_times_solidangles, ['red', 'green', 'blue'])
+    for omegat, color in zip(deltat_times_solidangles,\
+                             ['red', 'green', 'blue']):
         minSB_alexey = minsb(nsigma, np.array(df['bkg_cts_per_s_arcmin2']),\
                              np.array(df['fluxconv_cts_per_s']),\
                              omegat)
