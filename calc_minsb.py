@@ -730,7 +730,7 @@ def explorepars_omegat_extr(instrument):
     
     extr_ranges = {'athena-xifu': [4, 7, 10],\
                    'lynx-lxm-main': [3, 5, 7],\
-                   'lynx-lxm-uhr': [6, 7, 8, 10, 50],\
+                   'lynx-lxm-uhr': [6, 7, 8, 10, 15],\
                    'xrism-resolve': [15, 20, 25],\
                    }
     # 0.3 - 2 keV
@@ -749,13 +749,13 @@ def explorepars_omegat_extr(instrument):
                    {'color': 'blue'}, {'color': 'purple'}]
     kwargs_omegat = [{'linestyle': 'dotted'}, {'linestyle': 'dashed'},\
                      {'linestyle': 'solid'}]
-    Egrid = np.linspace(0.3, 2.0, 10) # 170
     im = InstrumentModel(instrument=instrument)
     if instrument == 'lynx-lxm-uhr':
         _max = im.responses.E_hi_arf[-1]
         Egrid = np.arange(0.3, _max - 0.05, 0.01)
         label = '{omegat:.0e} am2*s, {extr:.2f} eV'
     else:
+        Egrid = np.linspace(0.3, 2.0, 170) # 170
         label = '{omegat:.0e} am2*s, {extr:.1f} eV'
     for kw1, _extr in zip(kwargs_extr, extr):
         for kw2, _omegat in zip(kwargs_omegat, omegat):
