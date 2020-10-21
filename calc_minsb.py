@@ -728,7 +728,7 @@ def explorepars_omegat_extr(instrument):
     extr_ranges = {'athena-xifu': [4, 7, 10],\
                    'lynx-lxm-main': [3, 5, 7],\
                    'lynx-lxm-uhr': [17, 33, 50],\
-                   'xrism-resolve': [12, 14, 16, 18],\
+                   'xrism-resolve': [16, 18, 20],\
                    }
     # 0.3 - 2 keV
     delta_E_chan = {'lynx-lxm-main': 0.6,\
