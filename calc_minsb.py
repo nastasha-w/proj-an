@@ -730,7 +730,7 @@ def explorepars_omegat_extr(instrument):
     
     extr_ranges = {'athena-xifu': [4, 7, 10],\
                    'lynx-lxm-main': [3, 5, 7],\
-                   'lynx-lxm-uhr': [17, 33, 50],\
+                   'lynx-lxm-uhr': [2, 3, 4],\
                    'xrism-resolve': [15, 20, 25],\
                    }
     # 0.3 - 2 keV
@@ -769,6 +769,9 @@ def explorepars_omegat_extr(instrument):
     plt.title(title, fontsize=fontsize)
     plt.xlabel('line energy (keV)', fontsize=fontsize)
     plt.ylabel('log10 min. SB [photons / s / cm**2 / sr]', fontsize=fontsize)
+    ax.tick_params(which='both', direction='in', top=True, right=True,\
+                   left=True, bottom=True)
+    ax.grid(b=True)
     plt.legend(fontsize=fontsize)
     plt.savefig(mdir + 'minSB_{instr}_varying_omegatexp_spec-extr.pdf'.format(instr=instrument), bbox_inches='tight')        
 
