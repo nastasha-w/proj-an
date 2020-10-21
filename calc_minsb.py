@@ -890,11 +890,10 @@ def checkvals_lynx_lxm_uhr():
                                       z=0.0, nsigma=nsigma, area_texp=omegat,\
                                       extr_range=DeltaE,\
                                       incl_galabs=False)
-        minSB_nastasha /= arcmin2
         
         ax.scatter(Egrid, minSB_alexey, marker='.', color=color,\
                    label=labelbase.format('table', omegat=omegat))
-        ax.scatter(Egrid, minSB_nastasha, marker='o', color=color,\
+        ax.scatter(Egrid, minSB_nastasha, marker='o', color=color, alpha=0.5,\
                    label=labelbase.format('model', omegat=omegat))
     
     ax.set_xlabel('E [keV]', fontsize=fontsize)
