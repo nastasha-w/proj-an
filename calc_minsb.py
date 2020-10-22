@@ -970,7 +970,7 @@ def savetable_sbmin():
                                                       area_texp=omegat,\
                                                       incl_galabs=galabs)
             
-                            for _Erest, _minSB, line in zip([Erest, minSBs, lines]):
+                            for _Erest, _minSB, line in zip(Erest, minSBs, lines):
                                 out = printfmt.format(line=line, Erest=_Erest,\
                                                       linewidth=lw,redshift=z,\
                                                       omegat=omegat,\
