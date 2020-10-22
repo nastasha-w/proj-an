@@ -964,8 +964,8 @@ def savetable_sbmin():
                 for omegat in omegats:
                     for z in zvals:
                         for galabs in [True, False]:
-                            mask = Erest >= im.responses.E_lo_arf + 10e-3
-                            mask &= Erest <= im.responses.E_hi_arf - 10e-3
+                            mask = Erest >= im.responses.E_lo_arf[0] + 20e-3
+                            mask &= Erest <= im.responses.E_hi_arf[-1] - 20e-3
                             
                             minSBs = im.getminSB_grid(Erest[mask], linewidth_kmps=lw,\
                                                       z=z, nsigma=nsigma,\
