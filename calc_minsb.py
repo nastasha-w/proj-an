@@ -479,11 +479,10 @@ class InstrumentModel:
                                        self.Egrid[np.newaxis, :])\
                                       / E_width[:, np.newaxis]))
         specs_norm1 = specs_norm1[:, :-1] - specs_norm1[:, 1:]
-        if not np.allclose(np.sum(specs_norm1, axis=1), 1., rtol=1e-3):
+        if not np.allclose(np.sum(specs_norm1, axis=1), 1.):
             msg = 'Spectra not normalized to 1 over {} -- {} keV (obs)'
             msg = msg.format(self.responses.E_lo_arf[0],\
                              self.responses.E_hi_arf[-1])
-            print(np.sum(specs_norm1, axis=1))
             raise RuntimeError(msg)
             
         #print(np.sum(specs_norm1, axis=1))
@@ -965,12 +964,19 @@ def savetable_sbmin():
                 for omegat in omegats:
                     for z in zvals:
                         for galabs in [True, False]:
-                            minSBs = im.getminSB_grid(Erest, linewidth_kmps=lw,\
+                            mask = Erest >= im.responses.E_lo_arf + 10e-3
+                            mask &= Erest <= im.responses.E_hi_arf - 10e-3
+                            
+                            minSBs = im.getminSB_grid(Erest[mask], linewidth_kmps=lw,\
                                                       z=z, nsigma=nsigma,\
                                                       extr_range=extr_range,\
                                                       area_texp=omegat,\
                                                       incl_galabs=galabs)
-            
+                            dummy = np.ones(len(mask), minSBs.dtype) * np.NaN
+                            dummy[mask] = minSBs
+                            dummy[np.logical_not(mask)] = np.inf
+                            minSBs = dummy
+                            
                             for _Erest, _minSB, line in zip(Erest, minSBs, lines):
                                 out = printfmt.format(line=line, Erest=_Erest,\
                                                       linewidth=lw,redshift=z,\
