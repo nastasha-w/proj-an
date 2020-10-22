@@ -942,7 +942,7 @@ def savetable_sbmin():
     
     filename = 'minSBtable.dat'
     
-    Erest = [ol.line_eng_ion / c.ev_to_erg * 1e-3 for line in lines]
+    Erest = [ol.line_eng_ion[line] / c.ev_to_erg * 1e-3 for line in lines]
     Erest = np.array(Erest)
     
     printfmt = '{line}\t{Erest}\t{linewidth}\t{redshift}\t{omegat}\t' + \
