@@ -479,7 +479,7 @@ class InstrumentModel:
                                        self.Egrid[np.newaxis, :])\
                                       / E_width[:, np.newaxis]))
         specs_norm1 = specs_norm1[:, :-1] - specs_norm1[:, 1:]
-        if not np.allclose(np.sum(specs_norm1, axis=1), 1., rtol=1e-4):
+        if not np.allclose(np.sum(specs_norm1, axis=1), 1., rtol=1e-3):
             msg = 'Spectra not normalized to 1 over {} -- {} keV (obs)'
             msg = msg.format(self.responses.E_lo_arf[0],\
                              self.responses.E_hi_arf[-1])
