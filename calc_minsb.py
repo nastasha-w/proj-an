@@ -454,7 +454,7 @@ class InstrumentModel:
                         times the exposure time (s); float
         extr_range:     range around the input energy to extract the counts
                         float: range in eV (will be rounded to whole channels;
-                               half width)
+                               full width)
                         int:   number of channels (full width)
         incl_galabs:    include the effect of absorption by our Galaxy (bool)
                         (minimum surface brightnesses at the instrument are 
@@ -516,11 +516,12 @@ class InstrumentModel:
                           for tar, cen in zip(E_pos, cenchan)]
         else:
             extr_range *= 1e-3 # eV to keV
+            offset = 0.5 * extr_range
             mins = np.argmin(np.abs(self.responses.rmf.e_min[np.newaxis, :]\
-                                    - E_pos[:, np.newaxis] + extr_range),\
+                                    - E_pos[:, np.newaxis] + offset),\
                              axis=1)
             maxs = np.argmin(np.abs(self.responses.rmf.e_max[np.newaxis, :]\
-                                    - E_pos[:, np.newaxis] - extr_range),\
+                                    - E_pos[:, np.newaxis] - offset),\
                              axis=1)
             ranges = [slice(_min, _max) for _min, _max in zip(mins, maxs)]
         
@@ -932,10 +933,10 @@ def savetable_sbmin():
     lines.sort(key=ol.line_eng_ion.get)
     instruments = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr',\
                    'xrism-resolve']
-    extr_ranges = {'athena-xifu': [4, 7, 10],\
-                   'lynx-lxm-main': [3, 5, 7, 9, 11],\
-                   'lynx-lxm-uhr': [6, 7, 8, 10, 15],\
-                   'xrism-resolve': [10, 15, 20, 25],\
+    extr_ranges = {'athena-xifu': [2.5],\
+                   'lynx-lxm-main': [4.0],\
+                   'lynx-lxm-uhr': [0.6],\
+                   'xrism-resolve': [10.],\
                    }
     omegats = [1e5, 3e5, 1e6, 3e6, 1e7]
     
