@@ -483,6 +483,7 @@ class InstrumentModel:
             msg = 'Spectra not normalized to 1 over {} -- {} keV (obs)'
             msg = msg.format(self.responses.E_lo_arf[0],\
                              self.responses.E_hi_arf[-1])
+            print(np.sum(specs_norm1, axis=1))
             raise RuntimeError(msg)
             
         #print(np.sum(specs_norm1, axis=1))
