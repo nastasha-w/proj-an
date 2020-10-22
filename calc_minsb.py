@@ -926,7 +926,7 @@ def savetable_sbmin():
     
     nsigma = 5.
     lw = 100.
-    zvals = np.arange(0.95, 1.055, 0.01)
+    zvals = np.arange(0.095, 0.1055, 0.001)
     lines = ['c5r', 'n6r', 'n6-actualr', 'ne9r', 'ne10', 'mg11r', 'mg12',\
              'si13r', 'fe18', 'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy',\
              'o7f', 'o8', 'fe17', 'c6', 'n7']
@@ -946,7 +946,7 @@ def savetable_sbmin():
     Erest = np.array(Erest)
     
     printfmt = '{line}\t{Erest}\t{linewidth}\t{redshift}\t{omegat}\t' + \
-               '{extr_range}\t{nsigma}\t{galabs}\t{instrument}\t{minsb}'
+               '{extr_range}\t{nsigma}\t{galabs}\t{instrument}\t{minsb}\n'
     head = printfmt.format(line='line name', Erest='E rest [keV]',\
                            linewidth='linewidth [km/s]', redshift='redshift',\
                            omegat='sky area * exposure time [arcmin**2 s]',\
