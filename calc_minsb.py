@@ -868,6 +868,45 @@ def plot_Aeff_galabs():
     ax.set_ylim(1., 3e4)
     ax.legend(fontsize=fontsize)
 
+def plot_equiv_backgrounds():
+    names = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr', 'xrism-resolve']
+    labels = {'athena-xifu': 'X-IFU',\
+              'lynx-lxm-main': 'LXM-main',\
+              'lynx-lxm-uhr': 'LXM-UHR',\
+              'xrism-resolve': 'XRISM-R',\
+              }
+    cset = tc.tol_cset('vibrant')
+    colors = {'athena-xifu': cset.blue,\
+              'lynx-lxm-main': cset.orange,\
+              'lynx-lxm-uhr': cset.red,\
+              'xrism-resolve': cset.teal}
+    
+    fig = plt.figure(figsize=(5.5, 5.))
+    ax = fig.gca()
+    fontsize = 12
+    
+    for isn in names:
+        ins = InstrumentModel(instrument=isn)
+        Egrid = 0.5 * (ins.Egrid[:-1] + ins.Egrid[1:]) 
+        
+        aeff = ins.responses.get_Aeff(Egrid)
+        label = labels[isn] 
+        ax.plot(Egrid, aeff, label=label, color=colors[isn], linewidth=2)
+         
+        if isn == 'athena-xifu':
+            absfrac = ins.get_galabs(Egrid)
+            ax.plot(Egrid, absfrac * 1e4, color='black',\
+                    label='wabs * 1e4 $\\mathrm{cm}^{2}$')
+            
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('E [keV]', fontsize=fontsize)
+    ax.set_ylabel('$\\mathrm{A}_{\\mathrm{eff}} \\; [\\mathrm{cm}^{2}]$',\
+                  fontsize=fontsize)
+    xlim = ax.get_xlim()
+    ax.set_xlim(0.1, xlim[1])
+    ax.set_ylim(1., 3e4)
+    ax.legend(fontsize=fontsize)    
 
 def checkvals_lynx_lxm_uhr():
     nsigma = 5.
@@ -911,7 +950,7 @@ def checkvals_lynx_lxm_uhr():
     
     ax.set_xlabel('E [keV]', fontsize=fontsize)
     ax.set_ylabel('min. SB $[\\mathrm{photons} \\, \\mathrm{s}^{-1} \\mathrm{cm}^{-2} \\mathrm{sr}^{-2}]$',\
-                  fontsize=fontsize)    
+                  fontsize=fontsize)
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.legend(fontsize=fontsize - 2)
@@ -988,6 +1027,7 @@ def savetable_sbmin():
                                 fo.write(out)
         
         
+    
         
         
     
