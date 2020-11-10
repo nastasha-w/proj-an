@@ -36,6 +36,7 @@ import pandas as pd
 from astropy.io import fits
 from scipy.interpolate import interp1d
 from scipy.special import erf
+from scipy.signal import convolve # for smoothing backgrounds for plots
 # sherpa: for reading in and using rmf data here. Requires python >=3.5
 #from sherpa.astro import xspec
 #from sherpa.astro.data import DataRMF
@@ -163,7 +164,7 @@ class Responses:
             self.E_lo_arf[0] = self.rmf.ethresh
         
         self.get_Aeff = interp1d(self.E_cen_arf, self.aeff, kind='linear',\
-                                 copy=True, fill_value=0.)
+                                 copy=True, fill_value=0., bounds_error=False)
         
         self.check_compat()
         
@@ -729,7 +730,7 @@ def getminSB_grid(E_rest, linewidth_kmps=100., z=0.0,\
 
 def explorepars_omegat_extr(instrument):
     
-    extr_ranges = {'athena-xifu': [4, 7, 10],\
+    extr_ranges = {'athena-xifu': [4, 7, 10, 16, 22],\
                    'lynx-lxm-main': [3, 5, 7, 9, 11],\
                    'lynx-lxm-uhr': [6, 7, 8, 10, 15],\
                    'xrism-resolve': [10, 15, 20, 25],\
@@ -780,7 +781,7 @@ def explorepars_omegat_extr(instrument):
     plt.savefig(mdir + 'minSB_{instr}_varying_omegatexp_spec-extr.pdf'.format(instr=instrument), bbox_inches='tight')        
 
 def plot_minSB():
-    names = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr']#, 'xrism-resolve']
+    names = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr', 'xrism-resolve']
     labels = {'athena-xifu': 'X-IFU',\
               'lynx-lxm-main': 'LXM-main',\
               'lynx-lxm-uhr': 'LXM-UHR',\
@@ -791,18 +792,23 @@ def plot_minSB():
               'lynx-lxm-main': cset.orange,\
               'lynx-lxm-uhr': cset.red,\
               'xrism-resolve': cset.teal}
-    extr_ranges = {'athena-xifu': [1.5, 2.5, 3.5],\
-                   'lynx-lxm-main': [2.0, 3.0, 4.0],\
-                   'lynx-lxm-uhr': [0.1, 0.2, 0.3],\
-                   'xrism-resolve': [4.0, 5.0, 6.0],\
+    extr_ranges = {'athena-xifu': [2.5],\
+                   'lynx-lxm-main': [4.0],\
+                   'lynx-lxm-uhr': [0.6],\
+                   'xrism-resolve': [10.],\
                    }
+    #extr_ranges = {'athena-xifu': [1.5, 2.5, 3.5],\
+    #               'lynx-lxm-main': [2.0, 3.0, 4.0],\
+    #               'lynx-lxm-uhr': [0.1, 0.2, 0.3],\
+    #               'xrism-resolve': [4.0, 5.0, 6.0],\
+    #               }
     alphas = [1., 0.8, 0.4]
     fig = plt.figure(figsize=(5.5, 5.))
     ax = fig.gca()
     fontsize = 12
     exptimes = [1e5, 1e6, 1e7]
     linestyles = ['solid', 'dashed', 'dotted']
-    addl = '{omegat:.0e} am2 s, $\\Delta$E = {deltae:.1f} eV'
+    addl = ' {omegat:.0e} am2 s, $\\Delta$E = {deltae:.1f} eV'
     
     for isn in names:
         ins = InstrumentModel(instrument=isn)
@@ -823,10 +829,10 @@ def plot_minSB():
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_xlabel('E [keV]', fontsize=fontsize)
-    ax.set_ylabel('$\\mathrm{A}_{\\mathrm{eff}} \\; [\\mathrm{cm}^{2}]$',\
+    ax.set_ylabel('$\\min \\mathrm{SB} \\; [\\mathrm{ph} \\; \\mathrm{s}^{-1} \\mathrm{cm}^{-2} \\mathrm{sr}^{-1}]$',\
                   fontsize=fontsize)
     ax.legend(fontsize=fontsize-2)
-    
+    plt.savefig(mdir + 'minSB_instruments_varying_omegatexp.pdf', bbox_inches='tight')  
 
 def plot_Aeff_galabs():
     names = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr', 'xrism-resolve']
@@ -867,8 +873,15 @@ def plot_Aeff_galabs():
     ax.set_xlim(0.1, xlim[1])
     ax.set_ylim(1., 3e4)
     ax.legend(fontsize=fontsize)
+    plt.savefig(mdir + 'Aeff_galabs_instruments_varying_omegatexp.pdf', bbox_inches='tight')  
+    
 
-def plot_equiv_backgrounds():
+def plot_equiv_backgrounds(aeff_norm=True):
+    '''
+    backgrounds are smoothed for legibility, but at higher energies (> ~ 7 keV)
+    the smoothing for the X-IFU will have a variable length (non equally 
+    spaced energy grid)
+    '''
     names = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr', 'xrism-resolve']
     labels = {'athena-xifu': 'X-IFU',\
               'lynx-lxm-main': 'LXM-main',\
@@ -884,30 +897,71 @@ def plot_equiv_backgrounds():
     fig = plt.figure(figsize=(5.5, 5.))
     ax = fig.gca()
     fontsize = 12
+    Esmooth = 2.e-3 # background smoothing in eV 
+    numsig = 3
     
     for isn in names:
         ins = InstrumentModel(instrument=isn)
-        Egrid = 0.5 * (ins.Egrid[:-1] + ins.Egrid[1:]) 
+        Egrid = 0.5 * (ins.responses.rmf.e_min +\
+                       ins.responses.rmf.e_max) 
         
-        aeff = ins.responses.get_Aeff(Egrid)
+        bkg = ins.get_bkg(ins.responses.channel_rmf)
         label = labels[isn] 
-        ax.plot(Egrid, aeff, label=label, color=colors[isn], linewidth=2)
+        
+        # smooth a bit: curves are really noisy
+        deltaE_full = ins.responses.rmf.e_max - ins.responses.rmf.e_min
+        # equally spaced at low energies for these instruments; smoothing will 
+        # have an irregular spacing at high energies
+        deltaE = deltaE_full[1] # 0 may be off if lowest bin energy had to be adjusted
+        
+        yv = bkg * arcmin2 / (deltaE_full * 1e-3)
+        if aeff_norm:
+            aeff = ins.responses.get_Aeff(Egrid)
+            yv /= aeff
+        
+        halfsize = numsig * int(np.ceil(Esmooth / deltaE))
+        fullsize = 2 * halfsize + 1
+        convx = deltaE * np.arange(-halfsize, fullsize + 1)
+        kernel = np.exp(-0.5 * convx**2 / Esmooth**2)
+        kernel *= 1. / np.sum(kernel)        
+        
+        yv_in = np.append([yv[0]] * fullsize, yv)
+        yv_in = np.append(yv_in, [yv[-1]] * fullsize)
+        
+        yv_sm = convolve(yv_in, kernel, mode='same')
+        # convolve properly centers output
+        yv_sm = yv_sm[fullsize: -fullsize]
+        ax.plot(Egrid, yv_sm, label=label, color=colors[isn],\
+                linewidth=2)
          
-        if isn == 'athena-xifu':
-            absfrac = ins.get_galabs(Egrid)
-            ax.plot(Egrid, absfrac * 1e4, color='black',\
-                    label='wabs * 1e4 $\\mathrm{cm}^{2}$')
+        #if isn == 'athena-xifu':
+        #    absfrac = ins.get_galabs(Egrid)
+        #    ax.plot(Egrid, absfrac * 1e4, color='black',\
+        #            label='wabs * 1e4 $\\mathrm{cm}^{2}$')
             
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_xlabel('E [keV]', fontsize=fontsize)
-    ax.set_ylabel('$\\mathrm{A}_{\\mathrm{eff}} \\; [\\mathrm{cm}^{2}]$',\
-                  fontsize=fontsize)
-    xlim = ax.get_xlim()
-    ax.set_xlim(0.1, xlim[1])
-    ax.set_ylim(1., 3e4)
-    ax.legend(fontsize=fontsize)    
-
+    if aeff_norm:
+        ax.set_ylabel('background est. $[\\mathrm{cts} \\, \\mathrm{s}^{-1}\\mathrm{cm}^{-2}\\mathrm{arcmin}^{-2} \\mathrm{keV}^{-1}]$',\
+                  fontsize=fontsize) 
+        title = 'Smoothed background ({Esm:.0f} eV Gaussian) / effective area'
+        outfn = 'background_over_Aeff_instruments.pdf'
+        ax.set_ylim(3e-5, 1.)
+    else:
+        ax.set_ylabel('background est. $[\\mathrm{cts} \\, \\mathrm{s}^{-1}\\mathrm{arcmin}^{-2} \\mathrm{keV}^{-1}]$',\
+                  fontsize=fontsize) 
+        title = 'Smoothed background ({Esm:.0f} eV Gaussian)'
+        outfn = 'background_instruments.pdf'
+        ax.set_ylim(5e-2, 1e3)
+        
+    title = title.format(Esm=Esmooth * 1e3)
+    ax.set_title(title, fontsize=fontsize)
+    #xlim = ax.get_xlim()
+    ax.set_xlim(0.1, 9.)
+    ax.legend(fontsize=fontsize)   
+    plt.savefig(mdir + outfn , bbox_inches='tight')  
+    
 def checkvals_lynx_lxm_uhr():
     nsigma = 5.
     deltat_times_solidangles = [1e5, 1e6, 1e7]
