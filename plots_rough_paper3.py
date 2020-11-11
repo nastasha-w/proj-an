@@ -5482,10 +5482,20 @@ def plot_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                     
                     xpoints = np.array(xpoints)
                     ypoints = np.array(ypoints)
+                    print(xpoints)
+                    print(xpoints.shape)
+                    print(ypoints)
+                    print(ypoints.shape)
                     xs = np.argsort(xpoints)
                     ypoints = ypoints[xs]
                     xpoints = xpoints[xs]
-                        
+                    print(xs)
+                    print(xs.shape)
+                    print(xpoints)
+                    print(xpoints.shape)
+                    print(ypoints)
+                    print(ypoints.shape)
+
                     ax.plot(xpoints, ypoints, color='black',\
                             linestyle=linestyles[weight], alpha=alphas[cmb],\
                             path_effects=patheff_thick, linewidth=linewidth_thick)
