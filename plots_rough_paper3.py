@@ -5458,13 +5458,10 @@ def plot_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                     xpoints = []
                     ypoints = []
                     for mkey in mkeys:
-                        print(massincl)
-                        print(mkey)
                         keymatch = np.isclose(massincl, mkey)
                         if not np.any(keymatch):
                             continue
                         cmkey = massincl[np.where(keymatch)[0][0]]
-                        print(cmkey)
                         xpoints.append(cmkey + 0.25)
                         
                         edges_r = _edges[mkey][yq][0] 
@@ -5481,19 +5478,13 @@ def plot_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                         
                         percv = pu.percentiles_from_histogram(hist[np.newaxis, :], edges_y, axis=1,\
                                                               percentiles=np.array([percentile]))
-                        print(percv.shape)
                         ypoints.append(percv[0][0])
                     
                     xpoints = np.array(xpoints)
                     ypoints = np.array(ypoints)
-                    print(xpoints.shape)
-                    print(ypoints.shape)
                     xs = np.argsort(xpoints)
                     ypoints = ypoints[xs]
                     xpoints = xpoints[xs]
-                    print(xs.shape)
-                    print(xpoints.shape)
-                    print(ypoints.shape)
 
                     ax.plot(xpoints, ypoints, color='black',\
                             linestyle=linestyles[weight], alpha=alphas[cmb],\
