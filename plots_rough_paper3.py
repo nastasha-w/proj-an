@@ -5924,7 +5924,8 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                     ax.plot(xpoints, ypoints, color='green',\
                             linestyle=ls, alpha=alphas[cmb] * 0.7,\
                             path_effects=patheff_thick, linewidth=linewidth_thick)
-                    
+                    print(np.any(np.isnan(avvals)))
+                    print(np.any(np.isnan(wvals)))
                         
             if ti == 0 and mi == 2:
                 handles = [mlines.Line2D([], [], linestyle='solid', color='black',\
