@@ -4627,7 +4627,8 @@ def plot_barchart_Ls(simple=False):
     print('Numbers in annotations: log10 L density [erg/s/cMpc**3] rest-frame')
     
      # change order because the two two-line names overlap
-    lines = ['c5r', 'c6', 'n6r', 'n7', 'o7f', 'o7iy', 'o7ix', 'o7r', 'o8',\
+    lines = ['c5r', 'c6', 'n6r', 'n6-actualr', 'n7',\
+             'o7f', 'o7iy', 'o7ix', 'o7r', 'o8',\
              'fe17', 'fe18', 'fe19', 'fe17-other1', 'ne9r', 'ne10',\
              'mg11r', 'mg12', 'si13r']
     
