@@ -220,7 +220,7 @@ def getoutline(linewidth):
 
 mass_edges_standard = (11., 11.5, 12.0, 12.5, 13.0, 13.5, 14.0)
 fontsize = 12
-mdir = '/net/luttero/data2/imgs/paper3/'
+mdir = '/net/luttero/data2/imgs/paper3/n6-rf_comp/'
 tmdir = '/net/luttero/data2/imgs/paper3/img_talks/'
 
 def getsamplemedianmass():
@@ -730,7 +730,7 @@ def plotstamps(filebase=None, halocat=None,\
         halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
     if filebase is None:
         filebase = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS_stamps.hdf5'
-        filen_ne10 = 'emission_ne10_L0100N1504_27_test3.6_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS_stamps.hdf5'
+        filebase2 = 'emission_{line}_L0100N1504_27_test3.6_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS_stamps.hdf5'
     marklength = 10. #cMpc
     vmin = -12. # log10 photons / cm2 / s / sr 
     vtrans = -2.5
@@ -752,8 +752,8 @@ def plotstamps(filebase=None, halocat=None,\
     cosmoparss = {}
     snapshots = {}
     for line in lines:
-        if line == 'ne10':
-            filen = filen_ne10
+        if line in ['ne10', 'n6-actualr']:
+            filen = filebase2.format(line=line)
         else:
             filen = filebase.format(line=line)
         try:
