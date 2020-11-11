@@ -3619,7 +3619,8 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
     
     lsargs = {'c5r':  {'linestyle': 'solid'},\
               'c6':   {'linestyle': 'dashed'},\
-              'n6r':  {'linestyle': 'dotted'},\
+              'n6r':  {'linestyle': 'dashdot'},\
+              'n6-actualr': {'linestyle': 'dotted'},\
               'n7':   {'linestyle': 'dashdot'},\
               'o7r':  {'linestyle': 'solid'},\
               'o7ix': {'dashes': [2, 2, 2, 2]},\
