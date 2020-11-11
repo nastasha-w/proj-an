@@ -3607,7 +3607,7 @@ def plot_luminosities(addedges=(0., 1.), toSB=False, plottype='all'):
     toSB:     convert Luminosities to SB, assuming uniform emission within 
               the edges (in projection) at z = 0.1
     '''
-    outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    outdir = mdir + '3dprof/'
     outname = 'luminosities_{tp}_{mi}-{ma}-R200c'.format(tp=plottype,\
                             mi=addedges[0], ma=addedges[1])
     if toSB:
