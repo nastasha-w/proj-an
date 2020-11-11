@@ -3289,13 +3289,14 @@ def plot_emtables(z=0.1):
     [ax.set_xlim(*xlim) for ax in axes]
     [ax.set_ylim(*ylim) for ax in axes]
 
-    axions = {0: ['c5r', 'c6', 'n6r', 'n7'],\
+    axions = {0: ['c5r', 'c6', 'n6r', 'n6-actualr', 'n7'],\
               1: ['o7r', 'o7ix', 'o7iy', 'o7f', 'o8'],\
               2: ['ne9r', 'ne10', 'mg11r', 'mg12', 'si13r'],\
               3: ['fe17-other1', 'fe19', 'fe17', 'fe18']}
     lsargs = {'c5r':  {'linestyle': 'solid'},\
               'c6':   {'linestyle': 'dashed'},\
               'n6r':  {'linestyle': 'dotted'},\
+              'n6-actualr':  {'dashes': [2, 2, 2, 2]},\
               'n7':   {'linestyle': 'dashdot'},\
               'o7r':  {'linestyle': 'solid'},\
               'o7ix': {'dashes': [2, 2, 2, 2]},\
