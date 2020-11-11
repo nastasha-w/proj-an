@@ -3985,7 +3985,7 @@ def plot_sffrac_corr(addedges=(0., 1.)):
     '''
     fraction of L from SF gas as a function of total lumninosity
     '''
-    outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    outdir = mdir + '3dprof/'
     outname = 'SFfrac_lum_{mi}-{ma}-R200c'.format(\
                             mi=addedges[0], ma=addedges[1])
     
@@ -4163,7 +4163,7 @@ def plot3Dprof_overview(weighttype='Mass', stack='addnormed-R200c'):
     weighttype: 'Mass' or an ion name
     '''
     inclSF = True #False is not implemented in the histogram extraction
-    outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    outdir = mdir + '3dprof/'
     outname = outdir + 'overview_radprof_L0100N1504_27_Mh0p5dex_1000_{}_{}_{stack}.pdf'.format(\
                                                                      weighttype, 'wSF' if inclSF else 'nSF',\
                                                                      stack=stack)
