@@ -743,6 +743,8 @@ def plotstamps(filebase=None, halocat=None,\
     # retrieve the stamps, and necessary metadata
     if '/' not in filebase:
         filebase = ol.pdir + 'stamps/' + filebase
+    if '/' not in filebase2:
+        filebase2 = ol.pdir + 'stamps/' + filebase2
     if not isinstance(groups, dict):
         groups = {line: groups for line in lines}
     maps = {}
@@ -760,7 +762,7 @@ def plotstamps(filebase=None, halocat=None,\
         try:
             with h5py.File(filen, 'r') as ft:
                 if groups[line] not in ft:
-                    print('Could not find the group {grp} for {line}: {filen}.'.format(\
+                    print('Could not find the group {grp} for {line}: {filen}'.format(\
                           line=line, filen=filen, grp=groups[line]))
                     continue
                 grp = ft[groups[line]] 
