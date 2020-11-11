@@ -5857,8 +5857,8 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                         #print(np.any(np.isnan(avvals)))
                         #print(np.any(np.isnan(avvals[wvals != 0.])))
                     logmasses =  np.array(np.log10(galdata_all.loc[_galids, 'M200c_Msun']))
-                    print(avvals)
-                    print(wvals)
+                    #print(avvals)
+                    #print(wvals)
                 for cmb in combmethods: # combmethods = ['add', 'addnormed-R200c']
                     # elt = parent element, capitalized
                     
@@ -5924,8 +5924,8 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                     ax.plot(xpoints, ypoints, color='green',\
                             linestyle=ls, alpha=alphas[cmb] * 0.7,\
                             path_effects=patheff_thick, linewidth=linewidth_thick)
-                    print(np.any(np.isnan(avvals)))
-                    print(np.any(np.isnan(wvals)))
+                    #print(np.any(np.isnan(avvals)))
+                    #print(np.any(np.isnan(wvals)))
                         
             if ti == 0 and mi == 2:
                 handles = [mlines.Line2D([], [], linestyle='solid', color='black',\
@@ -5981,14 +5981,14 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
     inclSF:    include SF gas in the average weighting (M/V/L)
     '''
     
-    outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    outdir = mdir + '3dprof/'
     outname = outdir + 'totLw-halos_L0100N1504_27_Mh0p5dex_1000_0-1-R200c_{}_set{ws}.pdf'.format('wSF' if inclSF else 'nSF',\
                                                           ws=weightset)
     #addedges = (0., 1.)
     # for halo mass selections
     
     weightsets = {1: ['c5r', 'c6'],\
-                  2: ['n6r', 'n7'],\
+                  2: ['n6r', 'n6-actualr', 'n7'],\
                   3: ['ne9r', 'ne10'],\
                   4: ['mg11r', 'mg12'],\
                   5: ['si13r'],\
