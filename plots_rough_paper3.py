@@ -5458,6 +5458,8 @@ def plot_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                     xpoints = []
                     ypoints = []
                     for mkey in mkeys:
+                        print(massincl)
+                        print(mkey)
                         keymatch = np.isclose(massincl, mkey)
                         if not np.any(keymatch):
                             continue
