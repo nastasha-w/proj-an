@@ -752,7 +752,7 @@ def plotstamps(filebase=None, halocat=None,\
     cosmoparss = {}
     snapshots = {}
     for line in lines:
-        if line in ['ne10', 'n6-actualr']:
+        if line in []: #['ne10', 'n6-actualr']:
             filen = filebase2.format(line=line)
         else:
             filen = filebase.format(line=line)
