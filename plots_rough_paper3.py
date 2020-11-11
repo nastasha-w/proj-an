@@ -4860,13 +4860,15 @@ def crosscheck_Luminosities():
     from halo mass histograms
     '''
     
-    lines = ['c5r', 'c6', 'n6r', 'n7', 'o7f', 'o7iy', 'o7ix', 'o7r', 'o8',\
+    lines = ['c5r', 'c6', 'n6r', 'n6-actualr', 'n7',\
+             'o7f', 'o7iy', 'o7ix', 'o7r', 'o8',\
              'fe17', 'fe18', 'fe19', 'fe17-other1', 'ne9r', 'ne10',\
              'mg11r', 'mg12', 'si13r']
 
     lsargs = {'c5r':  {'linestyle': 'solid'},\
               'c6':   {'linestyle': 'dashed'},\
-              'n6r':  {'linestyle': 'dotted'},\
+              'n6-actualr':  {'linestyle': 'dotted'},\
+              'n6r':  {'linestyle': 'dashdot'},\
               'n7':   {'linestyle': 'dashdot'},\
               'o7r':  {'linestyle': 'solid'},\
               'o7ix': {'dashes': [2, 2, 2, 2]},\
@@ -5042,7 +5044,7 @@ def plot3Dprof_v1(weightset=1, M200cslice=(None, None, None)):
     minrshow = np.log10(0.1) # log10 R200c
     
     weightsets = {1: ['c5r', 'c6'],\
-                  2: ['n6r', 'n7'],\
+                  2: ['n6r', 'n6-actualr', 'n7'],\
                   3: ['ne9r', 'ne10'],\
                   4: ['mg11r', 'mg12'],\
                   5: ['si13r'],\
@@ -5317,7 +5319,7 @@ def plot_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
     '''
     
     inclSF = True #False is not implemented in the histogram extraction
-    outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    outdir = mdir + '3dprof/'
     outname = outdir + 'totLw_L0100N1504_27_Mh0p5dex_1000_0-1-R200c_{}_set{ws}.pdf'.format('wSF' if inclSF else 'nSF',\
                                                           ws=weightset)
     addedges = (0., 1.)
