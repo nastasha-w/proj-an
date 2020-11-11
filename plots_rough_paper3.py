@@ -1136,9 +1136,14 @@ def savestamps_v2():
             filen_in = basename.format(line=line)
         for kwargs in kwargss:
             print(kwargs)
-            make_and_save_stamps(filen_in, filen_weight=None,\
+            try:
+                make_and_save_stamps(filen_in, filen_weight=None,\
                          filen_out=None, **kwargs)
-        
+            except RuntimeError as err:
+                print('skipping; already exists?')
+                print(err)
+                continue
+            
 def plotstampzooms_perline(line='all'):
     '''
     line = 'all' -> call other lines recursively
