@@ -1161,7 +1161,7 @@ def plotstampzooms_perline(line='all'):
     
     filebase = ol.pdir + 'stamps/' + 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen21.875_z-projection_noEOS_stamps.hdf5'
     filebase = filebase.format(line=line)
-    if line == 'ne10':
+    if line in ['ne10', 'n6-actualr']:
         filebase = filebase.replace('test3.5', 'test3.6')
     grn_slice = 'slice'
     grn_zsmall = 'zoom1_small'
@@ -1272,9 +1272,9 @@ def plotstampzooms_perline(line='all'):
     with h5py.File(halocat, 'r') as hc:
         snapnum = hc['Header'].attrs['snapnum']
         cosmopars = {key: val for key, val in hc['Header/cosmopars'].attrs.items()}
-        #print(groups)
-        #print(snapshots)
-        #print(line)
+        print(groups)
+        print(snapshots)
+        print(line)
         if not np.all(snapnum == np.array([snapshots[line][grn] for grn in groups[line]])):
             raise RuntimeError('Stamp snapshots do not match halo catalogue snapshot')
         masses = np.log10(hc['M200c_Msun'][:])
