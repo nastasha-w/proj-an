@@ -5857,7 +5857,8 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                         #print(np.any(np.isnan(avvals)))
                         #print(np.any(np.isnan(avvals[wvals != 0.])))
                     logmasses =  np.array(np.log10(galdata_all.loc[_galids, 'M200c_Msun']))
-                    
+                    print(avvals)
+                    print(wvals)
                 for cmb in combmethods: # combmethods = ['add', 'addnormed-R200c']
                     # elt = parent element, capitalized
                     
