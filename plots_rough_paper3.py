@@ -3064,7 +3064,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
         ncols = 4
         nrows = (numlines - 1) // ncols + 1
         figwidth = 11. 
-        caxwidth = 1.
+        caxwidth = 1.5
     
     if ncols * nrows - numlines >= 2:
         cax_right = False
@@ -3099,6 +3099,8 @@ def plot_radprof4(talkversion=False, slidenum=0):
             raise RuntimeError('Could not find a place for the legend and color bar at the right of the plot (1 row)')
         cax = fig.add_subplot(grid[csl, ncols])
         lax = fig.add_subplot(grid[lsl, ncols])
+        lax.axis('off')
+        leg_kw = {'loc': 'upper left', 'bbox_to_anchor': (0.05, 0.95)}
     else:
         ind_min = ncols - (nrows * ncols - numlines)
         _cax = fig.add_subplot(grid[nrows - 1, ind_min:])
@@ -3113,6 +3115,10 @@ def plot_radprof4(talkversion=False, slidenum=0):
         lax = fig.add_axes([_l + wmargin, _b  + hmargin + cspace,\
                             _w - 2. * wmargin, lspace])
         lax.axis('off')
+        leg_kw = {'loc': 'upper center',\
+                  'bbox_to_anchor':(0.5, 1.),\
+                  'handlelength': 2.}
+        
     labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
     labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
     labelax.set_xlabel(xlabel, fontsize=fontsize)
@@ -3212,8 +3218,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
             handles = [mlines.Line2D([],[], label=label, color='black', ls=ls,\
                                      linewidth=2.) \
                        for ls, label in zip([ls_mean, ls_median], ['mean', 'median'])]
-            lax.legend(handles=handles, fontsize=fontsize, loc='upper center',\
-                      bbox_to_anchor=(0.5, 1.), handlelength=2.)
+            lax.legend(handles=handles, fontsize=fontsize, **leg_kw)
         
         
     # sync plot ranges
