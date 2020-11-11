@@ -72,8 +72,8 @@ nicenames_lines =  {'c5r': 'C V',\
                     'fe17-other1': 'Fe XVII (15.10 A)',\
                     'fe19': 'Fe XIX',\
                     'o7r': 'O VII (r)',\
-                    'o7ix': 'O VII (i)',\
-                    'o7iy': 'O VII (ix)',\
+                    'o7ix': 'O VII (ix)',\
+                    'o7iy': 'O VII (i)',\
                     'o7f': 'O VII (f)',\
                     'o8': 'O VIII',\
                     'fe17': 'Fe XVII (17.05 A)',\
