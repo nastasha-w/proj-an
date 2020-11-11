@@ -3813,7 +3813,7 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
     '''
     '''
     
-    outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    outdir = mdir + '/3dprof/'
     outname = 'luminosities_nice_{mi}-{ma}-R200c'.format(\
                             mi=addedges[0], ma=addedges[1])
     if talkversion:
