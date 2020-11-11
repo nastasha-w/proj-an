@@ -698,8 +698,9 @@ def savestamps(center=(25., 25.), diameter=50., resolution=125.):
     # first slice
     basename = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5'
     for line in lines:
-        if line == 'ne10':
-            filen_in = 'emission_ne10_L0100N1504_27_test3.6_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5'
+        if line in ['ne10', 'n6-actualr']:
+            filen_in = 'emission_{line}_L0100N1504_27_test3.6_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS.hdf5'
+            filen_in = filen_in.format(line=line)
         else:
             filen_in = basename.format(line=line)
         make_and_save_stamps(filen_in, filen_weight=None,\
@@ -752,7 +753,7 @@ def plotstamps(filebase=None, halocat=None,\
     cosmoparss = {}
     snapshots = {}
     for line in lines:
-        if line in []: #['ne10', 'n6-actualr']:
+        if line in ['n6-actualr']: #['ne10', 'n6-actualr']:
             filen = filebase2.format(line=line)
         else:
             filen = filebase.format(line=line)
