@@ -1580,7 +1580,7 @@ def plotstampzooms_overview():
         snapshots[line] = {}
                     
         filen = filebase.format(line=line)
-        if line == 'ne10':
+        if line in ['ne10', 'n6-actualr']:
             filen = filen.replace('test3.5', 'test3.6')
         try:
             with h5py.File(filen, 'r') as ft:
