@@ -3075,7 +3075,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
         c_aspect = 0.08
     else:
         cax_right = True
-        _ncols = ncols
+        _ncols = ncols + 1
         panelwidth = (figwidth - caxwidth) / ncols
         width_ratios = [panelwidth] * ncols + [caxwidth]
         c_orientation = 'vertical'
