@@ -62,7 +62,7 @@ fov_arcmin = {'Athena X-IFU': 5.,
 #         'si13r', 'fe18',
 #         'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',
 #         'c6', 'n7']
-lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12',
+lines = ['c5r', 'n6-actualr', 'ne9r', 'ne10', 'mg11r', 'mg12',
          'si13r', 'fe18',
          'fe17-other1', 'fe19', 'o7r', 'o7iy', 'o7f', 'o8', 'fe17',
          'c6', 'n7']
@@ -130,8 +130,8 @@ lineargs =  {'c5r':  {'linestyle': 'solid',   'color': _c1.blue},\
              'fe17':  {'linestyle': 'dotted',  'color': _c1.grey},\
              'fe18':  {'linestyle': 'dashdot', 'color': _c1.grey},\
               }
-# 'n6-actualr', 'o7ix',
-linesets = [['c5r', 'n6r', 'o7r', 'ne9r', 'mg11r', 'si13r'],\
+# 'n6r', 'o7ix',
+linesets = [['c5r', 'n6-actualr', 'o7r', 'ne9r', 'mg11r', 'si13r'],\
             ['c6', 'n7', 'o8', 'ne10', 'mg12'],\
             ['o7r', 'o7iy', 'o7f'],\
             ['fe17', 'fe17-other1', 'fe18', 'fe19'],\
@@ -3342,9 +3342,9 @@ def plot_emtables(z=0.1):
     [ax.set_xlim(*xlim) for ax in axes]
     [ax.set_ylim(*ylim) for ax in axes]
 
-    # 'n6-actualr',
+    # 'n6r',
     # 'o7ix',
-    axions = {0: ['c5r', 'c6', 'n6r', 'n7'],\
+    axions = {0: ['c5r', 'c6', 'n6-actualr', 'n7'],\
               1: ['o7r', 'o7iy', 'o7f', 'o8'],\
               2: ['ne9r', 'ne10', 'mg11r', 'mg12', 'si13r'],\
               3: ['fe17-other1', 'fe19', 'fe17', 'fe18']}
@@ -3546,8 +3546,8 @@ def plot_emcurves(z=0.1):
     axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(len(linesets))]
     
     lsargs = lineargs_sets.copy()
-    if 'n6r' in lsargs:
-        lsargs['n6r'].update({'linestyle': 'dotted'})
+    #if 'n6r' in lsargs:
+    #    lsargs['n6r'].update({'linestyle': 'dotted'})
     linelabels = nicenames_lines.copy()
     linelabels['fe17-other1'] = 'Fe XVII\n(15.10 A)'
     linelabels['fe17'] = 'Fe XVII\n(17.05 A)'
@@ -4686,9 +4686,10 @@ def plot_barchart_Ls(simple=False):
     ddir = '/net/luttero/data2/imgs/paper3/lumfracs/'
     print('Numbers in annotations: log10 L density [erg/s/cMpc**3] rest-frame')
     
-     # change order because the two two-line names overlap
-    lines = ['c5r', 'c6', 'n6r', 'n6-actualr', 'n7',\
-             'o7f', 'o7iy', 'o7ix', 'o7r', 'o8',\
+    # change order because the two two-line names overlap
+    # 'n6r',  'o7ix',
+    lines = ['c5r', 'c6', 'n6-actualr', 'n7',\
+             'o7f', 'o7iy', 'o7r', 'o8',\
              'fe17', 'fe18', 'fe19', 'fe17-other1', 'ne9r', 'ne10',\
              'mg11r', 'mg12', 'si13r']
     
@@ -4919,9 +4920,9 @@ def crosscheck_Luminosities():
     compare average L200c from L-weighted profiles to Ltot in halo mass bins
     from halo mass histograms
     '''
-    
-    lines = ['c5r', 'c6', 'n6r', 'n6-actualr', 'n7',\
-             'o7f', 'o7iy', 'o7ix', 'o7r', 'o8',\
+    # 'n6r', 'o7ix',
+    lines = ['c5r', 'c6', 'n6-actualr', 'n7',\
+             'o7f', 'o7iy', 'o7r', 'o8',\
              'fe17', 'fe18', 'fe19', 'fe17-other1', 'ne9r', 'ne10',\
              'mg11r', 'mg12', 'si13r']
 
@@ -5103,13 +5104,14 @@ def plot3Dprof_v1(weightset=1, M200cslice=(None, None, None)):
     massslice = slice(None, None, 2)
     minrshow = np.log10(0.1) # log10 R200c
     
+    # 'n6r', 'o7ix', 
     weightsets = {1: ['c5r', 'c6'],\
-                  2: ['n6r', 'n6-actualr', 'n7'],\
+                  2: ['n6-actualr', 'n7'],\
                   3: ['ne9r', 'ne10'],\
                   4: ['mg11r', 'mg12'],\
                   5: ['si13r'],\
                   6: ['o7r', 'o8'],\
-                  7: ['o7ix', 'o7iy', 'o7f'],\
+                  7: ['o7r', 'o7iy', 'o7f'],\
                   8: ['fe17', 'fe17-other1', 'fe18', 'fe19'],\
                   }
     
@@ -5387,13 +5389,14 @@ def plot_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
     massslice = M200cslice
     #minrshow = np.log10(0.1) # log10 R200c
     
+    # 'n6-actualr', 'o7ix',
     weightsets = {1: ['c5r', 'c6'],\
-                  2: ['n6r', 'n6-actualr', 'n7'],\
+                  2: ['n6r', 'n7'],\
                   3: ['ne9r', 'ne10'],\
                   4: ['mg11r', 'mg12'],\
                   5: ['si13r'],\
                   6: ['o7r', 'o8'],\
-                  7: ['o7ix', 'o7iy', 'o7f'],\
+                  7: ['o7r', 'o7iy', 'o7f'],\
                   8: ['fe17', 'fe17-other1', 'fe18', 'fe19'],\
                   }
     
@@ -5637,13 +5640,14 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
     massslice = M200cslice
     #minrshow = np.log10(0.1) # log10 R200c
     
+    # 'n6r', 'o7ix',
     weightsets = {1: ['c5r', 'c6'],\
-                  2: ['n6r', 'n6-actualr', 'n7'],\
+                  2: ['n6-actualr', 'n7'],\
                   3: ['ne9r', 'ne10'],\
                   4: ['mg11r', 'mg12'],\
                   5: ['si13r'],\
                   6: ['o7r', 'o8'],\
-                  7: ['o7ix', 'o7iy', 'o7f'],\
+                  7: ['o7r', 'o7iy', 'o7f'],\
                   8: ['fe17', 'fe17-other1', 'fe18', 'fe19'],\
                   }
     
@@ -6047,13 +6051,14 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
     #addedges = (0., 1.)
     # for halo mass selections
     
+    # 'n6-actualr', 'o7ix',
     weightsets = {1: ['c5r', 'c6'],\
-                  2: ['n6r', 'n6-actualr', 'n7'],\
+                  2: ['n6r', 'n7'],\
                   3: ['ne9r', 'ne10'],\
                   4: ['mg11r', 'mg12'],\
                   5: ['si13r'],\
                   6: ['o7r', 'o8'],\
-                  7: ['o7ix', 'o7iy', 'o7f'],\
+                  7: ['o7r', 'o7iy', 'o7f'],\
                   8: ['fe17', 'fe17-other1', 'fe18', 'fe19'],\
                   }
     
