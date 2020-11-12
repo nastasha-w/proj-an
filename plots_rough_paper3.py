@@ -5136,7 +5136,8 @@ def plot3Dprof_v1(weightset=1, M200cslice=(None, None, None)):
     linestyles = {weight: 'solid' for weight in weights}
     linestyles.update({'Volume': 'dashed'})
     title = 'medians from stacked histograms'
-
+    print(title)
+    
     # snapshot 27
     cosmopars = {'a': 0.9085634947881763,\
                  'boxsize': 67.77,\
@@ -5234,7 +5235,7 @@ def plot3Dprof_v1(weightset=1, M200cslice=(None, None, None)):
                      mppe.Stroke(linewidth=linewidth_thick, foreground="w"),\
                      mppe.Normal()]
      
-    fig.suptitle(title, fontsize=fontsize + 2)
+    #fig.suptitle(title, fontsize=fontsize + 2)
     
    
     for mi in axweights:
