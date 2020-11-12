@@ -6121,7 +6121,7 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
     
     # set up plot grid
     panelwidth = 3.
-    panelheight = 3.
+    panelheight = 2.5
     toplabelheight = 0.0
     #nmassbins = len(hists[combmethods[0]][weights[0]])
     nprof = 3
