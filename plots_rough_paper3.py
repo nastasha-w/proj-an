@@ -1727,7 +1727,7 @@ def plotstampzooms_overview():
     clabel_img = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{ph.} \\, \\mathrm{cm}^{-2} \\mathrm{s}^{-1} \\mathrm{sr}^{-1}]$'
     clabel_hmass = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
     
-    if ncol_small * nrows_small > len(slines) + 2:
+    if ncol_small * nrows_small <= len(slines) + 2:
         clabel_over_bar = True 
         texth  = _y0
         _ht = (_ps1_s - _y0) * 0.5 - texth
