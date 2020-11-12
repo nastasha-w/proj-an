@@ -5395,9 +5395,9 @@ def plot_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
     massslice = M200cslice
     #minrshow = np.log10(0.1) # log10 R200c
     
-    # 'n6-actualr', 'o7ix',
+    # 'n6r', 'o7ix',
     weightsets = {1: ['c5r', 'c6'],\
-                  2: ['n6r', 'n7'],\
+                  2: ['n6-actualr', 'n7'],\
                   3: ['ne9r', 'ne10'],\
                   4: ['mg11r', 'mg12'],\
                   5: ['si13r'],\
