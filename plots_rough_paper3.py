@@ -3251,6 +3251,9 @@ def plot_radprof4(talkversion=False, slidenum=0):
         while not ion[-1].isdigit():
             ion = ion[:-1]            
         linelabel = ild.getnicename(ion)
+        if ion == 'o7': # get (i), (r), (f) label:
+            linelabel = nicenames_lines[line]
+            
         ev = ol.line_eng_ion[line] / c.ev_to_erg
         numdig = 4
         lead = int(np.ceil(np.log10(ev)))
