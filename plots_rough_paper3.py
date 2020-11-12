@@ -1722,20 +1722,33 @@ def plotstampzooms_overview():
     #cax1  = fig.add_axes([left + 0.5 * _x0, bottom, width, _ht])
     #cax2  = fig.add_axes([left + width + _x0, bottom, width, _ht])
     # lower right: color bars
-    texth  = _y0
-    _ht = (_ps1_s - _y0) * 0.5 - texth
-    bottom = _y0
-    left = _x0 + (len(slines) % ncol_small) * _ps0_s
-    _width = _x1 - left - 2. * _x0
-    width = min(_width, 2. * _ps0_s)
-    left = left + 0.5 * (_width - width)
-    cax1  = fig.add_axes([left + _x0, bottom + texth, width, _ht])
-    cax2  = fig.add_axes([left + _x0, bottom + 2. * texth + _ht, width, _ht])
-    c_aspect = 1./10.
-    clabel_over_bar = True 
+    
     
     clabel_img = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{ph.} \\, \\mathrm{cm}^{-2} \\mathrm{s}^{-1} \\mathrm{sr}^{-1}]$'
     clabel_hmass = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
+    
+    if ncol_small * nrows_small > len(slines) + 2:
+        clabel_over_bar = True 
+        texth  = _y0
+        _ht = (_ps1_s - _y0) * 0.5 - texth
+        bottom = _y0
+        left = _x0 + (len(slines) % ncol_small) * _ps0_s
+        _width = _x1 - left - 2. * _x0
+        width = min(_width, 2. * _ps0_s)
+        left = left + 0.5 * (_width - width)
+        cax1  = fig.add_axes([left + _x0, bottom + texth, width, _ht])
+        cax2  = fig.add_axes([left + _x0, bottom + 2. * texth + _ht, width, _ht])
+    else:
+        clabel_over_bar = False
+        _ht = _ps1_s
+        bottom = _y0
+        left = _x0 + (len(slines) % ncol_small) * _ps0_s
+        width =  0.5 * (_x1 - 3. * _x0 - left)
+        cax1  = fig.add_axes([left + 0.5 * _x0, bottom, width, _ht])
+        cax2  = fig.add_axes([left + width + _x0, bottom, width, _ht])    
+    
+    c_aspect = 1./10.
+        
     if clabel_over_bar:
         _cl = None
     else:
