@@ -6169,7 +6169,7 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
                         labelbottom=labelx, fontsize=fontsize)
             ax.grid(b=True)            
             if labelx:
-                ax.set_xlabel(r'$\log_{10} \, \mathrm{M}_{\mathrm{200c}} [\mathrm{M}_{\odot}$', fontsize=fontsize)
+                ax.set_xlabel(r'$\log_{10} \, \mathrm{M}_{\mathrm{200c}} [\mathrm{M}_{\odot}]$', fontsize=fontsize)
             if labely:
                 ax.set_ylabel(axlabels[yq], fontsize=fontsize)
 
