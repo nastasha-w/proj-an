@@ -6131,7 +6131,8 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
     grid = gsp.GridSpec(nrows=nprof, ncols=len(axweights),\
                         hspace=0.0, wspace=0.0,\
                         width_ratios=[panelwidth] * len(axweights),\
-                        height_ratios=[panelheight] * nprof )
+                        height_ratios=[panelheight] * nprof,\
+                        top=0.95, bottom=0.05)
     axes = np.array([[fig.add_subplot(grid[yi, xi])\
                       for xi in range(len(axweights))]\
                       for yi in range(nprof)])
