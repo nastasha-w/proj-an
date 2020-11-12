@@ -5176,7 +5176,7 @@ def plot3Dprof_v1(weightset=1, M200cslice=(None, None, None)):
         
     # set up plot grid
     panelwidth = 3.
-    panelheight = 3.
+    panelheight = 2.5
     toplabelheight = 0.0
     caxwidth = 0.5
     #nmassbins = len(hists[combmethods[0]][weights[0]])
@@ -5188,7 +5188,7 @@ def plot3Dprof_v1(weightset=1, M200cslice=(None, None, None)):
                         hspace=0.0, wspace=0.0,\
                         width_ratios=[panelwidth] * len(axweights) + [caxwidth],\
                         height_ratios=[panelheight] * nprof,\
-                        top=0.95, bottom=0.05)
+                        top=0.97, bottom=0.05)
     axes = np.array([[fig.add_subplot(grid[yi, xi])\
                       for xi in range(len(axweights))]\
                       for yi in range(nprof)])
