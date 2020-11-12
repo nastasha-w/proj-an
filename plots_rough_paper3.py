@@ -3126,7 +3126,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
         _cax = fig.add_subplot(grid[nrows - 1, ind_min:])
         _cax.axis('off')
         _l, _b, _w, _h = (_cax.get_position()).bounds
-        vert = ncols - ind_min - 1 <= 2
+        vert = nrows * ncols - numlines <= 2
         print(vert)
         if vert:
             wmargin = panelwidth * 0.1 / figwidth
@@ -3169,7 +3169,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
     l2ax.set_ylabel(y2label, fontsize=fontsize)
     
     ind_min = ncols - (nrows * ncols - numlines)
-    if ncols - ind_min - 1 <= 2:
+    if nrows * ncols - numlines <= 2:
         labelax.set_xlabel(xlabel, fontsize=fontsize)    
     else:
         labelax1 = fig.add_subplot(grid[:nrows, :ind_min], frameon=False)
