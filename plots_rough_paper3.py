@@ -3126,22 +3126,39 @@ def plot_radprof4(talkversion=False, slidenum=0):
         _cax = fig.add_subplot(grid[nrows - 1, ind_min:])
         _cax.axis('off')
         _l, _b, _w, _h = (_cax.get_position()).bounds
-        wmargin = panelwidth * 0.1 / figwidth
-        hmargin = panelheight * 0.15 / figheight
-        lspace = 0.3 * panelheight / figheight
-        cspace = _h - 2. * hmargin - lspace
-        cax = fig.add_axes([_l + wmargin, _b + hmargin,\
-                            _w - 2.* wmargin, cspace])
-        lax = fig.add_axes([_l + wmargin, _b  + hmargin + cspace,\
-                            _w - 2. * wmargin, lspace])
-        lax.axis('off')
-        leg_kw = {'loc': 'upper center',\
+        vert = ncols - ind_min - 1 <= 2
+        
+        if vert:
+            wmargin = panelwidth * 0.1 / figwidth
+            hmargin = panelheight * 0.15 / figheight
+            lspace = 0.3 * panelheight / figheight
+            cspace = _h - 2. * hmargin - lspace
+            cax = fig.add_axes([_l + wmargin, _b + hmargin,\
+                                _w - 2.* wmargin, cspace])
+            lax = fig.add_axes([_l + wmargin, _b  + hmargin + cspace,\
+                                _w - 2. * wmargin, lspace])
+                
+            leg_kw = {'loc': 'upper center',\
                   'bbox_to_anchor':(0.5, 1.),\
                   'handlelength': 2.}
+        else:
+            wmargin = panelwidth * 0.1 / figwidth
+            hmargin = panelheight * 0.15 / figheight
+            vspace = 0.4 * panelheight / figheight
+            hspace_c = 0.7 * (_w - 3. * wmargin)
+            hspace_l = _w - 3. * wmargin - hspace_c
+            cax = fig.add_axes([_l + 2. * wmargin + hspace_l, _b + hmargin,\
+                                hspace_c, vspace])
+            lax = fig.add_axes([_l + wmargin, _b  + hmargin + cspace,\
+                                hspace_l, lspace])
+            leg_kw = {'loc': 'center',\
+                      'bbox_to_anchor':(0.5, 0.5),\
+                      'handlelength': 2.}
+        lax.axis('off')
+        
         
     labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
     labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
-    labelax.set_xlabel(xlabel, fontsize=fontsize)
     labelax.set_ylabel(ylabel, fontsize=fontsize)
     l2ax = labelax.twinx()
     l2ax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
@@ -3150,6 +3167,20 @@ def plot_radprof4(talkversion=False, slidenum=0):
     l2ax.spines['bottom'].set_visible(False)
     l2ax.spines['left'].set_visible(False)
     l2ax.set_ylabel(y2label, fontsize=fontsize)
+    
+    ind_min = ncols - (nrows * ncols - numlines)
+    if ncols - ind_min - 1 <= 2:
+        labelax.set_xlabel(xlabel, fontsize=fontsize)    
+    else:
+        labelax1 = fig.add_subplot(grid[:nrows, :ind_min], frameon=False)
+        labelax1.tick_params(labelcolor='none', top=False, bottom=False,
+                             left=False, right=False)
+        labelax1.set_xlabel(xlabel, fontsize=fontsize) 
+        
+        labelax2 = fig.add_subplot(grid[:nrows - 1, ind_min:], frameon=False)
+        labelax2.tick_params(labelcolor='none', top=False, bottom=False,
+                             left=False, right=False)
+        labelax2.set_xlabel(xlabel, fontsize=fontsize) 
     #l2ax.yaxis.set_label_position('right')
     #l2ax.axis('off')
     
