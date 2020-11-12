@@ -3149,8 +3149,8 @@ def plot_radprof4(talkversion=False, slidenum=0):
             hspace_l = _w - 3. * wmargin - hspace_c
             cax = fig.add_axes([_l + 2. * wmargin + hspace_l, _b + hmargin,\
                                 hspace_c, vspace])
-            lax = fig.add_axes([_l + wmargin, _b  + hmargin + cspace,\
-                                hspace_l, lspace])
+            lax = fig.add_axes([_l + wmargin, _b  + hmargin,\
+                                hspace_l, vspace])
             leg_kw = {'loc': 'center',\
                       'bbox_to_anchor':(0.5, 0.5),\
                       'handlelength': 2.}
