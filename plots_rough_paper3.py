@@ -29,34 +29,42 @@ import plot_utils as pu
 import make_maps_opts_locs as ol
 import ion_line_data as ild
 
+mdir = '/net/luttero/data2/imgs/paper3/' #'/net/luttero/data2/imgs/paper3/n6-rf_comp/'
+tmdir = '/net/luttero/data2/imgs/paper3/img_talks/'
+
 rho_to_nh = 0.752 / (c.atomw_H * c.u)
-cosmopars_eagle = {'omegab': c.omegabaryon,\
-                   'omegam': c.omega0,\
-                   'omegalambda': c.omegalambda,\
-                   'h': c.hubbleparam,\
+cosmopars_eagle = {'omegab': c.omegabaryon,
+                   'omegam': c.omega0,
+                   'omegalambda': c.omegalambda,
+                   'h': c.hubbleparam,
                   }
-cosmopars_27 = {'a': 0.9085634947881763,\
-                'boxsize': 67.77,\
-                'h': 0.6777,\
-                'omegab': 0.0482519,\
-                'omegalambda': 0.693,\
-                'omegam':  0.307,\
-                'z': 0.10063854175996956,\
+cosmopars_27 = {'a': 0.9085634947881763,
+                'boxsize': 67.77,
+                'h': 0.6777,
+                'omegab': 0.0482519,
+                'omegalambda': 0.693,
+                'omegam':  0.307,
+                'z': 0.10063854175996956,
                 }
 
-res_arcsec = {'Athena X-IFU': 5.,\
-              'Athena WFI':  3.,\
-              'Lynx PSF':    1.,\
-              'Lynx HDXI pixel':  0.3,\
+res_arcsec = {'Athena X-IFU': 5.,
+              'Athena WFI':  3.,
+              'Lynx PSF':    1.,
+              'Lynx HDXI pixel':  0.3,
               }
-fov_arcmin = {'Athena X-IFU': 5.,\
-              'Athena WFI':  40.,\
-              'Lynx HDXI':  22.,\
-              'Lynx X-ray microcalorimeter':  5.,\
+fov_arcmin = {'Athena X-IFU': 5.,
+              'Athena WFI':  40.,
+              'Lynx HDXI':  22.,
+              'Lynx X-ray microcalorimeter':  5.,
               }
 
-lines = ['c5r', 'n6r', 'n6-actualr', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
-         'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
+#lines = ['c5r', 'n6r', 'n6-actualr', 'ne9r', 'ne10', 'mg11r', 'mg12',
+#         'si13r', 'fe18',
+#         'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',
+#         'c6', 'n7']
+lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12',
+         'si13r', 'fe18',
+         'fe17-other1', 'fe19', 'o7r', 'o7iy', 'o7f', 'o8', 'fe17',
          'c6', 'n7']
 
 lines = sorted(lines, key=ol.line_eng_ion.get)
@@ -122,9 +130,10 @@ lineargs =  {'c5r':  {'linestyle': 'solid',   'color': _c1.blue},\
              'fe17':  {'linestyle': 'dotted',  'color': _c1.grey},\
              'fe18':  {'linestyle': 'dashdot', 'color': _c1.grey},\
               }
-linesets = [['c5r', 'n6r', 'n6-actualr', 'o7r', 'ne9r', 'mg11r', 'si13r'],\
+# 'n6-actualr', 'o7ix',
+linesets = [['c5r', 'n6r', 'o7r', 'ne9r', 'mg11r', 'si13r'],\
             ['c6', 'n7', 'o8', 'ne10', 'mg12'],\
-            ['o7r', 'o7ix', 'o7iy', 'o7f'],\
+            ['o7r', 'o7iy', 'o7f'],\
             ['fe17', 'fe17-other1', 'fe18', 'fe19'],\
             ]
 lineset_names = ['He $\\alpha$ (r)',\
@@ -220,8 +229,6 @@ def getoutline(linewidth):
 
 mass_edges_standard = (11., 11.5, 12.0, 12.5, 13.0, 13.5, 14.0)
 fontsize = 12
-mdir = '/net/luttero/data2/imgs/paper3/n6-rf_comp/'
-tmdir = '/net/luttero/data2/imgs/paper3/img_talks/'
 
 def getsamplemedianmass():
     mass_edges = mass_edges_standard
