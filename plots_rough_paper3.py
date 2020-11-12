@@ -3647,7 +3647,12 @@ def plot_emcurves(z=0.1):
         #                         color='black', **lsargs2[-1])]
         ax.legend(handles=handles, fontsize=fontsize, ncol=1,\
                   bbox_to_anchor=(1.0, 1.0), loc='upper right', frameon=True)
-
+        
+        setname = lineset_names[axi]
+        ax.text(0.05, 0.95, setname, fontsize=fontsize,\
+                horizontalalignment='left', verticalalignment='top',\
+                transform=ax.transAxes)
+            
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 ###############################################################################
