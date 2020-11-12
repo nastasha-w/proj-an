@@ -5187,7 +5187,8 @@ def plot3Dprof_v1(weightset=1, M200cslice=(None, None, None)):
     grid = gsp.GridSpec(nrows=nprof, ncols=len(axweights) + 1,\
                         hspace=0.0, wspace=0.0,\
                         width_ratios=[panelwidth] * len(axweights) + [caxwidth],\
-                        height_ratios=[panelheight] * nprof )
+                        height_ratios=[panelheight] * nprof,\
+                        top=0.95, bottom=0.05)
     axes = np.array([[fig.add_subplot(grid[yi, xi])\
                       for xi in range(len(axweights))]\
                       for yi in range(nprof)])
