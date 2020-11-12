@@ -5330,7 +5330,10 @@ def plot3Dprof_v1(weightset=1, M200cslice=(None, None, None)):
                 ax.legend(handles, labels, fontsize=fontsize, bbox_to_anchor=(1., 0.),\
                           loc='lower right')
             elif ti == 0:
-                ax.text(0.05, 0.95, _weights[0], fontsize=fontsize,\
+                plabel = _weights[0]
+                if plabel in nicenames_lines:
+                    plabel = nicenames_lines[plabel]
+                ax.text(0.05, 0.95, plabel, fontsize=fontsize,\
                         horizontalalignment='left', verticalalignment='top',\
                         transform=ax.transAxes)
             if ti == 0 and mi == 1:
