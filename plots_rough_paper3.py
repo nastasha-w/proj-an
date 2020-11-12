@@ -3127,7 +3127,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
         _cax.axis('off')
         _l, _b, _w, _h = (_cax.get_position()).bounds
         vert = ncols - ind_min - 1 <= 2
-        
+        print(vert)
         if vert:
             wmargin = panelwidth * 0.1 / figwidth
             hmargin = panelheight * 0.15 / figheight
