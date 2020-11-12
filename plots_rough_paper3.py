@@ -3651,7 +3651,8 @@ def plot_emcurves(z=0.1):
         setname = lineset_names[axi]
         ax.text(0.05, 0.95, setname, fontsize=fontsize,\
                 horizontalalignment='left', verticalalignment='top',\
-                transform=ax.transAxes, bbox={'alpha': 0.3})
+                transform=ax.transAxes,\
+                bbox={'alpha': 0.3, 'facecolor':'white'})
             
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
