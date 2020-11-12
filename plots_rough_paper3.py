@@ -5426,7 +5426,8 @@ def plot_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
     linestyles = {weight: 'solid' for weight in weights}
     linestyles.update({'Volume': 'dashed'})
     title = 'weighted medians from stacked histograms'
-
+    print(title)
+    
     # snapshot 27
     cosmopars = {'a': 0.9085634947881763,\
                  'boxsize': 67.77,\
@@ -5495,7 +5496,7 @@ def plot_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                      mppe.Stroke(linewidth=linewidth_thick, foreground="w"),\
                      mppe.Normal()]
      
-    fig.suptitle(title, fontsize=fontsize + 2)
+    #fig.suptitle(title, fontsize=fontsize + 2)
     
    
     for mi in axweights:
@@ -5584,7 +5585,10 @@ def plot_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                 ax.legend(handles, labels, fontsize=fontsize, bbox_to_anchor=(0., 1.),\
                           loc='upper left')
             elif ti == 0:
-                ax.text(0.05, 0.95, _weights[0], fontsize=fontsize,\
+                plabel = _weights[0]
+                if plabel in nicenames_lines:
+                    plabel = nicenames_lines[plabel]
+                ax.text(0.05, 0.95, plabel, fontsize=fontsize,\
                         horizontalalignment='left', verticalalignment='top',\
                         transform=ax.transAxes)
             if ti == 0 and mi == 1:
@@ -5677,7 +5681,8 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
     linestyles = {weight: 'solid' for weight in weights}
     linestyles.update({'Volume': 'dashed'})
     title = 'weighted medians from stacked histograms'
-
+    print(title)
+    
     # snapshot 27
     cosmopars = {'a': 0.9085634947881763,\
                  'boxsize': 67.77,\
@@ -5838,7 +5843,10 @@ def plotcomp_r200Lweighted(weightset=1, M200cslice=slice(None, None, None)):
                 ax.legend(handles, labels, fontsize=fontsize, bbox_to_anchor=(0., 1.),\
                           loc='upper left')
             elif ti == 0:
-                ax.text(0.05, 0.95, _weights[0], fontsize=fontsize,\
+                plabel = _weights[0]
+                if plabel in nicenames_lines:
+                    plabel = nicenames_lines[plabel]
+                ax.text(0.05, 0.95, plabel, fontsize=fontsize,\
                         horizontalalignment='left', verticalalignment='top',\
                         transform=ax.transAxes)
             if ti == 0 and mi == 1:
@@ -6057,9 +6065,9 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
     #addedges = (0., 1.)
     # for halo mass selections
     
-    # 'n6-actualr', 'o7ix',
+    # 'n6r', 'o7ix',
     weightsets = {1: ['c5r', 'c6'],\
-                  2: ['n6r', 'n7'],\
+                  2: ['n6-actualr', 'n7'],\
                   3: ['ne9r', 'ne10'],\
                   4: ['mg11r', 'mg12'],\
                   5: ['si13r'],\
@@ -6092,7 +6100,8 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
     color_Tindic = _c1.red
     color_leg = 'black'
     title = 'L-weighted averages within $\\mathrm{R}_{\\mathrm{200c}}$'
-
+    print(title)
+    
     # snapshot 27
     cosmopars = {'a': 0.9085634947881763,\
                  'boxsize': 67.77,\
@@ -6139,7 +6148,7 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
                      mppe.Stroke(linewidth=linewidth_thick, foreground="w"),\
                      mppe.Normal()]
      
-    fig.suptitle(title, fontsize=fontsize + 2)
+    #fig.suptitle(title, fontsize=fontsize + 2)
                     
                 
     ## from collated individual halo values
@@ -6295,8 +6304,11 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
                                loc='upper left')
                 l1set = True
             if ti == 0 and len(_weights) <= 1:
+                plabel = _weights[0]
+                if plabel in nicenames_lines:
+                    plabel = nicenames_lines[plabel]
                 bbox = {'boxstyle': 'round', 'facecolor': 'white', 'alpha':0.3}
-                ax.text(0.05, 0.95, _weights[0], fontsize=fontsize,\
+                ax.text(0.05, 0.95, plabel, fontsize=fontsize,\
                         horizontalalignment='left', verticalalignment='top',\
                         transform=ax.transAxes, bbox=bbox)
             if ti == 0 and mi == 0:
