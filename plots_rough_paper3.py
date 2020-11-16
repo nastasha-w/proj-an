@@ -6396,19 +6396,19 @@ def printlatex_minsb(filen='minSBtable.dat'):
     #galabs = df2['galaxy absorption included in limit'].unique()
     
     omegat_galabs = [(1e7, True), (1e6, True), (1e5, True), (1e5, False)]
-    omegat_coln = ['1e7', '1e6', '1e5', '1e5 no abs.']
+    omegat_coln = ['1e7', '1e6', '1e5', '1e5 {{n.a.}}']
     nsc = len(omegat_galabs)
     #subfmt = ' & '.join(['{}'] * nsc)
     instruments = ['xrism-resolve', 'athena-xifu', 'lynx-lxm-uhr', 'lynx-lxm-main']
     insnames = ['XRISM Resolve', 'Athena X-IFU', 'LXM main', 'LXM UHR']
     
     insfmt = '\\multicolumn{{{nsc}}}{{c}}{{{insn}}}'
-    head1 = 'line & ' + ' & '.join([insfmt.format(nsc=nsc, insn=insn)\
+    head1 = 'instrument & ' + ' & '.join([insfmt.format(nsc=nsc, insn=insn)\
                                                   for insn in insnames]) +\
             ' \\\\'
-    head2 = '$\\Delta \\Omega \\, \\Delta \\mathrm{t} \\; [\\mathrm{arcmin}^2 \\\mathrm{s}]$'
-    head2 = head2 + ' & ' +  ' & '.join([' & '.join(omegat_coln) *\
-                                         len(instruments)]) + ' \\\\'
+    head2 = '$\\Delta \\Omega \\, \\Delta \\mathrm{t} \\; [\\mathrm{arcmin}^2 \\mathrm{s}]$'
+    head2 = head2 + ' & ' +  ' & '.join([' & '.join(omegat_coln)] *\
+                                         len(instruments)) + ' \\\\'
     start = '\\begin{{tabular}}{{{cols}}}'.format(\
                     cols='l' + 'r' * nsc * len(instruments))
     end = '\\end{tabular}'
