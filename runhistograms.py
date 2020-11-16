@@ -1885,6 +1885,43 @@ elif jobind in range(10081, 10084):
     mh.makehist_masked_toh5py(filebases[ion], fills=fills_100, bins=[bins],\
                               includeinf=True, outfilename=outname)
     
+# halo projection CDDFs for H I, Si IV, C IV
+elif jobind in range(10084, 10090):
+    ions = ['h1ssh', 'c4', 'si4']
+    ionind = (jobind - 10084) % 3
+    snapind = (jobind - 10084) // 2
+    ion = ions[ionind]
+    snap = [28, 12][snapind]
+    
+    mass_edges = np.arange(9., 14.1, 0.5)
+    halosels = [None] + [[]] + [[('Mhalo_logMsun', mass_edges[mi], mass_edges[mi + 1])]\
+                            if mi != len(mass_edges) - 1 else \
+                            [('Mhalo_logMsun', mass_edges[mi], None)]
+                            for mi in range(len(mass_edges))]
+    fills_100 =  [str(i) for i in (np.arange(16) + 0.5) * 100./16.]
+    bins = np.arange(-28., 25.01, 0.05)
+        
+    filebase = 'coldens_{ion}_L0100N1504_{snap}_test3.6_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS{hs}.hdf5'
+    hsbase = '_halosel_{hm}_allinR200c_endhalosel'
+    for hs in halosels:
+        if hs is None:
+            hsn = ''
+        elif hs == []:
+            hsn = hsbase.format(hm='')
+        elif hs[2] is None:
+            hsn = hsbase.format(hm='Mhalo_{:.1f}<=log200c'.format(hs[1]))
+        else:
+            hsn = hsbase.format(hm='Mhalo_{:.1f}<=log200c<{:.1f}'.format(\
+                                hs[1], hs[2]))
+        filename = filebase.format(ion=ion, snap=snap, hs=hsn)
+            
+    
+        filebase = filebases[ion]
+        outname = 'cddf_' + '.'.join((filebase%('-all')).split('.')[:-1] + ['hdf5'])
+        
+        mh.makehist_masked_toh5py(filebases[ion], fills=fills_100, bins=[bins],\
+                                  includeinf=True, outfilename=outname)
+    
 ############################################
 ############ radial profiles ###############
 ############################################
