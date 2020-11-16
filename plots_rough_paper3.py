@@ -6440,6 +6440,8 @@ def printlatex_minsb(filen='minSBtable.dat'):
                 val = df2.at[ind, 'minimum detectable SB [phot/s/cm**2/sr]']
                 
                 pval = '-' if val == np.inf else '{:.1f}'.format(np.log10(val))
+                if pval == '-0.0':
+                    pval = '0.0'
                 vals.append(pval)
         pl = fmtl.format(*tuple(vals), line=nicenames_lines[line])
         print(pl)
