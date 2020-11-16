@@ -1081,7 +1081,24 @@ def savetable_sbmin():
                                 fo.write(out)
         
         
+def printlatex_minsb(filen='minSBtable.dat'):
     
+    df = pd.read_csv(mdir + filen, sep='\t')     
+    groupby = ['line name', 'linewidth [km/s]',
+               'sky area * exposure time [arcmin**2 s]', 
+               'full measured spectral range [eV]',
+               'detection significance [sigma]', 
+               'galaxy absorption included in limit',
+               'instrument']
+    df2 = df.groupby(groupby)['minimum detectable SB [phot/s/cm**2/sr]'].mean()
+    zopts = np.unique(df['redshift'])
+    
+
+    # columns: 'line name', 'E rest [keV]', 'linewidth [km/s]', 'redshift',\
+    # 'sky area * exposure time [arcmin**2 s]', 
+    # 'full measured spectral range [eV]', 'detection significance [sigma]',\
+    # 'galaxy absorption included in limit',\
+    # 'minimum detectable SB [phot/s/cm**2/sr]', 'instrument'
         
         
     
