@@ -6396,7 +6396,7 @@ def printlatex_minsb(filen='minSBtable.dat'):
     #galabs = df2['galaxy absorption included in limit'].unique()
     
     omegat_galabs = [(1e7, True), (1e6, True), (1e5, True), (1e5, False)]
-    omegat_coln = ['1e7', '1e6', '1e5', '1e5 {{n.a.}}']
+    omegat_coln = ['1e7', '1e6', '1e5', '1e5 n']
     nsc = len(omegat_galabs)
     #subfmt = ' & '.join(['{}'] * nsc)
     instruments = ['xrism-resolve', 'athena-xifu', 'lynx-lxm-uhr', 'lynx-lxm-main']
