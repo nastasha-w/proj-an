@@ -130,22 +130,43 @@ def getargs(arglist):
 
     Returns
     -------
-    None.
+    args : tuple
+        arguments for make_maps_v3_master.make_map
+    kwargs : dict
+        keyword arguments for make_maps_v3_master.make_map
 
     '''
+    defaults = {'simnum': 'L0100N1504',\
+                'snapnum': 28,\
+                'centre': [50.,50.,3.125],\
+                'L_x': 100.,\
+                'L_y': 100.,\
+                'L_z': 100,\
+                }
+    
+    argvals = ('simnum', 'snapnum', 'centre', 'L_x', 'L_y', 'L_z', 'npix_x',
+               'npix_y', 'ptypeW')
+    
+    kwargs = defaults.copy()
     
     
-    make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-         ptypeW,\
-         ionW=None, abundsW='auto', quantityW=None,\
-         ionQ=None, abundsQ='auto', quantityQ=None, ptypeQ=None,\
-         excludeSFRW=False, excludeSFRQ=False, parttype='0',\
-         theta=0.0, phi=0.0, psi=0.0, \
-         sylviasshtables=False, bensgadget2tables=False,\
-         var='auto', axis='z',log=True, velcut=False,\
-         periodic=True, kernel='C2', saveres=False,\
-         simulation='eagle', LsinMpc=None,\
-         select=None, misc=None, halosel=None, kwargs_halosel=None,\
-         ompproj=False, nameonly=False, numslices=None, hdf5=False,\
-         override_simdatapath=None)
+    args = tuple([kwargs[argval] for argval in argvals])
+    for argval in argvals:
+        del kwargs[argval]
+    
+    return args, kwargs
+
+    #make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
+    #     ptypeW,\
+    #     ionW=None, abundsW='auto', quantityW=None,\
+    #     ionQ=None, abundsQ='auto', quantityQ=None, ptypeQ=None,\
+    #     excludeSFRW=False, excludeSFRQ=False, parttype='0',\
+    #     theta=0.0, phi=0.0, psi=0.0, \
+    #     sylviasshtables=False, bensgadget2tables=False,\
+    #     var='auto', axis='z',log=True, velcut=False,\
+    #     periodic=True, kernel='C2', saveres=False,\
+    #     simulation='eagle', LsinMpc=None,\
+    #     select=None, misc=None, halosel=None, kwargs_halosel=None,\
+    #     ompproj=False, nameonly=False, numslices=None, hdf5=False,\
+    #     override_simdatapath=None)
 
