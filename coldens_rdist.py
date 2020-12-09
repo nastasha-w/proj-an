@@ -2669,7 +2669,7 @@ def combineprofiles(filenames, rbins, galids,
     retrieval script. Additions to that format include the ytype='mean' option
     and storing whether the values are log10 or not.
     
-    profiles are stored as <ytype_out>[_<yval_out>]_from_<ytype_in>[_<yval_in>]
+    profiles are stored as <ytype_out>[_<yval_out>]_of_<ytype_in>[_<yval_in>]
     '''
     
     if '.' in filenames:
@@ -2850,7 +2850,7 @@ def combineprofiles(filenames, rbins, galids,
             else:
                 _ynout = 'mean'
                 
-            dsname = _ynout + '_from_' + _ynin
+            dsname = _ynout + '_of_' + _ynin
             
             if dsname in bgrp:
                 pass # already saved
@@ -2860,7 +2860,7 @@ def combineprofiles(filenames, rbins, galids,
         else:
             for ind, yval in enumerate(yvals_out):
                 dsname = '{ytype}_{yval}'.format(ytype=ytype_out, yval=yval)
-                dsname += + '_from_' + _ynin
+                dsname += '_of_' + _ynin
                 if dsname in bgrp:
                     continue
                 else:
