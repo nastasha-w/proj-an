@@ -2620,12 +2620,12 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
     
     if rbinning == 0:
         outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
-                      'halomasscomp_{}'.format(measure)
+                      'linecomp_{}'.format(measure)
         checkbins = [0., 10., 20.]
         binset = 'binset_0'
     elif rbinning == 1:
         outname = mdir + 'radprof2d_10pkpc-0.1dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
-                      'halomasscomp_{}'.format(measure)
+                      'linecomp_{}'.format(measure)
         if ofmean:
             binset = 'binset_2'
             checkbins = [0., 10., 10.**1.1]
@@ -2634,7 +2634,7 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
             binset = 'binset_0'
     elif rbinning == 2:
         outname = mdir + 'radprof2d_0.25dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
-                      'halomasscomp_{}'.format(measure)
+                      'linecomp_{}'.format(measure)
         checkbins = [0., 10., 10**1.25]
         binset = 'binset_1'
     
@@ -2802,12 +2802,14 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
     print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmAb, C2 kernel')
     print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
     print('Black is for the stacked samples, colors are random individual galaxies')
+    print('Dark purple is for statistics of the means')
     
     fontsize = 12
     linewidth = 1.5
     patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),\
                mppe.Stroke(linewidth=linewidth, foreground="w"),\
                mppe.Normal()]
+    
     
     if rbinning == 0:
         rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
