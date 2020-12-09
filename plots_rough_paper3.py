@@ -2577,7 +2577,7 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
     
     input:
     ------
-    measure:  'mean' or 'median'
+    measure:  'mean', 'median-of-means', or 'median'
     mmin:     minimum halo mass to show (log10 Msun, 
               value options: 9.0, 9.5, 10., ... 14.)
     rbinning: 0 -> 10 pkpc bins
@@ -2598,37 +2598,40 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
            mppe.Stroke(linewidth=lw2, foreground="w"),\
            mppe.Normal()]
     
+    if measure == 'mean':
+        ys = [('mean',)]
+        ofmean = False
+    elif measure == 'median-of-means':
+        ys = [('perc', 50.)]
+        ofmean = True
+    else:
+        ys = [('perc', 50.)]
+        ofmean = False
+    
     if rbinning == 0:
-        rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
-        binset = 'binset_0'
+        outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+                      'halomasscomp_{}'.format(measure)
         checkbins = [0., 10., 20.]
+        binset = 'binset_0'
     elif rbinning == 1:
-        rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
-        binset = 'binset_0'
-        checkbins = [0., 10., 20.]
+        outname = mdir + 'radprof2d_10pkpc-0.1dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+                      'halomasscomp_{}'.format(measure)
+        if ofmean:
+            binset = 'binset_2'
+            checkbins = [0., 10., 10.**1.1]
+        else:
+            checkbins = [0., 10., 20.]
+            binset = 'binset_0'
     elif rbinning == 2:
-        rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
-        binset = 'binset_1'
+        outname = mdir + 'radprof2d_0.25dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+                      'halomasscomp_{}'.format(measure)
         checkbins = [0., 10., 10**1.25]
+        binset = 'binset_1'
+        
     checkbins = np.array(checkbins)
     
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
-    
-    if measure == 'mean':
-        ys = [('mean',)]
-    else:
-        ys = [('perc', 50.)]
-        
-    if rbinning == 0:
-        outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
-                      'linecomp_{}'.format(measure)
-    elif rbinning == 1:
-        outname = mdir + 'radprof2d_10pkpc-0.1dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
-                      'linecomp_{}'.format(measure)
-    elif rbinning == 2:
-        outname = mdir + 'radprof2d_0.25dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
-                      'linecomp_{}'.format(measure)
                       
     outname = outname.replace('.', 'p')
     outname = outname + '.pdf'              
