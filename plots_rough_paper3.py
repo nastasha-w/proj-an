@@ -3000,7 +3000,7 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
                                        line=line, mtag=mtag, ytag=ytag))
                 vals = yvals_ofmean[mtag][ytag]
                 cens = ed[:-1] + 0.5 * np.diff(ed)
-                ax.plot(cens, vals, **kwargs_y_stack[ytag])
+                ax.plot(cens, vals, **kwargs_y_ofmean[ytag])
                 try:
                     tmax = np.max(vals[np.isfinite(vals)])
                     _max = max(_max, tmax)
