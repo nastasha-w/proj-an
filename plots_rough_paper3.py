@@ -2598,6 +2598,18 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
            mppe.Stroke(linewidth=lw2, foreground="w"),\
            mppe.Normal()]
     
+    if rbinning == 0:
+        rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
+    elif rbinning == 1:
+        rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+    elif rbinning == 2:
+        rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+
+    checkbins = np.array(checkbins)
+    
+    xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
+    ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
+    
     if measure == 'mean':
         ys = [('mean',)]
         ofmean = False
@@ -2627,11 +2639,6 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
                       'halomasscomp_{}'.format(measure)
         checkbins = [0., 10., 10**1.25]
         binset = 'binset_1'
-        
-    checkbins = np.array(checkbins)
-    
-    xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
-    ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
                       
     outname = outname.replace('.', 'p')
     outname = outname + '.pdf'              
@@ -2709,7 +2716,7 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
         if line in ['ne10', 'n6-actualr']:
             filename = filename.replace('test3.5', 'test3.6')
         _yvals, _bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
-                                     binset=binset, retlog=True)
+                                     binset=binset, retlog=True, ofmean=ofmean)
         yvals[line] = _yvals
         bins[line] = _bins
         
