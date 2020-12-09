@@ -3084,6 +3084,10 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
                                   label=legtags[ytag] + ' (stack)',\
                                   **kwargs_y_stack[ytag])\
                    for ytag in ys]
+        handles1 += [mlines.Line2D([], [],\
+                                  label=legtags[ytag] + ' of means',\
+                                  **kwargs_y_ofmean[ytag])\
+                   for ytag in ys_ofmean]
         lcs = []
         line = [[(0, 0)]]
         for ytag in ys:
