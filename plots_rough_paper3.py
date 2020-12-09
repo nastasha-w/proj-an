@@ -3103,9 +3103,9 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
         print(l_loc)
         print(l_bbox_to_anchor)
         print(l_ncols)
-        lax.legend(handles=handles1 + lcs, fontsize=fontsize, loc=l_loc,\
-                   bbox_to_anchor=l_bbox_to_anchor, ncol=l_ncols,\
-                   handler_map={type(lc): pu.HandlerDashedLines()})
+        lax.legend(handles=handles1 + lcs) #, fontsize=fontsize, loc=l_loc,\
+                   #bbox_to_anchor=l_bbox_to_anchor, ncol=l_ncols,\
+                   #handler_map={type(lc): pu.HandlerDashedLines()})
         
         plt.savefig(outname, format='pdf', bbox_inches='tight')
         
