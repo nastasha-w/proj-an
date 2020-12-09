@@ -2756,7 +2756,7 @@ def combineprofiles(filenames, rbins, galids,
             msg = 'No profile for these files, bins and profile type was found'
             msg += 'for galaxy {}'.format(galid)
             msg += '\nbins: {rbins} {runit}'.format(rbins=rbins, runit=runit)
-            msg += '\nprofile: {ytype_in} {yvals_in}'.format(ytype_in=ytype_in
+            msg += '\nprofile: {ytype_in} {yvals_in}'.format(ytype_in=ytype_in,
                                                              yvals_in=yvals_in)
             raise RuntimeError(msg)
             
