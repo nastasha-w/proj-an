@@ -2957,7 +2957,7 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
         
         yvals_ofmean, bins_ofmean = readin_radprof(filename, seltags, ys_ofmean,
                                      runit='pkpc', separate=False,\
-                                     binset=binset, retlog=True, ofmean=True) 
+                                     binset=binset_ofmean, retlog=True, ofmean=True) 
             
         for hi, hkey in enumerate(medges):
             ax = axes[hi]
