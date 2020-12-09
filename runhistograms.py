@@ -4798,17 +4798,17 @@ if jobind in range(30215, 30234):
     del galids_dct['geq9.0_le9.5']
     del galids_dct['geq9.5_le10.0']
     del galids_dct['geq10.0_le10.5']
-    
+
     with h5py.File(catname, 'r') as cat:
         cosmopars = {key: item for key, item in cat['Header/cosmopars'].attrs.items()}
-    
+  
     lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
             'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
             'c6', 'n7', 'n6-actualr']
     lineind = jobind - 30215
     line = lines[lineind]
     numsl = 1
-    
+  
     mapbase = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
     if line in ['ne10', 'n6-actualr']:
         mapbase = mapbase.replace('test3.5', 'test3.6')
@@ -4867,3 +4867,83 @@ if jobind in range(30215, 30234):
                                halocat=halocat,\
                                outfile=outfile, grptag=hmkey,\
                                **kwargs)
+
+
+### single-line emission profiles: mean prof. statistics log r bins, from bins up to 3.5 R200c
+if jobind in range(30234, 30253):
+    
+    halocat = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'   
+    galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids()
+    del galids_dct['geq9.0_le9.5']
+    del galids_dct['geq9.5_le10.0']
+    del galids_dct['geq10.0_le10.5']
+
+    with h5py.File(catname, 'r') as cat:
+        cosmopars = {key: item for key, item in cat['Header/cosmopars'].attrs.items()}
+  
+    lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
+            'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
+            'c6', 'n7', 'n6-actualr']
+    lineind = jobind - 30234
+    line = lines[lineind]
+    numsl = 1
+  
+    mapbase = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
+    if line in ['ne10', 'n6-actualr']:
+        mapbase = mapbase.replace('test3.5', 'test3.6')
+    mapname = ol.ndir + mapbase.format(line=line)
+             
+    stampname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'%((mapname.split('/')[-1][:-5])%('-all'), numsl)
+    proffile = stampname.split('/')[-1]
+    proffile = ol.pdir + 'radprof/radprof_halosample_' + outfile
+    
+    rbins_r200c = np.arange(0., 2.51, 0.05)
+    yvals_perc = [1., 5., 10., 50., 90., 95., 99.]
+    #kwarg_opts = [
+    #              {'runit': 'pkpc', 'ytype': 'mean', 'yvals': None,\
+    #               'separateprofiles': True, 'uselogvals': False},\
+    #              ]
+    
+    for hmkey in galids_dct:
+        print('Trying halo set %s'%(hmkey))
+        # get max. distance from halo mass range:
+        
+        # hmkeys format: 'geq10.0_le10.5' or 'geq14.0'
+        # extracted out to max(R200c in bin)
+        minmass_Msun = 10**(float(hmkey.split('_')[0][3:]))
+        maxdist_pkpc = 3.5 * cu.R200c_pkpc(minmass_Msun * 10**0.5, cosmopars)
+        # lin-log bins: lin 10 pkpc up to 100 kpc, then 0.1 dex
+        rbins_log_large_pkpc = 10.**(np.arange(1., np.log10(maxdist_pkpc), 0.25))
+        rbins_pkpc_large = np.append([0.], rbins_log_large_pkpc)
+        
+        rbins_log_small_pkpc = 10.**(np.arange(1., np.log10(maxdist_pkpc), 0.1))
+        rbins_pkpc_small = np.append([0.], rbins_log_small_pkpc)
+        
+        
+        for kwargs in kwarg_opts:
+            print('Using kwargs {}'.format(kwargs))
+            #if kwargs['runit'] == 'pkpc':
+            #    rbins = rbins_pkpc
+            #else:
+            for rbins in [rbins_pkpc_small, rbins_pkpc_large]:
+                galids = np.copy(galids_dct[hmkey])
+                #if kwargs['separateprofiles']:
+                #    galids = galids[:10] # just a few examples, don't need the whole set
+                #print('Calling getprofiles_fromstamps with:')
+                #print(stampname)
+                #print('rbins: {}'.format(rbins))
+                #if len(galids) > 15:
+                #    print('galaxyids: {} ... {}'.format(galids[:8],  galids[-7:]))
+                #else:
+                #    print('galaxyids: {}'.format(galids))
+                #print(halocat)
+                #print('out: {}'.format(outfile))
+                #print('grouptag: {}'.format(hmkey))
+                #print('\t '.join(['{key}: {val}'.format(key=key, val=kwargs[key])\
+                #                  for key in kwargs]))
+                #print('\n\n')
+                combineprofiles(proffile, rbins, galids,
+                                runit='pkpc', ytype_in='mean', yvals_in=None,
+                                ytype_out='perc', yvals_out=[1., 5., 10., 50., 90., 95., 99.]
+                                uselogvals=True,\
+                                outfile='./test.hdf5', grptag=hmkey)

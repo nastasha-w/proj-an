@@ -2626,7 +2626,6 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
 def combineprofiles(filenames, rbins, galids,
                     runit='pkpc', ytype_in='mean', yvals_in=50.,
                     ytype_out='perc', yvals_out=50.,
-                    halocat=None,
                     uselogvals=True,
                     outfile=None, grptag=None):
     '''    
