@@ -2442,7 +2442,10 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
         outname = mdir + 'radprof2d_10pkpc-0.1dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
                       'halomasscomp_{}'.format(measure)
         checkbins = [0., 10., 20.]
-        binset = 'binset_0'
+        if ofmean:
+            binset = 'binset_2'
+        else:
+            binset = 'binset_0'
     elif rbinning == 2:
         outname = mdir + 'radprof2d_0.25dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
                       'halomasscomp_{}'.format(measure)
@@ -2530,7 +2533,8 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
         #print(ys)
         #print(binset)
         yvals, bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
-                                     binset=binset, retlog=True, ofmean=ofmean)
+                                     binset=binset, retlog=True, ofmean=ofmean
+                                     )
         #if line == 'n7':
         #    print(yvals)
         #    print(bins)
