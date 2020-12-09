@@ -69,17 +69,18 @@ def getcenfills(base, closevals=None, searchdir=None, tolerance=1e-4):
     print(scens)
     return scens
 
-def rdist(quantity,L_x,npix_x,rmin,rmax,rscale,centre,npix_y = None,plot=None,clabel=None, title=None, label=''):
+def rdist(quantity, L_x, npix_x, rmin, rmax, rscale, centre,
+          npix_y=None, plot=None, clabel=None, title=None, label=''):
     
     if npix_y == None:
         npix_y = npix_x
     # square pixels assumed
     length_per_pixel = np.float(L_x)/npix_x
 
-    pix_xmin = int(np.floor((centre[0]-rmax)/length_per_pixel))
-    pix_ymin = int(np.floor((centre[1]-rmax)/length_per_pixel))
-    pix_xmax = int(np.ceil((centre[0]+rmax)/length_per_pixel))
-    pix_ymax = int(np.ceil((centre[1]+rmax)/length_per_pixel))
+    pix_xmin = int(np.floor((centre[0] - rmax) / length_per_pixel))
+    pix_ymin = int(np.floor((centre[1] - rmax) / length_per_pixel))
+    pix_xmax = int(np.ceil((centre[0] + rmax) / length_per_pixel))
+    pix_ymax = int(np.ceil((centre[1] + rmax) / length_per_pixel))
     
     pix_xmin_o = pix_xmin
     pix_xmax_o = pix_xmax
@@ -94,47 +95,51 @@ def rdist(quantity,L_x,npix_x,rmin,rmax,rscale,centre,npix_y = None,plot=None,cl
     if pix_xmin < 0 or pix_xmax >= npix_x:
         uq = np.roll(uq,int(npix_x)/2,axis=0)
         if pix_xmin<0:
-            pix_xmin += int(npix_x)/2
-            pix_xmax += int(npix_x)/2
-            c0 += int(int(npix_x)/2)*length_per_pixel
+            pix_xmin += int(npix_x) / 2
+            pix_xmax += int(npix_x) / 2
+            c0 += int(int(npix_x) / 2) * length_per_pixel
         elif pix_xmax >=npix_x:
-            pix_xmin += int(npix_x)/2 - npix_x
-            pix_xmax += int(int(npix_x))/2 - npix_x
-            c0 += int(int(npix_x)/2 - npix_x)*length_per_pixel
+            pix_xmin += int(npix_x) / 2 - npix_x
+            pix_xmax += int(int(npix_x)) / 2 - npix_x
+            c0 += int(int(npix_x) / 2 - npix_x) * length_per_pixel
     if pix_ymin < 0 or pix_ymax >= npix_y:
-        uq = np.roll(uq,int(int(npix_y)/2),axis=1)
+        uq = np.roll(uq, int(int(npix_y) / 2), axis=1)
         if pix_ymin<0:
-            pix_ymin += int(npix_y)/2
-            pix_ymax += int(npix_y)/2
-            c1 += int(int(npix_y)/2)*length_per_pixel
+            pix_ymin += int(npix_y) / 2
+            pix_ymax += int(npix_y) / 2
+            c1 += int(int(npix_y) / 2) * length_per_pixel
         elif pix_ymax >=npix_y:
-            pix_ymin += int(npix_y)/2 - npix_y
-            pix_ymax += int(npix_y)/2 - npix_y
-            c1 += int(int(npix_y)/2 - npix_y)*length_per_pixel
-    pixrange = [slice(pix_xmin,pix_xmax,None),slice(pix_ymin,pix_ymax,None)]
+            pix_ymin += int(npix_y) / 2 - npix_y
+            pix_ymax += int(npix_y) / 2 - npix_y
+            c1 += int(int(npix_y) / 2 - npix_y) * length_per_pixel
+    pixrange = [slice(pix_xmin, pix_xmax, None),
+                slice(pix_ymin, pix_ymax, None)]
     
     slq = uq[pixrange]
     shape = slq.shape
     inds = np.indices(shape)
     # use distance to pixel centres
-    dists2 = (length_per_pixel*(inds[0]+pix_xmin + 0.5)-c0)**2+(length_per_pixel*(inds[1]+pix_ymin + 0.5)-c1)**2 
-    ann = np.logical_and(dists2 >= rmin**2,dists2 <= rmax**2)
-    rs = np.ndarray.flatten(np.sqrt(dists2[ann])/rscale)
+    dists2 = (length_per_pixel * (inds[0] + pix_xmin + 0.5) - c0)**2 + \
+             (length_per_pixel * (inds[1] + pix_ymin + 0.5) - c1)**2 
+    ann = np.logical_and(dists2 >= rmin**2, dists2 <= rmax**2)
+    rs = np.ndarray.flatten(np.sqrt(dists2[ann]) / rscale)
     qs = np.ndarray.flatten(slq[ann])
     
     print(str(pixrange))
 
     if plot is not None:
 
-        name = plot%('_zoom-x-%i-%i-y-%i-%i_%s'%(pix_xmin_o,pix_xmax_o,pix_ymin_o,pix_ymax_o,label))
-        fontsize=13
+        name = plot%('_zoom-x-%i-%i-y-%i-%i_%s'%(pix_xmin_o, pix_xmax_o,
+                                                 pix_ymin_o, pix_ymax_o,
+                                                 label))
+        fontsize = 13
         colmap = 'viridis'
-        xystarts = [pix_xmin_o*length_per_pixel, pix_ymin_o*length_per_pixel]
-        size = (pix_xmax_o - pix_xmin_o )*length_per_pixel
-        Vmin=10.5
-        Vmax=15.5
+        xystarts = [pix_xmin_o * length_per_pixel, pix_ymin_o * length_per_pixel]
+        size = (pix_xmax_o - pix_xmin_o ) * length_per_pixel
+        Vmin = 10.5
+        Vmax = 15.5
         
-        circle = plt.Circle(centre,rscale,color='white',fill=False)   
+        circle = plt.Circle(centre, rscale, color='white', fill=False)   
 
         fig = plt.figure(figsize = (5.5, 5.))
         ax = plt.subplot(111)   
@@ -174,17 +179,19 @@ def rqhist(rqarr, rbins, percentiles=None):
               for i in range(1, len(rbins))]
     return np.array(qstats).T  
 
-def rqgeq(rqarr,rbins,values=np.array([13.,14.,15.])):
+def rqgeq(rqarr, rbins, values=np.array([13.,14.,15.])):
     bininds = np.digitize(rqarr[0],rbins)
     qbins = [rqarr[1][bininds==i] for i in range(1,len(rbins))]
     lens = [len(_bin) for _bin in qbins]
-    qstats = [[np.sum(qbins[j]>val)/np.float(lens[j]) for val in values] for j in range(len(qbins))]
+    qstats = [[np.sum(qbins[j]>val)/np.float(lens[j]) for val in values]
+              for j in range(len(qbins))]
     return np.array(qstats).T
 
-def rqhists(rqarrs,rbins,percentiles=None):
-    return {key: rqhist(rqarrs[key], rbins, percentiles=percentiles) for key in rqarrs.keys()}
+def rqhists(rqarrs, rbins, percentiles=None):
+    return {key: rqhist(rqarrs[key], rbins, percentiles=percentiles) 
+                 for key in rqarrs.keys()}
  
-def rqgeqs(rqarrs,rbins,values=np.array([13.,14.,15.])):
+def rqgeqs(rqarrs, rbins, values=np.array([13.,14.,15.])):
     return {key: rqgeq(rqarrs[key],rbins,values) for key in rqarrs.keys()}
    
     
@@ -192,10 +199,10 @@ def plotrqhists(dist,bins,label,plot,ylabel=None,xlabel=None, medq=None):
     name = plot%('_Rdist-withmed_%s'%(label))
     fontsize = 16
         
-    plt.plot(bins,dist[2],linewidth=2,color='blue')
+    plt.plot(bins,dist[2], linewidth=2, color='blue')
     ax = plt.gca()
-    ax.fill_between(bins,dist[1],dist[3],facecolor='blue',alpha=0.2)
-    ax.fill_between(bins,dist[0],dist[4],facecolor='blue',alpha=0.2)
+    ax.fill_between(bins, dist[1], dist[3], facecolor='blue', alpha=0.2)
+    ax.fill_between(bins, dist[0], dist[4], facecolor='blue', alpha=0.2)
     
     if medq != None:
         percentiles = np.array([2.275,15.865,50,84.135,97.725])
@@ -300,22 +307,27 @@ def plotrqhistset(dists,rbins,label,plot,ylabel=None,xlabel=None, medq=None,colo
 
 
 def rplotset(dists,rbins,label,plot=None,ylabel=None,xlabel=None,medq=None):
-    qstats  = {key: rqhists(dists[key],rbins,percentiles=None) for key in dists.keys()}
+    qstats  = {key: rqhists(dists[key], rbins, percentiles=None) 
+                    for key in dists.keys()}
     if plot != None:
-        plotrqhistset(qstats, rbins[:-1] + np.diff(rbins)/2., label, plot=plot,ylabel=ylabel,xlabel=xlabel,medq=medq)
+        plotrqhistset(qstats, rbins[:-1] + np.diff(rbins) / 2.,
+                      label, plot=plot, ylabel=ylabel, xlabel=xlabel, 
+                      medq=medq)
     return qstats
 
-def combdists(rqarr,selkeys,rbins,percentiles=None):
+def combdists(rqarr, selkeys, rbins, percentiles=None):
     # get bin indices from rqarr[0] for each cluster  
-    bininds = [np.digitize(rqarr[key][0],rbins) for key in selkeys]
+    bininds = [np.digitize(rqarr[key][0], rbins) for key in selkeys]
     # sort column densities in rqarr[1] by bin index
-    totvals = [[list(rqarr[selkeys[j]][1][bininds[j]==i]) for j in range(len(selkeys))] for i in range(1,len(rbins))]
+    totvals = [[list(rqarr[selkeys[j]][1][bininds[j]==i]) 
+                for j in range(len(selkeys))] for i in range(1,len(rbins))]
     # collapse lists for each bin along cluster label dimension
     totvals = [np.array([item for sub in lis for item in sub]) for lis in totvals]
     
     if percentiles ==None: #use median and 1 sigma, 2 sigma values
         percentiles = np.array([2.275,15.865,50,84.135,97.725])
-    qstats = [np.percentile(totvals[i],percentiles) for i in range(len(rbins)-1)]
+    qstats = [np.percentile(totvals[i], percentiles) 
+              for i in range(len(rbins) - 1)]
     return np.array(qstats)
 
 ### low and high mass samples     
@@ -398,62 +410,62 @@ def rdist_sl(base, szcens, L_x, npix_x, rmin, rmax, rscale, centre,\
     # square pixels assumed
     length_per_pixel = np.float(L_x)/npix_x
 
-    pix_xmin = int(np.floor((centre[0]-rmax)/length_per_pixel))
-    pix_ymin = int(np.floor((centre[1]-rmax)/length_per_pixel))
-    pix_xmax = int(np.ceil((centre[0]+rmax)/length_per_pixel))
-    pix_ymax = int(np.ceil((centre[1]+rmax)/length_per_pixel))
+    pix_xmin = int(np.floor((centre[0] - rmax) / length_per_pixel))
+    pix_ymin = int(np.floor((centre[1] - rmax) / length_per_pixel))
+    pix_xmax = int(np.ceil((centre[0] + rmax) / length_per_pixel))
+    pix_ymax = int(np.ceil((centre[1] + rmax) / length_per_pixel))
     
     # needed for edge adjustment cases later
     pix_xmin_o = pix_xmin
     pix_xmax_o = pix_xmax
     pix_ymin_o = pix_ymin
     pix_ymax_o = pix_ymax
-    
-   
 
     if pix_xmin < 0 or pix_xmax >= npix_x:
-        if pix_xmin<0:
-            pix_xmin += int(npix_x)/2
-            pix_xmax += int(npix_x)/2
-            c0 += int(int(npix_x)/2)*length_per_pixel
+        if pix_xmin < 0:
+            pix_xmin += int(npix_x) / 2
+            pix_xmax += int(npix_x) / 2
+            c0 += int(int(npix_x) / 2) * length_per_pixel
         elif pix_xmax >=npix_x:
-            pix_xmin += int(npix_x)/2 - npix_x
-            pix_xmax += int(int(npix_x))/2 - npix_x
+            pix_xmin += int(npix_x) / 2 - npix_x
+            pix_xmax += int(int(npix_x)) / 2 - npix_x
             c0 += int(int(npix_x)/2 - npix_x)*length_per_pixel
     if pix_ymin < 0 or pix_ymax >= npix_y:
         if pix_ymin<0:
-            pix_ymin += int(npix_y)/2
-            pix_ymax += int(npix_y)/2
-            c1 += int(int(npix_y)/2)*length_per_pixel
+            pix_ymin += int(npix_y) / 2
+            pix_ymax += int(npix_y) / 2
+            c1 += int(int(npix_y) / 2)*length_per_pixel
         elif pix_ymax >=npix_y:
-            pix_ymin += int(npix_y)/2 - npix_y
-            pix_ymax += int(npix_y)/2 - npix_y
-            c1 += int(int(npix_y)/2 - npix_y)*length_per_pixel
-    pixrange = [slice(pix_xmin,pix_xmax,None), slice(pix_ymin,pix_ymax,None)]
+            pix_ymin += int(npix_y) / 2 - npix_y
+            pix_ymax += int(npix_y) / 2 - npix_y
+            c1 += int(int(npix_y) / 2 - npix_y) * length_per_pixel
+    pixrange = [slice(pix_xmin, pix_xmax, None),
+                slice(pix_ymin, pix_ymax, None)]
     
     ### find centering appropriate to the slice and centre[2]; assumes periodicity in projected direction
 
     zcens = [np.float(cen) for cen in szcens]
     zcens = np.asarray(zcens)
     # for an even number of slices, the closet point will be the smaller of the two centre values
-    zcens = zcens + (1 - numsl%2)*0.5*(zcens[-1] - zcens[0])/(len(zcens)-1.)
+    zcens = zcens + (1 - numsl % 2) * 0.5 * (zcens[-1] - zcens[0]) \
+                    / (len(zcens) - 1.)
     ceninds = np.argmin(abs(zcens - c2)) # returns the first index if multiple are the same  
     # odd number of slices: periodic boundary coincides with split point between first and last slice
     # even number of slices: point closet to index zero by argmin may be closer to the index -1 point 
     # when periodic conditions are factored in
-    if ceninds == 0 and numsl%2==0:
-        if abs(c2-0.) < abs(c2-zcens[0]):
+    if ceninds == 0 and numsl % 2 == 0:
+        if abs(c2 - 0.) < abs(c2 - zcens[0]):
             ceninds = len(zcens) -1
-    ceninds = (ceninds - ((numsl - 1) // 2) + np.arange(numsl))%len(zcens) # numsl/2 should be integer division 
+    ceninds = (ceninds - ((numsl - 1) // 2) + np.arange(numsl)) % len(zcens) # numsl/2 should be integer division 
     fills = np.array(szcens)[ceninds]
 
     
     ### load image and adjust by rolling axes if the cluster overlaps a box boundry
     slq = np.load(base%(fills[0]))['arr_0']
     if pix_xmin_o < 0 or pix_xmax_o >= npix_x:
-        slq = np.roll(slq, int(npix_x)/2, axis=0)
+        slq = np.roll(slq, int(npix_x) / 2, axis=0)
     if pix_ymin_o < 0 or pix_ymax_o >= npix_y:
-        slq = np.roll(slq, int(int(npix_y)/2), axis=1)
+        slq = np.roll(slq, int(int(npix_y) / 2), axis=1)
     slq = slq[pixrange]
 
     if numsl > 1:
@@ -461,9 +473,9 @@ def rdist_sl(base, szcens, L_x, npix_x, rmin, rmax, rscale, centre,\
         for fill in fills[1:]:
             tq = np.load(base%(fill))['arr_0']
             if pix_xmin_o < 0 or pix_xmax_o >= npix_x:
-                tq = np.roll(tq,int(npix_x)/2,axis=0)
+                tq = np.roll(tq, int(npix_x) / 2, axis=0)
             if pix_ymin_o < 0 or pix_ymax_o >= npix_y:
-                tq = np.roll(tq,int(int(npix_y)/2),axis=1)
+                tq = np.roll(tq, int(int(npix_y) / 2), axis=1)
             tq = tq[pixrange]
             tq = 10**tq
             slq +=tq
@@ -473,8 +485,9 @@ def rdist_sl(base, szcens, L_x, npix_x, rmin, rmax, rscale, centre,\
     shape = slq.shape
     inds = np.indices(shape)
     # use distance to pixel centres
-    dists2 = (length_per_pixel*(inds[0]+pix_xmin + 0.5)-c0)**2+(length_per_pixel*(inds[1]+pix_ymin + 0.5)-c1)**2 
-    ann = np.logical_and(dists2 >= rmin**2,dists2 <= rmax**2)
+    dists2 = (length_per_pixel * (inds[0] + pix_xmin + 0.5) - c0)**2 + \
+             (length_per_pixel * (inds[1] + pix_ymin + 0.5) - c1)**2 
+    ann = np.logical_and(dists2 >= rmin**2, dists2 <= rmax**2)
     rs = np.ndarray.flatten(np.sqrt(dists2[ann])/rscale)
     qs = np.ndarray.flatten(slq[ann])
     
@@ -516,9 +529,16 @@ def rdist_sl(base, szcens, L_x, npix_x, rmin, rmax, rscale, centre,\
     return np.array([rs,qs])
 
 
-def rdists_sl(base,szcens,L_x,npix_x,rmins,rmaxs,rscales,centres,labels, numsl = 1,npix_y = None,plot=None,clabel=None, title=None,axis='z'):
-    return {labels[i]: rdist_sl(base,szcens,L_x,npix_x,rmins[i],rmaxs[i],rscales[i],(centres[0][i],centres[1][i],centres[2][i]),numsl = numsl,npix_y = npix_y,plot=plot,clabel=clabel, title=title, label=labels[i], axis=axis) for i in range(len(labels))}
-
+def rdists_sl(base, szcens, L_x, npix_x, rmins, rmaxs, rscales, centres, 
+              labels, numsl=1, npix_y=None,plot=None,clabel=None,
+              title=None, axis='z'):
+    return {labels[i]: rdist_sl(base, szcens, L_x, npix_x, rmins[i], rmaxs[i],
+                                rscales[i], 
+                                (centres[0][i], centres[1][i], centres[2][i]),
+                                numsl=numsl, npix_y=npix_y, plot=plot,
+                                clabel=clabel, title=title, label=labels[i],
+                                axis=axis)
+            for i in range(len(labels))}
 
 
 def rdists_sl_faster(base, szcens, L_x, npix_x,\
@@ -740,9 +760,11 @@ def rdists_sl_faster(base, szcens, L_x, npix_x,\
         print('Loaded %s'%fill)
         # only modify the arrays for which we want to use this slice; avoid for loops by list comprehension (arrays won't work if the selection regions have different sizes)
         if logquantity:
-            qs = [qs[i] + 10**fullim[selections[i]]  if fill in fills[i] else qs[i] for i in range(len(fills))]
+            qs = [qs[i] + 10**fullim[selections[i]]  if fill in fills[i]
+                  else qs[i] for i in range(len(fills))]
         else:
-            qs = [qs[i] +     fullim[selections[i]]  if fill in fills[i] else qs[i] for i in range(len(fills))]
+            qs = [qs[i] +     fullim[selections[i]]  if fill in fills[i]
+                  else qs[i] for i in range(len(fills))]
         
         del fullim
         num = gc.collect()
@@ -1787,7 +1809,7 @@ def saveradialprofiles_hdf5_to_hdf5(infiles, halocat, rbins, yvals,\
             - galaxy_%i: for single galaxy ids
         mid-level:
             for galset groups:
-                - galaxyid -> list if combined galaxy ids
+                - galaxyid -> list of combined galaxy ids
             - pkpc_bins
             - R200c_bins
         lower-level:
@@ -2599,6 +2621,250 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
     
     [file.close() for file in files]
     return None
+
+
+def combineprofiles(filenames, rbins, galids,
+                    runit='pkpc', ytype_in='mean', yvals_in=50.,
+                    ytype_out='perc', yvals_out=50.,
+                    halocat=None,
+                    uselogvals=True,
+                    outfile=None, grptag=None):
+    '''    
+    starting from individual galaxy profiles, get ensemble statistics
+    
+    input:
+    ------
+    filenames:   list of hdf5 files containing the profiles. Assumes the 
+                 groups are named by their central galaxy ids ('galaxy_<id>').
+                 A single file is also ok. If a galaxyid is present in more 
+                 than one file, the first file in the list is used.
+    rbins:       bin edges for statistics extraction (checked against stored
+                 values)
+    runit:       unit the rbins are given in (string): 'pkpc' or 'R200c'
+    galids:      galaxyids to combine the profiles from (int or string 
+                 list-like)
+    ytype_in/out: what kind of statistic to extract (string)
+                 in are the galaxy profiles, out is how the values in each bin
+                 are combined:
+                 'perc' for percentiles, 'fcov' for covering fractions, or 
+                 'mean' for the average
+    yvals_in/out: if ytype is 'perc' or 'fcov': the values to get the covering
+                 fractions (same units as the map) or percentiles (0-100 range)
+                 for (float)
+                 ignored for ytype 'mean'
+                 for in, only a single value is accepted
+    outfile:     (string or None) name of the output file. same as the
+                 input filename if None and only one input filename is given
+    grptag:      tag for the autonamed output group for the profile. Useful to
+                 indicate how the galaxy ids were selected
+    uselogvals:  (bool) if True use log y values in the output (and interpret 
+                 type='fcov' yvals as log). Otherwise, non-log y values are 
+                 used in every case. (Just following what's in the input files 
+                 is not an option.) 
+             
+    output:
+    -------
+    profiles stored in outfile matching the format of the hdf5 file profile 
+    retrieval script. Additions to that format include the ytype='mean' option
+    and storing whether the values are log10 or not.
+    
+    profiles are stored as <ytype_out>[_<yval_out>]_from_<ytype_in>[_<yval_in>]
+    '''
+    
+    if '.' in filenames:
+        filenames = [filenames]
+    filenames = [ol.pdir + filename if '/' not in filename else filename\
+                 for filename in filenames]
+    
+    if outfile is None:
+        if len(filenames) > 1:
+            raise ValueError('outfile must e specified if there is more than '+\
+                             'one input file')
+        else:
+            outfile = filenames[0]
+            
+    files = [h5py.File(filename, 'r') for filename in filenames]
+    galids = np.array(sorted([int(galid) for galid in galids]))
+    
+    # groundwork for input profiles
+    binpart = runit + '_bins'
+    pathtemplate = 'galaxy_{galaxyid}/' + binpart 
+    if ytype_in == 'mean':
+        profn = ytype_in
+    elif ytype_in == 'perc':
+        if hasattr(yvals_in, '__len__'):
+            raise ValueError('Only a single value is allowed for yvals_in')
+        profn = 'perc_{val}'.format(val=yvals_in)
+    elif ytype_in == 'fcov':
+        profn = None # check log value before comparing name
+    
+    # read in input profiles
+    proflist = []
+    for galid in galids:
+        found = False
+        searchpath = pathtemplate.format(galaxyid=galid)
+        for file in files:
+            if searchpath not in file:
+                continue
+            sgrp = file[searchpath]
+            bingrns = sgrp.keys()
+            for bingrn in bingrns:
+                edges = sgrp[bingrn]['bin_edges'][:]
+                if len(edges) != len(rbins):
+                    continue
+                if not np.allclose(edges, rbins):
+                    continue
+                
+                if profn is None: # matching yvals_in depends on uselogvalues
+                    dsnames = list(sgrp[bingrn].keys())
+                    for name in dsnames:
+                        if dsname.startswith(ytype_in):
+                            _yval = float(dsname.split('_'))
+                            if 'logvalues' in sgrp[bingrn][dsname].attrs:
+                                _logv = bool(sgrp[bingrn][dsname].attrs['logvalues'])
+                            else: # assume same as asked here
+                                _logv = uselogvalues
+                            if _logv and not uselogvalues:
+                                _yval = 10**_yval
+                            elif uselogvalues and not _logv:
+                                _yval = np.log10(_yval)
+                            
+                            if np.isclose(_yval, yvals_in):
+                                found = True
+                                profile = sgrp[bingrn][dsname][:]
+                                if _logv and not uselogvalues:
+                                    profile = 10**profile
+                                elif uselogvalues and not _logv:
+                                    profile = np.log10(profile)
+                                
+                                proflist.append(profile)
+                                break
+                else:
+                    if profn in sgrp[bingrn]:
+                        profile = sgrp[bingrn][profn][:]
+                        if _logv and not uselogvalues:
+                            profile = 10**profile
+                        elif uselogvalues and not _logv:
+                            profile = np.log10(profile)
+                        proflist.append(profile) 
+                        found = True
+                        
+                if found: # binset loop
+                    break
+            if found: # file loop
+                break
+        if not found:
+            msg = 'No profile for these files, bins and profile type was found'
+            msg += 'for galaxy {}'.format(galid)
+            msg += '\nbins: {rbins} {runit}'.format(rbins=rbins, runit=runit)
+            msg += '\nprofile: {ytype_in} {yvals_in}'.format(ytype_in=ytype_in
+                                                             yvals_in=yvals_in)
+            raise RuntimeError(msg)
+            
+    [file.close() for file in files]
+    
+    if len(galids) != len(proflist):
+        raise RuntimeError('recovered {} profiles for {} galaxies'.format(
+            len(proflist), len(galids)))
+    proflist = np.array(proflist)
+    
+    # input is list of values to get stats from
+    if not hasattr(yvals_out, '__len__'):
+        yvals = [yvals_out]
+    yvals_out = np.sort(yvals_out)
+    outprofs = getstats(proflist.T, ytype=ytype_out, yvals=yvals_out)
+
+    
+    with h5py.File(outfile, 'a') as fo:
+        # galaxy sets: named galset_<int>
+        galsets = [key if 'galset' in key else None \
+                   for key in fo.keys()]
+        galsets = list(set(galsets) - {None})
+        galsets.sort(key=lambda x: int(x.split('_')[-1])) 
+        anymatch = False
+        for galset in galsets:
+            _galids = fo[galset + '/galaxyid'][:]
+            if len(_galids) == len(galids):
+                if np.all(_galids == galids):
+                    gn0 = galset
+                    anymatch = True
+                    break
+        if not anymatch:
+            i = 0
+            while 'galset_{i}'.format(i=i) in fo:
+                i += 1
+            gn0 = 'galset_{i}'.format(i=i)
+            _g = fo.create_group(gn0)
+            _g.create_dataset('galaxyid', data=galids)
+            if grptag is not None:
+                _g.attrs.create('seltag', np.string_(grptag))
+        
+        outgroup_base = '{gal}/{runit}_bins'.format(gal=gn0, runit=runit)
+        outgroup = outgroup_base.format(galid=galid)
+        
+        if grptag is not None:
+            galgrp = outgroup.split('/')[0]
+            if galgrp not in fo: 
+                print('Adding seltag')
+                _g = fo.create_group(galgrp)
+                _g.attrs.create('seltag', np.string_(grptag))
+        if outgroup in fo:
+            g0 = fo[outgroup]
+        else:
+            g0 = fo.create_group(outgroup)
+        # naming: binset_<index>
+        binsets = list(g0.keys())
+        binsets.sort(key=lambda x: int(x.split('_')[-1])) 
+        bmatch = False
+        for binset in binsets:
+            bin_edges = g0[binset + '/bin_edges']
+            if len(bin_edges) == len(rbins):
+                if np.allclose(bin_edges, rbins):
+                    bmatch = True
+                    bgrp = g0[binset]
+                    break
+        if not bmatch:
+            i = 0
+            while 'binset_{i}'.format(i=i) in g0:
+                i += 1
+            bgrp = g0.create_group('binset_{i}'.format(i=i))
+            bgrp.create_dataset('bin_edges', data=rbins)
+        
+        
+        if ytype_in == 'mean':
+            if uselogvals:
+                _ynin = 'mean_log'
+            else:
+                _ynin = 'mean'
+        else:
+            _ynin = {ytype}_{yval}'.format(ytype=ytype_in, yval=yvals_in)
+        
+        if ytype_out == 'mean':
+            if uselogvals:
+                _ynout = 'mean_log'
+            else:
+                _ynout = 'mean'
+                
+            dsname = _ynout + '_from_' + _ynin
+            
+            if dsname in bgrp:
+                pass # already saved
+            else:
+                ds = bgrp.create_dataset(dsname, data=np.array(profiles))
+                ds.attrs.create('logvalues', uselogvals)
+        else:
+            for ind, yval in enumerate(yvals_out):
+                dsname = '{ytype}_{yval}'.format(ytype=ytype_out, yval=yval)
+                dsname += + '_from_' + _ynin
+                if dsname in bgrp:
+                    continue
+                else:
+                     ds = bgrp.create_dataset(dsname, data=np.array(outprofs[ind]))
+                     ds.attrs.create('logvalues', uselogvals)
+
+    return None
+
+
 
 
 #################################################################
