@@ -2836,7 +2836,7 @@ def combineprofiles(filenames, rbins, galids,
             else:
                 _ynin = 'mean'
         else:
-            _ynin = {ytype}_{yval}'.format(ytype=ytype_in, yval=yvals_in)
+            _ynin = '{ytype}_{yval}'.format(ytype=ytype_in, yval=yvals_in)
         
         if ytype_out == 'mean':
             if uselogvals:
