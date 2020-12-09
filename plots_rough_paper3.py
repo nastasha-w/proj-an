@@ -2441,10 +2441,11 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
     elif rbinning == 1:
         outname = mdir + 'radprof2d_10pkpc-0.1dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
                       'halomasscomp_{}'.format(measure)
-        checkbins = [0., 10., 20.]
         if ofmean:
             binset = 'binset_2'
+            checkbins = [0., 10., 10.**1.1]
         else:
+            checkbins = [0., 10., 20.]
             binset = 'binset_0'
     elif rbinning == 2:
         outname = mdir + 'radprof2d_0.25dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
