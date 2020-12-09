@@ -4895,7 +4895,7 @@ if jobind in range(30234, 30253):
              
     stampname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'%((mapname.split('/')[-1][:-5])%('-all'), numsl)
     proffile = stampname.split('/')[-1]
-    proffile = ol.pdir + 'radprof/radprof_halosample_' + outfile
+    proffile = ol.pdir + 'radprof/radprof_halosample_' + proffile
     
     rbins_r200c = np.arange(0., 2.51, 0.05)
     yvals_perc = [1., 5., 10., 50., 90., 95., 99.]
