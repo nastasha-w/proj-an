@@ -2724,18 +2724,18 @@ def combineprofiles(filenames, rbins, galids,
                             if 'logvalues' in sgrp[bingrn][dsname].attrs:
                                 _logv = bool(sgrp[bingrn][dsname].attrs['logvalues'])
                             else: # assume same as asked here
-                                _logv = uselogvalues
-                            if _logv and not uselogvalues:
+                                _logv = uselogvals
+                            if _logv and not uselogvals:
                                 _yval = 10**_yval
-                            elif uselogvalues and not _logv:
+                            elif uselogvals and not _logv:
                                 _yval = np.log10(_yval)
                             
                             if np.isclose(_yval, yvals_in):
                                 found = True
                                 profile = sgrp[bingrn][dsname][:]
-                                if _logv and not uselogvalues:
+                                if _logv and not uselogvals:
                                     profile = 10**profile
-                                elif uselogvalues and not _logv:
+                                elif uselogvals and not _logv:
                                     profile = np.log10(profile)
                                 
                                 proflist.append(profile)
@@ -2746,10 +2746,10 @@ def combineprofiles(filenames, rbins, galids,
                         if 'logvalues' in sgrp[bingrn][profn].attrs:
                             _logv = bool(sgrp[bingrn][profn].attrs['logvalues'])
                         else: # assume same as asked here
-                            _logv = uselogvalues
-                        if _logv and not uselogvalues:
+                            _logv = uselogvals
+                        if _logv and not uselogvals:
                             profile = 10**profile
-                        elif uselogvalues and not _logv:
+                        elif uselogvals and not _logv:
                             profile = np.log10(profile)
                         proflist.append(profile) 
                         found = True
