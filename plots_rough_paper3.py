@@ -2604,8 +2604,6 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
         rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
     elif rbinning == 2:
         rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
-
-    checkbins = np.array(checkbins)
     
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
@@ -2639,7 +2637,8 @@ def plot_radprof2(measure='mean', mmin=10.5, rbinning=0):
                       'halomasscomp_{}'.format(measure)
         checkbins = [0., 10., 10**1.25]
         binset = 'binset_1'
-                      
+    
+    checkbins = np.array(checkbins)
     outname = outname.replace('.', 'p')
     outname = outname + '.pdf'              
     
