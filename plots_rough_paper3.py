@@ -2827,7 +2827,7 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
     print('Dark purple is for statistics of the means')
     
     fontsize = 12
-    linewidth = 1.5
+    linewidth = 1.0
     patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),\
                mppe.Stroke(linewidth=linewidth, foreground="w"),\
                mppe.Normal()]
@@ -2870,7 +2870,7 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
                                   'path_effects': patheff},\
                       ('perc', 10.): {'linestyle': 'dotted', 'linewidth': linewidth,\
                                   'path_effects': patheff},\
-                      ('perc', 50.): {'linestyle': 'solid', 'linewidth': linewidth,\
+                      ('perc', 50.): {'linestyle': 'dashdot', 'linewidth': linewidth,\
                                   'path_effects': patheff},\
                       ('perc', 90.): {'linestyle': 'dotted', 'linewidth': linewidth,\
                                   'path_effects': patheff},\
@@ -3098,6 +3098,10 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
                                      **kwargs)
             lcs.append(lc)
         
+        print(handles1 + lcs)
+        print(l_loc)
+        print(l_bbox_to_anchor)
+        print(l_ncols)
         lax.legend(handles=handles1 + lcs, fontsize=fontsize, loc=l_loc,\
                    bbox_to_anchor=l_bbox_to_anchor, ncol=l_ncols,\
                    handler_map={type(lc): pu.HandlerDashedLines()})
