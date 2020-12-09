@@ -4939,9 +4939,9 @@ if jobind in range(30234, 30253):
             #print('\t '.join(['{key}: {val}'.format(key=key, val=kwargs[key])\
             #                  for key in kwargs]))
             #print('\n\n')
-            combineprofiles(proffile, rbins, galids,
-                            runit='pkpc', ytype_in='mean', yvals_in=None,
-                            ytype_out='perc',\
-                            yvals_out=[1., 5., 10., 50., 90., 95., 99.],
-                            uselogvals=True,
-                            outfile='./test.hdf5', grptag=hmkey)
+            crd.combineprofiles(proffile, rbins, galids,
+                                runit='pkpc', ytype_in='mean', yvals_in=None,
+                                ytype_out='perc',\
+                                yvals_out=[1., 5., 10., 50., 90., 95., 99.],
+                                uselogvals=True,
+                                outfile='./test.hdf5', grptag=hmkey)
