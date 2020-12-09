@@ -2660,6 +2660,8 @@ def combineprofiles(filenames, rbins, galids,
                  type='fcov' yvals as log). Otherwise, non-log y values are 
                  used in every case. (Just following what's in the input files 
                  is not an option.) 
+                 if 'logvalues' aren't recorded, it's assumed they match 
+                 uselogvalues
              
     output:
     -------
@@ -2742,9 +2744,9 @@ def combineprofiles(filenames, rbins, galids,
                     if profn in sgrp[bingrn]:
                         profile = sgrp[bingrn][profn][:]
                         if 'logvalues' in sgrp[bingrn][profn].attrs:
-                                _logv = bool(sgrp[bingrn][profn].attrs['logvalues'])
-                            else: # assume same as asked here
-                                _logv = uselogvalues
+                            _logv = bool(sgrp[bingrn][profn].attrs['logvalues'])
+                        else: # assume same as asked here
+                            _logv = uselogvalues
                         if _logv and not uselogvalues:
                             profile = 10**profile
                         elif uselogvalues and not _logv:
