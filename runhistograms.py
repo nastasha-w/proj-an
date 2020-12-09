@@ -4919,32 +4919,29 @@ if jobind in range(30234, 30253):
         rbins_log_small_pkpc = 10.**(np.arange(1., np.log10(maxdist_pkpc), 0.1))
         rbins_pkpc_small = np.append([0.], rbins_log_small_pkpc)
         
-        
-        for kwargs in kwarg_opts:
-            print('Using kwargs {}'.format(kwargs))
-            #if kwargs['runit'] == 'pkpc':
-            #    rbins = rbins_pkpc
+        #if kwargs['runit'] == 'pkpc':
+        #    rbins = rbins_pkpc
+        #else:
+        for rbins in [rbins_pkpc_small, rbins_pkpc_large]:
+            galids = np.copy(galids_dct[hmkey])
+            #if kwargs['separateprofiles']:
+            #    galids = galids[:10] # just a few examples, don't need the whole set
+            #print('Calling getprofiles_fromstamps with:')
+            #print(stampname)
+            #print('rbins: {}'.format(rbins))
+            #if len(galids) > 15:
+            #    print('galaxyids: {} ... {}'.format(galids[:8],  galids[-7:]))
             #else:
-            for rbins in [rbins_pkpc_small, rbins_pkpc_large]:
-                galids = np.copy(galids_dct[hmkey])
-                #if kwargs['separateprofiles']:
-                #    galids = galids[:10] # just a few examples, don't need the whole set
-                #print('Calling getprofiles_fromstamps with:')
-                #print(stampname)
-                #print('rbins: {}'.format(rbins))
-                #if len(galids) > 15:
-                #    print('galaxyids: {} ... {}'.format(galids[:8],  galids[-7:]))
-                #else:
-                #    print('galaxyids: {}'.format(galids))
-                #print(halocat)
-                #print('out: {}'.format(outfile))
-                #print('grouptag: {}'.format(hmkey))
-                #print('\t '.join(['{key}: {val}'.format(key=key, val=kwargs[key])\
-                #                  for key in kwargs]))
-                #print('\n\n')
-                combineprofiles(proffile, rbins, galids,
-                                runit='pkpc', ytype_in='mean', yvals_in=None,
-                                ytype_out='perc',\
-                                yvals_out=[1., 5., 10., 50., 90., 95., 99.],
-                                uselogvals=True,
-                                outfile='./test.hdf5', grptag=hmkey)
+            #    print('galaxyids: {}'.format(galids))
+            #print(halocat)
+            #print('out: {}'.format(outfile))
+            #print('grouptag: {}'.format(hmkey))
+            #print('\t '.join(['{key}: {val}'.format(key=key, val=kwargs[key])\
+            #                  for key in kwargs]))
+            #print('\n\n')
+            combineprofiles(proffile, rbins, galids,
+                            runit='pkpc', ytype_in='mean', yvals_in=None,
+                            ytype_out='perc',\
+                            yvals_out=[1., 5., 10., 50., 90., 95., 99.],
+                            uselogvals=True,
+                            outfile='./test.hdf5', grptag=hmkey)
