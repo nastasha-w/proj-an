@@ -2810,20 +2810,26 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
                mppe.Stroke(linewidth=linewidth, foreground="w"),\
                mppe.Normal()]
     
-    
     if rbinning == 0:
         rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-3R200c_L0100N1504_27_Mh0p5dex_1000_centrals.hdf5'
-        binset = 'binset_0'
         checkbins = [0., 10., 20.]
+        binset = 'binset_0'
     elif rbinning == 1:
         rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
-        binset = 'binset_0'
+        
+        binset_ofmean = 'binset_2'
+        checkbins_ofmean = [0., 10., 10.**1.1]
+        
         checkbins = [0., 10., 20.]
+        binset = 'binset_0'
     elif rbinning == 2:
         rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
-        binset = 'binset_1'
         checkbins = [0., 10., 10**1.25]
+        binset = 'binset_1'
+        binset_ofmean = binset
+        checkbins_ofmean = checkbins
     checkbins = np.array(checkbins)
+    checkbins_ofmean = np.array(checkbins_ofmean)
     
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
@@ -2847,12 +2853,19 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
                       ('perc', 90.): {'linestyle': 'dotted', 'linewidth': linewidth,\
                                   'path_effects': patheff},\
                      }
+    kwargs_y_ofmean = {('perc', 10.): {'linestyle': 'dotted', 'linewidth': 2.5,\
+                                      'color': 'indigo'},\
+                      ('perc', 50.): {'linestyle': 'solid', 'linewidth': 2.5,\
+                                      'color': 'indigo'},\
+                      ('perc', 90.): {'linestyle': 'dotted', 'linewidth': 2.5,\
+                                      'color': 'indigo'},\
+                     }
     legtags = {('mean',): 'mean',\
                ('perc', 50.): 'median',\
                ('perc', 10.): '$10^{\\mathrm{th}}$ perc.',\
                ('perc', 90.): '$90^{\\mathrm{th}}$ perc.',\
                }
-    
+            
     medges = np.arange(mmin, 14.1, 0.5)
     seltag_keys = {medges[i]: 'geq{:.1f}_le{:.1f}'.format(medges[i], medges[i + 1])\
                                if i < len(medges) - 1 else\
@@ -2939,7 +2952,13 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
                                      binset=binset, retlog=True)
         yvals_ind, bins_ind = readin_radprof(filename, seltags, ys, runit='pkpc', separate=True,\
                                      binset=binset, retlog=True)
+        ys_ofmean = list(np.copy(ys))
+        ys_ofmean.remove(('mean',))
         
+        yvals_ofmean, bins_ofmean = readin_radprof(filename, seltags, ys_ofmean,
+                                     runit='pkpc', separate=False,\
+                                     binset=binset, retlog=True, ofmean=True) 
+            
         for hi, hkey in enumerate(medges):
             ax = axes[hi]
             labely = True # hi % ncols == 0
@@ -2971,6 +2990,29 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
             v2 = yvals[mtag][('perc', 90.)]
             cens = ed[:-1] + 0.5 * np.diff(ed)
             ax.fill_between(cens, v1, v2, facecolor='black', alpha=0.1,\
+                            edgecolor='none')
+            
+            # plot the mean stats
+            for ytag in ys_ofmean:
+                ed = bins_ofmean[mtag][ytag]
+                if not np.allclose(ed[:len(checkbins_ofmean)], checkbins_ofmean):
+                    raise RuntimeError('The correct bins were not retrieved for {line} {mtag} {ytag}'.format(\
+                                       line=line, mtag=mtag, ytag=ytag))
+                vals = yvals_ofmean[mtag][ytag]
+                cens = ed[:-1] + 0.5 * np.diff(ed)
+                ax.plot(cens, vals, **kwargs_y_stack[ytag])
+                try:
+                    tmax = np.max(vals[np.isfinite(vals)])
+                    _max = max(_max, tmax)
+                except ValueError: # no finite values
+                    pass
+                
+            # scatter range stack
+            ed = bins_ofmean[mtag][('perc', 10.)]
+            v1 = yvals_ofmean[mtag][('perc', 10.)]
+            v2 = yvals_ofmean[mtag][('perc', 90.)]
+            cens = ed[:-1] + 0.5 * np.diff(ed)
+            ax.fill_between(cens, v1, v2, facecolor='indigo', alpha=0.1,\
                             edgecolor='none')
             
             # plot individual galaxy data
