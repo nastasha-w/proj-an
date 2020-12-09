@@ -2670,6 +2670,8 @@ def combineprofiles(filenames, rbins, galids,
     and storing whether the values are log10 or not.
     
     profiles are stored as <ytype_out>[_<yval_out>]_of_<ytype_in>[_<yval_in>]
+    note that 'mean', not 'mean_log' is searched; mean_log for the input means
+    the log of the mean values was used
     '''
     
     if '.' in filenames:

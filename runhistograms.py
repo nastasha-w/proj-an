@@ -4944,4 +4944,4 @@ if jobind in range(30234, 30253):
                                 ytype_out='perc',\
                                 yvals_out=[1., 5., 10., 50., 90., 95., 99.],
                                 uselogvals=True,
-                                outfile='./test.hdf5', grptag=hmkey)
+                                outfile=proffile, grptag=hmkey)

@@ -2106,7 +2106,7 @@ def plotstampzooms_overview():
         
 ### radial profiles
 def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
-                   binset='binset_0', retlog=True):
+                   binset='binset_0', retlog=True, ofmean=False):
     '''
     from the coldens_rdist radial profile hdf5 file format: 
     extract the profiles matching the input criteria
@@ -2125,6 +2125,9 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
               profile 
     binset:   the name of the binset group ('binset_<number>')
     retlog:   return log unit values (ignored if log/non-log isn't recorded)
+    ofmean:   return statistics of the individual mean profiles instead of the
+              whole sample. Only works if separate is False. (assumed stored 
+              as mean_log)
     
     output:
     -------
@@ -2191,6 +2194,8 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
                     ypart = ytv
                 else:
                     ypart = ytv[0]
+            if ofmean:
+                ypart = ypart + '_of_mean_log'
             ypaths = {key: temppaths[key].format(ds=ypart) for key in temppaths}
             bpaths = {key: temppaths[key].format(ds='bin_edges') for key in temppaths}
 
@@ -2392,7 +2397,7 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
     
     input:
     ------
-    measure:  'mean' or 'median'
+    measure:  'mean', 'median-of-means' or 'median'
     mmin:     minimum halo mass to show (log10 Msun, 
               value options: 9.0, 9.5, 10., ... 14.)
     rbinning: 0 -> 10 pkpc bins
@@ -2420,8 +2425,13 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
     
     if measure == 'mean':
         ys = [('mean',)]
+        ofmean = False
+    elif measure == 'median-of-means':
+        ys = [('perc', 50.)]
+        ofmean = True
     else:
         ys = [('perc', 50.)]
+        ofmean = False
     
     if rbinning == 0:
         outname = mdir + 'radprof2d_10pkpc-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
@@ -2520,7 +2530,7 @@ def plot_radprof1(measure='mean', mmin=11., rbinning=0):
         #print(ys)
         #print(binset)
         yvals, bins = readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
-                                     binset=binset, retlog=True)
+                                     binset=binset, retlog=True, ofmean=ofmean)
         #if line == 'n7':
         #    print(yvals)
         #    print(bins)
