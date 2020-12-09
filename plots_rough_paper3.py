@@ -3089,7 +3089,7 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
                                   **kwargs_y_ofmean[ytag])\
                    for ytag in ys_ofmean]
         lcs = []
-        line = [[0, 0], [0, 0]]
+        line = [[[0, 0], [0, 0]]]
         for ytag in ys:
             kwargs = kwargs_y_indiv[ytag].copy()
             subcols = [mpl.colors.to_rgba('C{}'.format(i)) for i in range(numex)]
