@@ -2768,8 +2768,9 @@ def combineprofiles(filenames, rbins, galids,
                                                              yvals_in=yvals_in)
             raise RuntimeError(msg)
             
-    [file.close() for file in files]
-    
+    for file in files:
+        file.close() 
+        
     if len(galids) != len(proflist):
         raise RuntimeError('recovered {} profiles for {} galaxies'.format(
             len(proflist), len(galids)))
@@ -2781,7 +2782,6 @@ def combineprofiles(filenames, rbins, galids,
     yvals_out = np.sort(yvals_out)
     outprofs = getstats(proflist.T, ytype=ytype_out, yvals=yvals_out)
 
-    
     with h5py.File(outfile, 'a') as fo:
         # galaxy sets: named galset_<int>
         galsets = [key if 'galset' in key else None \
