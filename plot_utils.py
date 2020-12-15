@@ -518,7 +518,7 @@ class HandlerDashedLines(mlh.HandlerLineCollection):
         numlines = len(orig_handle.get_segments())
         xdata, xdata_marker = self.get_xdata(legend, xdescent, ydescent,
                                              width, height, fontsize)
-        print(xdata)
+        xdata = np.array(xdata)
         leglines = []
         # divide the vertical space where the lines will go
         # into equal parts based on the number of lines
