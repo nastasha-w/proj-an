@@ -3370,7 +3370,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
         if li == 0:
             handles = [mlines.Line2D([],[], label=label, color='black', ls=ls,\
                                      linewidth=2.) \
-                       for ls, label in zip([ls_mean, ls_median], ['mean', 'median mean'])]
+                       for ls, label in zip([ls_mean, ls_median], ['mean', 'med. mean'])]
             lax.legend(handles=handles, fontsize=fontsize, **leg_kw)
         
         
