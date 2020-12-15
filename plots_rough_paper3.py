@@ -3116,6 +3116,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
     print('Values are calculated from 3.125^2 ckpc^2 pixels')
     print('for means: in annuli of 0-10 pkpc, then 0.25 dex bins up to ~3.5 R200c')
     print('for medians: in annuli of 10 pkpc up to 100 pkpc, then 0.1 dex bins up to ~3.5 R200c')
+    print('for median of means: annuli of 0.1 dex starting from 10 pkpc')
     print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb, C2 kernel')
     print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
     
@@ -3130,7 +3131,8 @@ def plot_radprof4(talkversion=False, slidenum=0):
     
     rfilebase = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
     binset_mean = 'binset_1'
-    binset_median = 'binset_0'
+    #binset_median = 'binset_0'
+    binset_medianofmeans = 'binset_2'
     cosmopars = cosmopars_27 # for virial radius indicators
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
@@ -3147,7 +3149,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
     ls_median = 'solid'
     mmin = 11.
     
-    outname = 'radprof2d_0.25dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+    outname = 'radprof2d_0.1-0.25dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
               'halomasscomp_mean-median'
     outname = outname.replace('.', 'p')
     if talkversion:
@@ -3303,10 +3305,13 @@ def plot_radprof4(talkversion=False, slidenum=0):
         filename = rfilebase.format(line=line)
         if line in ['ne10', 'n6-actualr']:
             filename = filename.replace('test3.5', 'test3.6')
-        yvals, bins = readin_radprof(filename, seltags, [ykey_mean], runit='pkpc', separate=False,\
+        yvals, bins = readin_radprof(filename, seltags, [ykey_mean],
+                                     runit='pkpc', separate=False,
                                      binset=binset_mean, retlog=True)
-        _yvals, _bins = readin_radprof(filename, seltags, [ykey_median], runit='pkpc', separate=False,\
-                                     binset=binset_median, retlog=True)
+        _yvals, _bins = readin_radprof(filename, seltags, [ykey_median],
+                                       runit='pkpc', separate=False,
+                                     binset=binset_medianofmeans, retlog=True,
+                                     ofmean=True)
         for tag in yvals:
             bins[tag].update(_bins[tag])
             yvals[tag].update(_yvals[tag])
@@ -3365,7 +3370,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
         if li == 0:
             handles = [mlines.Line2D([],[], label=label, color='black', ls=ls,\
                                      linewidth=2.) \
-                       for ls, label in zip([ls_mean, ls_median], ['mean', 'median'])]
+                       for ls, label in zip([ls_mean, ls_median], ['mean', 'median of means'])]
             lax.legend(handles=handles, fontsize=fontsize, **leg_kw)
         
         
