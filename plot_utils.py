@@ -542,7 +542,7 @@ class HandlerDashedLines(mlh.HandlerLineCollection):
                 lw = orig_handle.get_linewidths()[i]
             except IndexError:
                 lw = orig_handle.get_linewidths()[0]
-            if dashes[0] is not None:
+            if dashes[0] is not None and dashes[1] is not None:
                 # seem to come out twice the input size when using dashes[1] -> fix
                 legline.set_dashes([_d *0.5 for _d in dashes[1]])
             legline.set_color(color)
