@@ -2820,7 +2820,7 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
               2 -> 0.25 dex bins starting at 10 kpc (smallest bin is 0-10 kpc)
     '''
     
-    print('Values are calculated from 3.125^2 ckpc^2 pixels in 10 pkpc annuli')
+    #print('Values are calculated from 3.125^2 ckpc^2 pixels in 10 pkpc annuli')
     print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmAb, C2 kernel')
     print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
     print('Black is for the stacked samples, colors are random individual galaxies')
@@ -3089,7 +3089,7 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
                                   **kwargs_y_ofmean[ytag])\
                    for ytag in ys_ofmean]
         lcs = []
-        line = [np.array([[0, 0], [0, 0]])]
+        line = [[(0, 0)]]
         for ytag in ys:
             kwargs = kwargs_y_indiv[ytag].copy()
             subcols = [mpl.colors.to_rgba('C{}'.format(i)) for i in range(numex)]
@@ -3099,13 +3099,9 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
                                      **kwargs)
             lcs.append(lc)
         
-        print(handles1 + lcs)
-        print(l_loc)
-        print(l_bbox_to_anchor)
-        print(l_ncols)
-        lax.legend(handles=handles1 + lcs, fontsize=fontsize, loc=l_loc,\
-                   bbox_to_anchor=l_bbox_to_anchor, ncol=l_ncols)
-                   #handler_map={type(lc): pu.HandlerDashedLines()})
+        lax.legend(handles=handles1 + lcs, fontsize=fontsize, loc=l_loc,
+                   bbox_to_anchor=l_bbox_to_anchor, ncol=l_ncols,
+                   handler_map={type(lc): pu.HandlerDashedLines()})
         
         plt.savefig(outname, format='pdf', bbox_inches='tight')
         
