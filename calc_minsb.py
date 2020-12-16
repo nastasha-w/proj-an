@@ -808,10 +808,13 @@ def plot_minSB():
     fig = plt.figure(figsize=(5.5, 5.))
     ax = fig.gca()
     fontsize = 12
+    
     exptimes = [1e6, 1e7]
     linestyles = ['solid', 'dashed']
+    
     alphas_g = [1.0, 0.4]
     galabs = [True, False]
+    
     addl = ' {omegat:.0e} am2 s, $\\Delta$E = {deltae:.1f} eV'
     
     for isn in names:
@@ -836,7 +839,7 @@ def plot_minSB():
     ax.set_xlabel('E [keV]', fontsize=fontsize)
     ax.set_ylabel('$\\min \\mathrm{SB} \\; [\\mathrm{ph} \\; \\mathrm{s}^{-1} \\mathrm{cm}^{-2} \\mathrm{sr}^{-1}]$',\
                   fontsize=fontsize)
-    ax.set_xticks([0.2, 0.3, 0.5, 1., 2.])
+    ax.set_xticks([0.2, 0.3, 0.5, 1., 2., 3.])
     ax.xaxis.set_major_formatter(ScalarFormatter())
     
     handles1 = [mlines.Line2D([], [],
