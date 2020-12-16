@@ -6613,12 +6613,11 @@ def plot_galabsdiff_minSB():
         vals = []
         for ins, insname in zip(instruments, insnames):
             firstom = True
-            for omegat_target in omegats_target:
+            for _omegat in omegats_target:
                 
-                otk = omegat[np.where(np.isclose(omegat, omegat_target))[0][0]]
                 sel = np.logical_and(df2['instrument'] == ins)
                 sel = np.logical_and(sel, df2['line name'] == line)
-                sel = np.logical_and(sel, df2['sky area * exposure time [arcmin**2 s]'] == otk)
+                sel = np.logical_and(sel, df2['sky area * exposure time [arcmin**2 s]'] == _omegat)
                 
                 sel_nogal = np.logical_and(sel, 
                     np.logical_not(df2['galaxy absorption included in limit']))
@@ -6626,8 +6625,8 @@ def plot_galabsdiff_minSB():
                     df2['galaxy absorption included in limit'])
                 
                 if np.sum(sel_gal) != 1 or np.sum(sel_nogal):
-                    print('for line {}, galabs {}, omegat {}, instrument {}'.format(\
-                          line, galabs_target, otk, ins))
+                    print('for line {}, omegat {}, instrument {}'.format(\
+                          line, _omegat, ins))
                     print(df2[sel])
                 
                 ind_gal = df2.index[sel_gal][0]
@@ -6641,7 +6640,7 @@ def plot_galabsdiff_minSB():
                     label = insname
                 else:
                     label = None
-                ax.scatter(np.log10(otk), diff, color=colors[ins], label=label)
+                ax.scatter(np.log10(_omegat), diff, color=colors[ins], label=label)
                 
                 firstom = False
                 
