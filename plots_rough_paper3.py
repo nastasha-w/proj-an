@@ -6591,7 +6591,7 @@ def plot_galabsdiff_minSB():
     fig = plt.figure(figsize=(figwidth, figheight))
     grid = gsp.GridSpec(ncols=ncols, nrows=nrows_use, hspace=0.0, wspace=0.0,\
                         width_ratios=[panelwidth] * ncols,\
-                        height_ratios=[paneheight] * nrows)
+                        height_ratios=[panelheight] * nrows)
     axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(len(_lines))]
     fontsize = 12
     fig.suptitle('Difference between min. SB without and with MW absorption')
