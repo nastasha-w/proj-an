@@ -48,6 +48,7 @@ import tol_colors as tc
 
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
+from matplotlib.ticker import ScalarFormatter
 
 arcmin2 = 1. * (np.pi / (180. * 60.))**2 # 1 arcmin**2 in steradian
 
@@ -835,6 +836,8 @@ def plot_minSB():
     ax.set_xlabel('E [keV]', fontsize=fontsize)
     ax.set_ylabel('$\\min \\mathrm{SB} \\; [\\mathrm{ph} \\; \\mathrm{s}^{-1} \\mathrm{cm}^{-2} \\mathrm{sr}^{-1}]$',\
                   fontsize=fontsize)
+    ax.xaxis.set_major_formatter(ScalarFormatter())
+    
     handles1 = [mlines.Line2D([], [],
                          label=labels[isn] + ', $\\Delta$E = {deltae:.1f} eV'.format(deltae=extr_ranges[isn][0]),
                          color=colors[isn])\
