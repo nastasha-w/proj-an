@@ -6570,10 +6570,10 @@ def plot_galabsdiff_minSB():
     
     instruments = ['xrism-resolve', 'athena-xifu', 'lynx-lxm-uhr', 'lynx-lxm-main']
     insnames = ['XRISM Resolve', 'Athena X-IFU', 'LXM main', 'LXM UHR']
-    colors_ins = {'xrism-resolve': _c0.green,
-                  'athena-xifu':   _c0.red,
-                  'lynx-lxm-uhr':  _c0.cyan,
-                  'lynx-lxm-main': _c0.blue,
+    colors_ins = {'xrism-resolve': _c1.green,
+                  'athena-xifu':   _c1.red,
+                  'lynx-lxm-uhr':  _c1.cyan,
+                  'lynx-lxm-main': _c1.blue,
                   }
     
     _lines = list(np.copy(lines))
