@@ -892,11 +892,12 @@ def plot_Aeff_galabs():
     ax.set_xlabel('E [keV]', fontsize=fontsize)
     ax.set_ylabel('$\\mathrm{A}_{\\mathrm{eff}} \\; [\\mathrm{cm}^{2}]$',\
                   fontsize=fontsize)
-    ax.tick_params(labelsize=fontsize-1, direction='in', which='both')
+    ax.tick_params(labelsize=fontsize-1, direction='in', which='both',\
+                   top=True, right=True)
     xlim = ax.get_xlim()
     ax.set_xlim(0.1, 3.)
-    ax.set_ylim(1., 3e4)
-    ax.legend(fontsize=fontsize)
+    ax.set_ylim(0.2, 3e4)
+    ax.legend(fontsize=fontsize, loc='lower right')
     plt.savefig(mdir + 'Aeff_galabs_instruments_varying_omegatexp.pdf', bbox_inches='tight')  
     
 
