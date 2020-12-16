@@ -6640,7 +6640,8 @@ def plot_galabsdiff_minSB():
                     label = insname
                 else:
                     label = None
-                ax.scatter(np.log10(_omegat), diff, color=colors[ins], label=label)
+                ax.scatter(np.log10(_omegat), diff, color=colors_ins[ins],
+                           label=label)
                 
                 firstom = False
                 
