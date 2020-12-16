@@ -856,9 +856,10 @@ def plot_minSB():
     plt.savefig(mdir + 'minSB_instruments_varying_omegatexp.pdf', bbox_inches='tight')  
 
 def plot_Aeff_galabs():
-    names = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr', 'xrism-resolve']
+    names = ['athena-xifu', 'lynx-lxm-main', 'xrism-resolve'] # , 'lynx-lxm-uhr'
     labels = {'athena-xifu': 'X-IFU',\
               'lynx-lxm-main': 'LXM',\
+              'lynx-lxm-uhr': 'LXM-UHR',\
               'xrism-resolve': 'XRISM-R',\
               }
     cset = tc.tol_cset('vibrant')
