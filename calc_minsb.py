@@ -807,8 +807,8 @@ def plot_minSB():
     fig = plt.figure(figsize=(5.5, 5.))
     ax = fig.gca()
     fontsize = 12
-    exptimes = [1e5, 1e6, 1e7]
-    linestyles = ['solid', 'dashed', 'dashdot']
+    exptimes = [1e6, 1e7]
+    linestyles = ['solid', 'dashed']
     alphas_g = [1.0, 0.4]
     galabs = [True, False]
     addl = ' {omegat:.0e} am2 s, $\\Delta$E = {deltae:.1f} eV'
@@ -816,9 +816,9 @@ def plot_minSB():
     for isn in names:
         ins = InstrumentModel(instrument=isn)
         if isn == 'lynx-lxm-uhr':
-            Egrid = np.arange(0.1, 0.9, 0.01)
+            Egrid = np.arange(0.2, 0.9, 0.01)
         else:
-            Egrid = np.arange(0.1, 3., 0.01)
+            Egrid = np.arange(0.2, 3., 0.01)
         
         for et, ls in zip(exptimes, linestyles):
             for erng, alpha in zip(extr_ranges[isn], alphas):
@@ -845,7 +845,7 @@ def plot_minSB():
                 for omt, ls in zip(exptimes, linestyles)]
     handles3 = [mlines.Line2D([], [],
                          label='with MW abs.' if ga else 'without MW abs.',
-                         linestyle='solid', color='gray', alpha=ag)\
+                         linestyle='solid', color='black', alpha=ag)\
                 for ga, ag in zip(galabs, alphas_g)]
         
     ax.legend(handles=handles1 + handles2 + handles3, fontsize=fontsize-2)
