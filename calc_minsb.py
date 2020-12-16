@@ -836,6 +836,7 @@ def plot_minSB():
     ax.set_xlabel('E [keV]', fontsize=fontsize)
     ax.set_ylabel('$\\min \\mathrm{SB} \\; [\\mathrm{ph} \\; \\mathrm{s}^{-1} \\mathrm{cm}^{-2} \\mathrm{sr}^{-1}]$',\
                   fontsize=fontsize)
+    ax.set_xticks([0.2, 0.3, 0.5, 1., 2.])
     ax.xaxis.set_major_formatter(ScalarFormatter())
     
     handles1 = [mlines.Line2D([], [],
