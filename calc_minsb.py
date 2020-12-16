@@ -808,7 +808,9 @@ def plot_minSB():
     ax = fig.gca()
     fontsize = 12
     exptimes = [1e5, 1e6, 1e7]
-    linestyles = ['solid', 'dashed', 'dotted']
+    linestyles = ['solid', 'dashed', 'dashdot']
+    alphas_g = [1.0, 0.4]
+    galabs = [True, False]
     addl = ' {omegat:.0e} am2 s, $\\Delta$E = {deltae:.1f} eV'
     
     for isn in names:
@@ -820,12 +822,13 @@ def plot_minSB():
         
         for et, ls in zip(exptimes, linestyles):
             for erng, alpha in zip(extr_ranges[isn], alphas):
-                aeff = ins.getminSB_grid(Egrid, linewidth_kmps=100., z=0.0,\
-                              nsigma=5., area_texp=et, extr_range=erng,\
-                              incl_galabs=False)
-                label = labels[isn] + addl.format(omegat=et, deltae=erng)
-                ax.plot(Egrid, aeff, label=label, color=colors[isn],\
-                        linestyle=ls, alpha=alpha)
+                for ga, ag in zip(galabs, alphas_g):
+                    aeff = ins.getminSB_grid(Egrid, linewidth_kmps=100., z=0.0,\
+                                  nsigma=5., area_texp=et, extr_range=erng,\
+                                  incl_galabs=ga)
+                    label = labels[isn] + addl.format(omegat=et, deltae=erng)
+                    ax.plot(Egrid, aeff, label=label, color=colors[isn],\
+                            linestyle=ls, alpha=alpha * ag)
             
     ax.set_xscale('log')
     ax.set_yscale('log')
@@ -840,7 +843,12 @@ def plot_minSB():
                          label='{:.0e} $\\mathrm{{arcmin}}^{{2}}$ s'.format(omt),
                          linestyle=ls, color='gray')\
                 for omt, ls in zip(exptimes, linestyles)]
-    ax.legend(handles=handles1 + handles2, fontsize=fontsize-2)
+    handles3 = [mlines.Line2D([], [],
+                         label='with MW abs.' if ga else 'without MW abs.',
+                         linestyle='solid', color='gray', alpha=ag)\
+                for ga, ag in zip(galabs, alphas_g)]
+        
+    ax.legend(handles=handles1 + handles2 + handles3, fontsize=fontsize-2)
     plt.savefig(mdir + 'minSB_instruments_varying_omegatexp.pdf', bbox_inches='tight')  
 
 def plot_Aeff_galabs():
