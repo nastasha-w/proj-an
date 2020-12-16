@@ -858,8 +858,7 @@ def plot_minSB():
 def plot_Aeff_galabs():
     names = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr', 'xrism-resolve']
     labels = {'athena-xifu': 'X-IFU',\
-              'lynx-lxm-main': 'LXM-main',\
-              'lynx-lxm-uhr': 'LXM-UHR',\
+              'lynx-lxm-main': 'LXM',\
               'xrism-resolve': 'XRISM-R',\
               }
     cset = tc.tol_cset('vibrant')
@@ -876,22 +875,25 @@ def plot_Aeff_galabs():
         ins = InstrumentModel(instrument=isn)
         Egrid = 0.5 * (ins.Egrid[:-1] + ins.Egrid[1:]) 
         
-        aeff = ins.responses.get_Aeff(Egrid)
-        label = labels[isn] 
-        ax.plot(Egrid, aeff, label=label, color=colors[isn], linewidth=2)
-         
+        
         if isn == 'athena-xifu':
             absfrac = ins.get_galabs(Egrid)
             ax.plot(Egrid, absfrac * 1e4, color='black',\
                     label='wabs * 1e4 $\\mathrm{cm}^{2}$')
+                
+        aeff = ins.responses.get_Aeff(Egrid)
+        label = labels[isn] 
+        ax.plot(Egrid, aeff, label=label, color=colors[isn], linewidth=2)
+         
             
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_xlabel('E [keV]', fontsize=fontsize)
     ax.set_ylabel('$\\mathrm{A}_{\\mathrm{eff}} \\; [\\mathrm{cm}^{2}]$',\
                   fontsize=fontsize)
+    ax.tick_params(labelsize=fontsize-1, direction='in', which='both')
     xlim = ax.get_xlim()
-    ax.set_xlim(0.1, xlim[1])
+    ax.set_xlim(0.1, 3.)
     ax.set_ylim(1., 3e4)
     ax.legend(fontsize=fontsize)
     plt.savefig(mdir + 'Aeff_galabs_instruments_varying_omegatexp.pdf', bbox_inches='tight')  
