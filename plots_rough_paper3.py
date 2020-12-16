@@ -6552,3 +6552,101 @@ def printlatex_minsb(filen='minSBtable.dat'):
     # 'full measured spectral range [eV]', 'detection significance [sigma]',\
     # 'galaxy absorption included in limit',\
     # 'minimum detectable SB [phot/s/cm**2/sr]', 'instrument'
+    
+def plot_galabsdiff_minSB():
+    filen='minSBtable.dat'
+    df = pd.read_csv(mdir + 'minSB/' + filen, sep='\t')     
+    groupby = ['line name', 'linewidth [km/s]',
+               'sky area * exposure time [arcmin**2 s]', 
+               'full measured spectral range [eV]',
+               'detection significance [sigma]', 
+               'galaxy absorption included in limit',
+               'instrument']
+    df2 = df.groupby(groupby)['minimum detectable SB [phot/s/cm**2/sr]'].mean().reset_index()
+    zopts = df['redshift'].unique()
+    omegats_target = df['sky area * exposure time [arcmin**2 s]'].unique()
+    print('Using redshifts: {}'.format(zopts))
+    print('\n\n')
+    
+    instruments = ['xrism-resolve', 'athena-xifu', 'lynx-lxm-uhr', 'lynx-lxm-main']
+    insnames = ['XRISM Resolve', 'Athena X-IFU', 'LXM main', 'LXM UHR']
+    colors_ins = {'xrism-resolve': _c0.green,
+                  'athena-xifu':   _c0.red,
+                  'lynx-lxm-uhr':  _c0.cyan,
+                  'lynx-lxm-main': _c0.blue,
+                  }
+    
+    _lines = list(np.copy(lines))
+    
+    ncols = 4
+    nrows = (len(_lines) - 1) // ncols + 1
+    figwidth = 11. 
+    
+    panelwidth = figwidth / float(ncols)
+    panelheight = panelwidth
+    nrows_use = nrows
+    
+    figheight = panelheight * nrows
+    
+    fig = plt.figure(figsize=(figwidth, figheight))
+    grid = gsp.GridSpec(ncols=ncols, nrows=nrows_use, hspace=0.0, wspace=0.0,\
+                        width_ratios=[panelwidth] * ncols,\
+                        height_ratios=[paneheight] * nrows)
+    axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(len(_lines))]
+    fontsize = 12
+    fig.suptitle('Difference between min. SB without and with MW absorption')
+    
+    for ind, (ax, line) in enumerate(zip(axes, lines)):
+        ax.text(0.95, 0.95, nicenames_lines[line], fontsize=fontsize,
+                horizontalalignment='right', verticalalignment='top',\
+                transform=ax.transAxes)
+        left = ind % ncols == 0
+        bottom = len(_lines) - ind < ncols
+        pu.setticks(ax, fontsize=fontsize, labelbottom=bottom, labelleft=left)
+        if left:
+            ax.set_ylabel('$\\Delta \\log_{10}$ min. SB', fontsize=fontsize)
+        if bottom:
+            ax.set_xlabel('$\\log_{10} \\, \\Delta \\Omega \\, \\Delta t \\; [\\mathrm{arcmin}^2 \\, \\mathrm{a}]$',
+                          fontsize=fontsize)
+            
+        # order of loops is important for consistent results with column names
+        vals = []
+        for ins, insname in zip(instruments, insnames):
+            firstom = True
+            for omegat_target in omegats_target:
+                
+                otk = omegat[np.where(np.isclose(omegat, omegat_target))[0][0]]
+                sel = np.logical_and(df2['instrument'] == ins)
+                sel = np.logical_and(sel, df2['line name'] == line)
+                sel = np.logical_and(sel, df2['sky area * exposure time [arcmin**2 s]'] == otk)
+                
+                sel_nogal = np.logical_and(sel, 
+                    np.logical_not(df2['galaxy absorption included in limit']))
+                sel_gal = np.logical_and(sel, 
+                    df2['galaxy absorption included in limit'])
+                
+                if np.sum(sel_gal) != 1 or np.sum(sel_nogal):
+                    print('for line {}, galabs {}, omegat {}, instrument {}'.format(\
+                          line, galabs_target, otk, ins))
+                    print(df2[sel])
+                
+                ind_gal = df2.index[sel_gal][0]
+                val_gal = df2.at[ind_gal, 'minimum detectable SB [phot/s/cm**2/sr]']
+                
+                ind_nogal = df2.index[sel_nogal][0]
+                val_nogal = df2.at[ind_nogal, 'minimum detectable SB [phot/s/cm**2/sr]']
+                
+                diff = val_nogal - val_gal
+                if firstom:
+                    label = insname
+                else:
+                    label = None
+                ax.scatter(np.log10(otk), diff, color=colors[ins], label=label)
+                
+                firstom = False
+                
+    if ind == 0:
+        ax.legend(fontsize=fontsize)
+    
+    
+    
