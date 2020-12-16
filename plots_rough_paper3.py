@@ -6624,7 +6624,7 @@ def plot_galabsdiff_minSB():
                 sel_gal = np.logical_and(sel, 
                     df2['galaxy absorption included in limit'])
                 
-                if np.sum(sel_gal) != 1 or np.sum(sel_nogal):
+                if np.sum(sel_gal) != 1 or np.sum(sel_nogal) != 1:
                     print('for line {}, omegat {}, instrument {}'.format(\
                           line, _omegat, ins))
                     print(df2[sel])
