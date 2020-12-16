@@ -6529,7 +6529,7 @@ def printlatex_minsb(filen='minSBtable.dat'):
                     cols='l' + 'r' * (nsc * len(instruments) + 1))
     end = '\\end{tabular}'
     fmtl = '{line} & ' + ' & '.join(['{}'] * nsc * len(instruments)) + \
-           ' & {delta_wabs} \\\\'
+           ' & {delta_wabs:.2f} \\\\'
     hline = '\\hline'
     
     print(start)
