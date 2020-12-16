@@ -6615,7 +6615,7 @@ def plot_galabsdiff_minSB():
             firstom = True
             for _omegat in omegats_target:
                 
-                sel = np.logical_and(df2['instrument'] == ins)
+                sel = df2['instrument'] == ins
                 sel = np.logical_and(sel, df2['line name'] == line)
                 sel = np.logical_and(sel, df2['sky area * exposure time [arcmin**2 s]'] == _omegat)
                 
