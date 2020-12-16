@@ -47,6 +47,7 @@ import make_maps_opts_locs as ol
 import tol_colors as tc
 
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 
 arcmin2 = 1. * (np.pi / (180. * 60.))**2 # 1 arcmin**2 in steradian
 
@@ -839,7 +840,7 @@ def plot_minSB():
                          label=labels[isn],
                           **ls)\
                 for omt, ls in zip(omegat, kwargs_omegat)]
-    ax.legend(fontsize=fontsize-2)
+    ax.legend(handles=handles1 + handles2, fontsize=fontsize-2)
     plt.savefig(mdir + 'minSB_instruments_varying_omegatexp.pdf', bbox_inches='tight')  
 
 def plot_Aeff_galabs():
