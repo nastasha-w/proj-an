@@ -6514,17 +6514,17 @@ def printlatex_minsb(filen='minSBtable.dat'):
     nsc = len(omegat_galabs)
     #subfmt = ' & '.join(['{}'] * nsc)
     instruments = ['xrism-resolve', 'athena-xifu', 'lynx-lxm-uhr', 'lynx-lxm-main']
-    insnames = ['XRISM Resolve', 'Athena X-IFU', 'LXM main', 'LXM UHR']
+    insnames = ['XRISM Resolve', 'Athena X-IFU', 'LXM UHR', 'LXM main']
     
     insfmt = '\\multicolumn{{{nsc}}}{{c}}{{{insn}}}'
     head1 = 'instrument & ' + ' & '.join([insfmt.format(nsc=nsc, insn=insn)\
                                                   for insn in insnames]) +\
-            ' & $\\Delta_{\\mathrm{wabs}} \\, \\log_{10} \\mathrm{SB}$ \\\\'
+            ' & \\multicolumn{1}{c}{$\\Delta_{\\mathrm{wabs}}$} \\\\'
             
     head2 = '$\\Delta \\Omega \\, \\Delta \\mathrm{t} \\; [\\mathrm{arcmin}^2 \\mathrm{s}]$'
     head2 = head2 + ' & ' +  ' & '.join([' & '.join(omegat_coln)] *\
                                          len(instruments)) +\
-            ' &  \\\\'
+            ' &  \\multicolumn{1}{c}{$[\\log_{10} \\mathrm{SB}]$} \\\\'
     start = '\\begin{{tabular}}{{{cols}}}'.format(\
                     cols='l' + 'r' * (nsc * len(instruments) + 1))
     end = '\\end{tabular}'
