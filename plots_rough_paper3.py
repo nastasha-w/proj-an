@@ -6635,7 +6635,7 @@ def plot_galabsdiff_minSB():
                 ind_nogal = df2.index[sel_nogal][0]
                 val_nogal = df2.at[ind_nogal, 'minimum detectable SB [phot/s/cm**2/sr]']
                 
-                diff = np.log10(val_nogal) - np.log10(val_gal)
+                diff = val_nogal #np.log10(val_nogal) - np.log10(val_gal)
                 if firstom:
                     label = insname
                 else:
@@ -6648,5 +6648,9 @@ def plot_galabsdiff_minSB():
     if ind == 0:
         ax.legend(fontsize=fontsize)
     
+    ylims = np.array([ax.get_ylim() for ax in axes])
+    ymin = np.min(ylims)
+    ymax = np.max(ylims)
+    [ax.set_ylim(ymin, ymax) for ax in axes]
     
     
