@@ -833,11 +833,12 @@ def plot_minSB():
     ax.set_ylabel('$\\min \\mathrm{SB} \\; [\\mathrm{ph} \\; \\mathrm{s}^{-1} \\mathrm{cm}^{-2} \\mathrm{sr}^{-1}]$',\
                   fontsize=fontsize)
     handles1 = [mlines.Line2D([], [],
-                         label=labels[isn] + '$\\Delta$E = {deltae:.1f} eV'.format(deltae=extr_ranges[isn][0]),
+                         label=labels[isn] + ', $\\Delta$E = {deltae:.1f} eV'.format(deltae=extr_ranges[isn][0]),
                          color=colors[isn])\
                 for isn in names ]
     handles2 = [mlines.Line2D([], [],
-                         label=labels[isn], linestyle=ls, color='gray')\
+                         label='{:.0e} $\\mathrm{arcmin}^{2}$ s'.format(omt),
+                         linestyle=ls, color='gray')\
                 for omt, ls in zip(exptimes, linestyles)]
     ax.legend(handles=handles1 + handles2, fontsize=fontsize-2)
     plt.savefig(mdir + 'minSB_instruments_varying_omegatexp.pdf', bbox_inches='tight')  
