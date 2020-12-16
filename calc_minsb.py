@@ -837,7 +837,7 @@ def plot_minSB():
                          color=colors[isn])\
                 for isn in names ]
     handles2 = [mlines.Line2D([], [],
-                         label=labels[isn], linestyle=linestyle, color='gray')\
+                         label=labels[isn], linestyle=ls, color='gray')\
                 for omt, ls in zip(exptimes, linestyles)]
     ax.legend(handles=handles1 + handles2, fontsize=fontsize-2)
     plt.savefig(mdir + 'minSB_instruments_varying_omegatexp.pdf', bbox_inches='tight')  
