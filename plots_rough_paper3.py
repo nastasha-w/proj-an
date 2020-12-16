@@ -6561,7 +6561,7 @@ def printlatex_minsb(filen='minSBtable.dat'):
                     pval = '0.0'
                 vals.append(pval)
         pl = fmtl.format(*tuple(vals), line=nicenames_lines[line], 
-                         delta=df_diff.at[line, 'minimum detectable SB [phot/s/cm**2/sr]'])
+                         delta_wabs=df_diff.at[line, 'minimum detectable SB [phot/s/cm**2/sr]'])
         print(pl)
     print(hline)
     print(end)    
