@@ -3154,10 +3154,10 @@ def plot_radprof4(talkversion=False, slidenum=0):
                  'xrism-resolve': 'XRISM-R'
                  }        
     _kwargs = {'facecolor': 'none', 'edgecolor': 'gray'}
-    kwargs_ins = {'athena-xifu':   {'hatch': '|'},
-                  'lynx-lxm-main': {'hatch': '\\'},
-                  'lynx-lxm-uhr':  {'hatch': '/'},
-                  'xrism-resolve': {'hatch': '-'},
+    kwargs_ins = {'athena-xifu':   {'hatch': '||'},
+                  'lynx-lxm-main': {'hatch': '\\\\'},
+                  'lynx-lxm-uhr':  {'hatch': '//'},
+                  'xrism-resolve': {'hatch': '--'},
                   }        
     for key in kwargs_ins:
         kwargs_ins[key].update(_kwargs)
@@ -3260,17 +3260,22 @@ def plot_radprof4(talkversion=False, slidenum=0):
                         width_ratios=width_ratios)
     axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(numlines)]
     if cax_right:
-        if nrows > 3: 
+        ncols_insleg = 1 
+        if nrows > 5: 
             csl = slice(nrows // 2 - 1, nrows // 2 + 2, None)
             lsl = slice(0, 1, None)
+            l2sl = slice(1, 2, None)
         elif nrows > 1:
-            csl = slice(1, None, None)
+            csl = slice(2, None, None)
             lsl = slice(0, 1, None)
+            l2sl = slice(1, 2, None)
         else:
             raise RuntimeError('Could not find a place for the legend and color bar at the right of the plot (1 row)')
         cax = fig.add_subplot(grid[csl, ncols])
         lax = fig.add_subplot(grid[lsl, ncols])
         lax.axis('off')
+        lax2 = fig.add_subplot(grid[l2sl, ncols])
+        lax2.axis('off')
         leg_kw = {'loc': 'upper left', 'bbox_to_anchor': (0.05, 0.95)}
     else:
         ind_min = ncols - (nrows * ncols - numlines)
@@ -3285,26 +3290,40 @@ def plot_radprof4(talkversion=False, slidenum=0):
             cspace = _h - 2. * hmargin - lspace
             cax = fig.add_axes([_l + wmargin, _b + hmargin,\
                                 _w - 2.* wmargin, cspace])
+            w1 = 0.3 * (_w - 3. * wmargin)
+            w2 = 0.7 * (_w - 3. * wmargin)
             lax = fig.add_axes([_l + wmargin, _b  + hmargin + cspace,\
-                                _w - 2. * wmargin, lspace])
+                                w1, lspace])
+            lax2 = fig.add_axes([_l + w1 + 2. * wmargin, _b  + hmargin + cspace,\
+                                w1, lspace])
                 
+            ncols_insleg = (len(instruments) + 1) // 2 
+            
             leg_kw = {'loc': 'upper center',\
                   'bbox_to_anchor':(0.5, 1.),\
                   'handlelength': 2.}
         else:
             wmargin = panelwidth * 0.1 / figwidth
             hmargin = panelheight * 0.15 / figheight
-            vspace = 0.4 * panelheight / figheight
+            
+            vspace = 0.35 * panelheight / figheight
             hspace_c = 0.7 * (_w - 3. * wmargin)
             hspace_l = _w - 3. * wmargin - hspace_c
-            cax = fig.add_axes([_l + 2. * wmargin + hspace_l, _b + hmargin,\
+            
+            
+            cax = fig.add_axes([_l + 2. * wmargin + hspace_l, _b,\
                                 hspace_c, vspace])
-            lax = fig.add_axes([_l + wmargin, _b  + hmargin,\
+            lax = fig.add_axes([_l + wmargin, _b,\
                                 hspace_l, vspace])
+            lax2 = fig.add_axes([_l + wmargin, _b  + hmargin + vspace,\
+                                _w - 3. * wmargin, vspace])    
+            ncols_insleg = 4
+             
             leg_kw = {'loc': 'center',\
                       'bbox_to_anchor':(0.5, 0.5),\
                       'handlelength': 2.}
         lax.axis('off')
+        lax2.axis('off')
         
         
     labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
@@ -3478,6 +3497,12 @@ def plot_radprof4(talkversion=False, slidenum=0):
     [ax.set_ylim(ymin + np.log10(right_over_left), ymax + np.log10(right_over_left))\
      for ax in axes2]
     
+    handles_ins = [mpatch.Patch(label=inslabels[ins], **kwargs_ins[ins]) \
+                   for ins in instruments]    
+    leg_ins = lax2.legend(handles=handles_ins, fontsize=fontsize, 
+                          ncols=ncols_insleg, **leg_kw)
+    leg_ins.set_title(legendtitle_minsb, fontsize=fontsize)
+        
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     
 def plot_emtables(z=0.1):
