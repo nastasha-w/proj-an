@@ -3306,7 +3306,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
             wmargin = panelwidth * 0.1 / figwidth
             hmargin = panelheight * 0.05 / figheight
             
-            vspace = 0.35 * panelheight / figheight
+            vspace = 0.25 * panelheight / figheight
             hspace_c = 0.7 * (_w - 3. * wmargin)
             hspace_l = _w - 3. * wmargin - hspace_c
             
