@@ -3450,6 +3450,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
             
             minx = xmin_ins[ins]
             maxx = xmax_ins[ins]
+            print(minx, maxx, miny, maxy)
             
             patch = mpatch.Rectangle([minx, miny], maxx - minx, maxy - miny,
                                      **kwargs_ins[ins])
