@@ -3154,11 +3154,14 @@ def plot_radprof4(talkversion=False, slidenum=0):
                  'xrism-resolve': 'XRISM-R'
                  }        
     _kwargs = {'facecolor': 'none', 'edgecolor': 'gray'}
-    kwargs_ins = {'athena-xifu':   _kwargs.update({'hatch': '|'}),
-                  'lynx-lxm-main': _kwargs.update({'hatch': '\\'}),
-                  'lynx-lxm-uhr':  _kwargs.update({'hatch': '/'}),
-                  'xrism-resolve': _kwargs.update({'hatch': '-'}),
+    kwargs_ins = {'athena-xifu':   {'hatch': '|'},
+                  'lynx-lxm-main': {'hatch': '\\'},
+                  'lynx-lxm-uhr':  {'hatch': '/'},
+                  'xrism-resolve': {'hatch': '-'},
                   }        
+    for key in kwargs_ins:
+        kwargs_ins.update(_kwargs)
+        
     # taken from the table in the paper
     xmin_ins = {'athena-xifu':   arcmin_to_pkpc(5. / 60., z=0.1),
                 'lynx-lxm-main': arcmin_to_pkpc(72. / 60., z=0.1),
