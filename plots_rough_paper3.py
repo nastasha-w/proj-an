@@ -3164,14 +3164,14 @@ def plot_radprof4(talkversion=False, slidenum=0):
         
     # taken from the table in the paper
     xmin_ins = {'athena-xifu':   arcmin_to_pkpc(5. / 60., z=0.1),
-                'lynx-lxm-main': arcmin_to_pkpc(72. / 60., z=0.1),
+                'lynx-lxm-main': arcmin_to_pkpc(0.5 / 60., z=0.1),
                 'lynx-lxm-uhr':  arcmin_to_pkpc(0.5 / 60., z=0.1),
-                'xrism-resolve': arcmin_to_pkpc(0.5 / 60., z=0.1),
+                'xrism-resolve': arcmin_to_pkpc(72. / 60., z=0.1),
                 }   
-    xmax_ins = {'athena-xifu':   arcmin_to_pkpc(5. / 60., z=0.1),
-                'lynx-lxm-main': arcmin_to_pkpc(72. / 60., z=0.1),
-                'lynx-lxm-uhr':  arcmin_to_pkpc(0.5 / 60., z=0.1),
-                'xrism-resolve': arcmin_to_pkpc(0.5 / 60., z=0.1),
+    xmax_ins = {'athena-xifu':   arcmin_to_pkpc(5., z=0.1),
+                'lynx-lxm-main': arcmin_to_pkpc(5., z=0.1),
+                'lynx-lxm-uhr':  arcmin_to_pkpc(1., z=0.1),
+                'xrism-resolve': arcmin_to_pkpc(2.9, z=0.1),
                 }  
                               
     if talkversion:
