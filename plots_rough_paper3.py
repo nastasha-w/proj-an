@@ -3311,11 +3311,11 @@ def plot_radprof4(talkversion=False, slidenum=0):
             hspace_l = _w - 3. * wmargin - hspace_c
             
             
-            cax = fig.add_axes([_l + 2. * wmargin + hspace_l, _b,\
+            cax = fig.add_axes([_l + 2. * wmargin + hspace_l, _b + hmargin,\
                                 hspace_c, vspace])
             lax = fig.add_axes([_l + wmargin, _b,\
                                 hspace_l, vspace])
-            lax2 = fig.add_axes([_l + wmargin, _b  + vspace,\
+            lax2 = fig.add_axes([_l + wmargin, _b  + vspace + hmargin,\
                                 _w - 2. * wmargin, vspace])    
             ncols_insleg = 4
              
