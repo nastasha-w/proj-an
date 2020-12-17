@@ -3500,7 +3500,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
     handles_ins = [mpatch.Patch(label=inslabels[ins], **kwargs_ins[ins]) \
                    for ins in instruments]    
     leg_ins = lax2.legend(handles=handles_ins, fontsize=fontsize, 
-                          ncols=ncols_insleg, **leg_kw)
+                          ncol=ncols_insleg, **leg_kw)
     leg_ins.set_title(legendtitle_minsb, fontsize=fontsize)
         
     plt.savefig(outname, format='pdf', bbox_inches='tight')
