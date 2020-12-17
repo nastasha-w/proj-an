@@ -3315,7 +3315,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
                                 hspace_c, vspace])
             lax = fig.add_axes([_l + wmargin, _b,\
                                 hspace_l, vspace])
-            lax2 = fig.add_axes([_l + wmargin, _b  + hmargin + vspace,\
+            lax2 = fig.add_axes([_l + wmargin, _b  + vspace,\
                                 _w - 2. * wmargin, vspace])    
             ncols_insleg = 4
              
@@ -3469,7 +3469,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
             
             minx = xmin_ins[ins]
             maxx = xmax_ins[ins]
-            print(minx, maxx, miny, maxy)
+            #print(minx, maxx, miny, maxy)
             
             patch = mpatch.Rectangle([minx, miny], maxx - minx, maxy - miny,
                                      **kwargs_ins[ins])
