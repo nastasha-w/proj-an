@@ -58,6 +58,10 @@ fov_arcmin = {'Athena X-IFU': 5.,
               'Lynx X-ray microcalorimeter':  5.,
               }
 
+
+
+res_arcsec.update({'athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr', 'xrism-resolve'})
+
 #lines = ['c5r', 'n6r', 'n6-actualr', 'ne9r', 'ne10', 'mg11r', 'mg12',
 #         'si13r', 'fe18',
 #         'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',
@@ -3120,6 +3124,57 @@ def plot_radprof4(talkversion=False, slidenum=0):
     print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb, C2 kernel')
     print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
     
+    # get minimum SB for the different instruments
+    omegat_use = [1e6, 1e7]
+    legendtitle_minsb = 'min. SB ($5\\sigma$ detection) for $\\Delta' +\
+        ' \\Omega \\, \\Delta t = {:.0e}, {:.0e}'.format(*tuple(omegat_use))+\
+        '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
+    
+    filen='minSBtable.dat'
+    df = pd.read_csv(mdir + 'minSB/' + filen, sep='\t')     
+    groupby = ['line name', 'linewidth [km/s]',
+               'sky area * exposure time [arcmin**2 s]', 
+               'full measured spectral range [eV]',
+               'detection significance [sigma]', 
+               'galaxy absorption included in limit',
+               'instrument']
+    df2 = df.groupby(groupby)['minimum detectable SB [phot/s/cm**2/sr]'].mean().reset_index()
+    zopts = df['redshift'].unique()
+    print('Using redshifts for min SB: {}'.format(zopts))
+    
+    expectedsame = ['linewidth [km/s]', 'detection significance [sigma]']
+    for colname in expectedsame:
+        if np.allclose(df2[colname], df2.at[0,colname]):
+            print('Using {}: {}'.format(colname, df2.at[0,colname]))
+            del df2[colname]
+            groupby.remove(colname)
+        else:
+            raise RuntimeError('Multiple values for {}; choose one'.format(colname))
+            
+    instruments = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr', 'xrism-resolve']        
+    inslabels = {'athena-xifu': 'X-IFU',
+                 'lynx-lxm-main': 'LXM main',
+                 'lynx-lxm-uhr': 'LXM UHR',
+                 'xrism-resolve': 'XRISM-R'
+                 }        
+    _kwargs = {'facecolor': 'none', 'edgecolor': 'gray'}
+    kwargs_ins = {'athena-xifu':   _kwargs.update({'hatch': '|'}),
+                  'lynx-lxm-main': _kwargs.update({'hatch': '\'}),
+                  'lynx-lxm-uhr':  _kwargs.update({'hatch': '/'}),
+                  'xrism-resolve': _kwargs.update({'hatch': '-'}),
+                  }        
+    # taken from the table in the paper
+    xmin_ins = {'athena-xifu':   arcmin_to_pkpc(5. / 60., z=0.1),
+                'lynx-lxm-main': arcmin_to_pkpc(72. / 60., z=0.1),
+                'lynx-lxm-uhr':  arcmin_to_pkpc(0.5. / 60., z=0.1),
+                'xrism-resolve': arcmin_to_pkpc(0.5. / 60., z=0.1),
+                }   
+    xmax_ins = {'athena-xifu':   arcmin_to_pkpc(5. / 60., z=0.1),
+                'lynx-lxm-main': arcmin_to_pkpc(72. / 60., z=0.1),
+                'lynx-lxm-uhr':  arcmin_to_pkpc(0.5. / 60., z=0.1),
+                'xrism-resolve': arcmin_to_pkpc(0.5. / 60., z=0.1),
+                }  
+                              
     if talkversion:
         fontsize = 14
     else:
@@ -3373,6 +3428,71 @@ def plot_radprof4(talkversion=False, slidenum=0):
                        for ls, label in zip([ls_mean, ls_median], ['mean', 'med. mean'])]
             lax.legend(handles=handles, fontsize=fontsize, **leg_kw)
         
+        # add SB mins
+        _sel = df2['galaxy absorption included in limit']
+        for ins in instruments:   
+            sel = np.logical_and(_sel, df2['instrument'] == ins)
+            sel &= df2['line name'] == line
+            
+            minsel = sel & np.isclose(df2['sky area * exposure time [arcmin**2 s]'],
+                                      np.min(omegat_use))
+            maxsel = sel & np.isclose(df2['sky area * exposure time [arcmin**2 s]'],
+                                      np.max(omegat_use))
+            if len(maxsel) != 1 or len(minsel) != 1:
+                msg = 'Something went wrong finding the SB limits:'
+                msg = 'selected {}, {} values'.format(len(minsel), len(maxsel))
+                raise RuntimeError(msg)
+            
+            miny = np.log10(df2[minsel].at[0, 'minimum detectable SB [phot/s/cm**2/sr]'])
+            maxy = np.log10(df2[maxsel].at[0, 'minimum detectable SB [phot/s/cm**2/sr]'])
+            
+            minx = xmin_ins[ins]
+            maxx = xmax_ins[ins]
+            
+            patch = mpatch.Rectangle([minx, miny], maxx - minx, maxy - miny,
+                                     **kwargs_ins[ins])
+            ax.add_artist(patch)
+            
+            
+            
+            omegat_use = [1e6, 1e7]
+        legendtitle_minsb = 'min. SB ($5\\sigma$ detection) for $\\Delta' +\
+            ' \\Omega \\, \\Delta t = {:.0e}, {:.0e}'.format(*tuple(omegat_use))+\
+            '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
+        
+        filen='minSBtable.dat'
+        df = pd.read_csv(mdir + 'minSB/' + filen, sep='\t')     
+        groupby = ['line name', 'linewidth [km/s]',
+                   'sky area * exposure time [arcmin**2 s]', 
+                   'full measured spectral range [eV]',
+                   'detection significance [sigma]', 
+                   'galaxy absorption included in limit',
+                   'instrument']
+        df2 = df.groupby(groupby)['minimum detectable SB [phot/s/cm**2/sr]'].mean().reset_index()
+        zopts = df['redshift'].unique()
+        print('Using redshifts for min SB: {}'.format(zopts))
+        
+        expectedsame = ['linewidth [km/s]', 'detection significance [sigma]']
+        for colname in expectedsame:
+            if np.allclose(df2[colname], df2.at[0,colname]):
+                print('Using {}: {}'.format(colname, df2.at[0,colname]))
+                del df2[colname]
+                groupby.remove(colname)
+            else:
+                raise RuntimeError('Multiple values for {}; choose one'.format(colname))
+                
+        instruments = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr', 'xrism-resolve']        
+        inslabels = {'athena-xifu': 'X-IFU',
+                     'lynx-lxm-main': 'LXM main',
+                     'lynx-lxm-uhr': 'LXM UHR',
+                     'xrism-resolve': 'XRISM-R'
+                     }        
+        _kwargs = {'facecolor': 'none', 'edgecolor': 'gray'}
+        kwargs_ins = {'athena-xifu':   _kwargs.update({'hatch': '|'}),
+                      'lynx-lxm-main': _kwargs.update({'hatch': '\'}),
+                      'lynx-lxm-uhr':  _kwargs.update({'hatch': '/'}),
+                      'xrism-resolve': _kwargs.update({'hatch': '-'}),
+                      }        
         
     # sync plot ranges
     xlims = [ax.get_xlim() for ax in axes]
