@@ -3440,9 +3440,10 @@ def plot_radprof4(talkversion=False, slidenum=0):
                 msg = 'Something went wrong finding the SB limits:'
                 msg = 'selected {}, {} values'.format(len(minsel), len(maxsel))
                 raise RuntimeError(msg)
-            
-            miny = np.log10(df2[minsel].at[0, 'minimum detectable SB [phot/s/cm**2/sr]'])
-            maxy = np.log10(df2[maxsel].at[0, 'minimum detectable SB [phot/s/cm**2/sr]'])
+            imin = df2.index[minsel][0]
+            imax = df2.index[maxsel][0]
+            miny = np.log10(df2.at[imin, 'minimum detectable SB [phot/s/cm**2/sr]'])
+            maxy = np.log10(df2.at[imax, 'minimum detectable SB [phot/s/cm**2/sr]'])
             
             minx = xmin_ins[ins]
             maxx = xmax_ins[ins]
