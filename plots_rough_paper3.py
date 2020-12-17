@@ -3160,7 +3160,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
                   'xrism-resolve': {'hatch': '-'},
                   }        
     for key in kwargs_ins:
-        kwargs_ins.update(_kwargs)
+        kwargs_ins[key].update(_kwargs)
         
     # taken from the table in the paper
     xmin_ins = {'athena-xifu':   arcmin_to_pkpc(5. / 60., z=0.1),
