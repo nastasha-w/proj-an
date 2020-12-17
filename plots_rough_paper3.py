@@ -3157,7 +3157,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
     kwargs_ins = {'athena-xifu':   {'hatch': '||'},
                   'lynx-lxm-main': {'hatch': '\\\\'},
                   'lynx-lxm-uhr':  {'hatch': '//'},
-                  'xrism-resolve': {'hatch': '--'},
+                  'xrism-resolve': {'hatch': '---'},
                   }        
     for key in kwargs_ins:
         kwargs_ins[key].update(_kwargs)
@@ -3304,7 +3304,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
                   'handlelength': 2.}
         else:
             wmargin = panelwidth * 0.1 / figwidth
-            hmargin = panelheight * 0.15 / figheight
+            hmargin = panelheight * 0.05 / figheight
             
             vspace = 0.35 * panelheight / figheight
             hspace_c = 0.7 * (_w - 3. * wmargin)
@@ -3316,7 +3316,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
             lax = fig.add_axes([_l + wmargin, _b,\
                                 hspace_l, vspace])
             lax2 = fig.add_axes([_l + wmargin, _b  + hmargin + vspace,\
-                                _w - 3. * wmargin, vspace])    
+                                _w - 2. * wmargin, vspace])    
             ncols_insleg = 4
              
             leg_kw = {'loc': 'center',\
@@ -3501,8 +3501,9 @@ def plot_radprof4(talkversion=False, slidenum=0):
                    for ins in instruments]    
     leg_ins = lax2.legend(handles=handles_ins, fontsize=fontsize, 
                           ncol=ncols_insleg, **leg_kw)
-    leg_ins.set_title(legendtitle_minsb, fontsize=fontsize)
-        
+    leg_ins.set_title(legendtitle_minsb)
+    leg_ins.get_title().set_fontsize(fontsize)
+    
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     
 def plot_emtables(z=0.1):
