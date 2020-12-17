@@ -58,10 +58,6 @@ fov_arcmin = {'Athena X-IFU': 5.,
               'Lynx X-ray microcalorimeter':  5.,
               }
 
-
-
-res_arcsec.update({'athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr', 'xrism-resolve'})
-
 #lines = ['c5r', 'n6r', 'n6-actualr', 'ne9r', 'ne10', 'mg11r', 'mg12',
 #         'si13r', 'fe18',
 #         'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',
