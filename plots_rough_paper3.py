@@ -3436,7 +3436,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
                                       np.min(omegat_use))
             maxsel = sel & np.isclose(df2['sky area * exposure time [arcmin**2 s]'],
                                       np.max(omegat_use))
-            if len(maxsel) != 1 or len(minsel) != 1:
+            if np.sum(maxsel) != 1 or np.sum(minsel) != 1:
                 msg = 'Something went wrong finding the SB limits:'
                 msg = 'selected {}, {} values'.format(len(minsel), len(maxsel))
                 raise RuntimeError(msg)
