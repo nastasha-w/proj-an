@@ -3159,7 +3159,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
                  }        
     _kwargs = {'facecolor': 'none', 'edgecolor': 'gray'}
     kwargs_ins = {'athena-xifu':   _kwargs.update({'hatch': '|'}),
-                  'lynx-lxm-main': _kwargs.update({'hatch': '\'}),
+                  'lynx-lxm-main': _kwargs.update({'hatch': '\\'}),
                   'lynx-lxm-uhr':  _kwargs.update({'hatch': '/'}),
                   'xrism-resolve': _kwargs.update({'hatch': '-'}),
                   }        
