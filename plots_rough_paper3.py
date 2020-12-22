@@ -3122,9 +3122,14 @@ def plot_radprof4(talkversion=False, slidenum=0):
     
     # get minimum SB for the different instruments
     omegat_use = [1e6, 1e7]
-    legendtitle_minsb = 'min. SB ($5\\sigma$ detection) for $\\Delta' +\
-        ' \\Omega \\, \\Delta t = {:.0e}, {:.0e}'.format(*tuple(omegat_use))+\
-        '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
+    if talkversion:
+        legendtitle_minsb = 'min. SB ($5\\sigma$) for $\\Delta' +\
+            ' \\Omega \\, \\Delta t = {:.0e}, {:.0e}'.format(*tuple(omegat_use))+\
+            '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
+    else:
+        legendtitle_minsb = 'min. SB ($5\\sigma$ detection) for $\\Delta' +\
+            ' \\Omega \\, \\Delta t = {:.0e}, {:.0e}'.format(*tuple(omegat_use))+\
+            '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
     
     filen='minSBtable.dat'
     df = pd.read_csv(mdir + 'minSB/' + filen, sep='\t')     
@@ -3162,16 +3167,16 @@ def plot_radprof4(talkversion=False, slidenum=0):
     for key in kwargs_ins:
         kwargs_ins[key].update(_kwargs)
         
-    # taken from the table in the paper
-    xmin_ins = {'athena-xifu':   arcmin_to_pkpc(5. / 60., z=0.1),
-                'lynx-lxm-main': arcmin_to_pkpc(0.5 / 60., z=0.1),
-                'lynx-lxm-uhr':  arcmin_to_pkpc(0.5 / 60., z=0.1),
-                'xrism-resolve': arcmin_to_pkpc(72. / 60., z=0.1),
+    # taken from the table in the paper (half of PSF and FOV)
+    xmin_ins = {'athena-xifu':   0.5 * arcmin_to_pkpc(5. / 60., z=0.1),
+                'lynx-lxm-main': 0.5 * arcmin_to_pkpc(0.5 / 60., z=0.1),
+                'lynx-lxm-uhr':  0.5 * arcmin_to_pkpc(0.5 / 60., z=0.1),
+                'xrism-resolve': 0.5 * arcmin_to_pkpc(72. / 60., z=0.1),
                 }   
-    xmax_ins = {'athena-xifu':   arcmin_to_pkpc(5., z=0.1),
-                'lynx-lxm-main': arcmin_to_pkpc(5., z=0.1),
-                'lynx-lxm-uhr':  arcmin_to_pkpc(1., z=0.1),
-                'xrism-resolve': arcmin_to_pkpc(2.9, z=0.1),
+    xmax_ins = {'athena-xifu':   0.5 * arcmin_to_pkpc(5., z=0.1),
+                'lynx-lxm-main': 0.5 * arcmin_to_pkpc(5., z=0.1),
+                'lynx-lxm-uhr':  0.5 * arcmin_to_pkpc(1., z=0.1),
+                'xrism-resolve': 0.5 * arcmin_to_pkpc(2.9, z=0.1),
                 }  
                               
     if talkversion:
