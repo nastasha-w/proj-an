@@ -3289,8 +3289,8 @@ def plot_radprof4(talkversion=False, slidenum=0):
         _l, _b, _w, _h = (_cax.get_position()).bounds
         vert = nrows * ncols - numlines <= 2
         if vert:
-            wmargin = panelwidth * 0.12 / figwidth
-            hmargin_b = panelheight * 0.09 / figheight
+            wmargin = panelwidth * 0.09 / figwidth
+            hmargin_b = panelheight * 0.07 / figheight
             hmargin_t = panelheight * 0.07 / figheight
             lspace = 0.3 * panelheight / figheight
             cspace = _h - hmargin_b - hmargin_t - lspace
