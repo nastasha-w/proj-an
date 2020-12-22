@@ -3289,18 +3289,18 @@ def plot_radprof4(talkversion=False, slidenum=0):
         _l, _b, _w, _h = (_cax.get_position()).bounds
         vert = nrows * ncols - numlines <= 2
         if vert:
-            wmargin = panelwidth * 0.15 / figwidth
-            hmargin_b = panelheight * 0.12 / figheight
+            wmargin = panelwidth * 0.12 / figwidth
+            hmargin_b = panelheight * 0.09 / figheight
             hmargin_t = panelheight * 0.07 / figheight
             lspace = 0.3 * panelheight / figheight
             cspace = _h - hmargin_b - hmargin_t - lspace
             cax = fig.add_axes([_l + wmargin, _b + hmargin_b,\
                                 _w - 1.* wmargin, cspace])
-            w1 = 0.3 * (_w - 2. * wmargin)
-            w2 = 0.7 * (_w - 2. * wmargin)
+            w1 = 0.35 * (_w - 1. * wmargin)
+            w2 = 0.65 * (_w - 1. * wmargin)
             lax = fig.add_axes([_l + wmargin, _b  + hmargin_b + cspace,\
                                 w1, lspace])
-            lax2 = fig.add_axes([_l + w1 + 2. * wmargin, _b  + hmargin_b + cspace,\
+            lax2 = fig.add_axes([_l + w1 + 1. * wmargin, _b  + hmargin_b + cspace,\
                                 w2, lspace])
                 
             ncols_insleg = (len(instruments) + 1) // 2 
