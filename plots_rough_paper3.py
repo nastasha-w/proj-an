@@ -3124,7 +3124,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
     omegat_use = [1e6, 1e7]
     if talkversion:
         legendtitle_minsb = 'min. SB ($5\\sigma$) for $\\Delta' +\
-            ' \\Omega \\, \\Delta t = {:.0e}, {:.0e}'.format(*tuple(omegat_use))+\
+            ' \\Omega \\, \\Delta t =$ \n ${:.0e}, {:.0e}'.format(*tuple(omegat_use))+\
             '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
     else:
         legendtitle_minsb = 'min. SB ($5\\sigma$ detection) for $\\Delta' +\
