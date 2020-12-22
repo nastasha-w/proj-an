@@ -4545,7 +4545,7 @@ def plot_NEW(fontsize=fontsize):
     
 # column density equivalent width, coldens, N, EW, N-EW, cog, curve of growth
 # b, bpar
-def plot_NEW_talkversion(fontsize=fontsize): 
+def plot_NEW_talkversion(fontsize=13): 
     '''
     EW vs. column density using voigt profile spectra
     '''
@@ -4655,7 +4655,7 @@ def plot_NEW_talkversion(fontsize=fontsize):
     panelwidth = 2.8
     panelheight = 2.8
     legheight = 1.0
-    wspace = 0.35
+    wspace = 0.38
     hspace = 0.2
     nrows = nions // ncols
     
