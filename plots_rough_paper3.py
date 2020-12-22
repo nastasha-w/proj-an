@@ -3292,7 +3292,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
             wmargin = panelwidth * 0.1 / figwidth
             hmargin = panelheight * 0.15 / figheight
             lspace = 0.3 * panelheight / figheight
-            cspace = _h - 1. * hmargin - lspace
+            cspace = _h - 2. * hmargin - lspace
             cax = fig.add_axes([_l + wmargin, _b + hmargin,\
                                 _w - 2.* wmargin, cspace])
             w1 = 0.3 * (_w - 3. * wmargin)
