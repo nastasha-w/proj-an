@@ -4540,7 +4540,314 @@ def plot_NEW(fontsize=fontsize):
     lax.legend(handles=hnd, labels=lab, fontsize=fontsize, loc='lower center',\
                          ncol=4, frameon=True, bbox_to_anchor=(0.5, 0.0))
 
-    plt.savefig(outname, format='pdf', bbox_inches='tight')    
+    plt.savefig(outname, format='pdf', bbox_inches='tight') 
+    
+    
+# column density equivalent width, coldens, N, EW, N-EW, cog, curve of growth
+# b, bpar
+def plot_NEW_talkversion(fontsize=fontsize): 
+    '''
+    EW vs. column density using voigt profile spectra
+    '''
+
+    outname = tmdir +\
+        'coldens_EW_sample3-6_ionselsamples_L0100N1504_27_T4EOS_voigt.pdf'
+    ions = ['o7', 'o8']
+    datafile = datadir + 'sample3-6_coldens_EW_vwindows_subsamples.hdf5'
+    
+    uselines = {'o7': ild.o7major,\
+                'o8': ild.o8doublet,\
+                'o6': ild.o6major,\
+                'ne8': ild.ne8major,\
+                'ne9': ild.ne9major,\
+                'fe17': ild.fe17major,\
+                }
+    Nminmax =  {'o7':   (14.5, 18.3),\
+                'o8':   (14.8, 17.5),\
+                'o6':   (12.8, 17.0),\
+                'ne9':  (14.9, 17.4),\
+                'ne8':  (13.5, 16.4),\
+                'fe17': (14.2, 16.6),\
+                }
+    logEWminmax = {'o7':   (0.0, 1.9),\
+                   'o8':   (0.0, 1.7),\
+                   'o6':   (1.0, 3.2),\
+                   'ne9':  (0.0, 1.3),\
+                   'ne8':  (1.3, 2.8),\
+                   'fe17': (0.0, 1.4),\
+                   }
+   
+    bvals_CIE = {ion: np.sqrt(2. * c.boltzmann * Tmax_CIE[ion] / \
+                              (ionh.atomw[string.capwords(ol.elements_ion[ion])] * c.u)) \
+                      * 1e-5
+                 for ion in Tmax_CIE}
+    # v windows
+    bfits = {'o6': 28.,\
+             'o7': 83.,\
+             'o8': 112.,\
+             'ne8': 37.,\
+             'ne9': 82.,\
+             'fe17': 92.,\
+             }
+    
+    vwindows_ion = {'o6': 600.,\
+                    'ne8': 600.,\
+                    'o7': 1600.,\
+                    'o8': 1600.,\
+                    'fe17': 1600.,\
+                    'ne9': 1600,\
+                    }
+    samplegroups_ion = {ion: '{ion}_selection'.format(ion=ion) \
+                              for ion in vwindows_ion}
+    
+    with h5py.File(datafile, 'r') as df:
+        coldens = {}
+        EWs = {}
+        for ion in ions:
+            samplegroup = samplegroups_ion[ion] + '/'
+            vwindow = vwindows_ion[ion]
+            
+            if vwindow is None:
+                epath = 'EW_tot_dw/'
+                cpath = 'coldens_tot/'
+            else:
+                spath = 'vwindows_maxtau_dw/Deltav_{dv:.3f}/'.format(dv=vwindow)
+                epath = spath + 'EW/'
+                cpath = spath + 'coldens/'
+            epath = samplegroup + epath
+            cpath = samplegroup + cpath
+            
+            coldens[ion] = np.array(df[cpath + ion])
+            EWs[ion] = np.array(df[epath + ion])
+    
+    bvals_indic = [10., 20., 50., 100., 200.]
+    percentiles = [2., 10., 50., 90., 98.]
+    logNspacing = 0.1
+    linemin = 50
+    ncols = 2
+    ylabel = r'$\log_{10} \, \mathrm{EW} \; [\mathrm{m\AA}]$'
+    ylabel2 = r'$\log_{10} \, \mathrm{EW} \; [\mathrm{eV}]$'
+    xlabel = r'$\log_{10} \, \mathrm{N} \; [\mathrm{cm}^{-2}]$'
+    bbox = {'facecolor': 'white', 'alpha': 0.5, 'edgecolor': 'none'}
+    
+    alpha = 0.3
+    size_data = 3.
+    linewidth = 2.
+    path_effects = [mppe.Stroke(linewidth=linewidth, foreground="black"),\
+                    mppe.Stroke(linewidth=linewidth - 0.5)]
+    color_data = ['gray', 'dimgray']
+    color_bbkg = 'C5'
+    color_lin  = 'forestgreen'
+    color_cie  = 'orange'
+    color_fit  = 'blue'
+    ls_data    = 'solid'
+    ls_bbkg    = 'dotted'
+    ls_lin     = 'dotted'
+    ls_cie     = 'dashed'
+    ls_fit     = 'dashdot'
+    ftllabel = 'best-fit $b$'
+    cielabel = '$b(\\mathrm{{T}}_{{\\max, \\mathrm{{CIE}}}})$'
+    linlabel = 'lin. COG'
+    bkglabel = 'var. $b \\; [\\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}]$'    
+    
+    nions = len(ions)
+    
+    panelwidth = 2.8
+    panelheight = 2.8
+    legheight = 1.0
+    wspace = 0.35
+    hspace = 0.2
+    nrows = nions // ncols
+    
+    fig = plt.figure(figsize=(panelwidth * ncols + wspace * (ncols - 1),\
+                              panelheight * nrows + hspace * (nrows - 1) +\
+                              legheight))
+    grid = gsp.GridSpec(ncols=ncols, nrows=nrows + 1, wspace=wspace, hspace=hspace,\
+                        height_ratios=[panelheight] * nrows + [legheight])   
+    axes = [fig.add_subplot(grid[ioni // ncols, ioni % ncols]) for ioni in range(nions)]
+    lax = fig.add_subplot(grid[nrows, :])
+    
+    for ioni in range(nions):
+        ax = axes[ioni]
+        ion = ions[ioni]
+        
+        axlabel1 = '$\\Delta v = \\pm {dv:.0f} \\, \\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}$'
+        axlabel2 = '$\\mathrm{{{ion}}}$'
+        axlabel1 = axlabel1.format(dv=0.5 * vwindows_ion[ion])
+        axlabel2 = axlabel2.format(ion=ild.getnicename(ion, mathmode=True))
+        ax.text(0.03, 0.97, axlabel1, fontsize=fontsize - 1,\
+                transform=ax.transAxes, verticalalignment='top',\
+                horizontalalignment='left',\
+                bbox=bbox)
+        ax.text(0.03, 0.85, axlabel2, fontsize=fontsize,\
+                transform=ax.transAxes, verticalalignment='top',\
+                horizontalalignment='left',\
+                bbox=None)
+        
+        fitlabel = 'fit: $b = {b:.0f} \\, \\mathrm{{km}}\\,\\mathrm{{s}}^{{-1}}$'.format(b=bfits[ion])
+        ax.text(0.97, 0.03, fitlabel, fontsize=fontsize - 1,\
+                transform=ax.transAxes, verticalalignment='bottom',\
+                horizontalalignment='right', bbox=bbox)
+        
+        pu.setticks(ax, fontsize - 2, right=False)
+        if ioni % ncols == 0:
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+        if ioni // ncols == nrows - 1:
+            ax.set_xlabel(xlabel, fontsize=fontsize)
+        
+        ax.set_xlim(*Nminmax[ion])
+        ax.set_ylim(*logEWminmax[ion])
+        
+        # add EW [eV] axis
+        ax2 = ax.twinx()
+        pu.setticks(ax2, fontsize - 2, right=True, left=False, top=False,\
+                    bottom=False, labelright=True,\
+                    labelleft=False, labelbottom=False, labeltop=False)
+        if ioni % ncols == ncols - 1:
+            ax2.set_ylabel(ylabel2, fontsize=fontsize)
+        ylim_mA = np.array(ax.get_ylim())
+        try:
+            wlen = uselines[ion].lambda_angstrom * 1e-8
+        except AttributeError:
+            sls = [uselines[ion].speclines[lnn] \
+                   for lnn in uselines[ion].speclines]
+            wlen = np.sum([ln.lambda_angstrom * 1e-8 * ln.fosc for ln in sls])\
+                   / np.sum([ln.fosc for ln in sls])
+        ylim_eV = c.planck * c.c / (wlen**2) * 10**ylim_mA * 1e-11 / c.ev_to_erg
+        ylim_eV = np.log10(ylim_eV)
+        ax2.set_ylim(*tuple(ylim_eV))
+        
+        #if ion in ['ne9', 'o8']:
+        #    for label in ax.get_ymajorticklabels():
+        #        label.set_rotation(45)
+        #if ion in ['ne8', 'o7', 'o8']:
+        #    for label in ax2.get_ymajorticklabels():
+        #        label.set_rotation(-45)
+        ax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
+        ax2.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
+        
+        N = coldens[ion]
+        EW = np.log10(EWs[ion]) + 3. # Angstrom -> mA
+        Nmin = np.min(N)
+        Nmax = np.max(N)
+        Nbmin = np.floor(Nmin / logNspacing) * logNspacing
+        Nbmax = np.ceil(Nmax / logNspacing) * logNspacing
+        Nbins = np.arange(Nbmin, Nbmax + 0.5 * logNspacing, logNspacing)
+        Nbinc = Nbins + 0.5 * logNspacing
+        Nbinc = np.append([Nbinc[0] - 0.5 * logNspacing], Nbinc)
+        
+        pvals, outliers, pinds =  pu.get_perc_and_points(N, EW, Nbins,\
+                        percentiles=percentiles,\
+                        mincount_x=linemin,\
+                        getoutliers_y=True, getmincounts_x=True,\
+                        x_extremes_only=True)
+        pvals = pvals.T
+        
+        nrange = len(percentiles) // 2
+        plotmed  = len(percentiles) % 2
+        
+        for i in range(nrange):
+            pmin = pvals[i][pinds]
+            pmax = pvals[len(pvals) - 1 - i][pinds]
+            ax.fill_between(Nbinc[pinds], pmin, pmax,\
+                            color=color_data[i], alpha=alpha)
+        if plotmed:
+            pmed = pvals[nrange]
+            ax.plot(Nbinc, pmed, linestyle=ls_data,\
+                    linewidth=linewidth, color=color_data[0],\
+                    path_effects=path_effects)
+        ax.scatter(outliers[0], outliers[1], c=color_data[0], alpha=alpha,\
+                   s=size_data)
+        
+        linvals = ild.lingrowthcurve_inv(10**Nbinc, uselines[ion])
+        linvals = np.log10(linvals) + 3
+        ax.plot(Nbinc, linvals, linestyle=ls_lin, color=color_lin,\
+                linewidth=linewidth, label=linlabel)
+        
+        cievals = ild.linflatdampedcurveofgrowth_inv(10**Nbinc,\
+                                               bvals_CIE[ion] * 1e5,\
+                                               uselines[ion])
+        cievals = np.log10(cievals) + 3
+        ax.plot(Nbinc, cievals, linestyle=ls_cie, color=color_cie,\
+                linewidth=linewidth, label=cielabel, path_effects=path_effects)
+        
+        fitvals = ild.linflatdampedcurveofgrowth_inv(10**Nbinc,\
+                                               bfits[ion] * 1e5,\
+                                               uselines[ion])
+        fitvals = np.log10(fitvals) + 3
+        ax.plot(Nbinc, fitvals, linestyle=ls_fit, color=color_fit,\
+                linewidth=linewidth, label=ftllabel, path_effects=path_effects)
+            
+        label = True
+        xlim = ax.get_xlim()
+        ylim = ax.get_ylim()
+        xr = xlim[1] - xlim[0]
+        yr = ylim[1] - ylim[0]
+        for bi in range(len(bvals_indic)):
+            bval = bvals_indic[bi]
+            if label:
+                _label = bkglabel
+            else:
+                _label = None
+            _vals = ild.linflatdampedcurveofgrowth_inv(10**Nbinc,\
+                                               bval * 1e5,\
+                                               uselines[ion])
+            _vals = np.log10(_vals) + 3
+            ax.plot(Nbinc, _vals, linestyle=ls_bbkg, color=color_bbkg,\
+                linewidth=linewidth, label=_label, zorder=-1)
+            label=False
+            
+            ## plots are already quit busy, so leave out b labels in the 
+            ## cramped top region
+            if bi == 0:
+                Nind = np.argmin(np.abs(xlim[1] - 0.3 * xr - Nbinc))
+            elif bi == 1:
+                Nind = np.argmin(np.abs(xlim[1] - 0.15 * xr - Nbinc))
+            else:
+                Nind = min(np.argmin(np.abs(xlim[1] - 0.08 * xr - Nbinc)),\
+                           len(Nbinc) - 2)
+            if _vals[Nind] < ylim[1]:  
+                rot = np.tan((_vals[Nind - 2] - _vals[Nind - 4]) /\
+                             (Nbinc[Nind - 2] - Nbinc[Nind - 4])\
+                             * xr / yr)
+                rot *= 180. / np.pi # rad -> deg
+                ax.text((Nbinc[Nind] - xlim[0]) / xr,\
+                        (_vals[Nind] - ylim[0]) / yr - 0.005,\
+                        '{:.0f}'.format(bval),\
+                        horizontalalignment='center', verticalalignment='top',\
+                        color=color_bbkg, fontsize=fontsize - 2, zorder=-1,\
+                        rotation=rot, transform=ax.transAxes)
+        
+#        if dampingwing_deltaEW_indic:            
+#            dfn = datadir + 'EWdiffs_dampingwings.hdf5'
+#            with h5py.File(dfn, 'r') as df:
+#                grp = df[ion]
+#                Nsample = np.array(grp['logNcm2'])
+#                EWgrid_lnf = np.log10(np.array(grp['EW_Angstrom_gaussian'])) + 3.
+#                EWgrid_dmp = np.log10(np.array(grp['EW_Angstrom_voigt'])) + 3.
+#                
+#            EWdiff = EWgrid_dmp - EWgrid_lnf
+#            
+#            xpoints = np.tile(Nsample, EWgrid_dmp.shape[0])
+#            ypoints = EWgrid_dmp.flatten()
+#            zpoints = EWdiff.flatten()
+#           
+#            EWpoints = np.linspace(ylim[0], ylim[1], 200)
+#            gridpoints = (Nsample[np.newaxis, :], EWpoints[:,None])
+#            diffvals = si.griddata((xpoints, ypoints), zpoints, gridpoints,\
+#                                   method='linear')
+#            contours = ax.contour(Nsample, EWpoints, np.abs(diffvals),\
+#                                  levels=[0.01, 0.02, 0.05, 0.1, 0.15, 0.2],\
+#                                  colors='red', zorder=2)
+#            ax.clabel(contours, inline=1, fontsize=fontsize - 2)
+            
+    print('Used b values {} km/s (low-to-high -> bottom to top in plot)'.format(bvals_indic))        
+    lax.axis('off')
+    hnd, lab = axes[0].get_legend_handles_labels()
+    lax.legend(handles=hnd, labels=lab, fontsize=fontsize, loc='lower center',\
+                         ncol=4, frameon=True, bbox_to_anchor=(0.5, 0.0))
+
+    plt.savefig(outname, format='pdf', bbox_inches='tight') 
 
 # b, b parameter, 
 def plotbpar(fontsize=fontsize, showgaussian=False):
