@@ -146,12 +146,17 @@ def getimgs(cen, size, sizemargin=2.):
         kwargs.update(argset[1])
         
         name = m3.make_map(*args, nameonly=True, **kwargs)
+        inclq = False
         if isinstance(name, tuple):
-            names.append(name[0])
-            names.append(name[1])
-            if not (os.path.isfile(name[0]) and os.path.isfile(name[1])): 
-                m3.make_map(*args, nameonly=False, **kwargs)
-        else:
+            if name[1] is None:
+                name = name[0]
+            else:
+                inclq = True
+                names.append(name[0])
+                names.append(name[1])
+                if not (os.path.isfile(name[0]) and os.path.isfile(name[1])): 
+                    m3.make_map(*args, nameonly=False, **kwargs)
+        if not inclq:
             names.append(name)
             if not os.path.isfile(name): 
                 m3.make_map(*args, nameonly=False, **kwargs)
