@@ -119,54 +119,251 @@ def create_cddf_singleslice(bins, *args, **kwargs):
         if filens[1] is not None:
             os.remove(filens[1])
     
-def getargs(arglist):
+
+def get_names_and_pars(mapslices, *args, **kwargs):
     '''
+    get the files names and arguments for each slice in make_maps_v3_master
+
+    Parameters
+    ----------
+    mapslices : int
+        number of slices to divide the region in *args into along the line of 
+        sight.
+    *args : 
+        arguments for make_maps_v3_master.make_map (region before division
+        into mapslices).
+    **kwargs :
+        key word arguments for make_maps_v3_master.make_maps. saveres and hdf5
+        are always set to True, nameonly is ignored
+
+    Returns
+    -------
+    names: list of tuples of strings
+        names of the hdf5 files created (in order of slices)
+    args: list of lists
+        arguments to input to make_maps (in order of slices)
+    kwargs: list of dicts
+        key-word arguments for make_maps (in order of slices)
+    '''
+    
+    _kwargs = kwargs.copy()
+    _kwargs['saveres'] = True
+    _kwargs['hdf5'] = True
+    if 'nameonly' in _kwargs:
+        del _kwargs['nameonly']
+    
+    if not isinstance(mapslices, int) and mapslices > 0:
+        raise ValueError('mapslices should be a positive integer; was' +\
+                         ' {}'.format(mapslices))
+    
+    kwargslist = [_kwargs] * mapslices
+    
+    argslist = []
+    nameslist = []
+    
+    if mapslices == 1:
+        argslist.append(args)
+        names = m3.make_maps(*args, nameonly=True, **kwargs)
+        nameslist.append(names)
+    else:
+        simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, ptypeW = args
+        # generate per-slice args and names
+        if 'axis' in _kwargs:
+            axis = _kwargs['axis']
+        else: # use make_maps default 
+            axis = 'z'
+    
+        if axis == 'z':
+            slind = 2
+            slext = L_z
+            L_z /= float(mapslices)
+        elif axis == 'y':
+            slind = 1
+            slext = L_y
+            L_y /= float(mapslices)  
+        elif axis == 'x':
+            slind = 0
+            slext = L_x
+            L_x /= float(mapslices)
+            
+        for i in range(mapslices):
+            _centre = np.copy(centre)
+            _centre[slind] = centre[slind] + \
+                             (0.5 / float(mapslices) - 0.5) * slext + \
+                             float(i) / float(mapslices) * slext
+    
+            _args = (simnum, snapnum, _centre, L_x, L_y, L_z,
+                     npix_x, npix_y, ptypeW)
+            argslist.append(_args)
+            
+            names = m3.make_maps(*_args, nameonly=True, **kwargs)
+        nameslist.append(names)
+            
+    return names, argslist, kwargslist
+    
+    
+
+    
+
+def create_histset(bins, args, kwargs, mapslices=1,
+                   deletemaps=False, kwargs_hist):
+    '''
+    create a histogram from a set of maps (slices); does not use weighted maps
     
 
     Parameters
     ----------
-    arglist : list
-        argument list from the command line ()
+    bins : array-like of floats (1D)
+        bin edges for the histogram
+    args : tuple 
+        arguments for make_maps_v3_master.make_maps
+    kwargs : dict
+        key word arguments for make_maps_v3_master.make_maps. saveres and hdf5
+        are always set to True, nameonly is ignored
+    mapslices : int, optional
+        number of slices to divide the volume in for projections; works like 
+        make_maps numslices argument, but only uses less memory if read_region
+        can be used in read_eagle. The default is 1.
+    kwargs_hist : list of dictionaries 
+        list of arguments for makehist_cddf_sliceadd
+        add : int, optional
+            how many slices to add together before histogramming. 
+            The default is 1.
+        addoffset : int, optional
+            for values add =/= 1, the first slice index in the first added set. 
+            The default is 0.
+        resreduce : int, optional
+            Factor by which to reduce the resolution of the map before 
+            histogramming. Must divide the number of pixels in each dimension. The
+            default is 1.
+        includeinf : bool, optional
+            Check if the left- and rightmost bin edges are -/+ infinity, and add 
+            those values if not. The default is True.
+    deletemaps : bool, optional
+        delete the created maps after making the histograms. Pre-existing maps
+        are left alone. The default is False.
 
     Returns
     -------
-    args : tuple
-        arguments for make_maps_v3_master.make_map
-    kwargs : dict
-        keyword arguments for make_maps_v3_master.make_map
+    None.
 
+    Note
+    ----
+    even in deletemaps is set, only the 'W' maps are deleted, since maps of 
+    weighted quantities are ignored. 
     '''
-    defaults = {'simnum': 'L0100N1504',\
-                'snapnum': 28,\
-                'centre': [50.,50.,3.125],\
-                'L_x': 100.,\
-                'L_y': 100.,\
-                'L_z': 100,\
-                }
-    
-    argvals = ('simnum', 'snapnum', 'centre', 'L_x', 'L_y', 'L_z', 'npix_x',
-               'npix_y', 'ptypeW')
-    
-    kwargs = defaults.copy()
     
     
-    args = tuple([kwargs[argval] for argval in argvals])
-    for argval in argvals:
-        del kwargs[argval]
+    nameslist, argslist, kwargslist = get_names_and_pars(mapslices,\
+                                                         *args, **kwargs)
+    already_exists = []
+    _nameslist = []    
+    for name, _args, _kwargs in zip(nameslist, argslist, kwargslist):
+        name = name[0]
+        _nameslist.append(name)
+        if os.path.isfile(name):
+            already_exists.append(True)
+        else:
+            already_exists.append(False)
+            print('Creating file: {}'.format(name))
+            print('-'*80)
+            m3.make_map(*_args, nameonly=False, **kwargs)
+            print('-'*80)
+            print('\n'*3)
     
-    return args, kwargs
+    if len(_nameslist) == 1:
+        fills = None
+        filebase = _nameslist[0]
+    else:
+        _base = _nameslist[0]
+        keyword = '{}cen-'.format(kwargs[axis])
+        pathparts = _base.split('/')
+        nameparts = pathparts[-1].split('_')
+        index = np.where([keyword in part for part in nameparts])[0][0]
+        filebase = '_'.join(nameparts[:index] +\
+                            [keyword + '{}'] +\
+                            nameparts[index + 1:])
+        filebase = '/'.join(pathparts[:-1] + [filebase])
+        
+        fills = []
+        for name in _nameslist:
+            pathparts = _base.split('/')
+            nameparts = pathparts[-1].split('_')
+            index = np.where([keyword in part for part in nameparts])[0][0]
+            part = nameparts[index]
+            fill = '-'.join(part.split('-')[1:])
+            
+            fills.append(fill)
+    
+    if isinstance(kwargs_hist, dict):
+        kwargs_hist = [kwargs_hist]
+    for hkwargs in kwargs_hist:
+        makehist_cddf_sliceadd(filebase, fills=None, bins=bins, **hkwargs,
+                               outname=None)
+    
+    if deletemaps:
+        for preexisting, name in zip(already_exists, _nameslist):
+            if not preexisting:
+                os.remove(name)
 
-    #make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-    #     ptypeW,\
-    #     ionW=None, abundsW='auto', quantityW=None,\
-    #     ionQ=None, abundsQ='auto', quantityQ=None, ptypeQ=None,\
-    #     excludeSFRW=False, excludeSFRQ=False, parttype='0',\
-    #     theta=0.0, phi=0.0, psi=0.0, \
-    #     sylviasshtables=False, bensgadget2tables=False,\
-    #     var='auto', axis='z',log=True, velcut=False,\
-    #     periodic=True, kernel='C2', saveres=False,\
-    #     simulation='eagle', LsinMpc=None,\
-    #     select=None, misc=None, halosel=None, kwargs_halosel=None,\
-    #     ompproj=False, nameonly=False, numslices=None, hdf5=False,\
-    #     override_simdatapath=None)
-
+def rungrids_emlines(index):
+    
+    
+    lines = ['c5r', 'n6-actualr', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12',
+             'si13r', 'fe18', 'fe17-other1', 'fe19', 'o7r', 'o7iy', 'o7f',
+             'o8', 'fe17', 'c6', 'n7']
+    
+    lineind = index // 2
+    line = lines[lineind]
+    
+    simset = index % 2
+    if simset == 0:
+        simnums = ['L0100N1504']
+        varlist = ['REFERENCE']
+        mapslices = [16]
+    elif simset == 1:
+        simnums = ['L0050N0752', 'L0025N0376',
+                   'L0025N0752', 'L0025N0752']
+        varlist = ['REFERENCE', 'REFERENCE',\
+                   'REFERENCE', 'RECALIBRATED']
+        mapslices = [8, 4, 4, 4]
+        
+    
+    
+    snapnum = 27
+    centre = [50., 50., 50.]
+    L_x, L_y, L_z = (100., 100., 100.)
+    npix_x, npix_y = (32000, 32000)
+    ptypeW = 'emission'
+    
+    kwargs = {'abundsW': 'Sm', 'excludeSFRW': True, 'ptypeQ': None,
+              'axis': 'z', 'periodic': True, 'kernel': 'C2',
+              'log': True, 'saveres': True, 'hdf5': True,
+              'simulation': 'eagle', 'ompproj': True,
+              }
+    bins = np.array([-np.inf] + np.arange(-40., 10.1, 0.1) + [np.inf])
+    
+    
+    for simnum, var, _mapslices in zip(simnums, varlist, mapslices):
+        args = (simnum, snapnum, centre, L_x, L_y, L_z,
+                npix_x, npix_y, ptypeW)
+        kwargs['var'] = var
+        
+        create_histset(bins, args, kwargs, mapslices=_mapslices,
+                       deletemaps=True, kwargs_hist)
+    
+    
+    
+    m3.make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
+         ptypeW,\
+         ionW=None, abundsW='auto', quantityW=None,\
+         ionQ=None, abundsQ='auto', quantityQ=None, ptypeQ=None,\
+         excludeSFRW=False, excludeSFRQ=False, parttype='0',\
+         theta=0.0, phi=0.0, psi=0.0, \
+         sylviasshtables=False, bensgadget2tables=False,\
+         var='auto', axis='z',log=True, velcut=False,\
+         periodic=True, kernel='C2', saveres=False,\
+         simulation='eagle', LsinMpc=None,\
+         select=None, misc=None, halosel=None, kwargs_halosel=None,\
+         ompproj=False, nameonly=False, numslices=None, hdf5=False,\
+         override_simdatapath=None):
