@@ -200,7 +200,7 @@ def get_names_and_pars(mapslices, *args, **kwargs):
             argslist.append(_args)
             
             names = m3.make_map(*_args, nameonly=True, **kwargs)
-        nameslist.append(names)
+            nameslist.append(names)
             
     return names, argslist, kwargslist
     
