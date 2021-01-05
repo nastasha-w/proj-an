@@ -299,7 +299,7 @@ def create_histset(bins, args, kwargs, mapslices=1,
     if isinstance(kwargs_hist, dict):
         kwargs_hist = [kwargs_hist]
     for hkwargs in kwargs_hist:
-        mh.makehist_cddf_sliceadd(filebase, fills=None, bins=bins, **hkwargs,
+        mh.makehist_cddf_sliceadd(filebase, fills=fills, bins=bins, **hkwargs,
                                outname=None)
     
     if deletemaps:
