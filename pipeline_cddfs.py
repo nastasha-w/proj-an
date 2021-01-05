@@ -373,8 +373,15 @@ def rungrids_emlines(index):
         kwargs['var'] = var
         kwargs['ionW'] = line
         
-        create_histset(bins, args, kwargs, mapslices=_mapslices,
-                       deletemaps=True, kwargs_hist=kwargs_hist)
+        print('\n\n')
+        print(args)
+        print(kwargs)
+        print(bins)
+        print('mapslices: {}'.format(_mapslices))
+        print(kwargs_hist)
+        
+        #create_histset(bins, args, kwargs, mapslices=_mapslices,
+        #               deletemaps=True, kwargs_hist=kwargs_hist)
         
 if __name__ == '__main__':
     index = sys.argv[1]
