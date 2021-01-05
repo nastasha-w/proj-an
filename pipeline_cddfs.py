@@ -336,14 +336,6 @@ def rungrids_emlines(index):
         simnums = ['L0100N1504']
         varlist = ['REFERENCE']
         mapslices = [16]
-        kwargs_hist = [{'add': 1, 'addoffset':0, 'resreduce':1}]
-        
-    elif simset == 1:
-        simnums = ['L0050N0752', 'L0025N0376',
-                   'L0025N0752', 'L0025N0752']
-        varlist = ['REFERENCE', 'REFERENCE',\
-                   'REFERENCE', 'RECALIBRATED']
-        mapslices = [8, 4, 4, 4]
         kwargs_hist = [{'add': 1, 'addoffset':0, 'resreduce':1},
                        {'add': 2, 'addoffset':0, 'resreduce':1},
                        {'add': 4, 'addoffset':0, 'resreduce':1},
@@ -352,6 +344,14 @@ def rungrids_emlines(index):
                        {'add': 1, 'addoffset':0, 'resreduce':4},
                        {'add': 1, 'addoffset':0, 'resreduce':8},
                        ]
+    elif simset == 1:
+        simnums = ['L0050N0752', 'L0025N0376',
+                   'L0025N0752', 'L0025N0752']
+        varlist = ['REFERENCE', 'REFERENCE',\
+                   'REFERENCE', 'RECALIBRATED']
+        mapslices = [8, 4, 4, 4]
+        kwargs_hist = [{'add': 1, 'addoffset':0, 'resreduce':1}]
+        
     
     snapnum = 27
     centre = [50., 50., 50.]
@@ -364,8 +364,7 @@ def rungrids_emlines(index):
               'log': True, 'saveres': True, 'hdf5': True,
               'simulation': 'eagle', 'ompproj': True,
               }
-    bins = np.array([-np.inf] + np.arange(-40., 10.1, 0.1) + [np.inf])
-    
+    bins = np.array([-np.inf] + list(np.arange(-50., 10.1, 0.1)) + [np.inf])
     
     for simnum, var, _mapslices in zip(simnums, varlist, mapslices):
         args = (simnum, snapnum, centre, L_x, L_y, L_z,
