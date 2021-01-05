@@ -289,7 +289,7 @@ def create_histset(bins, args, kwargs, mapslices=1,
         
         fills = []
         for name in _nameslist:
-            pathparts = _base.split('/')
+            pathparts = name.split('/')
             nameparts = pathparts[-1].split('_')
             index = np.where([keyword in part for part in nameparts])[0][0]
             part = nameparts[index]
