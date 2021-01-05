@@ -336,6 +336,7 @@ def rungrids_emlines(index):
         simnums = ['L0100N1504']
         varlist = ['REFERENCE']
         npix = [32000]
+        centres = [[50.] * 3]
         mapslices = [16]
         kwargs_hist = [{'add': 1, 'addoffset':0, 'resreduce':1},
                        {'add': 2, 'addoffset':0, 'resreduce':1},
@@ -351,13 +352,13 @@ def rungrids_emlines(index):
         varlist = ['REFERENCE', 'REFERENCE',\
                    'REFERENCE', 'RECALIBRATED']
         npix = [16000, 8000, 8000, 8000]
+        centres = [[25.] * 3] + [[12.5] * 3] * 3
         mapslices = [8, 4, 4, 4]
         kwargs_hist = [{'add': 1, 'addoffset':0, 'resreduce':1}]
         
     
     snapnum = 27
     centre = [50., 50., 50.]
-    L_x, L_y, L_z = (100., 100., 100.)
     ptypeW = 'emission'
     
     kwargs = {'abundsW': 'Sm', 'excludeSFRW': True, 'ptypeQ': None,
@@ -367,17 +368,20 @@ def rungrids_emlines(index):
               }
     bins = np.array([-np.inf] + list(np.arange(-50., 10.1, 0.1)) + [np.inf])
     
-    for simnum, var, _npix, _mapslices in zip(simnums, varlist, npix, mapslices):
+    for simnum, var, _npix, centre, _mapslices in\
+        zip(simnums, varlist, npix, centres, mapslices):
+        
+        L_x, L_y, L_z = (centre[0],) * 3
         npix_x, npix_y = (_npix,) * 2
         args = (simnum, snapnum, centre, L_x, L_y, L_z,
                 npix_x, npix_y, ptypeW)
         kwargs['var'] = var
         kwargs['ionW'] = line
         
-        print('\n\n')
+        print('\n')
         print(args)
         print(kwargs)
-        print(bins)
+        #print(bins)
         print('mapslices: {}'.format(_mapslices))
         print(kwargs_hist)
         
