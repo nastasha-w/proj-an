@@ -638,13 +638,14 @@ def makehist_cddf_sliceadd(filebase, fills=None, add=1, addoffset=0,\
             
             subgrp = hed.create_group('slice_%i'%fsi)
             arr_adder = None
-            print(fileset)
+            #print(fileset)
             for filen in fileset:
-                print(filen)
+                #print(filen)
                 with h5py.File(filen, 'r') as ft:
-                    print(subgrp)
+                    #print(subgrp)
                     sname = filen.split('/')[-1]
-                    print(sname)
+                    #print(sname)
+                     
                     ft.copy(ft['Header'], subgrp, name=sname)
                     
                     csmpath = 'Header/inputpars/cosmopars'
