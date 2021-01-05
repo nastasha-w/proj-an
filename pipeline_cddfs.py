@@ -278,7 +278,7 @@ def create_histset(bins, args, kwargs, mapslices=1,
         filebase = _nameslist[0]
     else:
         _base = _nameslist[0]
-        keyword = '{}cen-'.format(kwargs['axis'])
+        keyword = '{}cen-'.format(kwargslist[0]['axis'])
         pathparts = _base.split('/')
         nameparts = pathparts[-1].split('_')
         index = np.where([keyword in part for part in nameparts])[0][0]
