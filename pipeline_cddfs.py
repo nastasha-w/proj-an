@@ -371,7 +371,7 @@ def rungrids_emlines(index):
     for simnum, var, _npix, centre, _mapslices in\
         zip(simnums, varlist, npix, centres, mapslices):
         
-        L_x, L_y, L_z = (centre[0],) * 3
+        L_x, L_y, L_z = (centre[0] * 2.,) * 3
         npix_x, npix_y = (_npix,) * 2
         args = (simnum, snapnum, centre, L_x, L_y, L_z,
                 npix_x, npix_y, ptypeW)
