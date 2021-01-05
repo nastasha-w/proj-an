@@ -368,7 +368,7 @@ def rungrids_emlines(index):
     bins = np.array([-np.inf] + list(np.arange(-50., 10.1, 0.1)) + [np.inf])
     
     for simnum, var, _npix, _mapslices in zip(simnums, varlist, npix, mapslices):
-        npix_x, npix_y = (_npix) * 2
+        npix_x, npix_y = (_npix,) * 2
         args = (simnum, snapnum, centre, L_x, L_y, L_z,
                 npix_x, npix_y, ptypeW)
         kwargs['var'] = var
