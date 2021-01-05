@@ -607,7 +607,9 @@ def makehist_cddf_sliceadd(filebase, fills=None, add=1, addoffset=0,\
         files = np.roll(files, len(files) - addoffset)
         
     if len(files) % add != 0:
-        raise ValueError('add ({}) must divide the number of slices ({})'.format(add, len(files)))
+        msg = 'add ({}) must divide the number of slices ({})'
+        msg = msg.format(add, len(files))
+        raise ValueError(msg)
     if add == 1:
         filesets = np.array(files)[:, np.newaxis]
     else:
@@ -636,26 +638,41 @@ def makehist_cddf_sliceadd(filebase, fills=None, add=1, addoffset=0,\
             
             subgrp = hed.create_group('slice_%i'%fsi)
             arr_adder = None
+            print(fileset)
             for filen in fileset:
+                print(filen)
                 with h5py.File(filen, 'r') as ft:
                     sname = filen.split('/')[-1]
                     ft.copy(ft['Header'], subgrp, name=sname)
                     
-                    cosmopars_temp = {key: item for key, item in ft['Header/inputpars/cosmopars'].attrs.items()}
+                    csmpath = 'Header/inputpars/cosmopars'
+                    cosmopars_temp = {key: item for key, item in \
+                                      ft[csmpath].attrs.items()}
                     if cosmopars is None:
                         cosmopars = cosmopars_temp
                     else:
                         if cosmopars != cosmopars_temp:
-                            raise ValueError('cosmopars in file {} do not match previously found values'.format(filen))
+                            msg = 'cosmopars in file {} do not match' +\
+                                 ' previously found values'
+                            msg = msg.format(filen)
+                            raise ValueError(msg)
 
                     arr = np.array(ft['map'])
                     log = bool(ft['Header/inputpars'].attrs['log'])
                     if log:
                         arr = 10**arr
                     if resreduce != 1:
-                        if not (arr.shape[0] % resreduce == 0 and arr.shape[1] % resreduce == 0):
-                            raise ValueError('resreduce ({}) should divide the shape dimensions of the map ({} for file {})'.format(resreduce, arr.shape, filen))
-                        arr = np.average(arr.reshape(arr.shape[0] // resreduce, resreduce, arr.shape[1] // resreduce, resreduce), axis=(1, 3))
+                        if not (arr.shape[0] % resreduce == 0 and \
+                                arr.shape[1] % resreduce == 0):
+                            msg = 'resreduce ({}) should divide the shape' + \
+                                  ' dimensions of the map ({} for file {})'
+                            msg = msg.format(resreduce, arr.shape, filen)
+                            raise ValueError(msg)
+                        arr = np.average(arr.reshape(arr.shape[0] // resreduce,
+                                                     resreduce, 
+                                                     arr.shape[1] // resreduce,
+                                                     resreduce),
+                                         axis=(1, 3))
                     if arr_adder is None:
                         arr_adder = arr
                     else:
@@ -666,7 +683,9 @@ def makehist_cddf_sliceadd(filebase, fills=None, add=1, addoffset=0,\
             subhist, edges = np.histogramdd([arr_adder.flatten()], bins=[bins])
             edges = edges[0]
             if not np.allclose(edges, bins):
-                raise RuntimeError('Input bins do not match output histogram edges:\nedges: {}\nbins: {}'.format(edges, bins))
+                msg = 'Input bins do not match output histogram edges:\n' +\
+                      'edges: {}\nbins: {}'.format(edges, bins)
+                raise RuntimeError(msg)
             if histogram is None:
                 histogram = subhist
             else:
@@ -677,8 +696,10 @@ def makehist_cddf_sliceadd(filebase, fills=None, add=1, addoffset=0,\
         csm = hed.create_group('cosmopars')
         for key in cosmopars:
             csm.attrs.create(key, cosmopars[key])
-        dX = cu.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars)
-        dz = cu.getdz(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'], cosmopars=cosmopars)
+        dX = cu.getdX(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'],
+                      cosmopars=cosmopars)
+        dz = cu.getdz(cosmopars['z'], cosmopars['boxsize'] / cosmopars['h'],
+                      cosmopars=cosmopars)
         dX *= np.prod(arr_adder.shape)
         dz *= np.prod(arr_adder.shape)
         hed.attrs.create('dX', dX)
