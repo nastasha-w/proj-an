@@ -300,7 +300,7 @@ def create_histset(bins, args, kwargs, mapslices=1,
         kwargs_hist = [kwargs_hist]
     for hkwargs in kwargs_hist:
         mh.makehist_cddf_sliceadd(filebase, fills=fills, bins=bins, **hkwargs,
-                               outname=None)
+                                  outname=None)
     
     if deletemaps:
         for preexisting, name in zip(already_exists, _nameslist):
