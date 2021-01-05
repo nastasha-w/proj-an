@@ -258,7 +258,7 @@ def create_histset(bins, args, kwargs, mapslices=1,
     
     nameslist, argslist, kwargslist = get_names_and_pars(mapslices,\
                                                          *args, **kwargs)
-    return
+        
     already_exists = []
     _nameslist = []    
     for name, _args, _kwargs in zip(nameslist, argslist, kwargslist):
