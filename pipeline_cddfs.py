@@ -144,9 +144,9 @@ def get_names_and_pars(mapslices, *args, **kwargs):
     names: list of tuples of strings
         names of the hdf5 files created (in order of slices)
     args: list of lists
-        arguments to input to make_maps (in order of slices)
+        arguments to input to make_map (in order of slices)
     kwargs: list of dicts
-        key-word arguments for make_maps (in order of slices)
+        key-word arguments for make_map (in order of slices)
     '''
     
     _kwargs = kwargs.copy()
@@ -166,14 +166,14 @@ def get_names_and_pars(mapslices, *args, **kwargs):
     
     if mapslices == 1:
         argslist.append(args)
-        names = m3.make_maps(*args, nameonly=True, **kwargs)
+        names = m3.make_map(*args, nameonly=True, **kwargs)
         nameslist.append(names)
     else:
         simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, ptypeW = args
         # generate per-slice args and names
         if 'axis' in _kwargs:
             axis = _kwargs['axis']
-        else: # use make_maps default 
+        else: # use make_map default 
             axis = 'z'
     
         if axis == 'z':
@@ -199,7 +199,7 @@ def get_names_and_pars(mapslices, *args, **kwargs):
                      npix_x, npix_y, ptypeW)
             argslist.append(_args)
             
-            names = m3.make_maps(*_args, nameonly=True, **kwargs)
+            names = m3.make_map(*_args, nameonly=True, **kwargs)
         nameslist.append(names)
             
     return names, argslist, kwargslist
@@ -216,13 +216,13 @@ def create_histset(bins, args, kwargs, mapslices=1,
     bins : array-like of floats (1D)
         bin edges for the histogram
     args : tuple 
-        arguments for make_maps_v3_master.make_maps
+        arguments for make_maps_v3_master.make_map
     kwargs : dict
-        key word arguments for make_maps_v3_master.make_maps. saveres and hdf5
+        key word arguments for make_maps_v3_master.make_map. saveres and hdf5
         are always set to True, nameonly is ignored
     mapslices : int, optional
         number of slices to divide the volume in for projections; works like 
-        make_maps numslices argument, but only uses less memory if read_region
+        make_map numslices argument, but only uses less memory if read_region
         can be used in read_eagle. The default is 1.
     kwargs_hist : list of dictionaries 
         list of arguments for makehist_cddf_sliceadd
@@ -377,6 +377,8 @@ def rungrids_emlines(index):
         
 if __name__ == '__main__':
     index = sys.argv[1]
+    if not 'OMP_NUM_THREADS' in os.environ:
+        raise RuntimeError('OMP_NUM_THREADS environment variable needs to be set')
     
     if index >=0 and index < 36:
         rungrids_emlines(index)
