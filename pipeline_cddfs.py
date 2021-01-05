@@ -154,6 +154,8 @@ def get_names_and_pars(mapslices, *args, **kwargs):
     _kwargs['hdf5'] = True
     if 'nameonly' in _kwargs:
         del _kwargs['nameonly']
+    if 'axis' not in _kwargs:
+        _kwargs['axis'] = 'z'
     
     if not isinstance(mapslices, int) and mapslices > 0:
         raise ValueError('mapslices should be a positive integer; was' +\
