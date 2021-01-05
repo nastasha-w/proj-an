@@ -258,6 +258,7 @@ def create_histset(bins, args, kwargs, mapslices=1,
     
     nameslist, argslist, kwargslist = get_names_and_pars(mapslices,\
                                                          *args, **kwargs)
+    return
     already_exists = []
     _nameslist = []    
     for name, _args, _kwargs in zip(nameslist, argslist, kwargslist):
@@ -378,15 +379,16 @@ def rungrids_emlines(index):
         kwargs['var'] = var
         kwargs['ionW'] = line
         
-        print('\n')
+        print('Calling create_histset with')
         print(args)
         print(kwargs)
         #print(bins)
         print('mapslices: {}'.format(_mapslices))
         print(kwargs_hist)
+        print('\n')
         
-        #create_histset(bins, args, kwargs, mapslices=_mapslices,
-        #               deletemaps=True, kwargs_hist=kwargs_hist)
+        create_histset(bins, args, kwargs, mapslices=_mapslices,
+                       deletemaps=True, kwargs_hist=kwargs_hist)
         
 if __name__ == '__main__':
     index = int(sys.argv[1])
