@@ -384,7 +384,7 @@ def rungrids_emlines(index):
         #               deletemaps=True, kwargs_hist=kwargs_hist)
         
 if __name__ == '__main__':
-    index = sys.argv[1]
+    index = int(sys.argv[1])
     if not 'OMP_NUM_THREADS' in os.environ:
         raise RuntimeError('OMP_NUM_THREADS environment variable needs to be set')
     
