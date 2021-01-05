@@ -202,7 +202,7 @@ def get_names_and_pars(mapslices, *args, **kwargs):
             names = m3.make_map(*_args, nameonly=True, **kwargs)
             nameslist.append(names)
             
-    return names, argslist, kwargslist
+    return nameslist, argslist, kwargslist
     
 
 def create_histset(bins, args, kwargs, mapslices=1,
