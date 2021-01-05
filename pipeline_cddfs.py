@@ -13,15 +13,18 @@ afterwards
 """
 
 import os
+import sys
 import numpy as np
 import h5py
 
 import make_maps_opts_locs as ol
 import make_maps_v3_master as m3
+import makehistograms_basic as mh
 
 
 def create_cddf_singleslice(bins, *args, **kwargs):
     '''
+    UNTESTED
     creates a file named cddf_<autonamed column density map file> in 
     make_maps_opts_locs.pdir with the histogram of the map
 
@@ -201,12 +204,9 @@ def get_names_and_pars(mapslices, *args, **kwargs):
             
     return names, argslist, kwargslist
     
-    
-
-    
 
 def create_histset(bins, args, kwargs, mapslices=1,
-                   deletemaps=False, kwargs_hist):
+                   deletemaps=False, kwargs_hist=[{}]):
     '''
     create a histogram from a set of maps (slices); does not use weighted maps
     
@@ -276,7 +276,7 @@ def create_histset(bins, args, kwargs, mapslices=1,
         filebase = _nameslist[0]
     else:
         _base = _nameslist[0]
-        keyword = '{}cen-'.format(kwargs[axis])
+        keyword = '{}cen-'.format(kwargs['axis'])
         pathparts = _base.split('/')
         nameparts = pathparts[-1].split('_')
         index = np.where([keyword in part for part in nameparts])[0][0]
@@ -298,7 +298,7 @@ def create_histset(bins, args, kwargs, mapslices=1,
     if isinstance(kwargs_hist, dict):
         kwargs_hist = [kwargs_hist]
     for hkwargs in kwargs_hist:
-        makehist_cddf_sliceadd(filebase, fills=None, bins=bins, **hkwargs,
+        mh.makehist_cddf_sliceadd(filebase, fills=None, bins=bins, **hkwargs,
                                outname=None)
     
     if deletemaps:
@@ -307,7 +307,21 @@ def create_histset(bins, args, kwargs, mapslices=1,
                 os.remove(name)
 
 def rungrids_emlines(index):
-    
+    '''
+    generate the histograms for line emission line convergence tests
+
+    Parameters
+    ----------
+    index : int
+        which set of histograms to generate, in the range [0, 35]. The fast 
+        index sets the box to run (100 cMpc or the others), the slow index 
+        sets which line is run (the paper 3 set + N VI (f)).
+
+    Returns
+    -------
+    None.
+
+    '''
     
     lines = ['c5r', 'n6-actualr', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12',
              'si13r', 'fe18', 'fe17-other1', 'fe19', 'o7r', 'o7iy', 'o7f',
@@ -321,14 +335,22 @@ def rungrids_emlines(index):
         simnums = ['L0100N1504']
         varlist = ['REFERENCE']
         mapslices = [16]
+        kwargs_hist = [{'add': 1, 'addoffset':0, 'resreduce':1}]
+        
     elif simset == 1:
         simnums = ['L0050N0752', 'L0025N0376',
                    'L0025N0752', 'L0025N0752']
         varlist = ['REFERENCE', 'REFERENCE',\
                    'REFERENCE', 'RECALIBRATED']
         mapslices = [8, 4, 4, 4]
-        
-    
+        kwargs_hist = [{'add': 1, 'addoffset':0, 'resreduce':1},
+                       {'add': 2, 'addoffset':0, 'resreduce':1},
+                       {'add': 4, 'addoffset':0, 'resreduce':1},
+                       {'add': 8, 'addoffset':0, 'resreduce':1},
+                       {'add': 1, 'addoffset':0, 'resreduce':2},
+                       {'add': 1, 'addoffset':0, 'resreduce':4},
+                       {'add': 1, 'addoffset':0, 'resreduce':8},
+                       ]
     
     snapnum = 27
     centre = [50., 50., 50.]
@@ -348,22 +370,14 @@ def rungrids_emlines(index):
         args = (simnum, snapnum, centre, L_x, L_y, L_z,
                 npix_x, npix_y, ptypeW)
         kwargs['var'] = var
+        kwargs['ionW'] = line
         
         create_histset(bins, args, kwargs, mapslices=_mapslices,
-                       deletemaps=True, kwargs_hist)
+                       deletemaps=True, kwargs_hist=kwargs_hist)
+        
+if __name__ == '__main__':
+    index = sys.argv[1]
     
+    if index >=0 and index < 36:
+        rungrids_emlines(index)
     
-    
-    m3.make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-         ptypeW,\
-         ionW=None, abundsW='auto', quantityW=None,\
-         ionQ=None, abundsQ='auto', quantityQ=None, ptypeQ=None,\
-         excludeSFRW=False, excludeSFRQ=False, parttype='0',\
-         theta=0.0, phi=0.0, psi=0.0, \
-         sylviasshtables=False, bensgadget2tables=False,\
-         var='auto', axis='z',log=True, velcut=False,\
-         periodic=True, kernel='C2', saveres=False,\
-         simulation='eagle', LsinMpc=None,\
-         select=None, misc=None, halosel=None, kwargs_halosel=None,\
-         ompproj=False, nameonly=False, numslices=None, hdf5=False,\
-         override_simdatapath=None):
