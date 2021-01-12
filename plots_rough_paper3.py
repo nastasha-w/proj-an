@@ -6593,6 +6593,11 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
         [axes[i, xi].set_xlim(minx, maxx) for i in range(nprof)]
     
     plt.savefig(outname, format='pdf', box_inches='tight')
+
+def plot_SBdiff_conv(line, convtype):
+    
+    
+    
     
     
 ###############################################################################
