@@ -6683,7 +6683,12 @@ def plot_SBdiff_conv(line, convtype):
     ax1.text(0.01, 0.99, nicenames_lines[line], transform=ax1.transAxes,
              verticalalignment='top', horizontalalignment='left')
     
-    plt.savefig(outname, format='pdf', box_inches='tight')
+    xlims = [ax.get_xlim() for ax in (ax1, ax2)]
+    xmin = np.min([tup[0] for tup in xlims])
+    xmax = np.min([tup[1] for tup in xlims])
+    [ax.set_xlim(-10., xmax) for ax in (ax1, ax2)]
+    
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
     
     
     
