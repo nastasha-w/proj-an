@@ -6686,9 +6686,11 @@ def plot_SBdiff_conv(line, convtype):
             
             ax1.plot(xv, yv, label=box)
             ax2.plot(xv, yv_rel, label=box)
-        leg = ax1.legend(fontsize=fontsize)    
+        leg = ax1.legend(fontsize=fontsize, loc='lower right',
+                         bbox_to_anchor=(0., 0.))    
         leg.set_title('Simulation  res.')
         leg.get_title().set_fontsize(fontsize)
+    
     
     ax1.set_yscale('log')
     ax2.set_yscale('log')
@@ -6700,9 +6702,10 @@ def plot_SBdiff_conv(line, convtype):
     ax2.set_xlabel(xlabel, fontsize=fontsize)
     ax1.set_ylabel(ylabel1, fontsize=fontsize)
     ax2.set_ylabel(ylabel2, fontsize=fontsize)
-    ax1.text(0.01, 0.99, nicenames_lines[line], transform=ax1.transAxes,
+    bbox = {'boxstyle': 'round', 'facecolor': 'white', 'alpha':0.3}
+    ax1.text(0.03, 0.97, nicenames_lines[line], transform=ax1.transAxes,
              verticalalignment='top', horizontalalignment='left',
-             fontsize=fontsize)
+             fontsize=fontsize, bbox=bbox)
     
     xlims = [ax.get_xlim() for ax in (ax1, ax2)]
     xmin = np.min([tup[0] for tup in xlims])
