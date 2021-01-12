@@ -6647,7 +6647,8 @@ def plot_SBdiff_conv(line, convtype):
     ylabel2 = 'PDF / ref. PDF'
     xlabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons} \\, \\mathrm{cm}^{-2} \\mathrm{s}^{-1} \\mathrm{sr}^{-1}]$'
     
-    fig, (ax1, ax2) = plt.subplots(figsize=(5.5, 5), nrows=2)
+    fig, (ax1, ax2) = plt.subplots(figsize=(5.5, 5), nrows=2,
+                                   gridspec_kw={'hspace': 0.})
     
     if convtype == 'boxsize':
         for i, box in enumerate(['L100N1504', 'L050N0752', 'L025N0376']):
@@ -6664,7 +6665,7 @@ def plot_SBdiff_conv(line, convtype):
             yv_rel = yv / yv_ref
             
             ax1.plot(xv, yv, label=box)
-            ax2.plot(xv, yv_ref, label=box)
+            ax2.plot(xv, yv_rel, label=box)
         leg = ax1.legend(fontsize=fontsize)    
         leg.set_title('volume')
         leg.get_title().set_fontsize(fontsize)
@@ -6679,10 +6680,8 @@ def plot_SBdiff_conv(line, convtype):
     ax2.set_xlabel(xlabel, fontsize=fontsize)
     ax1.set_ylabel(ylabel1, fontsize=fontsize)
     ax2.set_ylabel(ylabel2, fontsize=fontsize)
-    ax1.text(0.01, 0.99, nicenames[line], transform=ax1.transAxes,
+    ax1.text(0.01, 0.99, nicenames_lines[line], transform=ax1.transAxes,
              verticalalignment='top', horizontalalignment='left')
-    
-    
     
     plt.savefig(outname, format='pdf', box_inches='tight')
     
