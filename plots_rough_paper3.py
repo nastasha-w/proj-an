@@ -6669,6 +6669,26 @@ def plot_SBdiff_conv(line, convtype):
         leg = ax1.legend(fontsize=fontsize)    
         leg.set_title('volume')
         leg.get_title().set_fontsize(fontsize)
+    elif convtype == 'resolution':
+        for i, box in enumerate(['L025N0376', 'L025N0752-Recal',
+                                 'L025N0752-Ref', 'L100N1504']):
+            fn = hfname.format(line=line, box=boxes[box], add=adds['6.25'],
+                               res=ress['3.125'], pix=pixs[box])
+            xv, yv = readin_hist(fn)
+            if i == 0:
+               xv_ref = xv
+               yv_ref = yv
+               
+            if not np.all(xv == xv_ref):
+                raise RuntimeError('Histogram bins did not match')
+            
+            yv_rel = yv / yv_ref
+            
+            ax1.plot(xv, yv, label=box)
+            ax2.plot(xv, yv_rel, label=box)
+        leg = ax1.legend(fontsize=fontsize)    
+        leg.set_title('Simulation  res.')
+        leg.get_title().set_fontsize(fontsize)
     
     ax1.set_yscale('log')
     ax2.set_yscale('log')
@@ -6681,7 +6701,8 @@ def plot_SBdiff_conv(line, convtype):
     ax1.set_ylabel(ylabel1, fontsize=fontsize)
     ax2.set_ylabel(ylabel2, fontsize=fontsize)
     ax1.text(0.01, 0.99, nicenames_lines[line], transform=ax1.transAxes,
-             verticalalignment='top', horizontalalignment='left')
+             verticalalignment='top', horizontalalignment='left',
+             fontsize=fontsize)
     
     xlims = [ax.get_xlim() for ax in (ax1, ax2)]
     xmin = np.min([tup[0] for tup in xlims])
