@@ -6594,6 +6594,21 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
     
     plt.savefig(outname, format='pdf', box_inches='tight')
 
+def readin_hist(filename):
+    with h5py.File(filename, 'r') as f:
+        hist = f['histogram'][:]
+        edges = f['edges'][:]
+    if edges[0] == -np.inf:
+        edges[0] = 2. * edges[1] - edges[2]
+    if edges[-1] == np.inf:
+        edges[-1] = 2. * edges[-2] - edges[-3]
+    de = np.diff(edges)
+    tot = float(np.sum(hist))
+    pdf = hist.astype(np.float) / tot / de
+    xv = 0.5 * (edges[:-1] + edges[1:])
+    
+    return xv, pdf
+
 def plot_SBdiff_conv(line, convtype):
     boxes = {'L100N1504': 'L0100N1504',
              'L050N0752': 'L0050N0752',
