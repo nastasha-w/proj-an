@@ -3105,7 +3105,7 @@ def plot_radprof3(mmin=10.5, numex=4, rbinning=0):
         
         plt.savefig(outname, format='pdf', bbox_inches='tight')
         
-def plot_radprof4(talkversion=False, slidenum=0):
+def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
     '''
     plot mean and median profiles for the different lines in different halo 
     mass bins
@@ -3153,9 +3153,9 @@ def plot_radprof4(talkversion=False, slidenum=0):
             raise RuntimeError('Multiple values for {}; choose one'.format(colname))
             
     instruments = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr', 'xrism-resolve']        
-    inslabels = {'athena-xifu': 'X-IFU',
-                 'lynx-lxm-main': 'LXM main',
-                 'lynx-lxm-uhr': 'LXM UHR',
+    inslabels = {'athena-xifu': 'Athena X-IFU',
+                 'lynx-lxm-main': 'Lynx Main',
+                 'lynx-lxm-uhr': 'Lynx UHR',
                  'xrism-resolve': 'XRISM-R'
                  }        
     _kwargs = {'facecolor': 'none', 'edgecolor': 'gray'}
@@ -3206,17 +3206,27 @@ def plot_radprof4(talkversion=False, slidenum=0):
     ykey_median = ('perc', 50.)
     ls_mean = 'dotted'
     ls_median = 'solid'
-    mmin = 11.
     
     outname = 'radprof2d_0.1-0.25dex-annuli_L0100N1504_27_test3.5_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
               'halomasscomp_mean-median'
     outname = outname.replace('.', 'p')
     if talkversion:
-        outname = tmdir + outname + '_talkversion_{}'.format(slidenum)
+        if talkvnum == 0:
+            outname = tmdir + outname + '_talkversion_{}'.format(slidenum)
+        else:
+            outname = tmdir + outname +\
+                      '_talkversion-{}_{}'.format(talkvnum, slidenum)
     else:
         outname = mdir + outname
     outname = outname + '.pdf'
     
+    if talkversion:
+        if talkvnum == 0:
+            mmin = 11.
+        elif talkvnum == 1:
+            mmin = 11.5
+    else:
+        mmin = 11.
     medges = np.arange(mmin, 14.1, 0.5)
     seltag_keys = {medges[i]: 'geq{:.1f}_le{:.1f}'.format(medges[i], medges[i + 1])\
                                if i < len(medges) - 1 else\
@@ -3289,25 +3299,34 @@ def plot_radprof4(talkversion=False, slidenum=0):
         _l, _b, _w, _h = (_cax.get_position()).bounds
         vert = nrows * ncols - numlines <= 2
         if vert:
-            wmargin = panelwidth * 0.09 / figwidth
+            wmargin_c = panelwidth * 0.13 / figwidth
+            wmargin_l = panelwidth * 0.05 / figwidth
             hmargin_b = panelheight * 0.07 / figheight
             hmargin_t = panelheight * 0.07 / figheight
             lspace = 0.3 * panelheight / figheight
             cspace = _h - hmargin_b - hmargin_t - lspace
-            cax = fig.add_axes([_l + wmargin, _b + hmargin_b,\
-                                _w - 1.* wmargin, cspace])
-            w1 = 0.35 * (_w - 1. * wmargin)
-            w2 = 0.65 * (_w - 1. * wmargin)
-            lax = fig.add_axes([_l + wmargin, _b  + hmargin_b + cspace,\
+            cax = fig.add_axes([_l + wmargin_c, _b + hmargin_b,\
+                                _w - wmargin_c, cspace])
+            w1 = 0.35 * (_w - 1. * wmargin_l)
+            w2 = 0.65 * (_w - 1. * wmargin_l)
+            lax = fig.add_axes([_l + wmargin_l, _b  + hmargin_b + cspace,\
                                 w1, lspace])
-            lax2 = fig.add_axes([_l + w1 + 1. * wmargin, _b  + hmargin_b + cspace,\
+            lax2 = fig.add_axes([_l + _w - w2 * 0.975, _b  + hmargin_b + cspace,\
                                 w2, lspace])
                 
             ncols_insleg = (len(instruments) + 1) // 2 
             
-            leg_kw = {'loc': 'upper center',\
-                  'bbox_to_anchor':(0.5, 1.),\
-                  'handlelength': 2.}
+            leg_kw = {'loc': 'upper left',
+                  'bbox_to_anchor': (0.0, 1.),
+                  'handlelength': 2.,
+                  'columnspacing': 1.,
+                  }
+            insleg_kw = {'loc': 'upper right',
+                  'bbox_to_anchor': (1.0, 1.),
+                  'handlelength': 1.8,
+                  'columnspacing': 0.8,
+                  }
+            
         else:
             wmargin = panelwidth * 0.1 / figwidth
             hmargin = panelheight * 0.05 / figheight
@@ -3325,9 +3344,16 @@ def plot_radprof4(talkversion=False, slidenum=0):
                                 _w - 2. * wmargin, vspace])    
             ncols_insleg = 4
              
-            leg_kw = {'loc': 'center',\
-                      'bbox_to_anchor':(0.5, 0.5),\
-                      'handlelength': 2.}
+            leg_kw = {'loc': 'center left',
+                      'bbox_to_anchor':(0., 0.5),
+                      'handlelength': 2.,
+                      'columnspacing': 1.,
+                      }
+            insleg_kw = {'loc': 'center left',
+                      'bbox_to_anchor':(0., 0.5),
+                      'handlelength': 2.,
+                      'columnspacing': 1.,
+                      }
         lax.axis('off')
         lax2.axis('off')
         
@@ -3495,9 +3521,9 @@ def plot_radprof4(talkversion=False, slidenum=0):
     # three most energetic ions have very low mean SB -> impose limits
     ylims = [ax.get_ylim() for ax in axes]
     if talkversion:
-        ymin = -4.9 #min([ylim[0] for ylim in ylims])
+        ymin = -2.95 #min([ylim[0] for ylim in ylims])
     else:
-        ymin = -5.0
+        ymin = -3.95
     ymax = 2. #max([ylim[1] for ylim in ylims])
     [ax.set_ylim(ymin, ymax) for ax in axes]
     [ax.set_ylim(ymin + np.log10(right_over_left), ymax + np.log10(right_over_left))\
@@ -3506,7 +3532,7 @@ def plot_radprof4(talkversion=False, slidenum=0):
     handles_ins = [mpatch.Patch(label=inslabels[ins], **kwargs_ins[ins]) \
                    for ins in instruments]    
     leg_ins = lax2.legend(handles=handles_ins, fontsize=fontsize, 
-                          ncol=ncols_insleg, **leg_kw)
+                          ncol=ncols_insleg, **insleg_kw)
     leg_ins.set_title(legendtitle_minsb)
     leg_ins.get_title().set_fontsize(fontsize)
     
