@@ -6671,8 +6671,8 @@ def plot_SBdiff_conv(line, convtype):
     
     ax1.set_yscale('log')
     ax2.set_yscale('log')
-    pu.setticks(ax1, labelbottom=False)
-    pu.setticks(ax2)
+    pu.setticks(ax1, fontsize, labelbottom=False)
+    pu.setticks(ax2, fontsize)
     ax1.grid(True)
     ax2.grid(True)
     
