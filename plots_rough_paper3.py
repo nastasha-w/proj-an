@@ -6616,12 +6616,12 @@ def plot_SBdiff_conv(line, convtype):
              'L025N0752-Ref': 'L0025N0752',
              'L025N0752-Recal': 'L0025N0752RECALIBRATED',
              }
-    pixs = {{'L100N1504': 32000,
+    pixs = {'L100N1504': 32000,
              'L050N0752': 16000,
              'L025N0376': 8000,
              'L025N0752-Ref': 8000,
              'L025N0752-Recal': 8000,
-             }}
+             }
     adds = {'6.25': 1,
             '12.5': 2,
             '25': 4,
