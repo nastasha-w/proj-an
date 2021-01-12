@@ -6616,6 +6616,12 @@ def plot_SBdiff_conv(line, convtype):
              'L025N0752-Ref': 'L0025N0752',
              'L025N0752-Recal': 'L0025N0752RECALIBRATED',
              }
+    pixs = {{'L100N1504': 32000,
+             'L050N0752': 16000,
+             'L025N0376': 8000,
+             'L025N0752-Ref': 8000,
+             'L025N0752-Recal': 8000,
+             }}
     adds = {'6.25': 1,
             '12.5': 2,
             '25': 4,
@@ -6627,7 +6633,7 @@ def plot_SBdiff_conv(line, convtype):
             '25': 8,
             }
 
-    hfname = 'cddf_emission_{line}_{box}_27_test3.6_SmAb_C2Sm_8000pix' +\
+    hfname = 'cddf_emission_{line}_{box}_27_test3.6_SmAb_C2Sm_{pix}pix' +\
              '_6.25slice_zcen-all_z-projection_noEOS_add-{add}_offset-0' +\
              '_resreduce-{res}.hdf5'
     hfname = ol.pdir + hfname
@@ -6646,7 +6652,7 @@ def plot_SBdiff_conv(line, convtype):
     if convtype == 'boxsize':
         for i, box in enumerate(['L100N1504', 'L050N0752', 'L025N0376']):
             fn = hfname.format(line=line, box=boxes[box], add=adds['6.25'],
-                               res=ress['3.125'])
+                               res=ress['3.125'], pix=pixs[box])
             xv, yv = readin_hist(fn)
             if i == 0:
                xv_ref = xv
