@@ -6630,6 +6630,7 @@ def plot_SBdiff_conv(line, convtype):
     hfname = 'cddf_emission_{line}_{box}_27_test3.6_SmAb_C2Sm_8000pix' +\
              '_6.25slice_zcen-all_z-projection_noEOS_add-{add}_offset-0' +\
              '_resreduce-{res}.hdf5'
+    hfname = ol.pdir + hfname
     
     outname = mdir + 'convtest_cddf_emission_{line}'.format(line=line) +\
               '_snap27_test3.6_SmAb_C2Sm_6.25slice_zcen-all_z-projection' +\
