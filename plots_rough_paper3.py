@@ -6595,6 +6595,74 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
     plt.savefig(outname, format='pdf', box_inches='tight')
 
 def plot_SBdiff_conv(line, convtype):
+    boxes = {'L100N1504': 'L0100N1504',
+             'L050N0752': 'L0050N0752',
+             'L025N0376': 'L0025N0376',
+             'L025N0752-Ref': 'L0025N0752',
+             'L025N0752-Recal': 'L0025N0752RECALIBRATED',
+             }
+    adds = {'6.25': 1,
+            '12.5': 2,
+            '25': 4,
+            '50': 8,
+            }
+    ress = {'3.125': 1,
+            '6.25': 2,
+            '12.5': 4,
+            '25': 8,
+            }
+
+    hfname = 'cddf_emission_{line}_{box}_27_test3.6_SmAb_C2Sm_8000pix' +\
+             '_6.25slice_zcen-all_z-projection_noEOS_add-{add}_offset-0' +\
+             '_resreduce-{res}.hdf5'
+    
+    outname = mdir + 'convtest_cddf_emission_{line}'.format(line=line) +\
+              '_snap27_test3.6_SmAb_C2Sm_6.25slice_zcen-all_z-projection' +\
+              '_noEOS_{}.pdf'.format(convtype)
+    
+    fontsize = 12
+    ylabel1 = 'PDF of $\\log_{10}$ SB'
+    ylabel2 = 'PDF / ref. PDF'
+    xlabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons} \\, \\mathrm{cm}^{-2} \\mathrm{s}^{-1} \\mathrm{sr}^{-1}]$'
+    
+    fig, (ax1, ax2) = plt.subplots(figsize=(5.5, 5), nrows=2)
+    
+    if convtype == 'boxsize':
+        for i, box in ['L100N1504', 'L050N0752', 'L025N0376']:
+            fn = hfname.format(line=line, box=boxes[box], add=adds['6.25'],
+                               res=ress['3.125'])
+            xv, yv = readin_hist(fn)
+            if i == 0:
+               xv_ref = xv
+               yv_ref = yv
+               
+            if not np.all(xv == xv_ref):
+                raise RuntimeError('Histogram bins did not match')
+            
+            yv_rel = yv / yv_ref
+            
+            ax1.plot(xv, yv, label=box)
+            ax2.plot(xv, yv_ref, label=box)
+        leg = ax1.legend(fontsize=fontsize)    
+        leg.set_title('volume')
+        leg.get_title().set_fontsize(fontsize)
+    
+    ax1.set_yscale('log')
+    ax2.set_yscale('log')
+    pu.setticks(ax1, labelbottom=False)
+    pu.setticks(ax2)
+    ax1.grid(True)
+    ax2.grid(True)
+    
+    ax2.set_xlabel(xlabel, fontsize=fontsize)
+    ax1.set_ylabel(ylabel1, fontsize=fontsize)
+    ax2.set_ylabel(ylabel2, fontsize=fontsize)
+    ax1.text(0.01, 0.99, nicenames[line], transform=ax1.transAxes,
+             verticalalignment='top', horizontalalignment='left')
+    
+    
+    
+    plt.savefig(outname, format='pdf', box_inches='tight')
     
     
     
