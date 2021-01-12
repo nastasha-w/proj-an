@@ -6628,7 +6628,7 @@ def plot_SBdiff_conv(line, convtype):
     fig, (ax1, ax2) = plt.subplots(figsize=(5.5, 5), nrows=2)
     
     if convtype == 'boxsize':
-        for i, box in ['L100N1504', 'L050N0752', 'L025N0376']:
+        for i, box in enumerate(['L100N1504', 'L050N0752', 'L025N0376']):
             fn = hfname.format(line=line, box=boxes[box], add=adds['6.25'],
                                res=ress['3.125'])
             xv, yv = readin_hist(fn)
