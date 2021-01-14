@@ -6611,6 +6611,34 @@ def readin_hist(filename):
     return xv, pdf
 
 def plot_SBdist_conv(line, convtype):
+    '''
+    compare surface brightness histograms for the same line in different 
+    simulation volumes and at different resolution
+
+    Parameters
+    ----------
+    line : string
+        emission line; see make_maps_opts_locs.py for options. The histogram 
+        must already be present  
+    convtype : string
+        'boxsize': different simulation volumes at the same mass resolution
+        'resolution': different simulation resolutions (25 cMpc volume),
+            with the 100 cMpc volume for reference
+        'pixels': size of the pixels in the column density map
+        'slices': depth of the slices represented in the column density maps
+        
+    Raises
+    ------
+    RuntimeError
+        stored histograms are for different bins
+    ValueError
+        invalid convtype 
+
+    Returns
+    -------
+    None.
+
+    '''
     boxes = {'L100N1504': 'L0100N1504',
              'L050N0752': 'L0050N0752',
              'L025N0376': 'L0025N0376',
@@ -6736,6 +6764,8 @@ def plot_SBdist_conv(line, convtype):
         leg.set_title('slice depth')
         leg.get_title().set_fontsize(fontsize)
         ylabel2 = ylabel2 + ' $\\times$ ref. width / width'
+    else:
+        raise ValueError('Invalid convtype {}'.format(convtype))
         
     ax1.set_yscale('log')
     ax2.set_yscale('log')
