@@ -6727,6 +6727,7 @@ def plot_SBdist_conv(line, convtype):
                 raise RuntimeError('Histogram bins did not match')
             
             yv_rel = yv / yv_ref
+            yv_rel *=  3.125 / float(width)
             label = width + ' cMpc'
             ax1.plot(xv, yv, label=label)
             ax2.plot(xv, yv_rel, label=label)
@@ -6734,6 +6735,7 @@ def plot_SBdist_conv(line, convtype):
                          bbox_to_anchor=(0., 0.))    
         leg.set_title('slice depth')
         leg.get_title().set_fontsize(fontsize)
+        ylabel2 = ylabel2 + ' $\times$ ref. width / width'
         
     ax1.set_yscale('log')
     ax2.set_yscale('log')
