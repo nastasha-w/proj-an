@@ -6715,7 +6715,7 @@ def plot_SBdist_conv(line, convtype):
     elif convtype == 'slices':
         box = 'L100N1504'
         for i, width in enumerate(adds.keys()):
-            fn = hfname.format(line=line, box=boxes[box], add=adds[widths],
+            fn = hfname.format(line=line, box=boxes[box], add=adds[width],
                                res=ress['3.125'], pix=pixs[box])
             xv, yv = readin_hist(fn)
             if i == 0:
@@ -6726,7 +6726,7 @@ def plot_SBdist_conv(line, convtype):
                 raise RuntimeError('Histogram bins did not match')
             
             yv_rel = yv / yv_ref
-            label = pixres + ' cMpc'
+            label = width + ' cMpc'
             ax1.plot(xv, yv, label=label)
             ax2.plot(xv, yv_rel, label=label)
         leg = ax1.legend(fontsize=fontsize - 1., loc='lower left',
