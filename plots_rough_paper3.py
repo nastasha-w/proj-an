@@ -6712,7 +6712,28 @@ def plot_SBdist_conv(line, convtype):
                          bbox_to_anchor=(0., 0.))    
         leg.set_title('pixel size')
         leg.get_title().set_fontsize(fontsize)
-    
+    elif convtype == 'slices':
+        box = 'L100N1504'
+        for i, width in enumerate(adds.keys()):
+            fn = hfname.format(line=line, box=boxes[box], add=adds[widths],
+                               res=ress['3.125'], pix=pixs[box])
+            xv, yv = readin_hist(fn)
+            if i == 0:
+               xv_ref = xv
+               yv_ref = yv
+               
+            if not np.all(xv == xv_ref):
+                raise RuntimeError('Histogram bins did not match')
+            
+            yv_rel = yv / yv_ref
+            label = pixres + ' cMpc'
+            ax1.plot(xv, yv, label=label)
+            ax2.plot(xv, yv_rel, label=label)
+        leg = ax1.legend(fontsize=fontsize - 1., loc='lower left',
+                         bbox_to_anchor=(0., 0.))    
+        leg.set_title('slice depth')
+        leg.get_title().set_fontsize(fontsize)
+        
     ax1.set_yscale('log')
     ax2.set_yscale('log')
     pu.setticks(ax1, fontsize, labelbottom=False)
