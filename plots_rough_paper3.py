@@ -6617,10 +6617,10 @@ def plot_SBdist_conv(line, convtype):
              'L025N0752-Recal': 'L0025N0752RECALIBRATED',
              }
     pixs = {'L100N1504': 32000,
-             'L050N0752': 16000,
-             'L025N0376': 8000,
-             'L025N0752-Ref': 8000,
-             'L025N0752-Recal': 8000,
+            'L050N0752': 16000,
+            'L025N0376': 8000,
+            'L025N0752-Ref': 8000,
+            'L025N0752-Recal': 8000,
              }
     adds = {'6.25': 1,
             '12.5': 2,
@@ -6690,7 +6690,28 @@ def plot_SBdist_conv(line, convtype):
                          bbox_to_anchor=(0., 0.))    
         leg.set_title('Simulation  res.')
         leg.get_title().set_fontsize(fontsize)
-    
+    elif convtype == 'pixels':
+        box = 'L100N1504'
+        for i, pixres in enumerate(ress.keys()):
+            fn = hfname.format(line=line, box=boxes[box],
+                               add=adds['6.25'],
+                               res=ress[pixres], pix=pixs[box])
+            xv, yv = readin_hist(fn)
+            if i == 0:
+               xv_ref = xv
+               yv_ref = yv
+               
+            if not np.all(xv == xv_ref):
+                raise RuntimeError('Histogram bins did not match')
+            
+            yv_rel = yv / yv_ref
+            label = pixres + ' ckpc'
+            ax1.plot(xv, yv, label=label)
+            ax2.plot(xv, yv_rel, label=label)
+        leg = ax1.legend(fontsize=fontsize - 1., loc='lower left',
+                         bbox_to_anchor=(0., 0.))    
+        leg.set_title('pixel size')
+        leg.get_title().set_fontsize(fontsize)
     
     ax1.set_yscale('log')
     ax2.set_yscale('log')
