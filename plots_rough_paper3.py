@@ -6604,6 +6604,7 @@ def readin_hist(filename):
         edges[-1] = 2. * edges[-2] - edges[-3]
     de = np.diff(edges)
     tot = float(np.sum(hist))
+    print(tot)
     pdf = hist.astype(np.float) / tot / de
     xv = 0.5 * (edges[:-1] + edges[1:])
     
