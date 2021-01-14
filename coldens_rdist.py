@@ -866,14 +866,18 @@ def rdists_sl_from_haloids(base, szcens, L_x, npix_x,\
             mindist_cMpc = 0.
         else:
             mindist_cMpc = mindist_pkpc * 1e-3 * (1. + z)
-        centres_cMpc = np.array([np.array(fi['Xcop_cMpc']), np.array(fi['Ycop_cMpc']), np.array(fi['Zcop_cMpc'])]).T
+        centres_cMpc = np.array([np.array(fi['Xcop_cMpc']),
+                                 np.array(fi['Ycop_cMpc']),
+                                 np.array(fi['Zcop_cMpc'])]).T
         ids   = np.array(fi['galaxyid'])
-        cosmopars = {key: item for (key, item) in fi['Header/cosmopars'].attrs.items()}
+        cosmopars = {key: item for (key, item) in \
+                     fi['Header/cosmopars'].attrs.items()}
         boxsize = cosmopars['boxsize'] / cosmopars['h']
         
         if velspace:    
             vpec = np.array(fi['V%spec_kmps'%axname]) * 1e5 # cm/s
-            vpec *= 1. / (cu.Hubble(cosmopars['z'], cosmopars=cosmopars) * cu.c.cm_per_mpc * cosmopars['a']) # cm/s -> H.f. cMpc  
+            vpec *= 1. / (cu.Hubble(cosmopars['z'], cosmopars=cosmopars) *\
+                          cu.c.cm_per_mpc * cosmopars['a']) # cm/s -> H.f. cMpc  
             centres_cMpc[:, Axis3] += vpec 
             centres_cMpc[:, Axis3] %= boxsize
         
@@ -889,7 +893,9 @@ def rdists_sl_from_haloids(base, szcens, L_x, npix_x,\
             R200c = R200c_cMpc
             centres = centres_cMpc
         else:
-            raise ValueError('galids should be an iterable of galaxy ids or "all", not %s'%galids)
+            msg = 'galids should be an iterable of galaxy ids or' +\
+                  ' "all", not %s'%galids
+            raise ValueError(msg)
     else:
         inds = np.array([np.where(ids == galid)[0][0] for galid in galids])
         halos = ids[inds]
@@ -910,18 +916,20 @@ def rdists_sl_from_haloids(base, szcens, L_x, npix_x,\
         print('Calling stamp or r/prop extraction')
     if stamps:
         if base[-5:] == '.hdf5':
-            return stamps_sl_hdf5(base, szcens, rmax_r200c, centres, rscales=R200c,\
-                           numsl=numsl, labels=halos, save=outname)
+            return stamps_sl_hdf5(base, szcens, rmax_r200c, centres,
+                                  rscales=R200c, numsl=numsl, labels=halos,
+                                  save=outname)
         else:
-            return stamps_sl(base, szcens, L_x, npix_x,\
-                     rmin_r200c, rmax_r200c, R200c, centres,\
-                     numsl=numsl, npix_y=npix_y, axis=axis, logquantity=logquantity,\
-                     labels=halos, save=outname)
+            return stamps_sl(base, szcens, L_x, npix_x,
+                     rmin_r200c, rmax_r200c, R200c, centres,
+                     numsl=numsl, npix_y=npix_y, axis=axis,
+                     logquantity=logquantity, labels=halos, save=outname)
     else:          
-        return rdists_sl_faster(base, szcens, L_x, npix_x,\
-                     rmin_r200c, rmax_r200c, R200c, centres,\
-                     numsl=numsl, npix_y=npix_y, axis=axis, logquantity=logquantity,\
-                     labels=halos, save=outname, trackprogress=trackprogress)
+        return rdists_sl_faster(base, szcens, L_x, npix_x,
+                     rmin_r200c, rmax_r200c, R200c, centres,
+                     numsl=numsl, npix_y=npix_y, axis=axis, 
+                     logquantity=logquantity, labels=halos, save=outname,
+                     trackprogress=trackprogress)
 
 
 def rdists_sl_from_selection(base, szcens, L_x, npix_x,\
