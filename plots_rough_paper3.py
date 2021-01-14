@@ -6686,7 +6686,7 @@ def plot_SBdist_conv(line, convtype):
             
             ax1.plot(xv, yv, label=box)
             ax2.plot(xv, yv_rel, label=box)
-        leg = ax1.legend(fontsize=fontsize, loc='lower right',
+        leg = ax1.legend(fontsize=fontsize - 1., loc='lower left',
                          bbox_to_anchor=(0., 0.))    
         leg.set_title('Simulation  res.')
         leg.get_title().set_fontsize(fontsize)
