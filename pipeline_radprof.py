@@ -26,9 +26,21 @@ import pipeline_cddfs as pcd
 
 pcd.get_names_and_pars(mapslices, *args, **kwargs)
 
+# stamps contain Header info from the maps in their Header group
+# radial profile files do not -> copy over in the pipeline
 
-def create_stampfiles(mapslices, catname, selection, numsl, mindist_pkpc,
-                      *args, nameonly=False, **kwargs):
+def create_stampfiles(mapslices, catname, *args, nameonly=False,
+                      stampkwlist, **kwargs):
+    
+    
+    stampkw_defaults = {'velspace': False, 'offset_los': 0.,
+                        'mindist_pkpc': None, 'numsl': 1,
+                        'selection': None, 'rmax_r200c': None}
+    check = np.all(['selection' in kws and 'rmax_r200c' in kws \
+                    for kws in stampkwlist])
+    if not check:
+        raise ValueError('keywords "selection" and "max_r200c" ' +\
+                         'must be given in stampkwlist')
     
     nameslist, argslist, kwargslist = get_names_and_pars(mapslices,\
                                                          *args, **kwargs)
@@ -76,39 +88,47 @@ def create_stampfiles(mapslices, catname, selection, numsl, mindist_pkpc,
     if nameonly:
         return outname
     
-    if isinstance(kwargs_hist, dict):
-        kwargs_hist = [kwargs_hist]
-    for hkwargs in kwargs_hist:
+    L_x = None
+    npix_x = None
+    rmin_r200c = np.Nan 
+    maxnum = np.inf
+    kw_ign = {'npix_y': None, 'logquantity': True, 'npix_y': None,
+              }
+    axis = kwargslist[0]['axis']
+    
+    
+    
+    
+    if isinstance(stampkwlist, dict):
+        stampkwlist = [stampkwlist]
+    for skwargs in stampkwlist:
+        _kw = kw_ign.copy()
+        _kw.update(stampkw_defaults)
+        _kw.update(skwargs)
+        
+        # not actually a keyword argument, but easier to wrap this way
+        selection = _kw['selection']
+        del _kw['selection']
         
         # with stamps=True, from hdf5 files:
         # following arguments are ignored
-        L_x = None
-        npix_x = None
-        rmin_r200c = np.Nan 
-        maxnum = np.inf
-        kw_ign = {'npix_y': None, 'logquantity': True, }
-                     numsl=1, npix_y=None, logquantity=True, mindist_pkpc=None,\
-                     axis='z', velspace=False, offset_los=0., stamps=False,\
-                     trackprogress=False
                      
         base, szcens, L_x, npix_x,\
-                     rmin_r200c, rmax_r200c,\
+                     rmin_r200c, ,\
                      catname,\
                      selection, maxnum, outname=None,\
                      numsl=1, npix_y=None, logquantity=True, mindist_pkpc=None,\
                      axis='z', velspace=False, offset_los=0., stamps=False,\
                      trackprogress=False
                      
-        crd.rdists_sl_from_selection(filebase, szcens, None, None,
-                                     np.NaN, rmax_r200c,
+        crd.rdists_sl_from_selection(filebase, szcens, L_x, npix_x,
+                                     rmin_r200c, rmax_r200c,
                                      catname,
-                                     selection, np.inf, outname=outname,
-                                     numsl=numsl, npix_y=None,
-                                     logquantity=True,
-                                     mindist_pkpc=mindist_pkpc,
-                                     axis='z', velspace=False, offset_los=0.,
+                                     selection, maxnum, outname=outname,
+                                     axis=axis, 
                                      stamps=True,
-                                     trackprogress=True)
+                                     trackprogress=True, 
+                                     **_kws)
     
     if deletemaps:
         for preexisting, name in zip(already_exists, _nameslist):
