@@ -6609,7 +6609,7 @@ def readin_hist(filename):
     
     return xv, pdf
 
-def plot_SBdiff_conv(line, convtype):
+def plot_SBdist_conv(line, convtype):
     boxes = {'L100N1504': 'L0100N1504',
              'L050N0752': 'L0050N0752',
              'L025N0376': 'L0025N0376',
