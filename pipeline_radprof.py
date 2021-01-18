@@ -15,6 +15,11 @@ hairy pretty fast.)
 Note that the pipeline does assume that if a stamp file with the same name as
 provided already exists, it contains the same data as the file you want to
 give that name.
+
+Running the pipeline for the same set of simulation map slices in different,
+parallel processes will most likely cause errors, since this pipeline assumes 
+each instance of itself is the only one creating this set of files, or 
+stamp files from those. 
  
 """
 
@@ -26,9 +31,9 @@ import os
 import make_maps_v3_master as m3
 import make_maps_opt_locs as ol
 import coldens_rdist as crd
-
 import pipeline_cddfs as pcd
-
+import cosmo_utils as cu
+import selecthalos as sh
 
 # stamps contain Header info from the maps in their Header group
 # radial profile files do not -> copy over in the pipeline
@@ -61,7 +66,8 @@ def create_stampfiles(mapslices, catname, args, stampkwlist,
             radius of the stamps to extract in units of R200c of the parent 
             halo.
         'outname': string
-            name for the stamp file. 
+            name for the stamp file. Automatically named if not given, but 
+            these names do not contain any info on the stampkw settings.
         'numsl': int, optional
             number of slices to combine for one stamp. The default is 1.
         'velspace': bool, optional 
@@ -91,7 +97,8 @@ def create_stampfiles(mapslices, catname, args, stampkwlist,
 
     Returns
     -------
-    None.
+    stampfiles: list of strings
+        Names of the stamp files in the order of stampkwlist.
 
     '''
     
@@ -107,10 +114,10 @@ def create_stampfiles(mapslices, catname, args, stampkwlist,
     if not check:
         raise ValueError('keywords "selection" and "max_r200c" ' +\
                          'must be given in stampkwlist')
-    check = np.all([kws['outname'] is not None for kws in stampkwlist]) 
-    if not check:
-        msg = 'outname may not be None for any entry in stampkwlist'
-        raise ValueError(msg)
+    #check = np.all([kws['outname'] is not None for kws in stampkwlist]) 
+    #if not check:
+    #    msg = 'outname may not be None for any entry in stampkwlist'
+    #    raise ValueError(msg)
     
     nameslist, argslist, kwargslist = pcd.get_names_and_pars(mapslices,\
                                                              *args, **kwargs)
@@ -164,7 +171,8 @@ def create_stampfiles(mapslices, catname, args, stampkwlist,
     maxnum = np.inf
     kw_ign = {'npix_y': None, 'logquantity': True, 'npix_y': None,
               }
-     
+    
+    stampfiles = []
     if isinstance(stampkwlist, dict):
         stampkwlist = [stampkwlist]
     for skwargs in stampkwlist:
@@ -178,6 +186,18 @@ def create_stampfiles(mapslices, catname, args, stampkwlist,
         rmax_r200c = _kw['rmax_r200c']
         del _kw['rmax_r200c']
         outname = _kw['outname']
+        if outname is None: # autoname
+            outname_base = filebase.split('/')[-1]
+            outname_base = ol.pdir + 'stamps/stamps_' + outname_base
+            outname_base = outname.base%('-all')
+            if outname_base[-5:] == '.hdf5':
+                outname_base = outname_base[:-5]
+            outname_base = outname_base + '_set{}.hdf5'
+            i = 0
+            while os.path.isfile(outname_base.format(i)):
+                i += 1
+            outname = outname_base.format(i)
+            
         if '/' not in outname:
             outname = ol.pdir + 'stamps/' + outname
         
@@ -189,15 +209,16 @@ def create_stampfiles(mapslices, catname, args, stampkwlist,
                                      stamps=True,
                                      trackprogress=True, 
                                      **_kw)
-    
+        stampfiles.append(outname)
+        
     if deletemaps:
         for preexisting, name in zip(already_exists, _nameslist):
             if not preexisting:
                 os.remove(name)
-
+    return stampfiles 
                 
 def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
-                     combrprofkwlist=(),
+                     combrprofkwlist=((())),
                      deletemaps=False, deletestamps=False, **kwargs):
     '''
     create radial profiles. Make slice maps and stamp files as intermediate
@@ -318,23 +339,32 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
     
     newstamps = []
     stampkwlist_run = []
-    
-    for stampkw, _rprofkwlist in zip(stampkwlist, rprofkwlist):
+    inds_createnew = []
+    for ni, stampkw in enumerate(stampkwlist):
         stampfilen =  stampkw['outname']
         if '/' not in stampfilen:
             stampfilen = ol.pdir + 'stamps/' + stampfilen
-        if not os.path.isfile(stampfilen):
+        if stampfilen is None:
             newstamps.append(stampfilen)
             stampkwlist_run.append(stampkw)
-    
+            inds_createnew.append(ni)
+        elif not os.path.isfile(stampfilen):
+            newstamps.append(stampfilen)
+            stampkwlist_run.append(stampkw)
+            inds_createnew.append(ni)
+            
     if len(stampkwlist_run) > 0:
-        create_stampfiles(mapslices, catname, args, stampkwlist_run, 
-                          deletemaps=deletemaps, **kwargs)
-    
+        stampfiles_new = create_stampfiles(mapslices, catname, args,
+                                           stampkwlist_run, 
+                                            deletemaps=deletemaps, **kwargs)
+    # store the actual stamp names with the keywords used to create them
+    for newi, fulli in enumerate(inds_createnew):
+        stampkwlist[fulli]['outname'] = stampfiles_new[newi]
+        
     for stampkw, _rprofkwlist, _combkwlist in \
         zip(stampkwlist, rprofkwlist, combrprofkwlist):
         
-        stampfilen =  stampkw['outname']
+        stampfilen = stampkw['outname']
         if '/' not in stampfilen:
             stampfilen = ol.pdir + 'stamps/' + stampfilen
         
@@ -385,30 +415,94 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
         for filen in newstamps:
             os.remove(filen)
         
+            
         
+def getprofiles_convtest_paper3(index):
     
     
+    lines = ['c5r', 'n6-actualr', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12',
+             'si13r', 'fe18', 'fe17-other1', 'fe19', 'o7r', 'o7iy', 'o7f',
+             'o8', 'fe17', 'c6', 'n7']
     
-    
-    
-def makeprofiles():
+    lineind = index // 2
+    line = lines[lineind]
+         
+    simset = index % 2
+    if simset == 0:
+        simnums = ['L0100N1504']
+        varlist = ['REFERENCE']
+        npix = [32000]
+        centres = [[50.] * 3]
+        mapslices = [16]
 
+        halocats = ['catalogue_RefL0100N1504_snap27_aperture30.hdf5'] 
+        
+        stampkwlist = [{'numsl': 1, 'offset_los': 0., 'velspace': False,
+                       'outname': None, 'rmax_r200c': 3.5,
+                       'mindist_pkpc': None, 'galaxyid': None},
+                       {'numsl': 2, 'offset_los': 0., 'velspace': False,
+                       'outname': None, 'rmax_r200c': 3.5,
+                       'mindist_pkpc': None, 'galaxyid': None},
+                       ] 
+        galids_dcts = [sh.L0100N1504_27_Mh0p5dex_1000.galids()]
+         
+    elif simset == 1:
+        simnums = ['L0050N0752', 'L0025N0376',
+                   'L0025N0752', 'L0025N0752']
+        varlist = ['REFERENCE', 'REFERENCE',\
+                   'REFERENCE', 'RECALIBRATED']
+        npix = [16000, 8000, 8000, 8000]
+        centres = [[25.] * 3] + [[12.5] * 3] * 3
+        mapslices = [8, 4, 4, 4]
+        
+        halocats = ['catalogue_RefL0050N0752_snap27_aperture30.hdf5',
+                    'catalogue_RefL0025N0376_snap27_aperture30.hdf5',  
+                    'catalogue_RefL0025N0752_snap27_aperture30.hdf5',
+                    'catalogue_RecalL0025N0752_snap27_aperture30.hdf5',
+                    ]
+        
+        stampkwlist = [{'numsl': 1, 'offset_los': 0., 'velspace': False,
+                       'outname': None, 'rmax_r200c': 3.5,
+                       'mindist_pkpc': None, 'galaxyid': None},
+                       ]
+        galids_dcts[sh.L0050N0752_27_Mh0p5dex_1000.galids(),
+                    sh.L0025N0376_27_Mh0p5dex_1000.galids(),
+                    sh.L0025N0752_27_Mh0p5dex_1000.galids(),
+                    sh.RecalL0025N0752_27_Mh0p5dex_1000.galids()]
+        
+
+    ptypeW = 'emission'
+    snapnum = 27
     
-    halocat = ol.pdir + 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'   
-    galids_dct = sh.L0100N1504_27_Mh0p5dex_1000.galids()
+    kwargs = {'abundsW': 'Sm', 'excludeSFRW': True, 'ptypeQ': None,
+              'axis': 'z', 'periodic': True, 'kernel': 'C2',
+              'log': True, 'saveres': True, 'hdf5': True,
+              'simulation': 'eagle', 'ompproj': True,
+              }
+    
+    halocats = [halocat if '/' in halocat else ol.pdir + halocat \
+                for halocat in halocats]
+    
+    rprofkwlist = [{'rbins': None, 'runit': 'pkpc', 'galaxyid': None,
+                    'ytype': 'mean', 'yvals': None, 
+                    'separateprofiles': True, 'grptag': None,
+                    'uselogvals': False}]
+    combrprofkwlist = [{'ytype_out': 'mean', 'yvals_out': None, 
+                        'galaxyids': None},
+                       {'ytype_out': 'perc', 
+                        'yvals_out': [1., 5., 10., 50., 90., 95., 99.], 
+                        'galaxyids': None},
+                       ]
+    
+    
+    
+    
     del galids_dct['geq9.0_le9.5']
     del galids_dct['geq9.5_le10.0']
     del galids_dct['geq10.0_le10.5']
 
     with h5py.File(catname, 'r') as cat:
         cosmopars = {key: item for key, item in cat['Header/cosmopars'].attrs.items()}
-  
-    lines = ['c5r', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r', 'fe18',\
-            'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy', 'o7f', 'o8', 'fe17',\
-            'c6', 'n7', 'n6-actualr']
-    lineind = jobind - 30234
-    line = lines[lineind]
-    numsl = 1
   
     mapbase = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
     if line in ['ne10', 'n6-actualr']:
@@ -467,3 +561,26 @@ def makeprofiles():
                                 yvals_out=[1., 5., 10., 50., 90., 95., 99.],
                                 uselogvals=True,
                                 outfile=proffile, grptag=hmkey)
+                
+    for simnum, var, _npix, centre, _mapslices, halocat in\
+        zip(simnums, varlist, npix, centres, mapslices, halocats):
+        
+        L_x, L_y, L_z = (centre[0] * 2.,) * 3
+        npix_x, npix_y = (_npix,) * 2
+        args = (simnum, snapnum, centre, L_x, L_y, L_z,
+                npix_x, npix_y, ptypeW)
+        kwargs['var'] = var
+        kwargs['ionW'] = line
+        
+        print('Calling create_histset with')
+        print(args)
+        print(kwargs)
+        #print(bins)
+        print('mapslices: {}'.format(_mapslices))
+        print(stampkwlist)
+        print(rprofkwlist)
+        print('\n')
+        
+        create_rprofiles(_mapslices, halocat, args, stampkwlist, rprofkwlist,
+                     combrprofkwlist=((())),
+                     deletemaps=True, deletestamps=False, **kwargs)
