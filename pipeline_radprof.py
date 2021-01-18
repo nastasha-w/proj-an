@@ -333,9 +333,9 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
                       'separateprofiles': False, 'uselogvals': True,
                       'outfile': None, 'grptag': None}
     
-    check = np.all(['bins' in kws for _l in rprofkwlist for kws in _l])
+    check = np.all(['rbins' in kws for _l in rprofkwlist for kws in _l])
     if not check:
-        raise ValueError('"bins" must be specified for radial profiles')
+        raise ValueError('"rbins" must be specified for radial profiles')
     
     newstamps = []
     stampkwlist_run = []
