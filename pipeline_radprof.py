@@ -570,8 +570,6 @@ def getprofiles_convtest_paper3(index):
         mapfilen = mapfilen.split('/')[-1]
         mapfilen.replace('zcen-3.125', 'zcen-all')
         
-        
-        
         for i in range(len(stampkwlist)):
             dist = stampkwlist[i]['rmax_r200c']
             dist = '{}'.format(dist)
@@ -606,7 +604,7 @@ def getprofiles_convtest_paper3(index):
             print('... done')
 
             stampkwlist[i]['mindist_pkpc'] = mindist_pkpc
-            stampkwlist[i]['galaxyid'] = allids
+            stampkwlist[i]['galaxyid'] = np.array(allids)
             
         rprofkwlist = [] 
         combrprofkwlist = []
