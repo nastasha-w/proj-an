@@ -432,7 +432,7 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
                         
                     crd.combineprofiles(outfilen, rbins, _galids,
                             runit=rkw['runit'], ytype_in=rkw['ytype'], 
-                            yvals_in=rkw['type'],
+                            yvals_in=rkw['yvals'],
                             uselogvals=rkw['uselogvals'], outfile=outfilen, 
                             grptag=rkw['grouptag'],
                             **combkw)
