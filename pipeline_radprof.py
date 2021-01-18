@@ -434,7 +434,7 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
                             runit=rkw['runit'], ytype_in=rkw['ytype'], 
                             yvals_in=rkw['yvals'],
                             uselogvals=rkw['uselogvals'], outfile=outfilen, 
-                            grptag=rkw['grouptag'],
+                            grptag=rkw['grptag'],
                             **combkw)
     
     if deletestamps:
