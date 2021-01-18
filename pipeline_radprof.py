@@ -263,7 +263,7 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
     rprofkwlist : list of list of dicts
             set of keywords to use for radial profile creation. The outer 
             layer of lists matches the stamp keywords to use, the inner layer
-            is the set of radial profile keyowrds to use for each stamp set.
+            is the set of radial profile keywords to use for each stamp set.
             Entries are:
             'rbins': array-like of floats       
                 bin edges for statistics extraction
@@ -376,7 +376,9 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
                 del rkw['galaxyid']
             else:
                 galids = stampkw['galaxyid']
-            
+            if galids is None:
+                galids = stampkw['galaxyid']
+                
             if 'nameonly' in rkw:
                 del rkw['nameonly']
             rbins = rkw['bins']
@@ -384,7 +386,7 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
             outfilen = crd.getprofiles_fromstamps(stampfilen, rbins, galids,
                                                   nameonly=True, **rkw)
             crd.getprofiles_fromstamps(stampfilen, rbins, galids,
-                                       nameonly=True, **rkw)
+                                       nameonly=False, **rkw)
             # add header info to the profile file
             with h5py.File(outfilen, 'a') as _f:
                 if not 'Header' in _f:
@@ -403,7 +405,9 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
                         del _combkw['galaxyid']
                     else:
                         _galids = galids
-                    
+                    if _galids is None:
+                        _galids = galids
+                        
                     crd.combineprofiles(outfilen, rbins, _galids,
                             runit=rkw['runit'], ytype_in=rkw['ytype'], 
                             yvals_in=rkw['type'],
@@ -418,7 +422,20 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
             
         
 def getprofiles_convtest_paper3(index):
-    
+    '''
+    generate the radial profiles for the paper 3 convergence tests: statistics
+    of the mean radial profiles in 10 kpc -> 0.1, 0.25 dex bins
+
+    Parameters
+    ----------
+    index : int
+        index for the simulation box(es) (fast, 2) and line (slow) to run.
+
+    Returns
+    -------
+    None.
+
+    '''
     
     lines = ['c5r', 'n6-actualr', 'n6r', 'ne9r', 'ne10', 'mg11r', 'mg12',
              'si13r', 'fe18', 'fe17-other1', 'fe19', 'o7r', 'o7iy', 'o7f',
@@ -470,7 +487,6 @@ def getprofiles_convtest_paper3(index):
                     sh.L0025N0752_27_Mh0p5dex_1000.galids(),
                     sh.RecalL0025N0752_27_Mh0p5dex_1000.galids()]
         
-
     ptypeW = 'emission'
     snapnum = 27
     
@@ -483,88 +499,21 @@ def getprofiles_convtest_paper3(index):
     halocats = [halocat if '/' in halocat else ol.pdir + halocat \
                 for halocat in halocats]
     
-    rprofkwlist = [{'rbins': None, 'runit': 'pkpc', 'galaxyid': None,
-                    'ytype': 'mean', 'yvals': None, 
-                    'separateprofiles': True, 'grptag': None,
-                    'uselogvals': False}]
-    combrprofkwlist = [{'ytype_out': 'mean', 'yvals_out': None, 
-                        'galaxyids': None},
-                       {'ytype_out': 'perc', 
-                        'yvals_out': [1., 5., 10., 50., 90., 95., 99.], 
-                        'galaxyids': None},
-                       ]
+    rprofkw_base = [{'rbins': None, 'runit': 'pkpc', 'galaxyid': None,
+                     'ytype': 'mean', 'yvals': None, 
+                     'separateprofiles': True, 'grptag': None,
+                     'uselogvals': False}]
+    combrprofkw_base = [{'ytype_out': 'mean', 'yvals_out': None, 
+                         'galaxyids': None},
+                        {'ytype_out': 'perc', 
+                         'yvals_out': [1., 2., 5., 10., 50., 90., 95., 98., 99.], 
+                         'galaxyids': None},
+                        ]
     
-    
-    
-    
-    del galids_dct['geq9.0_le9.5']
-    del galids_dct['geq9.5_le10.0']
-    del galids_dct['geq10.0_le10.5']
-
-    with h5py.File(catname, 'r') as cat:
-        cosmopars = {key: item for key, item in cat['Header/cosmopars'].attrs.items()}
-  
-    mapbase = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_noEOS.hdf5'
-    if line in ['ne10', 'n6-actualr']:
-        mapbase = mapbase.replace('test3.5', 'test3.6')
-    mapname = ol.ndir + mapbase.format(line=line)
-             
-    stampname = ol.pdir + 'stamps/' + 'stamps_%s_%islice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'%((mapname.split('/')[-1][:-5])%('-all'), numsl)
-    proffile = stampname.split('/')[-1]
-    proffile = ol.pdir + 'radprof/radprof_' + proffile
-    
-    rbins_r200c = np.arange(0., 2.51, 0.05)
-    yvals_perc = [1., 5., 10., 50., 90., 95., 99.]
-    #kwarg_opts = [
-    #              {'runit': 'pkpc', 'ytype': 'mean', 'yvals': None,\
-    #               'separateprofiles': True, 'uselogvals': False},\
-    #              ]
-    
-    for hmkey in galids_dct:
-        print('Trying halo set %s'%(hmkey))
-        # get max. distance from halo mass range:
+    for simnum, var, _npix, centre, _mapslices, halocat, galids_dct in\
+        zip(simnums, varlist, npix, centres, mapslices, halocats, galids_dcts):
         
-        # hmkeys format: 'geq10.0_le10.5' or 'geq14.0'
-        # extracted out to max(R200c in bin)
-        minmass_Msun = 10**(float(hmkey.split('_')[0][3:]))
-        maxdist_pkpc = 3.5 * cu.R200c_pkpc(minmass_Msun * 10**0.5, cosmopars)
-        # lin-log bins: lin 10 pkpc up to 100 kpc, then 0.1 dex
-        rbins_log_large_pkpc = 10.**(np.arange(1., np.log10(maxdist_pkpc), 0.25))
-        rbins_pkpc_large = np.append([0.], rbins_log_large_pkpc)
-        
-        rbins_log_small_pkpc = 10.**(np.arange(1., np.log10(maxdist_pkpc), 0.1))
-        rbins_pkpc_small = np.append([0.], rbins_log_small_pkpc)
-        
-        #if kwargs['runit'] == 'pkpc':
-        #    rbins = rbins_pkpc
-        #else:
-        for rbins in [rbins_pkpc_small, rbins_pkpc_large]:
-            galids = np.copy(galids_dct[hmkey])
-            #if kwargs['separateprofiles']:
-            #    galids = galids[:10] # just a few examples, don't need the whole set
-            #print('Calling getprofiles_fromstamps with:')
-            #print(stampname)
-            #print('rbins: {}'.format(rbins))
-            #if len(galids) > 15:
-            #    print('galaxyids: {} ... {}'.format(galids[:8],  galids[-7:]))
-            #else:
-            #    print('galaxyids: {}'.format(galids))
-            #print(halocat)
-            #print('out: {}'.format(outfile))
-            #print('grouptag: {}'.format(hmkey))
-            #print('\t '.join(['{key}: {val}'.format(key=key, val=kwargs[key])\
-            #                  for key in kwargs]))
-            #print('\n\n')
-            crd.combineprofiles(proffile, rbins, galids,
-                                runit='pkpc', ytype_in='mean', yvals_in=None,
-                                ytype_out='perc',\
-                                yvals_out=[1., 5., 10., 50., 90., 95., 99.],
-                                uselogvals=True,
-                                outfile=proffile, grptag=hmkey)
-                
-    for simnum, var, _npix, centre, _mapslices, halocat in\
-        zip(simnums, varlist, npix, centres, mapslices, halocats):
-        
+        # snapshot data 
         L_x, L_y, L_z = (centre[0] * 2.,) * 3
         npix_x, npix_y = (_npix,) * 2
         args = (simnum, snapnum, centre, L_x, L_y, L_z,
@@ -572,14 +521,120 @@ def getprofiles_convtest_paper3(index):
         kwargs['var'] = var
         kwargs['ionW'] = line
         
-        print('Calling create_histset with')
+        print('Calling create_rprofiles with')
         print(args)
         print(kwargs)
         #print(bins)
         print('mapslices: {}'.format(_mapslices))
         print(stampkwlist)
-        print(rprofkwlist)
         print('\n')
+        
+        del galids_dct['geq9.0_le9.5']
+        del galids_dct['geq9.5_le10.0']
+        del galids_dct['geq10.0_le10.5']
+        stampname = ol.pdir + 'stamps/' + \
+                   'stamps_{mapname}_{numsl}slice_to-min{dist}R200c' +\
+                   '_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+        
+        with h5py.File(halocat, 'r') as cat:
+            cosmopars = {key: item for key, item \
+                         in cat['Header/cosmopars'].attrs.items()}
+            r200cvals = np.array(cat['R200c_pkpc'])
+            galids = np.array(cat['galaxyid'])
+        
+        # assuming z-axis projection 
+        _centre = np.copy(centre)
+        _centre[2] = 3.125
+        _args = (simnum, snapnum, _centre, L_x, L_y, L_z / float(_mapslices),
+                 npix_x, npix_y, ptypeW)
+        mapfilen = m3.make_map(*_args, nameonly=True, hdf5=True, save=True,
+                               **kwargs)
+        mapfilen = mapfilen[0]
+        mapfilen = mapfilen.split('/')[-1]
+        mapfilen.replace('zcen-3.125', 'zcen-all')
+        
+        
+        
+        for i in len(stampkwlist):
+            dist = stampkwlist[i]['rmax_r200c']
+            dist = '{}'.format(dist)
+            dist = dist.replace('.', 'p')
+            stampkwlist[i]['outname'] = \
+                stampname.format(mapname=mapfilen, 
+                                 numsl=stampkwlist[i]['numsl'],
+                                 dist=dist)
+            
+            print('Getting halo radii')
+            radii_mhbins = {key: [r200cvals[galids == galid] \
+                                  for galid in galids_dct[key]] \
+                            for key in galids_dct}
+            maxradii_mhbins = {key: np.max(radii_mhbins[key]) \
+                               for key in radii_mhbins} 
+            #print('for debug: galids_dct:\n')
+            #print(galids_dct)
+            #print('\n')
+            print('Matching radii to Mhalo bins...')
+            allids = [gid for key in galids_dct.keys() for gid in galids_dct[key]]
+            gkeys = list(galids_dct.keys())
+            keymatch = [gkeys[np.where([gid in galids_dct[key] \
+                                        for key in gkeys])[0][0]] \
+                        for gid in allids]
+            mindist_pkpc = stampkwlist[i]['rmax_r200c'] *\
+                           np.array([maxradii_mhbins[gkey] \
+                                     for gkey in keymatch])
+            print('... done')
+
+            stampkwlist[i]['mindist_pkpc'] = mindist_pkpc
+            stampkwlist[i]['galaxyid'] = allids
+            
+        rprofkwlist = [] 
+        combrprofkwlist = []
+        for stampi, stampkw in enumerate(stampkwlist):
+            templist_rp = []
+            templist_cp = []
+            
+            proffile = stampkw['outname'].split('/')[-1]
+            proffile = ol.pdir + 'radprof/radprof_' + proffile
+        
+            for masstag in galids_dct:
+                if len(galids_dct[masstag]) == 0:
+                    continue
+                for _rkw in rprofkw_base:
+                    rkw = _rkw.copy()
+                    rkw['galaxyid'] = galids_dct[masstag]
+                    rkw['grptag'] = masstag
+                    rkw['outfile'] = proffile
+                    
+                    # masstag format: 'geq10.0_le10.5' or 'geq14.0'
+                    minmass_Msun = 10**(float(masstag.split('_')[0][3:]))
+                    minmass_Msun *= 10**0.5
+                    maxdist_pkpc = stampkw['rmax_r200c'] * \
+                                   cu.R200c_pkpc(minmass_Msun, cosmopars)
+                                        
+                    rbins_log_large_pkpc = 10.**(np.arange(1., np.log10(maxdist_pkpc), 0.25))
+                    rbins_pkpc_large = np.append([0.], rbins_log_large_pkpc)
+                    rkw1 = rkw.copy()
+                    rkw1['rbins'] = rbins_pkpc_large
+                    templist_rp.append(rkw1)
+                    
+                    rbins_log_small_pkpc = 10.**(np.arange(1., np.log10(maxdist_pkpc), 0.1))
+                    rbins_pkpc_small = np.append([0.], rbins_log_small_pkpc)
+                    rkw2 = rkw.copy()
+                    rkw2['rbins'] = rbins_pkpc_small
+                    templist_rp.append(rkw2)
+                    
+                    numradd = 2
+                    
+                    _templist_cp = []
+                    for _ckw in combrprofkw_base:
+                        ckw = _ckw.copy()
+                        ckw['galaxyid'] = rkw['galaxyid']
+                        _templist_cp.append(ckw)
+                    templist_cp = templist_cp + [_templist_cp] * numradd
+                
+            rprofkwlist.append(templist_rp)
+            combrprofkwlist.append(templist_cp)
+            
         
         create_rprofiles(_mapslices, halocat, args, stampkwlist, rprofkwlist,
                      combrprofkwlist=((())),
