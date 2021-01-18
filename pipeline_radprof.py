@@ -430,12 +430,13 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
                     if _galids is None:
                         _galids = galids
                         
+                        
                     crd.combineprofiles(outfilen, rbins, _galids,
                             runit=rkw['runit'], ytype_in=rkw['ytype'], 
                             yvals_in=rkw['yvals'],
                             uselogvals=rkw['uselogvals'], outfile=outfilen, 
                             grptag=rkw['grptag'],
-                            **combkw)
+                            **_combkw)
     
     if deletestamps:
         for filen in newstamps:
