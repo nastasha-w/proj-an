@@ -445,7 +445,24 @@ def getprofiles_convtest_paper3(index):
     line = lines[lineind]
          
     simset = index % 2
+    
+    # test version
     if simset == 0:
+        simnums = ['L00025N0376']
+        varlist = ['REFERENCE']
+        npix = [8000]
+        centres = [[12.5] * 3]
+        mapslices = [4]
+
+        halocats = ['catalogue_RefL0025N0376_snap27_aperture30.hdf5'] 
+        
+        stampkwlist = [{'numsl': 1, 'offset_los': 0., 'velspace': False,
+                       'outname': None, 'rmax_r200c': 2.5,
+                       'mindist_pkpc': None, 'galaxyid': None},
+                       ] 
+        galids_dcts = [sh.L0025N0376_27_Mh0p5dex_1000.galids()]
+        
+    elif simset == 0:
         simnums = ['L0100N1504']
         varlist = ['REFERENCE']
         npix = [32000]
