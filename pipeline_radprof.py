@@ -401,11 +401,13 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
             #print('making radial profiles: {}'.format(rkw))
                        
             outfilen = crd.getprofiles_fromstamps(stampfilen, rbins, galids,
-                                                  nameonly=True, **rkw)
+                                                  nameonly=True, 
+                                                  halocat=catname,
+                                                  **rkw)
             print('Saving radial profiles in {}'.format(outfilen))
             
             crd.getprofiles_fromstamps(stampfilen, rbins, galids,
-                                       nameonly=False, **rkw)
+                                       nameonly=False, halocat=catname, **rkw)
             # add header info to the profile file
             with h5py.File(outfilen, 'a') as _f:
                 if not 'Header' in _f:
