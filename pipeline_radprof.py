@@ -448,7 +448,7 @@ def getprofiles_convtest_paper3(index):
     
     # test version
     if simset == 0:
-        simnums = ['L00025N0376']
+        simnums = ['L0025N0376']
         varlist = ['REFERENCE']
         npix = [8000]
         centres = [[12.5] * 3]
