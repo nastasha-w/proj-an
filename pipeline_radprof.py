@@ -584,8 +584,12 @@ def getprofiles_convtest_paper3(index):
             radii_mhbins = {key: [r200cvals[galids == galid] \
                                   for galid in galids_dct[key]] \
                             for key in galids_dct}
+            nonemptykeys = {key if len(galids_dct[key]) else None \
+                            for key in galids_dct}
+            nonemptykeys -= {None}
+            nonemptykeys = list(nonemptykeys)
             maxradii_mhbins = {key: np.max(radii_mhbins[key]) \
-                               for key in radii_mhbins} 
+                               for key in nonemptykeys}
             #print('for debug: galids_dct:\n')
             #print(galids_dct)
             #print('\n')
