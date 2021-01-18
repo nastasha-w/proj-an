@@ -221,7 +221,7 @@ def create_stampfiles(mapslices, catname, args, stampkwlist,
     return stampfiles 
                 
 def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
-                     combrprofkwlist=((())),
+                     combrprofkwlist=None,
                      deletemaps=False, deletestamps=False, **kwargs):
     '''
     create radial profiles. Make slice maps and stamp files as intermediate
@@ -296,7 +296,7 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
                  ytype='fcov' yvals as log). Otherwise, non-log y values are 
                  used in every case. (Just following what's in the input files 
                  is not an option.)
-    combrprofkwlist : list of lists of lists of dicts, optional
+    combrprofkwlist : list of lists of lists of dicts or None, optional
         the arguments for combined statistsics for individual radial profiles.
         The outermost list layer corresponds to stamp sets, the layer inside 
         that corresponds to the initial radial profile types, and the 
@@ -364,9 +364,15 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
     for newi, fulli in enumerate(inds_createnew):
         stampkwlist[fulli]['outname'] = stampfiles_new[newi]
     
-    print(stampkwlist)
-    print(rprofkwlist)
-    print(combrprofkwlist)
+    #print(stampkwlist)
+    #print(rprofkwlist)
+    #print(combrprofkwlist)
+    
+    # match rprofkwlist shape to avoid errors from zipping lists
+    if combrprofkwlist is None:
+        combrprofkwlist = [ [[]] * len(rprofkwlist[i]) \
+                           for i in range(len(rprofkwlist))] 
+        combrprofkwlist = [combrprofkwlist] * len(rprofkwlist)
     
     for stampkw, _rprofkwlist, _combkwlist in \
         zip(stampkwlist, rprofkwlist, combrprofkwlist):
@@ -386,12 +392,13 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
                 galids = stampkw['galaxyid']
             if galids is None:
                 galids = stampkw['galaxyid']
-                
+            del rkw['galaxyid']
+            
             if 'nameonly' in rkw:
                 del rkw['nameonly']
             rbins = rkw['rbins']
             del rkw['rbins']
-            print('making radial profiles: {}'.format(rkw))
+            #print('making radial profiles: {}'.format(rkw))
                        
             outfilen = crd.getprofiles_fromstamps(stampfilen, rbins, galids,
                                                   nameonly=True, **rkw)
