@@ -202,6 +202,7 @@ def create_stampfiles(mapslices, catname, args, stampkwlist,
             outname = ol.pdir + 'stamps/' + outname
         del _kw['outname']
         
+        print('Saving stamps in {}'.format(outname))
         crd.rdists_sl_from_selection(filebase, szcens, L_x, npix_x,
                                      rmin_r200c, rmax_r200c,
                                      catname,
@@ -386,6 +387,8 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
             
             outfilen = crd.getprofiles_fromstamps(stampfilen, rbins, galids,
                                                   nameonly=True, **rkw)
+            print('Saving radial profiles in {}'.format(outfilen))
+            
             crd.getprofiles_fromstamps(stampfilen, rbins, galids,
                                        nameonly=False, **rkw)
             # add header info to the profile file
