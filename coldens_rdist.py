@@ -1456,6 +1456,8 @@ def stamps_sl_hdf5(base, szcens, rmax, centres, rscales=1.,\
         qs  = [ np.log10(q) for q in qs]
 
     dct_out = {labels[i]: qs[i] for i in range(len(selections))}
+    print('Saving stamps to {}'.format(save))
+    
     if save is not None:
         try:
             fon = save
