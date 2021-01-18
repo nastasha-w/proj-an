@@ -547,8 +547,7 @@ def getprofiles_convtest_paper3(index):
         _centre[2] = 3.125
         _args = (simnum, snapnum, _centre, L_x, L_y, L_z / float(_mapslices),
                  npix_x, npix_y, ptypeW)
-        mapfilen = m3.make_map(*_args, nameonly=True, hdf5=True, save=True,
-                               **kwargs)
+        mapfilen = m3.make_map(*_args, nameonly=True, **kwargs)
         mapfilen = mapfilen[0]
         mapfilen = mapfilen.split('/')[-1]
         mapfilen.replace('zcen-3.125', 'zcen-all')
