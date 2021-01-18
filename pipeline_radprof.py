@@ -544,10 +544,10 @@ def getprofiles_convtest_paper3(index):
                      'separateprofiles': True, 'grptag': None,
                      'uselogvals': False}]
     combrprofkw_base = [{'ytype_out': 'mean', 'yvals_out': None, 
-                         'galaxyids': None},
+                         'galaxyid': None},
                         {'ytype_out': 'perc', 
                          'yvals_out': [1., 2., 5., 10., 50., 90., 95., 98., 99.], 
-                         'galaxyids': None},
+                         'galaxyid': None},
                         ]
     
     for simnum, var, _npix, centre, _mapslices, halocat, galids_dct in\
