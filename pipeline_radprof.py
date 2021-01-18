@@ -366,7 +366,8 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
         
     for stampkw, _rprofkwlist, _combkwlist in \
         zip(stampkwlist, rprofkwlist, combrprofkwlist):
-        
+        print('making radial profiles for stamps: {}'.format(stampkw))
+            
         stampfilen = stampkw['outname']
         if '/' not in stampfilen:
             stampfilen = ol.pdir + 'stamps/' + stampfilen
@@ -384,8 +385,10 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
                 
             if 'nameonly' in rkw:
                 del rkw['nameonly']
-            rbins = rkw['bins']
-            
+            rbins = rkw['rbins']
+            del rkw['rbins']
+            print('making radial profiles: {}'.format(rkw))
+                       
             outfilen = crd.getprofiles_fromstamps(stampfilen, rbins, galids,
                                                   nameonly=True, **rkw)
             print('Saving radial profiles in {}'.format(outfilen))
@@ -405,6 +408,7 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
                     
                 for combkw in __combkwlist:
                     _combkw = combkw.copy()
+                    print('combining radial profiles: {}'.format(_combkw))
                     if 'galaxyid' in _combkw:
                         _galids = _combkw['galaxyid']
                         del _combkw['galaxyid']
