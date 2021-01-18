@@ -216,6 +216,7 @@ def create_stampfiles(mapslices, catname, args, stampkwlist,
     if deletemaps:
         for preexisting, name in zip(already_exists, _nameslist):
             if not preexisting:
+                print('Deleting map {}'.format(name))
                 os.remove(name)
     return stampfiles 
                 
@@ -421,6 +422,7 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
     
     if deletestamps:
         for filen in newstamps:
+            print('Deleting stamps {}'.format(filen))
             os.remove(filen)
         
             
