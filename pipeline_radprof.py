@@ -581,7 +581,7 @@ def getprofiles_convtest_paper3(index):
         mapfilen = m3.make_map(*_args, nameonly=True, **kwargs)
         mapfilen = mapfilen[0]
         mapfilen = mapfilen.split('/')[-1]
-        mapfilen.replace('zcen-3.125', 'zcen-all')
+        mapfilen.replace('zcen3.125', 'zcen-all')
         
         for i in range(len(stampkwlist)):
             dist = stampkwlist[i]['rmax_r200c']
@@ -677,7 +677,7 @@ def getprofiles_convtest_paper3(index):
         print('combrprofkwlist: {}'.format(combrprofkwlist))
         
         create_rprofiles(_mapslices, halocat, args, stampkwlist, rprofkwlist,
-                     combrprofkwlist=((())),
+                     combrprofkwlist=combrprofkwlist,
                      deletemaps=True, deletestamps=True, **kwargs)
 
 if __name__ == '__main__':
