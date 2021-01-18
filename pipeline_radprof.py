@@ -639,3 +639,11 @@ def getprofiles_convtest_paper3(index):
         create_rprofiles(_mapslices, halocat, args, stampkwlist, rprofkwlist,
                      combrprofkwlist=((())),
                      deletemaps=True, deletestamps=False, **kwargs)
+
+if __name__ == '__main__':
+    index = int(sys.argv[1])
+    if not 'OMP_NUM_THREADS' in os.environ:
+        raise RuntimeError('OMP_NUM_THREADS environment variable needs to be set')
+    
+    if index >=0 and index < 36:
+        getprofiles_convtest_paper3(index)
