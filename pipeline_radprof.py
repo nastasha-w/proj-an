@@ -363,7 +363,11 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
     # store the actual stamp names with the keywords used to create them
     for newi, fulli in enumerate(inds_createnew):
         stampkwlist[fulli]['outname'] = stampfiles_new[newi]
-        
+    
+    print(stampkwlist)
+    print(rprofkwlist)
+    print(combrprofkwlist)
+    
     for stampkw, _rprofkwlist, _combkwlist in \
         zip(stampkwlist, rprofkwlist, combrprofkwlist):
         print('making radial profiles for stamps: {}'.format(stampkw))
@@ -674,7 +678,7 @@ def getprofiles_convtest_paper3(index):
         
         create_rprofiles(_mapslices, halocat, args, stampkwlist, rprofkwlist,
                      combrprofkwlist=((())),
-                     deletemaps=True, deletestamps=False, **kwargs)
+                     deletemaps=True, deletestamps=True, **kwargs)
 
 if __name__ == '__main__':
     index = int(sys.argv[1])
