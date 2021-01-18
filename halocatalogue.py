@@ -19,7 +19,8 @@ import eagle_constants_and_units as c
 
 pdir = ol.pdir
 
-con = sql.connect('nwijers', password='G3Wuve94')
+con = sql.connect('wdf201', password='LZJ687pn')
+# old; don't work anymore 'nwijers', password='G3Wuve94'
 entries = ['groupid','m200c_solar','r200c_pkpc','xcop_cmpc','ycop_cmpc','zcop_cmpc']
 
 def getvar(var):
