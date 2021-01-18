@@ -376,7 +376,7 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
     
     for stampkw, _rprofkwlist, _combkwlist in \
         zip(stampkwlist, rprofkwlist, combrprofkwlist):
-        print('making radial profiles for stamps: {}'.format(stampkw))
+        #print('making radial profiles for stamps: {}'.format(stampkw))
             
         stampfilen = stampkw['outname']
         if '/' not in stampfilen:
@@ -404,7 +404,7 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
                                                   nameonly=True, 
                                                   halocat=catname,
                                                   **rkw)
-            print('Saving radial profiles in {}'.format(outfilen))
+            #print('Saving radial profiles in {}'.format(outfilen))
             
             crd.getprofiles_fromstamps(stampfilen, rbins, galids,
                                        nameonly=False, halocat=catname, **rkw)
@@ -421,7 +421,7 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
                     
                 for combkw in __combkwlist:
                     _combkw = combkw.copy()
-                    print('combining radial profiles: {}'.format(_combkw))
+                    #print('combining radial profiles: {}'.format(_combkw))
                     if 'galaxyid' in _combkw:
                         _galids = _combkw['galaxyid']
                         del _combkw['galaxyid']
@@ -682,9 +682,9 @@ def getprofiles_convtest_paper3(index):
         print('halo catalogue: {}'.format(halocat))
         print('args (for make_map): {}'.format(args))
         print('kwargs (for make_map): {}'.format(kwargs))
-        print('stampkwlist: {}'.format(stampkwlist))
-        print('rprofkwlist: {}'.format(rprofkwlist))
-        print('combrprofkwlist: {}'.format(combrprofkwlist))
+        #print('stampkwlist: {}'.format(stampkwlist))
+        #print('rprofkwlist: {}'.format(rprofkwlist))
+        #print('combrprofkwlist: {}'.format(combrprofkwlist))
         
         create_rprofiles(_mapslices, halocat, args, stampkwlist, rprofkwlist,
                      combrprofkwlist=combrprofkwlist,
