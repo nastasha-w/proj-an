@@ -29,7 +29,7 @@ import sys
 import os
 
 import make_maps_v3_master as m3
-import make_maps_opt_locs as ol
+import make_maps_opts_locs as ol
 import coldens_rdist as crd
 import pipeline_cddfs as pcd
 import cosmo_utils as cu
