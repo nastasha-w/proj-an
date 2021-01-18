@@ -674,7 +674,7 @@ def getprofiles_convtest_paper3(index):
         
         create_rprofiles(_mapslices, halocat, args, stampkwlist, rprofkwlist,
                      combrprofkwlist=((())),
-                     deletemaps=True, deletestamps=True, **kwargs)
+                     deletemaps=True, deletestamps=False, **kwargs)
 
 if __name__ == '__main__':
     index = int(sys.argv[1])
