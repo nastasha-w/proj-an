@@ -2289,7 +2289,7 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
                            runit='pkpc', ytype='perc', yvals=50.,\
                            halocat=None,\
                            separateprofiles=False, uselogvals=True,\
-                           outfile=None, grptag=None):
+                           outfile=None, grptag=None, nameonly=False):
     '''    
     input:
     ------
@@ -2325,6 +2325,8 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
     profiles stored in outfile matching the format of the hdf5 file profile 
     retrieval script. Additions to that format include the ytype='mean' option
     and storing whether the values are log10 or not.
+    if nameonly:
+        the name of the output file
     '''
     if '.' in filenames:
         filenames = [filenames]
@@ -2338,6 +2340,8 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
         else:
             outfile = filenames[0].split('/')[-1]
             outfile = rdir + 'radprof_' + outfile 
+    if nameonly:
+        return outfile
             
     files = [h5py.File(filename, 'r') for filename in filenames]
     galids = np.array(sorted([int(galid) for galid in galids]))
@@ -2728,7 +2732,7 @@ def combineprofiles(filenames, rbins, galids,
                 
                 if profn is None: # matching yvals_in depends on uselogvalues
                     dsnames = list(sgrp[bingrn].keys())
-                    for name in dsnames:
+                    for dsname in dsnames:
                         if dsname.startswith(ytype_in):
                             _yval = float(dsname.split('_'))
                             if 'logvalues' in sgrp[bingrn][dsname].attrs:
@@ -2786,7 +2790,7 @@ def combineprofiles(filenames, rbins, galids,
     
     # input is list of values to get stats from
     if not hasattr(yvals_out, '__len__'):
-        yvals = [yvals_out]
+        yvals_out = [yvals_out]
     yvals_out = np.sort(yvals_out)
     outprofs = getstats(proflist.T, ytype=ytype_out, yvals=yvals_out)
 
