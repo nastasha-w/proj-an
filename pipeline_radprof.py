@@ -571,7 +571,7 @@ def getprofiles_convtest_paper3(index):
         
         
         
-        for i in len(stampkwlist):
+        for i in range(len(stampkwlist)):
             dist = stampkwlist[i]['rmax_r200c']
             dist = '{}'.format(dist)
             dist = dist.replace('.', 'p')
@@ -651,10 +651,18 @@ def getprofiles_convtest_paper3(index):
             rprofkwlist.append(templist_rp)
             combrprofkwlist.append(templist_cp)
             
+        print('Calling create_rprofiles with:')
+        print('mapslices: {}'.format(_mapslices))
+        print('halo catalogue: {}'.format(halocat))
+        print('args (for make_map): {}'.format(args))
+        print('kwargs (for make_map): {}'.format(kwargs))
+        print('stampkwlist: {}'.format(stampkwlist))
+        print('rprofkwlist: {}'.format(rprofkwlist))
+        print('combrprofkwlist: {}'.format(combrprofkwlist))
         
         create_rprofiles(_mapslices, halocat, args, stampkwlist, rprofkwlist,
                      combrprofkwlist=((())),
-                     deletemaps=True, deletestamps=False, **kwargs)
+                     deletemaps=True, deletestamps=True, **kwargs)
 
 if __name__ == '__main__':
     index = int(sys.argv[1])
