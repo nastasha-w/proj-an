@@ -2869,7 +2869,7 @@ def combineprofiles(filenames, rbins, galids,
             if dsname in bgrp:
                 pass # already saved
             else:
-                ds = bgrp.create_dataset(dsname, data=np.array(profiles))
+                ds = bgrp.create_dataset(dsname, data=np.array(outprofs))
                 ds.attrs.create('logvalues', uselogvals)
         else:
             for ind, yval in enumerate(yvals_out):

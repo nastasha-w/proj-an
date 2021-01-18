@@ -1077,11 +1077,46 @@ Mh_names =[ 'geq%s_le%s'%(Mh_mins[i], Mh_maxs[i]) if Mh_maxs[i] is not None else
              'geq%s'%(Mh_mins[i])\
             for i in range(len(Mh_mins))]
 
-L0100N1504_27_Mh0p5dex = Galaxyselector(halocat_L0100N1504_27, selections=Mh_sels, names=Mh_names, number=200, seed=0)
-L0100N1504_27_Mh0p5dex_1000 = Galaxyselector(halocat_L0100N1504_27, selections=Mh_sels, names=Mh_names, number=1000, seed=0)
-L0100N1504_27_Mh0p5dex_7000 = Galaxyselector(halocat_L0100N1504_27, selections=Mh_sels, names=Mh_names, number=7000, seed=0)
-L0100N1504_27_Mh0p5dex_1000 = Galaxyselector(halocat_L0100N1504_27, selections=Mh_sels, names=Mh_names, number=1000, seed=0)
-L0100N1504_27_Mh0p5dex_100 = Galaxyselector(halocat_L0100N1504_27, selections=Mh_sels, names=Mh_names, number=100, seed=0)
+L0100N1504_27_Mh0p5dex = Galaxyselector(halocat_L0100N1504_27,
+                                        selections=Mh_sels, names=Mh_names,
+                                        number=200, seed=0)
+L0100N1504_27_Mh0p5dex_1000 = Galaxyselector(halocat_L0100N1504_27,
+                                             selections=Mh_sels, 
+                                             names=Mh_names, number=1000,
+                                             seed=0)
+L0100N1504_27_Mh0p5dex_7000 = Galaxyselector(halocat_L0100N1504_27,
+                                             selections=Mh_sels,
+                                             names=Mh_names, number=7000,
+                                             seed=0)
+L0100N1504_27_Mh0p5dex_1000 = Galaxyselector(halocat_L0100N1504_27, 
+                                             selections=Mh_sels,
+                                             names=Mh_names, number=1000, 
+                                             seed=0)
+L0100N1504_27_Mh0p5dex_100 = Galaxyselector(halocat_L0100N1504_27, 
+                                            selections=Mh_sels,
+                                            names=Mh_names, number=100,
+                                            seed=0)
+
+halocat_L0050N0752_27 = ol.pdir + 'catalogue_RefL0050N0752_snap27_aperture30.hdf5'
+L0050N0752_27_Mh0p5dex_1000 = Galaxyselector(halocat_L0050N0752_27, 
+                                             selections=Mh_sels,
+                                             names=Mh_names, number=1000, 
+                                             seed=0)
+halocat_L0025N0376_27 = ol.pdir + 'catalogue_RefL0025N0376_snap27_aperture30.hdf5'  
+L0025N0376_27_Mh0p5dex_1000 = Galaxyselector(halocat_L0025N0376_27, 
+                                             selections=Mh_sels,
+                                             names=Mh_names, number=1000, 
+                                             seed=0)
+halocat_L0025N0752_27 = ol.pdir + 'catalogue_RefL0025N0752_snap27_aperture30.hdf5'
+L0025N0752_27_Mh0p5dex_1000 = Galaxyselector(halocat_L0025N0752_27, 
+                                             selections=Mh_sels,
+                                             names=Mh_names, number=1000, 
+                                             seed=0)
+halocat_RecalL0025N0752_27 = ol.pdir + 'catalogue_RecalL0025N0752_snap27_aperture30.hdf5'
+RecalL0025N0752_27_Mh0p5dex_1000 = Galaxyselector(halocat_RecalL0025N0752_27, 
+                                             selections=Mh_sels,
+                                             names=Mh_names, number=1000, 
+                                             seed=0)
 
 # L0100N1504 snapshot 23, all centrals
 halocat_L0100N1504_23 = ol.pdir + 'catalogue_RefL0100N1504_snap23_aperture30.hdf5'
