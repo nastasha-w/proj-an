@@ -200,6 +200,7 @@ def create_stampfiles(mapslices, catname, args, stampkwlist,
             
         if '/' not in outname:
             outname = ol.pdir + 'stamps/' + outname
+        del _kw['outname']
         
         crd.rdists_sl_from_selection(filebase, szcens, L_x, npix_x,
                                      rmin_r200c, rmax_r200c,
@@ -356,7 +357,7 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
     if len(stampkwlist_run) > 0:
         stampfiles_new = create_stampfiles(mapslices, catname, args,
                                            stampkwlist_run, 
-                                            deletemaps=deletemaps, **kwargs)
+                                           deletemaps=deletemaps, **kwargs)
     # store the actual stamp names with the keywords used to create them
     for newi, fulli in enumerate(inds_createnew):
         stampkwlist[fulli]['outname'] = stampfiles_new[newi]
