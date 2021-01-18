@@ -482,10 +482,10 @@ def getprofiles_convtest_paper3(index):
                        'outname': None, 'rmax_r200c': 3.5,
                        'mindist_pkpc': None, 'galaxyid': None},
                        ]
-        galids_dcts[sh.L0050N0752_27_Mh0p5dex_1000.galids(),
-                    sh.L0025N0376_27_Mh0p5dex_1000.galids(),
-                    sh.L0025N0752_27_Mh0p5dex_1000.galids(),
-                    sh.RecalL0025N0752_27_Mh0p5dex_1000.galids()]
+        galids_dcts = [sh.L0050N0752_27_Mh0p5dex_1000.galids(),
+                       sh.L0025N0376_27_Mh0p5dex_1000.galids(),
+                       sh.L0025N0752_27_Mh0p5dex_1000.galids(),
+                       sh.RecalL0025N0752_27_Mh0p5dex_1000.galids()]
         
     ptypeW = 'emission'
     snapnum = 27
