@@ -3674,7 +3674,72 @@ def plot_emtables(z=0.1):
                   bbox_to_anchor=(1.0, 0.0), loc='lower right', frameon=False)
 
     plt.savefig(outname, format='pdf', bbox_inches='tight')
+
+def plot_fe_lshell_data(z=0.1):
+    '''
+    plot ion balance and line emission tables for some of the iron L-shell 
+    lines. Paths are set for my laptop.
+
+    Parameters
+    ----------
+    z : float, optional
+        redshift (for the ionizing background). The default is 0.1.
+
+    Returns
+    -------
+    None.
+
+    '''
+    outdir = '/Users/Nastasha/phd/own_papers/cgm_xray_em/imgs_work/line_test/'
     
+    fontsize = 12
+    xlabel = '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{3}]$'
+    ylabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
+    clabel = '$\\log_{10} \\, \\mathrm{\\Lambda} \\,\\mathrm{n}_' +\
+             '{\\mathrm{H}}^{-2} \\, \\mathrm{V}^{-1}  \\;' +\
+             ' [\\mathrm{erg} \\, \\mathrm{cm}^{3} \\mathrm{s}^{-1}]$'
+    title = 'emissivity of the {line} line at $z = {z:.2f}$'
+    
+    felines, logTK, lognHcm3 = cu.findemtables('iron', z)
+    
+    deltaT = np.average(np.diff(logTK))
+    deltanH = np.average(np.diff(lognHcm3))
+    extent = (lognHcm3[0] - 0.5 * deltanH, lognHcm3[-1] + 0.5 * deltanH,
+              logTK[0] - 0.5 * deltaT, logTK[-1] + 0.5 * deltaT)
+
+    for line in ['fe17', 'fe17-other1', 'fe18', 'fe19']:
+        fig, (ax, cax) = plt.subplots(ncols=2, nrows=1,
+                                      gridspec_kw={'width_ratios': [5., 1.],
+                                                   'wspace': 0.3})     
+        cmap = cm.get_cmap('viridis')
+        cmap.set_under('white')
+        
+        table = np.copy(felines[:, :, ol.line_nos_ion[line]])
+        zeroval = np.min(table)
+        table[table == zeroval] = -np.inf
+        vmin = np.min(table[table > zeroval])
+        
+        img = ax.imshow(table, interpolation='nearest', origin='lower', 
+                        extent=extent, cmap=cmap, vmin=vmin)
+        
+        ax.set_xlabel(xlabel, fontsize=fontsize)
+        ax.set_ylabel(ylabel, fontsize=fontsize)
+        ax.text(0.05, 0.95, nicenames_lines[line], fontsize=fontsize,
+                transform=ax.transAxes, horizontalalignment='left',
+                verticalalignment='top')
+        
+        # color bar 
+        pu.add_colorbar(cax, img=img, cmap=cmap, vmin=vmin,
+                        clabel=clabel, fontsize=fontsize, 
+                        orientation='vertical', extend='min')
+        cax.set_aspect(10.)
+        
+        fig.suptitle(title.format(line=nicenames_lines[line], z=z),
+                     fontsize=fontsize)
+        
+        outname = outdir + 'cloudy_table_{line}_z{z:.2f}.pdf'
+        outname = outname.format(line=line, z=z)
+        plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 def save_emcurves(lineset=None, z=0.1, nH='CIE'):
     '''
