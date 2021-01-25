@@ -3748,9 +3748,13 @@ def plot_fe_lshell_data(z=0.1, docloudy7p2=True, dosylvias=True):
         filen = 'UVB_dust1_CR1_G1_shield1_lines.hdf5'
         path = '/Users/Nastasha/phd/tables/lineem/lines_sp20/'
         
-        clabel = '$\\log_{10} \\, \\mathrm{\\Lambda}' +\
-             '\\, \\mathrm{V}^{-1}  \\;' +\
-             ' [\\mathrm{erg} \\, \\mathrm{cm}^{-3} \\mathrm{s}^{-1}]$'
+        clabel = '$\\log_{10} \\, \\mathrm{\\Lambda} \\,\\mathrm{n}_' +\
+             '{\\mathrm{H}}^{-2} \\, \\mathrm{V}^{-1}  \\;' +\
+             ' [\\mathrm{erg} \\, \\mathrm{cm}^{3} \\mathrm{s}^{-1}]$'
+        
+        #clabel = '$\\log_{10} \\, \\mathrm{\\Lambda}' +\
+        #     '\\, \\mathrm{V}^{-1}  \\;' +\
+        #     ' [\\mathrm{erg} \\, \\mathrm{cm}^{-3} \\mathrm{s}^{-1}]$'
         
         with h5py.File(path + filen, 'r') as f:
             lineid = f['IdentifierLines'][:]
@@ -3790,6 +3794,10 @@ def plot_fe_lshell_data(z=0.1, docloudy7p2=True, dosylvias=True):
                     msg = msg.format(line=lineid[li])
                     print(msg)
                     continue
+                
+                tozero = table == zeroval
+                table -= 2.* lognHcm3[np.newaxis, np.newaxis, :]
+                table[tozero] = zeroval
                 
                 vmin = np.min(table[table > zeroval])
                 vmax = np.max(table)
