@@ -3675,7 +3675,7 @@ def plot_emtables(z=0.1):
 
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
-def plot_fe_lshell_data(z=0.1):
+def plot_fe_lshell_data(z=0.1, docloudy7p2=True, dosylvias=True):
     '''
     plot ion balance and line emission tables for some of the iron L-shell 
     lines. Paths are set for my laptop.
@@ -3695,52 +3695,170 @@ def plot_fe_lshell_data(z=0.1):
     fontsize = 12
     xlabel = '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{3}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
-    clabel = '$\\log_{10} \\, \\mathrm{\\Lambda} \\,\\mathrm{n}_' +\
-             '{\\mathrm{H}}^{-2} \\, \\mathrm{V}^{-1}  \\;' +\
-             ' [\\mathrm{erg} \\, \\mathrm{cm}^{3} \\mathrm{s}^{-1}]$'
     title = 'emissivity of the {line} line at $z = {z:.2f}$'
     
-    felines, logTK, lognHcm3 = cu.findemtables('iron', z)
+    if docloudy7p2:
+        clabel = '$\\log_{10} \\, \\mathrm{\\Lambda} \\,\\mathrm{n}_' +\
+             '{\\mathrm{H}}^{-2} \\, \\mathrm{V}^{-1}  \\;' +\
+             ' [\\mathrm{erg} \\, \\mathrm{cm}^{3} \\mathrm{s}^{-1}]$'
+             
+        felines, logTK, lognHcm3 = cu.findemtables('iron', z)
+        
+        deltaT = np.average(np.diff(logTK))
+        deltanH = np.average(np.diff(lognHcm3))
+        extent = (lognHcm3[0] - 0.5 * deltanH, lognHcm3[-1] + 0.5 * deltanH,
+                  logTK[0] - 0.5 * deltaT, logTK[-1] + 0.5 * deltaT)
     
-    deltaT = np.average(np.diff(logTK))
-    deltanH = np.average(np.diff(lognHcm3))
-    extent = (lognHcm3[0] - 0.5 * deltanH, lognHcm3[-1] + 0.5 * deltanH,
-              logTK[0] - 0.5 * deltaT, logTK[-1] + 0.5 * deltaT)
+        for line in ['fe17', 'fe17-other1', 'fe18', 'fe19']:
+            fig, (ax, cax) = plt.subplots(ncols=2, nrows=1,
+                                          gridspec_kw={'width_ratios': [5., 1.],
+                                                       'wspace': 0.3})     
+            cmap = cm.get_cmap('viridis')
+            cmap.set_under('white')
+            
+            table = np.copy(felines[:, :, ol.line_nos_ion[line]])
+            zeroval = np.min(table)
+            table[table == zeroval] = -np.inf
+            vmin = np.min(table[table > zeroval])
+            
+            img = ax.imshow(table, interpolation='nearest', origin='lower', 
+                            extent=extent, cmap=cmap, vmin=vmin)
+            
+            ax.set_xlabel(xlabel, fontsize=fontsize)
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+            ax.text(0.05, 0.95, nicenames_lines[line], fontsize=fontsize,
+                    transform=ax.transAxes, horizontalalignment='left',
+                    verticalalignment='top')
+            
+            # color bar 
+            pu.add_colorbar(cax, img=img, cmap=cmap, vmin=vmin,
+                            clabel=clabel, fontsize=fontsize, 
+                            orientation='vertical', extend='min')
+            cax.set_aspect(10.)
+            
+            fig.suptitle(title.format(line=nicenames_lines[line], z=z),
+                         fontsize=fontsize)
+            
+            outname = outdir + 'cloudy_table_{line}_z{z:.2f}.pdf'
+            outname = outname.format(line=line, z=z)
+            plt.savefig(outname, format='pdf', bbox_inches='tight')
 
-    for line in ['fe17', 'fe17-other1', 'fe18', 'fe19']:
-        fig, (ax, cax) = plt.subplots(ncols=2, nrows=1,
-                                      gridspec_kw={'width_ratios': [5., 1.],
-                                                   'wspace': 0.3})     
-        cmap = cm.get_cmap('viridis')
-        cmap.set_under('white')
+    # Sylvia's tables
+    if dosylvias:
+        filen = 'UVB_dust1_CR1_G1_shield1_lines.hdf5'
+        path = '/Users/Nastasha/phd/tables/lineem/lines_sp20/'
         
-        table = np.copy(felines[:, :, ol.line_nos_ion[line]])
-        zeroval = np.min(table)
-        table[table == zeroval] = -np.inf
-        vmin = np.min(table[table > zeroval])
+        clabel = '$\\log_{10} \\, \\mathrm{\\Lambda}' +\
+             '\\, \\mathrm{V}^{-1}  \\;' +\
+             ' [\\mathrm{erg} \\, \\mathrm{cm}^{-3} \\mathrm{s}^{-1}]$'
         
-        img = ax.imshow(table, interpolation='nearest', origin='lower', 
-                        extent=extent, cmap=cmap, vmin=vmin)
-        
-        ax.set_xlabel(xlabel, fontsize=fontsize)
-        ax.set_ylabel(ylabel, fontsize=fontsize)
-        ax.text(0.05, 0.95, nicenames_lines[line], fontsize=fontsize,
-                transform=ax.transAxes, horizontalalignment='left',
-                verticalalignment='top')
-        
-        # color bar 
-        pu.add_colorbar(cax, img=img, cmap=cmap, vmin=vmin,
-                        clabel=clabel, fontsize=fontsize, 
-                        orientation='vertical', extend='min')
-        cax.set_aspect(10.)
-        
-        fig.suptitle(title.format(line=nicenames_lines[line], z=z),
-                     fontsize=fontsize)
-        
-        outname = outdir + 'cloudy_table_{line}_z{z:.2f}.pdf'
-        outname = outname.format(line=line, z=z)
-        plt.savefig(outname, format='pdf', bbox_inches='tight')
-
+        with h5py.File(path + filen, 'r') as f:
+            lineid = f['IdentifierLines'][:]
+            lineid = np.array([line.decode() for line in lineid])
+            targets = ['Fe17', 'Fe18', 'Fe19']
+            match = [np.any([line.startswith(tar) for tar in targets])\
+                     for line in lineid]
+            lineinds = np.where(match)[0]
+            
+            em = f['Tdep/EmissivitiesVol'] 
+            # 0: Redshift, 1: Temperature, 2: Metallicity, 3: Density, 4: Line
+            redshift = f['TableBins/RedshiftBins'][:]
+            logTK = f['TableBins/TemperatureBins'][:]
+            lognHcm3 = f['TableBins/DensityBins'][:]
+            logZsol = f['TableBins/MetallicityBins'][:] # -50. = primordial
+            
+            deltaT = np.average(np.diff(logTK))
+            deltanH = np.average(np.diff(lognHcm3))
+            extent = (lognHcm3[0] - 0.5 * deltanH, lognHcm3[-1] + 0.5 * deltanH,
+                      logTK[0] - 0.5 * deltaT, logTK[-1] + 0.5 * deltaT)
+            
+            zi_lo = np.min(np.where(z <= redshift)[0])
+            zi_hi = np.max(np.where(z >= redshift)[0])            
+            
+            for li in lineinds:                
+                if zi_lo == zi_hi:
+                    table = em[zi_lo, :, :, :, li]
+                else:
+                    z_lo = redshift[zi_lo]
+                    z_hi = redshift[zi_hi]
+                    table = (z_hi - z) / (z_hi - z_lo) * em[zi_lo, :, :, :, li] + \
+                            (z - z_lo) / (z_hi - z_lo) * em[zi_hi, :, :, :, li]
+                
+                zeroval = -50.
+                if np.all(table == zeroval):
+                    msg = 'skipping line {line}: no emission!'
+                    msg = msg.format(line=lineid[li])
+                    print(msg)
+                    continue
+                
+                vmin = np.min(table[table > zeroval])
+                vmax = np.max(table)
+                #table = np.log10(table)
+                
+                ncols = 4
+                numZ = len(logZsol)
+                nrows = (numZ - 1) // ncols + 1
+                figwidth = 11.
+                cwidth = 1.
+                panelwidth = (figwidth - cwidth) / float(ncols)
+                panelheight = panelwidth
+                figheight = panelheight * nrows
+                width_ratios = [panelwidth] * ncols + [cwidth]
+                
+                fig = plt.figure(figsize=(figwidth, figheight))
+                grid = gsp.GridSpec(ncols=ncols + 1, nrows=nrows,
+                                    hspace=0.0, wspace=0.0,
+                                    width_ratios=width_ratios)
+                axes = [fig.add_subplot(grid[i // ncols, i % ncols]) \
+                        for i in range(numZ)]
+                cax = fig.add_subplot(grid[:, ncols]) 
+                
+                cmap = cm.get_cmap('viridis')
+                cmap.set_under('white')
+                
+                for mi, logZ in enumerate(logZsol):
+                    ax = axes[mi]
+                    
+                    left = mi % ncols == 0 
+                    bottom = numZ - mi <= ncols 
+                    pu.setticks(ax, fontsize, labelleft=left,
+                                labelbottom=bottom)
+                    if bottom:
+                        ax.set_xlabel(xlabel, fontsize=fontsize)
+                    if left:
+                        ax.set_ylabel(ylabel, fontsize=fontsize)
+                    if np.isclose(logZ, -50.):
+                        labelZ = 'primordial'
+                    else:
+                        labelZ = '$\\log_{{10}} \\, \\mathrm{{Z}}\\, /' +\
+                            ' \\, \\mathrm{{Z}}_{{\\odot}} = {logZ}$'
+                        labelZ = labelZ.format(logZ=logZ)
+                    img = ax.imshow(table[:, mi, :], interpolation='nearest',
+                                    origin='lower', extent=extent, cmap=cmap,
+                                    vmin=vmin, vmax=vmax)
+                    ylim = ax.get_ylim()
+                    xlim = ax.get_xlim()
+                    ax.set_aspect((xlim[1] - xlim[0]) / (ylim[1] - ylim[0]))
+                    
+                    ax.text(0.05, 0.95, labelZ, fontsize=fontsize,
+                            transform=ax.transAxes, horizontalalignment='left',
+                            verticalalignment='top')
+            
+                # color bar 
+                pu.add_colorbar(cax, img=img, cmap=cmap, vmin=vmin,
+                                clabel=clabel, fontsize=fontsize, 
+                                orientation='vertical', extend='min')
+                cax.set_aspect(10.)
+            
+                _line = lineid[li]
+                fig.suptitle(title.format(line=_line, z=z), fontsize=fontsize)
+                
+                _line = _line.replace(' ', '_')
+                outname = outdir + 'sylvias_table_{line}_z{z:.2f}.pdf'
+                outname = outname.format(line=_line, z=z)
+                plt.savefig(outname, format='pdf', bbox_inches='tight')
+            
+            
 def save_emcurves(lineset=None, z=0.1, nH='CIE'):
     '''
     get a table of line emissivity as a function of temperature 
