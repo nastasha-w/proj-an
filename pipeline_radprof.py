@@ -399,6 +399,8 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
             rbins = rkw['rbins']
             del rkw['rbins']
             #print('making radial profiles: {}'.format(rkw))
+            print('Running {tag} with outer bin {}'.format(rbins[-1],
+                                                           tag=rkw['grptag']))
                        
             outfilen = crd.getprofiles_fromstamps(stampfilen, rbins, galids,
                                                   nameonly=True, 
@@ -695,7 +697,6 @@ def getprofiles_convtest_paper3(index):
         #print('stampkwlist: {}'.format(stampkwlist))
         #print('rprofkwlist: {}'.format(rprofkwlist))
         #print('combrprofkwlist: {}'.format(combrprofkwlist))
-        return rprofkwlist 
         
         create_rprofiles(_mapslices, halocat, args, stampkwlist, rprofkwlist,
                      combrprofkwlist=combrprofkwlist,
