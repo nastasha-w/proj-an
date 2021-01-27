@@ -646,6 +646,7 @@ def getprofiles_convtest_paper3(index):
             for masstag in galids_dct:
                 if len(galids_dct[masstag]) == 0:
                     continue
+                print('Setting properties for {}'.format(masstag))
                 for _rkw in rprofkw_base:
                     rkw = _rkw.copy()
                     rkw['galaxyid'] = galids_dct[masstag]
@@ -657,18 +658,21 @@ def getprofiles_convtest_paper3(index):
                     minmass_Msun *= 10**0.5
                     maxdist_pkpc = stampkw['rmax_r200c'] * \
                                    cu.R200c_pkpc(minmass_Msun, cosmopars)
-                                        
-                    rbins_log_large_pkpc = 10.**(np.arange(1., np.log10(maxdist_pkpc), 0.25))
+                    print('Using maxdist_pkpc {}'.format(maxdist_pkpc))                    
+                    rbins_log_large_pkpc = 10.**(\
+                                np.arange(1.,np.log10(maxdist_pkpc), 0.25))
                     rbins_pkpc_large = np.append([0.], rbins_log_large_pkpc)
                     rkw1 = rkw.copy()
                     rkw1['rbins'] = rbins_pkpc_large
                     templist_rp.append(rkw1)
                     
-                    rbins_log_small_pkpc = 10.**(np.arange(1., np.log10(maxdist_pkpc), 0.1))
+                    rbins_log_small_pkpc = 10.**(\
+                                np.arange(1., np.log10(maxdist_pkpc), 0.1))
                     rbins_pkpc_small = np.append([0.], rbins_log_small_pkpc)
                     rkw2 = rkw.copy()
                     rkw2['rbins'] = rbins_pkpc_small
                     templist_rp.append(rkw2)
+                    print('Adding radial profile kw:\n{}'.format(templist))
                     
                     numradd = 2
                     
