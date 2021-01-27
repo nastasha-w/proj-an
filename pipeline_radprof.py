@@ -672,7 +672,8 @@ def getprofiles_convtest_paper3(index):
                     rkw2 = rkw.copy()
                     rkw2['rbins'] = rbins_pkpc_small
                     templist_rp.append(rkw2)
-                    print('Adding radial profile kw:\n{}'.format(templist_rp))
+                    print('Adding radial profiles up to: {}, {} pkpc'.format(
+                         rbins_pkpc_large[-1], rbins_pkpc_small[-1]))
                     
                     numradd = 2
                     
