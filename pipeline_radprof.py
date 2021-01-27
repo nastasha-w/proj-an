@@ -385,8 +385,8 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
         for _rprofkw, __combkwlist in zip(_rprofkwlist, _combkwlist):
             rkw = defaults_rprof.copy()
             rkw.update(_rprofkw)
-            if 'galaxyid' in _rprofkwlist:
-                galids = _rprofkwlist['galaxyid']
+            if 'galaxyid' in _rprofkw:
+                galids = _rprofkw['galaxyid']
                 del rkw['galaxyid']
             else:
                 galids = stampkw['galaxyid']
@@ -401,6 +401,7 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
             #print('making radial profiles: {}'.format(rkw))
             print('Running {tag} with outer bin {}'.format(rbins[-1],
                                                            tag=rkw['grptag']))
+            print('for {} galaxies'.format(len(galids)))
                        
             outfilen = crd.getprofiles_fromstamps(stampfilen, rbins, galids,
                                                   nameonly=True, 
