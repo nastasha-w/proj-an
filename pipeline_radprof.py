@@ -387,7 +387,6 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
             rkw.update(_rprofkw)
             if 'galaxyid' in _rprofkw:
                 galids = _rprofkw['galaxyid']
-                del rkw['galaxyid']
             else:
                 galids = stampkw['galaxyid']
             if galids is None:
