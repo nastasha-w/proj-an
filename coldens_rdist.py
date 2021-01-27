@@ -2337,7 +2337,7 @@ def getprofiles_fromstamps(filenames, rbins, galids,\
     
     if outfile is None:
         if len(filenames) > 1:
-            raise ValueError('outfile must e specified if there is more than '+\
+            raise ValueError('outfile must be specified if there is more than '+\
                              'one input file')
         else:
             outfile = filenames[0].split('/')[-1]
