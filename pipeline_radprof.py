@@ -695,6 +695,7 @@ def getprofiles_convtest_paper3(index):
         #print('stampkwlist: {}'.format(stampkwlist))
         #print('rprofkwlist: {}'.format(rprofkwlist))
         #print('combrprofkwlist: {}'.format(combrprofkwlist))
+        return rprofkwlist 
         
         create_rprofiles(_mapslices, halocat, args, stampkwlist, rprofkwlist,
                      combrprofkwlist=combrprofkwlist,
