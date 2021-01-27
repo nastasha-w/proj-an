@@ -547,7 +547,8 @@ def getprofiles_convtest_paper3(index):
     combrprofkw_base = [{'ytype_out': 'mean', 'yvals_out': None, 
                          'galaxyid': None},
                         {'ytype_out': 'perc', 
-                         'yvals_out': [1., 2., 5., 10., 50., 90., 95., 98., 99.], 
+                         'yvals_out': [1., 2., 5., 10., 25., 50., 75., 90.,
+                                       95., 98., 99.], 
                          'galaxyid': None},
                         ]
     
