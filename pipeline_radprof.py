@@ -496,11 +496,11 @@ def getprofiles_convtest_paper3(index):
         halocats = ['catalogue_RefL0100N1504_snap27_aperture30.hdf5'] 
         
         stampkwlist = [{'numsl': 1, 'offset_los': 0., 'velspace': False,
-                       'outname': None, 'rmax_r200c': 3.5,
-                       'mindist_pkpc': None, 'galaxyid': None},
+                        'outname': None, 'rmax_r200c': 3.5,
+                        'mindist_pkpc': None, 'galaxyid': None},
                        {'numsl': 2, 'offset_los': 0., 'velspace': False,
-                       'outname': None, 'rmax_r200c': 3.5,
-                       'mindist_pkpc': None, 'galaxyid': None},
+                        'outname': None, 'rmax_r200c': 3.5,
+                        'mindist_pkpc': None, 'galaxyid': None},
                        ] 
         galids_dcts = [sh.L0100N1504_27_Mh0p5dex_1000.galids()]
          
@@ -580,8 +580,8 @@ def getprofiles_convtest_paper3(index):
         with h5py.File(halocat, 'r') as cat:
             cosmopars = {key: item for key, item \
                          in cat['Header/cosmopars'].attrs.items()}
-            r200cvals = np.array(cat['R200c_pkpc'])
-            galids = np.array(cat['galaxyid'])
+            #r200cvals = np.array(cat['R200c_pkpc'])
+            #galids = np.array(cat['galaxyid'])
         
         # assuming z-axis projection 
         _centre = np.copy(centre)
@@ -598,20 +598,25 @@ def getprofiles_convtest_paper3(index):
             dist = '{}'.format(dist)
             dist = dist.replace('.', 'p')
             stampkwlist[i]['outname'] = \
-                stampname.format(mapname=mapfilen, 
+                stampname.format(mapname=mapfilen[:-5], 
                                  numsl=stampkwlist[i]['numsl'],
                                  dist=dist)
             
             print('Getting halo radii')
-            radii_mhbins = {key: [r200cvals[galids == galid] \
-                                  for galid in galids_dct[key]] \
-                            for key in galids_dct}
-            nonemptykeys = {key if len(galids_dct[key]) else None \
+            #radii_mhbins = {key: [r200cvals[galids == galid] \
+            #                      for galid in galids_dct[key]] \
+            #                for key in galids_dct}
+            nonemptykeys = {key if len(galids_dct[key]) > 0 else None \
                             for key in galids_dct}
             nonemptykeys -= {None}
             nonemptykeys = list(nonemptykeys)
-            maxradii_mhbins = {key: np.max(radii_mhbins[key]) \
-                               for key in nonemptykeys}
+            #maxradii_mhbins = {key: np.max(radii_mhbins[key]) \
+            #                   for key in nonemptykeys}
+            maxradii_mhbins =  {hmkey: cu.R200c_pkpc(
+                                       10**(float(hmkey.split('_')[0][3:]) +\
+                                            0.5),
+                                       cosmopars)
+                                for hmkey in nonemptykeys}
             #print('for debug: galids_dct:\n')
             #print(galids_dct)
             #print('\n')
