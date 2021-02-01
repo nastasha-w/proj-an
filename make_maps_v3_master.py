@@ -115,6 +115,7 @@ import h5py
 import numbers as num # for instance checking
 import sys
 import pandas as pd
+import scipy 
 
 import make_maps_opts_locs as ol
 import projection_classes as pc
@@ -807,8 +808,8 @@ def find_ionbal_bensgadget2(z, ion, dct_nH_T):
     inbalance[inbalance == table_zeroequiv] = 0.
     return inbalance
 
-
-class linetables_SP20:
+# Does not account for dust depletion
+class linetable_SP20:
     
     def parse_ionname(self):
         '''
@@ -836,12 +837,14 @@ class linetables_SP20:
             self.ionstage = ''
             i = 0
             while not self.ion[i].isdigit():
-                i += 1
+                i += 1             
             self.elementshort = string.capwords(self.ion[:i])
             self.elementshort = self.elementshort.strip()
             while self.ion[i].isdigit():
                 self.ionstage = self.ionstage + self.ion[i]
                 i += 1
+                if i == len(self.ion):
+                    break
             self.ionstage = int(self.ionstage)
             
             msg = 'Interpreting {ion} as the {elt} {stage} ion'
@@ -851,10 +854,11 @@ class linetables_SP20:
             
     def getmetadata(self):
         '''
-        get the solar metallicity (self.solarZ) and the abundance of the 
-        selected element as a function of log Z / solarZ 
-        (self.numberfraction_Z) 
-
+        get the solar metallicity (self.solarZ),
+        the abundance of the selected element as a function of log Z / solarZ 
+        (self.numberfraction_Z),
+        and the element mass in atomic mass units
+      
         Raises
         ------
         ValueError
@@ -867,19 +871,21 @@ class linetables_SP20:
         '''
         with h5py.File(self.ionbalfile, 'r') as f:
             # get element abundances (n_i / n_H) for tabulated log Z / Z_solar
-            self.numberfractions_Z_elt = f['TotalAbundances'][]
-            elts = [elt.decode() for elt in f2['ElementNamesShort'][:]]
-            if self.elememtshort not in elts:
+            self.numberfractions_Z_elt = f['TotalAbundances'][:, :]
+            elts = [elt.decode() for elt in f['ElementNamesShort'][:]]
+            if self.elementshort not in elts:
                 msg = 'Data for element {elt} is not available'
                 msg = msg.format(elt=self.elementshort)
                 raise ValueError(msg)
-            self.eltind = np.where([self.elementshort == elt for elt in elts])[0][0]
+            self.eltind = np.where([self.elementshort == elt \
+                                    for elt in elts])[0][0]
             # element number fraction n_i / n_H as a function of metallicity
             # in the tables
-            self.numberfraction_Z = np.copy(numberfractions_Z_elt[:, eltind])
+            self.numberfraction_Z = np.copy(\
+                self.numberfractions_Z_elt[:, self.eltind])
             
-            self.element = f2['ElementNames'][self.eltind]
-            self.elementmass_u = f2['ElementMasses'][self.eltind]
+            self.element = f['ElementNames'][self.eltind]
+            self.elementmass_u = f['ElementMasses'][self.eltind]
             
             # solar Z for scaling
             self.solarZ = f['SolarMetallicity'][0]
@@ -891,93 +897,291 @@ class linetables_SP20:
         self.ion = ion
         self.z = z
         self.ionbalfile = ionbalfile
-        self.emtabfile = emtablefile
+        self.emtabfile = emtabfile
         self.emission = emission
         self.vol = vol
         
         self.parse_ionname()
         self.getmetadata()
-        self.gettable()
-        
     
-    def findiontables_sylviassh(self):
+    def find_ionbal(dct_T_Z_nH):
+        '''
+        retrieve the interpolated ion balance values for the input particle 
+        density, temperature, and metallicity
+
+        Parameters
+        ----------
+        dct_logT_logZ_lognH : dict of 1-D float arrays
+            dictionary containing the following arrays describing each 
+            resolution element:
+                'logT': log10 temperature [K]
+                'logZ': log10 metallicity [mass fraction, *not* normalized to 
+                                           solar]
+                'lognH': log10 hydrogen number density [cm**-3].
+
+        Returns
+        -------
+        float array
+            ion balances: ion mass / gas phase parent element mass.
+
+        '''
+        if not hasattr(self, 'iontable_T_Z_nH'):
+            self.findiontable()
+        return 10**self.interpolate_3Dtable(dct_T_Z_nH, self.iontable_T_Z_nH)
+        
+    def find_emission(dct_T_Z_nH):
+        '''
+        retrieve the interpolated emission values for the input particle 
+        density, temperature, and metallicity
+
+        Parameters
+        ----------
+        dct_logT_logZ_lognH : dict of 1-D float arrays
+            dictionary containing the following arrays describing each 
+            resolution element:
+                'logT': log10 temperature [K]
+                'logZ': log10 metallicity [mass fraction, *not* normalized to 
+                                           solar]
+                'lognH': log10 hydrogen number density [cm**-3].
+
+        Returns
+        -------
+        float array
+            line emission per unit volume: erg / s / cm**3 
+        '''
+        if not hasattr(self, 'emtable_T_Z_nH'):
+            self.findemtable()
+        return 10**self.interpolate_3Dtable(dct_T_Z_nH, self.emtable_T_Z_nH)
+    
+    def find_depletion(dct_T_Z_nH):
+        '''
+        retrieve the interpolated dust depletion values for the input particle 
+        density, temperature, and metallicity
+
+        Parameters
+        ----------
+        dct_logT_logZ_lognH : dict of 1-D float arrays
+            dictionary containing the following arrays describing each 
+            resolution element:
+                'logT': log10 temperature [K]
+                'logZ': log10 metallicity [mass fraction, *not* normalized to 
+                                           solar]
+                'lognH': log10 hydrogen number density [cm**-3].
+
+        Returns
+        -------
+        float array
+            dust depletion: fraction of element locked in dust
+        '''
+        if not hasattr(self, 'depletiontable_T_Z_nH'):
+            self.finddepletiontable()
+        return 10**self.interpolate_3Dtable(dct_T_Z_nH,
+                                            self.depletiontable_T_Z_nH)
+    
+    def find_assumedabundance(dct_Z):
+        '''
+        retrieve the interpolated assumed parent element abundance values for 
+        the input particle metallicity
+
+        Parameters
+        ----------
+        dct_logZ: dict of 1-D float arrays
+            dictionary containing the following arrays describing each 
+            resolution element:
+                'logZ': log10 metallicity [mass fraction, *not* normalized to 
+                                           solar]
+
+        Returns
+        -------
+        float array
+            element abundance n_i / n_H for the parent element of the line or
+            ion assumed at the input metallicity
+            
+        '''
+        
+        if not hasattr(self, 'logZsol'):
+            self.findiontable()
+        logZabs = self.logZsol + np.log10(solarZ)
+        # linear extrapolation should be fine here
+        interp = scipy.interpolate.interp1d(logZabs, self.numberfraction_Z,
+                                            kind='linear', axis=-1, copy=True,
+                                            bounds_error=False,
+                                            fill_value='extrapolate')
+        return 10**interp(dct_Z['logZ'])
+        
+    def findiontable(self):
         if self.vol:
-            self.vc = 'Vol'
+            vc = 'Vol'
         else:
-            self.vc = 'Col'
+            vc = 'Col'
+            
         if self.ion in ['hmolssh', 'h1ssh', 'h1', 'h2']:
             tablepath = '/Tdep/HydrogenFractions{vc}'.format(vc=vc)
-            if ion == 'hmolssh':
+            if self.ion == 'hmolssh':
                 ionind = 2
-            elif ion in ['h1ssh', 'h1']:
+            elif self.ion in ['h1ssh', 'h1']:
                 ionind = 0
-            elif ion == 'h2':
+            elif self.ion == 'h2':
                 ionind = 1
-        elif ion == 'hneutralssh':
+        elif self.ion == 'hneutralssh':
             msg = "hneutralssh fractions from the PS20 tables are not" + \
                   "currently implemented"
             raise NotImplementedError(msg)
         else:
-            ionind = self.ionstage
-            tablepath = 'Tdep/IonFractions/{eltnum}{eltname}'
-            tablepath = tablepath.format(eltnum=string.lower(self.eltind),
+            if not self.vol:
+                msg = 'Column quantities are only available for hydrogen'
+                raise ValueError(msg)
+            ionind = self.ionstage - 1 
+            tablepath = 'Tdep/IonFractions/{eltnum:02d}{eltname}'
+            tablepath = tablepath.format(eltnum=self.eltind,
                                          eltname=string.lower(self.element))
-    
-        tablefilename = ol.iontab_sylvia_ssh
-        with h5py.File(tablefilename, "r") as tablefile:
-            logTK    = np.array(tablefile['TableBins/TemperatureBins'], dtype=np.float32)  # log10 K
-            lognHcm3 = np.array(tablefile['TableBins/DensityBins'], dtype=np.float32) # log10 cm^-3
-            logZ     = np.array(tablefile['TableBins/MetallicityBins'], dtype=np.float32) # log10 mass fraction
-            ziopts   = np.array(tablefile['TableBins/RedshiftBins'], dtype=np.float32) # monotonically incresing, first entry is zero
-            if '/' not in eltname:
-                balancegrp = tablefile['Tdep/IonFractionsVol']
-                grpnames = balancegrp.keys()
-                grpname = [name if eltname in name else None for name in grpnames]
-                grpname = list(set(grpname))
-                grpname.remove(None)
-                grpname = grpname[0]
-                eltname = 'Tdep/IonFractionsVol/%s'%grpname
-            tab_z_T_Z_nH = np.array(tablefile[eltname], dtype=np.float32)[:, :, :, :, ionind] # z, T, Z, nH, ion
-    
-        if z < 0.:
-            z = 0.0
-            zind = 0
-            interp = False
-    
-        elif z in ziopts:
-            # only need one table
-            zind = np.argwhere(z == ziopts)
-            interp = False
-    
-        elif z <= ziopts[-1]:
-            # linear interpolation between two tables
-            zind1 = np.sum(ziopts < z) - 1
-            zind2 = -1 * np.sum(ziopts > z)
-            interp = True
-        else:
-            print("Chosen z value requires extrapolation. This has not been implemented. \n")
-    
-    
-        #### read in the tables; interpolate tables in z if needed and possible
-    
-        if not interp:
-            balance = np.squeeze(tab_z_T_Z_nH[zind, :, :, :]) # for some reason, extra dimensions are tacked on
-    
-        if interp: #linear interpolation: 1./(a1-a0) * ( (a1-a)*f0 + (a-a0)*f1 )
-            balance1 = tab_z_T_Z_nH[zind1, :, :, :]
-            balance2 = tab_z_T_Z_nH[zind2, :, :, :]
-    
-            print("interpolating 2 emission tables")
-            balance = 1. / ( ziopts[zind2] - ziopts[zind1]) *\
-                      ( (ziopts[zind2] - z) * balance1 \
-                       + (z - ziopts[zind1]) * balance2 )
-    
-        return balance, logTK, logZ, lognHcm3
+            print('Using table {}'.format(tablepath))
+            
+        with h5py.File(self.ionbalfile, "r") as tablefile:
+            self.logTK     = tablefile['TableBins/TemperatureBins'][:] 
+            self.lognHcm3  = tablefile['TableBins/DensityBins'][:] 
+            self.logZsol   = tablefile['TableBins/MetallicityBins'][:]
+            self.redshifts = tablefile['TableBins/RedshiftBins'][:] 
+            
+            if self.z < self.redshifts[0] or self.z > self.redshifts[-1]:
+                msg = 'Desired redshift {z} is outside the tabulated range '+\
+                      + '{zmin} - {zmax}'
+                msg = msg.format(z=self.z, zmin=self.redshifts[0], 
+                                 zmax=self.reshifts[-1])
+                raise ValueError(msg)
+            zi_lo = np.min(np.where(self.z <= self.redshifts)[0])
+            zi_hi = np.max(np.where(self.z >= self.redshifts)[0])            
+            
+            tableg = tablefile[tablepath] #  z, T, Z, nH, ion
+                          
+            if zi_lo == zi_hi:
+                self.iontable_T_Z_nH =\
+                    tableg[zi_lo, :, :, :, ionind]
+            else:
+                msg = 'Linearly interpolating ion balance table ' +\
+                      'values in redshift'
+                print(msg)
+                z_lo = self.redshifts[zi_lo]
+                z_hi = self.redshifts[zi_hi]
+                self.iontable_T_Z_nH =\
+                    (z_hi - self.z) / (z_hi - z_lo) * \
+                        tableg[zi_lo, :, :, :, ionind] + \
+                    (self.z - z_lo) / (z_hi - z_lo) * \
+                        tableg[zi_hi, :, :, :, ionind]
 
-    def find_ionbal(dct_logT_logZ_lognH):
-    
-        # compared to the line emission files, the order of the nH, T indices in the balance tables is switched
-        balance, logTK, logZabs, lognHcm3 = findiontables_sylviassh(ion, z) #(np.array([[0.,0.],[0.,1.],[0.,2.]]), np.array([0.,1.,2.]), np.array([0.,1.]) )
+    def findemtable(self):
+        if self.vol:
+            vc = 'Vol'
+        else:
+            vc = 'Col'
+            
+        with h5py.File(self.emtabfile, 'r') as f:
+            lineid = f['IdentifierLines'][:]
+            lineid = np.array([line.decode() for line in lineid])
+            match = [self.ion == line for line in lineid]
+            li = np.where(match)[0][0]
+            
+            emg = f['Tdep/Emissivities{vc}'.format(vc=vc)] 
+            # 0: Redshift, 1: Temperature, 2: Metallicity, 3: Density, 4: Line
+            self.redshifts = f['TableBins/RedshiftBins'][:]
+            self.logTK = f['TableBins/TemperatureBins'][:]
+            self.lognHcm3 = f['TableBins/DensityBins'][:]
+            self.logZsol = f['TableBins/MetallicityBins'][:] # -50. = primordial
+            
+            zi_lo = np.min(np.where(self.z <= self.redshifts)[0])
+            zi_hi = np.max(np.where(self.z >= self.redshifts)[0])            
+            
+            if self.z < self.redshifts[0] or self.z > self.redshifts[-1]:
+                msg = 'Desired redshift {z} is outside the tabulated range '+\
+                      + '{zmin} - {zmax}'
+                msg = msg.format(z=self.z, zmin=self.redshifts[0], 
+                                 zmax=self.reshifts[-1])
+                raise ValueError(msg) 
+
+            if zi_lo == zi_hi:
+                self.emtable_T_Z_nH = em[zi_lo, :, :, :, li]
+            else:
+                z_lo = redshift[zi_lo]
+                z_hi = redshift[zi_hi]
+                self.emtable_T_Z_nH =\
+                    (z_hi - self.z) / (z_hi - z_lo) *\
+                        emg[zi_lo, :, :, :, li] + \
+                    (self.z - z_lo) / (z_hi - z_lo) *\
+                        emg[zi_hi, :, :, :, li]
+        
+    def finddepletiontable(self):
+        with h5py.File(self.iontabfile, 'r') as f:
+            
+            deplg = f['Tdep/Emissivities{vc}'.format(vc=vc)] 
+            # z, T, Z, nH, element
+            self.redshifts = f['TableBins/RedshiftBins'][:]
+            self.logTK = f['TableBins/TemperatureBins'][:]
+            self.lognHcm3 = f['TableBins/DensityBins'][:]
+            self.logZsol = f['TableBins/MetallicityBins'][:] # -50. = primordial
+             
+            zi_lo = np.min(np.where(self.z <= self.redshifts)[0])
+            zi_hi = np.max(np.where(self.z >= self.redshifts)[0])              
+            
+            if self.z < self.redshifts[0] or self.z > self.redshifts[-1]:
+                msg = 'Desired redshift {z} is outside the tabulated range '+\
+                      + '{zmin} - {zmax}'
+                msg = msg.format(z=self.z, zmin=self.redshifts[0], 
+                                 zmax=self.reshifts[-1])
+                raise ValueError(msg) 
+
+            if zi_lo == zi_hi:
+                self.depletiontable_T_Z_nH = em[zi_lo, :, :, :, self.eltind]
+            else:
+                z_lo = redshift[zi_lo]
+                z_hi = redshift[zi_hi]
+                self.depletiontable_T_Z_nH =\
+                    (z_hi - self.z) / (z_hi - z_lo) *\
+                        deplg[zi_lo, :, :, :, self.eltind] + \
+                    (self.z - z_lo) / (z_hi - z_lo) *\
+                        deplg[zi_hi, :, :, :, self.eltind]
+        
+        
+    def interpolate_3Dtable(self, dct_logT_logZ_lognH, table):
+        '''
+        retrieve the table values for the input particle density, temperature,
+        and metallicity
+
+        Parameters
+        ----------
+        dct_logT_logZ_lognH : dict of 1-D float arrays
+            dictionary containing the following arrays describing each 
+            resolution element:
+                'logT': log10 temperature [K]
+                'logZ': log10 metallicity [mass fraction, *not* normalized to 
+                                           solar]
+                'lognH': log10 hydrogen number density [cm**-3].
+
+        Raises
+        ------
+        ValueError
+            input arrays have different lengths
+            or the requested redshift is outside the tabulated range
+            or the input table shape doesn't match logTK, logZsol, lognHcm3.
+
+        Returns
+        -------
+        1D float array
+            the fraction interpolated table values
+
+        '''
+        if len(table.shape) != 3:
+            msg = 'Interpolation is for 3 dimensional tables only, ' + \
+                'not shape {}'.format(table.shape)
+            raise ValueError(msg)
+        
+        expected_tableshape = (len(self.logTK), 
+                               len(self.logZsol), 
+                               len(self.lognHcm3)) 
+        if table.shape != expected_tableshape: 
+            msg  = 'Table shape {} did not match expected {}'
+            msg = msg.format(table.shape, expected_tableshape)
+            raise ValueError(msg)
+            
         lognH = dct_logT_logZ_lognH['lognH']
         logT  = dct_logT_logZ_lognH['logT']
         logZ  = dct_logT_logZ_lognH['logZ']
@@ -986,42 +1190,51 @@ class linetables_SP20:
         inbalance = np.zeros(NumPart, dtype=np.float32)    
         if len(logT) != NumPart or len(logZ) != NumPart:
             raise ValueError('lognH, logZ, and logT  should have the same length')
-            return None
     
         # need to compile with some extra options to get this to work: make -f make_emission_only
         print("------------------- C interpolation function output --------------------------\n")
         cfile = ol.c_interpfile
     
         acfile = ct.CDLL(cfile)
-        interpfunction = acfile.interpolate_3d # just a linear interpolator; works for non-emission stuff too
+        interpfunction = acfile.interpolate_3d 
+        # just a linear interpolator; works for non-emission stuff too
         # retrieved ion balance tables are T x Z x nH
     
-        interpfunction.argtypes = [np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(NumPart,)),\
-                                   np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(NumPart,)),\
-                                   np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(NumPart,)),\
-                                   ct.c_longlong , \
-                                   np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(len(logTK)*len(logZabs)*len(lognHcm3),)), \
-                                   np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(len(logTK),)), \
-                                   ct.c_int,\
-                                   np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(len(logZabs),)), \
-                                   ct.c_int,\
-                                   np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(len(lognHcm3),)), \
-                                   ct.c_int,\
-                                   np.ctypeslib.ndpointer(dtype=ct.c_float, shape=(NumPart,))]
+        type_partarray = np.ctypeslib.ndpointer(dtype=ct.c_float, 
+                                                          shape=(NumPart,))
+        tablesize = np.prod(table.shape)
+        type_table = np.ctypeslib.ndpointer(dtype=ct.c_float,
+                                            shape=(tablesize,))
+        
+        interpfunction.argtypes = [type_partarray,
+                                   type_partarray,
+                                   type_partarray,
+                                   ct.c_longlong, 
+                                   type_table,
+                                   np.ctypeslib.ndpointer(dtype=ct.c_float,
+                                       shape=self.logTK.shape),
+                                   ct.c_int,
+                                   np.ctypeslib.ndpointer(dtype=ct.c_float,
+                                       shape=self.logZsol.shape),
+                                   ct.c_int,
+                                   np.ctypeslib.ndpointer(dtype=ct.c_float,
+                                       shape=self.lognHcm3.shape), 
+                                   ct.c_int,
+                                   type_partarray]
     
-    
-        res = interpfunction(logT.astype(np.float32),\
-                             logZ.astype(np.float32),\
-                             lognH.astype(np.float32),\
-                             ct.c_longlong(NumPart),\
-                             np.ndarray.flatten(balance.astype(np.float32)),\
-                             logTK.astype(np.float32),\
-                             ct.c_int(len(logTK)), \
-                             logZabs.astype(np.float32),\
-                             ct.c_int(len(logZabs)), \
-                             lognHcm3.astype(np.float32),\
-                             ct.c_int(len(lognHcm3)),\
-                             inbalance \
+        logZabs = self.logZsol + np.log10(self.solarZ)
+        res = interpfunction(logT.astype(np.float32),
+                             logZ.astype(np.float32),
+                             lognH.astype(np.float32),
+                             ct.c_longlong(NumPart),
+                             np.ndarray.flatten(table.astype(np.float32)),
+                             self.logTK.astype(np.float32),
+                             ct.c_int(len(self.logTK)), 
+                             logZabs.astype(np.float32),
+                             ct.c_int(len(logZabs)), 
+                             self.lognHcm3.astype(np.float32),
+                             ct.c_int(len(self.lognHcm3)),
+                             inbalance,
                              )
     
         print("-------------- C interpolation function output finished ----------------------\n")
@@ -1030,7 +1243,7 @@ class linetables_SP20:
             print('Something has gone wrong in the C function: output %s. \n',str(res))
             return None
     
-        return 10**inbalance
+        return inbalance
 
 
 ### cooling tables -> cooling rates.
