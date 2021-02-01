@@ -920,7 +920,8 @@ class linetables_SP20:
         else:
             ionind = self.ionstage
             tablepath = 'Tdep/IonFractions/{eltnum}{eltname}'
-            tablepath = tablepath.format()
+            tablepath = tablepath.format(eltnum=string.lower(self.eltind),
+                                         eltname=string.lower(self.element))
     
         tablefilename = ol.iontab_sylvia_ssh
         with h5py.File(tablefilename, "r") as tablefile:
