@@ -12,8 +12,13 @@ import numpy as np
 import h5py
 
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gsp
+import matplotlib.cm as cm
 
 import make_maps_v3_master as m3
+import make_maps_opts_locs as ol
+import cosmo_utils as cu
+import plot_utils as pu
 
 from importlib import reload
 reload(m3) # testing script -> make sure I'm using the latest version
@@ -21,7 +26,7 @@ reload(m3) # testing script -> make sure I'm using the latest version
 mdir  = '/net/luttero/data1/line_em_abs/v3_master_tests/ssh_tables_SP20/'
 m3.ol.ndir = mdir
 
-ions = ['o6', 'o7', 'o8', 'ne8', 'ne9', 'ne10', 'fe17']
+ions = ['h1ssh', 'hmolssh', 'o6', 'o7', 'o8', 'ne8', 'ne9', 'ne10', 'fe17']
 
 
 # check line data for these
@@ -51,6 +56,27 @@ lines_SB = ['c5r', 'n6-actualr', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r',
             'fe18', 'fe17-other1', 'fe19', 'o7r', 'o7iy', 'o7f', 'o8', 'fe17',
             'c6', 'n7']
 
+nicenames_lines =  {'c5r': 'C V',\
+                    'n6r': 'N VI (f)',\
+                    'n6-actualr': 'N VI',\
+                    'ne9r': 'Ne IX',\
+                    'ne10': 'Ne X',\
+                    'mg11r': 'Mg XI',\
+                    'mg12': 'Mg XII',\
+                    'si13r': 'Si XIII',\
+                    'fe18': 'Fe XVIII',\
+                    'fe17-other1': 'Fe XVII (15.10 A)',\
+                    'fe19': 'Fe XIX',\
+                    'o7r': 'O VII (r)',\
+                    'o7ix': 'O VII (ix)',\
+                    'o7iy': 'O VII (i)',\
+                    'o7f': 'O VII (f)',\
+                    'o8': 'O VIII',\
+                    'fe17': 'Fe XVII (17.05 A)',\
+                    'c6': 'C VI',\
+                    'n7': 'N VII',\
+                    }
+
 linematch_SP20 = {'C  5      40.2678A': 'c5r',
                   'C  6      33.7372A': 'c6',
                   'N  6      29.5343A': 'n6r',
@@ -73,6 +99,159 @@ linematch_SP20 = {'C  5      40.2678A': 'c5r',
                   'Fe18      16.0720A': None,
                   }
 
-def plottables_SP20(line, z):
+zeroval_PS20 = -50.
+zeroval_SB = -100.
+
+def plotemtables_SP20(line, z):
+    tab = m3.linetable_PS20(line, z, emission=False)
+    tab.findiontable()
+
+    fontsize = 12
+    xlabel = '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{3}]$'
+    ylabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
+    title = 'emissivity of the {line} line at $z = {z:.2f}$'    
+    clabel = '$\\log_{10} \\, \\mathrm{\\Lambda} \\,\\mathrm{n}_' +\
+         '{\\mathrm{H}}^{-2} \\, \\mathrm{V}^{-1}  \\;' +\
+         ' [\\mathrm{erg} \\, \\mathrm{cm}^{3} \\mathrm{s}^{-1}]$'
     
+    #clabel = '$\\log_{10} \\, \\mathrm{\\Lambda}' +\
+    #     '\\, \\mathrm{V}^{-1}  \\;' +\
+    #     ' [\\mathrm{erg} \\, \\mathrm{cm}^{-3} \\mathrm{s}^{-1}]$'
+    
+
+
+    deltaT = np.average(tab.logTK)
+    deltanH = np.average(tab.lognHcm3)
+    extent = (tab.lognHcm3[0] - 0.5 * deltanH, tab.lognHcm3[-1] + 0.5 * deltanH,
+              tab.logTK[0] - 0.5 * deltaT, tab.logTK[-1] + 0.5 * deltaT)
+              
+    table_T_Z_nH = np.copy(tab.iontable_T_Z_nH)        
+        
+    zeroval = zeroval_PS20
+    if np.all(table_T_Z_nH == zeroval):
+        msg = 'skipping line {line}: no emission!'
+        msg = msg.format(line=line)
+        print(msg)
+        return
+        
+    tozero = table_T_Z_nH == zeroval
+    table_T_Z_nH -= 2.* tab.lognHcm3[np.newaxis, np.newaxis, :]
+    table_T_Z_nH[tozero] = zeroval
+    
+    vmin = np.min(table_T_Z_nH[table_T_Z_nH > zeroval])
+    vmax = np.max(table_T_Z_nH)
+    #table = np.log10(table)
+    
+    ncols = 4
+    numZ = len(tab.logZsol)
+    nrows = (numZ - 1) // ncols + 1
+    figwidth = 11.
+    cwidth = 1.
+    panelwidth = (figwidth - cwidth) / float(ncols)
+    panelheight = panelwidth
+    figheight = panelheight * nrows
+    width_ratios = [panelwidth] * ncols + [cwidth]
+    
+    fig = plt.figure(figsize=(figwidth, figheight))
+    grid = gsp.GridSpec(ncols=ncols + 1, nrows=nrows,
+                        hspace=0.0, wspace=0.0,
+                        width_ratios=width_ratios)
+    axes = [fig.add_subplot(grid[i // ncols, i % ncols]) \
+            for i in range(numZ)]
+    cax = fig.add_subplot(grid[:, ncols]) 
+    
+    cmap = cm.get_cmap('viridis')
+    cmap.set_under('white')
+    
+    for mi, logZ in enumerate(tab.logZsol):
+        ax = axes[mi]
+        
+        left = mi % ncols == 0 
+        bottom = numZ - mi <= ncols 
+        pu.setticks(ax, fontsize, labelleft=left,
+                    labelbottom=bottom)
+        if bottom:
+            ax.set_xlabel(xlabel, fontsize=fontsize)
+        if left:
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+        if np.isclose(logZ, -50.):
+            labelZ = 'primordial'
+        else:
+            labelZ = '$\\log_{{10}} \\, \\mathrm{{Z}}\\, /' +\
+                ' \\, \\mathrm{{Z}}_{{\\odot}} = {logZ}$'
+            labelZ = labelZ.format(logZ=logZ)
+        img = ax.imshow(table_T_Z_nH[:, mi, :], interpolation='nearest',
+                        origin='lower', extent=extent, cmap=cmap,
+                        vmin=vmin, vmax=vmax)
+        ylim = ax.get_ylim()
+        xlim = ax.get_xlim()
+        ax.set_aspect((xlim[1] - xlim[0]) / (ylim[1] - ylim[0]))
+        
+        ax.text(0.05, 0.95, labelZ, fontsize=fontsize,
+                transform=ax.transAxes, horizontalalignment='left',
+                verticalalignment='top')
+
+    # color bar 
+    pu.add_colorbar(cax, img=img, cmap=cmap, vmin=vmin,
+                    clabel=clabel, fontsize=fontsize, 
+                    orientation='vertical', extend='min')
+    cax.set_aspect(10.)
+
+    fig.suptitle(title.format(line=line, z=z), fontsize=fontsize)
+    
+    _line = line.replace(' ', '_')
+    outname = mdir+ 'PS20_table_{line}_z{z:.2f}.pdf'
+    outname = outname.format(line=_line, z=z)
+    plt.savefig(outname, format='pdf', bbox_inches='tight')        
+     
+
+def plotemtables_SB(line, z):
+    fontsize = 12
+    xlabel = '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{3}]$'
+    ylabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
+    title = 'emissivity of the {line} line at $z = {z:.2f}$'
+    
+    clabel = '$\\log_{10} \\, \\mathrm{\\Lambda} \\,\\mathrm{n}_' +\
+         '{\\mathrm{H}}^{-2} \\, \\mathrm{V}^{-1}  \\;' +\
+         ' [\\mathrm{erg} \\, \\mathrm{cm}^{3} \\mathrm{s}^{-1}]$'
+         
+    eltlines, logTK, lognHcm3 = cu.findemtables(ol.elements_ion[line], z)
+    
+    deltaT = np.average(np.diff(logTK))
+    deltanH = np.average(np.diff(lognHcm3))
+    extent = (lognHcm3[0] - 0.5 * deltanH, lognHcm3[-1] + 0.5 * deltanH,
+              logTK[0] - 0.5 * deltaT, logTK[-1] + 0.5 * deltaT)
+
+    fig, (ax, cax) = plt.subplots(ncols=2, nrows=1,
+                                  gridspec_kw={'width_ratios': [5., 1.],
+                                               'wspace': 0.3})     
+    cmap = cm.get_cmap('viridis')
+    cmap.set_under('white')
+    
+    table = np.copy(eltlines[:, :, ol.line_nos_ion[line]])
+    zeroval = zeroval_SB
+    table[table == zeroval] = -np.inf
+    vmin = np.min(table[table > zeroval])
+    
+    img = ax.imshow(table, interpolation='nearest', origin='lower', 
+                    extent=extent, cmap=cmap, vmin=vmin)
+    
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    ax.text(0.05, 0.95, nicenames_lines[line], fontsize=fontsize,
+            transform=ax.transAxes, horizontalalignment='left',
+            verticalalignment='top')
+    
+    # color bar 
+    pu.add_colorbar(cax, img=img, cmap=cmap, vmin=vmin,
+                    clabel=clabel, fontsize=fontsize, 
+                    orientation='vertical', extend='min')
+    cax.set_aspect(10.)
+    
+    fig.suptitle(title.format(line=nicenames_lines[line], z=z),
+                 fontsize=fontsize)
+    
+    outname = mdir + 'SB_table_{line}_z{z:.2f}.pdf'
+    outname = outname.format(line=line, z=z)
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
     

@@ -809,7 +809,19 @@ def find_ionbal_bensgadget2(z, ion, dct_nH_T):
     return inbalance
 
 # Does not account for dust depletion
-class linetable_SP20:
+class linetable_PS20:
+    '''
+    class for storing data from the Ploeckinger & Schaye (2020) ion balance 
+    and line emission tables. 
+    
+    Methods include functions for interpolating the ion balance and emissvitiy 
+    tables in logT, logZ, and lognH, as well as the dust depletion and assumed
+    abundance of the given element for a total metallicity value.
+    
+    A single instance is for one emission or absorption line. This does mean 
+    the table bins and dust table may be stored twice if multiple objects are 
+    in use. The instance is also only valid for one redshift.
+    '''
     
     def parse_ionname(self):
         '''
@@ -826,26 +838,31 @@ class linetable_SP20:
 
         '''
         if self.emission: # lines are formatted as in the IdentifierLines dataset
-            self.elementshort = self.ion[:2]
+            self.elementshort = self.ion[:2].strip()
             self.ionstage = int(self.ion[2:4])
             msg = 'Interpreting {line} as coming from the {elt} {stage} ion'
             msg = msg.format(line=self.ion, elt=self.elementshort,
                              stage=self.ionstage)
             print(msg)
         else: # ions are '<elt><stage>....'
-            self.elementshort = ''
-            self.ionstage = ''
-            i = 0
-            while not self.ion[i].isdigit():
-                i += 1             
-            self.elementshort = string.capwords(self.ion[:i])
-            self.elementshort = self.elementshort.strip()
-            while self.ion[i].isdigit():
-                self.ionstage = self.ionstage + self.ion[i]
-                i += 1
-                if i == len(self.ion):
-                    break
-            self.ionstage = int(self.ionstage)
+            if self.ion == 'hmolssh':
+                self.elementshort = 'H'
+                # get a useful error, I hope
+                self.ionstage = 'invalid index for hmolssh'   
+            else:
+                self.elementshort = ''
+                self.ionstage = ''
+                i = 0
+                while not self.ion[i].isdigit():
+                    i += 1             
+                self.elementshort = string.capwords(self.ion[:i])
+                self.elementshort = self.elementshort.strip()
+                while self.ion[i].isdigit():
+                    self.ionstage = self.ionstage + self.ion[i]
+                    i += 1
+                    if i == len(self.ion):
+                        break
+                self.ionstage = int(self.ionstage)
             
             msg = 'Interpreting {ion} as the {elt} {stage} ion'
             msg = msg.format(ion=self.ion, elt=self.elementshort,
@@ -884,7 +901,7 @@ class linetable_SP20:
             self.numberfraction_Z = np.copy(\
                 self.numberfractions_Z_elt[:, self.eltind])
             
-            self.element = f['ElementNames'][self.eltind]
+            self.element = f['ElementNames'][self.eltind].decode().strip()
             self.elementmass_u = f['ElementMasses'][self.eltind]
             
             # solar Z for scaling
@@ -893,7 +910,43 @@ class linetable_SP20:
     def __init__(self, ion, z, emission=False, vol=True,
                  ionbalfile=ol.iontab_sylvia_ssh,
                  emtabfile=ol.emtab_sylvia_ssh):
-        
+        '''
+        Parameters
+        ----------
+        ion: string
+            ion or emission line to get tables for; emission line names should
+            match an entry in the IdentifierLines dataset in the emission line
+            table. Ion names should follow the format 
+            '<element abbreviation><ionization stage>[other stuff]',
+            e.g. 'o7' for the O^{6+} / O VII ion, 'Fe17-other', etc.
+            other options are 'hmolssh' and 'h1ssh'. Note that 'h2' is ionized
+            hydrogen (H^+), not molecular hydrogen (H_2)
+        z: float
+            redshift. Must be within the tabulated range.
+        emission: bool
+            get emission tables (True) or absorption tables (False)
+            in principle, if emission is True, the absorption table methods 
+            for the ion producing the line may also available. This is, 
+            however, untested, and will only work if the table bins are the 
+            same. (They should be.)
+        vol: bool
+            Use quantities for the last Cloudy zone (True) or column-averaged
+            quantities (False). The column option is only available for the
+            hydrogen species.
+        ionbalfile: string
+            the file (including directory path) containing the ion balance 
+            data. This is aslo needed for emission calculations, since some of
+            the metadata is not contained in the emission file.
+        emtabfile: string
+            the file (including directory path) containing the emissivity 
+            data. Only used when calculating emission data. It is assumed 
+            table options, like inclusion (or not) of shielding, cosmic rays,
+            dust, and stellar radiation, are the same for both tables.
+            
+        Returns
+        -------
+        a linetable_PS20 object.
+        '''
         self.ion = ion
         self.z = z
         self.ionbalfile = ionbalfile
@@ -904,7 +957,39 @@ class linetable_SP20:
         self.parse_ionname()
         self.getmetadata()
     
-    def find_ionbal(dct_T_Z_nH):
+    def __str__(self):
+        _str = '{obj}: {ion} {emabs} at z={z:.3f} using {vol} data from' +\
+               ' {iontab} and {emtab}'
+        if self.emission:
+            emabs = 'emission'
+        else:
+            emabs = 'ion fraction'
+        if self.vol:
+            vc = 'Vol'
+        else:
+            vc = 'Col'
+        _str = _str.format(obj=self.__class__, ion=self.ion, emabs=emabs,
+                           z=self.z, vol=vc, 
+                           iontab=self.ionbalfile.split('/')[-1],
+                           emtab=self.emtabfile.split('/')[-1])
+        return _str
+    
+    def __repr__(self):
+        _str = '{obj} instance: interpolate Ploeckinger & Schaye (2020) tables\n'
+        _str += 'ion:\t {ion}, interpreted as (coming from) the {elt} {stage} ion\n'
+        _str += 'z:\t {z}\n'
+        _str += 'vol:\t {vol}\n'
+        _str += 'emission:\t {emission}\n'
+        _str += 'emtabfile:\t {emtabfile}\n'
+        _str += 'ionbalfile:\t {ionbalfile}\n'
+        _str = _str.format(obj=self.__class__, ion=self.ion,
+                           elt=self.elementshort, stage=self.ionstage,
+                           z=self.z, vol=self.vol, emission=self.emission,
+                           emtabfile=self.emtabfile,
+                           ionbalfile=self.ionbalfile)
+        return _str
+        
+    def find_ionbal(self, dct_T_Z_nH):
         '''
         retrieve the interpolated ion balance values for the input particle 
         density, temperature, and metallicity
@@ -929,7 +1014,7 @@ class linetable_SP20:
             self.findiontable()
         return 10**self.interpolate_3Dtable(dct_T_Z_nH, self.iontable_T_Z_nH)
         
-    def find_emission(dct_T_Z_nH):
+    def find_emission(self, dct_T_Z_nH):
         '''
         retrieve the interpolated emission values for the input particle 
         density, temperature, and metallicity
@@ -953,7 +1038,7 @@ class linetable_SP20:
             self.findemtable()
         return 10**self.interpolate_3Dtable(dct_T_Z_nH, self.emtable_T_Z_nH)
     
-    def find_depletion(dct_T_Z_nH):
+    def find_depletion(self, dct_T_Z_nH):
         '''
         retrieve the interpolated dust depletion values for the input particle 
         density, temperature, and metallicity
@@ -978,7 +1063,7 @@ class linetable_SP20:
         return 10**self.interpolate_3Dtable(dct_T_Z_nH,
                                             self.depletiontable_T_Z_nH)
     
-    def find_assumedabundance(dct_Z):
+    def find_assumedabundance(self, dct_Z):
         '''
         retrieve the interpolated assumed parent element abundance values for 
         the input particle metallicity
@@ -1001,13 +1086,14 @@ class linetable_SP20:
         
         if not hasattr(self, 'logZsol'):
             self.findiontable()
-        logZabs = self.logZsol + np.log10(solarZ)
+        logZabs = self.logZsol + np.log10(self.solarZ)
         # linear extrapolation should be fine here
-        interp = scipy.interpolate.interp1d(logZabs, self.numberfraction_Z,
+        self.abunds_interp = scipy.interpolate.interp1d(logZabs,
+                                                        self.numberfraction_Z,
                                             kind='linear', axis=-1, copy=True,
                                             bounds_error=False,
                                             fill_value='extrapolate')
-        return 10**interp(dct_Z['logZ'])
+        return 10**self.abunds_interp(dct_Z['logZ'])
         
     def findiontable(self):
         if self.vol:
@@ -1034,7 +1120,7 @@ class linetable_SP20:
             ionind = self.ionstage - 1 
             tablepath = 'Tdep/IonFractions/{eltnum:02d}{eltname}'
             tablepath = tablepath.format(eltnum=self.eltind,
-                                         eltname=string.lower(self.element))
+                                         eltname=self.element.lower())
             print('Using table {}'.format(tablepath))
             
         with h5py.File(self.ionbalfile, "r") as tablefile:
@@ -1099,20 +1185,19 @@ class linetable_SP20:
                 raise ValueError(msg) 
 
             if zi_lo == zi_hi:
-                self.emtable_T_Z_nH = em[zi_lo, :, :, :, li]
+                self.emtable_T_Z_nH = emg[zi_lo, :, :, :, li]
             else:
-                z_lo = redshift[zi_lo]
-                z_hi = redshift[zi_hi]
+                z_lo = self.redshifts[zi_lo]
+                z_hi = self.redshifts[zi_hi]
                 self.emtable_T_Z_nH =\
                     (z_hi - self.z) / (z_hi - z_lo) *\
                         emg[zi_lo, :, :, :, li] + \
                     (self.z - z_lo) / (z_hi - z_lo) *\
                         emg[zi_hi, :, :, :, li]
         
-    def finddepletiontable(self):
-        with h5py.File(self.iontabfile, 'r') as f:
-            
-            deplg = f['Tdep/Emissivities{vc}'.format(vc=vc)] 
+    def finddepletiontable(self):    
+        with h5py.File(self.ionbalfile, 'r') as f:        
+            deplg = f['Tdep/Depletion'] 
             # z, T, Z, nH, element
             self.redshifts = f['TableBins/RedshiftBins'][:]
             self.logTK = f['TableBins/TemperatureBins'][:]
@@ -1130,10 +1215,10 @@ class linetable_SP20:
                 raise ValueError(msg) 
 
             if zi_lo == zi_hi:
-                self.depletiontable_T_Z_nH = em[zi_lo, :, :, :, self.eltind]
+                self.depletiontable_T_Z_nH = deplg[zi_lo, :, :, :, self.eltind]
             else:
-                z_lo = redshift[zi_lo]
-                z_hi = redshift[zi_hi]
+                z_lo = self.redshifts[zi_lo]
+                z_hi = self.redshifts[zi_hi]
                 self.depletiontable_T_Z_nH =\
                     (z_hi - self.z) / (z_hi - z_lo) *\
                         deplg[zi_lo, :, :, :, self.eltind] + \
