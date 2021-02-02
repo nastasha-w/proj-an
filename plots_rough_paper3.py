@@ -67,6 +67,13 @@ lines = ['c5r', 'n6-actualr', 'ne9r', 'ne10', 'mg11r', 'mg12',
          'fe17-other1', 'fe19', 'o7r', 'o7iy', 'o7f', 'o8', 'fe17',
          'c6', 'n7']
 
+# check line data for these
+lines_SP20 = ['C  5      40.2678A',
+              'C  6      33.7372A',
+              'N  6      29.5343A',
+              'N  6      28.7870A',
+              ]
+
 lines = sorted(lines, key=ol.line_eng_ion.get)
 nicenames_lines =  {'c5r': 'C V',\
                     'n6r': 'N VI (f)',\
