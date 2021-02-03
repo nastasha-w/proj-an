@@ -17,6 +17,7 @@ import matplotlib.cm as cm
 
 import make_maps_v3_master as m3
 import make_maps_opts_locs as ol
+import calcfmassh as cfh
 import cosmo_utils as cu
 import plot_utils as pu
 from ion_line_data import element_to_abbr
@@ -103,6 +104,30 @@ linematch_SP20 = {'C  5      40.2678A': 'c5r',
 
 zeroval_PS20 = -50.
 zeroval_SB = -100.
+
+def gethssh_R13(ion, z, logTK=None, lognHcm3=None):
+    
+    if logTK is None:
+        logTK = np.arange(2., 8.1, 0.2)
+    if lognHcm3 is None:
+        lognHcm3 = np.arange(-8., 4.1, 0.2)
+    
+    Tgrid = np.array([[x] * len(lognHcm3) for x in logTK]).flatten()
+    ngrid = np.array([[x] * len(logTK) for x in lognHcm3]).flatten()
+    dct = {'logT': Tgrid, 'lognH': ngrid, 
+           'eos': np.zeros(len(Tgrid), dtype=bool)}
+    
+    h1hmolfrac = cfh.nHIHmol_over_nH(dct, z, UVB='HM01', useLSR=False)
+    if ion == 'h1ssh':
+        h1hmolfrac *= (1. - cfh.rhoHmol_over_rhoH(dct))
+    elif ion == 'hmolssh':
+        h1hmolfrac *= cfh.rhoHmol_over_rhoH(dct)
+    else: # 'hneutralssh' -> want just the total
+        raise ValueError('{} is not an ion option'.format(ion))
+    
+    table = h1hmolfrac.reshape((len(logTK), len(lognHcm3)))
+    return table, logTK, lognHcm3 
+    
 
 def plottables_PS20(line, z, table='emission'):
     
@@ -249,10 +274,15 @@ def plottables_SB(line, z, table='emission'):
         title = 'fraction {ion} / {elt} at $z = {z:.2f}$'
         clabel = '$\\log_{{10}} \\; \\mathrm{{n}}(\\mathrm{{{ion}}}) \\, /' + \
             ' \\, \\mathrm{{n}}(\\mathrm{{{elt}}})$'
-            
-        balance, logTK, lognHcm3 = cu.findiontables(line, z)
-        table_T_nH = np.log10(balance.T)
-        zeroval = np.min(table_T_nH[np.isfinite(table_T_nH)])
+        
+        if ion in ['h1ssh', 'hmolssh']:
+            table_T_nH, logTK, lognHcm3 = gethssh_R13(ion, z)
+            table_T_nH = np.log10(table_T_nH)
+            zeroval = -50. # whatever
+        else:
+            balance, logTK, lognHcm3 = cu.findiontables(line, z)
+            table_T_nH = np.log10(balance.T)
+            zeroval = np.min(table_T_nH[np.isfinite(table_T_nH)])
     
     if line in nicenames_lines:
         linen = nicenames_lines[line]
