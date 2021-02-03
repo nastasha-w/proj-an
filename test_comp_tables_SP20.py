@@ -334,7 +334,121 @@ def plottables_SB(line, z, table='emission'):
     outname = mdir + 'SB_{table}_table_{line}_z{z:.2f}.pdf'
     outname = outname.format(line=line, z=z, table=table)
     plt.savefig(outname, format='pdf', bbox_inches='tight')
+
+
+# compare sets of tables: second reasonability check and assesment of 
+# differences
+def compare_tables(line_PS20, line_SB, z, table='emission'):
+        
+    fontsize = 12
+    xlabel = '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{3}]$'
+    ylabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
     
+    if table == 'emission':
+        title = 'emissivity of the {line} line at $z = {z:.2f}$'
+        clabel = '$\\log_{{10}} \\, \\mathrm{{\\Lambda}} \\,\\mathrm{{n}}_' +\
+         '{{\\mathrm{{H}}}}^{{-2}} \\, \\mathrm{{V}}^{{-1}}  \\;' +\
+         ' [\\mathrm{{erg}} \\, \\mathrm{{cm}}^{{3}} \\mathrm{{s}}^{{-1}}]$'
+         
+        eltlines, logTK, lognHcm3 = cu.findemtables(ol.elements_ion[line_SB],
+                                                    z)
+        table_T_nH_SB = np.copy(eltlines[:, :, ol.line_nos_ion[line_SB]])
+        
+    elif table == 'dust':
+        raise ValueError("Dust tables are not available in Serena's set")
+        title = 'dust depletion fraction of {elt} at $z = {z:.2f}$'
+        clabel = '$\\log_{{10}}$ fraction of {elt} in dust'
+        
+    elif table == 'ionbal':
+        title = 'fraction {ion} / {elt} at $z = {z:.2f}$'
+        clabel = '$\\log_{{10}} \\; \\mathrm{{m}}(\\mathrm{{{ion}}}) \\, /' + \
+            ' \\, \\mathrm{{m}}(\\mathrm{{{elt}}})$'
+        
+        if line_SB in ['h1ssh', 'hmolssh']:
+            table_T_nH_SB, logTK, lognHcm3 = gethssh_R13(line_SB, z)
+            table_T_nH_SB = np.log10(table_T_nH_SB)
+        else:
+            balance, logTK, lognHcm3 = cu.findiontables(line_SB, z)
+            table_T_nH_SB = np.log10(balance.T)
+    else:
+        raise ValueError('{} is not a valid table option'.format(table))
+    
+    Tgrid = np.array([[x] * len(lognHcm3) for x in logTK]).flatten()
+    ngrid = np.array([lognHcm3] * len(logTK)).flatten()
+    dct = {'logT': 10**Tgrid, 'lognH': 10**ngrid, 
+           'logZ': np.zeros(len(Tgrid), dtype=bool)}
+        
+    if table == 'emission':        
+        tab = m3.linetable_PS20(line_PS20, z, emission=True)
+        table_T_nH_PS20 = tab.find_emission(dct)
+        table_T_nH_PS20 = table_T_nH_PS20.reshape((len(logTK), 
+                                                   len(lognHcm3)))
+
+        tozero = table_T_nH_PS20 == zeroval_PS20
+        table_T_nH_PS20 -= 2.* lognHcm3[np.newaxis, np.newaxis, :]
+        table_T_nH_PS20[tozero] = zeroval_PS20
+        
+    elif table == 'ionbal':
+        tab = m3.linetable_PS20(line_PS20, z, emission=False)
+        table_T_nH_PS20 = tab.find_ionbal(dct)    
+        table_T_nH_PS20 = table_T_nH_PS20.reshape((len(logTK), 
+                                                   len(lognHcm3)))
+        
+    
+    if line in nicenames_lines:
+        linen = nicenames_lines[line]
+    else:
+        linen = line
+    kws = {'ion': line, 'line': linen, 
+           'elt': ol.elements_ion[line], 'z': z}
+    title = title.format(**kws)
+    clabel = clabel.format(**kws)
+    
+    deltaT = np.average(np.diff(logTK))
+    deltanH = np.average(np.diff(lognHcm3))
+    extent = (lognHcm3[0] - 0.5 * deltanH, lognHcm3[-1] + 0.5 * deltanH,
+              logTK[0] - 0.5 * deltaT, logTK[-1] + 0.5 * deltaT)
+
+    fig, (ax, cax) = plt.subplots(ncols=2, nrows=1,
+                                  gridspec_kw={'width_ratios': [5., 1.],
+                                               'wspace': 0.3})     
+    cmap = cm.get_cmap('viridis')
+    cmap.set_under('white')
+    
+    zeroval = max(zeroval_SB, zeroval_PS20)
+    table_T_nH_SB[table_T_nH_SB <= zeroval] = -np.inf
+    table_T_nH_PS20[table_T_nH_PS20 <= zeroval] = -np.inf
+    
+    vmin = np.min(table_T_nH_SB[table_T_nH > zeroval])
+    
+    img = ax.imshow(table_T_nH, interpolation='nearest', origin='lower', 
+                    extent=extent, cmap=cmap, vmin=vmin)
+    
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    
+    txt = '$\\mathrm{{Z}}_{{\\odot}}$: '+\
+          '$\\mathrm{{n}}_{{\\mathrm{{{elt}}}}} \\, / ' + \
+              '\\, \\mathrm{{n}}_{{\\mathrm{{H}}}} =$ {abund:.2e}'
+    txt = txt.format(abund=ol.solar_abunds_sb[ol.elements_ion[line]],\
+                     elt=element_to_abbr[ol.elements_ion[line]]) 
+    ax.text(0.05, 0.95, txt, fontsize=fontsize,
+            transform=ax.transAxes, horizontalalignment='left',
+            verticalalignment='top')
+    
+    # color bar 
+    pu.add_colorbar(cax, img=img, cmap=cmap, vmin=vmin,
+                    clabel=clabel, fontsize=fontsize, 
+                    orientation='vertical', extend='min')
+    cax.set_aspect(10.)
+    
+    fig.suptitle(title, fontsize=fontsize)
+    
+    outname = mdir + 'SB_{table}_table_{line}_z{z:.2f}.pdf'
+    outname = outname.format(line=line, z=z, table=table)
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
+
+
 # test basic table retrieval and sensitbility
 def plot_tables(zs):
     for z in zs:
@@ -347,10 +461,7 @@ def plot_tables(zs):
             plottables_PS20(ion, z, table='dust')
             plottables_SB(ion, z, table='ionbal')
 
-# compare sets of tables: second reasonability check and assesment of 
-# differences
-def compare_tables(line_PS20, line_SB, z, table='emission'):
-    pass
+
 
 # test interpolation of the tables graphically
 def test_interp(lines_PS20, table='emission'):
