@@ -253,7 +253,11 @@ def plottables_SB(line, z, table='emission'):
         balance, logTK, lognHcm3 = cu.findiontables(line, z)
         table_T_nH = balance.T
     
-    kws = {'ion': line, 'line': nicenames_lines[line], 
+    if line in nicenames_lines[line]:
+        linen = nicenames_lines[line]
+    else:
+        linen = line
+    kws = {'ion': line, 'line': linen, 
            'elt': ol.elements_ion[line], 'z': z}
     title = title.format(**kws)
     clabel = clabel.format(**kws)
