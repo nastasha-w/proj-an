@@ -19,6 +19,7 @@ import make_maps_v3_master as m3
 import make_maps_opts_locs as ol
 import cosmo_utils as cu
 import plot_utils as pu
+from ion_line_data import element_to_abbr
 
 from importlib import reload
 reload(m3) # testing script -> make sure I'm using the latest version
@@ -279,8 +280,10 @@ def plottables_SB(line, z, table='emission'):
     ax.set_ylabel(ylabel, fontsize=fontsize)
     
     txt = '$\\mathrm{{Z}}_{{\\odot}}$: {:.2e} '+\
-          '$[\\mathrm{{n}}_{{\\mathrm{{H}}}}]$'
-    txt = txt.format(ol.solar_abunds_sb[ol.elements_ion[line]]) 
+          '$\\mathrm{{n}}_{{\\mathrm{{{elt}}}}} \\, / ' + \
+              '\\, \\mathrm{{n}}_{{\\mathrm{{H}}}} =$ {:.2e}'
+    txt = txt.format(ol.solar_abunds_sb[ol.elements_ion[line]],\
+                     elt=element_to_abbr[ol.elements_ion[line]]) 
     ax.text(0.05, 0.95, txt, fontsize=fontsize,
             transform=ax.transAxes, horizontalalignment='left',
             verticalalignment='top')
