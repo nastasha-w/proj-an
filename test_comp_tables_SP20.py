@@ -26,7 +26,8 @@ reload(m3) # testing script -> make sure I'm using the latest version
 mdir  = '/net/luttero/data1/line_em_abs/v3_master_tests/ssh_tables_SP20/'
 m3.ol.ndir = mdir
 
-ions = ['h1ssh', 'hmolssh', 'o6', 'o7', 'o8', 'ne8', 'ne9', 'ne10', 'fe17']
+ions = ['h1ssh', 'hmolssh', 'mg2', 'si4', 'o6', 'o7', 'o8', 'ne8',\
+        'ne9', 'ne10', 'fe17']
 
 
 # check line data for these
@@ -102,42 +103,61 @@ linematch_SP20 = {'C  5      40.2678A': 'c5r',
 zeroval_PS20 = -50.
 zeroval_SB = -100.
 
-def plotemtables_SP20(line, z):
-    tab = m3.linetable_PS20(line, z, emission=False)
-    tab.findiontable()
-
+def plottables_PS20(line, z, table='emission'):
+    
     fontsize = 12
     xlabel = '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{3}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
-    title = 'emissivity of the {line} line at $z = {z:.2f}$'    
-    clabel = '$\\log_{10} \\, \\mathrm{\\Lambda} \\,\\mathrm{n}_' +\
-         '{\\mathrm{H}}^{-2} \\, \\mathrm{V}^{-1}  \\;' +\
-         ' [\\mathrm{erg} \\, \\mathrm{cm}^{3} \\mathrm{s}^{-1}]$'
     
-    #clabel = '$\\log_{10} \\, \\mathrm{\\Lambda}' +\
-    #     '\\, \\mathrm{V}^{-1}  \\;' +\
-    #     ' [\\mathrm{erg} \\, \\mathrm{cm}^{-3} \\mathrm{s}^{-1}]$'
+    zeroval = zeroval_PS20
     
+    if table == 'emission':
+        title = 'emissivity of the {line} line at $z = {z:.2f}$'
+        clabel = '$\\log_{{10}} \\, \\mathrm{{\\Lambda}} \\,\\mathrm{{n}}_' +\
+         '{{\\mathrm{{H}}}}^{{-2}} \\, \\mathrm{{V}}^{{-1}}  \\;' +\
+         ' [\\mathrm{{erg}} \\, \\mathrm{{cm}}^{{3}} \\mathrm{{s}}^{{-1}}]$'
+         
+        tab = m3.linetable_PS20(line, z, emission=True)
+        tab.findemtable()
+        table_T_Z_nH = np.copy(tab.iontable_T_Z_nH) 
+        
+        tozero = table_T_Z_nH == zeroval
+        table_T_Z_nH -= 2.* tab.lognHcm3[np.newaxis, np.newaxis, :]
+        table_T_Z_nH[tozero] = zeroval
 
+    elif table == 'dust':
+        raise ValueError("Dust tables are not available in Serena's set")
+        title = 'dust depletion fraction of {elt} at $z = {z:.2f}$'
+        clabel = '$\\log_{{10}}$ fraction of {elt} in dust'
+        
+        tab = m3.linetable_PS20(line, z, emission=False)
+        tab.finddepletiontable()
+        table_T_Z_nH = np.copy(tab.depletiontable_T_Z_nH)
+        
+    elif table == 'ionbal':
+        title = 'fraction {ion} / {elt} at $z = {z:.2f}$'
+        clabel = '$\\log_{{10}} \\; \\mathrm{n}(\\mathrm{{{ion}}}) \\, /' + \
+            ' \\, \\mathrm{{n}}(\\mathrm{{{elt}}})$'
+            
+        tab = m3.linetable_PS20(line, z, emission=False)
+        tab.findiontable()
+        table_T_Z_nH = np.copy(tab.iontable_T_Z_nH)
+    
+    kws = {'ion': line, 'line': line, 'elt': tab.elementshort, 'z': tab.z}
+    title = title.format(**kws)
+    clabel = clabel.format(**kws)
 
     deltaT = np.average(tab.logTK)
     deltanH = np.average(tab.lognHcm3)
     extent = (tab.lognHcm3[0] - 0.5 * deltanH, tab.lognHcm3[-1] + 0.5 * deltanH,
               tab.logTK[0] - 0.5 * deltaT, tab.logTK[-1] + 0.5 * deltaT)
-              
-    table_T_Z_nH = np.copy(tab.iontable_T_Z_nH)        
-        
-    zeroval = zeroval_PS20
+      
     if np.all(table_T_Z_nH == zeroval):
         msg = 'skipping line {line}: no emission!'
         msg = msg.format(line=line)
         print(msg)
         return
         
-    tozero = table_T_Z_nH == zeroval
-    table_T_Z_nH -= 2.* tab.lognHcm3[np.newaxis, np.newaxis, :]
-    table_T_Z_nH[tozero] = zeroval
-    
     vmin = np.min(table_T_Z_nH[table_T_Z_nH > zeroval])
     vmax = np.max(table_T_Z_nH)
     #table = np.log10(table)
@@ -205,17 +225,38 @@ def plotemtables_SP20(line, z):
     plt.savefig(outname, format='pdf', bbox_inches='tight')        
      
 
-def plotemtables_SB(line, z):
+def plottables_SB(line, z, table='emission'):
+    
     fontsize = 12
     xlabel = '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{3}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
-    title = 'emissivity of the {line} line at $z = {z:.2f}$'
     
-    clabel = '$\\log_{10} \\, \\mathrm{\\Lambda} \\,\\mathrm{n}_' +\
-         '{\\mathrm{H}}^{-2} \\, \\mathrm{V}^{-1}  \\;' +\
-         ' [\\mathrm{erg} \\, \\mathrm{cm}^{3} \\mathrm{s}^{-1}]$'
+    if table == 'emission':
+        title = 'emissivity of the {line} line at $z = {z:.2f}$'
+        clabel = '$\\log_{{10}} \\, \\mathrm{{\\Lambda}} \\,\\mathrm{{n}}_' +\
+         '{{\\mathrm{{H}}}}^{{-2}} \\, \\mathrm{{V}}^{{-1}}  \\;' +\
+         ' [\\mathrm{{erg}} \\, \\mathrm{{cm}}^{{3}} \\mathrm{{s}}^{{-1}}]$'
          
-    eltlines, logTK, lognHcm3 = cu.findemtables(ol.elements_ion[line], z)
+        eltlines, logTK, lognHcm3 = cu.findemtables(ol.elements_ion[line], z)
+        table = np.copy(eltlines[:, :, ol.line_nos_ion[line]])
+
+    elif table == 'dust':
+        raise ValueError("Dust tables are not available in Serena's set")
+        title = 'dust depletion fraction of {elt} at $z = {z:.2f}$'
+        clabel = '$\\log_{{10}}$ fraction of {elt} in dust'
+        
+    elif table == 'ionbal':
+        title = 'fraction {ion} / {elt} at $z = {z:.2f}$'
+        clabel = '$\\log_{{10}} \\; \\mathrm{n}(\\mathrm{{{ion}}}) \\, /' + \
+            ' \\, \\mathrm{{n}}(\\mathrm{{{elt}}})$'
+            
+        balance, logTK, lognHcm3 = cu.findiontables(line, z)
+        table = balance.T
+    
+    kws = {'ion': line, 'line': nicenames_lines(line), 
+           'elt': ol.elements_ion[line], 'z': z}
+    title = title.format(**kws)
+    clabel = clabel.format(**kws)
     
     deltaT = np.average(np.diff(logTK))
     deltanH = np.average(np.diff(lognHcm3))
@@ -228,7 +269,6 @@ def plotemtables_SB(line, z):
     cmap = cm.get_cmap('viridis')
     cmap.set_under('white')
     
-    table = np.copy(eltlines[:, :, ol.line_nos_ion[line]])
     zeroval = zeroval_SB
     table[table == zeroval] = -np.inf
     vmin = np.min(table[table > zeroval])
@@ -238,7 +278,10 @@ def plotemtables_SB(line, z):
     
     ax.set_xlabel(xlabel, fontsize=fontsize)
     ax.set_ylabel(ylabel, fontsize=fontsize)
-    ax.text(0.05, 0.95, nicenames_lines[line], fontsize=fontsize,
+    
+    txt = '$\\mathrm{{Z}}_{{\\odot}}$: {} [\\mathrm{{n}}_{{\\mathrm{{H}}}}]'
+    txt = txt.format(ol.solar_abunds_sb(ol.elements_ion[line])) 
+    ax.text(0.05, 0.95, txt, fontsize=fontsize,
             transform=ax.transAxes, horizontalalignment='left',
             verticalalignment='top')
     
@@ -251,16 +294,24 @@ def plotemtables_SB(line, z):
     fig.suptitle(title.format(line=nicenames_lines[line], z=z),
                  fontsize=fontsize)
     
-    outname = mdir + 'SB_table_{line}_z{z:.2f}.pdf'
-    outname = outname.format(line=line, z=z)
+    outname = mdir + 'SB_{table}_table_{line}_z{z:.2f}.pdf'
+    outname = outname.format(line=line, z=z, table=table)
     plt.savefig(outname, format='pdf', bbox_inches='tight')
+    
+
+def compare_tables(line_PS20, line_SB, z, table='emission'):
+    pass
     
 def plot_emtables(zs):
     for z in zs:
         for line in lines_SP20:
-            plotemtables_SP20(line, z)
+            plottables_PS20(line, z, table='emission')
         for line in lines_SB:
-            plotemtables_SB(line, z)  
+            plottables_SB(line, z, table='emission')
+        for ion in ions:
+            plottables_PS20(line, z, table='ionbal')
+            plottables_PS20(line, z, table='dust')
+            plottables_SB(line, z, table='ionbal')
 
 if __name__ == '__main__':
     zs_test = [0.0, 0.1, 1., 3.]
