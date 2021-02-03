@@ -253,7 +253,7 @@ def plottables_SB(line, z, table='emission'):
         balance, logTK, lognHcm3 = cu.findiontables(line, z)
         table_T_nH = balance.T
     
-    if line in nicenames_lines[line]:
+    if line in nicenames_lines:
         linen = nicenames_lines[line]
     else:
         linen = line
