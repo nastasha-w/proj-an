@@ -251,7 +251,8 @@ def plottables_SB(line, z, table='emission'):
             ' \\, \\mathrm{{n}}(\\mathrm{{{elt}}})$'
             
         balance, logTK, lognHcm3 = cu.findiontables(line, z)
-        table_T_nH = balance.T
+        table_T_nH = np.log10(balance.T)
+        zeroval = np.min(table_T_nH[np.isfinite(table_T_nH)])
     
     if line in nicenames_lines:
         linen = nicenames_lines[line]
