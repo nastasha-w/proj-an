@@ -237,7 +237,7 @@ def plottables_SB(line, z, table='emission'):
          ' [\\mathrm{{erg}} \\, \\mathrm{{cm}}^{{3}} \\mathrm{{s}}^{{-1}}]$'
          
         eltlines, logTK, lognHcm3 = cu.findemtables(ol.elements_ion[line], z)
-        table = np.copy(eltlines[:, :, ol.line_nos_ion[line]])
+        table_T_nH = np.copy(eltlines[:, :, ol.line_nos_ion[line]])
 
     elif table == 'dust':
         raise ValueError("Dust tables are not available in Serena's set")
@@ -250,7 +250,7 @@ def plottables_SB(line, z, table='emission'):
             ' \\, \\mathrm{{n}}(\\mathrm{{{elt}}})$'
             
         balance, logTK, lognHcm3 = cu.findiontables(line, z)
-        table = balance.T
+        table_T_nH = balance.T
     
     kws = {'ion': line, 'line': nicenames_lines[line], 
            'elt': ol.elements_ion[line], 'z': z}
@@ -269,10 +269,10 @@ def plottables_SB(line, z, table='emission'):
     cmap.set_under('white')
     
     zeroval = zeroval_SB
-    table[table == zeroval] = -np.inf
-    vmin = np.min(table[table > zeroval])
+    table_T_nH[table_T_nH == zeroval] = -np.inf
+    vmin = np.min(table_T_nH[table_T_nH > zeroval])
     
-    img = ax.imshow(table, interpolation='nearest', origin='lower', 
+    img = ax.imshow(table_T_nH, interpolation='nearest', origin='lower', 
                     extent=extent, cmap=cmap, vmin=vmin)
     
     ax.set_xlabel(xlabel, fontsize=fontsize)
