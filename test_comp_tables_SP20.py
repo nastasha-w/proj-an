@@ -136,7 +136,7 @@ def plottables_PS20(line, z, table='emission'):
         
     elif table == 'ionbal':
         title = 'fraction {ion} / {elt} at $z = {z:.2f}$'
-        clabel = '$\\log_{{10}} \\; \\mathrm{n}(\\mathrm{{{ion}}}) \\, /' + \
+        clabel = '$\\log_{{10}} \\; \\mathrm{{n}}(\\mathrm{{{ion}}}) \\, /' + \
             ' \\, \\mathrm{{n}}(\\mathrm{{{elt}}})$'
             
         tab = m3.linetable_PS20(line, z, emission=False)
@@ -247,7 +247,7 @@ def plottables_SB(line, z, table='emission'):
         
     elif table == 'ionbal':
         title = 'fraction {ion} / {elt} at $z = {z:.2f}$'
-        clabel = '$\\log_{{10}} \\; \\mathrm{n}(\\mathrm{{{ion}}}) \\, /' + \
+        clabel = '$\\log_{{10}} \\; \\mathrm{{n}}(\\mathrm{{{ion}}}) \\, /' + \
             ' \\, \\mathrm{{n}}(\\mathrm{{{elt}}})$'
             
         balance, logTK, lognHcm3 = cu.findiontables(line, z)
