@@ -255,13 +255,16 @@ def plotemtables_SB(line, z):
     outname = outname.format(line=line, z=z)
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     
+def plot_emtables(zs):
+    for z in zs:
+        for line in lines_SP20:
+            plotemtables_SP20(line, z)
+        for line in lines_SB:
+            plotemtables_SB(line, z)  
 
 if __name__ == '__main__':
     zs_test = [0.0, 0.1, 1., 3.]
     
-    for z in zs_test:
-        for line in lines_SP20:
-            plotemtables_SP20(line, z)
-        for line in lines_SB:
-            plotemtables_SB(line, z)    
+    plot_emtables(zs_test)
+      
             
