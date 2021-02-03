@@ -126,7 +126,6 @@ def plottables_PS20(line, z, table='emission'):
         table_T_Z_nH[tozero] = zeroval
 
     elif table == 'dust':
-        raise ValueError("Dust tables are not available in Serena's set")
         title = 'dust depletion fraction of {elt} at $z = {z:.2f}$'
         clabel = '$\\log_{{10}}$ fraction of {elt} in dust'
         
