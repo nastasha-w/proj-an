@@ -119,7 +119,7 @@ def plottables_PS20(line, z, table='emission'):
          
         tab = m3.linetable_PS20(line, z, emission=True)
         tab.findemtable()
-        table_T_Z_nH = np.copy(tab.iontable_T_Z_nH) 
+        table_T_Z_nH = np.copy(tab.emtable_T_Z_nH) 
         
         tozero = table_T_Z_nH == zeroval
         table_T_Z_nH -= 2.* tab.lognHcm3[np.newaxis, np.newaxis, :]
@@ -298,11 +298,8 @@ def plottables_SB(line, z, table='emission'):
     outname = outname.format(line=line, z=z, table=table)
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     
-
-def compare_tables(line_PS20, line_SB, z, table='emission'):
-    pass
-    
-def plot_emtables(zs):
+# test basic table retrieval and sensitbility
+def plot_tables(zs):
     for z in zs:
         for line in lines_SP20:
             plottables_PS20(line, z, table='emission')
@@ -313,9 +310,27 @@ def plot_emtables(zs):
             plottables_PS20(line, z, table='dust')
             plottables_SB(line, z, table='ionbal')
 
+# compare sets of tables: second reasonability check and assesment of 
+# differences
+def compare_tables(line_PS20, line_SB, z, table='emission'):
+    pass
+
+# test interpolation of the tables graphically
+def test_interp(lines_PS20, table='emission'):
+    pass
+
+# compare maps with the two table sets
+# emission maps for a few ions, with and without abundance adjustments
+# absorption maps
+# no-dust maps with both table sets
+# with and without dust depletion
+
+def compare_maps(args_map1, args_map2, kwargs_map1, kwargs_map2,\
+                 imgname=None):
+    pass
+
 if __name__ == '__main__':
-    zs_test = [0.0, 0.1, 1., 3.]
-    
-    plot_emtables(zs_test)
+    zs_test = [0.0, 0.1, 1., 3.]  
+    plot_tables(zs_test)
       
             
