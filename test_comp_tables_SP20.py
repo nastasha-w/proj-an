@@ -114,7 +114,7 @@ def gethssh_R13(ion, z, logTK=None, lognHcm3=None):
     
     Tgrid = np.array([[x] * len(lognHcm3) for x in logTK]).flatten()
     ngrid = np.array([[x] * len(logTK) for x in lognHcm3]).flatten()
-    dct = {'logT': Tgrid, 'lognH': ngrid, 
+    dct = {'Temperature': 10**Tgrid, 'lognH': ngrid, 
            'eos': np.zeros(len(Tgrid), dtype=bool)}
     
     h1hmolfrac = cfh.nHIHmol_over_nH(dct, z, UVB='HM01', useLSR=False)
