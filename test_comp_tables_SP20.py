@@ -279,10 +279,10 @@ def plottables_SB(line, z, table='emission'):
     ax.set_xlabel(xlabel, fontsize=fontsize)
     ax.set_ylabel(ylabel, fontsize=fontsize)
     
-    txt = '$\\mathrm{{Z}}_{{\\odot}}$: {:.2e} '+\
+    txt = '$\\mathrm{{Z}}_{{\\odot}}$: '+\
           '$\\mathrm{{n}}_{{\\mathrm{{{elt}}}}} \\, / ' + \
-              '\\, \\mathrm{{n}}_{{\\mathrm{{H}}}} =$ {:.2e}'
-    txt = txt.format(ol.solar_abunds_sb[ol.elements_ion[line]],\
+              '\\, \\mathrm{{n}}_{{\\mathrm{{H}}}} =$ {abund:.2e}'
+    txt = txt.format(abund=ol.solar_abunds_sb[ol.elements_ion[line]],\
                      elt=element_to_abbr[ol.elements_ion[line]]) 
     ax.text(0.05, 0.95, txt, fontsize=fontsize,
             transform=ax.transAxes, horizontalalignment='left',
