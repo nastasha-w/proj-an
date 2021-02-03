@@ -298,8 +298,7 @@ def plottables_SB(line, z, table='emission'):
                     orientation='vertical', extend='min')
     cax.set_aspect(10.)
     
-    fig.suptitle(title.format(line=nicenames_lines[line], z=z),
-                 fontsize=fontsize)
+    fig.suptitle(title, fontsize=fontsize)
     
     outname = mdir + 'SB_{table}_table_{line}_z{z:.2f}.pdf'
     outname = outname.format(line=line, z=z, table=table)
