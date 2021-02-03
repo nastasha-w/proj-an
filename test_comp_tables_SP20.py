@@ -113,7 +113,7 @@ def gethssh_R13(ion, z, logTK=None, lognHcm3=None):
         lognHcm3 = np.arange(-8., 4.1, 0.2)
     
     Tgrid = np.array([[x] * len(lognHcm3) for x in logTK]).flatten()
-    ngrid = np.array([[x] * len(logTK) for x in lognHcm3]).flatten()
+    ngrid = np.array([lognHcm3] * len(logTK)).flatten()
     dct = {'Temperature': 10**Tgrid, 'nH': 10**ngrid, 
            'eos': np.zeros(len(Tgrid), dtype=bool)}
     
@@ -272,8 +272,8 @@ def plottables_SB(line, z, table='emission'):
         
     elif table == 'ionbal':
         title = 'fraction {ion} / {elt} at $z = {z:.2f}$'
-        clabel = '$\\log_{{10}} \\; \\mathrm{{n}}(\\mathrm{{{ion}}}) \\, /' + \
-            ' \\, \\mathrm{{n}}(\\mathrm{{{elt}}})$'
+        clabel = '$\\log_{{10}} \\; \\mathrm{{m}}(\\mathrm{{{ion}}}) \\, /' + \
+            ' \\, \\mathrm{{m}}(\\mathrm{{{elt}}})$'
         
         if line in ['h1ssh', 'hmolssh']:
             table_T_nH, logTK, lognHcm3 = gethssh_R13(line, z)
