@@ -275,8 +275,8 @@ def plottables_SB(line, z, table='emission'):
         clabel = '$\\log_{{10}} \\; \\mathrm{{n}}(\\mathrm{{{ion}}}) \\, /' + \
             ' \\, \\mathrm{{n}}(\\mathrm{{{elt}}})$'
         
-        if ion in ['h1ssh', 'hmolssh']:
-            table_T_nH, logTK, lognHcm3 = gethssh_R13(ion, z)
+        if line in ['h1ssh', 'hmolssh']:
+            table_T_nH, logTK, lognHcm3 = gethssh_R13(line, z)
             table_T_nH = np.log10(table_T_nH)
             zeroval = -50. # whatever
         else:
