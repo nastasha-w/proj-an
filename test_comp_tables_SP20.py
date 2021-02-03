@@ -313,9 +313,9 @@ def plot_tables(zs):
         for line in lines_SB:
             plottables_SB(line, z, table='emission')
         for ion in ions:
-            plottables_PS20(line, z, table='ionbal')
-            plottables_PS20(line, z, table='dust')
-            plottables_SB(line, z, table='ionbal')
+            plottables_PS20(ion, z, table='ionbal')
+            plottables_PS20(ion, z, table='dust')
+            plottables_SB(ion, z, table='ionbal')
 
 # compare sets of tables: second reasonability check and assesment of 
 # differences
