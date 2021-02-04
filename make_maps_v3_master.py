@@ -115,7 +115,7 @@ import h5py
 import numbers as num # for instance checking
 import sys
 import pandas as pd
-import scipy 
+import scipy.interpolate as spint 
 
 import make_maps_opts_locs as ol
 import projection_classes as pc
@@ -1089,8 +1089,7 @@ class linetable_PS20:
             self.findiontable()
         logZabs = self.logZsol + np.log10(self.solarZ)
         # linear extrapolation should be fine here
-        self.abunds_interp = scipy.interpolate.interp1d(logZabs,
-                                                        self.numberfraction_Z,
+        self.abunds_interp = spint.interp1d(logZabs, self.numberfraction_Z,
                                             kind='linear', axis=-1, copy=True,
                                             bounds_error=False,
                                             fill_value='extrapolate')
