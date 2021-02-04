@@ -452,7 +452,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     cmap_img = cm.get_cmap('viridis')
     cmap_img.set_under('white')
     
-    cmap_contours = cm.get_cmap('plasma_r')    
+    cmap_contours = cm.plasma_r    
     
     vmin = np.min(table_T_nH_SB[table_T_nH_SB > zeroval])
     vmin = max(vmin, np.min(table_T_nH_PS20[table_T_nH_PS20 > zeroval]))
