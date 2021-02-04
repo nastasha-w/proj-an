@@ -29,7 +29,7 @@ reload(m3) # testing script -> make sure I'm using the latest version
 mdir  = '/net/luttero/data1/line_em_abs/v3_master_tests/ssh_tables_SP20/'
 m3.ol.ndir = mdir
 
-ions = ['h1ssh', 'hmolssh', 'mg2', 'si4', 'o6', 'o7', 'o8', 'ne8',\
+ions = ['h1ssh', 'hmolssh', 'mg2', 'o1', 'si4', 'o6', 'o7', 'o8', 'ne8',\
         'ne9', 'ne10', 'fe17']
 
 
@@ -572,7 +572,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
 
 
 # test basic table retrieval and sensitbility
-def plot_tables(zs):
+def plot_tablsets(zs):
     for z in zs:
         for line in lines_SP20:
             plottables_PS20(line, z, table='emission')
@@ -583,7 +583,14 @@ def plot_tables(zs):
             plottables_PS20(ion, z, table='dust')
             plottables_SB(ion, z, table='ionbal')
 
-
+def compare_tablesets(z):
+    for ion in ions:
+        compare_tables(ion, ion, z, table='ionbal')
+    for line in linematch_SP20:
+        if linematch_SP20[line] is None:
+            continue
+        compare_tables(line, linematch_SP20[line], z, table='emission')
+        
 
 # test interpolation of the tables graphically
 def test_interp(lines_PS20, table='emission'):
@@ -601,6 +608,6 @@ def compare_maps(args_map1, args_map2, kwargs_map1, kwargs_map2,\
 
 if __name__ == '__main__':
     zs_test = [0.0, 0.1, 1., 3.]  
-    plot_tables(zs_test)
+    plot_tablesets(zs_test)
       
             
