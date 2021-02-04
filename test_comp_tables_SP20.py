@@ -544,11 +544,12 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     cieax.set_xlabel(ylabel, fontsize=fontsize)
     cieax.set_ylabel(clabel, fontsize=fontsize)
     cieax.grid(True)
-    cieax.set_ylim(vmax - 6., vmax + 0.2)
+    cieax.set_ylim(vmax_cie - 6., vmax_cie + 0.2)
     txt = 'CIE: $\\log_{{10}} \\mathrm{{n}}_{{\\mathrm{{H}}}} \\, /' + \
         '\\, \\mathrm{{cm}}^{{-3}} =$ {lognH:.1f}'.format(lognH=lognHcm3[-1])
-    cieax.text(0.05, 0.95, txt, horizontalalignment='left',
-               verticalalignment='top', transform=cieax.transAxes)
+    cieax.text(0.05, 0.05, txt, fontsize=fontsize, horizontalalignment='left',
+               verticalalignment='top', transform=cieax.transAxes,
+               bbox={'facecolor': 'white', 'alpha': 0.3})
     
     lax.text(0.05, 0.95, ltext, fontsize=fontsize, horizontalalignment='left',
                verticalalignment='top', transform=lax.transAxes)
