@@ -1014,7 +1014,7 @@ class linetable_PS20:
             self.findiontable()
         return 10**self.interpolate_3Dtable(dct_T_Z_nH, self.iontable_T_Z_nH)
         
-    def find_emission(self, dct_T_Z_nH):
+    def find_logemission(self, dct_T_Z_nH):
         '''
         retrieve the interpolated emission values for the input particle 
         density, temperature, and metallicity
@@ -1032,11 +1032,12 @@ class linetable_PS20:
         Returns
         -------
         float array
-            line emission per unit volume: erg / s / cm**3 
+            log line emission per unit volume: log10 erg / s / cm**3 
+            (the non-log emission values may cause overflows)
         '''
         if not hasattr(self, 'emtable_T_Z_nH'):
             self.findemtable()
-        return 10**self.interpolate_3Dtable(dct_T_Z_nH, self.emtable_T_Z_nH)
+        return self.interpolate_3Dtable(dct_T_Z_nH, self.emtable_T_Z_nH)
     
     def find_depletion(self, dct_T_Z_nH):
         '''

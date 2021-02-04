@@ -391,7 +391,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
                                                    len(lognHcm3)))
 
         tozero = table_T_nH_PS20 <= zeroval_PS20
-        table_T_nH_PS20 -= 2.* lognHcm3[np.newaxis, np.newaxis, :]
+        table_T_nH_PS20 -= 2.* lognHcm3[np.newaxis, :]
         table_T_nH_PS20[tozero] = zeroval_PS20
         
         assumed_abunds_SB = ol.solar_abunds_sb[tab.element.lower()]
