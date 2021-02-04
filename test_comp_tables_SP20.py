@@ -463,10 +463,12 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     
     vmax_cie = np.max(table_T_nH_PS20[:, -1])
     
-    clevels = list(np.linspace(vmin, vmax_cie - 3., 4))[1:-1] +\
-              list(np.linspace(vmax_cie - 3., vmax_cie - 0.2, 5))[1:] +\
+    clevels = list(np.linspace(vmax_cie - 3., vmax_cie - 0.2, 5))[1:] +\
               list(np.linspace(vmax_cie - 0.2, vmax, 3)[:-1]) 
-              
+    if vmax_cie - 3. > vmin + 2.:
+        clevels = clevels + list(np.linspace(vmin, vmax_cie - 3., 4))[1:-1]
+    print(clevels)
+        
     cmap_contours = cm.get_cmap('plasma_r') 
     colors_contours = cmap_contours(np.linspace(0., 1., len(clevels)))
     
