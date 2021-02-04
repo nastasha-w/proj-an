@@ -543,7 +543,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
                verticalalignment='top', transform=cieax.transAxes)
     
     lax.text(0.05, 0.95, ltxt, horizontalalignnment='left',
-               verticalalignment='top', transform=lax.transAxes))
+               verticalalignment='top', transform=lax.transAxes)
     
     # color bar 
     cbar = pu.add_colorbar(cax, img=img, cmap=cmap_img, vmin=vmin,
