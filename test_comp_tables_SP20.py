@@ -461,8 +461,11 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     vmax = max(vmax, np.max(table_T_nH_PS20_res))
     #vmax = 0.
     
-    clevels = list(np.linspace(vmin, vmax - 2., 5))[1:-1] +\
-              list(np.linspace(vmax - 2., vmax, 10)[:-1]) 
+    vmax_cie = np.max(table_T_nH_PS20[:, -1])
+    
+    clevels = list(np.linspace(vmin, vmax_cie - 3., 4))[1:-1] +\
+              list(np.linspace(vmax_cie - 3., vmax_cie - 0.2, 5))[1:] +\
+              list(np.linspace(vmax_cie - 0.2., vmax, 3)[:-1]) 
               
     cmap_contours = cm.get_cmap('plasma_r') 
     colors_contours = cmap_contours(np.linspace(0., 1., len(clevels)))
@@ -501,10 +504,12 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
         cs = ax.contour(lognHcm3, logTK, _table, levels=clevels,
                          colors=colors_contours, origin='lower',
                          linestyles=linestyle, linewidths=linewidth)
-        compax.contour(lognHcm3, logTK, _table, levels=clevels,
-                         colors=colors_contours, origin='lower', 
-                         linestyles=linestyle, linewidths=linewidth,
-                         path_effects=patheff)
+        cs2 = compax.contour(lognHcm3, logTK, _table, levels=clevels,
+                             colors=colors_contours, origin='lower', 
+                             linestyles=linestyle, linewidths=linewidth,
+                             path_effects=patheff)
+        plt.setp(cs2.collections, path_effects=patheff)
+        
         cieax.plot(logTK, _table[:, -1], linestyle=linestyle,
                    linewidth=linewidth, color='black', alpha=0.3)
         
