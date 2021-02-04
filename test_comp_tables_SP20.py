@@ -14,6 +14,7 @@ import h5py
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gsp
 import matplotlib.cm as cm
+import matplotlib.patheffects as mppe
 
 import make_maps_v3_master as m3
 import make_maps_opts_locs as ol
@@ -409,8 +410,8 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
         info_PS20_res = info_SB
         
         info_SB = info_SB.format(Z=dct_Z['logZ'][0],
-                                 elt=element_to_abbr[ol.elements_ion[line]],
-                                 abund=ol.solar_abunds_sb[ol.elements_ion[line]])
+                                 elt=element_to_abbr[ol.elements_ion[line_SB]],
+                                 abund=ol.solar_abunds_sb[ol.elements_ion[line_SB]])
         info_PS20 = info_PS20.format(Z=dct_Z['logZ'][0],
                                  elt=tab.elementshort,
                                  abund=assumed_abunds_PS20)
@@ -473,34 +474,72 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     lax = fig.add_subplot(grid[1, 2:])
     cieax = fig.add_subplot(grid[1, 1])
     compax = fig.add_subplot(grid[1, 0])
+    
     lax.axis('off')
     
     table_T_nH_SB[table_T_nH_SB <= zeroval] = -np.inf
     table_T_nH_PS20[table_T_nH_PS20 <= zeroval] = -np.inf
     table_T_nH_PS20_res[table_T_nH_PS20_res <= zeroval] = -np.inf
     
+    linewidth = 2
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"),\
+               mppe.Stroke(linewidth=linewidth + 0.5, foreground="white"),\
+               mppe.Normal()]
+        
+    for ind, (_table, linestyle, label, line, info, title) \
+        in enumerate(zip([table_T_nH_SB, table_T_nH_PS20, table_T_nH_PS20_res],
+                         ['solid', 'dashed', 'dotted'],
+                         ['(a)', '(b)', '(c)'],
+                         [line_SB, line_PS20, line_PS20]
+                         [info_SB, info_PS20, info_PS20_res],
+                         [title_SB, title_PS20, title_PS20])):
+        ax = fig.add_subplot(grid[0, ind])
+        img = ax.imshow(_table, interpolation='nearest', origin='lower', 
+                        extent=extent, cmap=cmap_img, vmin=vmin, vmax=vmax)
+        cs = ax.contour(lognHcm3, logTK, _table, levels=clevels,
+                         colors=cmap_contours, origin='lower',
+                         linestyle=linestyle, linewidth=linewidth)
+        compax.contour(lognHcm3, logTK, _table, levels=clevels,
+                         colors=cmap_contours, origin='lower', 
+                         linestyle=linestyle, linewidth=linewidth,
+                         path_effects=patheff)
+        cieax.plot(logTK, _table[:, -1], linestyle=linestyle,
+                   linewidth=linewidth, color='black')
+        
+        ax.set_xlabel(xlabel, fontsize=fontsize)
+        ax.set_ylabel(ylabel, fontsize=fontsize)
+        pu.setticks(ax, fontsize=fontsize)
+        
+        ax.text(0.5, 1.01, label + ' ' + title, fontsize=fontsize,
+                transform=ax.transAxes, horizontalalignment='center',
+                verticalalignment='bottom')
+        
+        if line in nicenames_lines:
+            linen = nicenames_lines[line]
+        else:
+            linen = line
+        if ind == 0:
+            ltext = '{label}: {line}\n   '.format(label=label, line=linen) +\
+                     info
+        else:
+            ltext = ltext + '\n{label}: {line}\n   '.format(label=label,
+                                                            line=linen) +\
+                     info
+        
+    pu.setticks(compax, fontsize=fontsize)
+    compax.set_xlabel(xlabel, fontsize=fontsize)
+    compax.set_ylabel(ylabel, fontsize=fontsize)
+    compax.grid(True)
     
-    ax1 = fig.add_subplot(grid[0, 0])
-    img = ax1.imshow(table_T_nH_SB, interpolation='nearest', origin='lower', 
-                    extent=extent, cmap=cmap_img, vmin=vmin, vmax=vmax)
-    cs = ax1.contour(lognHcm3, logTK, table_T_nH_SB, levels=clevels,
-                     colors=cmap_contours, origin='lower', linestyle='solid')
-    compax.contour(lognHcm3, logTK, table_T_nH_SB, levels=clevels,
-                     colors=cmap_contours, origin='lower', linestyle='solid')
-    
-    ax1.set_xlabel(xlabel, fontsize=fontsize)
-    ax1.set_ylabel(ylabel, fontsize=fontsize)
-    pu.setticks(ax1, fontsize=fontsize)
-    
-    ax1.text(0.05, 0.95, 'A', fontsize=fontsize,
-            transform=ax1.transAxes, horizontalalignment='left',
-            verticalalignment='top',
-            bbox={'facecolor': 'white', 'alpha': 0.3})
-    if line_SB in nicenames_lines:
-        linen_SB = nicnames_lines[line_SB]
-    else:
-        linen_SB = line_SB
-    ltext = 'A: {line}\n   '.format() + info_SB
+    pu.setticks(cieax, fontsize=fontsize)
+    cieax.set_xlabel(ylabel, fontsize=fontsize)
+    cieax.set_ylabel(clabel, fontsize=fontsize)
+    cieax.grid(True)
+    cieax.set_ylim(vmax + 0.2, vmax - 6.)
+    txt = 'CIE: $\\log_{{\\mathrm{{n}}_\\mathrm{{H}}}} \\, /' + \
+        '\\, \\mathrm{{cm}}^{{-3}} =$ {lognH:.1f}'.format(lognH=lognHcm3[-1])
+    cieax.text(0.05, 0.95, txt, horizontalaligment='left',
+               verticalalignment='top', transform=cieax.transAxes)
     
     # color bar 
     cbar = pu.add_colorbar(cax, img=img, cmap=cmap_img, vmin=vmin,
