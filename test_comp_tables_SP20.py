@@ -511,7 +511,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
         ax.set_ylabel(ylabel, fontsize=fontsize)
         pu.setticks(ax, fontsize=fontsize)
         
-        ax.text(0.5, 1.01, label + ' ' + title, fontsize=fontsize,
+        ax.text(0.5, 1.01, label + ' ' + title, fontsize=fontsize - 1,
                 transform=ax.transAxes, horizontalalignment='center',
                 verticalalignment='bottom')
         
@@ -537,12 +537,12 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     cieax.set_ylabel(clabel, fontsize=fontsize)
     cieax.grid(True)
     cieax.set_ylim(vmax + 0.2, vmax - 6.)
-    txt = 'CIE: $\\log_{{\\mathrm{{n}}_\\mathrm{{H}}}} \\, /' + \
+    txt = 'CIE: $\\log_{{10}} \\mathrm{{n}}_{{\\mathrm{{H}}}} \\, /' + \
         '\\, \\mathrm{{cm}}^{{-3}} =$ {lognH:.1f}'.format(lognH=lognHcm3[-1])
     cieax.text(0.05, 0.95, txt, horizontalalignment='left',
                verticalalignment='top', transform=cieax.transAxes)
     
-    lax.text(0.05, 0.95, ltxt, horizontalalignnment='left',
+    lax.text(0.05, 0.95, ltext, horizontalalignnment='left',
                verticalalignment='top', transform=lax.transAxes)
     
     # color bar 
