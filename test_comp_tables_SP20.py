@@ -405,17 +405,17 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
         
         info_SB = '$\\mathrm{{Z}} =$ {Z:.3e}, ' +\
                   '$\\mathrm{{n}}(\\mathrm{{{elt}}}) \\, /' + \
-                  ' \\, \\mathrm{{n}}(\\mathrm{{H}}) =$ {abund}'
+                  ' \\, \\mathrm{{n}}(\\mathrm{{H}}) =$ {abund:.3e}'
         info_PS20 = info_SB
         info_PS20_res = info_SB
         
-        info_SB = info_SB.format(Z=dct_Z['logZ'][0],
+        info_SB = info_SB.format(Z=10**dct_Z['logZ'][0],
                                  elt=element_to_abbr[ol.elements_ion[line_SB]],
                                  abund=ol.solar_abunds_sb[ol.elements_ion[line_SB]])
-        info_PS20 = info_PS20.format(Z=dct_Z['logZ'][0],
+        info_PS20 = info_PS20.format(Z=10**dct_Z['logZ'][0],
                                  elt=tab.elementshort,
                                  abund=assumed_abunds_PS20)
-        info_PS20_res = info_PS20_res.format(Z=dct_Z['logZ'][0],
+        info_PS20_res = info_PS20_res.format(Z=10**dct_Z['logZ'][0],
                                  elt=tab.elementshort,
                                  abund=assumed_abunds_SB)
         
@@ -459,6 +459,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     vmax = np.max(table_T_nH_SB)
     vmax = max(vmax, np.max(table_T_nH_PS20))
     vmax = max(vmax, np.max(table_T_nH_PS20_res))
+    vmax = 0.
     
     clevels = list(np.linspace(vmin, vmax - 2., 5))[1:-1] +\
               list(np.linspace(vmax - 2., vmax, 10)[:-1]) 

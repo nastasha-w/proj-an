@@ -230,6 +230,7 @@ def add_colorbar(ax, img=None, vmin=None, vmax=None, cmap=None, clabel=None, new
     ax.tick_params(labelsize=fontsize-2)
     if clabel is not None:
         cbar.set_label(clabel,fontsize=fontsize)
+    return cbar
 
 def add_2dplot(ax, bins, edges, toplotaxes, log=True, usepcolor=False, pixdens=False, shiftx=0., shifty=0., **kwargs):
     # hist3d can be a histogram of any number >=2 of dimensions
