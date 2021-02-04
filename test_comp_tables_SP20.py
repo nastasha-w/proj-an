@@ -88,7 +88,7 @@ linematch_SP20 = {'C  5      40.2678A': 'c5r',
                   'N  7      24.7807A': 'n7',
                   'O  7      21.6020A': 'o7f',
                   'O  7      21.8044A': 'o7iy',
-                  'O  7      21.8070A': 'o7i',
+                  'O  7      21.8070A': 'o7iy',
                   'O  7      22.1012A': 'o7r',
                   'O  8      18.9709A': 'o8',
                   'Ne 9      13.4471A': 'ne9r',
@@ -467,7 +467,6 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
               list(np.linspace(vmax_cie - 0.2, vmax, 3)[:-1]) 
     if vmax_cie - 3. > vmin + 2.:
         clevels = list(np.linspace(vmin, vmax_cie - 3., 4))[1:-1] + clevels
-    print(clevels)
         
     cmap_contours = cm.get_cmap('plasma_r') 
     colors_contours = cmap_contours(np.linspace(0., 1., len(clevels)))
@@ -572,7 +571,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
 
 
 # test basic table retrieval and sensitbility
-def plot_tablsets(zs):
+def plot_tablesets(zs):
     for z in zs:
         for line in lines_SP20:
             plottables_PS20(line, z, table='emission')
@@ -609,5 +608,7 @@ def compare_maps(args_map1, args_map2, kwargs_map1, kwargs_map2,\
 if __name__ == '__main__':
     zs_test = [0.0, 0.1, 1., 3.]  
     plot_tablesets(zs_test)
-      
+    
+    z = 0.1
+    compare_tablesets(z)
             
