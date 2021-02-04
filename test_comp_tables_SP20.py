@@ -498,7 +498,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
         img = ax.imshow(_table, interpolation='nearest', origin='lower', 
                         extent=extent, cmap=cmap_img, vmin=vmin, vmax=vmax)
         cs = ax.contour(lognHcm3, logTK, _table, levels=clevels,
-                         colors=cmap_contours, origin='lower',
+                         colors=colors_contours, origin='lower',
                          linestyle=linestyle, linewidth=linewidth)
         compax.contour(lognHcm3, logTK, _table, levels=clevels,
                          colors=colors_contours, origin='lower', 
