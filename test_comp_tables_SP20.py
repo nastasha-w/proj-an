@@ -451,9 +451,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
 
     cmap_img = cm.get_cmap('viridis')
     cmap_img.set_under('white')
-    
-    cmap_contours = cm.plasma_r    
-    
+        
     vmin = np.min(table_T_nH_SB[table_T_nH_SB > zeroval])
     vmin = max(vmin, np.min(table_T_nH_PS20[table_T_nH_PS20 > zeroval]))
     vmin = max(vmin, np.min(table_T_nH_PS20_res[table_T_nH_PS20_res > zeroval]))
@@ -462,8 +460,11 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     vmax = max(vmax, np.max(table_T_nH_PS20))
     vmax = max(vmax, np.max(table_T_nH_PS20_res))
     
-    clevels = list(np.linspace(vmin, vmax - 2., 5))[:-1] +\
+    clevels = list(np.linspace(vmin, vmax - 2., 5))[1:-1] +\
               list(np.linspace(vmax - 2., vmax, 10)[:-1]) 
+              
+    cmap_contours = cm.get_cmap('plasma_r') 
+    colors_contours = cmap_contours(np.linspace(0., 1., len(clevels)))
     
     fig = plt.figure(figsize=(11., 5.))
     grid = gsp.GridSpec(ncols=4, nrows=2,
@@ -500,7 +501,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
                          colors=cmap_contours, origin='lower',
                          linestyle=linestyle, linewidth=linewidth)
         compax.contour(lognHcm3, logTK, _table, levels=clevels,
-                         colors=cmap_contours, origin='lower', 
+                         colors=colors_contours, origin='lower', 
                          linestyle=linestyle, linewidth=linewidth,
                          path_effects=patheff)
         cieax.plot(logTK, _table[:, -1], linestyle=linestyle,
