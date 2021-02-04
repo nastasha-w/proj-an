@@ -490,7 +490,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
         in enumerate(zip([table_T_nH_SB, table_T_nH_PS20, table_T_nH_PS20_res],
                          ['solid', 'dashed', 'dotted'],
                          ['(a)', '(b)', '(c)'],
-                         [line_SB, line_PS20, line_PS20]
+                         [line_SB, line_PS20, line_PS20],
                          [info_SB, info_PS20, info_PS20_res],
                          [title_SB, title_PS20, title_PS20])):
         ax = fig.add_subplot(grid[0, ind])
