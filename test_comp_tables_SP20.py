@@ -500,13 +500,13 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
                         extent=extent, cmap=cmap_img, vmin=vmin, vmax=vmax)
         cs = ax.contour(lognHcm3, logTK, _table, levels=clevels,
                          colors=colors_contours, origin='lower',
-                         linestyle=linestyle, linewidth=linewidth)
+                         linestyles=linestyle, linewidths=linewidth)
         compax.contour(lognHcm3, logTK, _table, levels=clevels,
                          colors=colors_contours, origin='lower', 
-                         linestyle=linestyle, linewidth=linewidth,
+                         linestyles=linestyle, linewidths=linewidth,
                          path_effects=patheff)
         cieax.plot(logTK, _table[:, -1], linestyle=linestyle,
-                   linewidth=linewidth, color='black')
+                   linewidth=linewidth, color='black', alpha=0.3)
         
         ax.set_xlabel(xlabel, fontsize=fontsize)
         ax.set_ylabel(ylabel, fontsize=fontsize)
@@ -537,7 +537,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     cieax.set_xlabel(ylabel, fontsize=fontsize)
     cieax.set_ylabel(clabel, fontsize=fontsize)
     cieax.grid(True)
-    cieax.set_ylim(vmax + 0.2, vmax - 6.)
+    cieax.set_ylim(vmax - 6., vmax + 0.2)
     txt = 'CIE: $\\log_{{10}} \\mathrm{{n}}_{{\\mathrm{{H}}}} \\, /' + \
         '\\, \\mathrm{{cm}}^{{-3}} =$ {lognH:.1f}'.format(lognH=lognHcm3[-1])
     cieax.text(0.05, 0.95, txt, horizontalalignment='left',
@@ -551,7 +551,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
                            clabel=clabel, fontsize=fontsize, 
                            orientation='vertical', extend='min')
     cax.set_aspect(8.)
-    cax.tick_params(fontsize=fontsize - 1.)
+    cax.tick_params(labelsize=fontsize - 1.)
     cbar.add_lines(cs)
         
     outname = mdir + 'comp_SB_PS20_{table}_table_{line_SB}_{line_PS20}_z{z:.2f}.pdf'
