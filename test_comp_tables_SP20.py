@@ -344,12 +344,15 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     xlabel = '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{3}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
     
+    title_SB = "Serena Bertone's tables"
+    title_PS20 = 'Ploeckinger & Schaye (2020)'
+        
     if table == 'emission':
-        title = 'emissivity of the {line} line at $z = {z:.2f}$'
+        title = 'emissivity of the {line_PS20} / {line_SB} line at $z = {z:.2f}$'
         clabel = '$\\log_{{10}} \\, \\mathrm{{\\Lambda}} \\,\\mathrm{{n}}_' +\
          '{{\\mathrm{{H}}}}^{{-2}} \\, \\mathrm{{V}}^{{-1}}  \\;' +\
          ' [\\mathrm{{erg}} \\, \\mathrm{{cm}}^{{3}} \\mathrm{{s}}^{{-1}}]$'
-         
+        
         eltlines, logTK, lognHcm3 = cu.findemtables(ol.elements_ion[line_SB],
                                                     z)
         table_T_nH_SB = np.copy(eltlines[:, :, ol.line_nos_ion[line_SB]])
@@ -360,7 +363,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
         clabel = '$\\log_{{10}}$ fraction of {elt} in dust'
         
     elif table == 'ionbal':
-        title = 'fraction {ion} / {elt} at $z = {z:.2f}$'
+        title = 'fraction {line_PS20} / {elt} at $z = {z:.2f}$'
         clabel = '$\\log_{{10}} \\; \\mathrm{{m}}(\\mathrm{{{ion}}}) \\, /' + \
             ' \\, \\mathrm{{m}}(\\mathrm{{{elt}}})$'
         
@@ -376,31 +379,67 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     Tgrid = np.array([[x] * len(lognHcm3) for x in logTK]).flatten()
     ngrid = np.array([lognHcm3] * len(logTK)).flatten()
     dct = {'logT': 10**Tgrid, 'lognH': 10**ngrid, 
-           'logZ': np.zeros(len(Tgrid), dtype=bool)}
-        
+           'logZ': np.ones(len(Tgrid), dtype=np.float32) *\
+               np.log10(ol.Zsun_ea)}
+    zeroval = max(zeroval_SB, zeroval_PS20)
+    
     if table == 'emission':        
         tab = m3.linetable_PS20(line_PS20, z, emission=True)
-        table_T_nH_PS20 = tab.find_emission(dct)
+        table_T_nH_PS20 = np.log10(tab.find_emission(dct))
         table_T_nH_PS20 = table_T_nH_PS20.reshape((len(logTK), 
                                                    len(lognHcm3)))
 
-        tozero = table_T_nH_PS20 == zeroval_PS20
+        tozero = table_T_nH_PS20 <= zeroval_PS20
         table_T_nH_PS20 -= 2.* lognHcm3[np.newaxis, np.newaxis, :]
         table_T_nH_PS20[tozero] = zeroval_PS20
         
+        assumed_abunds_SB = ol.solar_abunds_sb[tab.element.lower()]
+        dct_Z = {'logZ': np.array([dct['logZ'][0]])}
+        assumed_abunds_PS20 = tab.find_assumedabundance(dct_Z)[0]
+        
+        table_T_nH_PS20_res = table_T_nH_PS20 +\
+            np.log10(assumed_abunds_SB / assumed_abunds_PS20)
+        
+        table_T_nH_PS20_res[tozero] = zeroval
+        
+        info_SB = '$\\mathrm{{Z}} =$ {Z:.3e}, ' +\
+                  '$\\mathrm{{n}}(\\mathrm{{{elt}}}) \\, /' + \
+                  ' \\, \\mathrm{{n}}(\\mathrm{{H}}) =$ {abund}'
+        info_PS20 = info_SB
+        info_PS20_res = info_SB
+        
+        info_SB = info_SB.format(Z=dct_Z['logZ'][0],
+                                 elt=element_to_abbr[ol.elements_ion[line]],
+                                 abund=ol.solar_abunds_sb[ol.elements_ion[line]])
+        info_PS20 = info_PS20.format(Z=dct_Z['logZ'][0],
+                                 elt=tab.elementshort,
+                                 abund=assumed_abunds_PS20)
+        info_PS20_res = info_PS20_res.format(Z=dct_Z['logZ'][0],
+                                 elt=tab.elementshort,
+                                 abund=assumed_abunds_SB)
+        
     elif table == 'ionbal':
         tab = m3.linetable_PS20(line_PS20, z, emission=False)
-        table_T_nH_PS20 = tab.find_ionbal(dct)    
+        table_T_nH_PS20 = np.log10(tab.find_ionbal(dct))    
         table_T_nH_PS20 = table_T_nH_PS20.reshape((len(logTK), 
                                                    len(lognHcm3)))
+        tozero = table_T_nH_PS20 <= zeroval_PS20
         
+        gasphase = 1. - tab.find_depletion(dct).reshape((len(logTK), 
+                                                         len(lognHcm3)))
+        table_T_nH_PS20_res = table_T_nH_PS20 + np.log10(gasphase)
+        table_T_nH_PS20_res[tozero] = zeroval
+        
+        info_SB = ''
+        info_PS20 = ''
+        info_PS20_res = 'incl. dust depletion'
     
-    if line in nicenames_lines:
-        linen = nicenames_lines[line]
+    if line_SB in nicenames_lines:
+        linen = nicenames_lines[line_SB]
     else:
-        linen = line
-    kws = {'ion': line, 'line': linen, 
-           'elt': ol.elements_ion[line], 'z': z}
+        linen = line_SB
+    kws = {'ion': line_PS20, 'line_SB': linen, 'line_PS20': line_PS20, 
+           'elt': tab.elementshort, 'z': z}
     title = title.format(**kws)
     clabel = clabel.format(**kws)
     
@@ -409,43 +448,70 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     extent = (lognHcm3[0] - 0.5 * deltanH, lognHcm3[-1] + 0.5 * deltanH,
               logTK[0] - 0.5 * deltaT, logTK[-1] + 0.5 * deltaT)
 
-    fig, (ax, cax) = plt.subplots(ncols=2, nrows=1,
-                                  gridspec_kw={'width_ratios': [5., 1.],
-                                               'wspace': 0.3})     
-    cmap = cm.get_cmap('viridis')
-    cmap.set_under('white')
+    cmap_img = cm.get_cmap('viridis')
+    cmap_img.set_under('white')
     
-    zeroval = max(zeroval_SB, zeroval_PS20)
+    cmap_contours = cm.get_cmap('plasma_r')    
+    
+    vmin = np.min(table_T_nH_SB[table_T_nH_SB > zeroval])
+    vmin = max(vmin, np.min(table_T_nH_PS20[table_T_nH_PS20 > zeroval]))
+    vmin = max(vmin, np.min(table_T_nH_PS20_res[table_T_nH_PS20_res > zeroval]))
+    
+    vmax = np.max(table_T_nH_SB)
+    vmax = max(vmax, np.max(table_T_nH_PS20))
+    vmax = max(vmax, np.max(table_T_nH_PS20_res))
+    
+    clevels = list(np.linspace(vmin, vmax - 2., 5))[:-1] +\
+              list(np.linspace(vmax - 2., vmax, 10)[:-1]) 
+    
+    fig = plt.figure(figsize=(11., 5.))
+    grid = gsp.GridSpec(ncols=4, nrows=2,
+                        hspace=0.3, wspace=0.3,
+                        width_ratios=[4., 4., 4., 1.])
+    
+    cax = fig.add_subplot(grid[0, 3]) 
+    lax = fig.add_subplot(grid[1, 2:])
+    cieax = fig.add_subplot(grid[1, 1])
+    compax = fig.add_subplot(grid[1, 0])
+    lax.axis('off')
+    
     table_T_nH_SB[table_T_nH_SB <= zeroval] = -np.inf
     table_T_nH_PS20[table_T_nH_PS20 <= zeroval] = -np.inf
+    table_T_nH_PS20_res[table_T_nH_PS20_res <= zeroval] = -np.inf
     
-    vmin = np.min(table_T_nH_SB[table_T_nH > zeroval])
     
-    img = ax.imshow(table_T_nH, interpolation='nearest', origin='lower', 
-                    extent=extent, cmap=cmap, vmin=vmin)
+    ax1 = fig.add_subplot(grid[0, 0])
+    img = ax1.imshow(table_T_nH_SB, interpolation='nearest', origin='lower', 
+                    extent=extent, cmap=cmap_img, vmin=vmin, vmax=vmax)
+    cs = ax1.contour(lognHcm3, logTK, table_T_nH_SB, levels=clevels,
+                     colors=cmap_contours, origin='lower', linestyle='solid')
+    compax.contour(lognHcm3, logTK, table_T_nH_SB, levels=clevels,
+                     colors=cmap_contours, origin='lower', linestyle='solid')
     
-    ax.set_xlabel(xlabel, fontsize=fontsize)
-    ax.set_ylabel(ylabel, fontsize=fontsize)
+    ax1.set_xlabel(xlabel, fontsize=fontsize)
+    ax1.set_ylabel(ylabel, fontsize=fontsize)
+    pu.setticks(ax1, fontsize=fontsize)
     
-    txt = '$\\mathrm{{Z}}_{{\\odot}}$: '+\
-          '$\\mathrm{{n}}_{{\\mathrm{{{elt}}}}} \\, / ' + \
-              '\\, \\mathrm{{n}}_{{\\mathrm{{H}}}} =$ {abund:.2e}'
-    txt = txt.format(abund=ol.solar_abunds_sb[ol.elements_ion[line]],\
-                     elt=element_to_abbr[ol.elements_ion[line]]) 
-    ax.text(0.05, 0.95, txt, fontsize=fontsize,
-            transform=ax.transAxes, horizontalalignment='left',
-            verticalalignment='top')
+    ax1.text(0.05, 0.95, 'A', fontsize=fontsize,
+            transform=ax1.transAxes, horizontalalignment='left',
+            verticalalignment='top',
+            bbox={'facecolor': 'white', 'alpha': 0.3})
+    if line_SB in nicenames_lines:
+        linen_SB = nicnames_lines[line_SB]
+    else:
+        linen_SB = line_SB
+    ltext = 'A: {line}\n   '.format() + info_SB
     
     # color bar 
-    pu.add_colorbar(cax, img=img, cmap=cmap, vmin=vmin,
-                    clabel=clabel, fontsize=fontsize, 
-                    orientation='vertical', extend='min')
+    cbar = pu.add_colorbar(cax, img=img, cmap=cmap_img, vmin=vmin,
+                           clabel=clabel, fontsize=fontsize, 
+                           orientation='vertical', extend='min')
     cax.set_aspect(10.)
-    
-    fig.suptitle(title, fontsize=fontsize)
-    
-    outname = mdir + 'SB_{table}_table_{line}_z{z:.2f}.pdf'
-    outname = outname.format(line=line, z=z, table=table)
+    cbar.add_lines(cs)
+        
+    outname = mdir + 'comp_SB_PS20_{table}_table_{line_SB}_{line_PS20}_z{z:.2f}.pdf'
+    outname = outname.format(line_SB=line_SB, line_PS20=line_PS20,
+                             z=z, table=table)
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 
