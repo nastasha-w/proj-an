@@ -540,18 +540,21 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     compax.set_ylabel(ylabel, fontsize=fontsize)
     compax.grid(True)
     
-    pu.setticks(cieax, fontsize=fontsize)
+    pu.setticks(cieax, fontsize=fontsize, labelleft=False, labelright=True)
     cieax.set_xlabel(ylabel, fontsize=fontsize)
     cieax.set_ylabel(clabel, fontsize=fontsize)
+    cieax.yaxis.set_label_position('right')
     cieax.grid(True)
-    cieax.set_ylim(vmax_cie - 6., vmax_cie + 0.2)
-    txt = 'CIE: $\\log_{{10}} \\mathrm{{n}}_{{\\mathrm{{H}}}} \\, /' + \
+    cieax.set_ylim(vmax_cie - 6., vmax_cie + 0.3)
+    txt = 'CIE: $\\log_{{10}} \\, \\mathrm{{n}}_{{\\mathrm{{H}}}} \\, /' + \
         '\\, \\mathrm{{cm}}^{{-3}} =$ {lognH:.1f}'.format(lognH=lognHcm3[-1])
-    cieax.text(0.05, 0.05, txt, fontsize=fontsize, horizontalalignment='left',
-               verticalalignment='top', transform=cieax.transAxes,
+    cieax.text(0.05, 0.05, txt, fontsize=fontsize - 1,
+               horizontalalignment='left',
+               verticalalignment='bottom', transform=cieax.transAxes,
                bbox={'facecolor': 'white', 'alpha': 0.3})
+    cieax.set_ylim
     
-    lax.text(0.05, 0.95, ltext, fontsize=fontsize, horizontalalignment='left',
+    lax.text(0.15, 0.95, ltext, fontsize=fontsize, horizontalalignment='left',
                verticalalignment='top', transform=lax.transAxes)
     
     # color bar 
