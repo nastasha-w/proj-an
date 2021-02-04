@@ -539,8 +539,11 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     cieax.set_ylim(vmax + 0.2, vmax - 6.)
     txt = 'CIE: $\\log_{{\\mathrm{{n}}_\\mathrm{{H}}}} \\, /' + \
         '\\, \\mathrm{{cm}}^{{-3}} =$ {lognH:.1f}'.format(lognH=lognHcm3[-1])
-    cieax.text(0.05, 0.95, txt, horizontalaligment='left',
+    cieax.text(0.05, 0.95, txt, horizontalalignment='left',
                verticalalignment='top', transform=cieax.transAxes)
+    
+    lax.text(0.05, 0.95, ltxt, horizontalalignnment='left',
+               verticalalignment='top', transform=lax.transAxes))
     
     # color bar 
     cbar = pu.add_colorbar(cax, img=img, cmap=cmap_img, vmin=vmin,
