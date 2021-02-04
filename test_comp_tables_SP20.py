@@ -386,7 +386,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     
     if table == 'emission':        
         tab = m3.linetable_PS20(line_PS20, z, emission=True)
-        table_T_nH_PS20 = np.log10(tab.find_emission(dct))
+        table_T_nH_PS20 = tab.find_logemission(dct)
         table_T_nH_PS20 = table_T_nH_PS20.reshape((len(logTK), 
                                                    len(lognHcm3)))
 
