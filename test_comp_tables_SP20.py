@@ -542,7 +542,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     cieax.text(0.05, 0.95, txt, horizontalalignment='left',
                verticalalignment='top', transform=cieax.transAxes)
     
-    lax.text(0.05, 0.95, ltext, horizontalalignnment='left',
+    lax.text(0.05, 0.95, ltext, horizontalalignment='left',
                verticalalignment='top', transform=lax.transAxes)
     
     # color bar 
