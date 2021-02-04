@@ -1267,10 +1267,10 @@ class linetable_PS20:
             msg = msg.format(table.shape, expected_tableshape)
             raise ValueError(msg)
             
-        lognH = dct_logT_logZ_lognH['lognH']
         logT  = dct_logT_logZ_lognH['logT']
         logZ  = dct_logT_logZ_lognH['logZ']
-
+        lognH = dct_logT_logZ_lognH['lognH']
+        
         NumPart = len(lognH)
         inbalance = np.zeros(NumPart, dtype=np.float32)    
         if len(logT) != NumPart or len(logZ) != NumPart:

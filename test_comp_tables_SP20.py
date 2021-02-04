@@ -379,7 +379,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     
     Tgrid = np.array([[x] * len(lognHcm3) for x in logTK]).flatten()
     ngrid = np.array([lognHcm3] * len(logTK)).flatten()
-    dct = {'logT': 10**Tgrid, 'lognH': 10**ngrid, 
+    dct = {'logT': Tgrid, 'lognH': ngrid, 
            'logZ': np.ones(len(Tgrid), dtype=np.float32) *\
                np.log10(ol.Zsun_ea)}
     zeroval = max(zeroval_SB, zeroval_PS20)
@@ -459,7 +459,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     vmax = np.max(table_T_nH_SB)
     vmax = max(vmax, np.max(table_T_nH_PS20))
     vmax = max(vmax, np.max(table_T_nH_PS20_res))
-    vmax = 0.
+    #vmax = 0.
     
     clevels = list(np.linspace(vmin, vmax - 2., 5))[1:-1] +\
               list(np.linspace(vmax - 2., vmax, 10)[:-1]) 
@@ -543,14 +543,15 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     cieax.text(0.05, 0.95, txt, horizontalalignment='left',
                verticalalignment='top', transform=cieax.transAxes)
     
-    lax.text(0.05, 0.95, ltext, horizontalalignment='left',
+    lax.text(0.05, 0.95, ltext, fontsize=fontsize, horizontalalignment='left',
                verticalalignment='top', transform=lax.transAxes)
     
     # color bar 
     cbar = pu.add_colorbar(cax, img=img, cmap=cmap_img, vmin=vmin,
                            clabel=clabel, fontsize=fontsize, 
                            orientation='vertical', extend='min')
-    cax.set_aspect(10.)
+    cax.set_aspect(8.)
+    cax.tick_params(fontsize=fontsize - 1.)
     cbar.add_lines(cs)
         
     outname = mdir + 'comp_SB_PS20_{table}_table_{line_SB}_{line_PS20}_z{z:.2f}.pdf'
