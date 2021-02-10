@@ -4,6 +4,9 @@
 Created on Wed Feb 10 14:50:25 2021
 
 @author: Nastasha
+
+Be careful if you change some of the pipeline elements: parts of the pipieline 
+assume only e.g. ionW and quantityQ vary betwen maps.
 """
 
 import os
@@ -75,6 +78,9 @@ def getsample(size, logM200_Msun_min=12.0, logM200_Msun_max=12.5, seed=0):
 
 def create_maps(samplename, los_R200c=4., diameter_R200c=2.1, 
                 pixelsize_ckpc=3.125):
+    if '/' not in samplename:
+        samplename = wdir + samplename
+        
     galfile = p3g.dataname(samplename)
     
     with open(galfile, 'r') as fi:
