@@ -14,6 +14,7 @@ import h5py
 
 
 import make_maps_v3_master as m3
+import make_maps_opts_locs as ol
 import prof3d_galsets as p3g 
 import selecthalos as sh
 
