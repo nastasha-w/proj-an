@@ -67,7 +67,7 @@ def getsample(size, logM200_Msun_min=12.0, logM200_Msun_max=12.5, seed=0):
     
     samplename = 'galaxies_logM200c-Msun-{mmin}-{mmax}_{num}_seed{seed}'
     samplename = samplename.format(mmin=logM200_Msun_min,
-                                   mmax=logM200_Msun_min,
+                                   mmax=logM200_Msun_max,
                                    num=size, seed=seed)    
     
     p3g.gensample(samplename=samplename, galaxyselector=sel)
