@@ -166,7 +166,7 @@ def create_maps(samplename, los_R200c=4., diameter_R200c=2.1,
                                                      outname[1]))
 
 
-def create_histogram(samplename, ionW), radius_R200c=1.):
+def create_histogram(samplename, ionW, radius_R200c=1.):
     
     filesets = {}
     for kw in kwargs_l2:
