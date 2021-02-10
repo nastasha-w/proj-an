@@ -25,7 +25,7 @@ import selecthalos as sh
 # set output paths
 wdir = '/cosma5/data/dp004/dc-wije1/smallprojects/absorber_nHTZ_sample/'
 p3g.tdir = wdir
-m3.ndir = wdir + 'maps/'
+m3.ol.ndir = wdir + 'maps/'
 
 ### sample
 #simnum = 'L0100N1504'
@@ -56,8 +56,11 @@ units = {'Density': 'log10 g / cm**3',
 
 
 def mapname_file(samplename, kwargs):
-    base = 'maps_{sample}_{ionW}_{quantityQ}.txt'
+    base = wdir + 'maps_{sample}_{ionW}_{quantityQ}.txt'
     return base.format(sample=samplename, **kwargs)
+
+def histogram_file(samplename, ionW):
+    base = wdir + 'histogram_{sample}_{ionW}.hdf5'
 
 
 def getsample(size, logM200_Msun_min=12.0, logM200_Msun_max=12.5, seed=0):
@@ -163,8 +166,45 @@ def create_maps(samplename, los_R200c=4., diameter_R200c=2.1,
                                                      outname[1]))
 
 
-def create_histogram(samplename, ionW):
+def create_histogram(samplename, ionW), radius_R200c=1.):
     
+    filesets = {}
+    for kw in kwargs_l2:
+        kw_map = {'ionW': ionW}
+        kw_map.update(kw)
+        filesets[kw['quantityQ']] = mapname_file(samplename, kw_map)
+    
+    galfile = p3g.dataname(samplename)
+    
+    with open(galfile, 'r') as fi:
+        # scan for halo catalogue (only metadata needed for this)
+        headlen = 0
+        halocat = None
+        while True:
+            line = fi.readline()
+            if line == '':
+                if halocat is None:
+                    msg = 'Reached the end of {} without finding the halo catalogue name'
+                    raise RuntimeError(msg.format(galfile))
+                else:
+                    break
+            elif line.startswith('halocat'):
+                halocat = line.split(':')[1]
+                halocat = halocat.strip()
+                headlen += 1
+            elif ':' in line or line == '\n':
+                headlen += 1
+                
+    with h5py.File(halocat, 'r') as hc:
+        hed = hc['Header']
+        cosmopars = {key: item for key, item in hed['cosmopars'].attrs.items()}
+        simnum = hed.attrs['simnum']
+        snapnum = hed.attrs['snapnum']
+        var = hed.attrs['var']
+    
+    galdata_all = pd.read_csv(galfile, header=headlen,
+                              sep='\t', index_col='galaxyid')
+    galaxyids = np.array(galdata_all.index)
     
     
     hist, edges = p3g.combine_hists(hist, temp, edges, edges_temp,
@@ -183,11 +223,12 @@ if __name__ == '__main__':
         size = int(sys.argv[1])
         seed = int(sys.argv[2])
         
-    samplename = getsample(size, logM200_Msun_min=12.0, logM200_Msun_max=12.5,\
+    samplename = getsample(size, logM200_Msun_min=12.0, logM200_Msun_max=12.5,
                            seed=seed)
     
     create_maps(samplename)
-    create_histogram(samplename)
+    create_histogram(samplename, 'hydrogen')
+    create_histogram(samplename, 'hneutralssh')
 
     
 
