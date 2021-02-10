@@ -158,7 +158,7 @@ def create_maps(samplename, los_R200c=4., diameter_R200c=2.1,
                     if os.path.isfile(outname[0]) and os.path.isfile(outname[1]):
                         alreadyexists = True
                     if alreadyexists:
-                        print('For galaxy {}, a ap already exists; skipping'.format(gid))
+                        print('For galaxy {}, a map already exists; skipping'.format(gid))
                     else:
                         m3.make_map(*args, nameonly=False, **_kwargs)
                     
