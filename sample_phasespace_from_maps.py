@@ -65,7 +65,7 @@ def getsample(size, logM200_Msun_min=12.0, logM200_Msun_max=12.5, seed=0):
     sel = sh.Galaxyselector(halocat, selections=Mh_sels, names=Mh_names,\
                          number=size, seed=seed)
     
-    samplename = 'galaxies_logM200c-Msun-{mmin}-{mmax}_{num}_seed{seed}.txt'
+    samplename = 'galaxies_logM200c-Msun-{mmin}-{mmax}_{num}_seed{seed}'
     samplename = samplename.format(mmin=logM200_Msun_min,
                                    mmax=logM200_Msun_min,
                                    num=size, seed=seed)    
