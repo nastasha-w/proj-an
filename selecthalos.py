@@ -946,8 +946,8 @@ class Galaxyselector:
     def galids(self, name=None):
         if not hasattr(self, 'galid_dct'):
             self.get_galid()
-        if name is None and len(self.galid_dct) == 1:
-            return self.galid_dct[0]
+        #if name is None and len(self.galid_dct) == 1:
+        #    return self.galid_dct[list(self.galid_dct.keys())[0]]
         elif name is None:
             return self.galid_dct
         else:
