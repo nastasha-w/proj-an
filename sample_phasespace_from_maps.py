@@ -78,10 +78,6 @@ def getsample(size, logM200_Msun_min=12.0, logM200_Msun_max=12.5, seed=0):
 
 def create_maps(samplename, los_R200c=4., diameter_R200c=2.1, 
                 pixelsize_ckpc=3.125):
-    if '/' in samplename:
-        samplename = samplename.split('/')[-1]
-    if samplename[-4:] == '.txt':
-        samplename = samplename[:-4]
         
     galfile = p3g.dataname(samplename)
     
@@ -153,7 +149,7 @@ def create_maps(samplename, los_R200c=4., diameter_R200c=2.1,
                             'coldens')
                 
                     # ion, quantity, nameonly,
-                    outname = m3.make_mape(*args, nameonly=True, **_kwargs)
+                    outname = m3.make_map(*args, nameonly=True, **_kwargs)
                     
                     alreadyexists = False
                     if os.path.isfile(outname[0]) and os.path.isfile(outname[1]):
