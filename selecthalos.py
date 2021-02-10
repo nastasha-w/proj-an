@@ -948,7 +948,7 @@ class Galaxyselector:
             self.get_galid()
         #if name is None and len(self.galid_dct) == 1:
         #    return self.galid_dct[list(self.galid_dct.keys())[0]]
-        elif name is None:
+        if name is None:
             return self.galid_dct
         else:
             return self.galid_dct[name]
