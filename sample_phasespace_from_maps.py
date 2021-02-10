@@ -63,7 +63,7 @@ def getsample(size, logM200_Msun_min=12.0, logM200_Msun_max=12.5, seed=0):
                                    mmax=logM200_Msun_min,
                                    num=size, seed=seed)    
     
-    p3g.gensample(samplename=None, galaxyselector=sel)
+    p3g.gensample(samplename=samplename, galaxyselector=sel)
     return samplename
 
 def create_maps(samplename, los_R200c=4., diameter_R200c=2.1, 
