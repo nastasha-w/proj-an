@@ -44,6 +44,13 @@ kwargs_l2 = [{'ptypeQ': 'basic', 'quantityQ': 'Density'},
              {'ptypeQ': 'basic', 'quantityQ': 'Temperature'},
              {'ptypeQ': 'basic', 'quantityQ': 'Metallicity'},
              ]
+units = {'Density': 'log10 g / cm**3',
+         'Temperature': 'log10 K',
+         'Metallicity': 'log10 mass fraction (not normalized to solar])',
+         'Hydrogen': 'log10 (H atoms) / cm**2',
+         'Neutral Hydrogen': 'log10 (H in H1 and H_2) / cm**2',
+         }
+
 
 def mapname_file(samplename, kwargs):
     base = 'maps_{sample}_{ionW}_{quantityQ}.txt'
@@ -152,7 +159,9 @@ def create_maps(samplename, los_R200c=4., diameter_R200c=2.1,
                                                      outname[1]))
 
 
-def create_histogram():
+def create_histogram(samplename, ionW):
+    
+    
     
     hist, edges = p3g.combine_hists(hist, temp, edges, edges_temp,
                                     rtol=1e-5, atol=1e-8, add=True)
