@@ -408,7 +408,7 @@ def create_histogram(samplename, ionW, radius_R200c=1., binsize=0.2):
         hed.create_dataset('galaxyids', data=galaxyids)
         
         axg = fo.create_group('histogram_axes')
-        for axis, dim, ed in enumerate(zip(dimensions, edges)):
+        for axis, (dim, ed) in enumerate(zip(dimensions, edges)):
             ds = axg.create_dataset(dim, data=ed)
             ds.attrs.create('units', np.string_(units[dim]))
             if dim in info:
