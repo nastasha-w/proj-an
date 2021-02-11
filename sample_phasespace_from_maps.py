@@ -205,8 +205,8 @@ def read_map_and_attrs(mapfile, cosmopars_check=None, inputpars_check=None,
     return _map, cosmopars, inputpars
 
 def nicebins(values, delta):
-    min_t = np.min(np.isfinite(values))
-    max_t = np.max(np.isfinite(values))
+    min_t = np.min(values[np.isfinite(values)])
+    max_t = np.max(values[np.isfinite(values)])
     
     minbin = np.floor(min_t / delta) * delta
     maxbin = np.ceil(max_t / delta) * delta
