@@ -351,8 +351,8 @@ def create_histogram(samplename, ionW, radius_R200c=1., binsize=0.2):
               (grid[1] * imgdy - 0.5 * imgly + imgcy - galcy)**2
         mask = rsq <= radius_cMpc**2
         
-        print('Mask covering fraction: {}'.format(float(np.sum(mask)) \
-                                                / float(np.prod(mask.shape))))
+        #print('Mask covering fraction: {}'.format(float(np.sum(mask)) \
+        #                                        / float(np.prod(mask.shape))))
         #plt.figure()        
         #plt.imshow(mask.T, origin='lower', interpolation='nearest')
         #plt.colorbar()
@@ -369,11 +369,11 @@ def create_histogram(samplename, ionW, radius_R200c=1., binsize=0.2):
         
         edges_temp = {key: nicebins(valdct[key], binsize) \
                       for key in dimensions}
-        print(edges_temp)
+        #print(edges_temp)
         edges_temp.update(bindct_fixed)
         edges_temp = [edges_temp[key] for key in dimensions]
         values = [valdct[key] for key in dimensions]
-        print(values)
+        #print(values)
         temp, _edges = np.histogramdd(values, edges_temp)
         
         if first:
