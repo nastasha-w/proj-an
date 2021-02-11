@@ -67,7 +67,7 @@ def mapname_file(samplename, kwargs):
 
 def histogram_file(samplename, ionW):
     base = wdir + 'histogram_{sample}_{ionW}.hdf5'
-    return base.format(sample=sample, ionW=ionW)
+    return base.format(sample=samplename, ionW=ionW)
 
 def getsample(size, logM200_Msun_min=12.0, logM200_Msun_max=12.5, seed=0):
     
