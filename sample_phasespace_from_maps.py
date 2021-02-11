@@ -67,7 +67,7 @@ def mapname_file(samplename, kwargs):
 
 def histogram_file(samplename, ionW):
     base = wdir + 'histogram_{sample}_{ionW}.hdf5'
-    return base
+    return base.format(sample=sample, ionW=ionW)
 
 def getsample(size, logM200_Msun_min=12.0, logM200_Msun_max=12.5, seed=0):
     
@@ -404,7 +404,7 @@ def create_histogram(samplename, ionW, radius_R200c=1., binsize=0.2):
         inp = hed.create_group('inputpars')
         inkeys = set(inputpars.keys()) - ignorematch_global
         for key in inkeys:
-            inp.attrs.create(key, inp[key])
+            inp.attrs.create(key, inputpars[key])
         hed.create_dataset('galaxyids', data=galaxyids)
         
         axg = fo.create_group('histogram_axes')
