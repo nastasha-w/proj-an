@@ -270,7 +270,9 @@ def create_histogram(samplename, ionW, radius_R200c=1., binsize=0.2):
     Zbins = np.array(Zbins)
     bindct_fixed = {'Metallicity': Zbins}    
     
+    print('starting loop over {} galaxies'.format(len(galaxyids)))
     for galid in galaxyids:
+        print('Starting galaxy {}'.format(galid))
         
         Tvals, _cosmopars, inputpars = read_map_and_attrs(\
                                 galname_all['Temperature'].at[galid, 'mapQ'],
@@ -349,9 +351,10 @@ def create_histogram(samplename, ionW, radius_R200c=1., binsize=0.2):
               (grid[1] * imgdy - 0.5 * imgly + imgcy - galcy)**2
         mask = rsq <= radius_cMpc**2
         
-        plt.imshow(mask.T, origin='lower', interpolation='nearest')
-        plt.colorbar()
-        plt.show()
+        print('Mask covering fraction: {}'.format(np.sum(mask)) / float(np.prod(mask.shape)))
+        #plt.figure()        
+        #plt.imshow(mask.T, origin='lower', interpolation='nearest')
+        #plt.colorbar()
         
         _Tvals = Tvals[mask]
         _nvals = nvals[mask]
@@ -381,6 +384,7 @@ def create_histogram(samplename, ionW, radius_R200c=1., binsize=0.2):
     
     histfile = histogram_file(samplename, ionW)
     
+    print('Starting save')
     with h5py.File(histfile, 'a') as fo:
         ds = fo.create_dataset('histogram', data=hist)
         _info = 'histogram of {ionW} column densities and their weighted ' +\
