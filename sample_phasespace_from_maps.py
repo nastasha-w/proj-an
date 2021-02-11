@@ -414,8 +414,46 @@ def create_histogram(samplename, ionW, radius_R200c=1., binsize=0.2):
             if dim in info:
                 ds.attrs.create('info', np.string_(info[dim]))
             ds.attrs.create('histogram_axis', axis)
-            
-            
+
+def plotdist(filen, axis0, axis1):
+    
+    with h5py.File(filen, 'r') as f:
+        ds0 = f['histogram_axes/{ax}'.format(ax=axis0)]
+        ed0 = ds0[:]
+        i0 = ds0.attrs['histogram_axis']
+        u0 = ds0.attrs['units'].decode()    
+        label0 = axis0 + ' ' + u0
+        
+        ds1 = f['histogram_axes/{ax}'.format(ax=axis1)]
+        ed1 = ds1[:]
+        i1 = ds1.attrs['histogram_axis']
+        u1 = ds1.attrs['units'].decode()    
+        label1 = axis1 + ' ' + u1
+    
+        hist = f['histogram'][:]
+    
+    inds = list(np.arange(len(hist.shape)))
+    inds.remove(i0)
+    inds.remove(i1)
+    hist = np.sum(hist, axis=tuple(inds))
+    if i1 > i0:
+        hist = hist.T
+    hist = np.log10(hist)
+    
+    if ed0[0] == -np.inf:
+        ed0[0] = 2. * ed0[1] - ed0[2]
+    if ed0[-1] == np.inf:
+        ed0[-1] = 2. * ed0[-2] - ed0[-3]
+    if ed1[0] == -np.inf:
+        ed1[0] = 2. * ed1[1] - ed1[2]
+    if ed1[-1] == np.inf:
+        ed1[-1] = 2. * ed1[-2] - ed1[-3]    
+    
+    plt.pcolormesh(ed0, ed1, hist, vmin=0.)
+    plt.colorbar()
+    plt.xlabel(label0)
+    plt.ylabel(label1)
+    plt.title('log number of sightlines')
     
 if __name__ == '__main__':
     if len(sys.argv) == 1:
