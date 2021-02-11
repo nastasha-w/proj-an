@@ -367,7 +367,8 @@ def create_histogram(samplename, ionW, radius_R200c=1., binsize=0.2):
                   'Metallicity': _Zvals,
                   ionW: _columns}
         
-        edges_temp = {nicebins(valdct[key], binsize) for key in dimensions}
+        edges_temp = {key: nicebins(valdct[key], binsize) \
+                      for key in dimensions}
         edges_temp.update(bindct_fixed)
         edges_temp = [edges_temp[key] for key in dimensions]
         values = [valdct[key] for key in dimensions]
