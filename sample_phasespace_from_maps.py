@@ -351,7 +351,8 @@ def create_histogram(samplename, ionW, radius_R200c=1., binsize=0.2):
               (grid[1] * imgdy - 0.5 * imgly + imgcy - galcy)**2
         mask = rsq <= radius_cMpc**2
         
-        print('Mask covering fraction: {}'.format(np.sum(mask)) / float(np.prod(mask.shape)))
+        print('Mask covering fraction: {}'.format(float(np.sum(mask)) \
+                                                / float(np.prod(mask.shape))))
         #plt.figure()        
         #plt.imshow(mask.T, origin='lower', interpolation='nearest')
         #plt.colorbar()
