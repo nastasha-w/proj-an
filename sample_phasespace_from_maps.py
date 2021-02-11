@@ -266,7 +266,7 @@ def create_histogram(samplename, ionW, radius_R200c=1., binsize=0.2):
                           'quantityQ'}
 
     Zbins = [-np.inf, -10., -8., -6., -5.] + \
-            list(np.arange(-4., 1., binsize) + [np.inf]
+            list(np.arange(-4., 1., binsize)) + [np.inf]
     Zbins = np.array(Zbins)
     bindct_fixed = {'Metallicity': Zbins}    
     
