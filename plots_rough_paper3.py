@@ -3417,8 +3417,8 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
         if line in ['ne10', 'n6-actualr']:
             filename = filename.replace('test3.5', 'test3.6')
             filename = filename[:-5] + '_old.hdf5'
-        print(line)
-        print(filename)
+        #print(line)
+        #print(filename)
         yvals, bins = readin_radprof(filename, seltags, [ykey_mean],
                                      runit='pkpc', separate=False,
                                      binset=binset_mean, retlog=True)
@@ -3426,10 +3426,10 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
                                        runit='pkpc', separate=False,
                                      binset=binset_medianofmeans, retlog=True,
                                      ofmean=True)
-        print(bins.keys())
-        print(_bins.keys())
+        #print(bins.keys())
+        #print(_bins.keys())
         for tag in yvals:
-            print(tag)
+            #print(tag)
             bins[tag].update(_bins[tag])
             yvals[tag].update(_yvals[tag])
         for mi, me in enumerate(medges):
@@ -3548,7 +3548,7 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
     [ax.set_ylim(ymin + np.log10(right_over_left), ymax + np.log10(right_over_left))\
      for ax in axes2]
     
-    _inss = instruments
+    _inss = list(np.copy(instruments))
     if talkversion and talkvnum == 2:
         for ins in instruments:
             if 'lynx' in ins:
