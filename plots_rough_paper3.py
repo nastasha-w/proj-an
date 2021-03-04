@@ -3236,6 +3236,11 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
     
     if talkversion:
         _lines = ['c6', 'o7r', 'o8', 'mg12']
+        if talkvnum == 2:
+            _lines = ['o7r', 'o8', 'ne10', 'mg12']
+        elif talkvnum == 3:
+            _lines = ['c6', 'n7', 'o8', 'ne10', 'mg12']
+        
         numlines = len(_lines)
         fontsize = 14
         
@@ -3243,6 +3248,7 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
         nrows = (numlines - 1) // ncols + 1
         figwidth = 11. 
         caxwidth = 1.
+        
         
     else:
         _lines = list(np.copy(lines))
@@ -3426,6 +3432,9 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
             # plot profiles
             for ykey, ls, zo in zip([ykey_mean, ykey_median], [ls_mean, ls_median], [5, 6]):
                 if talkversion:
+                    if talkvnum == 2:
+                        if ykey == ykey_mean:
+                            continue
                     if ykey == ykey_mean:
                         yi = 1
                     elif ykey == ykey_median:
@@ -3472,7 +3481,7 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
         ax.text(0.98, 0.97, linelabel, fontsize=fontsize,\
                 transform=ax.transAxes, horizontalalignment='right',\
                 verticalalignment='top')
-        if li == 0:
+        if li == 0 and not (talkversion and talkvnum == 2):
             handles = [mlines.Line2D([],[], label=label, color='black', ls=ls,\
                                      linewidth=2.) \
                        for ls, label in zip([ls_mean, ls_median], ['mean', 'med. mean'])]
@@ -3482,7 +3491,11 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
         _sel = df2['galaxy absorption included in limit']
         _xlim = ax.get_xlim()
         _ylim = ax.get_ylim()
-        for ins in instruments:   
+        for ins in instruments: 
+            if talkversion and talkvnum == 2:
+                if 'lynx' in ins:
+                    continue
+                
             sel = np.logical_and(_sel, df2['instrument'] == ins)
             sel &= df2['line name'] == line
             
@@ -3529,8 +3542,14 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
     [ax.set_ylim(ymin + np.log10(right_over_left), ymax + np.log10(right_over_left))\
      for ax in axes2]
     
+    _inss = instruments
+    if talkversion and talkvnum == 2:
+        for ins in instruments:
+            if 'lynx' in ins:
+                _inss.remove(ins)
+            
     handles_ins = [mpatch.Patch(label=inslabels[ins], **kwargs_ins[ins]) \
-                   for ins in instruments]    
+                   for ins in _inss]    
     leg_ins = lax2.legend(handles=handles_ins, fontsize=fontsize, 
                           ncol=ncols_insleg, **insleg_kw)
     leg_ins.set_title(legendtitle_minsb)
