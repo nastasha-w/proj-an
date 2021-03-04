@@ -3247,7 +3247,7 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
         ncols = 3
         nrows = (numlines - 1) // ncols + 1
         figwidth = 11. 
-        caxwidth = 1.
+        caxwidth = figwidth / float(ncols + 1)
         
         
     else:
@@ -3256,7 +3256,7 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
         ncols = 4
         nrows = (numlines - 1) // ncols + 1
         figwidth = 11. 
-        caxwidth = panelwidth
+        caxwidth = 1.
     
     if ncols * nrows - numlines >= 2:
         cax_right = False
