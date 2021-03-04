@@ -1,0 +1,2 @@
+TNG database API key:
+517dab78ec4cee614eb2a2bef0b82a67
