@@ -3416,6 +3416,7 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
         filename = rfilebase.format(line=line)
         if line in ['ne10', 'n6-actualr']:
             filename = filename.replace('test3.5', 'test3.6')
+            filename = filename[:-5] + '_old.hdf5'
         print(line)
         print(filename)
         yvals, bins = readin_radprof(filename, seltags, [ykey_mean],
