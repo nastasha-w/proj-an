@@ -3223,7 +3223,7 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
     if talkversion:
         if talkvnum == 0:
             mmin = 11.
-        elif talkvnum == 1:
+        elif talkvnum in [1, 2, 3]:
             mmin = 11.5
     else:
         mmin = 11.
