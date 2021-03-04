@@ -3256,7 +3256,7 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
         ncols = 4
         nrows = (numlines - 1) // ncols + 1
         figwidth = 11. 
-        caxwidth = 1.5
+        caxwidth = panelwidth
     
     if ncols * nrows - numlines >= 2:
         cax_right = False
@@ -3282,7 +3282,7 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
     axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(numlines)]
     if cax_right:
         ncols_insleg = 1 
-        leg_kw = {'loc': 'upper right', 'bbox_to_anchor': (0.05, 0.95)}
+        leg_kw = {'loc': 'upper left', 'bbox_to_anchor': (0.15, 1.)}
         insleg_kw = leg_kw.copy()
         if nrows > 5: 
             csl = slice(nrows // 2 - 1, nrows // 2 + 2, None)
@@ -3296,8 +3296,8 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
             csl = slice(1, None, None)
             lsl = slice(0, 1, None)
             l2sl = slice(0, 1, None)
-            insleg_kw = {'loc': 'lower right',
-                     'bbox_to_anchor': (0.05, 0.05),
+            insleg_kw = {'loc': 'lower left',
+                     'bbox_to_anchor': (0.15, 0.0),
                      'handlelength': 1.8,
                      'columnspacing': 0.8,
                      }
