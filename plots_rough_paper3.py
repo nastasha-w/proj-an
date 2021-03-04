@@ -3282,14 +3282,25 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
     axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(numlines)]
     if cax_right:
         ncols_insleg = 1 
+        leg_kw = {'loc': 'upper right', 'bbox_to_anchor': (0.05, 0.95)}
+        insleg_kw = leg_kw.copy()
         if nrows > 5: 
             csl = slice(nrows // 2 - 1, nrows // 2 + 2, None)
             lsl = slice(0, 1, None)
             l2sl = slice(1, 2, None)
-        elif nrows > 1:
+        elif nrows > 2:
             csl = slice(2, None, None)
             lsl = slice(0, 1, None)
             l2sl = slice(1, 2, None)
+        elif nrows == 2:
+            csl = slice(1, None, None)
+            lsl = slice(0, 1, None)
+            l2sl = slice(0, 1, None)
+            insleg_kw = {'loc': 'lower right',
+                     'bbox_to_anchor': (0.05, 0.05),
+                     'handlelength': 1.8,
+                     'columnspacing': 0.8,
+                     }
         else:
             raise RuntimeError('Could not find a place for the legend and color bar at the right of the plot (1 row)')
         cax = fig.add_subplot(grid[csl, ncols])
@@ -3297,7 +3308,7 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
         lax.axis('off')
         lax2 = fig.add_subplot(grid[l2sl, ncols])
         lax2.axis('off')
-        leg_kw = {'loc': 'upper left', 'bbox_to_anchor': (0.05, 0.95)}
+        
     else:
         ind_min = ncols - (nrows * ncols - numlines)
         _cax = fig.add_subplot(grid[nrows - 1, ind_min:])
