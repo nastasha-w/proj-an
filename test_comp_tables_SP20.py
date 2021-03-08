@@ -525,13 +525,15 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
         
         cieax.plot(logTK, _table[:, -1], linestyle=linestyle,
                    linewidth=linewidth, color='black', alpha=0.3)
-        cierelax.plot(logTK, _table[:, -1] - cie_yvals_base,
+        reldiff = _table[:, -1] - cie_yvals_base
+        cierelax.plot(logTK, reldiff,
                       linestyle=linestyle, color='black', alpha=0.3)
         
+        # for difference axis limits
         regionofinterest = _table[:, -1] >= np.max(_table[:, -1]) - 2.5
         regionofinterest |= cie_yvals_base >= np.max(cie_yvals_base) - 2.5  
-        cierelmin = min(cierelmin, np.min(_table[:, -1][regionofinterest]))
-        cierelmax = max(cierelmax, np.max(_table[:, -1][regionofinterest]))
+        cierelmin = min(cierelmin, np.min(reldiff[regionofinterest]))
+        cierelmax = max(cierelmax, np.max(reldiff[regionofinterest]))
         
         ax.set_xlabel(xlabel, fontsize=fontsize)
         ax.set_ylabel(ylabel, fontsize=fontsize)
@@ -583,12 +585,12 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     cierelax.set_ylabel(cierellabel, fontsize=fontsize)
     
     #cierelax.yaxis.set_label_position('right')
-    print(cierelmin, cierelmax)
+    #print(cierelmin, cierelmax)
     ylim = (1.1 * cierelmin, 1.1 * cierelmax)
     y0 = min(ylim[0], -0.05)
-    y0 = max(y0, -1.0)
+    y0 = max(y0, -1.5)
     y1 = max(ylim[1], 0.05)
-    y1 = min(y1, 1.0)
+    y1 = min(y1, 1.5)
     y0_old = y0
     y0 = min(y0, -0.15 * y1)
     y1 = max(y1, -0.15 * y0_old)
