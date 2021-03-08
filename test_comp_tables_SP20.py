@@ -484,7 +484,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     _cieax = fig.add_subplot(grid[1, 1])
     _l, _b, _w, _h = (_cieax.get_position()).bounds
     cieax = fig.add_axes([_l, _b + 0.3 * _h, _w, 0.7 * _h])
-    cierelax = fig.add_axes(_l, _b, _w, 0.3 * _h)
+    cierelax = fig.add_axes([_l, _b, _w, 0.3 * _h])
     _cieax.axis('off')
     
     
