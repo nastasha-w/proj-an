@@ -635,9 +635,73 @@ def compare_tablesets(z):
         
 
 # test interpolation of the tables graphically
-def test_interp(lines_PS20, table='emission'):
-    pass
 
+def test_interp(line, table='emission'):
+    
+    fontsize = 12    
+    title = '{table} interpolation test\n' + \
+             'interpolating in one dimemsion,' + \
+             ' random grid points for the others'
+    
+    axes = ['T', 'n', 'Z', 'z']
+    xlabels = {'T': '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$',
+               'n': '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}}' + \
+                    ' \\; [\\mathrm{cm}^{-3}]$',
+               'Z': '\\log_{10} \\, \\mathrm{Z} \\; [\\mathrm{Z}_{\\odot}]',
+               'z': 'redshift'}
+    
+    # not used for the interpolation, just to get filenames etc.
+    dummytab = m3.linetable_PS20(line, 0.0)
+    filen    = dummytab.ionbalfile
+    filen_em = dummytab.emtabfile
+    
+    with h5py.File(filen, 'r') as f:
+        gridvalues = {'T': f['TableBins/TemperatureBins'][:], 
+                      'n': f['TableBins/DensityBins'][:], 
+                      'Z': f['TableBins/MetallicityBins'][:],
+                      'z': f['TableBins/RedshiftBins'][:],
+                      }
+    
+    if table == 'emission':
+        ylabel = '$\\log_{{10}} \\, \\mathrm{{\\Lambda}}' + \
+        '\\, \\mathrm{{V}}^{{-1}}  \\;' +\
+        ' [\\mathrm{{erg}} \\, \\mathrm{{cm}}^{{3}} \\mathrm{{s}}^{{-1}}]$'
+        tablepath = 'Tdep/EmissivitiesVol' 
+    elif table == 'dust':
+        ylabel = '$\\log_{{10}}$ fraction of {elt} in dust'
+        tablepath = 'Tdep/Depletion' 
+    elif table == 'ionbal':
+        ylabel = '$\\log_{{10}} \\; \\mathrm{{m}}(\\mathrm{{{ion}}}) \\, /' + \
+            ' \\, \\mathrm{{m}}(\\mathrm{{{elt}}})$'
+        tablepath = 'Tdep/IonFractions/{eltnum:02d}{eltname}'
+        tablepath = tablepath.format(eltnum=dummytab.eltnum, 
+                                     eltname=dummytab.element.lower())
+    elif table == 'assumed_abundandance':
+        ylabel = '$\\mathrm{{n}}_{{\\mathrm{{{elt}}}}} \\, / \\,' +\
+                 ' \\mathrm{{n}}_{{\\mathrm{{H}}}}$'
+        # logZ, element
+        tablepath = 'TotalAbundances'
+        axes = ['Z']
+    else:
+        raise ValueError('{} is not a valid table option'.format(table))
+    title = title.format(table=table)
+    ylabel = ylabel.format(elt=dummytab.elementshort,
+                           ion='{}{}'.format(dummytab.elementshort,
+                                             dummytab.ionstage))
+    
+    if len(axes) == 1:
+        fig, ax = plt.subplots(ncols=1, nrows=1)
+        axs = [ax]
+    elif len(axes) == 4:
+        fig, axs = plt.subplots(ncols=2, nrows=2)
+    
+        
+    
+    
+    # 0: Redshift, 1: Temperature, 2: Metallicity, 3: Density, 4: Line/ion stage
+    
+
+    
 # compare maps with the two table sets
 # emission maps for a few ions, with and without abundance adjustments
 # absorption maps
