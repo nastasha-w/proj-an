@@ -808,7 +808,7 @@ def find_ionbal_bensgadget2(z, ion, dct_nH_T):
     inbalance[inbalance == table_zeroequiv] = 0.
     return inbalance
 
-# Does not account for dust depletion
+
 class linetable_PS20:
     '''
     class for storing data from the Ploeckinger & Schaye (2020) ion balance 

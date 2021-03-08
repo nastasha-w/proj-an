@@ -344,6 +344,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     fontsize = 12
     xlabel = '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{3}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
+    cierellabel = '$\\Delta \\, \\log$'
     
     title_SB = "Serena Bertone's tables"
     title_PS20 = 'Ploeckinger & Schaye (2020)'
@@ -478,8 +479,14 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     
     cax = fig.add_subplot(grid[0, 3]) 
     lax = fig.add_subplot(grid[1, 2:])
-    cieax = fig.add_subplot(grid[1, 1])
     compax = fig.add_subplot(grid[1, 0])
+    
+    _cieax = fig.add_subplot(grid[1, 1])
+    _l, _b, _w, _h = (cieax.get_position()).bounds
+    cieax = fig.add_axes(_l, _b + 0.3 * _h, _w, 0.7 * _h)
+    cierelax = fig.add_axes(_l, _b, _w, 0.3 * _h)
+    _cieax.axis('off')
+    
     
     lax.axis('off')
     
@@ -511,8 +518,13 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
                              path_effects=patheff)
         plt.setp(cs2.collections, path_effects=patheff)
         
+        if ind == 0:
+            cie_yvals_base = np.copy(_table[:, -1])
+            
         cieax.plot(logTK, _table[:, -1], linestyle=linestyle,
                    linewidth=linewidth, color='black', alpha=0.3)
+        cierelax.plot(logTK, _table[:, -1] - cie_yvals_base,
+                      linestyle=linestyle, color='black', alpha=0.3)
         
         ax.set_xlabel(xlabel, fontsize=fontsize)
         ax.set_ylabel(ylabel, fontsize=fontsize)
@@ -539,8 +551,9 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     compax.set_ylabel(ylabel, fontsize=fontsize)
     compax.grid(True)
     
-    pu.setticks(cieax, fontsize=fontsize, labelleft=False, labelright=True)
-    cieax.set_xlabel(ylabel, fontsize=fontsize)
+    pu.setticks(cieax, fontsize=fontsize, labelleft=False, labelright=True,
+                labelbottom=False)
+    #cieax.set_xlabel(ylabel, fontsize=fontsize)
     cieax.set_ylabel(clabel, fontsize=fontsize)
     cieax.yaxis.set_label_position('right')
     cieax.grid(True)
@@ -551,7 +564,13 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
                horizontalalignment='left',
                verticalalignment='bottom', transform=cieax.transAxes,
                bbox={'facecolor': 'white', 'alpha': 0.3})
-    cieax.set_ylim
+    
+    pu.setticks(cieax, fontsize=fontsize, labelleft=False, labelright=True)
+    cierelax.set_xlabel(ylabel, fontsize=fontsize)
+    cierelax.grid(True)
+    pu.setticks(cierelax, fontsize=fontsize, labelleft=False, labelright=True)
+    cierelax.set_ylabel(cierellabel, fontsize=fontsize)
+    cierelax.yaxis.set_label_position('right')
     
     lax.text(0.15, 0.95, ltext, fontsize=fontsize, horizontalalignment='left',
                verticalalignment='top', transform=lax.transAxes)
