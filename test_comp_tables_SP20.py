@@ -573,19 +573,23 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     cierelax.set_xlabel(ylabel, fontsize=fontsize)
     cierelax.grid(True)
     pu.setticks(cierelax, fontsize=fontsize, labelleft=False, labelright=True)
-    cierelax.text(0.0, 1.0, cierellabel, fontsize=fontsize,
-                  transform=cierelax.transAxes,
-                  horizontalalignment='left', verticalalignment='top',
-                  bbox={'facecolor': 'white', 'alpha': 0.3})
-    cierelax.yaxis.set_label_position('right')
+    #cierelax.text(0.0, 1.0, cierellabel, fontsize=fontsize,
+    #              transform=cierelax.transAxes,
+    #              horizontalalignment='left', verticalalignment='top',
+    #              bbox={'facecolor': 'white', 'alpha': 0.3})
+    cieax.set_ylabel(cierellabel, fontsize=fontsize)
+    
+    #cierelax.yaxis.set_label_position('right')
     ylim = (1.1 * cierelmin, 1.1 * cierelmax)
     y0 = min(ylim[0], -0.05)
     y0 = max(y0, -1.5)
     y1 = max(ylim[1], 0.05)
     y1 = min(y1, 1.5)
+    y0_old = y0
+    y0 = min(y0, -0.1 * y1)
+    y1 = max(y1, -0.1 * y0_old)
     cierelax.set_ylim(y0, y1)
-    
-    
+        
     lax.text(0.15, 0.95, ltext, fontsize=fontsize, horizontalalignment='left',
                verticalalignment='top', transform=lax.transAxes)
     
