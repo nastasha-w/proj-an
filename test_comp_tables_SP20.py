@@ -344,7 +344,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     fontsize = 12
     xlabel = '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{3}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
-    cierellabel = '$\\Delta \\, \\log$'
+    cierellabel = '$\\Delta$'
     
     title_SB = "Serena Bertone's tables"
     title_PS20 = 'Ploeckinger & Schaye (2020)'
@@ -571,6 +571,13 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     pu.setticks(cierelax, fontsize=fontsize, labelleft=False, labelright=True)
     cierelax.set_ylabel(cierellabel, fontsize=fontsize)
     cierelax.yaxis.set_label_position('right')
+    ylim = cierelax.get_ylim()
+    y0 = min(ylim[0], -0.05)
+    y0 = max(y0, -1.5)
+    y1 = max(ylim[1], 0.05)
+    y1 = min(y1, 1.5)
+    cierelax.set_ylim(y0, y1)
+    
     
     lax.text(0.15, 0.95, ltext, fontsize=fontsize, horizontalalignment='left',
                verticalalignment='top', transform=lax.transAxes)
