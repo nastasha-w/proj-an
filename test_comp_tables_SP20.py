@@ -589,8 +589,8 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     y1 = max(ylim[1], 0.05)
     y1 = min(y1, 1.5)
     y0_old = y0
-    y0 = min(y0, -0.1 * y1)
-    y1 = max(y1, -0.1 * y0_old)
+    y0 = min(y0, -0.15 * y1)
+    y1 = max(y1, -0.15 * y0_old)
     cierelax.set_ylim(y0, y1)
         
     lax.text(0.15, 0.95, ltext, fontsize=fontsize, horizontalalignment='left',
