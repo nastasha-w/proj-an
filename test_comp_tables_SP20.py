@@ -583,6 +583,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     cierelax.set_ylabel(cierellabel, fontsize=fontsize)
     
     #cierelax.yaxis.set_label_position('right')
+    print(cierelmin, cierelmax)
     ylim = (1.1 * cierelmin, 1.1 * cierelmax)
     y0 = min(ylim[0], -0.05)
     y0 = max(y0, -1.0)
