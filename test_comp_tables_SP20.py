@@ -527,8 +527,11 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
                    linewidth=linewidth, color='black', alpha=0.3)
         cierelax.plot(logTK, _table[:, -1] - cie_yvals_base,
                       linestyle=linestyle, color='black', alpha=0.3)
-        cierelmin = min(cierelmin, np.min(_table[:, -1]))
-        cierelmax = max(cierelmax, np.max(_table[:, -1]))
+        
+        regionofinterest = _table[:, -1] >= np.max(_table[:, -1]) - 2.5
+        regionofinterest |= cie_yvals_base >= np.max(cie_yvals_base) - 2.5  
+        cierelmin = min(cierelmin, np.min(_table[:, -1][regionofinterest]))
+        cierelmax = max(cierelmax, np.max(_table[:, -1][regionofinterest]))
         
         ax.set_xlabel(xlabel, fontsize=fontsize)
         ax.set_ylabel(ylabel, fontsize=fontsize)
