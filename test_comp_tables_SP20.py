@@ -575,7 +575,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     pu.setticks(cierelax, fontsize=fontsize, labelleft=False, labelright=True)
     cierelax.text(0.0, 1.0, cierellabel, fontsize=fontsize,
                   transform=cierelax.transAxes,
-                  horizontalalignment='left', verticalaligment='top',
+                  horizontalalignment='left', verticalalignment='top',
                   bbox={'facecolor': 'white', 'alpha': 0.3})
     cierelax.yaxis.set_label_position('right')
     ylim = (1.1 * cierelmin, 1.1 * cierelmax)
