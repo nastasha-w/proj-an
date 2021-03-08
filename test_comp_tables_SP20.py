@@ -567,9 +567,9 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     cieax.text(0.05, 0.05, txt, fontsize=fontsize - 1,
                horizontalalignment='left',
                verticalalignment='bottom', transform=cieax.transAxes,
-               bbox={'facecolor': 'white', 'alpha': 0.3})
-    
+               bbox={'facecolor': 'white', 'alpha': 0.3})   
     pu.setticks(cieax, fontsize=fontsize, labelleft=False, labelright=True)
+    
     cierelax.set_xlabel(ylabel, fontsize=fontsize)
     cierelax.grid(True)
     pu.setticks(cierelax, fontsize=fontsize, labelleft=False, labelright=True)
@@ -577,7 +577,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     #              transform=cierelax.transAxes,
     #              horizontalalignment='left', verticalalignment='top',
     #              bbox={'facecolor': 'white', 'alpha': 0.3})
-    cieax.set_ylabel(cierellabel, fontsize=fontsize)
+    cierelax.set_ylabel(cierellabel, fontsize=fontsize)
     
     #cierelax.yaxis.set_label_position('right')
     ylim = (1.1 * cierelmin, 1.1 * cierelmax)
