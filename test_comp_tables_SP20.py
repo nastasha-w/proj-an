@@ -732,7 +732,9 @@ def test_interp(line, table='emission'):
             gridinds = {d: np.random.randint(0, high=len(gridvalues[d]),
                                              size=numsample)
                         for d in otheraxes}
-            label = ', '.join(['$\\mathrm{{{{{d}}}}} = {{{d}:.1f}}$'.format(d=d) \
+            #label = ', '.join(['$\\mathrm{{{{{d}}}}} = {{{d}:.1f}}$'.format(d=d) \
+            #                   for d in otheraxes])
+            label = ', '.join(['{d}={{{d}:.1f}}'.format(d=d) \
                                for d in otheraxes])
             seltuples = np.array([[slice(None, None, None)] * 5] * numsample)
             for d in otheraxes:
@@ -846,7 +848,7 @@ def test_interp(line, table='emission'):
                 ax.scatter(grid_x, grid_y, color=cset[i], marker='o', s=30,
                             label=None, alpha=0.3)
                 ax.scatter(samplex, sampley,
-                           color=cset[0], alpha=0.7,
+                           color=cset[i], alpha=0.7,
                            marker='x', s=10, label=_label)
             
             title = title.format(table=table)
@@ -862,7 +864,7 @@ def test_interp(line, table='emission'):
                         mlines.Line2D([], [], label='table', color='black',
                                       alpha=0.3, marker='o'),
                         ]
-            ax.legend(handles=handles2 + handles1, fontsize=fontsize - 1.)
+            ax.legend(handles=handles2 + handles1, fontsize=fontsize - 3.)
             ax.legend(fontsize=fontsize)       
          
     fig.suptitle(title, fontsize=fontsize)    
