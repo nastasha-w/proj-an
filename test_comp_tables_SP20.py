@@ -735,7 +735,7 @@ def test_interp(line, table='emission'):
                                for d in otheraxes])
             seltuples = np.array([[slice(None, None, None)] * 5] * numsample)
             for d in otheraxes:
-                seltuples[tabledims[d]] = gridinds[d]
+                seltuples[:, tabledims[d]] = gridinds[d]
             
             labelfill = {}
             if tabax == 'z':
