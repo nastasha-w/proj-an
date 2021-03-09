@@ -721,9 +721,9 @@ def test_interp(line, table='emission'):
             
             ax.plot(grid_x, grid_y, color=cset[0], linewidth=2)
             ax.scatter(grid_x, grid_y, color=cset[0], marker='o', s=30,
-                        label='table')
-            ax.scatter(samplex, sampley, color=cset[0], marker='x', s=10,
-                        label='interp')
+                        label='table', alpha=0.3)
+            ax.scatter(samplex  - np.log10(dummytab.solarZ), sampley,
+                       color=cset[0], marker='x', s=10, label='interp')
         ax.legend(fontsize=fontsize)
             
             
