@@ -685,7 +685,8 @@ def test_interp(line, table='emission'):
         fig, ax = plt.subplots(ncols=1, nrows=1)
         axs = [ax]
     elif len(axes) == 4:
-        fig, axs = plt.subplots(ncols=2, nrows=2)
+        fig, axs = plt.subplots(ncols=2, nrows=2, figsize=(7.5, 7.),
+                                gridspec_kw={'hspace': 0.4, 'wspace': 0.4})
         axs = [axs[i //2, i %2] for i in range(4)]
     
     np.random.seed(seed=0)
