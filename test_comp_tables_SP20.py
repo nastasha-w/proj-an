@@ -711,8 +711,8 @@ def test_interp(line, table='emission'):
             
             title = title.format(table=table)
             ylabel = ylabel.format(elt=dummytab.elementshort,
-                                   ion='{}{}'.format(dummytab.elementshort,
-                                                     dummytab.ionstage)) 
+                                    ion='{}{}'.format(dummytab.elementshort,
+                                                      dummytab.ionstage)) 
             
             pu.setticks(ax, fontsize)
             ax.set_ylabel(ylabel, fontsize=fontsize)
@@ -731,7 +731,7 @@ def test_interp(line, table='emission'):
             gridinds = {d: np.random.randint(0, high=len(gridvalues[d]),
                                              size=numsample)
                         for d in otheraxes}
-            label = ', '.join(['$\\\\mathrm{{{d}}} = {{{d}:.1f}}$'.format(d=d) \
+            label = ', '.join(['$\\\\mathrm{{{{{d}}}}} = {{{d}:.1f}}$'.format(d=d) \
                                for d in otheraxes])
             seltuples = np.array([[slice(None, None, None)] * 5] * numsample)
             for d in otheraxes:
@@ -849,11 +849,11 @@ def test_interp(line, table='emission'):
                            marker='x', s=10, label=_label)
             
             title = title.format(table=table)
-            ylabel = ylabel.format(elt=dummytab.elementshort,
-                                   ion='{}{}'.format(dummytab.elementshort,
-                                                     dummytab.ionstage)) 
+            _ylabel = ylabel.format(elt=dummytab.elementshort,
+                                    ion='{}{}'.format(dummytab.elementshort,
+                                                      dummytab.ionstage)) 
             pu.setticks(ax, fontsize)
-            ax.set_ylabel(ylabel, fontsize=fontsize)
+            ax.set_ylabel(_ylabel, fontsize=fontsize)
             ax.set_xlabel(xlabels[tabax], fontsize=fontsize)
             handles1, labels = ax.get_legend_handles_labels()
             handles2 = [mlines.Line2D([], [], label='interp', color='black',
