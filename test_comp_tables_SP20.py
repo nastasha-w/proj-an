@@ -716,14 +716,15 @@ def test_interp(line, table='emission'):
             if table == 'assumed_abundance':
                 with h5py.File(filen, 'r') as f:
                     grid_y = f[tablepath][:, dummytab.eltind]
-                dct_Z = {'logZ': samplex - np.log10(dummytab.solarZ)}
+                dct_Z = {'logZ': samplex + np.log10(dummytab.solarZ)}
                 sampley = np.log10(dummytab.find_assumedabundance(dct_Z))
             
             ax.plot(grid_x, grid_y, color=cset[0], linewidth=2)
             ax.scatter(grid_x, grid_y, color=cset[0], marker='o', s=30,
                         label='table', alpha=0.3)
-            ax.scatter(samplex  - np.log10(dummytab.solarZ), sampley,
-                       color=cset[0], marker='x', s=10, label='interp')
+            ax.scatter(samplex, sampley,
+                       color=cset[0], alpha=0.7,
+                       marker='x', s=10, label='interp')
         ax.legend(fontsize=fontsize)
             
             
