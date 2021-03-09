@@ -614,28 +614,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
                              z=z, table=table)
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
-
-# test basic table retrieval and sensitbility
-def plot_tablesets(zs):
-    for z in zs:
-        for line in lines_SP20:
-            plottables_PS20(line, z, table='emission')
-        for line in lines_SB:
-            plottables_SB(line, z, table='emission')
-        for ion in ions:
-            plottables_PS20(ion, z, table='ionbal')
-            plottables_PS20(ion, z, table='dust')
-            plottables_SB(ion, z, table='ionbal')
-
-def compare_tablesets(z):
-    for ion in ions:
-        compare_tables(ion, ion, z, table='ionbal')
-    for line in linematch_SP20:
-        if linematch_SP20[line] is None:
-            continue
-        compare_tables(line, linematch_SP20[line], z, table='emission')
-        
-
+    
 # test interpolation of the tables graphically
 
 def test_interp(line, table='emission'):
@@ -665,33 +644,31 @@ def test_interp(line, table='emission'):
                       'Z': f['TableBins/MetallicityBins'][:],
                       'z': f['TableBins/RedshiftBins'][:],
                       }
+    # 0: Redshift, 1: Temperature, 2: Metallicity, 3: Density, 4: Line/ion stage
+    tabledims = {'z': 0,
+                 'T': 1,
+                 'Z': 2,
+                 'n': 3}
     
     if table == 'emission':
         ylabel = '$\\log_{{10}} \\, \\mathrm{{\\Lambda}}' + \
         '\\, \\mathrm{{V}}^{{-1}}  \\;' +\
         ' [\\mathrm{{erg}} \\, \\mathrm{{cm}}^{{3}} \\mathrm{{s}}^{{-1}}]$'
-        tablepath = 'Tdep/EmissivitiesVol' 
     elif table == 'dust':
         ylabel = '$\\log_{{10}}$ fraction of {elt} in dust'
-        tablepath = 'Tdep/Depletion' 
     elif table == 'ionbal':
         ylabel = '$\\log_{{10}} \\; \\mathrm{{m}}(\\mathrm{{{ion}}}) \\, /' + \
             ' \\, \\mathrm{{m}}(\\mathrm{{{elt}}})$'
-        tablepath = 'Tdep/IonFractions/{eltnum:02d}{eltname}'
-        tablepath = tablepath.format(eltnum=dummytab.eltind, 
-                                     eltname=dummytab.element.lower())
     elif table == 'assumed_abundance':
-        ylabel = '$\\log_{{10}} \\, \\mathrm{{n}}_{{\\mathrm{{{elt}}}}}' +\
+                ylabel = '$\\log_{{10}} \\, \\mathrm{{n}}_{{\\mathrm{{{elt}}}}}' +\
                  '\\, / \\, \\mathrm{{n}}_{{\\mathrm{{H}}}}$'
-        # logZ, element
-        tablepath = 'TotalAbundances'
+    
+    if table == 'assumed_abundance':
         axes = ['Z']
+    elif table in ['emission', 'dust', 'ionbal']:
+        pass
     else:
         raise ValueError('{} is not a valid table option'.format(table))
-    title = title.format(table=table)
-    ylabel = ylabel.format(elt=dummytab.elementshort,
-                           ion='{}{}'.format(dummytab.elementshort,
-                                             dummytab.ionstage))
     
     if len(axes) == 1:
         fig, ax = plt.subplots(ncols=1, nrows=1)
@@ -701,39 +678,115 @@ def test_interp(line, table='emission'):
     
     np.random.seed(seed=0)
     numsample = len(cset)
+    samplesize = 200
     
     for ind, (ax, tabax) in enumerate(zip(axs, axes)):
-        pu.setticks(ax, fontsize)
-        ax.set_ylabel(ylabel, fontsize=fontsize)
-        ax.set_xlabel(xlabels[tabax], fontsize=fontsize)
-        
         grid_x = gridvalues[tabax]
         test_range = [grid_x[0] - 5., grid_x[-1] + 5.]
         
         if len(axes) == 1: #abundances
             samplex = np.random.uniform(low=test_range[0], high=test_range[1],
-                                        size=200)
+                                        size=samplesize)
             if table == 'assumed_abundance':
+                ylabel = '$\\log_{{10}} \\, \\mathrm{{n}}_{{\\mathrm{{{elt}}}}}' +\
+                 '\\, / \\, \\mathrm{{n}}_{{\\mathrm{{H}}}}$'
+                # logZ, element
+                tablepath = 'TotalAbundances'
+                
                 with h5py.File(filen, 'r') as f:
                     grid_y = f[tablepath][:, dummytab.eltind]
                 dct_Z = {'logZ': samplex + np.log10(dummytab.solarZ)}
                 sampley = np.log10(dummytab.find_assumedabundance(dct_Z))
             
+            title = title.format(table=table)
+            ylabel = ylabel.format(elt=dummytab.elementshort,
+                                   ion='{}{}'.format(dummytab.elementshort,
+                                                     dummytab.ionstage)) 
+            
+            pu.setticks(ax, fontsize)
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+            ax.set_xlabel(xlabels[tabax], fontsize=fontsize)
             ax.plot(grid_x, grid_y, color=cset[0], linewidth=2)
             ax.scatter(grid_x, grid_y, color=cset[0], marker='o', s=30,
                         label='table', alpha=0.3)
             ax.scatter(samplex, sampley,
                        color=cset[0], alpha=0.7,
                        marker='x', s=10, label='interp')
-        ax.legend(fontsize=fontsize)
+            ax.legend(fontsize=fontsize)
             
+        else:
+            otheraxes = list(np.copy(axes))
+            otheraxes.remove(tabax)
+            gridinds = {d: np.random.randint(0, high=len(gridvalues[d]),
+                                             size=numsample)
+                        for d in otheraxes}
+            label = ', '.join(['$\\mathrm{{{{{d}}}}} = {{{d}:.1f}}$' \
+                               for d in otheraxes])
+            seltuples = np.array([[slice(None, None, None)] * 5] * numsample)
+            for d in otheraxes:
+                slices[tabledims[d]] = gridinds[d]
             
-            
+            if tabax == 'z':
+                _samplesize = 1
+            else:
+                _samplesize = samplesize
+            for i in range(numsample):
+                dct_T_Z_nH = {}
+                if 'T' in otheraxes:
+                    _a = [gridvalues['T'][gridinds['T'][i]]] * _samplesize
+                    dct = {'logT': np.array(_a)}
+                    dct_T_Z_nH.update(dct)
+                else:
+                    pass
+                if 'Z' in otheraxes:
+                    _a = [gridvalues['Z'][gridinds['Z'][i]] +\
+                          np.log10(dummytab.solarZ)] * _samplesize
+                    dct = {'logZ': np.array(_a)}
+                    dct_T_Z_nH.update(dct)
+                else:
+                    pass
+                if 'n' in otheraxes:
+                    _a = [gridvalues['n'][gridinds['n'][i]]] * _samplesize
+                    dct = {'lognH': np.array(_a)}
+                    dct_T_Z_nH.update(dct)
+                else:
+                    pass
+                if 'z' in otheraxes:
+                    z = gridvalues['z'][gridinds['z'][i]]
+                else:
+                    pass
+                
+                
+                if table == 'emission':
+                    tablepath = 'Tdep/EmissivitiesVol' 
                     
+                elif table == 'dust':
+
+                    tablepath = 'Tdep/Depletion' 
+                elif table == 'ionbal':
+                    tablepath = 'Tdep/IonFractions/{eltnum:02d}{eltname}'
+                    tablepath = tablepath.format(eltnum=dummytab.eltind, 
+                                                 eltname=dummytab.element.lower())
             
-                   
+                 
+                
+                ax.plot(grid_x, grid_y, color=cset[0], linewidth=2)
+                ax.scatter(grid_x, grid_y, color=cset[0], marker='o', s=30,
+                            label='table', alpha=0.3)
+                ax.scatter(samplex, sampley,
+                           color=cset[0], alpha=0.7,
+                           marker='x', s=10, label='interp')
+            
+            title = title.format(table=table)
+            ylabel = ylabel.format(elt=dummytab.elementshort,
+                                   ion='{}{}'.format(dummytab.elementshort,
+                                                     dummytab.ionstage)) 
+            pu.setticks(ax, fontsize)
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+            ax.set_xlabel(xlabels[tabax], fontsize=fontsize)
+            ax.legend(fontsize=fontsize)       
          
-        
+    fig.suptitle(title, fontsize=fontsize)    
     
     
     # 0: Redshift, 1: Temperature, 2: Metallicity, 3: Density, 4: Line/ion stage
@@ -742,7 +795,6 @@ def test_interp(line, table='emission'):
     outname = outname.format(line=line,table=table)
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
-    
 # compare maps with the two table sets
 # emission maps for a few ions, with and without abundance adjustments
 # absorption maps
@@ -753,6 +805,29 @@ def compare_maps(args_map1, args_map2, kwargs_map1, kwargs_map2,\
                  imgname=None):
     pass
 
+
+
+# test basic table retrieval and sensitbility
+def plot_tablesets(zs):
+    for z in zs:
+        for line in lines_SP20:
+            plottables_PS20(line, z, table='emission')
+        for line in lines_SB:
+            plottables_SB(line, z, table='emission')
+        for ion in ions:
+            plottables_PS20(ion, z, table='ionbal')
+            plottables_PS20(ion, z, table='dust')
+            plottables_SB(ion, z, table='ionbal')
+
+def compare_tablesets(z):
+    for ion in ions:
+        compare_tables(ion, ion, z, table='ionbal')
+    for line in linematch_SP20:
+        if linematch_SP20[line] is None:
+            continue
+        compare_tables(line, linematch_SP20[line], z, table='emission')
+
+    
 if __name__ == '__main__':
     zs_test = [0.0, 0.1, 1., 3.]  
     plot_tablesets(zs_test)
