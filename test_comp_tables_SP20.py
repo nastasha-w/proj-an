@@ -16,6 +16,8 @@ import matplotlib.gridspec as gsp
 import matplotlib.cm as cm
 import matplotlib.patheffects as mppe
 
+import tol_colors as tc
+
 import make_maps_v3_master as m3
 import make_maps_opts_locs as ol
 import calcfmassh as cfh
@@ -639,6 +641,8 @@ def compare_tablesets(z):
 def test_interp(line, table='emission'):
     
     fontsize = 12    
+    cset =  tc.tol_cset('bright') 
+    
     title = '{table} interpolation test\n' + \
              'interpolating in one dimemsion,' + \
              ' random grid points for the others'
@@ -695,11 +699,47 @@ def test_interp(line, table='emission'):
     elif len(axes) == 4:
         fig, axs = plt.subplots(ncols=2, nrows=2)
     
+    np.random.seed(seed=0)
+    numsample = len(cset)
+    
+    for ind, (ax, tabax) in enumerate(zip([axs, axes])):
+        pu.setticks(ax, fontsize)
+        ax.set_ylabel(ylabel, fontsize=fontsize)
+        ax.set_xlabel(xlabels[tabax], fontsize=fontsize)
+        
+        grid_x = gridvalues[tabax]
+        test_range = [grid_x[0] - 5., grid_x[-1] + 5.]
+        
+        if len(axes) == 1: #abundances
+            samplex = np.random.uniform(low=test_range[0], high=test_range[1],
+                                        size=200)
+            if table == 'assumed_abundandance':
+                with h5py.File(filen, 'r') as f:
+                    grid_y = f[tablepath][:, dummytab.eltnum]
+            dct_Z = {'logZ': samplex - np.log10(dummytab.Zsolar)}
+            sampley = dummytab.find_assumedabundance(dct_Z)
+            
+            ax.plot(grid_x, grid_y, color=cset[0], linewidth=2)
+            ax.scatter(grid_x, grid_y, color=cset[0], marker='o', size=30,
+                        label='table')
+            ax.scatter(samplex, sampley, color=cset[0], marker='x', size=10,
+                        label='interp')
+        ax.legend(fontsize=fontsize)
+            
+            
+            
+                    
+            
+                   
+         
         
     
     
     # 0: Redshift, 1: Temperature, 2: Metallicity, 3: Density, 4: Line/ion stage
     
+    outname = mdir + 'interptest_PS20_{table}_table_{line}.pdf'
+    outname = outname.format(line=line,table=table)
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
 
     
 # compare maps with the two table sets
