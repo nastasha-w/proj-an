@@ -720,9 +720,9 @@ def test_interp(line, table='emission'):
                 sampley = dummytab.find_assumedabundance(dct_Z)
             
             ax.plot(grid_x, grid_y, color=cset[0], linewidth=2)
-            ax.scatter(grid_x, grid_y, color=cset[0], marker='o', size=30,
+            ax.scatter(grid_x, grid_y, color=cset[0], marker='o', s=30,
                         label='table')
-            ax.scatter(samplex, sampley, color=cset[0], marker='x', size=10,
+            ax.scatter(samplex, sampley, color=cset[0], marker='x', s=10,
                         label='interp')
         ax.legend(fontsize=fontsize)
             
