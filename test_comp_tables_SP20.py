@@ -651,7 +651,7 @@ def test_interp(line, table='emission'):
     xlabels = {'T': '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$',
                'n': '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}}' + \
                     ' \\; [\\mathrm{cm}^{-3}]$',
-               'Z': '\\log_{10} \\, \\mathrm{Z} \\; [\\mathrm{Z}_{\\odot}]',
+               'Z': '$\\log_{10} \\, \\mathrm{Z} \\; [\\mathrm{Z}_{\\odot}]$',
                'z': 'redshift'}
     
     # not used for the interpolation, just to get filenames etc.
@@ -681,8 +681,8 @@ def test_interp(line, table='emission'):
         tablepath = tablepath.format(eltnum=dummytab.eltind, 
                                      eltname=dummytab.element.lower())
     elif table == 'assumed_abundance':
-        ylabel = '$\\mathrm{{n}}_{{\\mathrm{{{elt}}}}} \\, / \\,' +\
-                 ' \\mathrm{{n}}_{{\\mathrm{{H}}}}$'
+        ylabel = '$\\log_{10} \\, \\mathrm{{n}}_{{\\mathrm{{{elt}}}}}' +\
+                 '\\, / \\, \\mathrm{{n}}_{{\\mathrm{{H}}}}$'
         # logZ, element
         tablepath = 'TotalAbundances'
         axes = ['Z']
@@ -717,7 +717,7 @@ def test_interp(line, table='emission'):
                 with h5py.File(filen, 'r') as f:
                     grid_y = f[tablepath][:, dummytab.eltind]
                 dct_Z = {'logZ': samplex - np.log10(dummytab.solarZ)}
-                sampley = dummytab.find_assumedabundance(dct_Z)
+                sampley = np.log10(dummytab.find_assumedabundance(dct_Z))
             
             ax.plot(grid_x, grid_y, color=cset[0], linewidth=2)
             ax.scatter(grid_x, grid_y, color=cset[0], marker='o', s=30,
