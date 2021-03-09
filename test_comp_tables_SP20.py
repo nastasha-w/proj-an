@@ -681,7 +681,7 @@ def test_interp(line, table='emission'):
         tablepath = tablepath.format(eltnum=dummytab.eltind, 
                                      eltname=dummytab.element.lower())
     elif table == 'assumed_abundance':
-        ylabel = '$\\log_{10} \\, \\mathrm{{n}}_{{\\mathrm{{{elt}}}}}' +\
+        ylabel = '$\\log_{{10}} \\, \\mathrm{{n}}_{{\\mathrm{{{elt}}}}}' +\
                  '\\, / \\, \\mathrm{{n}}_{{\\mathrm{{H}}}}$'
         # logZ, element
         tablepath = 'TotalAbundances'
