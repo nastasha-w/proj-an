@@ -680,7 +680,7 @@ def test_interp(line, table='emission'):
         tablepath = 'Tdep/IonFractions/{eltnum:02d}{eltname}'
         tablepath = tablepath.format(eltnum=dummytab.eltnum, 
                                      eltname=dummytab.element.lower())
-    elif table == 'assumed_abundandance':
+    elif table == 'assumed_abundance':
         ylabel = '$\\mathrm{{n}}_{{\\mathrm{{{elt}}}}} \\, / \\,' +\
                  ' \\mathrm{{n}}_{{\\mathrm{{H}}}}$'
         # logZ, element
@@ -702,7 +702,7 @@ def test_interp(line, table='emission'):
     np.random.seed(seed=0)
     numsample = len(cset)
     
-    for ind, (ax, tabax) in enumerate(zip([axs, axes])):
+    for ind, (ax, tabax) in enumerate(zip(axs, axes)):
         pu.setticks(ax, fontsize)
         ax.set_ylabel(ylabel, fontsize=fontsize)
         ax.set_xlabel(xlabels[tabax], fontsize=fontsize)
