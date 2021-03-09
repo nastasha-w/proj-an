@@ -687,9 +687,10 @@ def test_interp(line, table='emission'):
     elif len(axes) == 4:
         fig, axs = plt.subplots(ncols=2, nrows=2)
         axs = [axs[i //2, i %2] for i in range(4)]
+    
     np.random.seed(seed=0)
-    numsample = len(cset)
-    samplesize = 200
+    numsample = 3 #len(cset)
+    samplesize = 10
     
     for ind, (ax, tabax) in enumerate(zip(axs, axes)):
         grid_x = gridvalues[tabax]
@@ -731,7 +732,7 @@ def test_interp(line, table='emission'):
             gridinds = {d: np.random.randint(0, high=len(gridvalues[d]),
                                              size=numsample)
                         for d in otheraxes}
-            label = ', '.join(['$\\\\mathrm{{{{{d}}}}} = {{{d}:.1f}}$'.format(d=d) \
+            label = ', '.join(['$\\mathrm{{{{{d}}}}} = {{{d}:.1f}}$'.format(d=d) \
                                for d in otheraxes])
             seltuples = np.array([[slice(None, None, None)] * 5] * numsample)
             for d in otheraxes:
