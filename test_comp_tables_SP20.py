@@ -831,7 +831,12 @@ def test_interp(line, table='emission'):
                 tableslice = seltuples[i]
                 tableslice[4] = lineind
                 tableslice = tuple(tableslice)
+                print(filen_em)
+                print(tableslice)
                 with h5py.File(filen_em, 'r') as f:
+                    print(tablepath)
+                    print(tablepath in f)
+                    print(f[tablepath].shape)
                     grid_y = f[tablepath][tableslice]
                                     
                 ax.plot(grid_x, grid_y, color=cset[0], linewidth=2)
