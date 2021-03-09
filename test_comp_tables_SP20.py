@@ -731,7 +731,7 @@ def test_interp(line, table='emission'):
             gridinds = {d: np.random.randint(0, high=len(gridvalues[d]),
                                              size=numsample)
                         for d in otheraxes}
-            label = ', '.join(['$\\mathrm{{{{{d}}}}} = {{{d}:.1f}}$' \
+            label = ', '.join(['$\\mathrm{{{d}}} = {{{d}:.1f}}$'.format(d=d) \ 
                                for d in otheraxes])
             seltuples = np.array([[slice(None, None, None)] * 5] * numsample)
             for d in otheraxes:
