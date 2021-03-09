@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gsp
 import matplotlib.cm as cm
 import matplotlib.patheffects as mppe
+import matplotlib.lines as mlines
 
 import tol_colors as tc
 
@@ -644,6 +645,16 @@ def test_interp(line, table='emission'):
                       'Z': f['TableBins/MetallicityBins'][:],
                       'z': f['TableBins/RedshiftBins'][:],
                       }
+        if table == 'emission':
+            lineid = f['IdentifierLines'][:]
+            lineid = np.array([_line.decode() for _line in lineid])
+            match = [line == _line for _line in lineid]
+            lineind = np.where(match)[0][0]
+        elif table == 'ionbal':
+            lineind = dummytab.ionstage
+        elif table == 'dust':
+            lineid = dummytab.eltind
+        
     # 0: Redshift, 1: Temperature, 2: Metallicity, 3: Density, 4: Line/ion stage
     tabledims = {'z': 0,
                  'T': 1,
@@ -682,9 +693,9 @@ def test_interp(line, table='emission'):
     
     for ind, (ax, tabax) in enumerate(zip(axs, axes)):
         grid_x = gridvalues[tabax]
-        test_range = [grid_x[0] - 5., grid_x[-1] + 5.]
         
         if len(axes) == 1: #abundances
+            test_range = [grid_x[0] - 5., grid_x[-1] + 5.]
             samplex = np.random.uniform(low=test_range[0], high=test_range[1],
                                         size=samplesize)
             if table == 'assumed_abundance':
@@ -726,56 +737,109 @@ def test_interp(line, table='emission'):
             for d in otheraxes:
                 slices[tabledims[d]] = gridinds[d]
             
+            labelfill = {}
             if tabax == 'z':
                 _samplesize = 1
+                test_range = [grid_x[0], grid_x[-1]]
             else:
                 _samplesize = samplesize
+                test_range = [grid_x[0] - 5., grid_x[-1] + 5.]
             for i in range(numsample):
                 dct_T_Z_nH = {}
                 if 'T' in otheraxes:
                     _a = [gridvalues['T'][gridinds['T'][i]]] * _samplesize
                     dct = {'logT': np.array(_a)}
                     dct_T_Z_nH.update(dct)
+                    labelfill['T'] = _a[0]
                 else:
-                    pass
+                    samplex = np.random.uniform(low=test_range[0], 
+                                                high=test_range[1],
+                                                size=samplesize)
+                    dct = {'logT': samplex}
+                    dct_T_Z_nH.update(dct)
                 if 'Z' in otheraxes:
                     _a = [gridvalues['Z'][gridinds['Z'][i]] +\
                           np.log10(dummytab.solarZ)] * _samplesize
                     dct = {'logZ': np.array(_a)}
                     dct_T_Z_nH.update(dct)
+                    labelfill['Z'] = _a[0]
                 else:
-                    pass
+                    samplex = np.random.uniform(low=test_range[0], 
+                                                high=test_range[1],
+                                                size=samplesize)
+                    dct = {'logZ': samplex}
                 if 'n' in otheraxes:
                     _a = [gridvalues['n'][gridinds['n'][i]]] * _samplesize
                     dct = {'lognH': np.array(_a)}
                     dct_T_Z_nH.update(dct)
+                    labelfill['n'] = _a[0]
                 else:
-                    pass
+                    samplex = np.random.uniform(low=test_range[0], 
+                                                high=test_range[1],
+                                                size=samplesize)
+                    dct = {'lognH': samplex}
                 if 'z' in otheraxes:
                     z = gridvalues['z'][gridinds['z'][i]]
+                    labelfill['z'] = z
                 else:
-                    pass
+                    samplex = np.random.uniform(low=test_range[0], 
+                                                high=test_range[1],
+                                                size=samplesize)
+                    z = samplex
                 
+                _label = label.format(**labelfill)
                 
+                emission = False
                 if table == 'emission':
                     tablepath = 'Tdep/EmissivitiesVol' 
+                    emission = True
+                    if tabax == 'z':
+                        _tables = [m3.linetable_PS20(line, z, emission=emission)\
+                                   for z in z]
+                        sampley = [_table.find_logemission(dct_T_Z_nH) \
+                                   for _table in _tables]
+                    else:
+                        _table = m3.linetable_PS20(line, z, emission=emission)
+                        sampley = _table.find_logemission(dct_T_Z_nH)
                     
                 elif table == 'dust':
-
                     tablepath = 'Tdep/Depletion' 
+                    _table = m3.linetable_PS20(line, z, emission=emission)
+                    if tabax == 'z':
+                        _tables = [m3.linetable_PS20(line, z, emission=emission)\
+                                   for z in z]
+                        sampley = [_table.find_depletion(dct_T_Z_nH) \
+                                   for _table in _tables]
+                    else:
+                        _table = m3.linetable_PS20(line, z, emission=emission)
+                        sampley = np.log10(_table.find_depletion(dct_T_Z_nH))
+                    
                 elif table == 'ionbal':
                     tablepath = 'Tdep/IonFractions/{eltnum:02d}{eltname}'
                     tablepath = tablepath.format(eltnum=dummytab.eltind, 
                                                  eltname=dummytab.element.lower())
-            
-                 
+                    if tabax == 'z':
+                        _tables = [m3.linetable_PS20(line, z, emission=emission)\
+                                   for z in z]
+                        sampley = [_table.find_ionbal(dct_T_Z_nH, log=True) \
+                                   for _table in _tables]
+                    else:
+                        _table = m3.linetable_PS20(line, z, emission=emission)
+                        sampley = _table.find_ionbal(dct_T_Z_nH, log=True)        
+                sampley = np.array(sampley)    
                 
+                tableslice = seltuples[i]
+                tableslice[4] = lineind
+                tableslice = tuple(tableslice)
+                with h5py.File(filen_em, 'r') as f:
+                    grid_y = f[tablepath][tableslice]
+                                    
                 ax.plot(grid_x, grid_y, color=cset[0], linewidth=2)
                 ax.scatter(grid_x, grid_y, color=cset[0], marker='o', s=30,
-                            label='table', alpha=0.3)
+                            label=None, alpha=0.3)
                 ax.scatter(samplex, sampley,
                            color=cset[0], alpha=0.7,
-                           marker='x', s=10, label='interp')
+                           marker='x', s=10, label=_label)
             
             title = title.format(table=table)
             ylabel = ylabel.format(elt=dummytab.elementshort,
@@ -784,6 +848,13 @@ def test_interp(line, table='emission'):
             pu.setticks(ax, fontsize)
             ax.set_ylabel(ylabel, fontsize=fontsize)
             ax.set_xlabel(xlabels[tabax], fontsize=fontsize)
+            handles1, labels = ax.get_legend_handles_labels()
+            handles2 = [mlines.Line2D([], [], label='interp', color='black',
+                                      alpha=0.7, s=10, marker='x'),
+                        mlines.Line2D([], [], label='table', color='black',
+                                      alpha=0.3, s=30, marker='o'),
+                        ]
+            ax.legend(handles=handles2 + handles1, fontsize=fontsize - 1.)
             ax.legend(fontsize=fontsize)       
          
     fig.suptitle(title, fontsize=fontsize)    

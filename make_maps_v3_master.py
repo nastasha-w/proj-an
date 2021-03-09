@@ -989,7 +989,7 @@ class linetable_PS20:
                            ionbalfile=self.ionbalfile)
         return _str
         
-    def find_ionbal(self, dct_T_Z_nH):
+    def find_ionbal(self, dct_T_Z_nH, log=False):
         '''
         retrieve the interpolated ion balance values for the input particle 
         density, temperature, and metallicity
@@ -1003,7 +1003,8 @@ class linetable_PS20:
                 'logZ': log10 metallicity [mass fraction, *not* normalized to 
                                            solar]
                 'lognH': log10 hydrogen number density [cm**-3].
-
+        log: bool
+            return log ion balance or not
         Returns
         -------
         float array
@@ -1012,7 +1013,10 @@ class linetable_PS20:
         '''
         if not hasattr(self, 'iontable_T_Z_nH'):
             self.findiontable()
-        return 10**self.interpolate_3Dtable(dct_T_Z_nH, self.iontable_T_Z_nH)
+        res = self.interpolate_3Dtable(dct_T_Z_nH, self.iontable_T_Z_nH)
+        if not log:
+            res = 10**res
+        return res
         
     def find_logemission(self, dct_T_Z_nH):
         '''
