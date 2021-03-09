@@ -686,11 +686,11 @@ def test_interp(line, table='emission'):
         axs = [ax]
     elif len(axes) == 4:
         fig, axs = plt.subplots(ncols=2, nrows=2, figsize=(7.5, 7.),
-                                gridspec_kw={'hspace': 0.4, 'wspace': 0.4})
+                                gridspec_kw={'hspace': 0.3, 'wspace': 0.4})
         axs = [axs[i //2, i %2] for i in range(4)]
     
     np.random.seed(seed=0)
-    numsample = 3 #len(cset)
+    numsample = 5 #len(cset)
     samplesize = 10
     
     for ind, (ax, tabax) in enumerate(zip(axs, axes)):
@@ -866,7 +866,7 @@ def test_interp(line, table='emission'):
                                       alpha=0.3, marker='o'),
                         ]
             ax.legend(handles=handles2 + handles1, fontsize=fontsize - 3.)
-            ax.legend(fontsize=fontsize)       
+            #ax.legend(fontsize=fontsize)       
          
     fig.suptitle(title, fontsize=fontsize)    
     
