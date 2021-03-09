@@ -768,6 +768,7 @@ def test_interp(line, table='emission'):
                                                 high=test_range[1],
                                                 size=samplesize)
                     dct = {'logZ': samplex}
+                    dct_T_Z_nH.update(dct)
                 if 'n' in otheraxes:
                     _a = [gridvalues['n'][gridinds['n'][i]]] * _samplesize
                     dct = {'lognH': np.array(_a)}
@@ -778,6 +779,7 @@ def test_interp(line, table='emission'):
                                                 high=test_range[1],
                                                 size=samplesize)
                     dct = {'lognH': samplex}
+                    dct_T_Z_nH.update(dct)
                 if 'z' in otheraxes:
                     z = gridvalues['z'][gridinds['z'][i]]
                     labelfill['z'] = z
