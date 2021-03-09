@@ -678,7 +678,7 @@ def test_interp(line, table='emission'):
         ylabel = '$\\log_{{10}} \\; \\mathrm{{m}}(\\mathrm{{{ion}}}) \\, /' + \
             ' \\, \\mathrm{{m}}(\\mathrm{{{elt}}})$'
         tablepath = 'Tdep/IonFractions/{eltnum:02d}{eltname}'
-        tablepath = tablepath.format(eltnum=dummytab.eltnum, 
+        tablepath = tablepath.format(eltnum=dummytab.eltind, 
                                      eltname=dummytab.element.lower())
     elif table == 'assumed_abundance':
         ylabel = '$\\mathrm{{n}}_{{\\mathrm{{{elt}}}}} \\, / \\,' +\
@@ -715,7 +715,7 @@ def test_interp(line, table='emission'):
                                         size=200)
             if table == 'assumed_abundance':
                 with h5py.File(filen, 'r') as f:
-                    grid_y = f[tablepath][:, dummytab.eltnum]
+                    grid_y = f[tablepath][:, dummytab.eltind]
                 dct_Z = {'logZ': samplex - np.log10(dummytab.solarZ)}
                 sampley = dummytab.find_assumedabundance(dct_Z)
             
