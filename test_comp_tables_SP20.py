@@ -762,9 +762,8 @@ def test_interp(line, table='emission'):
                     dct = {'logT': samplex}
                     dct_T_Z_nH.update(dct)
                 if 'Z' in otheraxes:
-                    _a = [gridvalues['Z'][gridinds['Z'][i]] +\
-                          np.log10(dummytab.solarZ)] * _samplesize
-                    dct = {'logZ': np.array(_a)}
+                    _a = [gridvalues['Z'][gridinds['Z'][i]]] * _samplesize
+                    dct = {'logZ': np.array(_a) + np.log10(dummytab.solarZ)}
                     dct_T_Z_nH.update(dct)
                     labelfill['Z'] = _a[0]
                 else:

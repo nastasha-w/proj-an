@@ -1153,6 +1153,12 @@ class linetable_PS20:
                 print(msg)
                 z_lo = self.redshifts[zi_lo]
                 z_hi = self.redshifts[zi_hi]
+                print(zi_lo)
+                print(zi_hi)
+                print(z_hi)
+                print(z_lo)
+                print(self.z)
+                
                 self.iontable_T_Z_nH =\
                     (z_hi - self.z) / (z_hi - z_lo) * \
                         tableg[zi_lo, :, :, :, ionind] + \
