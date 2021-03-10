@@ -624,7 +624,7 @@ def test_interp(line, table='emission'):
     cset =  tc.tol_cset('bright') 
     
     title = '{table} interpolation test\n' + \
-             'interpolating in one dimemsion,' + \
+             'interpolating in one dimension,' + \
              ' random grid points for the others'
     
     axes = ['T', 'n', 'Z', 'z']
@@ -771,7 +771,7 @@ def test_interp(line, table='emission'):
                     samplex = np.random.uniform(low=test_range[0], 
                                                 high=test_range[1],
                                                 size=samplesize)
-                    dct = {'logZ': samplex}
+                    dct = {'logZ': samplex + np.log10(dummytab.solarZ)}
                     dct_T_Z_nH.update(dct)
                 if 'n' in otheraxes:
                     _a = [gridvalues['n'][gridinds['n'][i]]] * _samplesize
