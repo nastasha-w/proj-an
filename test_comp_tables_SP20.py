@@ -837,11 +837,11 @@ def test_interp(line, table='emission'):
                 tableslice = seltuples[i]
                 tableslice[4] = lineind
                 tableslice = tuple(tableslice)
-                print(tabax)
-                for d in otheraxes:
-                    msg = '{d}: {val:.2f}'
-                    val = gridvalues[d][tableslice[tabledims[d]]]
-                    print(msg.format(d=d, val=val))
+                #print(tabax)
+                #for d in otheraxes:
+                #    msg = '{d}: {val:.2f}'
+                #    val = gridvalues[d][tableslice[tabledims[d]]]
+                #    print(msg.format(d=d, val=val))
                 #print(filen_em)
                 #print(tableslice)
                 with h5py.File(filen_em if emission else filen, 'r') as f:
@@ -852,7 +852,7 @@ def test_interp(line, table='emission'):
                                     
                 ax.plot(grid_x, grid_y, color=cset[i], linewidth=1.)
                 ax.scatter(grid_x, grid_y, color=cset[i], marker='o', s=30,
-                            label=None, alpha=0.1)
+                            label=None, alpha=0.2)
                 ax.scatter(samplex, sampley,
                            color=cset[i], alpha=0.8,
                            marker='x', s=10, label=_label)
@@ -866,9 +866,9 @@ def test_interp(line, table='emission'):
             ax.set_xlabel(xlabels[tabax], fontsize=fontsize)
             handles1, labels = ax.get_legend_handles_labels()
             handles2 = [mlines.Line2D([], [], label='interp', color='black',
-                                      alpha=0.8, marker='x', linewidth=1.5),
+                                      alpha=0.8, marker='x', linewidth=0.0),
                         mlines.Line2D([], [], label='table', color='black',
-                                      alpha=0.1, marker='o', linewidth=0.),
+                                      alpha=0.2, marker='o', linewidth=1.5),
                         ]
             ax.legend(handles=handles2 + handles1, fontsize=fontsize - 3.)
             #ax.legend(fontsize=fontsize)       
