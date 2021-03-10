@@ -816,9 +816,14 @@ def test_interp(line, table='emission'):
                                    for z in z]
                         sampley = [_table.find_depletion(dct_T_Z_nH) \
                                    for _table in _tables]
+                        sampley = np.log10(sampley)
+                        # table zero value
+                        sampley[sampley == -np.inf] = -50.
                     else:
                         _table = m3.linetable_PS20(line, z, emission=emission)
                         sampley = np.log10(_table.find_depletion(dct_T_Z_nH))
+                        # table zero value
+                        sampley[sampley == -np.inf] = -50.
                     
                 elif table == 'ionbal':
                     tablepath = 'Tdep/IonFractions/{eltnum:02d}{eltname}'
@@ -866,8 +871,7 @@ def test_interp(line, table='emission'):
             ax.set_xlabel(xlabels[tabax], fontsize=fontsize)
             handles1, labels = ax.get_legend_handles_labels()
             handles2 = [mlines.Line2D([], [], label='interp', color='black',
-                                      alpha=0.8, marker='x', linewidth=0.0,
-                                      markersize=10),
+                                      alpha=0.8, marker='x', linewidth=0.0),
                         mlines.Line2D([], [], label='table', color='black',
                                       alpha=0.2, marker='o', linewidth=1.5),
                         ]
