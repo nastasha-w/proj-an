@@ -850,11 +850,11 @@ def test_interp(line, table='emission'):
                     #print(f[tablepath].shape)
                     grid_y = f[tablepath][tableslice]
                                     
-                ax.plot(grid_x, grid_y, color=cset[i], linewidth=2)
+                ax.plot(grid_x, grid_y, color=cset[i], linewidth=1.)
                 ax.scatter(grid_x, grid_y, color=cset[i], marker='o', s=30,
-                            label=None, alpha=0.3)
+                            label=None, alpha=0.1)
                 ax.scatter(samplex, sampley,
-                           color=cset[i], alpha=0.7,
+                           color=cset[i], alpha=0.8,
                            marker='x', s=10, label=_label)
             
             title = title.format(table=table)
@@ -866,9 +866,9 @@ def test_interp(line, table='emission'):
             ax.set_xlabel(xlabels[tabax], fontsize=fontsize)
             handles1, labels = ax.get_legend_handles_labels()
             handles2 = [mlines.Line2D([], [], label='interp', color='black',
-                                      alpha=0.7, marker='x'),
+                                      alpha=0.8, marker='x', linewidth=1.5),
                         mlines.Line2D([], [], label='table', color='black',
-                                      alpha=0.3, marker='o'),
+                                      alpha=0.1, marker='o', linewidth=0.),
                         ]
             ax.legend(handles=handles2 + handles1, fontsize=fontsize - 3.)
             #ax.legend(fontsize=fontsize)       
