@@ -691,8 +691,8 @@ def test_interp(line, table='emission'):
         axs = [axs[i //2, i %2] for i in range(4)]
     
     np.random.seed(seed=0)
-    numsample = 2 #len(cset)
-    samplesize = 20
+    numsample = 5 #len(cset)
+    samplesize = 40
     
     for ind, (ax, tabax) in enumerate(zip(axs, axes)):
         grid_x = gridvalues[tabax]
@@ -919,6 +919,16 @@ def compare_tablesets(z):
             continue
         compare_tables(line, linematch_SP20[line], z, table='emission')
 
+# test table interpolation
+def plot_interptests():
+    test_interp('Ne10      12.1375A', table='emission')
+    test_interp('Ne10      12.1375A', table='ionbal')
+    test_interp('Ne10      12.1375A', table='assumed_abundance')
+    test_interp('Ne10      12.1375A', table='dust')
+    test_interp('Mg11      9.16875A', table='emission')
+    test_interp('Mg11      9.16875A', table='ionbal')
+    test_interp('Mg11      9.16875A', table='assumed_abundance')
+    test_interp('Mg11      9.16875A', table='dust')
     
 if __name__ == '__main__':
     zs_test = [0.0, 0.1, 1., 3.]  
@@ -927,3 +937,4 @@ if __name__ == '__main__':
     z = 0.1
     compare_tablesets(z)
             
+    plot_interptests()
