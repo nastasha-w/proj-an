@@ -854,7 +854,7 @@ def test_interp(line, table='emission'):
                 ax.scatter(grid_x, grid_y, color=cset[i], marker='o', s=30,
                             label=None, alpha=0.2)
                 ax.scatter(samplex, sampley,
-                           color=cset[i], alpha=0.8,
+                           color=cset[i], alpha=0.8, markersize=10,
                            marker='x', s=10, label=_label)
             
             title = title.format(table=table)
