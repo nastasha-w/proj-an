@@ -993,6 +993,9 @@ class linetable_PS20:
         '''
         retrieve the interpolated ion balance values for the input particle 
         density, temperature, and metallicity
+        
+        The lowest metallicity bin is ignored since all ion fractions are 
+        tabulated as zero there.
 
         Parameters
         ----------
@@ -1013,7 +1016,12 @@ class linetable_PS20:
         '''
         if not hasattr(self, 'iontable_T_Z_nH'):
             self.findiontable()
-        res = self.interpolate_3Dtable(dct_T_Z_nH, self.iontable_T_Z_nH)
+        
+        self.logZsol_base = np.copy(self.logZsel)[1:]
+        res = self.interpolate_3Dtable(dct_T_Z_nH,
+                                       self.iontable_T_Z_nH[:, 1:, :])
+        self.logZsol = self.logZsol_base
+        del self.logZsol_base
         if not log:
             res = 10**res
         return res
