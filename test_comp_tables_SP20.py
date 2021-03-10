@@ -653,7 +653,7 @@ def test_interp(line, table='emission'):
         elif table == 'ionbal':
             lineind = dummytab.ionstage
         elif table == 'dust':
-            lineid = dummytab.eltind
+            lineind = dummytab.eltind
         
     # 0: Redshift, 1: Temperature, 2: Metallicity, 3: Density, 4: Line/ion stage
     tabledims = {'z': 0,
