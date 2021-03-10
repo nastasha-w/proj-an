@@ -794,6 +794,12 @@ def test_interp(line, table='emission'):
                 
                 _label = label.format(**labelfill)
                 
+                print('\n\n')
+                print(tabax)
+                print(dct_T_Z_nH)
+                print(z)
+                print('\n\n')
+                
                 emission = False
                 if table == 'emission':
                     tablepath = 'Tdep/EmissivitiesVol' 
