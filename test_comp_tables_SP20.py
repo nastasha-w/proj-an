@@ -651,7 +651,7 @@ def test_interp(line, table='emission'):
             match = [line == _line for _line in lineid]
             lineind = np.where(match)[0][0]
         elif table == 'ionbal':
-            lineind = dummytab.ionstage
+            lineind = dummytab.ionstage - 1
         elif table == 'dust':
             lineind = dummytab.eltind
         
