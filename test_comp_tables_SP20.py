@@ -836,6 +836,11 @@ def test_interp(line, table='emission'):
                 tableslice = seltuples[i]
                 tableslice[4] = lineind
                 tableslice = tuple(tableslice)
+                print(tabax)
+                for d in otheraxes:
+                    msg = '{d}: {val:.2f}'
+                    val = gridvalues[d][tableslice[tabledims[d]]]
+                    print(msg.format(d=d, val=val))
                 #print(filen_em)
                 #print(tableslice)
                 with h5py.File(filen_em if emission else filen, 'r') as f:
