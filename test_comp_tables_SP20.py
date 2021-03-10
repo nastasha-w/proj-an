@@ -690,7 +690,7 @@ def test_interp(line, table='emission'):
         axs = [axs[i //2, i %2] for i in range(4)]
     
     np.random.seed(seed=0)
-    numsample = 2 #len(cset)
+    numsample = 5 #len(cset)
     samplesize = 20
     
     for ind, (ax, tabax) in enumerate(zip(axs, axes)):
@@ -793,13 +793,7 @@ def test_interp(line, table='emission'):
                     z = samplex
                 
                 _label = label.format(**labelfill)
-                
-                print('\n\n')
-                print(tabax)
-                print(dct_T_Z_nH)
-                print(z)
-                print('\n\n')
-                
+                                
                 emission = False
                 if table == 'emission':
                     tablepath = 'Tdep/EmissivitiesVol' 
