@@ -1017,7 +1017,7 @@ class linetable_PS20:
         if not hasattr(self, 'iontable_T_Z_nH'):
             self.findiontable()
         
-        self.logZsol_base = np.copy(self.logZsel)[1:]
+        self.logZsol_base = np.copy(self.logZsol)[1:]
         res = self.interpolate_3Dtable(dct_T_Z_nH,
                                        self.iontable_T_Z_nH[:, 1:, :])
         self.logZsol = self.logZsol_base
