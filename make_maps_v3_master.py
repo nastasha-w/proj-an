@@ -1092,11 +1092,13 @@ class linetable_PS20:
         if not hasattr(self, 'logZsol'):
             self.findiontable()
         logZabs = self.logZsol + np.log10(self.solarZ)
-        # linear extrapolation should be fine here
+        # edge values outside range: matches use of edge values in T, Z, nH
+        # table interpolation
+        edgevals = (self.numberfraction_Z[0], self.numberfraction_Z[-1])
         self.abunds_interp = spint.interp1d(logZabs, self.numberfraction_Z,
                                             kind='linear', axis=-1, copy=True,
                                             bounds_error=False,
-                                            fill_value='extrapolate')
+                                            fill_value=edgevals)
         return 10**self.abunds_interp(dct_Z['logZ'])
         
     def findiontable(self):
