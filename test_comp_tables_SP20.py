@@ -646,7 +646,8 @@ def test_interp(line, table='emission'):
                       'z': f['TableBins/RedshiftBins'][:],
                       }
         if table == 'emission':
-            lineid = f['IdentifierLines'][:]
+            with h5py.File(filen_em, 'r') as fe:
+                lineid = fe['IdentifierLines'][:]
             lineid = np.array([_line.decode() for _line in lineid])
             match = [line == _line for _line in lineid]
             lineind = np.where(match)[0][0]

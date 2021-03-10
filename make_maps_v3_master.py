@@ -1214,7 +1214,7 @@ class linetable_PS20:
             
             if self.z < self.redshifts[0] or self.z > self.redshifts[-1]:
                 msg = 'Desired redshift {z} is outside the tabulated range '+\
-                      + '{zmin} - {zmax}'
+                      '{zmin} - {zmax}'
                 msg = msg.format(z=self.z, zmin=self.redshifts[0], 
                                  zmax=self.reshifts[-1])
                 raise ValueError(msg) 
