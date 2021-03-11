@@ -893,6 +893,8 @@ class linetable_PS20:
         None.
 
         '''
+        self.table_logzero = -50.0
+        
         with h5py.File(self.ionbalfile, 'r') as f:
             # get element abundances (n_i / n_H) for tabulated log Z / Z_solar
             self.numberfractions_Z_elt = f['TotalAbundances'][:, :]
