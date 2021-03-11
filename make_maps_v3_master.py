@@ -816,7 +816,14 @@ class linetable_PS20:
     
     Methods include functions for interpolating the ion balance and emissvitiy 
     tables in logT, logZ, and lognH, as well as the dust depletion and assumed
-    abundance of the given element for a total metallicity value.
+    abundance of the given element for a total metallicity value. These table
+    interpolations omit the log Z / solarZ = -50.0 values in the tables,
+    because these somewhat arbitrary zero values are unsuitable for 
+    interpolation.
+    
+    This does mean that line emission (proportional to the element fraction)
+    should be rescaled to the right metallicity (or better: specific element
+    abundance) after the interpolation step.
     
     A single instance is for one emission or absorption line. This does mean 
     the table bins and dust table may be stored twice if multiple objects are 
@@ -935,7 +942,7 @@ class linetable_PS20:
             hydrogen species.
         ionbalfile: string
             the file (including directory path) containing the ion balance 
-            data. This is aslo needed for emission calculations, since some of
+            data. This is also needed for emission calculations, since some of
             the metadata is not contained in the emission file.
         emtabfile: string
             the file (including directory path) containing the emissivity 
@@ -1017,12 +1024,8 @@ class linetable_PS20:
         if not hasattr(self, 'iontable_T_Z_nH'):
             self.findiontable()
         
-        self.logZsol_base = np.copy(self.logZsol)
-        self.logZsol = np.copy(self.logZsol_base[1:])
         res = self.interpolate_3Dtable(dct_T_Z_nH,
                                        self.iontable_T_Z_nH[:, 1:, :])
-        self.logZsol = self.logZsol_base
-        del self.logZsol_base
         if not log:
             res = 10**res
         return res
@@ -1077,7 +1080,7 @@ class linetable_PS20:
         return 10**self.interpolate_3Dtable(dct_T_Z_nH,
                                             self.depletiontable_T_Z_nH)
     
-    def find_assumedabundance(self, dct_Z):
+    def find_assumedabundance(self, dct_Z, log=False):
         '''
         retrieve the interpolated assumed parent element abundance values for 
         the input particle metallicity
@@ -1108,7 +1111,10 @@ class linetable_PS20:
                                             kind='linear', axis=-1, copy=True,
                                             bounds_error=False,
                                             fill_value=edgevals)
-        return 10**self.abunds_interp(dct_Z['logZ'])
+        res = self.abunds_interp(dct_Z['logZ'])
+        if not log:
+            res = 10*res
+        return res
         
     def findiontable(self):
         if self.vol:
@@ -1141,7 +1147,7 @@ class linetable_PS20:
         with h5py.File(self.ionbalfile, "r") as tablefile:
             self.logTK     = tablefile['TableBins/TemperatureBins'][:] 
             self.lognHcm3  = tablefile['TableBins/DensityBins'][:] 
-            self.logZsol   = tablefile['TableBins/MetallicityBins'][:]
+            self.logZsol   = tablefile['TableBins/MetallicityBins'][1:]
             self.redshifts = tablefile['TableBins/RedshiftBins'][:] 
             
             if self.z < self.redshifts[0] or self.z > self.redshifts[-1]:
@@ -1154,7 +1160,7 @@ class linetable_PS20:
             zi_hi = np.max(np.where(self.z >= self.redshifts)[0])            
             
             tableg = tablefile[tablepath] #  z, T, Z, nH, ion
-                          
+             # 0: Redshift, 1: Temperature, 2: Metallicity, 3: Density, 4: Ion
             if zi_lo == zi_hi:
                 self.iontable_T_Z_nH =\
                     tableg[zi_lo, :, :, :, ionind]
@@ -1167,9 +1173,9 @@ class linetable_PS20:
                 
                 self.iontable_T_Z_nH =\
                     (z_hi - self.z) / (z_hi - z_lo) * \
-                        tableg[zi_lo, :, :, :, ionind] + \
+                        tableg[zi_lo, :, 1:, :, ionind] + \
                     (self.z - z_lo) / (z_hi - z_lo) * \
-                        tableg[zi_hi, :, :, :, ionind]
+                        tableg[zi_hi, :, 1:, :, ionind]
 
     def findemtable(self):
         if self.vol:
@@ -1188,7 +1194,7 @@ class linetable_PS20:
             self.redshifts = f['TableBins/RedshiftBins'][:]
             self.logTK = f['TableBins/TemperatureBins'][:]
             self.lognHcm3 = f['TableBins/DensityBins'][:]
-            self.logZsol = f['TableBins/MetallicityBins'][:] # -50. = primordial
+            self.logZsol = f['TableBins/MetallicityBins'][1:] # -50. = primordial
             
             zi_lo = np.min(np.where(self.z <= self.redshifts)[0])
             zi_hi = np.max(np.where(self.z >= self.redshifts)[0])            
@@ -1199,17 +1205,17 @@ class linetable_PS20:
                 msg = msg.format(z=self.z, zmin=self.redshifts[0], 
                                  zmax=self.reshifts[-1])
                 raise ValueError(msg) 
-
+             # 0: Redshift, 1: Temperature, 2: Metallicity, 3: Density, 4: Line
             if zi_lo == zi_hi:
-                self.emtable_T_Z_nH = emg[zi_lo, :, :, :, li]
+                self.emtable_T_Z_nH = emg[zi_lo, :, 1:, :, li]
             else:
                 z_lo = self.redshifts[zi_lo]
                 z_hi = self.redshifts[zi_hi]
                 self.emtable_T_Z_nH =\
                     (z_hi - self.z) / (z_hi - z_lo) *\
-                        emg[zi_lo, :, :, :, li] + \
+                        emg[zi_lo, :, 1:, :, li] + \
                     (self.z - z_lo) / (z_hi - z_lo) *\
-                        emg[zi_hi, :, :, :, li]
+                        emg[zi_hi, :, 1:, :, li]
         
     def finddepletiontable(self):    
         with h5py.File(self.ionbalfile, 'r') as f:        
@@ -1218,7 +1224,7 @@ class linetable_PS20:
             self.redshifts = f['TableBins/RedshiftBins'][:]
             self.logTK = f['TableBins/TemperatureBins'][:]
             self.lognHcm3 = f['TableBins/DensityBins'][:]
-            self.logZsol = f['TableBins/MetallicityBins'][:] # -50. = primordial
+            self.logZsol = f['TableBins/MetallicityBins'][1:] # -50. = primordial
              
             zi_lo = np.min(np.where(self.z <= self.redshifts)[0])
             zi_hi = np.max(np.where(self.z >= self.redshifts)[0])              
@@ -1229,17 +1235,18 @@ class linetable_PS20:
                 msg = msg.format(z=self.z, zmin=self.redshifts[0], 
                                  zmax=self.reshifts[-1])
                 raise ValueError(msg) 
-
+             # 0: Redshift, 1: Temperature, 2: Metallicity, 3: Density, 4: element
             if zi_lo == zi_hi:
-                self.depletiontable_T_Z_nH = deplg[zi_lo, :, :, :, self.eltind]
+                self.depletiontable_T_Z_nH = \
+                    deplg[zi_lo, :, 1:, :, self.eltind]
             else:
                 z_lo = self.redshifts[zi_lo]
                 z_hi = self.redshifts[zi_hi]
                 self.depletiontable_T_Z_nH =\
                     (z_hi - self.z) / (z_hi - z_lo) *\
-                        deplg[zi_lo, :, :, :, self.eltind] + \
+                        deplg[zi_lo, :, 1:, :, self.eltind] + \
                     (self.z - z_lo) / (z_hi - z_lo) *\
-                        deplg[zi_hi, :, :, :, self.eltind]
+                        deplg[zi_hi, :, 1:, :, self.eltind]
         
         
     def interpolate_3Dtable(self, dct_logT_logZ_lognH, table):
