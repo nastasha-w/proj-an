@@ -932,10 +932,9 @@ class linetable_PS20:
             redshift. Must be within the tabulated range.
         emission: bool
             get emission tables (True) or absorption tables (False)
-            in principle, if emission is True, the absorption table methods 
-            for the ion producing the line may also available. This is, 
-            however, untested, and will only work if the table bins are the 
-            same. (They should be.)
+            if emission is True, the absorption table methods for the ion 
+            producing the line are also available. Using emission=True for an
+            invalid emission line name will produce an error though.
         vol: bool
             Use quantities for the last Cloudy zone (True) or column-averaged
             quantities (False). The column option is only available for the
@@ -1014,7 +1013,7 @@ class linetable_PS20:
                                            solar]
                 'lognH': log10 hydrogen number density [cm**-3].
         log: bool
-            return log ion balance or not
+            return log ion balance if True
         Returns
         -------
         float array
@@ -1092,7 +1091,8 @@ class linetable_PS20:
             resolution element:
                 'logZ': log10 metallicity [mass fraction, *not* normalized to 
                                            solar]
-
+        log: bool
+            return log abundances if True
         Returns
         -------
         float array

@@ -929,6 +929,11 @@ def plot_interptests():
     test_interp('Mg11      9.16875A', table='ionbal')
     test_interp('Mg11      9.16875A', table='assumed_abundance')
     test_interp('Mg11      9.16875A', table='dust')
+    test_interp('Mg12      8.42141A', table='emission')
+    test_interp('Mg12      8.42141A', table='ionbal')
+    test_interp('Mg12      8.42141A', table='assumed_abundance')
+    test_interp('Mg12      8.42141A', table='dust')
+    
     
 if __name__ == '__main__':
     zs_test = [0.0, 0.1, 1., 3.]  
