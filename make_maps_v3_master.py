@@ -1026,7 +1026,7 @@ class linetable_PS20:
             self.findiontable()
         
         res = self.interpolate_3Dtable(dct_T_Z_nH,
-                                       self.iontable_T_Z_nH[:, 1:, :])
+                                       self.iontable_T_Z_nH[:, :, :])
         if not log:
             res = 10**res
         return res
