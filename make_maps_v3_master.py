@@ -4259,11 +4259,11 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,\
 
 def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          ptypeW,\
-         ionW=None, abundsW='auto', quantityW=None,\
-         ionQ=None, abundsQ='auto', quantityQ=None, ptypeQ=None,\
-         excludeSFRW=False, excludeSFRQ=False, parttype='0',\
+         ionW=None, abundsW='auto', quantityW=None,
+         ionQ=None, abundsQ='auto', quantityQ=None, ptypeQ=None,
+         excludeSFRW=False, excludeSFRQ=False, parttype='0',
          theta=0.0, phi=0.0, psi=0.0, \
-         sylviasshtables=False, bensgadget2tables=False,\
+         sylviasshtables=False, bensgadget2tables=False,
          var='auto', axis='z',log=True, velcut=False,\
          periodic=True, kernel='C2', saveres=False,\
          simulation='eagle', LsinMpc=None,\
@@ -4272,92 +4272,122 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          override_simdatapath=None):
 
     """
-    ------------------
-     input simulation
-    ------------------
-    simnum:    only L####N####; string
-    var:       'REFERENCE', 'RECALIBRATED', etc.; string
-               default ('auto') means 'REFERENCE' for all but L0025N0752
-    snapnum:   number of the snapshot; integer
-    simulation:which simulation to use; 'eagle' or 'bahamas' (or 'eagle-ioneq')
-               default 'eagle'
-    override_simdatapath: None or a string specifying the directory containing
-               e.g. the snapshot.../, group.../ directories
-               for non-standard file organisations where the format assumed in 
-               make_maps_opts_locs.py, projection_classes.py, and 
-               read_eagle_files.py will fail at higher levels than this
-               ! Beware: this overrides the simnum and var options, so ideally,
-               set these paths in a wrapper scripts that checks that the files 
-               and assumed simulation parameters agree
-    -----------------
-     what to project (particle selection)
-    -----------------
-    centre:    centre of the box to select particles in; list of 3 floats
-    L_x (y,z): total length of the region to project in the x, (y,z) direction;
-               float
-    LsinMpc:   are L_x,y,z and centre given in Mpc (True) or Mpc/h (False);
-               boolean or None
-               if None: True for EAGLE, False for BAHAMAS
-               default None
-    log:       return log of projected values; boolean
-               default True is strongly recommended to prevent float32 overflow
-               in the output
-    theta, psi, phi: angles to rotate image before plotting; float
-               UNIMPLEMENTED after modifications to Marijke's make_maps
-    axis:      axis to project along; string
-               options: 'x', 'y', 'z'
-    velcut:    slice by velocity in stead of position; boolean or number
-               True: uses hubble flow equivalent of region given in position
-               space
-               False: no velocity information used
-               float: velocity (pkm/s) +/- value relative to hubble flow
-                      velocity at given centre is used; particles are chosen
-                      only from the position-selected region
-                      assumed/set to a positive value
-               (float, float): first value is a velocity offset relative to the
-               hubble flow at centre, second is as above
-               should be rest-frame
-
-               default: False
-               (box position along projection axis defines velocity cut through
-               Hubble flow)
-    npix_x,    number of pixels to use in the prjection in the x and y
-    npix_y:    directions (int, > 0). Naming only uses the number of x pixels, 
-               and the minimum smoothing length uses the pixel diagonal, so 
-               using non-square pixels will not improve the resolution along 
-               one direction by much
-    nameonly:  (bool, default False) if True, don't do any projection, just
-               return the npz file names you would get using the same
-               parameters
-    numslices: if not None, cut the projection region into numslices slices
-               along the projection axis, and project and save each separately
-    halosel:   only include particles belonging to FOF halos meeting these 
-               selection criteria. See documentation of selecthaloparticles for
-               format, or sh.selecthalos_subfindfiles (sh = selecthalos.py) 
-               for more details
-               default: None -> no selection on halo membership
-               note that an empty selection will include all halo particles, 
-               not all particles: halosel=[] gives different results from 
-               halosel=None
+    make a map of an integral quantity (W), and optionally, a local quantity 
+    weighted by an integral quantity (Q), from a numerical simulation
+    
+    Parameters
+    ----------
+    
+    ---------------------
+    simulation to analyse
+    ---------------------
+    simnum:    string
+        which simulation volume to use. For Eagle, the format is 'L####N####'  
+    var: string
+        which feedback/physics variation to use: e.g., 'REFERENCE',
+        'RECALIBRATED'. Should match the value in the directory path for the
+        target simulation. The default is 'auto'; this means 'REFERENCE' for 
+        all Eagle volumes but L0025N0752, where the default means 
+        'RECALIBRATED'.
+    snapnum: int
+        the number of the simulation snapshot to use
+    simulation: string
+        which simulation set to use, e.g. 'eagle' or 'bahamas' 
+        (or 'eagle-ioneq'). The default is 'eagle'.
+    override_simdatapath: None or a string 
+        if this isn't None, the sring specifies the directory containing
+        e.g. the snapshot.../, group.../ directories for non-standard file 
+        organisations where the format assumed in make_maps_opts_locs.py, 
+        projection_classes.py, and read_eagle_files.py will fail at higher 
+        levels than this.
+        ! Beware: this overrides the simnum and var options, so ideally, set 
+        these paths in a wrapper scripts that ensures that the files and 
+        assumed simulation parameters agree
+        
+    ------------------------------------------
+     what to project (SPH particle selection)
+    ------------------------------------------
+    centre: list-like or 3 floats
+        centre of the box to select particles from.
+    L_x (y,z): float
+        total length of the region to project in the x, (y,z) direction.
+    LsinMpc: bool or None
+        L_x,y,z and centre are given in Mpc (True) or Mpc/h (False). 
+        If None, this is set to True for EAGLE, and False for BAHAMAS. The
+        default None.
+   
+    theta, psi, phi: float
+        angles to rotate coordinates before projecting. The defaults are 0.
+        UNIMPLEMENTED after modifications to Marijke Segers' make_maps
+    axis:  string; options: 'x', 'y', 'z'
+        axis to project along. The default is 'z'.       
+    velcut: bool, float, or (float, float) tuple
+        Select particles along the line of sight by velocity (Hubble flow +
+        peculiar) instead of position. Options are:
+        True:  uses the Hubble flow equivalent of the region given in position
+               space (centre, L_x, L_y, L_z) along the projection direction.
+        False: no velocity information is used; particles are selected only on
+               position
+        float: particles with velocities within +/- the input value 
+               (proper km/s) of the Hubble flow velocity at given centre are
+               used. Particles are chosen only from the position-selected 
+               region. (Meaning there is a dual position/velocity selection
+               along the projection direction.) The values is assumed to be/
+               set to a positive value.    
+        (float, float): the first value is a velocity offset relative to the
+               hubble flow at the centre, the second is as above. Velocities 
+               are rest-frame km/s.
+        The default is False.
+    npix_x, npix_y: int, >0   
+        number of pixels to use in the projection in the x and y
+        directions. File naming only uses the number of x pixels, and the 
+        minimum smoothing length uses the pixel diagonal, so using non-square 
+        pixels will not improve the resolution along one direction by much.
+        The x and y directions correspond to the axes after projection. If the 
+        projection direction is 'z', they corresond to the simulation x and y
+        axes. For 'x' projections, npix_x -> simulation y, npix_y -> 
+        simulation z, and for 'y' projections, npix_x -> simulation z, npix_y
+        -> simulation x
+    nameonly: bool
+        if True, don't do any projection, just return the npz/hdf5 file names
+        you would get using the same parameters (assuming savres=True).
+        The default is False. 
+    numslices: int or None
+        if not None, cut the projection region into numslices slices along the
+        projection axis, and project and save each separately. If the 
+        projection axis selection is on velocity, this slicing will also be in 
+        velocity space. (This is useful for thin slices, or velocity space, 
+        when data for many particles will loaded anyway.)
+    halosel: list of tuples or None  
+        if not None, only include particles belonging to FOF halos meeting 
+        these selection criteria. See documentation of selecthaloparticles for
+        the format, or sh.selecthalos_subfindfiles (sh = selecthalos.py) for 
+        more details.
+        The default is None, meaning there is no selection on halo membership.
+        Note that an empty selection will include all halo particles, not all 
+        particles: halosel=[] gives different results from halosel=None.
     kwargs_halosel: kwargs for selecthalos 
-                aperture: aperture in which to get e.g. stellar masses 
-                  (default: 30 [pkpc])
-                mdef: halo mass definition to use (default: '200c')
-                exclsatellites: halo list applies to centrals/FOF main halos 
-                  only; exclsatellites determines whether SubGroupNumber !=0 
-                  gas (belonging to subhalos) is explicitly excluded (True) 
-                  or not 
-                  Note that this means unbound gas (e.g. at the edges of the 
-                  halo) is also excluded.
-                allinR200c: include particles inside R200c but not in the FOF 
-                  group
-                label: replace the automatic name for the halo selection with 
-                  this label (useful for more complicated selections which 
-                  otherwise produce 'filename too long' IOErrors)
-                  recommended to use with the hdf5 saving option, which will 
-                  save the exact selection used
-                  otherwise, the exact parameter documentation relies on 
-                  external files/notes
+        aperture: int
+            aperture in which to get e.g. stellar masses (physical kpc). The
+            default is 30.
+        mdef: string
+            The halo mass definition to use. The default is '200c'.
+        exclsatellites: bool
+            Only halo particles belonging to centrals/FOF main halos are 
+            included. exclsatellites determines whether SubGroupNumber !=0 gas
+            (belonging to subhalos) is explicitly excluded (True). Note that 
+            this means unbound gas (e.g. at the edges of the halo) is also 
+            excluded. The default is False.
+        allinR200c: bool
+            include particles inside R200c but not in the FOF group. The 
+            default is True.
+        label: string or omit
+            replace the automatic name for the halo selection with this label 
+            (useful for more complicated selections which otherwise produce 
+             'filename too long' IOErrors)
+            recommended to use with the hdf5 saving option, which will 
+            save the exact selection used. Otherwise, the exact parameter 
+            documentation relies on external files/notes.
                 
     The chosen region is assumed to be a continuous block. 
 
@@ -4467,19 +4497,28 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                O I - VIII.
                boolean
                
-    --------
-     output
-    --------
-    default:    2D array of projected emission
-    optional:   .npz file containing the 2D array (naming is automatic)
-    nameonly:   name of the file you would get from the saveres output with the 
-                same parameters
-    hdf5:       save output to an hdf5 file instead of .npz (also documents
-                input parameters)
-    modify make_maps_opts_locs for locations of interpolation files (c),
+    --------------
+    output control
+    --------------
+    hdf5: bool      
+        save output to an hdf5 file instead of .npz (also document input 
+        parameters).The default is False for backward compatibilty, but True
+        is strongly recommended.
+    nameonly: bool
+        instead of calculating the full maps, just return the names of the 
+        files you would get if saveres=True, with the same parameters. The
+        default is False.
+    saveres: bool 
+        save the output maps to .npz or .hdf5 files. The default is False. 
+    log: bool      
+        return (and save) log10 of the projected values. The default is True,
+        and is strongly recommended to prevent float32 overflows in the 
+        output.
+        
+    Modify make_maps_opts_locs.py for locations of interpolation files (c),
     projection routine (c), ion balance and emission tables (hdf5) and write
-    locations
-
+    locations.
+    
     --------------
      misc options
     --------------
@@ -4499,6 +4538,21 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                            HI/Hmolecular model
                            (Rahmati, Pawlik, Raicevic, Schaye 2013)
                            default: 'HM01'
+    Returns
+    -------
+    default:    2D array of projected emission/ions/etc.
+                tuple of (integral quantity map, weighted average map or None)
+    optional:   creates an .hdf5 or .npz file containing the 2D array (naming 
+                is automatic)
+    hdf5:       save output to an hdf5 file instead of .npz (also documents
+                input parameters)
+    if nameonly: name of the file you would get from if saveres=True with 
+                the same parameters tuple of (integral quantity file,
+                weighted average file or None)
+    
+    modify make_maps_opts_locs for locations of interpolation files (c),
+    projection routine (c), ion balance and emission tables (hdf5) and write
+    locations
     """
     ########################
     #   setup and checks   #
