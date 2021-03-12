@@ -27,7 +27,7 @@ TODO:
       (can be basic only, initially)
 """
 
-version = 3.6 # matches corresponding make_maps version
+version = 3.7 # matches corresponding make_maps version
 # for 3.4:
 # naming of outputs updated to be more sensible, e.g. cares less about
 # projection axis;
@@ -4264,6 +4264,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          excludeSFRW=False, excludeSFRQ=False, parttype='0',
          theta=0.0, phi=0.0, psi=0.0, \
          sylviasshtables=False, bensgadget2tables=False,
+         ps20tables=False, ps20depletion=True,
          var='auto', axis='z',log=True, velcut=False,\
          periodic=True, kernel='C2', saveres=False,\
          simulation='eagle', LsinMpc=None,\
@@ -4504,8 +4505,14 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         self-shielding and other processes important for ISM gas and low ions, 
         which is not included in the EAGLE cooling tales, but are needed for 
         realistic low ion properties. They also do not contain a bug in the
-        Fe L-shell emission lines that is present in the default tables.
+        Fe L-shell emission lines that is present in the default tables. The
+        variation of Ploeckinger & Schaye table can be adapted by setting 
+        iontab_sylvia_ssh and emtab_sylvia_ssh in make_maps_opts_locs.py. 
         The default is False.
+    ps20depletion: bool
+        Include the effects of dust depletion on ion/element content of the 
+        gas or element emission. The value is only used if ps20tables is True.
+        The default is True, but this might fail if a 'dust0' table is used. 
     bensgadget2tables: bool
         use Ben Oppenheimer's tables made for work on Gadegt-2 simulations to 
         calculate ion fractions; these are made under the same assumptions 
@@ -5591,13 +5598,27 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
             bensgadget2tables = dct['bensgadget2tables']
         else:
             bensgadget2tables = dct_defaults['bensgadget2tables']
+        if 'ps20tables' in dct.keys():
+            ps20tables = dct['ps20tables']
+        else:
+            ps20tables = dct_defaults['ps20tables']
+        if 'ps20depletion' in dct.keys():
+            ps20depletion = dct['ps20depletion']
+        else:
+            ps20depletion = dct_defaults['ps20depletion']
         if not isinstance(sylviasshtables, bool):
             print('sylviasshtables should be True or False')
             return 42
         if not isinstance(bensgadget2tables, bool):
             print('bensgadget2tables should be True or False')
             return 43
-        if sylviasshtables and bensgadget2tables:
+        if not isinstance(ps20tables, bool):
+            print('ps20tables should be True or False')
+            return 47
+        if not isinstance(ps20depletion, bool):
+            print('ps20depletion should be True or False')
+            return 48
+        if sylviasshtables + bensgadget2tables + ps20tables > 1:
             print('only one table set of sylviasshtables and bensgadget2tables can be used')
             return 44
         if sylviasshtables and ion == 'hneutralssh':
@@ -5608,9 +5629,30 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
             return 46
         dct['sylviasshtables'] = sylviasshtables
         dct['bensgadget2tables'] = bensgadget2tables
+        dct['ps20tables'] = ps20tables
+        dct['ps20depletion'] = ps20depletion
+    elif ptype in ['Luminosity', 'Lumdens']:
+        dct['sylviasshtables'] = False
+        dct['bensgadget2tables'] = False
+        if 'ps20tables' in dct.keys():
+            ps20tables = dct['ps20tables']
+        else:
+            ps20tables = dct_defaults['ps20tables']
+        if 'ps20depletion' in dct.keys():
+            ps20depletion = dct['ps20depletion']
+        else:
+            ps20depletion = dct_defaults['ps20depletion']
+        if not isinstance(ps20tables, bool):
+            print('ps20tables should be True or False')
+            return 47
+        if not isinstance(ps20depletion, bool):
+            print('ps20depletion should be True or False')
+            return 48
     else:
         dct['sylviasshtables'] = False
         dct['bensgadget2tables'] = False
+        dct['ps20tables'] = False
+        dct['ps20depletion'] = False
                 
     dct['parttype'] = parttype
     
@@ -5620,11 +5662,12 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
             dct[key] = dct_defaults[key]
     return dct, parttype
 
-def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
-                              L_x, L_y, L_z, centre, LsinMpc,\
-                              excludeSFR, abunds, ion, parttype, quantity,\
-                              axesdct, axbins, allinR200c, mdef,\
-                              sylviasshtables, bensgadget2tables,\
+def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,
+                              L_x, L_y, L_z, centre, LsinMpc,
+                              excludeSFR, abunds, ion, parttype, quantity,
+                              axesdct, axbins, allinR200c, mdef,
+                              sylviasshtables, bensgadget2tables, 
+                              ps20tables, ps20depletion,
                               misc):
 
     '''
@@ -5632,7 +5675,7 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
     This is not an exhaustive check; it does handle the default/auto options
     return numbers are not ordered; just search <return ##>
     '''
-    # max used number: 45
+    # max used number: 47
 
     # basic type and valid option checks
     if not isinstance(var, str):
@@ -5661,9 +5704,15 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
     elif bensgadget2tables and not np.any([ptype in ['Nion', 'Niondens']] + [_dct['ptype'] in ['Nion', 'Niondens'] for _dct in axesdct]):
         print('Warning: the option bensgadget2tables only applies to ion numbers or densities; it will be ignored altogether here')
         return 44
-    if bensgadget2tables and sylviasshtables:
-        print('Only one table set of bensgadget2tables and sylviasshtables can be used')
-        return 45
+    if not isinstance(ps20tables, bool):
+        print('ps20tables should be True or False')
+        return 46
+    if not isinstance(ps20depletion, bool):
+        print('ps20depletion should be True or False')
+        return 47
+    if bensgadget2tables + sylviasshtables + ps20tables > 1:
+        print('Only one table set of bensgadget2tables, ps20tables and sylviasshtables can be used')
+        return 45    
     
     if not (L_x is None and L_y is None and L_z is None and centre is None):
         if (not isinstance(centre[0], num.Number)) or (not isinstance(centre[1], num.Number)) or (not isinstance(centre[2], num.Number)):
