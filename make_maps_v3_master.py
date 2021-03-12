@@ -4273,6 +4273,11 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,
         
         saveattr(hed, 'cosmopars', cosmopars)
         
+        saveattr(hed, 'make_maps_opts_locs.emtab_sylvia_ssh', 
+                 str(ol.emtab_sylvia_ssh))
+        saveattr(hed, 'make_maps_opts_locs.iontab_sylvia_ssh', 
+                 str(ol.iontab_sylvia_ssh))
+        
         hsel = hed.create_group('halosel')
         saveattr(hsel, 'kwargs_halosel', kwargs_halosel)
         if halosel is None:
@@ -6291,6 +6296,10 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
             hed.attrs.create('snapnum', snapnum)
             hed.attrs.create('var', np.string_(var))
             hed.attrs.create('simulation', np.string_(simulation))
+            hed.attrs.create('make_maps_opts_locs.emtab_sylvia_ssh', 
+                             np.string_(str(ol.emtab_sylvia_ssh)))
+            hed.attrs.create('make_maps_opts_locs.iontab_sylvia_ssh', 
+                             np.string_(str(ol.iontab_sylvia_ssh)))
             csm = hed.create_group('cosmopars')
             csm.attrs.create('a', simfile.a)
             csm.attrs.create('z', simfile.z)
@@ -6506,6 +6515,17 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
         saveattr(group, 'L_z', L_z)
         saveattr(group, 'centre', centre)
         saveattr(group, 'Ls_in_Mpc', Ls_in_Mpc)
+        saveattr(group, 'ptype', ptype)
+        saveattr(group, 'excludeSFR', excludeSFR)
+        saveattr(group, 'ion', ion)
+        saveattr(group, 'quantity', quantity)
+        saveattr(group, 'sylviasshtables', sylviasshtables)
+        saveattr(group, 'bensgadget2tables', bensgadget2tables)
+        saveattr(group, 'ps20tables', ps20tables)
+        saveattr(group, 'ps20depletion', ps20depletion)
+        saveattr(group, 'misc', misc)
+        saveattr(group, 'mdef', mdef)
+        saveattr(group, 'allinR200c', allinR200c)
         
         for i in range(len(edges)):
             bingrp.create_dataset('Axis%i'%(i), data=edges[i])
