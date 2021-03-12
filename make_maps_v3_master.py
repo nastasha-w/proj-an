@@ -1165,7 +1165,7 @@ class linetable_PS20:
              # 0: Redshift, 1: Temperature, 2: Metallicity, 3: Density, 4: Ion
             if zi_lo == zi_hi:
                 self.iontable_T_Z_nH =\
-                    tableg[zi_lo, :, :, :, ionind]
+                    tableg[zi_lo, :, 1:, :, ionind]
             else:
                 msg = 'Linearly interpolating ion balance table ' +\
                       'values in redshift'
