@@ -4396,106 +4396,123 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     -----------------
     two quantities can be projected: W and Q
     W is projected directly: the output map is the sum of the particle
-     contributions in each grid cell
+        contributions in each grid cell
     for Q, a W-weighted average is calculated in each cell
-    parameters describing what quantities to calculate have W/Q versions, that
-     do the same thing, but for the different quantities. For the Q options,
-     None can be used for all if no weighted average is desired
+    Parameters describing what quantities to calculate have W/Q versions, that
+        do the same thing, but for the different quantities. For the Q options,
+        None can be used for all if no weighted average is desired.
 
-    ptypeW/    the category of quantity to project (str)
-    ptypeQ:    options are 'basic', 'emission', 'coldens', and for ptypeQ, None
-               'basic' means a quantity stored in the EAGLE output
-               default: None for ptypeQ
-    ionW/      required for ptype options 'emission' and 'coldens'
-    ionQ:      for ptype option 'basic', option is ignored
-               ion/element for which to calculated the column density
-               (ptype 'coldens')
-               or ion/line of which to calculated the emission
-               (ptype 'emission')
-               see make_maps_opts_locs.py for options
-    quantityW/ required for ptype option 'basic'
-    quantityQ: for ptype options 'emission' and 'coldens', option is ignored
-               the quantity from the EAGLE output to project (string)
-               should be the path in the hdf5 file starting after PartType#/
-    parttype:  required for ptype option 'basic'
-               for ptype options 'emission' and 'coldens', option is ignored
-               the particle type for which to project (string!)
-               0 (default): gas
-               1: DM !! DM mass projection only work for Eagle 
-                        (Simfile particle mass read-in)
-               4: Stars
-               5: BHs
-
-
+    ptypeW/ptypeQ: str    
+        the category of quantity to project. Options are 'basic', 'emission',
+        'coldens', and for ptypeQ, None.
+        'basic' means a quantity stored in the EAGLE output, and None for 
+        pytypeQ means no weighted average map is computed, only the intergral
+        quantity map. For ptypeQ, the default is None.
+    ionW/ionQ: str    
+        ion/element for which to calculated the column density (ptype 
+        'coldens') or ion/line of which to calculated the emission (ptype 
+        'emission'). For the standard tables, the options are given in 
+        make_maps_opts_locs.py. The argument is required for ptype[W/Q] 
+        options 'emission' and 'coldens'; for the ptype option 'basic', the 
+        ion option is ignored.
+        see make_maps_opts_locs.py for options       
+    quantityW/quantityQ: str
+        the quantity from the EAGLE output to project. This should be the path
+        in the hdf5 file starting after 'PartType#/'. The argument is required 
+        for ptype option 'basic'; for ptype options 'emission' and 'coldens', 
+        the option is ignored.
+    parttype: str
+        the particle type to project:
+        '0': gas
+        '1': DM !! DM mass projection only work for Eagle 
+                  (Simfile particle mass read-in), and will fail for the full
+                  100 cMpc volume due to counter int/long int issues in the 
+                  smoothing length calculation.
+        '4': Stars
+        '5': BHs
+        The argument is required for ptype option 'basic'. For ptype options 
+        'emission' and 'coldens', the option is ignored. The default is '0'.
     -------------------
      technical choices
     -------------------
-    abundsW/   type of SPH abundances; string, float, or tuple(option,option)
-    abundsQ:   if one option is given,
-               smoothed/particle abundances are used for both nH and element
-               abundances
-               float is fixed element abundance in eagle solar units
-               (see make_maps_opts_locs); for emission and coldens,
-               the primordial hydrogen abundance is then used to calculate
-               lognH
-               if tuple option is given,
-               then the first element (index 0) is for the element abundance,
-               and the second for hydrogen (lognH calculation for emission and
-               absorption); float option here is in (absolute)  mass fraction
-               'auto' is smoothed for ptype 'emission', particle for 'coldens',
-               and same as the one-option setting for hydrogen
-               options are 'Sm', 'Pt', 'auto', float, or a tuple of these
-               For emission from hydrogen, only the hydrogen abundance matters;
-               the element abundance is not used in this case. 
-               (Mixing eltab and hab settings is, in any case, not 
-               recommended.)
-    kernel:    smoothing kernel to use in projections; string
-               options: 'C2', 'gadget'
-               default: 'C2'
-               see HsmlAndProject for other options
-    periodic:  use periodic boundary conditions (not along projection axis);
-               boolean 
-               always set True if you're using the whole box perpendicular to 
-               the projection axis and False otherwise
-    excludeSFRW/ how to handle particle on the equation of state; string/bool
-    excludeSFRQ: options are
-               True   -> exclude EOS particles
-               False  -> include EOS particles at face temperature
-               'T4'   -> include EOS particles at T = 1e4 K
-               'only' -> include only EOS particles
-               'from' -> use only EOS particles or calculate halpha
-                          emission from the star formation rate (ptype
-                          'emission', currently only for ion 'halpha')
-               since Q and W must use the same particles, only False and T4
-               or from and only can be combined with each other
-    misc:      intended for one-off uses without messing with the rest
-               dict or None (default)
-               used in nameoutput with simple key-value naming
-               no checks in inputcheck: typically single-funciton modifications
-               checks are done there
-    ompproj:   use the OpenMP implementation of the C projection routine (bool)
-               faster, but not necessary for small box/region tests
-               do set OMP_NUM_THREADS in the shell to restrict the number of
-               threads if you use the multithreading implementation on a shared 
-               system
-               boolean
-    sylviasshtables: use Sylvia's tables to calculate ion fractions. These
-               assume an HM12 UV/X-ray background and use a newer Cloudy,
-               version, compared to EAGLE's HM01 and older CLoudy cooling
-               (Wiersma et al. 2009). However, these do include self-shielding,
-               which is not included in the EAGLE cooling tales, but is needed
-               for realistic low ion properties
-               These tables also contain a number of ions for which older 
-               tables are not available
-               boolean
-    bensgadget2tables: use Ben's tables made for work on Gadegt-2 simulations 
-               to calculate ion fractions; these are made under the same 
-               assumptions (HM01 UV/X-ray background, solar Z), but with a 
-               newer cloudy version, than the default tables from Serena 
-               Bertone that are consistent with Eagle cooling.
-               These tables exist for a limited number of ions, but include
-               O I - VIII.
-               boolean
+    abundsW/abundsQ: str, float, or tuple(option, option)  
+        type of SPH element abundance to use in 'coldens' or 'emission' 
+        calculations. If one option is given, smoothed/particle abundances are
+        used for both nH and element abundances.
+        A float means a fixed element abundance in eagle solar units (see 
+        make_maps_opts_locs). For emission and coldens, the primordial 
+        hydrogen abundance is then used to calculate lognH. 'Sm' means use 
+        smoothed abudances, 'Pt' means particle abundances.
+        If a tuple is given, the first element (index 0) is for the element 
+        abundance, and the second for hydrogen (lognH calculation for emission 
+        and absorption). The float option for logNh here is the (absolute) 
+        mass fraction.
+        'auto' means use the smoothed abundance for ptype 'emission', and 
+        particle for 'coldens'. As a second tuple argument, 'auto' means use
+        the same as option for hydrogen as the elemen (and a primordial 
+        hydrogen mass fraction if a float value is given).
+        options are 'Sm', 'Pt', 'auto', float, or a 2-tuple of these.
+        For emission from hydrogen, only the hydrogen abundance matters; the 
+        element abundance is not used in this case. Mixing element and 
+        hydrogen settings is, in any case, not recommended. 
+        The default is 'auto'.
+    kernel: str   
+        smoothing kernel to use in projections. The options are 'C2' and 
+        'gadget'. The default is 'C2'.
+        See HsmlAndProject for other (unimplemented) options
+    periodic:  bool
+        use periodic boundary conditions (not along projection axis). Always 
+        set True if you're using the whole box perpendicular to the projection
+        axis and False otherwise.
+    excludeSFRW/excludeSFRQ: str or bool
+        how to handle particle on the equation of state (star-forming gas).
+        The options are:
+        True:  exclude EOS particles
+        False: include EOS particles at face temperature
+        'T4':  include EOS particles at T = 1e4 K
+        'only': include only EOS particles
+        'from': use only EOS particles or calculate halpha emission from the 
+                star formation rate (ptype 'emission', currently only for ion 
+                'halpha')
+        Since Q and W must use the same particles, only False and T4
+        or from and only can be combined with each other.
+    misc: dct or None     
+        intended for one-off uses without messing with the rest of the code.
+        Used in nameoutput with simple key-value naming. No checks in 
+        inputcheck: typically single-funciton modifications; checks are done 
+        there. The default is None.
+    ompproj: bool  
+        use the OpenMP implementation of the C projection routine. Faster, but
+        not necessary for small box/region tests. Do set OMP_NUM_THREADS in 
+        the shell to restrict the number of threads if you use the 
+        multithreading implementation on a shared system.
+    sylviasshtables: bool, DEPRECATED
+        Use Sylvia's tables to calculate ion fractions. These assume an HM12 
+        UV/X-ray background and use a newer Cloudy version, compared to 
+        EAGLE's HM01 and older Cloudy cooling (Wiersma et al. 2009). However, 
+        these do include self-shielding, which is not included in the EAGLE 
+        cooling tales, but is needed for realistic low ion properties.
+        !! The location of these tables in make_maps_opts_locs.py has been 
+        overwritten with the location of the Ploeckinger & Schaye (2020) 
+        tables: the final, published version for which the original ssh tables
+        were a work in progress. The default is False
+    ps20tables: bool
+        Use the Ploeckinger & Schaye (2020) tables to calculate ion fractions 
+        or line emission. These assume an FG20 UV/X-ray background and use a 
+        newer Cloudy version, compared to EAGLE's HM01 and older Cloudy 
+        cooling (Wiersma et al. 2009). However, these do include 
+        self-shielding and other processes important for ISM gas and low ions, 
+        which is not included in the EAGLE cooling tales, but are needed for 
+        realistic low ion properties. They also do not contain a bug in the
+        Fe L-shell emission lines that is present in the default tables.
+        The default is False.
+    bensgadget2tables: bool
+        use Ben Oppenheimer's tables made for work on Gadegt-2 simulations to 
+        calculate ion fractions; these are made under the same assumptions 
+        (HM01 UV/X-ray background, solar Z), but with a newer cloudy version, 
+        than the default tables from Serena Bertone that are consistent with 
+        Eagle cooling. These tables exist for a limited number of ions, but 
+        include O I - VIII.
                
     --------------
     output control
@@ -4540,15 +4557,13 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                            default: 'HM01'
     Returns
     -------
-    default:    2D array of projected emission/ions/etc.
-                tuple of (integral quantity map, weighted average map or None)
-    optional:   creates an .hdf5 or .npz file containing the 2D array (naming 
-                is automatic)
-    hdf5:       save output to an hdf5 file instead of .npz (also documents
-                input parameters)
+    default: 2D array of projected emission/ions/etc.
+        tuple of (integral quantity map, weighted average map or None)
     if nameonly: name of the file you would get from if saveres=True with 
-                the same parameters tuple of (integral quantity file,
-                weighted average file or None)
+        the same parameters. Tuple of (integral quantity file, weighted 
+        average file or None).
+    optionally, creates an .hdf5 or .npz file containing the 2D array (naming 
+    is automatic).
     
     modify make_maps_opts_locs for locations of interpolation files (c),
     projection routine (c), ion balance and emission tables (hdf5) and write
