@@ -1108,8 +1108,8 @@ class linetable_PS20:
         logZabs = self.logZsol + np.log10(self.solarZ)
         # edge values outside range: matches use of edge values in T, Z, nH
         # table interpolation
-        edgevals = (self.numberfraction_Z[0], self.numberfraction_Z[-1])
-        self.abunds_interp = spint.interp1d(logZabs, self.numberfraction_Z,
+        edgevals = (self.numberfraction_Z[1], self.numberfraction_Z[-1])
+        self.abunds_interp = spint.interp1d(logZabs, self.numberfraction_Z[1:],
                                             kind='linear', axis=-1, copy=True,
                                             bounds_error=False,
                                             fill_value=edgevals)
@@ -2206,10 +2206,11 @@ def translate(old_dct, old_nm, centre, boxsize, periodic):
 
 
 
-def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,\
-               npix_x, L_x, L_y, L_z, centre, BoxSize, hconst,\
-               excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,\
-               axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, quantityW, quantityQ,\
+def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
+               npix_x, L_x, L_y, L_z, centre, BoxSize, hconst,
+               excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,
+               ps20tables, ps20depletion,
+               axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, quantityW, quantityQ,
                simulation, LsinMpc, halosel, kwargs_halosel, misc, hdf5):
     # some messiness is hard to avoid, but it's contained
     # Ls and centre have not been converted to Mpc when this function is called
@@ -2274,14 +2275,35 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,\
         iontableindW = '_iontab-sylviasHM12shh'
     elif bensgadget2tables and ptypeW == 'coldens':
         iontableindW = '_iontab-bensgagdet2'
+    elif ps20tables and ptypeW in ['coldens', 'emission']:
+        iontableindW = '_iontab-PS20-'
+        iontab = ol.iontab_sylvia_ssh.split('/')[-1]
+        iontab = iontab[:-5] # remove '.hdf5'
+        iontab = iontab.replace('_', '-')
+        iontableindW = iontableindW + '-' + 'iontab'
+        if ps20depletion:
+            iontableindW += '_depletion-T'
+        else:
+            iontableindW += '_depletion-F'
     else:
         iontableindW = ''
     if sylviasshtables and ptypeQ == 'coldens':
         iontableindQ = '_iontab-sylviasHM12shh'
     elif bensgadget2tables and ptypeQ == 'coldens':
         iontableindQ = '_iontab-bensgagdet2'
+    elif ps20tables and ptypeQ in ['coldens', 'emission']:
+        iontableindQ = '_iontab-PS20-'
+        iontab = ol.iontab_sylvia_ssh.split('/')[-1]
+        iontab = iontab[:-5] # remove '.hdf5'
+        iontab = iontab.replace('_', '-')
+        iontableindQ = iontableindQ + '-' + 'iontab'
+        if ps20depletion:
+            iontableindQ += '_depletion-T'
+        else:
+            iontableindQ += '_depletion-F'
     else:
         iontableindQ = ''
+        
     # abundances
     if ptypeW in ['coldens', 'emission']:
         if abundsW[0] not in ['Sm','Pt']:
@@ -2396,24 +2418,26 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,\
 
 
 
-def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-         ptypeW,\
-         ionW, abundsW, quantityW,\
-         ionQ, abundsQ, quantityQ, ptypeQ,\
-         excludeSFRW, excludeSFRQ, parttype,\
-         theta, phi, psi, \
-         sylviasshtables, bensgadget2tables,\
-         var, axis, log, velcut,\
-         periodic, kernel, saveres,\
-         simulation, LsinMpc,\
-         select, misc, ompproj, numslices, halosel, kwargs_halosel, hdf5, override_simdatapath):
+def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
+         ptypeW,
+         ionW, abundsW, quantityW,
+         ionQ, abundsQ, quantityQ, ptypeQ,
+         excludeSFRW, excludeSFRQ, parttype,
+         theta, phi, psi,
+         sylviasshtables, bensgadget2tables,
+         ps20tables, ps20depletion,
+         var, axis, log, velcut,
+         periodic, kernel, saveres,
+         simulation, LsinMpc,
+         select, misc, ompproj, numslices, halosel, kwargs_halosel,
+         hdf5, override_simdatapath):
 
     '''
     Checks the input to make_map();
     This is not an exhaustive check; it does handle the default/auto options
     return numbers are not ordered; just search <return ##>
     '''
-    # max used number: 48
+    # max used number: 53
 
     # basic type and valid option checks
     if not isinstance(var, str):
@@ -2455,9 +2479,32 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         if ionW == 'hneutralssh' or ionQ == 'hneutralssh':
             print("Neutral hydrogen is not currenty available from Ben's gadget 2 tables")
             return 47
-    if sylviasshtables and bensgadget2tables:
-        print('Cannot use both sylviasshtables and bensgadget2tables; choose one')
-        return 48
+    if not isinstance(ps20tables, bool):
+        print('ps20tables should be True or False.\n')
+        return 48  
+    if ps20tables:
+        if not os.path.isfile(ol.iontab_sylvia_ssh):
+            print('PS20 table {} was not found'.format(ol.iontab_sylvia_ssh))
+            return 52
+    if ps20tables and (ptypeQ == 'emission' or ptypeW == 'emission'):
+        if not os.path.isfile(ol.emtab_sylvia_ssh):
+            print('PS20 emission table {} was not found'.format(ol.emtab_sylvia_ssh))
+            return 53
+        iontab = ol.iontab_sylvia_ssh.split('/')[-1]
+        iontab = iontab[:-5]
+        emtab = ol.emtab_sylvia_ssh.split('/')[-1]
+        emtab = emtab[:-5]
+        if emtab != iontab + '_lines':
+            print('PS20 emission and absorption tables do not match:')
+            print(ol.emtab_sylvia_ssh)
+            print(ol.iontab_sylvia_ssh)
+            return 51
+    if not isinstance(ps20depletion, bool):
+        print('ps20depletion should be True or False.\n')
+        return 49
+    if sylviasshtables + bensgadget2tables + ps20tables > 1:
+        print('Cannot use more than one of sylviasshtables, sp20tables, and bensgadget2tables; choose one')
+        return 50
     if not isinstance(saveres, bool):
         print('saveres should be True or False.\n')
         return 14
@@ -2760,6 +2807,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          excludeSFRW, excludeSFRQ, parttype,\
          theta, phi, psi, \
          sylviasshtables, bensgadget2tables,\
+         ps20tables, ps20depletion,\
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
@@ -4158,17 +4206,18 @@ def saveattr(grp, name, val):
     else:
         grp.attrs.create(name, val)
         
-def savemap_hdf5(hdf5name, projmap, minval, maxval,\
-         simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-         ptypeW,\
-         ionW, abundsW, quantityW,\
-         ionQ, abundsQ, quantityQ, ptypeQ,\
-         excludeSFRW, excludeSFRQ, parttype,\
-         theta, phi, psi, \
-         sylviasshtables, bensgadget2tables,\
-         var, axis, log, velcut,\
-         periodic, kernel, saveres,\
-         simulation, LsinMpc, misc, ompproj, numslices,\
+def savemap_hdf5(hdf5name, projmap, minval, maxval,
+         simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
+         ptypeW,
+         ionW, abundsW, quantityW,
+         ionQ, abundsQ, quantityQ, ptypeQ,
+         excludeSFRW, excludeSFRQ, parttype,
+         theta, phi, psi,
+         sylviasshtables, bensgadget2tables,
+         ps20tables, ps20depletion,
+         var, axis, log, velcut,
+         periodic, kernel, saveres,
+         simulation, LsinMpc, misc, ompproj, numslices,
          halosel, kwargs_halosel, cosmopars, override_simdatapath, groupnums):
     '''
     save projmap, minval, maxval with npzname and the processed input 
@@ -4215,6 +4264,8 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,\
         saveattr(hed, 'numslices', numslices)
         saveattr(hed, 'sylviasshtables', sylviasshtables)
         saveattr(hed, 'bensgadget2tables', bensgadget2tables)
+        saveattr(hed, 'ps20tables', ps20tables)
+        saveattr(hed, 'ps20depletion', ps20depletion)
         saveattr(hed, 'theta', theta)
         saveattr(hed, 'phi', phi)
         saveattr(hed, 'psi', psi)
@@ -4581,17 +4632,19 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     ########################
 
     # Must come first! (including 'auto' option handling)
-    res = inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-         ptypeW,\
-         ionW, abundsW, quantityW,\
-         ionQ, abundsQ, quantityQ, ptypeQ,\
-         excludeSFRW, excludeSFRQ, parttype,\
-         theta, phi, psi, \
-         sylviasshtables, bensgadget2tables,\
-         var, axis, log, velcut,\
-         periodic, kernel, saveres,\
-         simulation, LsinMpc,\
-         select, misc, ompproj, numslices, halosel, kwargs_halosel, hdf5, override_simdatapath)
+    res = inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
+         ptypeW,
+         ionW, abundsW, quantityW,
+         ionQ, abundsQ, quantityQ, ptypeQ,
+         excludeSFRW, excludeSFRQ, parttype,
+         theta, phi, psi,
+         sylviasshtables, bensgadget2tables,
+         ps20tables, ps20depletion,
+         var, axis, log, velcut,
+         periodic, kernel, saveres,
+         simulation, LsinMpc,
+         select, misc, ompproj, numslices, halosel, kwargs_halosel,
+         hdf5, override_simdatapath)
     if isinstance(res, int):
         raise ValueError("inputcheck returned error code %i"%res)
 
@@ -4602,6 +4655,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          excludeSFRW, excludeSFRQ, parttype,\
          theta, phi, psi, \
          sylviasshtables, bensgadget2tables,\
+         ps20tables, ps20depletion,\
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
@@ -4620,8 +4674,10 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                           %(ptypeW,   ionW,   abundsW,   quantityW,   excludeSFRW,   iseltW))
     print((':\t%s\t'.join(['ptypeQ', 'ionQ', 'abundsQ', 'quantityQ', 'excludeSFRQ', 'iseltQ', '']))\
                           %(ptypeQ,   ionQ,   abundsQ,   quantityQ,   excludeSFRQ,   iseltQ))
-    print((':\t%s\t'.join(['log', 'sylviasshtables', 'bensgadget2tables','saveres', 'ompproj', 'hdf5', '']))\
-                          %(log,   sylviasshtables,   bensgadget2tables,  saveres,   ompproj,   hdf5))
+    print((':\t%s\t'.join(['sylviasshtables', 'bensgadget2tables', 'ps20tables', 'ps20depletion', '']))\
+                          %(sylviasshtables,   bensgadget2tables,   ps20tables,   ps20depletion))
+    print((':\t%s\t'.join(['log', 'saveres', 'ompproj', 'hdf5', '']))\
+                          %(log,   saveres,   ompproj,   hdf5))
     print((':\t%s\t'.join(['halosel', 'kwargs_halosel', '']))\
                           %(halosel,  kwargs_halosel))
     print((':\t%s\t'.join(['override_simdatapath', '']))\
@@ -4678,7 +4734,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
             # only needed to get lognH
             wishlist.remove('Density')
             wishlist.remove(habQ)
-        if eltabQ == eltabW and sylviasshtables and ptypeW == 'coldens': #same abundance choice
+        if eltabQ == eltabW and (sylviasshtables or ps20tables) and ptypeW == 'coldens': #same abundance choice
             wishlist.append('logZ')
         if ptypeW == 'emission' and ptypeQ == 'emission':
             wishlist.append('propvol')
@@ -4718,17 +4774,27 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     # done before conversion to Mpc to preserve nice filenames in Mpc/h units
     
     vardict_temp = pc.Vardict(simfile, parttype, []) #argument needed in selecthalos; only the naming and some input checks are called here, only simfile properties are used for those
-    resfile = nameoutput(vardict_temp, ptypeW, simnum, snapnum, version, kernel,\
-                         npix_x, L_x, L_y, L_z, centre, simfile.boxsize, simfile.h,\
-                         excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,\
-                         axis, var, abundsW, ionW, parttype, None, abundsQ, ionQ, quantityW, quantityQ,\
-                         simulation, LsinMpc, halosel, kwargs_halosel, misc, hdf5)
+    resfile = nameoutput(vardict_temp, ptypeW, simnum, snapnum, version, 
+                         kernel,
+                         npix_x, L_x, L_y, L_z, centre, simfile.boxsize, 
+                         simfile.h,
+                         excludeSFRW, excludeSFRQ, velcut, sylviasshtables, 
+                         bensgadget2tables, ps20tables, ps20depletion,                          
+                         axis, var, abundsW, ionW, parttype, None, 
+                         abundsQ, ionQ, quantityW, quantityQ,
+                         simulation, LsinMpc, halosel, kwargs_halosel, 
+                         misc, hdf5)
     if ptypeQ !=None:
-        resfile2 = nameoutput(vardict_temp, ptypeW, simnum, snapnum, version, kernel,\
-                              npix_x, L_x, L_y, L_z, centre, simfile.boxsize, simfile.h,\
-                              excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,\
-                              axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, quantityW, quantityQ,\
-                              simulation, LsinMpc, halosel, kwargs_halosel, misc, hdf5)
+        resfile2 = nameoutput(vardict_temp, ptypeW, simnum, snapnum, version, 
+                              kernel,
+                              npix_x, L_x, L_y, L_z, centre, simfile.boxsize,
+                              simfile.h,
+                              excludeSFRW, excludeSFRQ, velcut, sylviasshtables, 
+                              bensgadget2tables,  ps20tables, ps20depletion,
+                              axis, var, abundsW, ionW, parttype, 
+                              ptypeQ, abundsQ, ionQ, quantityW, quantityQ,
+                              simulation, LsinMpc, halosel, kwargs_halosel,
+                              misc, hdf5)
     del vardict_temp
     # just get the file name for a set of parameters
     if nameonly:
@@ -4923,8 +4989,14 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         qQ = np.zeros(qW.shape,dtype=np.float32)
 
     if numslices is None:
-        projdict = {'lsmooth':lsmooth, 'coords':vardict_WQ.particle['coords_cMpc-vel'],'qW': qW, 'qQ':qQ}
-        resultW,resultQ = project(NumPart,vardict_WQ.box['Ls'],Axis1,Axis2,Axis3,vardict_WQ.box['box3'],periodic,npix_x,npix_y,kernel,projdict,tree,ompproj=ompproj)
+        projdict = {'lsmooth': lsmooth, 
+                    'coords': vardict_WQ.particle['coords_cMpc-vel'],
+                    'qW': qW, 
+                    'qQ': qQ}
+        resultW, resultQ = project(NumPart, vardict_WQ.box['Ls'],
+                                   Axis1, Axis2, Axis3, vardict_WQ.box['box3'],
+                                   periodic, npix_x, npix_y, kernel, 
+                                   projdict, tree, ompproj=ompproj)
 
 
         if log: # strongly recommended: log values should fit into float32 just fine, e.g. non-log cgs Mass overflows float32
@@ -4945,37 +5017,44 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
             if halosel is None:
                 if hdf5:
                     #print('should be saving hdf5 file now')
-                    savemap_hdf5(resfile, resW, minW, maxW,\
-                                 simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-                                 ptypeW,\
-                                 ionW, abundsW, quantityW,\
-                                 ionQ, abundsQ, quantityQ, ptypeQ,\
-                                 excludeSFRW, excludeSFRQ, parttype,\
-                                 theta, phi, psi, \
-                                 sylviasshtables, bensgadget2tables,\
-                                 var, axis, log, velcut,\
-                                 periodic, kernel, saveres,\
-                                 simulation, LsinMpc, misc, ompproj, numslices,\
-                                 halosel, kwargs_halosel, cosmopars, override_simdatapath, None)
+                    savemap_hdf5(resfile, resW, minW, maxW,
+                                 simnum, snapnum, centre, L_x, L_y, L_z, 
+                                 npix_x, npix_y, 
+                                 ptypeW,
+                                 ionW, abundsW, quantityW,
+                                 ionQ, abundsQ, quantityQ, ptypeQ,
+                                 excludeSFRW, excludeSFRQ, parttype,
+                                 theta, phi, psi,
+                                 sylviasshtables, bensgadget2tables,
+                                 ps20tables, ps20depletion,
+                                 var, axis, log, velcut,
+                                 periodic, kernel, saveres,
+                                 simulation, LsinMpc, misc, ompproj, numslices,
+                                 halosel, kwargs_halosel, cosmopars, 
+                                 override_simdatapath, None)
                 else:
                     np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW)
             else:
                 if hdf5:
                     #print('should be saving hdf5 file now')
-                    savemap_hdf5(resfile, resW, minW, maxW,\
-                                 simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-                                 ptypeW,\
-                                 ionW, abundsW, quantityW,\
-                                 ionQ, abundsQ, quantityQ, ptypeQ,\
-                                 excludeSFRW, excludeSFRQ, parttype,\
-                                 theta, phi, psi, \
-                                 sylviasshtables, bensgadget2tables,\
-                                 var, axis, log, velcut,\
-                                 periodic, kernel, saveres,\
-                                 simulation, LsinMpc, misc, ompproj, numslices,\
-                                 halosel, kwargs_halosel, cosmopars, override_simdatapath, groupnums)
+                    savemap_hdf5(resfile, resW, minW, maxW,
+                                 simnum, snapnum, centre, L_x, L_y, L_z, 
+                                 npix_x, npix_y,
+                                 ptypeW,
+                                 ionW, abundsW, quantityW,
+                                 ionQ, abundsQ, quantityQ, ptypeQ,
+                                 excludeSFRW, excludeSFRQ, parttype,
+                                 theta, phi, psi,
+                                 sylviasshtables, bensgadget2tables,
+                                 ps20tables, ps20depletion,
+                                 var, axis, log, velcut,
+                                 periodic, kernel, saveres,
+                                 simulation, LsinMpc, misc, ompproj, numslices,
+                                 halosel, kwargs_halosel, cosmopars, 
+                                 override_simdatapath, groupnums)
                 else:
-                    np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW, groupnums=groupnums)
+                    np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW,
+                             groupnums=groupnums)
             del resW
             if ptypeQ is not None:
                 resQ = resultQ.astype(np.float32)
@@ -4986,34 +5065,40 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                 maxQ = np.max(resQ)
                 if halosel is None:
                     if hdf5:
-                        savemap_hdf5(resfile2, resQ, minQ, maxQ,\
-                                     simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-                                     ptypeW,\
-                                     ionW, abundsW, quantityW,\
-                                     ionQ, abundsQ, quantityQ, ptypeQ,\
-                                     excludeSFRW, excludeSFRQ, parttype,\
-                                     theta, phi, psi, \
-                                     sylviasshtables, bensgadget2tables,\
-                                     var, axis, log, velcut,\
-                                     periodic, kernel, saveres,\
-                                     simulation, LsinMpc, misc, ompproj, numslices,\
-                                     halosel, kwargs_halosel, cosmopars, override_simdatapath, None)
+                        savemap_hdf5(resfile2, resQ, minQ, maxQ,
+                                     simnum, snapnum, centre, L_x, L_y, L_z, 
+                                     npix_x, npix_y, 
+                                     ptypeW,
+                                     ionW, abundsW, quantityW,
+                                     ionQ, abundsQ, quantityQ, ptypeQ,
+                                     excludeSFRW, excludeSFRQ, parttype,
+                                     theta, phi, psi,
+                                     sylviasshtables, bensgadget2tables,
+                                     ps20tables, ps20depletion,
+                                     var, axis, log, velcut,
+                                     periodic, kernel, saveres,
+                                     simulation, LsinMpc, misc, ompproj, numslices,
+                                     halosel, kwargs_halosel, cosmopars, 
+                                     override_simdatapath, None)
                     else:
                         np.savez(resfile2, arr_0=resQ, minfinite=minQ, max=maxQ)
                 else:
                     if hdf5:
-                        savemap_hdf5(resfile2, resQ, minQ, maxQ,\
-                                     simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-                                     ptypeW,\
-                                     ionW, abundsW, quantityW,\
-                                     ionQ, abundsQ, quantityQ, ptypeQ,\
-                                     excludeSFRW, excludeSFRQ, parttype,\
-                                     theta, phi, psi, \
-                                     sylviasshtables, bensgadget2tables,\
-                                     var, axis, log, velcut,\
-                                     periodic, kernel, saveres,\
-                                     simulation, LsinMpc, misc, ompproj, numslices,\
-                                     halosel, kwargs_halosel, cosmopars, override_simdatapath, groupnums)
+                        savemap_hdf5(resfile2, resQ, minQ, maxQ,
+                                     simnum, snapnum, centre, L_x, L_y, L_z, 
+                                     npix_x, npix_y,
+                                     ptypeW,
+                                     ionW, abundsW, quantityW,
+                                     ionQ, abundsQ, quantityQ, ptypeQ,
+                                     excludeSFRW, excludeSFRQ, parttype,
+                                     theta, phi, psi, 
+                                     sylviasshtables, bensgadget2tables,
+                                     ps20tables, ps20depletion,
+                                     var, axis, log, velcut,
+                                     periodic, kernel, saveres,
+                                     simulation, LsinMpc, misc, ompproj, numslices,
+                                     halosel, kwargs_halosel, cosmopars, 
+                                     override_simdatapath, groupnums)
                     else:
                         np.savez(resfile2, arr_0=resQ, minfinite=minQ, max=maxQ, groupnums=groupnums)
                 del resQ
@@ -5060,22 +5145,32 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                     L_z_temp = L_z / float(numslices)
                     centre_temp[Axis3] = centre_temp[Axis3] - (numslices + 1.)*L_z_temp/2. + sliceind*L_z_temp
 
-                subresfile = nameoutput(ptypeW, simnum, snapnum, version, kernel,\
-                         npix_x, L_x_temp, L_y_temp, L_z_temp, centre_temp, simfile.boxsize, simfile.h,\
-                         excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,\
-                         axis, var, abundsW, ionW, parttype, None, abundsQ, ionQ, quantityW, quantityQ,\
+                subresfile = nameoutput(ptypeW, simnum, snapnum, version, kernel,
+                         npix_x, L_x_temp, L_y_temp, L_z_temp, centre_temp, simfile.boxsize, simfile.h,
+                         excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,
+                         ps20tables, ps20depletion,
+                         axis, var, abundsW, ionW, parttype, None, abundsQ, ionQ, quantityW, quantityQ,
                          simulation, LsinMpc, misc)
                 print('Saving W result to %s'%subresfile)
                 if ptypeQ !=None:
-                    subresfile2 = nameoutput(ptypeW, simnum, snapnum, version, kernel,\
-                              npix_x, L_x_temp, L_y_temp, L_z_temp, centre_temp, simfile.boxsize, simfile.h,\
-                              excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,\
-                              axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, quantityW, quantityQ,\
+                    subresfile2 = nameoutput(ptypeW, simnum, snapnum, version, kernel,
+                              npix_x, L_x_temp, L_y_temp, L_z_temp, centre_temp, simfile.boxsize, simfile.h,
+                              excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,
+                              ps20tables, ps20depletion,
+                              axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, quantityW, quantityQ,
                               simulation, LsinMpc, misc)
                     print('Saving Q result to %s'%subresfile2)
 
-            projdict = {'lsmooth':lsmooth, 'coords':vardict_WQ.particle['coords_cMpc-vel'],'qW': qW, 'qQ':qQ}
-            subresultW, subresultQ = project(NumPart, Ls_temp, Axis1, Axis2, Axis3, vardict_WQ.box['box3'], periodic, npix_x, npix_y, kernel, projdict, tree, ompproj=ompproj, projmin=projmin, projmax=projmax)
+            projdict = {'lsmooth': lsmooth, 
+                        'coords': vardict_WQ.particle['coords_cMpc-vel'],
+                        'qW': qW, 
+                        'qQ':qQ }
+            subresultW, subresultQ = project(NumPart, Ls_temp, 
+                                             Axis1, Axis2, Axis3, 
+                                             vardict_WQ.box['box3'], periodic, 
+                                             npix_x, npix_y, kernel, projdict, 
+                                             tree, ompproj=ompproj, 
+                                             projmin=projmin, projmax=projmax)
 
             if log: # strongly recommended: log values should fit into float32 just fine, e.g. non-log cgs Mass overflows float32
                 subresultW = np.log10(subresultW) + np.log10(multipafterW)
@@ -5094,36 +5189,43 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                 maxW = np.max(resW)
                 if halosel is None:
                     if hdf5:
-                        savemap_hdf5(subresfile, resW, minW, maxW,\
-                                     simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-                                     ptypeW,\
-                                     ionW, abundsW, quantityW,\
-                                     ionQ, abundsQ, quantityQ, ptypeQ,\
-                                     excludeSFRW, excludeSFRQ, parttype,\
-                                     theta, phi, psi, \
-                                     sylviasshtables, bensgadget2tables,\
-                                     var, axis, log, velcut,\
-                                     periodic, kernel, saveres,\
-                                     simulation, LsinMpc, misc, ompproj, numslices,\
-                                     halosel, kwargs_halosel, cosmopars, override_simdatapath, None)
+                        savemap_hdf5(subresfile, resW, minW, maxW,
+                                     simnum, snapnum, centre, L_x, L_y, L_z, 
+                                     npix_x, npix_y, 
+                                     ptypeW,
+                                     ionW, abundsW, quantityW,
+                                     ionQ, abundsQ, quantityQ, ptypeQ,
+                                     excludeSFRW, excludeSFRQ, parttype,
+                                     theta, phi, psi, 
+                                     sylviasshtables, bensgadget2tables,
+                                     ps20tables, ps20depletion,
+                                     var, axis, log, velcut,
+                                     periodic, kernel, saveres,
+                                     simulation, LsinMpc, misc, ompproj, numslices,
+                                     halosel, kwargs_halosel, cosmopars, 
+                                     override_simdatapath, None)
                     else:
                         np.savez(subresfile, arr_0=resW, minfinite=minW, max=maxW)
                 else:
                     if hdf5:
-                        savemap_hdf5(subresfile, resW, minW, maxW,\
-                                     simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-                                     ptypeW,\
-                                     ionW, abundsW, quantityW,\
-                                     ionQ, abundsQ, quantityQ, ptypeQ,\
-                                     excludeSFRW, excludeSFRQ, parttype,\
-                                     theta, phi, psi, \
-                                     sylviasshtables, bensgadget2tables,\
-                                     var, axis, log, velcut,\
-                                     periodic, kernel, saveres,\
-                                     simulation, LsinMpc, misc, ompproj, numslices,\
-                                     halosel, kwargs_halosel, cosmopars, override_simdatapath, groupnums)
+                        savemap_hdf5(subresfile, resW, minW, maxW,
+                                     simnum, snapnum, centre, L_x, L_y, L_z, 
+                                     npix_x, npix_y, 
+                                     ptypeW,
+                                     ionW, abundsW, quantityW,
+                                     ionQ, abundsQ, quantityQ, ptypeQ,
+                                     excludeSFRW, excludeSFRQ, parttype,
+                                     theta, phi, psi, 
+                                     sylviasshtables, bensgadget2tables,
+                                     ps20tables, ps20depletion,
+                                     var, axis, log, velcut,
+                                     periodic, kernel, saveres,
+                                     simulation, LsinMpc, misc, ompproj, numslices,
+                                     halosel, kwargs_halosel, cosmopars, 
+                                     override_simdatapath, groupnums)
                     else:
-                        np.savez(subresfile, arr_0=resW, minfinite=minW, max=maxW, groupnums=groupnums)
+                        np.savez(subresfile, arr_0=resW, minfinite=minW, 
+                                 max=maxW, groupnums=groupnums)
                 del resW
                 if ptypeQ is not None:
                     resQ = subresultQ.astype(np.float32)
@@ -5134,36 +5236,43 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                     maxQ = np.max(resQ)
                     if halosel is None:
                         if hdf5:
-                            savemap_hdf5(subresfile2, resQ, minQ, maxQ,\
-                                         simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-                                         ptypeW,\
-                                         ionW, abundsW, quantityW,\
-                                         ionQ, abundsQ, quantityQ, ptypeQ,\
-                                         excludeSFRW, excludeSFRQ, parttype,\
-                                         theta, phi, psi, \
-                                         sylviasshtables, bensgadget2tables,\
-                                         var, axis, log, velcut,\
-                                         periodic, kernel, saveres,\
-                                         simulation, LsinMpc, misc, ompproj, numslices,\
-                                         halosel, kwargs_halosel, cosmopars, override_simdatapath, None)
+                            savemap_hdf5(subresfile2, resQ, minQ, maxQ,
+                                         simnum, snapnum, centre, L_x, L_y, L_z, 
+                                         npix_x, npix_y, 
+                                         ptypeW,
+                                         ionW, abundsW, quantityW,
+                                         ionQ, abundsQ, quantityQ, ptypeQ,
+                                         excludeSFRW, excludeSFRQ, parttype,
+                                         theta, phi, psi, 
+                                         sylviasshtables, bensgadget2tables,
+                                         ps20tables, ps20depletion,
+                                         var, axis, log, velcut,
+                                         periodic, kernel, saveres,
+                                         simulation, LsinMpc, misc, ompproj, numslices,
+                                         halosel, kwargs_halosel, cosmopars, 
+                                         override_simdatapath, None)
                         else:
                             np.savez(subresfile2, arr_0=resQ, minfinite=minQ, max=maxQ)
                     else:
                         if hdf5:
-                            savemap_hdf5(subresfile2, resQ, minQ, maxQ,\
-                                         simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-                                         ptypeW,\
-                                         ionW, abundsW, quantityW,\
-                                         ionQ, abundsQ, quantityQ, ptypeQ,\
-                                         excludeSFRW, excludeSFRQ, parttype,\
-                                         theta, phi, psi, \
-                                         sylviasshtables, bensgadget2tables,\
-                                         var, axis, log, velcut,\
-                                         periodic, kernel, saveres,\
-                                         simulation, LsinMpc, misc, ompproj, numslices,\
-                                         halosel, kwargs_halosel, cosmopars, override_simdatapath, groupnums)
+                            savemap_hdf5(subresfile2, resQ, minQ, maxQ,
+                                         simnum, snapnum, centre, L_x, L_y, L_z, 
+                                         npix_x, npix_y,
+                                         ptypeW,
+                                         ionW, abundsW, quantityW,
+                                         ionQ, abundsQ, quantityQ, ptypeQ,
+                                         excludeSFRW, excludeSFRQ, parttype,
+                                         theta, phi, psi,
+                                         sylviasshtables, bensgadget2tables,
+                                         ps20tables, ps20depletion,
+                                         var, axis, log, velcut,
+                                         periodic, kernel, saveres,
+                                         simulation, LsinMpc, misc, ompproj, numslices,
+                                         halosel, kwargs_halosel, cosmopars, 
+                                         override_simdatapath, groupnums)
                         else:
-                            np.savez(subresfile2, arr_0=resQ, minfinite=minQ, max=maxQ, groupnums=groupnums)
+                            np.savez(subresfile2, arr_0=resQ, minfinite=minQ, 
+                                     max=maxQ, groupnums=groupnums)
                     del resQ
                 print('results saved to file')
             resultW = resultW + [subresultW]
@@ -5265,10 +5374,11 @@ def get3ddist(vardict, cen, last=True, trustcoords=False):
     vardict.delif('Coordinates', last=last)
 
 
-def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
-                              L_x, L_y, L_z, centre, LsinMpc, BoxSize, hconst, excludeSFR,\
-                              abunds, ion, parttype, quantity,\
-                              sylviasshtables, bensgadget2tables,\
+def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,
+                              L_x, L_y, L_z, centre, LsinMpc, BoxSize, hconst, excludeSFR,
+                              abunds, ion, parttype, quantity,
+                              sylviasshtables, bensgadget2tables,
+                              ps20tables, ps20depletion,
                               misc):
     # some messiness is hard to avoid, but it's contained
     # Ls and centre have not been converted to Mpc when this function is called
@@ -5341,13 +5451,30 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
             iontableind = '_iontab-sylviasHM12shh'
         elif bensgadget2tables:
             iontableind = '_iontab-bensgagdet2'
+    if ps20tables and ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']: 
+        iontableind = '_iontab-PS20-'
+        iontab = ol.iontab_sylvia_ssh.split('/')[-1]
+        iontab = iontab[:-5] # remove '.hdf5'
+        iontab = iontab.replace('_', '-')
+        iontableind = iontableind + '-' + 'iontab'
+        if ps20depletion:
+            iontableind += '_depletion-T'
+        else:
+            iontableind += '_depletion-F'
         
     if ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
-        resfile = ol.ndir + 'particlehist_%s_%s%s%s_%s_%s_test%s_%s' %(ptype, ion, sparttype, iontableind, ssimnum, snapnum, str(version), sabunds) + boxstring + SFRind
+        resfile = ol.ndir + 'particlehist_%s_%s%s%s_%s_%s_test%s_%s'%(ptype,
+                            ion, sparttype, iontableind, ssimnum, snapnum, 
+                            str(version), sabunds) +\
+                  boxstring + SFRind
     elif ptype == 'basic':
-        resfile = ol.ndir + 'particlehist_%s%s_%s_%s_test%s' %(squantity, sparttype, ssimnum, snapnum, str(version)) + boxstring + SFRind
+        resfile = ol.ndir + 'particlehist_%s%s_%s_%s_test%s' %(squantity, 
+                            sparttype, ssimnum, snapnum, str(version)) +\
+                  boxstring + SFRind
     elif ptype in ['halo', 'coords']:
-        resfile = 'particlehist_%s-%s%s_%s_%s_test%s' %(ptype, quantity, sparttype, ssimnum, snapnum, str(version)) + boxstring + SFRind
+        resfile = 'particlehist_%s-%s%s_%s_%s_test%s' %(ptype, quantity, 
+                  sparttype, ssimnum, snapnum, str(version)) +\
+                  boxstring + SFRind
         
     if misc is not None:
         miscind = '_'+'_'.join(['%s-%s'%(key, misc[key]) for key in misc.keys()])
@@ -5399,7 +5526,20 @@ def namehistogram_perparticle_axis(dct):
             stables = '_iontab-sylviasHM12shh'
         elif dct['bensgadget2tables']:
             stables = '_iontab-bensgagdet2'
-        axname = '%s_%s%s_%s%s' %(ptype, dct['ion'], sparttype, sabunds, stables) + SFRind
+        elif dct['ps20tables']: 
+            iontableind = '_iontab-PS20-'
+            iontab = ol.iontab_sylvia_ssh.split('/')[-1]
+            iontab = iontab[:-5] # remove '.hdf5'
+            iontab = iontab.replace('_', '-')
+            iontableind = iontableind + '-' + 'iontab'
+            if dct['ps20depletion']:
+                iontableind += '_depletion-T'
+            else:
+                iontableind += '_depletion-F'
+            stables = iontableind
+        axname = '%s_%s%s_%s%s' %(ptype, dct['ion'], sparttype, sabunds, 
+                                  stables) +\
+                 SFRind
 
     elif ptype == 'basic':
         parttype = dct['parttype']
@@ -5675,7 +5815,7 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,
     This is not an exhaustive check; it does handle the default/auto options
     return numbers are not ordered; just search <return ##>
     '''
-    # max used number: 47
+    # max used number: 53
 
     # basic type and valid option checks
     if not isinstance(var, str):
@@ -5707,6 +5847,23 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,
     if not isinstance(ps20tables, bool):
         print('ps20tables should be True or False')
         return 46
+    if ps20tables and ptype in ['Luminosity', 'Lumdens', 'Nion', 'Niondens']:
+        if not os.path.isfile(ol.iontab_sylvia_ssh):
+            print('PS20 table {} was not found'.format(ol.iontab_sylvia_ssh))
+            return 52
+    if ps20tables and ptype in ['Luminosity', 'Lumdens']:
+        if not os.path.isfile(ol.emtab_sylvia_ssh):
+            print('PS20 emission table {} was not found'.format(ol.emtab_sylvia_ssh))
+            return 53
+        iontab = ol.iontab_sylvia_ssh.split('/')[-1]
+        iontab = iontab[:-5]
+        emtab = ol.emtab_sylvia_ssh.split('/')[-1]
+        emtab = emtab[:-5]
+        if emtab != iontab + '_lines':
+            print('PS20 emission and absorption tables do not match:')
+            print(ol.emtab_sylvia_ssh)
+            print(ol.iontab_sylvia_ssh)
+            return 51
     if not isinstance(ps20depletion, bool):
         print('ps20depletion should be True or False')
         return 47
@@ -5759,31 +5916,39 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,
         else:
             var = 'REFERENCE'
 
-    dct_defaults = {'ptype': ptype, 'excludeSFR': excludeSFR, 'abunds': abunds,\
-                    'ion': ion, 'parttype': parttype, 'quantity': quantity,\
-                    'misc': misc, 'allinR200c': allinR200c, 'mdef': mdef,\
-                    'sylviasshtables': sylviasshtables, 'bensgadget2tables': bensgadget2tables}
-    dct_defaults, parttype = check_particlequantity(dct_defaults, {}, parttype, simulation)
-    axesdct = [check_particlequantity(dct, dct_defaults, parttype, simulation)[0] for dct in axesdct]
+    dct_defaults = {'ptype': ptype, 'excludeSFR': excludeSFR, 
+                    'abunds': abunds,
+                    'ion': ion, 'parttype': parttype, 'quantity': quantity,
+                    'misc': misc, 'allinR200c': allinR200c, 'mdef': mdef,
+                    'sylviasshtables': sylviasshtables, 
+                    'bensgadget2tables': bensgadget2tables,
+                    'ps20tables': ps20tables, 'ps20depletion': ps20depletion}
+    dct_defaults, parttype = check_particlequantity(dct_defaults, {},
+                                                    parttype, simulation)
+    axesdct = [check_particlequantity(dct, dct_defaults, parttype, 
+                                      simulation)[0] 
+               for dct in axesdct]
     if np.any(np.array([isinstance(dct, int) for dct in axesdct])):
         print('Error in one of the axis particle properties')
         return 38
 
 
     # if nothing has gone wrong, return all input, since setting quantities in functions doesn't work on global variables
-    return 0, dct_defaults['ptype'], simnum, snapnum, var, simulation,\
-                              L_x, L_y, L_z, centre, LsinMpc,\
-                              dct_defaults['excludeSFR'], dct_defaults['abunds'], dct_defaults['ion'], dct_defaults['parttype'], dct_defaults['quantity'],\
-                              axesdct, axbins, dct_defaults['allinR200c'], dct_defaults['mdef'],\
-                              dct_defaults['sylviasshtables'], dct_defaults['bensgadget2tables'],\
-                              misc
+    return (0, dct_defaults['ptype'], simnum, snapnum, var, simulation,
+            L_x, L_y, L_z, centre, LsinMpc, dct_defaults['excludeSFR'], 
+            dct_defaults['abunds'], dct_defaults['ion'], 
+            dct_defaults['parttype'], dct_defaults['quantity'],
+            axesdct, axbins, dct_defaults['allinR200c'], dct_defaults['mdef'],
+            dct_defaults['sylviasshtables'], dct_defaults['bensgadget2tables'],
+            dct_defaults['ps20tables'],  dct_defaults['ps20depletion'], misc)
 
 
 
-
-def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity,\
-                    sylviasshtables=False, bensgadget2tables=False,\
-                    last=True, updatesel=False, misc=None, mdef='200c', allinR200c=True):
+# TODO: ps20tables=False, ps20depletion=True,
+def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity,
+                    sylviasshtables=False, bensgadget2tables=False,
+                    last=True, updatesel=False, misc=None, mdef='200c', 
+                    allinR200c=True):
     '''
     just copied bits from make_map
     '''
@@ -5884,13 +6049,15 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity,\
 
 
 def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
-                               simulation='eagle',\
-                               excludeSFR=False, abunds=None, ion=None, parttype='0', quantity=None,\
-                               axbins=0.2,\
-                               sylviasshtables=False, bensgadget2tables=False,\
+                               simulation='eagle',
+                               excludeSFR=False, abunds=None, ion=None, 
+                               parttype='0', quantity=None, axbins=0.2,
+                               sylviasshtables=False, bensgadget2tables=False,
+                               ps20tables=False, ps20depletion=True,
                                allinR200c=True, mdef='200c',\
-                               L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
-                               misc=None,\
+                               L_x=None, L_y=None, L_z=None, centre=None, 
+                               Ls_in_Mpc=True,
+                               misc=None,
                                name_append=None, logax=True, loghist=False,
                                nameonly=False):
     '''
@@ -5907,7 +6074,10 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
     ion
     parttype
     quantity
-    sylviasshtables (only available as a choice to apply to all weights/axes)
+    sylviasshtables DEPRECATED (only available as a choice to apply to all 
+                                weights/axes)
+    ps20tables (only available as a choice to apply to all weights/axes)
+    ps20depletion (only available as a choice to apply to all weights/axes)
     bensgadget2tables (only available as a choice to apply to all weights/axes)
     misc
     L_x, L_Y, L_z, centre, Ls_in_Mpc: not currently implemented beyond input
@@ -5920,7 +6090,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
          - pytpe 'halo' is an option, 
            with 'Mass' and 'subcat' quantities  
            'Mass' group particles by parent halo mass (no halo -> halo mass 0.)
-           'subcat' divides galaxies into central, satellite, and unbound 
+           'subcat' divides particles into central, satellite, and unbound 
            classes
          - instead of 'coldens' and 'emission', 
            the ion/emission types are 'Nion' and 'Luminosity' (for total number
@@ -5969,11 +6139,12 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
     '''
     axesdct = [_dct.copy() for _dct in _axesdct]
     
-    res = inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,\
-                              L_x, L_y, L_z, centre, Ls_in_Mpc,\
-                              excludeSFR, abunds, ion, parttype, quantity,\
-                              axesdct, axbins, allinR200c, mdef,\
-                              sylviasshtables, bensgadget2tables,\
+    res = inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,
+                              L_x, L_y, L_z, centre, Ls_in_Mpc,
+                              excludeSFR, abunds, ion, parttype, quantity,
+                              axesdct, axbins, allinR200c, mdef,
+                              sylviasshtables, bensgadget2tables,
+                              ps20tables, ps20depletion,
                               misc)
     if isinstance(res, int):
         print('Input error %i'%res)
@@ -5994,6 +6165,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
     exlcudeSFR, abunds, ion, parttype, quantity,\
     axesdct, axbins, allinR200c, mdef,\
     sylviasshtables, bensgadget2tables,\
+    ps20tables, ps20depletion,\
     misc = res[1:]
 
     print('Processed input for makehstograms_perparticle:')
@@ -6001,29 +6173,39 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
     print('parttype: \t%s \tsimnum: \t%s snapnum: \t%s \tvar: \t%s \tsimulation: \t%s'%(parttype, simnum, snapnum, var, simulation))
     print('L_x: \t%s \tL_y: \t%s \tL_z: \t%s \tcentre: \t%s \tLs_in_Mpc: \t%s'%(L_x, L_y, L_z, centre, Ls_in_Mpc))
     print('loghist: \t%s \tnameonly: \t%s \tname_append: \t%s'%(loghist, nameonly, name_append))
-    fillstr_particleprop = 'ptype: \t%s \texcludeSFR: \t%s \tabunds: \t%s \tion: \t%s \tquantity: \t%s\n\tsylviasshtables: \t%s \tbensgadget2tables: \t%s\tallinR200c: \t%s\tmdef: \t%s'
+    fillstr_particleprop = 'ptype: \t%s \texcludeSFR: \t%s \tabunds: \t%s '+\
+        '\tion: \t%s \tquantity: \t%s\n\tsylviasshtables: \t%s '+\
+        '\tbensgadget2tables: \t%s \tps20tables: \t%s \tps20depletion: \t%s,'+\
+        '\tallinR200c: \t%s\tmdef: \t%s'
     print('histogram weight:')
-    print(fillstr_particleprop%(ptype, excludeSFR, abunds, ion, quantity, sylviasshtables, bensgadget2tables, allinR200c, mdef))
+    print(fillstr_particleprop%(ptype, excludeSFR, abunds, ion, quantity,
+                                sylviasshtables, bensgadget2tables, 
+                                ps20tables, ps20depletion, allinR200c, mdef))
     print('misc: %s'%(misc))
     print('histogram axes:')
     for axi in range(len(axesdct)):
         dct_temp = axesdct[axi]
         print('axis %i'%axi)
-        print(fillstr_particleprop%(dct_temp['ptype'], dct_temp['excludeSFR'],\
-                                    dct_temp['abunds'], dct_temp['ion'],\
-                                    dct_temp['quantity'], dct_temp['sylviasshtables'],\
-                                    dct_temp['bensgadget2tables'], dct_temp['allinR200c'],\
+        print(fillstr_particleprop%(dct_temp['ptype'], dct_temp['excludeSFR'],
+                                    dct_temp['abunds'], dct_temp['ion'],
+                                    dct_temp['quantity'], dct_temp['sylviasshtables'],
+                                    dct_temp['bensgadget2tables'], 
+                                    dct_temp['ps20tables'], dct_temp['ps20depletion'],
+                                    dct_temp['allinR200c'],
                                     dct_temp['mdef']))
         print('\taxbin: \t%s \tlogax: \t%s'%(axbins[axi] if hasattr(axbins, '__getitem__') else axbins, logax[axi]))
     
     useparticledata = ptype == 'halo'
-    useparticledata = useparticledata or np.any([dct_sub['ptype'] == 'halo' for dct_sub in axesdct])
+    useparticledata = useparticledata or np.any([dct_sub['ptype'] == 'halo' \
+                                                 for dct_sub in axesdct])
     
     if useparticledata:
-        simfile = pc.Simfile(simnum, snapnum, var, file_type='particles', simulation=simulation)
+        simfile = pc.Simfile(simnum, snapnum, var, file_type='particles', 
+                             simulation=simulation)
         print('Using particle data')
     else:
-        simfile = pc.Simfile(simnum, snapnum, var, file_type='snap', simulation=simulation)
+        simfile = pc.Simfile(simnum, snapnum, var, file_type='snap', 
+                             simulation=simulation)
         print('Using snapshot data')
     vardict = pc.Vardict(simfile, parttype, [], region=None, readsel=None) # important: vardict.region is set later, so don't read in anything before that
     
@@ -6161,12 +6343,21 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
                 bensgadget2tables_t = dct_t['bensgadget2tables']
             else:
                 bensgadget2tables_t = None
+            if 'ps20tables' in dct_t.keys():
+                ps20tables_t = dct_t['ps20tables']
+            else:
+                ps20tables_t = None
+            if 'ps20depletion' in dct_t.keys():
+                ps20depletion_t = dct_t['ps20depletion']
+            else:
+                ps20depletion_t = None
             logax_t = logax[axind]
-            
             axdata_t, multipafter_t = getparticledata(vardict, ptype_t, excludeSFR_t, abunds_t,\
                                                      ion_t, quantity_t,\
                                                      sylviasshtables=sylviasshtables_t,\
                                                      bensgadget2tables=bensgadget2tables_t,\
+                                                     ps20tables=ps20tables_t, 
+                                                     ps20depletion=ps20depletion_t,
                                                      last=True,\
                                                      updatesel=False, misc=misc_t, mdef=mdef_t,\
                                                      allinR200c=allinR200c_t)
@@ -6247,6 +6438,8 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
             saveattr(grp, 'quantity', quantity_t)
             saveattr(grp, 'sylviasshtables', sylviasshtables_t)
             saveattr(grp, 'bensgadget2tables', bensgadget2tables_t)
+            saveattr(grp, 'ps20tables', ps20tables_t)
+            saveattr(grp, 'ps20depletion', ps20depletion_t)
             saveattr(grp, 'misc', misc_t)
             saveattr(grp, 'mdef', mdef_t)
             saveattr(grp, 'allinR200c', allinR200c_t)
@@ -6260,10 +6453,17 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
             axbins_touse += [axbins_t]
             axdata += [axdata_t]
             del axdata_t
-            
-        weight, multipafter_w = getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity,\
-                                                sylviasshtables=sylviasshtables, bensgadget2tables=bensgadget2tables,\
-                                                last=True, updatesel=False, misc=None, allinR200c=allinR200c, mdef=mdef)
+                   
+        weight, multipafter_w = getparticledata(vardict, ptype, excludeSFR, 
+                                                abunds, ion, quantity,
+                                                sylviasshtables=sylviasshtables, 
+                                                bensgadget2tables=bensgadget2tables,
+                                                ps20tables=ps20tables, 
+                                                ps20depletion=ps20depletion,
+                                                last=True, updatesel=False, 
+                                                misc=None, 
+                                                allinR200c=allinR200c, 
+                                                mdef=mdef)
         maxw = np.max(weight)
         lenw = len(weight)
         # rescale for fp precision and overflow avoidance
