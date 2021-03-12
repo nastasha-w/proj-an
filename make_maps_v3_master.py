@@ -4536,9 +4536,9 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     projection routine (c), ion balance and emission tables (hdf5) and write
     locations.
     
-    --------------
-     misc options
-    --------------
+    ----------------------
+     dct options for misc
+    ----------------------
     'usechemabundtables': 'BenOpp1'
                            use Ben Oppenheimer's ChemicalAbundances tables
                            ion inclusion is checked, whether the simulation
@@ -4562,8 +4562,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     if nameonly: name of the file you would get from if saveres=True with 
         the same parameters. Tuple of (integral quantity file, weighted 
         average file or None).
-    optionally, creates an .hdf5 or .npz file containing the 2D array (naming 
-    is automatic).
+    Optionally (saveres), creates an .hdf5 or .npz file (hdf5) containing the 
+    2D array (naming is automatic).
     
     modify make_maps_opts_locs for locations of interpolation files (c),
     projection routine (c), ion balance and emission tables (hdf5) and write
