@@ -1115,7 +1115,7 @@ class linetable_PS20:
                                             fill_value=edgevals)
         res = self.abunds_interp(dct_Z['logZ'])
         if not log:
-            res = 10*res
+            res = 10**res
         return res
         
     def findiontable(self):
