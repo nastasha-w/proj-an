@@ -27,85 +27,84 @@ import h5py
 import eagle_constants_and_units as c
 import make_maps_opts_locs as ol
 
-elements_ion = {'c1': 'carbon', 'c2': 'carbon', 'c3': 'carbon',\
-                'c4': 'carbon', 'c5': 'carbon', 'c6': 'carbon',\
-                'fe2': 'iron', 'fe3': 'iron', 'fe17': 'iron', \
-                'h1': 'hydrogen', 'h2': 'hydrogen', 'lyalpha': 'hydrogen',\
-                'halpha': 'hydrogen', 'h1ssh': 'hydrogen',\
-                'hmolssh': 'hydrogen', 'hneutralssh': 'hydrogen',\
-                'he1': 'helium', 'he2': 'helium',\
-                'mg1': 'magnesium', 'mg2': 'magnesium',\
-                'n2': 'nitrogen', 'n3': 'nitrogen', 'n4': 'nitrogen',\
-                'n5': 'nitrogen', 'n6': 'nitrogen', 'n7': 'nitrogen',\
-                'ne8': 'neon', 'ne9': 'neon', 'ne10': 'neon',\
-                'o1': 'oxygen', 'o3': 'oxygen', 'o4': 'oxygen',\
-                'o5': 'oxygen', 'o6': 'oxygen', 'o7': 'oxygen',\
-                'o8': 'oxygen', 'o7r': 'oxygen',\
-                's5': 'sulfur',\
-                'si2': 'silicon', 'si3': 'silicon', 'si4': 'silicon',\
+elements_ion = {'c1': 'carbon', 'c2': 'carbon', 'c3': 'carbon',
+                'c4': 'carbon', 'c5': 'carbon', 'c6': 'carbon',
+                'fe2': 'iron', 'fe3': 'iron', 'fe17': 'iron',
+                'h1': 'hydrogen', 'h2': 'hydrogen', 'lyalpha': 'hydrogen',
+                'halpha': 'hydrogen', 'h1ssh': 'hydrogen',
+                'hmolssh': 'hydrogen', 'hneutralssh': 'hydrogen',
+                'he1': 'helium', 'he2': 'helium',
+                'mg1': 'magnesium', 'mg2': 'magnesium',
+                'n2': 'nitrogen', 'n3': 'nitrogen', 'n4': 'nitrogen',
+                'n5': 'nitrogen', 'n6': 'nitrogen', 'n7': 'nitrogen',
+                'ne8': 'neon', 'ne9': 'neon', 'ne10': 'neon',
+                'o1': 'oxygen', 'o3': 'oxygen', 'o4': 'oxygen',
+                'o5': 'oxygen', 'o6': 'oxygen', 'o7': 'oxygen',
+                'o8': 'oxygen', 'o7r': 'oxygen',
+                's5': 'sulfur',
+                'si2': 'silicon', 'si3': 'silicon', 'si4': 'silicon',
                 'si13': 'silicon'}
-element_to_abbr = {\
-                   'hydrogen':  'H',\
-                   'helium':    'He',\
-                   'carbon':    'C',\
-                   'iron':      'Fe',\
-                   'magnesium': 'Mg',\
-                   'nitrogen':  'N',\
-                   'neon':      'Ne',\
-                   'oxygen':    'O',\
-                   'sulfur':    'S',\
-                   'silicon':   'Si',\
+element_to_abbr = {'hydrogen':  'H',
+                   'helium':    'He',
+                   'carbon':    'C',
+                   'iron':      'Fe',
+                   'magnesium': 'Mg',
+                   'nitrogen':  'N',
+                   'neon':      'Ne',
+                   'oxygen':    'O',
+                   'sulfur':    'S',
+                   'silicon':   'Si',
                    }
 abbr_to_element = {element_to_abbr[key]: key for key in element_to_abbr.keys()}
 
-roman_to_arabic = {'I':      1,\
-                   'II':     2,\
-                   'III':    3,\
-                   'IV':     4,\
-                   'V':      5,\
-                   'VI':     6,\
-                   'VII':    7,\
-                   'VIII':   8,\
-                   'IX':     9,\
-                   'X':      10,\
-                   'XI':     11,\
-                   'XII':    12,\
-                   'XIII':   13,\
-                   'XIV':    14,\
-                   'XV':     15,\
-                   'XVI':    16,\
-                   'XVII':   17,\
-                   'XVIII':  18,\
-                   'XIX':    19,\
-                   'XX':     20,\
-                   'XXI':    21,\
-                   'XXII':   22,\
-                   'XXIII':  23,\
-                   'XXIV':   24,\
-                   'XXV':    25,\
+roman_to_arabic = {'I':      1,
+                   'II':     2,
+                   'III':    3,
+                   'IV':     4,
+                   'V':      5,
+                   'VI':     6,
+                   'VII':    7,
+                   'VIII':   8,
+                   'IX':     9,
+                   'X':      10,
+                   'XI':     11,
+                   'XII':    12,
+                   'XIII':   13,
+                   'XIV':    14,
+                   'XV':     15,
+                   'XVI':    16,
+                   'XVII':   17,
+                   'XVIII':  18,
+                   'XIX':    19,
+                   'XX':     20,
+                   'XXI':    21,
+                   'XXII':   22,
+                   'XXIII':  23,
+                   'XXIV':   24,
+                   'XXV':    25,
                    'XXVI':   26}
 arabic_to_roman = {roman_to_arabic[key]: key for key in roman_to_arabic.keys()}
 
-atomnumber_elt = {'hydrogen': 1,\
-                   'helium': 2,\
-                   'lithium': 3,\
-                   'beryllium': 4,\
-                   'boron': 5,\
-                   'carbon': 6,\
-                   'nitrogen': 7,\
-                   'oxygen': 8,\
-                   'fluorine': 9,\
-                   'neon': 10,\
-                   'sodium': 11,\
-                   'magnesium': 12,\
-                   'aluminum': 13,\
-                   'silicon': 14,\
-                   'phosphorus': 15,\
-                   'sulfur': 16,\
-                   'chlorine': 17,\
-                   'argon': 18,\
-                   'potassium': 19,\
-                   'calcium': 20,\
+atomnumber_elt = {'hydrogen': 1,
+                   'helium': 2,
+                   'lithium': 3,
+                   'beryllium': 4,
+                   'boron': 5,
+                   'carbon': 6,
+                   'nitrogen': 7,
+                   'oxygen': 8,
+                   'fluorine': 9,
+                   'neon': 10,
+                   'sodium': 11,
+                   'magnesium': 12,
+                   'aluminum': 13,
+                   'silicon': 14,
+                   'phosphorus': 15,
+                   'sulfur': 16,
+                   'chlorine': 17,
+                   'argon': 18,
+                   'potassium': 19,
+                   'calcium': 20,
                    'iron': 26}
 
 elt_atomnumber = {atomnumber_elt[key]: key for key in atomnumber_elt}

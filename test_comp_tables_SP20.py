@@ -892,6 +892,41 @@ def test_interp(line, table='emission'):
 # absorption maps
 # no-dust maps with both table sets
 # with and without dust depletion
+def create_maps():
+    
+    simnum = 'L0012N0188'
+    snapnum = 27
+    centre = [6.25, 6.25, 3.125]
+    L_x = 12.5
+    L_y = 12.5
+    L_z = 6.25
+    npix_x = 800
+    npix_y = 800
+    
+    kwargs_def = {'ionW': 'o7', 'abundsW': 'auto', 'quantity': None, 
+                  'ionQ': None, 'abundsW': 'auto', 'quantity': None, 
+                  'ptypeQ': None,
+                  'excludeSFRW': 'T4', 'excludeSFRQ': 'T4',
+                  'var': 'REFERENCE', 'axis': 'z', 'log': True, 
+                  'velcut': False, 'periodic': True, 'kernel': 'C2',
+                  'saveres': True, 'hdf5': True, 'ompproj': True,
+                  }
+    
+    make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
+         ptypeW,\
+         ionW=None, abundsW='auto', quantityW=None,
+         ionQ=None, abundsQ='auto', quantityQ=None, ptypeQ=None,
+         excludeSFRW=False, excludeSFRQ=False, parttype='0',
+         theta=0.0, phi=0.0, psi=0.0, \
+         sylviasshtables=False, bensgadget2tables=False,
+         ps20tables=False, ps20depletion=True,
+         var='auto', axis='z',log=True, velcut=False,\
+         periodic=True, kernel='C2', saveres=False,\
+         simulation='eagle', LsinMpc=None,\
+         select=None, misc=None, halosel=None, kwargs_halosel=None,\
+         ompproj=False, nameonly=False, numslices=None, hdf5=False,\
+         override_simdatapath=None)
+
 
 def compare_maps(args_map1, args_map2, kwargs_map1, kwargs_map2,\
                  imgname=None):

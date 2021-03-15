@@ -845,32 +845,39 @@ class linetable_PS20:
 
         '''
         if self.emission: # lines are formatted as in the IdentifierLines dataset
-            self.elementshort = self.ion[:2].strip()
-            self.ionstage = int(self.ion[2:4])
-            msg = 'Interpreting {line} as coming from the {elt} {stage} ion'
-            msg = msg.format(line=self.ion, elt=self.elementshort,
-                             stage=self.ionstage)
-            print(msg)
+            try:
+                self.elementshort = self.ion[:2].strip()
+                self.ionstage = int(self.ion[2:4])
+                msg = 'Interpreting {line} as coming from the {elt} {stage} ion'
+                msg = msg.format(line=self.ion, elt=self.elementshort,
+                                 stage=self.ionstage)
+                print(msg)
+            except:
+                msg = 'Failed to parse "{}" as an emission line'
+                raise ValueError(msg.format(self.ion))
         else: # ions are '<elt><stage>....'
-            if self.ion == 'hmolssh':
-                self.elementshort = 'H'
-                # get a useful error, I hope
-                self.ionstage = 'invalid index for hmolssh'   
-            else:
-                self.elementshort = ''
-                self.ionstage = ''
-                i = 0
-                while not self.ion[i].isdigit():
-                    i += 1             
-                self.elementshort = string.capwords(self.ion[:i])
-                self.elementshort = self.elementshort.strip()
-                while self.ion[i].isdigit():
-                    self.ionstage = self.ionstage + self.ion[i]
-                    i += 1
-                    if i == len(self.ion):
-                        break
-                self.ionstage = int(self.ionstage)
-            
+            try:
+                if self.ion == 'hmolssh':
+                    self.elementshort = 'H'
+                    # get a useful error, I hope
+                    self.ionstage = 'invalid index for hmolssh'   
+                else:
+                    self.elementshort = ''
+                    self.ionstage = ''
+                    i = 0
+                    while not self.ion[i].isdigit():
+                        i += 1             
+                    self.elementshort = string.capwords(self.ion[:i])
+                    self.elementshort = self.elementshort.strip()
+                    while self.ion[i].isdigit():
+                        self.ionstage = self.ionstage + self.ion[i]
+                        i += 1
+                        if i == len(self.ion):
+                            break
+                    self.ionstage = int(self.ionstage)
+            except:
+                msg = 'Failed to parse "{}" as an ion'
+                raise ValueError(msg.format(self.ion))
             msg = 'Interpreting {ion} as the {elt} {stage} ion'
             msg = msg.format(ion=self.ion, elt=self.elementshort,
                              stage=self.ionstage)
@@ -2437,7 +2444,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
     This is not an exhaustive check; it does handle the default/auto options
     return numbers are not ordered; just search <return ##>
     '''
-    # max used number: 53
+    # max used number: 55
 
     # basic type and valid option checks
     if not isinstance(var, str):
@@ -2590,7 +2597,9 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                 print('kwargs_halosel: "label" must be a string; was %s'%(kwargs_halosel['label']))
                 return 43   
             
-    if simulation not in ['eagle', 'bahamas', 'Eagle', 'Bahamas', 'EAGLE', 'BAHAMAS', 'eagle-ioneq', 'c-eagle-hydrangea', 'CE', 'hydrangea', 'CEH']:
+    if simulation not in ['eagle', 'bahamas', 'Eagle', 'Bahamas', 'EAGLE',
+                          'BAHAMAS', 'eagle-ioneq', 'c-eagle-hydrangea', 'CE',
+                          'hydrangea', 'CEH']:
         print('Simulation %s is not a valid choice; should be "eagle", "eagle-ioneq", "c-eagle-hydrangea" or "bahamas"'%str(simulation))
         return 30
     elif simulation == 'Eagle' or simulation == 'EAGLE':
@@ -2671,12 +2680,20 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
     if ptypeW not in ['emission', 'coldens', 'basic']:
         print('ptypeW should be one of emission, coldens, or basic (str).\n')
         return 3
-    elif ptypeW in ['emission','coldens']:
+    elif ptypeW in ['emission', 'coldens']:
         parttype = '0'
         if ionW in ol.elements_ion.keys():
             iseltW = False
         elif ionW in ol.elements and ptypeW == 'coldens':
             iseltW = True
+        elif ps20tables:
+            try:
+                linetable_PS20(ionW, 0.0, emission=ptypeW=='emission')
+            except ValueError as err:
+                print(err)
+                print('Invalid PS20 ion {}'.format(ionW))
+                return 55
+            iseltW = False
         else:
             print('%s is an invalid ion option for ptypeW %s\n'%(ionW,ptypeW))
             return 26
@@ -2715,8 +2732,6 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
             return 6
 
 
-
-
     if ptypeQ not in ['emission', 'coldens', 'basic', None]:
         print('ptypeQ should be one of emission, coldens, basic (str), or None.\n')
         return 7
@@ -2727,6 +2742,14 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
             iseltQ = False
         elif ionQ in ol.elements and ptypeQ == 'coldens':
             iseltQ = True
+        elif ps20tables:
+            try:
+                linetable_PS20(ionQ, 0.0, emission=ptypeQ=='emission')
+            except ValueError as err:
+                print(err)
+                print('Invalid PS20 ion {}'.format(ionQ))
+                return 55
+            iseltQ = False
         else:
             print('%s is an invalid ion option for ptypeQ %s\n'%(ionQ,ptypeQ))
             return 8
@@ -3454,24 +3477,32 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
     return luminosity, CGSconv # array, cgsconversion
 
 
-def luminosity_to_Sb(vardict, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ion):
+def luminosity_to_Sb(vardict, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ion,
+                     ps20tables=False):
     '''
     converts cgs luminosity (erg/s) to cgs surface brightness
     (photons/s/cm2/steradian)
     ion needed because conversion depends on the line energy
     
-    input:
-    ------
-    vardict:        Vardict instance -- used to get cosmological parameters
-    Ls:             the dimensions of the projected box:
-                    Ls[0] is the full extent along the x axis, Ls[1] along y,
-                    Ls[2] is along z (diameter, not radius)
-    Axis1, Axis2:   axes perpendicular to the line of sight (0=x, 1=y, 2=z)
-                    (int)
-    Axis3:          axis along the line of sight (int)
-    npix_x, npix_y: number of pixels along Axis1 and Axis2, respectively 
-    ion:            name for the line to get the conversion for, as used in 
-                    make_maps_opts_locs
+    Parameters
+    ----------
+    vardict: Vardict instance 
+        used to get cosmological parameters
+    Ls: array of floats            
+        the dimensions of the projected box: Ls[0] is the full extent along 
+        the x axis, Ls[1] along y, Ls[2] is along z (diameter, not radius)
+    Axis1, Axis2: int  
+        axes perpendicular to the line of sight (0=x, 1=y, 2=z
+    Axis3: int 
+        axis along the line of sight (int)
+    npix_x, npix_y: int
+        number of pixels along Axis1 and Axis2, respectively 
+    ion: str           
+        name for the line to get the conversion for, as used in 
+        make_maps_opts_locs
+    ps20tables: bool    
+        if True, the ion refers to a PS20 table line (get energy from the 
+        line name, not make_maps_opnts_locs)
     In Ls, the the indices match the simulation axes every time: indices 0, 1, 
     and 2 always correspond to the X, Y, and Z axes respectively.
     Axis1, Axis2, and Axis3 and as used as indices for Ls. Axis1 and Axis2, 
@@ -3504,7 +3535,18 @@ def luminosity_to_Sb(vardict, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ion):
     # the (1+z) is not so much a correction to the line energy as to the luminosity distance:
     # the 1/4 pi dL^2 luminosity -> flux conversion is for a broad spectrum and includes energy flux decrease to to redshifting
     # multiplying by (1+z) compensates for this: the number of photons does not change from redshifting
-    return 1. / (4 * np.pi * ldist**2) * (1. + zcalc) / ol.line_eng_ion[ion] *\
+    if ps20tables:
+        # units: Å (A), cm (c), and μm (m)
+        _wl = (ion[4:]).strip()
+        _unit = _wl[-1]
+        wl = float(_wl[:-1])
+        unit = 1. if _unit == 'c' else 1e-8 if _unit == 'A' \
+              else 1e-4 if _unit == 'm' else np.NaN
+        wl_cm = wl * unit
+        eng_erg = c.planck * c.c / wl_cm
+    else:
+        eng_erg = ol.line_eng_ion[ion]
+    return 1. / (4 * np.pi * ldist**2) * (1. + zcalc) / eng_erg *\
            1. / solidangle(halfangle_x, halfangle_y)
 
 
@@ -3710,8 +3752,11 @@ def Nelt_calc(vardict,excludeSFR,eltab,hab,ion,last=True,updatesel=True,
         if len(vardict.particle['logT']) > 0:
             print('Min, max, median of particle log temperature [K]: %.5e %.5e %.5e' \
                 % (np.min(vardict.particle['logT']), np.max(vardict.particle['logT']), np.median(vardict.particle['logT'])))
-            
-        table = linetable_PS20(ion, vardict.simfile.z)
+        
+        # linetable object needs an actual ion
+        dummyion = ild.element_to_abbr[ion]
+        dummyion = dummyion.lower() + '1'
+        table = linetable_PS20(dummyion, vardict.simfile.z)
         print('Using table for z={.3f}'.format(vardict.simfile.z))
         if 'logZ' not in vardict.particle.keys():
             if isinstance(eltab, str):
@@ -5153,7 +5198,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                            ps20tables=ps20tables, 
                                            ps20depletion=ps20depletion)
         multipafterQ *= luminosity_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3,
-                                         npix_x, npix_y, ionW, ,
+                                         npix_x, npix_y, ionW,
                                          ps20tables=ps20tables)
     elif ptypeQ == 'emission' and excludeSFRQ == 'from':
         if ionQ == 'halpha':
