@@ -996,7 +996,7 @@ class linetable_PS20:
                            emtabfile=self.emtabfile,
                            ionbalfile=self.ionbalfile)
         return _str
-        
+    
     def find_ionbal(self, dct_T_Z_nH, log=False):
         '''
         retrieve the interpolated ion balance values for the input particle 
@@ -1007,7 +1007,7 @@ class linetable_PS20:
 
         Parameters
         ----------
-        dct_logT_logZ_lognH : dict of 1-D float arrays
+        dct_T_Z_nH : dict of 1-D float arrays
             dictionary containing the following arrays describing each 
             resolution element:
                 'logT': log10 temperature [K]
@@ -1038,7 +1038,7 @@ class linetable_PS20:
 
         Parameters
         ----------
-        dct_logT_logZ_lognH : dict of 1-D float arrays
+        dct_T_Z_nH : dict of 1-D float arrays
             dictionary containing the following arrays describing each 
             resolution element:
                 'logT': log10 temperature [K]
@@ -1063,7 +1063,7 @@ class linetable_PS20:
 
         Parameters
         ----------
-        dct_logT_logZ_lognH : dict of 1-D float arrays
+        dct_T_Z_nH : dict of 1-D float arrays
             dictionary containing the following arrays describing each 
             resolution element:
                 'logT': log10 temperature [K]
@@ -1088,7 +1088,7 @@ class linetable_PS20:
 
         Parameters
         ----------
-        dct_logZ: dict of 1-D float arrays
+        dct_Z: dict of 1-D float arrays
             dictionary containing the following arrays describing each 
             resolution element:
                 'logZ': log10 metallicity [mass fraction, *not* normalized to 
@@ -3252,7 +3252,8 @@ def get_eltab_names(abunds,iselt,ion): #assumes
 
 
 def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
-                    last=True, updatesel=True):
+                    last=True, updatesel=True, ps20tables=False, 
+                    ps20depletion=True):
     '''
     Calculate the per particle luminosity of an emission line (ion)
     vardict should already contain the particle selection for which to
@@ -3278,7 +3279,9 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
     if not vardict.isstored_part('propvol'):
         vardict.readif('Density', rawunits=True)
         vardict.readif('Mass', rawunits=True)
-        vardict.add_part('propvol', (vardict.particle['Mass'] / vardict.particle['Density']) * (vardict.CGSconv['Mass'] / vardict.CGSconv['Density']))
+        vardict.add_part('propvol', (vardict.particle['Mass'] /\
+                                     vardict.particle['Density']) *
+                         (vardict.CGSconv['Mass'] / vardict.CGSconv['Density']))
         vardict.delif('Mass',last=last)
     
     if len(vardict.particle['propvol']) > 0:
@@ -3324,65 +3327,131 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
                np.max(vardict.particle['logT']),\
                np.median(vardict.particle['logT'])))
 
-
-    lineind = ol.line_nos_ion[ion]
-    vardict.add_part('emdenssq', find_emdenssq(vardict.simfile.z,\
-                                               ol.elements_ion[ion],\
-                                               vardict.particle,\
-                                               lineind))
-    if len(vardict.particle['emdenssq']) > 0:
-        print('Min, max, median of particle emdenssq: %.5e %.5e %.5e' \
-            % (np.min(vardict.particle['emdenssq']),\
-               np.max(vardict.particle['emdenssq']),\
-               np.median(vardict.particle['emdenssq'])))
-    vardict.delif('logT',last = last)
-
-    # for agreement with Cosmoplotter
-    # also: using SPH_KERNEL_GADGET; check what EAGLE uses!!
-    #lowZ = eltabund < 10**-15
-    #eltabund[lowZ] = 0.
-
-    if ol.elements_ion[ion] == 'hydrogen': # no rescaling if hydrogen
-        zscale = 1.
-    else:
-        if isinstance(hab, str):
-            vardict.readif(hab, rawunits=True)
-            hmfrac = vardict.particle[hab]
-            if eltab != hab:
-                vardict.delif(hab, last=last)
+    if ps20tables:
+        table = linetable_PS20(ion, vardict.simfile.z, emission=True)
+        if 'logZ' not in vardict.particle.keys():
+            if isinstance(eltab, str):
+                if 'SmoothedElementAbundance' in eltab:
+                    vardict.readif('SmoothedMetallicity', rawunits=True) # dimensionless
+                    vardict.add_part('logZ', np.log10(vardict.particle['SmoothedMetallicity']))
+                    vardict.delif('SmoothedMetallicity', last=last)
+                elif 'ElementAbundance' in eltab:
+                    vardict.readif('Metallicity', rawunits=True) # dimensionless
+                    vardict.add_part('logZ', np.log10(vardict.particle['Metallicity']))
+                    vardict.delif('Metallicity', last=last)
+            else:
+                _logZ = np.ones(len(vardict.particle['lognH']))
+                _logZ *= np.log10(table.solarZ)
+                vardict.add_part('logZ', _logZ)
+                del _logZ
+        # zero metallicity leads to interpolation errors; 
+        # if hydrogen or helium, set minimum to > -np.inf 
+        # any value < -50. -> minimum table value used
+        minlz = np.min(vardict.particle['logZ'])
+        print('Minimum logZ found: {}'.format(minlz))
+        dellz = False
+        if minlz == -np.inf:
+            print('Adjusting minimum logZ to small finite value')
+            vardict.particle['logZ'][vardict.particle['logZ'] == -np.inf] = -100.
+            dellz = True        
+        luminosity = table.find_logemission(vardict.particle)        
+        vardict.delif('logT', last=last) 
+        vardict.delif('lognH', last=last)
+                
+        if not ps20depletion:
+            # luminosity in table = (1 - depletion) * luminosity_if_all_elt_in_gas
+            # so divide by depleted fraction to get undepleted emission
+            luminosity -= np.log10(1. - table.find_depletion(vardict.particle))
+        # rescale to the correct /element/ abundance
+        if ol.elements_ion[ion] == 'hydrogen': # no rescaling if hydrogen
+            vardict.delif('logZ', last=(last or dellz)) 
         else:
-            hmfrac = hab
-        if isinstance(eltab, str):
-            vardict.readif(eltab, rawunits=True)
-            emfrac = vardict.particle[eltab]
-            vardict.delif(eltab, last=last)
+            luminosity -= table.find_assumedabundance(vardict.particle,
+                                                      log=True)
+            vardict.delif('logZ', last=(last or dellz))
+            if isinstance(hab, str):
+                vardict.readif(hab, rawunits=True)
+                hmfrac = vardict.particle[hab]
+                if eltab != hab:
+                    vardict.delif(hab, last=last)
+            else:
+                hmfrac = hab
+            if isinstance(eltab, str):
+                vardict.readif(eltab, rawunits=True)
+                emfrac = vardict.particle[eltab]
+                vardict.delif(eltab, last=last)
+            else:
+                emfrac = eltab
+            zscale = emfrac / hmfrac
+            del emfrac
+            del hmfrac
+            zscale *= ionh.atomw['Hydrogen'] / table.elementmass_u
+            luminosity += np.log10(zscale)
+        luminosity += np.log10(vardict.particle['propvol'])
+        vardict.delif('propvol',last=last)
+        if len(luminosity) > 0:
+            maxL = np.max(luminosity)
+            # attempt to prevent overflow in exponentiation + projection
+            rescale = 34. - maxL
         else:
-            emfrac = eltab
-        zscale = emfrac / hmfrac
-        del emfrac
-        del hmfrac
-        zscale *= ionh.atomw['Hydrogen'] / \
-                  ionh.atomw[string.capwords(ol.elements_ion[ion])]
-        zscale /= ol.solar_abunds_sb[ol.elements_ion[ion]]
-    # using units of 10**-10 * CGS, to make sure overflow of float32 does not occur in C
-    # (max is within 2-3 factors of 10 of float32 overflow in one simulation)
-    luminosity = zscale * 10**(vardict.particle['emdenssq'] +\
-                               2. * vardict.particle['lognH'] +\
-                               np.log10(vardict.particle['propvol']) - 10.)
-    vardict.delif('lognH',last=last)
-    vardict.delif('emdenssq',last=last)
-    vardict.delif('propvol',last=last)
+            rescale = 0.
+        luminosity = 10.0**(luminosity - rescale)
+        CGSconv = 10**rescale
+    
+    else: # not ps20tables
+        lineind = ol.line_nos_ion[ion]
+        vardict.add_part('emdenssq', find_emdenssq(vardict.simfile.z,\
+                                                   ol.elements_ion[ion],\
+                                                   vardict.particle,\
+                                                   lineind))
+        if len(vardict.particle['emdenssq']) > 0:
+            print('Min, max, median of particle emdenssq: %.5e %.5e %.5e' \
+                % (np.min(vardict.particle['emdenssq']),\
+                   np.max(vardict.particle['emdenssq']),\
+                   np.median(vardict.particle['emdenssq'])))
+        vardict.delif('logT', last=last)
+    
+        # for agreement with Cosmoplotter
+        # also: using SPH_KERNEL_GADGET; check what EAGLE uses!!
+        #lowZ = eltabund < 10**-15
+        #eltabund[lowZ] = 0.
+        if ol.elements_ion[ion] == 'hydrogen': # no rescaling if hydrogen
+            zscale = 1.
+        else:
+            if isinstance(hab, str):
+                vardict.readif(hab, rawunits=True)
+                hmfrac = vardict.particle[hab]
+                if eltab != hab:
+                    vardict.delif(hab, last=last)
+            else:
+                hmfrac = hab
+            if isinstance(eltab, str):
+                vardict.readif(eltab, rawunits=True)
+                emfrac = vardict.particle[eltab]
+                vardict.delif(eltab, last=last)
+            else:
+                emfrac = eltab
+            zscale = emfrac / hmfrac
+            del emfrac
+            del hmfrac
+            zscale *= ionh.atomw['Hydrogen'] / \
+                      ionh.atomw[string.capwords(ol.elements_ion[ion])]
+            zscale /= ol.solar_abunds_sb[ol.elements_ion[ion]]
+        # using units of 10**-10 * CGS, to make sure overflow of float32 does not occur in C
+        # (max is within 2-3 factors of 10 of float32 overflow in one simulation)
+        luminosity = zscale * 10**(vardict.particle['emdenssq'] +\
+                                   2. * vardict.particle['lognH'] +\
+                                   np.log10(vardict.particle['propvol']) - 10.)
+        CGSconv = 1e10
+        vardict.delif('lognH',last=last)
+        vardict.delif('emdenssq',last=last)
+        vardict.delif('propvol',last=last)
 
     if len(luminosity) > 0:
         print('Min, max, median of particle luminosity [1e10 cgs]: %.5e %.5e %.5e' \
             % (np.min(luminosity), np.max(luminosity), np.median(luminosity)))
-
-    CGSconv = 1e10
     print('  done.\n')
-
     return luminosity, CGSconv # array, cgsconversion
-
-
 
 
 def luminosity_to_Sb(vardict, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ion):
@@ -3440,10 +3509,16 @@ def luminosity_to_Sb(vardict, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ion):
 
 
 
-def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,\
-              last=True, updatesel=True, misc=None, bensgadget2tables=False):
+def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,
+              last=True, updatesel=True, misc=None, bensgadget2tables=False,
+              ps20tables=False, ps20depletion=True):
     '''
-    When using Sylvia's tables, smoothed/particle/fixed metallicities match the choice for element abundance
+    When using sylviasshtables (deprecated) or ps20tables, 
+    smoothed/particle/fixed metallicities match the choice for element 
+    abundance. If the element abundance is a float value, solar metallicity is
+    assumed for ps20tables, and eltab / solar eltab * solar Z is used for 
+    syvliasshtables. (This is modified for ps20tables because it doesn't work
+    for hydrogen and helium, and metallicity dependences are small anyway.)
     '''
     ionbal_from_outputs = False
     if misc is not None:
@@ -3489,7 +3564,10 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,\
         if len(vardict.particle['logT']) > 0:
             print('Min, max, median of particle log temperature [K]: %.5e %.5e %.5e' \
                 % (np.min(vardict.particle['logT']), np.max(vardict.particle['logT']), np.median(vardict.particle['logT'])))
-        if sylviasshtables:
+        if sylviasshtables or ps20tables:
+            if ps20tables:
+                table = linetable_PS20(ion, vardict.simfile.z)
+                print('Using table for z={.3f}'.format(vardict.simfile.z))
             if 'logZ' not in vardict.particle.keys():
                 if isinstance(eltab, str):
                     if 'SmoothedElementAbundance' in eltab:
@@ -3500,10 +3578,18 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,\
                         vardict.readif('Metallicity', rawunits=True) # dimensionless
                         vardict.add_part('logZ', np.log10(vardict.particle['Metallicity']))
                         vardict.delif('Metallicity', last=last)
-                else:
+                elif sylviasshtables:
                     vardict.add_part('logZ', np.ones(len(vardict.particle['lognH'])) *\
                                      np.log10(eltab / ol.solar_abunds_ea[ol.elements_ion[ion]] *\
                                               ol.Zsun_sylviastables))
+                else:
+                    _logZ = np.ones(len(vardict.particle['lognH']))
+                    _logZ *= np.log10(table.solarZ)
+                    vardict.add_part('logZ', _logZ)
+                    del _logZ
+                    
+                    # invert logZ - element abundance relation
+                    
                 # zero metallicity leads to interpolation errors; 
                 # if hydrogen or helium, set minimum to > -np.inf 
                 # any value < -50. -> minimum table value used
@@ -3514,15 +3600,26 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,\
                     print('Adjusting minimum logZ to small finite value')
                     vardict.particle['logZ'][vardict.particle['logZ'] == -np.inf] = -100.
                     dellz = True
-            vardict.add_part('ionfrac', find_ionbal_sylviassh(vardict.simfile.z, ion, vardict.particle))
+            if sylviasshtables:
+                vardict.add_part('ionfrac', find_ionbal_sylviassh(vardict.simfile.z,
+                                                                  ion, vardict.particle))
+            elif ps20tables:
+                _ionfrac = table.find_ionbal(vardict.particle, log=False)
+                if ps20depletion:
+                    _ionfrac *= (1. - table.find_depletion(vardict.particle))
+                vardict.add_part('ionfrac', _ionfrac)
+                del _ionfrac
+                
             if not isinstance(eltab, str):
                 vardict.delif('logZ', last=True)
             else:
                 vardict.delif('logZ', last=dellz)
         elif bensgadget2tables: # same data as the default tables from Serena Bertone
-            vardict.add_part('ionfrac', find_ionbal_bensgadget2(vardict.simfile.z, ion, vardict.particle))
+            vardict.add_part('ionfrac', find_ionbal_bensgadget2(vardict.simfile.z, 
+                                                                ion, vardict.particle))
         else:
-            vardict.add_part('ionfrac', find_ionbal(vardict.simfile.z, ion, vardict.particle))
+            vardict.add_part('ionfrac', find_ionbal(vardict.simfile.z, ion, 
+                                                    vardict.particle))
         vardict.delif('lognH', last=last)
         vardict.delif('logT', last=last)
 
@@ -3531,19 +3628,23 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,\
         # gets ionfrac entry
         getBenOpp1chemabundtables(vardict,excludeSFR,eltab,hab,ion,last=last,updatesel=updatesel,misc=misc)
 
-    vardict.readif('Mass',rawunits=True)
+    vardict.readif('Mass', rawunits=True)
 
     if isinstance(eltab, str):
-        Nion = vardict.particle[eltab] * vardict.particle['ionfrac'] * vardict.particle['Mass']
+        Nion = vardict.particle[eltab] * vardict.particle['ionfrac'] *\
+            vardict.particle['Mass']
         vardict.delif('ionfrac',last=last)
         vardict.delif('Mass',last=last)
         vardict.delif(eltab,last=last)
     else:
-        Nion = eltab*vardict.particle['ionfrac']*vardict.particle['Mass']
+        Nion = eltab * vardict.particle['ionfrac'] * vardict.particle['Mass']
         vardict.delif('ionfrac',last=last)
         vardict.delif('Mass',last=last)
-
-    ionmass = ionh.atomw[string.capwords(ol.elements_ion[ion])]
+    
+    if ps20tables:
+        ionmass = table.elementmass_u
+    else:
+        ionmass = ionh.atomw[string.capwords(ol.elements_ion[ion])]
     if ion == 'hmolssh':
         ionmass *= 2
     to_cgs_numdens = vardict.CGSconv['Mass'] / (ionmass * c.u)
@@ -3551,7 +3652,15 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,\
     return Nion, to_cgs_numdens # array, cgsconversion
 
 
-def Nelt_calc(vardict,excludeSFR,eltab,ion,last=True,updatesel=True):
+def Nelt_calc(vardict,excludeSFR,eltab,hab,ion,last=True,updatesel=True,
+              ps20tables=False, ps20depletion=True):
+    '''
+    ps20tables and ps20depletion mean the element column is calculated with
+    the dust depletion subtracted. ps20tables is ignored if ps20tables is 
+    ignored ps20depletion is False. hab is also only used for depletion 
+    calculations.
+    '''
+    
 
     if isinstance(eltab, str):
         vardict.readif(eltab, rawunits=True)
@@ -3567,8 +3676,65 @@ def Nelt_calc(vardict,excludeSFR,eltab,ion,last=True,updatesel=True):
     else:
         Nelt = eltab*vardict.particle['Mass']
         vardict.delif('Mass',last=last)
+    
+    if ps20tables and ps20depletion:
+        if not vardict.isstored_part('lognH'):
+            vardict.readif('Density', rawunits=True)
+            if isinstance(hab, str):
+                vardict.readif(hab,rawunits = True)
+                vardict.add_part('lognH', np.log10(vardict.particle[hab]) + np.log10(vardict.particle['Density']) + np.log10( vardict.CGSconv['Density'] / (c.atomw_H * c.u)) )
+                if eltab != hab:
+                    vardict.delif(hab, last=last)
+            else:
+                vardict.add_part('lognH', np.log10(vardict.particle['Density']) + np.log10( vardict.CGSconv['Density'] * hab / (c.atomw_H * c.u)) )
+            vardict.delif('Density', last=last)
+        
+        if len(vardict.particle['lognH']) > 0:
+            print('Min, max, median of particle log10 nH [cgs]: %.5e %.5e %.5e' \
+                % (np.min(vardict.particle['lognH']), np.max(vardict.particle['lognH']), np.median(vardict.particle['lognH'])) )
+        else:
+            print('No particles in current selection')
 
-    ionmass = ionh.atomw[string.capwords(ion)]
+        if not vardict.isstored_part('logT'):
+            if excludeSFR == 'T4':
+                vardict.readif('OnEquationOfState', rawunits=True)
+                vardict.add_part('eos', vardict.particle['OnEquationOfState'] > 0.)
+                vardict.delif('OnEquationOfState', last=last)
+                vardict.readif('Temperature', rawunits=True,\
+                               setsel=vardict.particle['eos'], setval = 1e4)
+                vardict.delif('eos',last=last)
+            else:
+                vardict.readif('Temperature', rawunits=True)
+            vardict.add_part('logT', np.log10(vardict.particle['Temperature']))
+            vardict.delif('Temperature',last=last)
+        if len(vardict.particle['logT']) > 0:
+            print('Min, max, median of particle log temperature [K]: %.5e %.5e %.5e' \
+                % (np.min(vardict.particle['logT']), np.max(vardict.particle['logT']), np.median(vardict.particle['logT'])))
+            
+        table = linetable_PS20(ion, vardict.simfile.z)
+        print('Using table for z={.3f}'.format(vardict.simfile.z))
+        if 'logZ' not in vardict.particle.keys():
+            if isinstance(eltab, str):
+                if 'SmoothedElementAbundance' in eltab:
+                    vardict.readif('SmoothedMetallicity', rawunits=True) # dimensionless
+                    vardict.add_part('logZ', np.log10(vardict.particle['SmoothedMetallicity']))
+                    vardict.delif('SmoothedMetallicity', last=last)
+                elif 'ElementAbundance' in eltab:
+                    vardict.readif('Metallicity', rawunits=True) # dimensionless
+                    vardict.add_part('logZ', np.log10(vardict.particle['Metallicity']))
+                    vardict.delif('Metallicity', last=last)
+            else:
+                _logZ = np.ones(len(vardict.particle['lognH']))
+                _logZ *= np.log10(table.solarZ)
+                vardict.add_part('logZ', _logZ)
+                del _logZ
+        Nelt *= (1. - table.find_depletion(vardict.particle))
+        vardict.delif('lognH', last=last)
+        vardict.delif('logT', last=last)
+        vardict.delif('logZ', last=last)
+        ionmass = table.elementmass_u
+    else:
+        ionmass = ionh.atomw[string.capwords(ion)]
     to_cgs_numdens = vardict.CGSconv['Mass'] / (ionmass * c.u)
     return Nelt, to_cgs_numdens
 
@@ -3576,7 +3742,8 @@ def Nelt_calc(vardict,excludeSFR,eltab,ion,last=True,updatesel=True):
 def Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=True, updatesel=True, misc=None):
     '''
     Rahmati et al 2013 HI and H2 (molecular)
-    best to use with face-value EOS temperatures, I think; LSR comes from a pressure scaling
+    best to use with face-value EOS temperatures, I think; LSR comes from a 
+    pressure scaling
     '''
     if misc is None:
         useLSR = False
@@ -4696,7 +4863,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     ##### Wishlist generation: preventing doing calculations twice
 
     wishlist = ['coords_cMpc-vel']
-    if ptypeQ != None:
+    if ptypeQ is not None:
         if ptypeQ == 'basic' and quantityQ != 'Temperature': #temperature checks come later
             wishlist += [quantityQ]
         elif (ptypeQ=='basic' and quantityQ =='Temperature') and ((excludeSFRQ == 'T4' and excludeSFRW == 'T4') or (excludeSFRQ != 'T4' and excludeSFRW != 'T4')):
@@ -4733,7 +4900,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         wishlist = []
 
     #### more advanced wishlist options:
-    if (ptypeW in ['emission','coldens'] and excludeSFRW != 'from') and (ptypeQ in ['emission','coldens'] and excludeSFRQ != 'from'):
+    if (ptypeW in ['emission','coldens'] and excludeSFRW != 'from') and \
+       (ptypeQ in ['emission','coldens'] and excludeSFRQ != 'from'):
         if habQ == habW: #same abundance choice
             wishlist.append('lognH')
             # only needed to get lognH
@@ -4758,9 +4926,12 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
 
     #### set data file, setup axis handling
     if halosel is not None:
-        simfile = pc.Simfile(simnum, snapnum, var, simulation=simulation, file_type='particles', override_filepath=override_simdatapath)
+        simfile = pc.Simfile(simnum, snapnum, var, simulation=simulation,
+                             file_type='particles',
+                             override_filepath=override_simdatapath)
     else: # use default: snapshot data
-        simfile = pc.Simfile(simnum, snapnum, var, simulation=simulation, override_filepath=override_simdatapath)
+        simfile = pc.Simfile(simnum, snapnum, var, simulation=simulation,
+                             override_filepath=override_simdatapath)
 
     if axis == 'x':
         Axis1 = 1
@@ -4870,7 +5041,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
 
     # apply halo selection after the more read-in efficient region selection
     if halosel is not None:
-        groupnums = selecthaloparticles(vardict_WQ, halosel, nameonly=False, last=False, **kwargs_halosel) 
+        groupnums = selecthaloparticles(vardict_WQ, halosel, nameonly=False,
+                                        last=False, **kwargs_halosel) 
     
     # excludeSFR handling: use np.logical_not on selection array
     # this is needed for all calculations, so might as well do it here
@@ -4905,23 +5077,45 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
             
     elif ptypeW == 'coldens' and not iseltW:
         if ionW in ['h1ssh', 'hmolssh', 'hneutralssh'] and not (sylviasshtables or bensgadget2tables):
-            qW, multipafterW = Nion_calc_ssh(vardict_WQ, excludeSFRW, habW, ionW, last=True, updatesel=True, misc=misc)
+            qW, multipafterW = Nion_calc_ssh(vardict_WQ, excludeSFRW, habW, 
+                                             ionW, last=True, updatesel=True, 
+                                             misc=misc)
         else:
-            qW, multipafterW = Nion_calc(vardict_WQ, excludeSFRW, eltabW, habW, ionW,\
-                                         sylviasshtables=sylviasshtables, bensgadget2tables=bensgadget2tables,\
-                                         last=last, updatesel=True, misc=misc,)
-        multipafterW *= Nion_to_coldens(vardict_WQ,Ls,Axis1,Axis2,Axis3,npix_x,npix_y)
+            qW, multipafterW = Nion_calc(vardict_WQ, excludeSFRW, eltabW, 
+                                         habW, ionW,
+                                         sylviasshtables=sylviasshtables,
+                                         bensgadget2tables=bensgadget2tables,
+                                         last=last, updatesel=True, misc=misc,
+                                         ps20tables=ps20tables, 
+                                         ps20depletion=ps20depletion)
+        multipafterW *= Nion_to_coldens(vardict_WQ, Ls, Axis1, Axis2, Axis3,
+                                        npix_x, npix_y)
     elif ptypeW == 'coldens' and iseltW:
-        qW, multipafterW = Nelt_calc(vardict_WQ, excludeSFRW, eltabW, ionW, last=last, updatesel=True)
-        multipafterW *= Nion_to_coldens(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y)
+        qW, multipafterW = Nelt_calc(vardict_WQ, excludeSFRW, eltabW, ionW,
+                                     last=last, updatesel=True,
+                                     ps20tables=ps20tables, 
+                                     ps20depletion=ps20depletion)
+        multipafterW *= Nion_to_coldens(vardict_WQ, Ls, Axis1, Axis2, Axis3,
+                                        npix_x, npix_y)
 
     elif ptypeW == 'emission' and excludeSFRW != 'from':
-        qW, multipafterW = luminosity_calc(vardict_WQ, excludeSFRW, eltabW, habW, ionW, last=last, updatesel=True)
-        multipafterW *= luminosity_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
+        qW, multipafterW = luminosity_calc(vardict_WQ, excludeSFRW, eltabW,
+                                           habW, ionW, last=last, 
+                                           updatesel=True,
+                                           ps20tables=ps20tables, 
+                                           ps20depletion=ps20depletion)
+        multipafterW *= luminosity_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3,
+                                         npix_x, npix_y, ionW,
+                                         ps20tables=ps20tables)
     elif ptypeW == 'emission' and excludeSFRW == 'from':
         if ionW == 'halpha':
-            qW, multipafterW = luminosity_calc_halpha_fromSFR(vardict_WQ, excludeSFRW, last=last, updatesel=True)
-        multipafterW *= luminosity_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
+            qW, multipafterW = luminosity_calc_halpha_fromSFR(vardict_WQ,
+                                                              excludeSFRW, 
+                                                              last=last, 
+                                                              updatesel=True)
+        multipafterW *= luminosity_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3,
+                                         npix_x, npix_y, ionW, 
+                                         ps20tables=ps20tables)
 
 
     if ptypeQ == 'basic':
@@ -4931,33 +5125,60 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         
     elif ptypeQ == 'coldens' and not iseltQ:
         if ionQ in ['h1ssh', 'hmolssh', 'hneutralssh'] and not (sylviasshtables or bensgadget2tables):
-            qQ, multipafterQ = Nion_calc_ssh(vardict_WQ, excludeSFRQ, habQ, ionQ, last=True, updatesel=False, misc=misc)
+            qQ, multipafterQ = Nion_calc_ssh(vardict_WQ, excludeSFRQ, habQ, 
+                                             ionQ, last=True, updatesel=False, 
+                                             misc=misc)
         else:
-            qQ, multipafterQ = Nion_calc(vardict_WQ, excludeSFRQ, eltabQ, habQ, ionQ,\
-                                         sylviasshtables=sylviasshtables, bensgadget2tables=bensgadget2tables,\
+            qQ, multipafterQ = Nion_calc(vardict_WQ, excludeSFRQ, eltabQ, 
+                                         habQ, ionQ,
+                                         sylviasshtables=sylviasshtables, 
+                                         bensgadget2tables=bensgadget2tables,
+                                         ps20tables=ps20tables, 
+                                         ps20depletion=ps20depletion,
                                          last=True, updatesel=False, misc=misc)
-        multipafterQ *= Nion_to_coldens(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y)
+        multipafterQ *= Nion_to_coldens(vardict_WQ, Ls, Axis1, Axis2, Axis3,
+                                        npix_x, npix_y)
     elif ptypeQ == 'coldens' and iseltQ:
-        qQ, multipafterQ = Nelt_calc(vardict_WQ, excludeSFRQ, eltabQ, ionQ, last=True, updatesel=False)
-        multipafterQ *= Nion_to_coldens(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y)
+        qQ, multipafterQ = Nelt_calc(vardict_WQ, excludeSFRQ, eltabQ, ionQ,
+                                     last=True, updatesel=False,
+                                     ps20tables=ps20tables, 
+                                     ps20depletion=ps20depletion)
+        multipafterQ *= Nion_to_coldens(vardict_WQ, Ls, Axis1, Axis2, Axis3,
+                                        npix_x, npix_y)
 
     elif ptypeQ == 'emission' and excludeSFRQ != 'from':
-        qQ, multipafterQ = luminosity_calc(vardict_WQ, excludeSFRQ, eltabQ, habQ, ionQ, last=True, updatesel=False)
-        multipafterQ *= luminosity_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
+        qQ, multipafterQ = luminosity_calc(vardict_WQ, excludeSFRQ, eltabQ,
+                                           habQ, ionQ, last=True, 
+                                           updatesel=False,
+                                           ps20tables=ps20tables, 
+                                           ps20depletion=ps20depletion)
+        multipafterQ *= luminosity_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3,
+                                         npix_x, npix_y, ionW, ,
+                                         ps20tables=ps20tables)
     elif ptypeQ == 'emission' and excludeSFRQ == 'from':
         if ionQ == 'halpha':
-            qQ, multipafterQ = luminosity_calc_halpha_fromSFR(vardict_WQ, excludeSFRQ, last=True, updatesel=False)
-        multipafterQ *= luminosity_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3, npix_x, npix_y, ionW)
+            qQ, multipafterQ = luminosity_calc_halpha_fromSFR(vardict_WQ,
+                                                              excludeSFRQ, 
+                                                              last=True, 
+                                                              updatesel=False)
+        multipafterQ *= luminosity_to_Sb(vardict_WQ, Ls, Axis1, Axis2, Axis3,
+                                         npix_x, npix_y, ionW, 
+                                         ps20tables=ps20tables)
 
     if velcut == False:
         vardict_WQ.readif('Coordinates',rawunits=True)
-        vardict_WQ.add_part('coords_cMpc-vel', vardict_WQ.particle['Coordinates'] * simfile.h**-1)
+        vardict_WQ.add_part('coords_cMpc-vel', 
+                            vardict_WQ.particle['Coordinates'] * simfile.h**-1)
         vardict_WQ.delif('Coordinates',last=True) # essentially, force delete
-        translate(vardict_WQ.particle,'coords_cMpc-vel', vardict_WQ.box['centre'], vardict_WQ.box['box3'], periodic)
+        translate(vardict_WQ.particle,'coords_cMpc-vel', 
+                  vardict_WQ.box['centre'], vardict_WQ.box['box3'], periodic)
 
     NumPart = vardict_WQ.particle['coords_cMpc-vel'].shape[0]
     if parttype == '0':
-        lsmooth = simfile.readarray('PartType%s/SmoothingLength'%parttype, rawunits=True, region=vardict_WQ.region)[vardict_WQ.readsel.val] * simfile.h**-1
+        lsmooth = simfile.readarray('PartType%s/SmoothingLength'%parttype, 
+                                    rawunits=True, 
+                                    region=vardict_WQ.region)[vardict_WQ.readsel.val] * \
+                  simfile.h**-1
         tree = False
     elif parttype == '1': # DM: has a physically reasonable smoothing length, but it is not in the output files
         lsmooth = np.zeros(NumPart)
@@ -5952,6 +6173,7 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,
 # TODO: ps20tables=False, ps20depletion=True,
 def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity,
                     sylviasshtables=False, bensgadget2tables=False,
+                    ps20tables=False, ps20depletion=True,
                     last=True, updatesel=False, misc=None, mdef='200c', 
                     allinR200c=True):
     '''
@@ -5998,35 +6220,50 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity,
             multipafter = 1.
 
     elif ptype in ['Nion', 'Niondens'] and not iselt:
-        if ion in ['h1ssh', 'hmolssh', 'hneutralssh'] and not (sylviasshtables or bensgadget2tables):
-            q, multipafter = Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=last, updatesel=updatesel, misc=misc)
+        if ion in ['h1ssh', 'hmolssh', 'hneutralssh'] and \
+           not (sylviasshtables or bensgadget2tables):
+            q, multipafter = Nion_calc_ssh(vardict, excludeSFR, hab, ion, 
+                                           last=last, updatesel=updatesel, 
+                                           misc=misc)
             if ptype == 'Niondens':
                 readbasic(vardict, 'ipropvol', excludeSFR, last=last)
                 q *= vardict.particle['ipropvol'] 
                 multipafter *= vardict.CGSconv['ipropvol']
         else:
-            q, multipafter = Nion_calc(vardict, excludeSFR, eltab, hab, ion, last=last,\
-                                       sylviasshtables=sylviasshtables, bensgadget2tables=bensgadget2tables,\
+            q, multipafter = Nion_calc(vardict, excludeSFR, eltab, hab, ion, 
+                                       last=last,
+                                       sylviasshtables=sylviasshtables, 
+                                       bensgadget2tables=bensgadget2tables,
+                                       ps20tables=ps20tables, 
+                                       ps20depletion=ps20depletion,
                                        updatesel=updatesel, misc=misc)
             if ptype == 'Niondens':
                 readbasic(vardict, 'ipropvol', excludeSFR, last=last)
                 q *= vardict.particle['ipropvol'] 
                 multipafter *= vardict.CGSconv['ipropvol']
     elif ptype in ['Nion', 'Niondens'] and iselt:
-        q, multipafter = Nelt_calc(vardict, excludeSFR, eltab, ion, last=last, updatesel=updatesel)
+        q, multipafter = Nelt_calc(vardict, excludeSFR, eltab, ion, last=last,
+                                   updatesel=updatesel, ps20tables=ps20tables, 
+                                   ps20depletion=ps20depletion,)
         if ptype == 'Niondens':
             readbasic(vardict, 'ipropvol', excludeSFR, last=last)
             q *= vardict.particle['ipropvol'] 
             multipafter *= vardict.CGSconv['ipropvol']
     elif ptype in ['Luminosity', 'Lumdens'] and excludeSFR != 'from':
-        q, multipafter = luminosity_calc(vardict, excludeSFR, eltab, hab, ion, last=last, updatesel=updatesel)
+        q, multipafter = luminosity_calc(vardict, excludeSFR, eltab, hab, ion, 
+                                         last=last, updatesel=updatesel, 
+                                         ps20tables=ps20tables, 
+                                         ps20depletion=ps20depletion)
         if ptype == 'Lumdens':
             readbasic(vardict, 'ipropvol', excludeSFR, last=last)
             q *= vardict.particle['ipropvol'] 
             multipafter *= vardict.CGSconv['ipropvol']
     elif ptype in ['Luminosity', 'Lumdens'] and excludeSFR == 'from':
         if ion == 'halpha':
-            q, multipafter = luminosity_calc_halpha_fromSFR(vardict, excludeSFR, last=last, updatesel=updatesel)
+            q, multipafter = luminosity_calc_halpha_fromSFR(vardict, 
+                                                            excludeSFR, 
+                                                            last=last, 
+                                                            updatesel=updatesel)
             if ptype == 'Lumdens':
                 readbasic(vardict, 'ipropvol', excludeSFR, last=last)
                 q *= vardict.particle['ipropvol'] 
@@ -6037,7 +6274,8 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity,
     elif ptype == 'coords':
         if quantity == 'r3D':
             # coordinates should have been centred in region selection, in cMpc units
-            get3ddist(vardict, np.array([0., 0., 0.]), last=last, trustcoords=True)
+            get3ddist(vardict, np.array([0., 0., 0.]), last=last, 
+                      trustcoords=True)
             q = vardict.particle['r3D']
             multipafter = vardict.CGSconv['r3D']
         else:
