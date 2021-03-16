@@ -2336,7 +2336,8 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
             else: # couple of input options; standardize output name
                 _tab = linetable_PS20(ionW, 0.0, emission=False)
                 sionW = _tab.elementshort.lower() + str(_tab.ionstage)
-
+        else:
+            sionW = ionW
     if ptypeQ in ['coldens', 'emission']:
         if abundsQ[0] not in ['Sm','Pt']:
             sabundsQ = str(abundsQ[0]) + 'massfracAb'
@@ -2352,7 +2353,8 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
             else:
                 _tab = linetable_PS20(ionQ, 0.0, emission=False)
                 sionQ = _tab.elementshort.lower() + str(_tab.ionstage)
-
+        else:
+            sionQ = ionQ
     # miscellaneous: ppv/ppp box, simulation, particle type
     if velcut == True:
         vind = '_velocity-sliced'
@@ -5803,7 +5805,9 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,
             else: # couple of input options; standardize output name
                 _tab = linetable_PS20(ion, 0.0, emission=False)
                 sion = _tab.elementshort.lower() + str(_tab.ionstage)
-        
+        else:
+            sion = ion
+            
     if ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
         base = 'particlehist_{ptype}_{ion}{parttype}{iontab}' + \
                '_{sim}_{snap}_test{ver}_{abunds}'
