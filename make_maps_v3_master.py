@@ -2723,7 +2723,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
             iseltW = True
         elif ps20tables:
             try:
-                _ = linetable_PS20(ionW, 0.0, emission=ptypeW=='emission')
+                linetable_PS20(ionW, 0.0, emission=ptypeW=='emission')
             except ValueError as err:
                 print(err)
                 print('Invalid PS20 ion {}'.format(ionW))
