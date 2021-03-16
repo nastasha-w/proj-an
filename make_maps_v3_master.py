@@ -2235,21 +2235,30 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
         if L_z*hfac < BoxSize * hconst**-1:
             zcen = '_zcen%s%s' %(str(centre[2]),Lunit)
         if L_x*hfac < BoxSize * hconst**-1 or L_y*hfac < BoxSize * hconst**-1:
-            xypos = '_x%s-pm%s%s_y%s-pm%s%s' %(str(centre[0]),str(L_x),Lunit,str(centre[1]),str(L_y),Lunit)
+            xypos = '_x%s-pm%s%s_y%s-pm%s%s' %(str(centre[0]), str(L_x), 
+                                               Lunit, 
+                                               str(centre[1]), str(L_y),
+                                               Lunit)
         sLp = str(L_z)
 
     elif axis == 'y':
         if L_y*hfac < BoxSize * hconst**-1:
             zcen = '_ycen%s%s' % (str(centre[1]),Lunit)
         if L_x*hfac < BoxSize * hconst**-1 or L_z*hfac < BoxSize * hconst**-1:
-            xypos = '_z%s-pm%s%s_x%s-pm%s%s' %(str(centre[2]),str(L_z),Lunit,str(centre[0]),str(L_x),Lunit)
+            xypos = '_z%s-pm%s%s_x%s-pm%s%s' %(str(centre[2]), str(L_z), 
+                                               Lunit,
+                                               str(centre[0]), str(L_x),
+                                               Lunit)
         sLp = str(L_y)
 
     elif axis == 'x':
         if L_x*hfac < BoxSize * hconst**-1:
             zcen = '_xcen%s%s' % (str(centre[0]),Lunit)
         if L_y*hfac < BoxSize * hconst**-1 or L_z*hfac < BoxSize * hconst**-1:
-            xypos = '_y%s-pm%s%s_z%s-pm%s%s' %(str(centre[1]),str(L_y),Lunit,str(centre[2]),str(L_z),Lunit)
+            xypos = '_y%s-pm%s%s_z%s-pm%s%s' %(str(centre[1]), str(L_y), 
+                                               Lunit, 
+                                               str(centre[2]), str(L_z), 
+                                               Lunit)
         sLp = str(L_x)
 
 
@@ -2374,7 +2383,8 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
     
     # halo selections
     if halosel is not None:
-        halostr = '_' + selecthaloparticles(vardict, halosel, nameonly=True, last=False, **kwargs_halosel)
+        halostr = '_' + selecthaloparticles(vardict, halosel, nameonly=True,
+                                            last=False, **kwargs_halosel)
         if 'label' in kwargs_halosel.keys():
             if kwargs_halosel['label'] is not None:
                 halostr = '_halosel-%s-endhalosel'%kwargs_halosel['label']
@@ -2384,22 +2394,47 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
     # putting it together: ptypeQ = None is set to get resfile for W
     if ptypeQ is None: #output outputW name
         if ptypeW == 'coldens' or ptypeW == 'emission':
-            resfile = ol.ndir + '%s_%s%s_%s_%s_test%s_%s_%sSm_%spix_%sslice' %(ptypeW,ionW,iontableindW,ssimnum,snapnum,str(version),sabundsW,kernel,str(npix_x),sLp) + zcen + xypos + axind + SFRindW + halostr + vind
+            base = '{ptype}_{ion}{iontab}_{sim}_{snap}_test{ver}_{abunds}' + \
+                   '_{kernel}Sm_{npix}pix_{depth}slice'
+            base = base.format(ptype=ptypeW, ion=ionW.replace(' ', '-'),
+                               iontab=iontableindW,
+                               sim=ssimnum, snap=snapnum, ver=str(version),
+                               abunds=abundsW, kernel=kernel, npix=npix_x,
+                               depth=sLp)
+            resfile = ol.ndir + base + zcen + xypos + axind + SFRindW +\
+                      halostr + vind
 
         elif ptypeW == 'basic':
-            resfile = ol.ndir + '%s%s_%s_%s_test%s_%sSm_%spix_%sslice' %(squantityW,sparttype,ssimnum,snapnum,str(version),kernel,str(npix_x),sLp) + zcen + xypos + axind + SFRindW + halostr + vind
+            base = '{qW}{parttype}_{sim}_{snap}_test{ver}' + \
+                   '_{kernel}Sm_{npix}pix_{depth}slice'
+            base = base.format(qW=squantityW, parttype=sparttype, sim=ssimnum, 
+                               snap=snapnum, ver=str(version), kernel=kernel, 
+                               npix=npix_x, depth=sLp)
+            resfile = ol.ndir + base + zcen + xypos + axind + SFRindW +\
+                      halostr + vind
 
     if ptypeQ is not None: # naming for quantityQ output
+        qty_base = '{ptype}_{ion}_{abunds}{iontab}{sfgas}'
         if ptypeQ == 'basic':
             squantityQ = squantityQ + SFRindQ
         else:
-            squantityQ = '%s_%s_%s%s'%(ptypeQ,ionQ,sabundsQ, iontableindQ) + SFRindQ
+            squantityQ = qty_base.format(ptype=ptypeQ, 
+                                         ion=ionQ.replace(' ', '-'),
+                                         abunds=sabundsQ, iontab=iontableindQ,
+                                         sfgas=SFRindQ)
         if ptypeW == 'basic':
             squantityW = squantityW + SFRindW
         else:
-            squantityW = '%s_%s_%s%s'%(ptypeW,ionW,sabundsW, iontableindW) + SFRindW
-
-        resfile = ol.ndir + '%s_%s%s_%s_%s_test%s_%sSm_%spix_%sslice' %(squantityQ,squantityW,sparttype,ssimnum,snapnum,str(version),kernel,str(npix_x),sLp) + zcen + xypos + axind + halostr + vind
+            squantityW = qty_base.format(ptype=ptypeW, 
+                                         ion=ionW.replace(' ', '-'),
+                                         abunds=sabundsW, iontab=iontableindW,
+                                         sfgas=SFRindW)
+        base = '{qQ}_{qW}{parttype}_{sim}_{snap}_test{ver}_{abunds}' + \
+               '_{kernel}Sm_{npix}pix_{depth}slice'
+        base = base.format(qQ=squantityQ, qW=squantityW, parttype=spartttype,
+                            sim=ssimnum, snap=snapnum, ver=str(version),
+                            kernel=kernel, npix=npix_x, depth=sLp)
+        resfile = ol.ndir + base + zcen + xypos + axind + halostr + vind
 
 
     #if misc is not None:
@@ -5646,7 +5681,8 @@ def get3ddist(vardict, cen, last=True, trustcoords=False):
 
 
 def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,
-                              L_x, L_y, L_z, centre, LsinMpc, BoxSize, hconst, excludeSFR,
+                              L_x, L_y, L_z, centre, LsinMpc, BoxSize, hconst,
+                              excludeSFR,
                               abunds, ion, parttype, quantity,
                               sylviasshtables, bensgadget2tables,
                               ps20tables, ps20depletion,
@@ -5688,26 +5724,26 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,
     # abundances
     if ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
         if abunds[0] not in ['Sm','Pt']:
-            sabunds = '%smassfracAb'%str(abunds[0])
+            sabunds = '{}massfracAb'.format(str(abunds[0]))
         else:
             sabunds = abunds[0] + 'Ab'
         if isinstance(abunds[1], num.Number):
-            sabunds = sabunds + '-%smassfracHAb'%str(abunds[1])
+            sabunds = sabunds + '-{}massfracHAb'.format(str(abunds[1]))
         elif abunds[1] != abunds[0]:
-            sabunds = sabunds + '-%smassfracHAb'%abunds[1]
+            sabunds = sabunds + '-{}massfracHAb'.format(abunds[1])
 
 
     if var != 'REFERENCE':
-        ssimnum = simnum +var
+        ssimnum = simnum + var
     else:
         ssimnum = simnum
     if simulation == 'bahamas':
-        ssimnum = 'BA-%s'%ssimnum
+        ssimnum = 'BA-{}'.format(ssimnum)
     if simulation == 'eagle-ioneq':
-        ssimnum = 'EA-ioneq-%s'%ssimnum
+        ssimnum = 'EA-ioneq-{}'.format(simnum)
 
     if parttype != '0':
-        sparttype = '_PartType%s'%parttype
+        sparttype = '_PartType{}'.quantity(parttype)
     else:
         sparttype = ''
 
@@ -5734,21 +5770,28 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,
             iontableind += '_depletion-F'
         
     if ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
-        resfile = ol.ndir + 'particlehist_%s_%s%s%s_%s_%s_test%s_%s'%(ptype,
-                            ion, sparttype, iontableind, ssimnum, snapnum, 
-                            str(version), sabunds) +\
-                  boxstring + SFRind
+        base = 'particlehist_{ptype}_{ion}{parttype}{iontab}' + \
+               '_{sim}_{snap}_test{ver}_{abunds}'
+        base = base.format(ptype=ptype, ion=ion.replace(' ', '-'),
+                           parttype=sparttype, iontab=iontableind, sim=simnum,
+                           snap=snapnum, ver=str(version), abunds=sabunds)
+        resfile = ol.ndir + base + boxstring + SFRind
     elif ptype == 'basic':
-        resfile = ol.ndir + 'particlehist_%s%s_%s_%s_test%s' %(squantity, 
-                            sparttype, ssimnum, snapnum, str(version)) +\
-                  boxstring + SFRind
+        base = 'particlehist_{qty}{parttype}_{sim}_{snap}_test{ver}'
+        base = base.format(qty=squantity, parttype=sparttype, sim=simnum,
+                           snap=snapnum, ver=str(version))
+        resfile = ol.ndir + base + boxstring + SFRind
     elif ptype in ['halo', 'coords']:
-        resfile = 'particlehist_%s-%s%s_%s_%s_test%s' %(ptype, quantity, 
-                  sparttype, ssimnum, snapnum, str(version)) +\
-                  boxstring + SFRind
+        base = 'particlehist_{ptype}-{quantity}{parttype}' +\
+               '_{sim}_{snap}_test{ver}'
+        base = base.format(ptype=ptype, quantity=quantity, 
+                           parttype=spartttype, sim=simnum, snap=snapnum,
+                           ver=str(version))
+        resfile = ol.ndir + base + boxstring + SFRind
         
     if misc is not None:
-        miscind = '_'+'_'.join(['%s-%s'%(key, misc[key]) for key in misc.keys()])
+        miscind = '_'+'_'.join(['{}-{}'.format(key, misc[key]) \
+                                for key in misc.keys()])
         resfile = resfile + miscind
 
     resfile = resfile + '.hdf5'
