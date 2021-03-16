@@ -3285,18 +3285,20 @@ def selecthaloparticles(vardict, halosel, nameonly=False, last=True, **kwargs):
 
 ##### small helper functions for the main projection routine
 
-def get_eltab_names(abunds,iselt,ion): #assumes
-    if abunds[0] == 'Sm':
-        if not iselt:
-            eltab = 'SmoothedElementAbundance/%s' %string.capwords(ol.elements_ion[ion])
-        else:
-            eltab = 'SmoothedElementAbundance/%s' %string.capwords(ion)
-    elif abunds[0] =='Pt': # auto already set in inputcheck
-        if not iselt:
-            eltab = 'ElementAbundance/%s' %string.capwords(ol.elements_ion[ion])
-        else:
-            eltab = 'ElementAbundance/%s' %string.capwords(ion)
+def get_eltab_names(abunds, iselt, ion): 
+    if iselt:
+         _elt = ion
+    elif ion in ol.elements_ion:
+        _elt = ol.elements_ion[ion]
     else:
+        _dummytab = linetable_PS20(ion, 0.0, emission=False)
+        _elt = _dummytab.element
+ 
+    if abunds[0] == 'Sm':
+        eltab = 'SmoothedElementAbundance/%s' %string.capwords(_elt)
+    elif abunds[0] == 'Pt': 
+        eltab = 'ElementAbundance/%s' %string.capwords(_elt)
+    else: # auto already set in inputcheck
         eltab = abunds[0] #float
 
     if abunds[1] == 'Sm':
