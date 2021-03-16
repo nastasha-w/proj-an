@@ -2330,6 +2330,12 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
             sabundsW = sabundsW + '-%smassfracHAb'%str(abundsW[1])
         elif abundsW[1] != abundsW[0]:
             sabundsW = sabundsW + '-%smassfracHAb'%abundsW[1]
+        if ps20tables:
+            if ptypeW == 'emission':
+                sionW = ionW.replace(' ', '-')
+            else: # couple of input options; standardize output name
+                _tab = linetable_PS20(ionW, 0.0, emission=False)
+                sionW = _tab.elementshort.lower() + str(_tab.ionstage)
 
     if ptypeQ in ['coldens', 'emission']:
         if abundsQ[0] not in ['Sm','Pt']:
@@ -2340,7 +2346,12 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
             sabundsQ = sabundsQ + '-%smassfracHAb'%str(abundsQ[1])
         elif abundsQ[1] != abundsQ[0]:
             sabundsQ = sabundsQ + '-%sHAb'%abundsQ[1]
-
+        if ps20tables:
+            if ptypeQ == 'emission':
+                sionQ = ionQ.replace(' ', '-')
+            else:
+                _tab = linetable_PS20(ionQ, 0.0, emission=False)
+                sionQ = _tab.elementshort.lower() + str(_tab.ionstage)
 
     # miscellaneous: ppv/ppp box, simulation, particle type
     if velcut == True:
@@ -2396,7 +2407,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
         if ptypeW == 'coldens' or ptypeW == 'emission':
             base = '{ptype}_{ion}{iontab}_{sim}_{snap}_test{ver}_{abunds}' + \
                    '_{kernel}Sm_{npix}pix_{depth}slice'
-            base = base.format(ptype=ptypeW, ion=ionW.replace(' ', '-'),
+            base = base.format(ptype=ptypeW, ion=sionW,
                                iontab=iontableindW,
                                sim=ssimnum, snap=snapnum, ver=str(version),
                                abunds=sabundsW, kernel=kernel, npix=npix_x,
@@ -2419,7 +2430,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
             squantityQ = squantityQ + SFRindQ
         else:
             squantityQ = qty_base.format(ptype=ptypeQ, 
-                                         ion=ionQ.replace(' ', '-'),
+                                         ion=sionQ,
                                          abunds=sabundsQ, iontab=iontableindQ,
                                          sfgas=SFRindQ)
         if ptypeW == 'basic':
