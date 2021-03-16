@@ -2799,19 +2799,20 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                 linetable_PS20(ionQ, 0.0, emission=ptypeQ=='emission')
                 iseltW = False
             except ValueError as err:
-                if ptypeW == 'coldens' and ionW in ol.elements:
+                if ptypeQ == 'coldens' and ionQ in ol.elements:
                     iseltQ = True
                 else:
                     print(err)
                     print('Invalid PS20 ion {}'.format(ionQ))
                     return 55
         else:
-            if ionW in ol.elements_ion.keys():
+            if ionQ in ol.elements_ion.keys():
                 iseltQ = False
-            elif ionW in ol.elements and ptypeQ == 'coldens':
+            elif ionQ in ol.elements and ptypeQ == 'coldens':
                 iseltQ = True
             else:
-                print('%s is an invalid ion option for ptypeW %s\n'%(ionW,ptypeW))
+                print('%s is an invalid ion option for ptypeQ %s\n'%(ionQ, 
+                                                                     ptypeQ))
                 return 8
         
         if not isinstance(abundsQ, (list, tuple, np.ndarray)):
