@@ -2446,7 +2446,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
                                          ion=ionW.replace(' ', '-'),
                                          abunds=sabundsW, iontab=iontableindW,
                                          sfgas=SFRindW)
-        base = '{qQ}_{qW}{parttype}_{sim}_{snap}_test{ver}_{abunds}' + \
+        base = '{qQ}_{qW}{parttype}_{sim}_{snap}_test{ver}' + \
                '_{kernel}Sm_{npix}pix_{depth}slice'
         base = base.format(qQ=squantityQ, qW=squantityW, parttype=sparttype,
                             sim=ssimnum, snap=snapnum, ver=str(version),
