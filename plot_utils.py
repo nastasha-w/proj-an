@@ -216,7 +216,9 @@ def setticks(ax, fontsize, color='black', labelbottom=True, top=True,\
 
 
 ### functions to make actual plots
-def add_colorbar(ax, img=None, vmin=None, vmax=None, cmap=None, clabel=None, newax=False, extend='neither', fontsize=fontsize, orientation='vertical'):
+def add_colorbar(ax, img=None, vmin=None, vmax=None, cmap=None, clabel=None,
+                 newax=False, extend='neither', fontsize=fontsize,
+                 orientation='vertical'):
     if img is None:
         cmap = mpl.cm.get_cmap(cmap)
         norm = mpl.colors.Normalize(vmin=vmin,vmax=vmax)

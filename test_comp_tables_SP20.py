@@ -953,9 +953,20 @@ def create_maps():
             del _kwargs['ionW']
             _kwargs['ptypeQ'] = ptype
             _kwargs['quantityW'] = 'Mass'
-            
 
-def compare_maps(filen1, filen2, imgname=None):
+def getaxinds(coordaxis):
+    coordaxis = coordaxis.lower()
+    if coordaxis == 'z':
+        return 0, 1, 2
+    elif coordaxis == 'x':
+        return 2, 0, 1
+    elif coordaxis == 'y':
+        return 1, 2, 0
+    else:
+        raise ValueError('Invalid coordinate axis {}'.format(coordaxis))
+
+def compare_maps(filen1, filen2, imgname=None,
+                 mapmin=None, diffmax=None):
     '''
     plot maps in two files, their histgrams, the difference map, the 
     difference histogram, and the difference vs. map value
@@ -978,28 +989,208 @@ def compare_maps(filen1, filen2, imgname=None):
     title = title.format(filen1.split('/')[-1], filen2.split('/')[-1])
     
     fontsize = 12
-    cmapmain = 'plasma'
-    cmapdiff = 'RdBu'
-    cmaphist = 'viridis'
+    cset =  tc.tol_cset('bright')
+    scmapmain = 'plasma'
+    scmapdiff = 'RdBu'
+    scmaphist = 'viridis'
     
+    cmapmain = cm.get_cmap(scmapmain)
+    cmapmain.set_under('gray')
+    extend_main = 'lower'
+    
+    cmapdiff = cm.get_cmap(scmapdiff)
+    cmapdiff.set_under('magenta')
+    cmapdiff.set_over('cyan')
+    extend_diff = 'both'
+    
+    cmaphist = cm.get_cmap(scmaphist)
+    cmaphist.set_under('white')
+    extend_hist = 'neither'
+    histlabel = 'pixel fraction'
+    
+    mainlabel = 'map value'
     with h5py.File(filen1, 'r') as f:
         m1 = f['map'][:, :]
+        axis = f['Header/inputpars'].attrs['axis'].decode()
+        a1, a2, a3 = getaxinds(axis)
+        centre = np.array(f['Header/inputpars'].attrs['centre'])
+        Ls = np.array([f['Header/inputpars'].attrs['L_x'],
+                       f['Header/inputpars'].attrs['L_y'],
+                       f['Header/inputpars'].attrs['L_z']])
+        LsinMpc = bool(f['Header/inputpars'].attrs['LsinMpc'])
+        if LsinMpc:
+            unit = 'cMpc'
+        else:
+            unit = 'cMpc/h'
+        xlabel1 = '{} [{unit}]'.format(['X', 'Y', 'Z'][a1], unit=unit)
+        ylabel1 = '{} [{unit}]'.format(['X', 'Y', 'Z'][a2], unit=unit)
+            
+        extent1 = (centre[a1] - 0.5 * Ls[a1], centre[a1] + 0.5 * Ls[a1],
+                   centre[a2] - 0.5 * Ls[a2], centre[a2] + 0.5 * Ls[a2])      
     with h5py.File(filen2, 'r') as f:
         m2 = f['map'][:, :]
+        axis = f['Header/inputpars'].attrs['axis'].decode()
+        a1, a2, a3 = getaxinds(axis)
+        centre = np.array(f['Header/inputpars'].attrs['centre'])
+        Ls = np.array([f['Header/inputpars'].attrs['L_x'],
+                       f['Header/inputpars'].attrs['L_y'],
+                       f['Header/inputpars'].attrs['L_z']])
+        LsinMpc = bool(f['Header/inputpars'].attrs['LsinMpc'])
+        if LsinMpc:
+            unit = 'cMpc'
+        else:
+            unit = 'cMpc/h'
+        xlabel2 = '{} [{unit}]'.format(['X', 'Y', 'Z'][a1], unit=unit)
+        ylabel2 = '{} [{unit}]'.format(['X', 'Y', 'Z'][a2], unit=unit)
+            
+        extent2 = (centre[a1] - 0.5 * Ls[a1], centre[a1] + 0.5 * Ls[a1],
+                   centre[a2] - 0.5 * Ls[a2], centre[a2] + 0.5 * Ls[a2])
     
     mmin = min(np.min(m1[np.isfinite(m1)]), np.min(m2[np.isfinite[m2]]))
     mmax = max(np.max(m1), np.max(m2))
-    extend_map = 'lower'
+    print('Auto map range: {} - {}'.format(mmin, mmax))
+    if mapmin is not None:
+        mmin = mapmin
     
     diff = m2 - m1
+    difflabel = 'map 2 - map 1'
+    
     dmin = np.min(diff[np.isfinite(diff)])
     dmax = np.max(diff[np.isfinite(diff)])
     dmax = max(np.abs(dmin), np.abs(dmax))
     dmin = -1. * dmax
-    extend_map = 'both'
+    print('Auto diff range: {} - {}'.format(dmin, dmax))
+    if diffmax is not None:
+        dmin = -1. * diffmax
+        dmax = diffmax
     
-    fig = plt.figure(figsize=(7., 5.5))
+    fig = plt.figure(figsize=(8., 5.5))
+    grid = gsp.GridSpec(ncols=4, nrows=2, hspace=0.3, wspace=0.3,
+                        width_ratios=[1, 1, 1, 0.3])
+    axes = [fig.add_subplot(grid[i // 3, i % 3]) for i in range(6)]
+    cax_base = fig.add_subplot(grid[:, 3]) 
+    grid2 = gsp.GridSpecFromSubplotSpec(ncols=1, nrows=3, 
+                                        subplot_spec=cax_base,
+                                        hspace=0.1)
+    cax_base.axis('off')
+    caxdiff = grid2[0]
+    caxmain = grid2[1]
+    caxhist = grid2[2]
     
+    # plot the main maps
+    img = axes[0].imshow(m1.T, extent=extent1, origin='lower', 
+                         interpolation='nearest', cmap=cmapmain,
+                         vmin=mmin, vmax=mmax)
+    axes[0].set_xlabel(xlabel1, fontsize=fontsize)
+    axes[0].set_ylabel(ylabel1, fontsize=fontsize)
+    axes[0].tick_params(labelsize=fontsize - 1.)
+    axes[0].text(0.5, 1.01, 'Map 1', fontsize=fontsize,
+                 transform=axes[0].transAxes,
+                 horizontalalignment='center', verticalalignment='bottom')
+    pu.add_colorbar(caxmain, img=img, vmin=mmin, vmax=mmax, cmap=cmapmain, 
+                    clabel=mainlabel, newax=False, extend=extend_main, 
+                    fontsize=fontsize, orientation='vertical')
+    
+    axes[1].imshow(m2.T, extent=extent2, origin='lower', 
+                   interpolation='nearest', cmap=cmapmain,
+                   vmin=mmin, vmax=mmax)
+    axes[1].set_xlabel(xlabel2, fontsize=fontsize)
+    axes[1].set_ylabel(ylabel2, fontsize=fontsize)
+    axes[1].tick_params(labelsize=fontsize - 1.)
+    axes[1].text(0.5, 1.01, 'Map 2', fontsize=fontsize,
+                 transform=axes[1].transAxes,
+                 horizontalalignment='center', verticalalignment='bottom')
+    
+    # plot the difference map
+    if np.allclose(np.array(extent1), np.array(extent2)):
+        extent=extent1
+    else:
+        extent=None
+    img = axes[2].imshow(diff.T, origin='lower', interpolation='nearest', 
+                         extent=extent, vmin=dmin, vmax=dmax, cmap=cmapdiff)
+    if xlabel1 == xlabel2:
+        axes[2].set_xlabel(xlabel1, fontsize=fontsize)
+    if ylabel1 == ylabel2:
+        axes[2].set_ylabel(ylabel1, fontsize=fontsize)
+    pu.add_colorbar(caxdiff, img=img, vmin=dmin, vmax=dmax, cmap=cmapdiff, 
+                    clabel=difflabel, newax=False, extend=extend_diff, 
+                    fontsize=fontsize, orientation='vertical')
+    axes[2].text(0.5, 1.01, 'Difference', fontsize=fontsize,
+                 transform=axes[2].transAxes,
+                 horizontalalignment='center', verticalalignment='bottom')
+    
+    # plot value histograms
+    mbins = np.linspace(mmin, mmax, 100)
+    mbins = np.append(mmin - 3. * np.average(np.diff(mbins)), mbins)
+    mbins_c = 0.5 * (mbins[:-1] + mbins[1:])
+    mbins_w = np.diff(mbins)
+    
+    _m1 = np.copy(m1).flatten()
+    _m1[_m1 < mmin] = 0.5 * (mbins[0] + mbins[1])
+    _m2 = np.copy(m2).flatten()
+    _m2[_m2 < mmin] = 0.5 * (mbins[0] + mbins[1])    
+    h1 = np.histogram(_m1, bins=mbins)
+    h2 = np.histogram(_m2, bins=mbins)
+    
+    axes[3].bar(mbins_c, h1, width=mbins_w, bottom=None, align='center',
+                color=cset[0], alpha=0.3, edgecolor=cset[0], label='Map 1')
+    axes[3].bar(mbins_c, h2, width=mbins_w, bottom=None, align='center',
+                color=cset[1], alpha=0.3, edgecolor=cset[1], label='Map 2')
+    axes[3].legend(fontsize=fontsize)
+    axes[3].set_xlabel(mainlabel, fontsize=fontsize)
+    axes[3].set_ylabel(histlabel, fontsize=fontsize)
+    axes[3].set_yscale('log')
+    axes[3].tick_params(labelsize=fontsize - 1., top=True, bottom=True,
+                        direction='in', which='both')
+    axes[3].grid(True)
+    axes[3].axvspan(axes[3].get_xlim()[0], mbins[1],
+                    ymin=0, ymax=1, edgecolor='none', facecolor='gray',
+                    linewidth=0, alpha=0.3)
+    
+    # plot the difference histogram
+    _dbins = np.linspace(dmin, dmax, 100)
+    dbins = np.append(dmin - 3. * np.average(np.diff(_dbins)), _dbins)
+    dbins = np.append(dbins, dmax + 3. * np.average(np.diff(_dbins)),)
+    dbins_c = 0.5 * (dbins[:-1] + dbins[1:])
+    dbins_w = np.diff(dbins)
+    
+    _diff = np.copy(diff).flatten()
+    _diff[_diff < dmin] = 0.5 * (dbins[0] + dbins[1])
+    _diff[_diff > dmax] = 0.5 * (dbins[-2] + dbins[-1])
+    hd = np.histogram(_diff, bins=dbins)
+    
+    axes[4].bar(dbins_c, hd, width=dbins_w, bottom=None, align='center',
+                color='none', edgecolor='gray', linewidth=2)
+    axes[4].set_xlabel(difflabel, fontsize=fontsize)
+    axes[4].set_ylabel(histlabel, fontsize=fontsize)
+    axes[4].set_yscale('log')
+    axes[4].tick_params(labelsize=fontsize - 1., top=True, bottom=True,
+                        direction='in', which='both')
+    axes[4].grid(True)
+    axes[4].axvspan(axes[4].get_xlim()[0], dbins[1],
+                    ymin=0, ymax=1, edgecolor='none', facecolor='gray',
+                    linewidth=0, alpha=0.3)
+    axes[4].axvspan(dbins[-2], axes[4].get_xlim()[1], 
+                    ymin=0, ymax=1, edgecolor='none', facecolor='gray',
+                    linewidth=0, alpha=0.3)
+    
+    # plot difference vs. value
+    h1d = np.histogram2d(_m1, _diff, bins=[mbins, dbins])
+    
+    img = axes[5].pcolormesh(mbins, dbins, np.lgo10(h1d).T, cmap=cmaphist)
+    axes[5].set_xlabel('Map 1 values', fontsize=fontsize)
+    axes[5].set_ylabel(difflabel, fontsize=fontsize)
+    axes[5].tick_params(labelsize=fontsize - 1.)
+    pu.add_colorbar(caxhist, img=img, cmap=cmaphist, 
+                    clabel='log10 pixel fraction', newax=False,
+                    extend=extend_hist, 
+                    fontsize=fontsize, orientation='vertical')
+    
+    if imgname is not None:
+        if '/' not in imgname:
+            imgname = mdir + imgname
+        plt.savefig(imgname, format=imgname.split('.')[-1], 
+                    bbox_inches='tight')
 
 # test basic table retrieval and sensitbility
 def plot_tablesets(zs):
