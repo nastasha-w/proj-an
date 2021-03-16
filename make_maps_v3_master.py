@@ -2722,7 +2722,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                 linetable_PS20(ionW, 0.0, emission=ptypeW=='emission')
                 iseltW = False
             except ValueError as err:
-                if ptypeW == 'coldens' and ionW in ol.element_ion.keys():
+                if ptypeW == 'coldens' and ionW in ol.elements_ion.keys():
                     iseltW = True
                 else:
                     print(err)
@@ -2782,7 +2782,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                 linetable_PS20(ionQ, 0.0, emission=ptypeQ=='emission')
                 iseltW = False
             except ValueError as err:
-                if ptypeW == 'coldens' and ionW in ol.element_ion.keys():
+                if ptypeW == 'coldens' and ionW in ol.elements_ion.keys():
                     iseltQ = True
                 else:
                     print(err)
