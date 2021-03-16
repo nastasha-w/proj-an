@@ -902,8 +902,8 @@ def create_maps():
     npix_x = 800
     npix_y = 800
     
-    kwargs_def = {'ionW': 'o7', 'abundsW': 'auto', 'quantity': None, 
-                  'ionQ': None, 'abundsW': 'auto', 'quantity': None, 
+    kwargs_def = {'ionW': 'o7', 'abundsW': 'auto', 'quantityW': None, 
+                  'ionQ': None, 'abundsW': 'auto', 'quantityQ': None, 
                   'ptypeQ': None,
                   'excludeSFRW': 'T4', 'excludeSFRQ': 'T4',
                   'var': 'REFERENCE', 'axis': 'z', 'log': True, 
@@ -945,14 +945,18 @@ def create_maps():
             kwargs = kwargs_def.copy()
             
             kwargs.update(_kwargs)
+            kwargs['abundsW'] = abunds
             m3.make_map(*args, **kwargs)
             
             args = (simnum, snapnum, centre, L_x, L_y, L_z, 
                     npix_x, npix_y, 'basic')
-            _kwargs.update({'ionQ': _kwargs['ionW']})
+            kwargs.update({'ionQ': _kwargs['ionW']})
             del _kwargs['ionW']
-            _kwargs['ptypeQ'] = ptype
-            _kwargs['quantityW'] = 'Mass'
+            kwargs['ptypeQ'] = ptype
+            kwargs['quantityW'] = 'Mass'
+            kwargs['abundsQ'] = abunds
+            
+            m3.make_map(*args, **kwargs)
 
 def getaxinds(coordaxis):
     coordaxis = coordaxis.lower()

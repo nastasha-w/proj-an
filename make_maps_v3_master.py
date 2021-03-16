@@ -2399,7 +2399,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
             base = base.format(ptype=ptypeW, ion=ionW.replace(' ', '-'),
                                iontab=iontableindW,
                                sim=ssimnum, snap=snapnum, ver=str(version),
-                               abunds=abundsW, kernel=kernel, npix=npix_x,
+                               abunds=sabundsW, kernel=kernel, npix=npix_x,
                                depth=sLp)
             resfile = ol.ndir + base + zcen + xypos + axind + SFRindW +\
                       halostr + vind
@@ -2431,7 +2431,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
                                          sfgas=SFRindW)
         base = '{qQ}_{qW}{parttype}_{sim}_{snap}_test{ver}_{abunds}' + \
                '_{kernel}Sm_{npix}pix_{depth}slice'
-        base = base.format(qQ=squantityQ, qW=squantityW, parttype=spartttype,
+        base = base.format(qQ=squantityQ, qW=squantityW, parttype=sparttype,
                             sim=ssimnum, snap=snapnum, ver=str(version),
                             kernel=kernel, npix=npix_x, depth=sLp)
         resfile = ol.ndir + base + zcen + xypos + axind + halostr + vind
@@ -5794,7 +5794,7 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,
         base = 'particlehist_{ptype}-{quantity}{parttype}' +\
                '_{sim}_{snap}_test{ver}'
         base = base.format(ptype=ptype, quantity=quantity, 
-                           parttype=spartttype, sim=simnum, snap=snapnum,
+                           parttype=sparttype, sim=simnum, snap=snapnum,
                            ver=str(version))
         resfile = ol.ndir + base + boxstring + SFRind
         
