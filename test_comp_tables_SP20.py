@@ -892,8 +892,7 @@ def test_interp(line, table='emission'):
 # absorption maps
 # no-dust maps with both table sets
 # with and without dust depletion
-def create_maps():
-    
+def create_maps():  
     simnum = 'L0012N0188'
     snapnum = 27
     centre = [6.25, 6.25, 3.125]
@@ -912,27 +911,95 @@ def create_maps():
                   'saveres': True, 'hdf5': True, 'ompproj': True,
                   }
     
-    make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-         ptypeW,\
-         ionW=None, abundsW='auto', quantityW=None,
-         ionQ=None, abundsQ='auto', quantityQ=None, ptypeQ=None,
-         excludeSFRW=False, excludeSFRQ=False, parttype='0',
-         theta=0.0, phi=0.0, psi=0.0, \
-         sylviasshtables=False, bensgadget2tables=False,
-         ps20tables=False, ps20depletion=True,
-         var='auto', axis='z',log=True, velcut=False,\
-         periodic=True, kernel='C2', saveres=False,\
-         simulation='eagle', LsinMpc=None,\
-         select=None, misc=None, halosel=None, kwargs_halosel=None,\
-         ompproj=False, nameonly=False, numslices=None, hdf5=False,\
-         override_simdatapath=None)
+    # abundances comparisons 
+    opts = [('emission', 
+             {'ionW': 'o7r', 'ps20tables': False, 'ps20depletion': False}),
+            ('coldens',
+             {'ionW': 'o7', 'ps20tables': False, 'ps20depletion': False}),
+            ('coldens',
+             {'ionW': 'oxygen', 'ps20tables': False, 'ps20depletion': False}),
+            ('emission', 
+             {'ionW': 'O  7      22.1012A', 'ps20tables': True,
+              'ps20depletion': False}),
+            ('coldens',
+             {'ionW': 'o7', 'ps20tables': True, 'ps20depletion': False}),
+            ('coldens',
+             {'ionW': 'oxygen', 'ps20tables': True, 'ps20depletion': False}),
+            ('emission', 
+             {'ionW': 'halpha', 'ps20tables': False, 'ps20depletion': False}),
+            ('coldens',
+             {'ionW': 'h1', 'ps20tables': False, 'ps20depletion': False}),
+            ('coldens',
+             {'ionW': 'hydrogen', 'ps20tables': False, 'ps20depletion': False}),
+            ('emission', 
+             {'ionW': 'H  1      6562.81A', 'ps20tables': True,
+              'ps20depletion': False}),
+            ('coldens',
+             {'ionW': 'h1', 'ps20tables': True, 'ps20depletion': False}),
+            ('coldens',
+             {'ionW': 'hydrogen', 'ps20tables': True, 'ps20depletion': False})]
+    for abunds in ['Sm', 'Pt', 1.]:
+        for ptype, _kwargs in opts:
+            args = (simnum, snapnum, centre, L_x, L_y, L_z, 
+                    npix_x, npix_y, ptype)
+            kwargs = kwargs_def.copy()
+            
+            kwargs.update(_kwargs)
+            m3.make_map(*args, **kwargs)
+            
+            args = (simnum, snapnum, centre, L_x, L_y, L_z, 
+                    npix_x, npix_y, 'basic')
+            _kwargs.update({'ionQ': _kwargs['ionW']})
+            del _kwargs['ionW']
+            _kwargs['ptypeQ'] = ptype
+            _kwargs['quantityW'] = 'Mass'
+            
 
+def compare_maps(filen1, filen2, imgname=None):
+    '''
+    plot maps in two files, their histgrams, the difference map, the 
+    difference histogram, and the difference vs. map value
 
-def compare_maps(args_map1, args_map2, kwargs_map1, kwargs_map2,\
-                 imgname=None):
-    pass
+    Parameters
+    ----------
+    filen1 : str
+        file containing the first map (full path).
+    filen2 : str
+        file containing the second map (full path).
+    imgname : str, optional
+        file to save the resulting plot to, if any. The default is None.
 
+    Returns
+    -------
+    None.
 
+    '''
+    title = 'map comparison:\nfile 1: {}\nfile 2:{}'
+    title = title.format(filen1.split('/')[-1], filen2.split('/')[-1])
+    
+    fontsize = 12
+    cmapmain = 'plasma'
+    cmapdiff = 'RdBu'
+    cmaphist = 'viridis'
+    
+    with h5py.File(filen1, 'r') as f:
+        m1 = f['map'][:, :]
+    with h5py.File(filen2, 'r') as f:
+        m2 = f['map'][:, :]
+    
+    mmin = min(np.min(m1[np.isfinite(m1)]), np.min(m2[np.isfinite[m2]]))
+    mmax = max(np.max(m1), np.max(m2))
+    extend_map = 'lower'
+    
+    diff = m2 - m1
+    dmin = np.min(diff[np.isfinite(diff)])
+    dmax = np.max(diff[np.isfinite(diff)])
+    dmax = max(np.abs(dmin), np.abs(dmax))
+    dmin = -1. * dmax
+    extend_map = 'both'
+    
+    fig = plt.figure(figsize=(7., 5.5))
+    
 
 # test basic table retrieval and sensitbility
 def plot_tablesets(zs):
