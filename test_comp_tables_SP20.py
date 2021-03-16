@@ -893,6 +893,8 @@ def test_interp(line, table='emission'):
 # no-dust maps with both table sets
 # with and without dust depletion
 def create_maps():  
+    m3.ol.ndir = mdir
+    
     simnum = 'L0012N0188'
     snapnum = 27
     centre = [6.25, 6.25, 3.125]

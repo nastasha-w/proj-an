@@ -2292,11 +2292,11 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
     elif bensgadget2tables and ptypeW == 'coldens':
         iontableindW = '_iontab-bensgagdet2'
     elif ps20tables and ptypeW in ['coldens', 'emission']:
-        iontableindW = '_iontab-PS20-'
+        iontableindW = '_iontab-PS20'
         iontab = ol.iontab_sylvia_ssh.split('/')[-1]
         iontab = iontab[:-5] # remove '.hdf5'
         iontab = iontab.replace('_', '-')
-        iontableindW = iontableindW + '-' + 'iontab'
+        #iontableindW = iontableindW + '-' + 'iontab'
         if ps20depletion:
             iontableindW += '_depletion-T'
         else:
@@ -5850,11 +5850,11 @@ def namehistogram_perparticle_axis(dct):
         elif dct['bensgadget2tables']:
             stables = '_iontab-bensgagdet2'
         elif dct['ps20tables']: 
-            iontableind = '_iontab-PS20-'
+            iontableind = '_PS20-iontab'
             iontab = ol.iontab_sylvia_ssh.split('/')[-1]
             iontab = iontab[:-5] # remove '.hdf5'
             iontab = iontab.replace('_', '-')
-            iontableind = iontableind + '-' + 'iontab'
+            #iontableind = iontableind + '-' + 'iontab'
             if dct['ps20depletion']:
                 iontableind += '_depletion-T'
             else:
