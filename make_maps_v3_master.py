@@ -5156,7 +5156,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                        vardict_WQ.CGSconv[quantityW]
             
     elif ptypeW == 'coldens' and not iseltW:
-        if ionW in ['h1ssh', 'hmolssh', 'hneutralssh'] and not (sylviasshtables or bensgadget2tables):
+        if ionW in ['h1ssh', 'hmolssh', 'hneutralssh'] and \
+            not (sylviasshtables or bensgadget2tables):
             qW, multipafterW = Nion_calc_ssh(vardict_WQ, excludeSFRW, habW, 
                                              ionW, last=True, updatesel=True, 
                                              misc=misc)
@@ -5320,11 +5321,15 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
             except ValueError: # nothing in the map at all
                 minW = np.NaN
             maxW = np.max(resW)
+            if not LsinMpc:
+                centre_save = centre * simfile.h
+            else:
+                centre_save = centre
             if halosel is None:
                 if hdf5:
                     #print('should be saving hdf5 file now')
                     savemap_hdf5(resfile, resW, minW, maxW,
-                                 simnum, snapnum, centre, L_x, L_y, L_z, 
+                                 simnum, snapnum, centre_save, L_x, L_y, L_z, 
                                  npix_x, npix_y, 
                                  ptypeW,
                                  ionW, abundsW, quantityW,
@@ -5344,7 +5349,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                 if hdf5:
                     #print('should be saving hdf5 file now')
                     savemap_hdf5(resfile, resW, minW, maxW,
-                                 simnum, snapnum, centre, L_x, L_y, L_z, 
+                                 simnum, snapnum, centre_save, L_x, L_y, L_z, 
                                  npix_x, npix_y,
                                  ptypeW,
                                  ionW, abundsW, quantityW,
@@ -5496,7 +5501,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                 if halosel is None:
                     if hdf5:
                         savemap_hdf5(subresfile, resW, minW, maxW,
-                                     simnum, snapnum, centre, L_x, L_y, L_z, 
+                                     simnum, snapnum, centre_temp, 
+                                     L_x_temp, L_y_temp, L_z_temp, 
                                      npix_x, npix_y, 
                                      ptypeW,
                                      ionW, abundsW, quantityW,
@@ -5515,7 +5521,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                 else:
                     if hdf5:
                         savemap_hdf5(subresfile, resW, minW, maxW,
-                                     simnum, snapnum, centre, L_x, L_y, L_z, 
+                                     simnum, snapnum, centre_temp, 
+                                     L_x_temp, L_y_temp, L_z_temp,  
                                      npix_x, npix_y, 
                                      ptypeW,
                                      ionW, abundsW, quantityW,
@@ -5543,7 +5550,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                     if halosel is None:
                         if hdf5:
                             savemap_hdf5(subresfile2, resQ, minQ, maxQ,
-                                         simnum, snapnum, centre, L_x, L_y, L_z, 
+                                         simnum, snapnum, centre_temp, 
+                                         L_x_temp, L_y_temp, L_z_temp,  
                                          npix_x, npix_y, 
                                          ptypeW,
                                          ionW, abundsW, quantityW,
@@ -5562,7 +5570,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                     else:
                         if hdf5:
                             savemap_hdf5(subresfile2, resQ, minQ, maxQ,
-                                         simnum, snapnum, centre, L_x, L_y, L_z, 
+                                         simnum, snapnum, centre_temp, 
+                                         L_x_temp, L_y_temp, L_z_temp,  
                                          npix_x, npix_y,
                                          ptypeW,
                                          ionW, abundsW, quantityW,
