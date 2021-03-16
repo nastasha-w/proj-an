@@ -5762,7 +5762,6 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,
         elif abunds[1] != abunds[0]:
             sabunds = sabunds + '-{}massfracHAb'.format(abunds[1])
 
-
     if var != 'REFERENCE':
         ssimnum = simnum + var
     else:
@@ -5798,11 +5797,17 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,
             iontableind += '_depletion-T'
         else:
             iontableind += '_depletion-F'
+        if ps20tables:
+            if ptypeW in ['Luminosity', 'Lumdens']:
+                sion = ion.replace(' ', '-')
+            else: # couple of input options; standardize output name
+                _tab = linetable_PS20(ion, 0.0, emission=False)
+                sion = _tab.elementshort.lower() + str(_tab.ionstage)
         
     if ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
         base = 'particlehist_{ptype}_{ion}{parttype}{iontab}' + \
                '_{sim}_{snap}_test{ver}_{abunds}'
-        base = base.format(ptype=ptype, ion=ion.replace(' ', '-'),
+        base = base.format(ptype=ptype, ion=sion,
                            parttype=sparttype, iontab=iontableind, sim=simnum,
                            snap=snapnum, ver=str(version), abunds=sabunds)
         resfile = ol.ndir + base + boxstring + SFRind
