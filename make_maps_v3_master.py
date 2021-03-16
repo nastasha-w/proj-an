@@ -2721,7 +2721,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
             iseltW = False
         elif ionW in ol.elements and ptypeW == 'coldens':
             iseltW = True
-        elif ps20tables:
+        if ps20tables:
             try:
                 linetable_PS20(ionW, 0.0, emission=ptypeW=='emission')
             except ValueError as err:
