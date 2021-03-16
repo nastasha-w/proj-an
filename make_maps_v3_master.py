@@ -2717,21 +2717,25 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
         return 3
     elif ptypeW in ['emission', 'coldens']:
         parttype = '0'
-        if ionW in ol.elements_ion.keys():
-            iseltW = False
-        elif ionW in ol.elements and ptypeW == 'coldens':
-            iseltW = True
         if ps20tables:
             try:
                 linetable_PS20(ionW, 0.0, emission=ptypeW=='emission')
+                iseltW = False
             except ValueError as err:
-                print(err)
-                print('Invalid PS20 ion {}'.format(ionW))
-                return 55
-            iseltW = False
+                if ptypeW == 'coldens' and ionW in ol.element_ion.keys():
+                    iseltW = True
+                else:
+                    print(err)
+                    print('Invalid PS20 ion {}'.format(ionW))
+                    return 55
         else:
-            print('%s is an invalid ion option for ptypeW %s\n'%(ionW,ptypeW))
-            return 26
+            if ionW in ol.elements_ion.keys():
+                iseltW = False
+            elif ionW in ol.elements and ptypeW == 'coldens':
+                iseltW = True
+            else:
+                print('%s is an invalid ion option for ptypeW %s\n'%(ionW,ptypeW))
+                return 26
         if not isinstance(abundsW, (list, tuple, np.ndarray)):
             abundsW = [abundsW,'auto']
         else:
@@ -2773,22 +2777,26 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
 
     elif ptypeQ in ['emission','coldens']:
         parttype = '0'
-        if ionQ in ol.elements_ion.keys():
-            iseltQ = False
-        elif ionQ in ol.elements and ptypeQ == 'coldens':
-            iseltQ = True
-        elif ps20tables:
+        if ps20tables:
             try:
                 linetable_PS20(ionQ, 0.0, emission=ptypeQ=='emission')
+                iseltW = False
             except ValueError as err:
-                print(err)
-                print('Invalid PS20 ion {}'.format(ionQ))
-                return 55
-            iseltQ = False
+                if ptypeW == 'coldens' and ionW in ol.element_ion.keys():
+                    iseltQ = True
+                else:
+                    print(err)
+                    print('Invalid PS20 ion {}'.format(ionQ))
+                    return 55
         else:
-            print('%s is an invalid ion option for ptypeQ %s\n'%(ionQ,ptypeQ))
-            return 8
-
+            if ionW in ol.elements_ion.keys():
+                iseltQ = False
+            elif ionW in ol.elements and ptypeQ == 'coldens':
+                iseltQ = True
+            else:
+                print('%s is an invalid ion option for ptypeW %s\n'%(ionW,ptypeW))
+                return 8
+        
         if not isinstance(abundsQ, (list, tuple, np.ndarray)):
             abundsQ = [abundsQ, 'auto']
         else:
