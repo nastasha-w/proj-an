@@ -5798,7 +5798,7 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,
         else:
             iontableind += '_depletion-F'
         if ps20tables:
-            if ptypeW in ['Luminosity', 'Lumdens']:
+            if ptype in ['Luminosity', 'Lumdens']:
                 sion = ion.replace(' ', '-')
             else: # couple of input options; standardize output name
                 _tab = linetable_PS20(ion, 0.0, emission=False)
