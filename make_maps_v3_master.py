@@ -2308,7 +2308,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
     elif bensgadget2tables and ptypeQ == 'coldens':
         iontableindQ = '_iontab-bensgagdet2'
     elif ps20tables and ptypeQ in ['coldens', 'emission']:
-        iontableindQ = '_iontab-PS20-'
+        iontableindQ = '_iontab-PS20'
         iontab = ol.iontab_sylvia_ssh.split('/')[-1]
         iontab = iontab[:-5] # remove '.hdf5'
         iontab = iontab.replace('_', '-')
