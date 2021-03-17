@@ -10,6 +10,7 @@ test the SP20 tables implementation and compare to Serena Bertone's tables
 
 import numpy as np
 import h5py
+import os
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gsp
@@ -955,7 +956,9 @@ def create_maps(inclps20=True):
             
             kwargs.update(_kwargs)
             kwargs['abundsW'] = abunds
-            m3.make_map(*args, **kwargs)
+            filen = m3.make_map(*args, **kwargs, nameonly=True)
+            if not os.path.isfile(filen):
+                m3.make_map(*args, **kwargs, nameonly=False)
             
             args = (simnum, snapnum, centre, L_x, L_y, L_z, 
                     npix_x, npix_y, 'basic')
@@ -965,7 +968,9 @@ def create_maps(inclps20=True):
             kwargs['quantityW'] = 'Mass'
             kwargs['abundsQ'] = abunds
             
-            m3.make_map(*args, **kwargs)
+            filen = m3.make_map(*args, **kwargs, nameonly=True)
+            if not os.path.isfile(filen):
+                m3.make_map(*args, **kwargs, nameonly=False)
 
 def getaxinds(coordaxis):
     coordaxis = coordaxis.lower()
