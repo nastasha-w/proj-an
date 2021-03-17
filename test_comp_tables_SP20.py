@@ -1115,6 +1115,8 @@ def compare_maps(filen1, filen2, imgname=None,
     caxmain = fig.add_subplot(grid2[1])
     caxhist = fig.add_subplot(grid2[2])
     
+    fig.suptitle(title, fontsize=fontsize)
+    
     # plot the main maps
     img = axes[0].imshow(m1.T, extent=extent1, origin='lower', 
                          interpolation='nearest', cmap=cmapmain,
@@ -1167,8 +1169,8 @@ def compare_maps(filen1, filen2, imgname=None,
     _m1[_m1 < mmin] = 0.5 * (mbins[0] + mbins[1])
     _m2 = np.copy(m2).flatten()
     _m2[_m2 < mmin] = 0.5 * (mbins[0] + mbins[1])    
-    h1 = np.histogram(_m1, bins=mbins)
-    h2 = np.histogram(_m2, bins=mbins)
+    h1, _ = np.histogram(_m1, bins=mbins)
+    h2, _ = np.histogram(_m2, bins=mbins)
     
     axes[3].bar(mbins_c, h1, width=mbins_w, bottom=None, align='center',
                 color=cset[0], alpha=0.3, edgecolor=cset[0], label='Map 1')
@@ -1195,7 +1197,7 @@ def compare_maps(filen1, filen2, imgname=None,
     _diff = np.copy(diff).flatten()
     _diff[_diff < dmin] = 0.5 * (dbins[0] + dbins[1])
     _diff[_diff > dmax] = 0.5 * (dbins[-2] + dbins[-1])
-    hd = np.histogram(_diff, bins=dbins)
+    hd, _x, _y = np.histogram(_diff, bins=dbins)
     
     axes[4].bar(dbins_c, hd, width=dbins_w, bottom=None, align='center',
                 color='none', edgecolor='gray', linewidth=2)
