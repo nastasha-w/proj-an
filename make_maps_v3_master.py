@@ -3446,11 +3446,14 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
             print('Adjusting minimum logZ to small finite value')
             vardict.particle['logZ'][vardict.particle['logZ'] == -np.inf] = -100.
             dellz = True        
-        luminosity = table.find_logemission(vardict.particle)        
+        luminosity = table.find_logemission(vardict.particle)   
+        print('Max log emission (table): {}'.format(np.max(luminosity)))
         if not ps20depletion:
             # luminosity in table = (1 - depletion) * luminosity_if_all_elt_in_gas
             # so divide by depleted fraction to get undepleted emission
             luminosity -= np.log10(1. - table.find_depletion(vardict.particle))
+            print('Max log emission (table - depletion): {}'.format(\
+                   np.max(luminosity)))
         vardict.delif('logT', last=last) 
         vardict.delif('lognH', last=last)
         # rescale to the correct /element/ abundance
@@ -3459,6 +3462,8 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
         else:
             luminosity -= table.find_assumedabundance(vardict.particle,
                                                       log=True)
+            print('Max log emission (table - assumed abunds): {}'.format(\
+                   np.max(luminosity)))
             vardict.delif('logZ', last=(last or dellz))
             if isinstance(hab, str):
                 vardict.readif(hab, rawunits=True)
@@ -3478,15 +3483,21 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
             del hmfrac
             zscale *= ionh.atomw['Hydrogen'] / table.elementmass_u
             luminosity += np.log10(zscale)
+            print('Max log emission (table - assumed + true abunds): {}'.format(\
+                   np.max(luminosity)))
         luminosity += np.log10(vardict.particle['propvol'])
+        print('Max log emission incl particle volume: {}'.format(\
+               np.max(luminosity)))
         vardict.delif('propvol',last=last)
         if len(luminosity) > 0:
             maxL = np.max(luminosity)
             # attempt to prevent overflow in exponentiation + projection
-            rescale = 34. - maxL
+            rescale = maxL - 30.
         else:
             rescale = 0.
+        print('log rescale factor: {}'.format(rescale))
         luminosity = 10.0**(luminosity - rescale)
+        print('Max luminosity per SPH particle (rescaled): {}'.format)
         CGSconv = 10**rescale
     
     else: # not ps20tables: calculate luminosity
