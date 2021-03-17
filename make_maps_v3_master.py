@@ -3817,11 +3817,11 @@ def Nelt_calc(vardict, excludeSFR, eltab, hab, ion, last=True, updatesel=True,
     vardict.readif('Mass', rawunits=True)
 
     if isinstance(eltab, str):
-        Nelt = vardict.particle[eltab]*vardict.particle['Mass']
+        Nelt = vardict.particle[eltab] * vardict.particle['Mass']
         vardict.delif('Mass',last=last)
         vardict.delif(eltab,last=last)
     else:
-        Nelt = eltab*vardict.particle['Mass']
+        Nelt = eltab * vardict.particle['Mass']
         vardict.delif('Mass',last=last)
     
     if ps20tables and ps20depletion:
@@ -3878,10 +3878,16 @@ def Nelt_calc(vardict, excludeSFR, eltab, hab, ion, last=True, updatesel=True,
                 _logZ *= np.log10(table.solarZ)
                 vardict.add_part('logZ', _logZ)
                 del _logZ
+            _mlz = np.min(vardict.particle['logZ'])
+            if _mlz == -np.inf: # avoid interpolation error ()
+                vardict.particle['logZ'][vardict.particle['logZ'] == -np.inf] = -100.0
+                dellz = True
+            else:
+                dellz = False
         Nelt *= (1. - table.find_depletion(vardict.particle))
         vardict.delif('lognH', last=last)
         vardict.delif('logT', last=last)
-        vardict.delif('logZ', last=last)
+        vardict.delif('logZ', last=last or dellz)
         ionmass = table.elementmass_u
     else:
         ionmass = ionh.atomw[string.capwords(ion)]
