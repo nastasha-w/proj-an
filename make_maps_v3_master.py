@@ -2296,7 +2296,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
         iontab = ol.iontab_sylvia_ssh.split('/')[-1]
         iontab = iontab[:-5] # remove '.hdf5'
         iontab = iontab.replace('_', '-')
-        #iontableindW = iontableindW + '-' + 'iontab'
+        iontableindW = iontableindW + '-' + iontab
         if ps20depletion:
             iontableindW += '_depletion-T'
         else:
@@ -2312,7 +2312,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
         iontab = ol.iontab_sylvia_ssh.split('/')[-1]
         iontab = iontab[:-5] # remove '.hdf5'
         iontab = iontab.replace('_', '-')
-        iontableindQ = iontableindQ + '-' + 'iontab'
+        iontableindQ = iontableindQ + '-' + iontab
         if ps20depletion:
             iontableindQ += '_depletion-T'
         else:
