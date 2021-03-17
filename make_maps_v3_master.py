@@ -2736,7 +2736,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
         parttype = '0'
         if ps20tables:
             try:
-                linetable_PS20(ionW, 0.0, emission=ptypeW=='emission')
+                table = linetable_PS20(ionW, 0.0, emission=ptypeW=='emission')
                 iseltW = False
             except ValueError as err:
                 if ptypeW == 'coldens' and ionW in ol.elements:
@@ -2757,12 +2757,15 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
             abundsW = [abundsW,'auto']
         else:
             abundsW = list(abundsW) # tuple element assigment is not allowed, sometimes needed
-        if abundsW[0] not in ['Sm','Pt','auto']:
+        if abundsW[0] not in ['Sm', 'Pt', 'auto']:
             if not isinstance(abundsW[0], num.Number):
                 print('Abundances must be either smoothed ("Sm") or particle ("Pt") abundances, automatic ("auto"), or a solar units abundance (float)')
                 return 4
             elif iseltW:
                 abundsW[0] = abundsW[0] * ol.solar_abunds_ea[ionW]
+            elif ps20tables:
+                abundsW[0] = abundsW[0] *\
+                    ol.solar_abunds_ea[table.element.lower()]
             else:
                 abundsW[0] = abundsW[0] * ol.solar_abunds_ea[ol.elements_ion[ionW]]
         elif abundsW[0] == 'auto':
@@ -2796,7 +2799,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
         parttype = '0'
         if ps20tables:
             try:
-                linetable_PS20(ionQ, 0.0, emission=ptypeQ=='emission')
+                tableQ = linetable_PS20(ionQ, 0.0, emission=ptypeQ=='emission')
                 iseltW = False
             except ValueError as err:
                 if ptypeQ == 'coldens' and ionQ in ol.elements:
@@ -2825,6 +2828,9 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                 return 9
             elif iseltQ:
                 abundsQ[0] = abundsQ[0] * ol.solar_abunds_ea[ionQ]
+            elif ps20tables:
+                abundsQ[0] = abundsQ[0] *\
+                    ol.solar_abunds_ea[tableQ.element.lower()]
             else:
                 abundsQ[0] = abundsQ[0] * ol.solar_abunds_ea[ol.elements_ion[ionQ]]
         elif abundsQ[0] == 'auto':
@@ -6014,7 +6020,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
         
         if dct['ps20tables']:
             try:
-                linetable_PS20(ion, 0.0, emission=ptype=='emission')
+                table = linetable_PS20(ion, 0.0, emission=ptype=='emission')
                 iselt = False
             except ValueError as err:
                 if ptype == 'coldens' and ion in ol.elements:
@@ -6053,6 +6059,9 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
                 return 4
             elif iselt:
                 abunds[0] = abunds[0] * ol.solar_abunds_ea[ion]
+            elif dct['ps20tables']:
+                abunds[0] = abunds[0] *\
+                    ol.solar_abunds_ea[table.element.lower()]
             else:
                 abunds[0] = abunds[0] * ol.solar_abunds_ea[ol.elements_ion[ion]]
         elif abunds[0] == 'auto':
