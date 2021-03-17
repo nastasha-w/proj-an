@@ -3704,7 +3704,7 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,
         if sylviasshtables or ps20tables:
             if ps20tables:
                 table = linetable_PS20(ion, vardict.simfile.z)
-                print('Using table for z={.3f}'.format(vardict.simfile.z))
+                print('Using table for z={:.3f}'.format(vardict.simfile.z))
             if 'logZ' not in vardict.particle.keys():
                 if isinstance(eltab, str):
                     if 'SmoothedElementAbundance' in eltab:
