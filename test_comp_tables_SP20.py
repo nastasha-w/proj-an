@@ -893,55 +893,74 @@ def test_interp(line, table='emission'):
 # absorption maps
 # no-dust maps with both table sets
 # with and without dust depletion
-def create_maps(inclps20=True):  
+def create_maps(setnum=1, inclps20=True):  
     m3.ol.ndir = mdir
     
-    simnum = 'L0012N0188'
-    snapnum = 27
-    centre = [6.25, 6.25, 3.125]
-    L_x = 12.5
-    L_y = 12.5
-    L_z = 6.25
-    npix_x = 800
-    npix_y = 800
-    
-    kwargs_def = {'ionW': 'o7', 'abundsW': 'auto', 'quantityW': None, 
-                  'ionQ': None, 'abundsW': 'auto', 'quantityQ': None, 
-                  'ptypeQ': None,
-                  'excludeSFRW': 'T4', 'excludeSFRQ': 'T4',
-                  'var': 'REFERENCE', 'axis': 'z', 'log': True, 
-                  'velcut': False, 'periodic': True, 'kernel': 'C2',
-                  'saveres': True, 'hdf5': True, 'ompproj': True,
-                  }
-    
-    # abundances comparisons 
-    opts = [('emission', 
-             {'ionW': 'o7r', 'ps20tables': False, 'ps20depletion': False}),
-            ('coldens',
-             {'ionW': 'o7', 'ps20tables': False, 'ps20depletion': False}),
-            ('coldens',
-             {'ionW': 'oxygen', 'ps20tables': False, 'ps20depletion': False}),
-            ('emission', 
-             {'ionW': 'O  7      22.1012A', 'ps20tables': True,
-              'ps20depletion': False}),
-            ('coldens',
-             {'ionW': 'o7', 'ps20tables': True, 'ps20depletion': False}),
-            ('coldens',
-             {'ionW': 'oxygen', 'ps20tables': True, 'ps20depletion': False}),
-            ('emission', 
-             {'ionW': 'halpha', 'ps20tables': False, 'ps20depletion': False}),
-            ('coldens',
-             {'ionW': 'h1', 'ps20tables': False, 'ps20depletion': False}),
-            ('coldens',
-             {'ionW': 'hydrogen', 'ps20tables': False, 'ps20depletion': False}),
-            ('emission', 
-             {'ionW': 'H  1      6562.81A', 'ps20tables': True,
-              'ps20depletion': False}),
-            ('coldens',
-             {'ionW': 'h1', 'ps20tables': True, 'ps20depletion': False}),
-            ('coldens',
-             {'ionW': 'hydrogen', 'ps20tables': True, 'ps20depletion': False})]
-    for abunds in ['Sm', 'Pt', 1.]:
+    if setnum in [1, 2]:
+        simnum = 'L0012N0188'
+        snapnum = 27
+        centre = [6.25, 6.25, 3.125]
+        L_x = 12.5
+        L_y = 12.5
+        L_z = 6.25
+        npix_x = 800
+        npix_y = 800
+        
+        kwargs_def = {'ionW': 'o7', 'abundsW': 'auto', 'quantityW': None, 
+                      'ionQ': None, 'abundsW': 'auto', 'quantityQ': None, 
+                      'ptypeQ': None,
+                      'excludeSFRW': 'T4', 'excludeSFRQ': 'T4',
+                      'var': 'REFERENCE', 'axis': 'z', 'log': True, 
+                      'velcut': False, 'periodic': True, 'kernel': 'C2',
+                      'saveres': True, 'hdf5': True, 'ompproj': True,
+                      }
+    if setnum == 1:
+        # abundances comparisons 
+        opts = [('emission', 
+                 {'ionW': 'o7r', 'ps20tables': False, 'ps20depletion': False}),
+                ('coldens',
+                 {'ionW': 'o7', 'ps20tables': False, 'ps20depletion': False}),
+                ('coldens',
+                 {'ionW': 'oxygen', 'ps20tables': False, 'ps20depletion': False}),
+                ('emission', 
+                 {'ionW': 'O  7      22.1012A', 'ps20tables': True,
+                  'ps20depletion': False}),
+                ('coldens',
+                 {'ionW': 'o7', 'ps20tables': True, 'ps20depletion': False}),
+                ('coldens',
+                 {'ionW': 'oxygen', 'ps20tables': True, 'ps20depletion': False}),
+                ('emission', 
+                 {'ionW': 'halpha', 'ps20tables': False, 'ps20depletion': False}),
+                ('coldens',
+                 {'ionW': 'h1', 'ps20tables': False, 'ps20depletion': False}),
+                ('coldens',
+                 {'ionW': 'hydrogen', 'ps20tables': False, 'ps20depletion': False}),
+                ('emission', 
+                 {'ionW': 'H  1      6562.81A', 'ps20tables': True,
+                  'ps20depletion': False}),
+                ('coldens',
+                 {'ionW': 'h1', 'ps20tables': True, 'ps20depletion': False}),
+                ('coldens',
+                 {'ionW': 'hydrogen', 'ps20tables': True, 'ps20depletion': False})]
+        abundss = ['Sm', 'Pt', 1.]
+    if setnum == 2:
+        opts = [('emission', 
+                 {'ionW': 'O  7      22.1012A', 'ps20tables': True,
+                  'ps20depletion': True}),
+                ('coldens',
+                 {'ionW': 'o7', 'ps20tables': True, 'ps20depletion': True}),
+                ('coldens',
+                 {'ionW': 'oxygen', 'ps20tables': True, 'ps20depletion': True}),
+                ('emission', 
+                 {'ionW': 'H  1      6562.81A', 'ps20tables': True,
+                  'ps20depletion': True}),
+                ('coldens',
+                 {'ionW': 'h1', 'ps20tables': True, 'ps20depletion': True}),
+                ('coldens',
+                 {'ionW': 'hydrogen', 'ps20tables': True, 'ps20depletion': True})]
+        abundss = ['Sm']
+        
+    for abunds in abundss:
         for ptype, __kwargs in opts:
             _kwargs = __kwargs.copy()
             # running on master branch without these arguments implemented
