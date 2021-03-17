@@ -957,7 +957,7 @@ def create_maps(inclps20=True):
             kwargs.update(_kwargs)
             kwargs['abundsW'] = abunds
             filen = m3.make_map(*args, **kwargs, nameonly=True)
-            if not os.path.isfile(filen):
+            if not os.path.isfile(filen[0]):
                 m3.make_map(*args, **kwargs, nameonly=False)
             
             args = (simnum, snapnum, centre, L_x, L_y, L_z, 
@@ -969,7 +969,7 @@ def create_maps(inclps20=True):
             kwargs['abundsQ'] = abunds
             
             filen = m3.make_map(*args, **kwargs, nameonly=True)
-            if not os.path.isfile(filen):
+            if not (os.path.isfile(filen[0]) and os.path.isfile(filen[1])):
                 m3.make_map(*args, **kwargs, nameonly=False)
 
 def getaxinds(coordaxis):
