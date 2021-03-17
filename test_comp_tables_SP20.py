@@ -892,7 +892,7 @@ def test_interp(line, table='emission'):
 # absorption maps
 # no-dust maps with both table sets
 # with and without dust depletion
-def create_maps():  
+def create_maps(inclps20=True):  
     m3.ol.ndir = mdir
     
     simnum = 'L0012N0188'
@@ -942,6 +942,13 @@ def create_maps():
              {'ionW': 'hydrogen', 'ps20tables': True, 'ps20depletion': False})]
     for abunds in ['Sm', 'Pt', 1.]:
         for ptype, _kwargs in opts:
+            # running on master branch without these arguments implemented
+            if not inclps20:
+                if _kwargs['ps20tables']:
+                    continue
+                else:
+                    del _kwargs['ps20tables']
+                    del _kwargs['ps20depletion']
             args = (simnum, snapnum, centre, L_x, L_y, L_z, 
                     npix_x, npix_y, ptype)
             kwargs = kwargs_def.copy()
