@@ -3357,11 +3357,18 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
     '''
     print('Calculating particle luminosities...')
 
+    # particle selection
     if isinstance(eltab, str):
         vardict.readif(eltab, rawunits=True)
-        if updatesel and (ol.elements_ion[ion] not in ['hydrogen', 'helium']):
+        if ps20tables:
+            table = linetable_PS20(ion, vardict.simfile.z, emission=True)
+            parentelt = table.element.lower()
+        else:
+            parentelt = ol.elements_ion[ion]
+        if updatesel and (parentelt not in ['hydrogen', 'helium']):
             vardict.update(vardict.particle[eltab] > 0.)
-
+    
+    # get required variables
     if not vardict.isstored_part('propvol'):
         vardict.readif('Density', rawunits=True)
         vardict.readif('Mass', rawunits=True)
@@ -3413,8 +3420,7 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
                np.max(vardict.particle['logT']),\
                np.median(vardict.particle['logT'])))
 
-    if ps20tables:
-        table = linetable_PS20(ion, vardict.simfile.z, emission=True)
+    if ps20tables: #ps20tables: calculate luminosity
         if 'logZ' not in vardict.particle.keys():
             if isinstance(eltab, str):
                 if 'SmoothedElementAbundance' in eltab:
@@ -3449,7 +3455,7 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
             # so divide by depleted fraction to get undepleted emission
             luminosity -= np.log10(1. - table.find_depletion(vardict.particle))
         # rescale to the correct /element/ abundance
-        if ol.elements_ion[ion] == 'hydrogen': # no rescaling if hydrogen
+        if parentelt == 'hydrogen': # no rescaling if hydrogen
             vardict.delif('logZ', last=(last or dellz)) 
         else:
             luminosity -= table.find_assumedabundance(vardict.particle,
@@ -3484,7 +3490,7 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
         luminosity = 10.0**(luminosity - rescale)
         CGSconv = 10**rescale
     
-    else: # not ps20tables
+    else: # not ps20tables: calculate luminosity
         lineind = ol.line_nos_ion[ion]
         vardict.add_part('emdenssq', find_emdenssq(vardict.simfile.z,\
                                                    ol.elements_ion[ion],\
@@ -3633,7 +3639,12 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,
 
     if isinstance(eltab, str):
         vardict.readif(eltab, rawunits=True)
-        if updatesel and (ol.elements_ion[ion] not in ['hydrogen', 'helium']):
+        if ps20tables:
+            table = linetable_PS20(ion, vardict.simfile.z, emission=True)
+            parentelt = table.element.lower()
+        else:
+            parentelt = ol.elements_ion[ion]
+        if updatesel and (parentelt not in ['hydrogen', 'helium']):
             vardict.update(vardict.particle[eltab] > 0.)
 
     if not ionbal_from_outputs: # if not misc option for getting ionfrac from Ben Oppenheimer's modified RECAL-L0025N0752 runs with non-equilibrium ion fractions
@@ -3687,7 +3698,7 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,
                     vardict.add_part('logZ', np.ones(len(vardict.particle['lognH'])) *\
                                      np.log10(eltab / ol.solar_abunds_ea[ol.elements_ion[ion]] *\
                                               ol.Zsun_sylviastables))
-                else:
+                else: # ps20tables
                     _logZ = np.ones(len(vardict.particle['lognH']))
                     _logZ *= np.log10(table.solarZ)
                     vardict.add_part('logZ', _logZ)
@@ -5797,11 +5808,11 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,
         elif bensgadget2tables:
             iontableind = '_iontab-bensgagdet2'
     if ps20tables and ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']: 
-        iontableind = '_iontab-PS20-'
+        iontableind = '_iontab-PS20'
         iontab = ol.iontab_sylvia_ssh.split('/')[-1]
         iontab = iontab[:-5] # remove '.hdf5'
         iontab = iontab.replace('_', '-')
-        iontableind = iontableind + '-' + 'iontab'
+        iontableind = iontableind + '-' + iontab
         if ps20depletion:
             iontableind += '_depletion-T'
         else:
@@ -5893,14 +5904,14 @@ def namehistogram_perparticle_axis(dct):
             iontab = ol.iontab_sylvia_ssh.split('/')[-1]
             iontab = iontab[:-5] # remove '.hdf5'
             iontab = iontab.replace('_', '-')
-            #iontableind = iontableind + '-' + 'iontab'
+            iontableind = iontableind + '-' + iontab
             if dct['ps20depletion']:
                 iontableind += '_depletion-T'
             else:
                 iontableind += '_depletion-F'
             stables = iontableind
             
-            if ps20tables:
+            if dct['ps20tables']:
                 ion = dct['ion']
                 if ptype in ['Luminosity', 'Lumdens']:
                     sion = ion.replace(' ', '-')
@@ -5976,19 +5987,38 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
             abunds = dct_defaults['abunds']
         else:
             abunds = None
-        if ion in ol.elements_ion.keys():
-            iselt = False
+        
+        if dct['ps20tables']:
+            try:
+                linetable_PS20(ion, 0.0, emission=ptype=='emission')
+                iselt = False
+            except ValueError as err:
+                if ptype == 'coldens' and ion in ol.elements:
+                    iselt = True
+                else:
+                    print(err)
+                    print('Invalid PS20 ion {}'.format(ion))
+                    return 55
+        else:
+            if ion in ol.elements_ion.keys():
+                iselt = False
+                
+            elif ion in ol.elements and ptype == 'coldens':
+                iselt = True
+            else:
+                print('%s is an invalid ion option for ptypeW %s\n'%(ion,
+                                                                     ptype))
+                return 8
+        
+        if not iselt:
             parttype = '0'
-        elif ion in ol.elements and ptype in ['Nion', 'Niondens']:
-            iselt = True
+        elif iselt and ptype in ['Nion', 'Niondens']:
             if parttype not in ['0', '4', 0, 4]:
                 print('Element masses are only available for gas and stars')
                 return 47
             else:
                 parttype = str(parttype)
-        else:
-            print('%s is an invalid ion option for ptype %s\n'%(ion,ptype))
-            return 8
+
         if not isinstance(abunds, (list, tuple, np.ndarray)):
             abunds = [abunds, 'auto']
         else:
