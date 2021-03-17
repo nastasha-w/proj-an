@@ -1084,7 +1084,7 @@ def compare_maps(filen1, filen2, imgname=None,
         extent2 = (centre[a1] - 0.5 * Ls[a1], centre[a1] + 0.5 * Ls[a1],
                    centre[a2] - 0.5 * Ls[a2], centre[a2] + 0.5 * Ls[a2])
     
-    mmin = min(np.min(m1[np.isfinite(m1)]), np.min(m2[np.isfinite[m2]]))
+    mmin = min(np.min(m1[np.isfinite(m1)]), np.min(m2[np.isfinite(m2)]))
     mmax = max(np.max(m1), np.max(m2))
     print('Auto map range: {} - {}'.format(mmin, mmax))
     if mapmin is not None:
