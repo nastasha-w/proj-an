@@ -1211,10 +1211,10 @@ def compare_maps(filen1, filen2, imgname=None,
     axes[4].grid(True)
     xlim = axes[4].get_xlim()
     dx = xlim[1] - xlim[0]
-    axes[4].axvspan(xlim[0] - 0.5 * xd, dbins[1],
+    axes[4].axvspan(xlim[0] - 0.5 * dx, dbins[1],
                     ymin=0, ymax=1, edgecolor='none', facecolor='gray',
                     linewidth=0, alpha=0.3)
-    axes[4].axvspan(dbins[-2], xlim[1] + 0.5 * xd, 
+    axes[4].axvspan(dbins[-2], xlim[1] + 0.5 * dx, 
                     ymin=0, ymax=1, edgecolor='none', facecolor='gray',
                     linewidth=0, alpha=0.3)
     axes[4].set_xlim(xlim)
