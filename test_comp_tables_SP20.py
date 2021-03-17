@@ -1111,9 +1111,9 @@ def compare_maps(filen1, filen2, imgname=None,
                                         subplot_spec=cax_base,
                                         hspace=0.1)
     cax_base.axis('off')
-    caxdiff = grid2[0]
-    caxmain = grid2[1]
-    caxhist = grid2[2]
+    caxdiff = fig.add_subplot(grid2[0])
+    caxmain = fig.add_subplot(grid2[1])
+    caxhist = fig.add_subplot(grid2[2])
     
     # plot the main maps
     img = axes[0].imshow(m1.T, extent=extent1, origin='lower', 
