@@ -3363,17 +3363,18 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
     '''
     print('Calculating particle luminosities...')
 
+    if ps20tables:
+        table = linetable_PS20(ion, vardict.simfile.z, emission=True)
+        parentelt = table.element.lower()
+    else:
+        parentelt = ol.elements_ion[ion]
+
     # particle selection
     if isinstance(eltab, str):
         vardict.readif(eltab, rawunits=True)
-        if ps20tables:
-            table = linetable_PS20(ion, vardict.simfile.z, emission=True)
-            parentelt = table.element.lower()
-        else:
-            parentelt = ol.elements_ion[ion]
         if updatesel and (parentelt not in ['hydrogen', 'helium']):
             vardict.update(vardict.particle[eltab] > 0.)
-    
+            
     # get required variables
     if not vardict.isstored_part('propvol'):
         vardict.readif('Density', rawunits=True)
