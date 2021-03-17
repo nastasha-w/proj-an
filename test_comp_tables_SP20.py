@@ -1104,7 +1104,7 @@ def compare_maps(filen1, filen2, imgname=None,
     
     fig = plt.figure(figsize=(8., 5.5))
     grid = gsp.GridSpec(ncols=4, nrows=2, hspace=0.3, wspace=0.3,
-                        width_ratios=[1, 1, 1, 0.3])
+                        width_ratios=[1, 1, 1, 0.3], top=0.9)
     axes = [fig.add_subplot(grid[i // 3, i % 3]) for i in range(6)]
     cax_base = fig.add_subplot(grid[:, 3]) 
     grid2 = gsp.GridSpecFromSubplotSpec(ncols=1, nrows=3, 
@@ -1115,7 +1115,7 @@ def compare_maps(filen1, filen2, imgname=None,
     caxmain = fig.add_subplot(grid2[1])
     caxhist = fig.add_subplot(grid2[2])
     
-    fig.suptitle(title, fontsize=fontsize)
+    fig.suptitle(title, fontsize=fontsize - 2)
     
     # plot the main maps
     img = axes[0].imshow(m1.T, extent=extent1, origin='lower', 
@@ -1197,7 +1197,7 @@ def compare_maps(filen1, filen2, imgname=None,
     _diff = np.copy(diff).flatten()
     _diff[_diff < dmin] = 0.5 * (dbins[0] + dbins[1])
     _diff[_diff > dmax] = 0.5 * (dbins[-2] + dbins[-1])
-    hd, _x, _y = np.histogram(_diff, bins=dbins)
+    hd, _ = np.histogram(_diff, bins=dbins)
     
     axes[4].bar(dbins_c, hd, width=dbins_w, bottom=None, align='center',
                 color='none', edgecolor='gray', linewidth=2)
@@ -1215,7 +1215,7 @@ def compare_maps(filen1, filen2, imgname=None,
                     linewidth=0, alpha=0.3)
     
     # plot difference vs. value
-    h1d = np.histogram2d(_m1, _diff, bins=[mbins, dbins])
+    h1d, _x, _y = np.histogram2d(_m1, _diff, bins=[mbins, dbins])
     
     img = axes[5].pcolormesh(mbins, dbins, np.lgo10(h1d).T, cmap=cmaphist)
     axes[5].set_xlabel('Map 1 values', fontsize=fontsize)
