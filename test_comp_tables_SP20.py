@@ -942,7 +942,8 @@ def create_maps(inclps20=True):
             ('coldens',
              {'ionW': 'hydrogen', 'ps20tables': True, 'ps20depletion': False})]
     for abunds in ['Sm', 'Pt', 1.]:
-        for ptype, _kwargs in opts:
+        for ptype, __kwargs in opts:
+            _kwargs = __kwargs.copy()
             # running on master branch without these arguments implemented
             if not inclps20:
                 if _kwargs['ps20tables']:
