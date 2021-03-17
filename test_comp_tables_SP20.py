@@ -1023,10 +1023,10 @@ def compare_maps(filen1, filen2, imgname=None,
     None.
 
     '''
-    title = 'map comparison:\nfile 1: {}\nfile 2:{}'
+    title = 'map comparison:\nfile 1: {}\nfile 2: {}'
     title = title.format(filen1.split('/')[-1], filen2.split('/')[-1])
     
-    fontsize = 12
+    fontsize = 11
     cset =  tc.tol_cset('bright')
     scmapmain = 'plasma'
     scmapdiff = 'RdBu'
@@ -1115,7 +1115,7 @@ def compare_maps(filen1, filen2, imgname=None,
     caxmain = fig.add_subplot(grid2[1])
     caxhist = fig.add_subplot(grid2[2])
     
-    fig.suptitle(title, fontsize=fontsize - 2)
+    fig.suptitle(title, fontsize=fontsize)
     
     # plot the main maps
     img = axes[0].imshow(m1.T, extent=extent1, origin='lower', 
@@ -1183,10 +1183,12 @@ def compare_maps(filen1, filen2, imgname=None,
     axes[3].tick_params(labelsize=fontsize - 1., top=True, bottom=True,
                         direction='in', which='both')
     axes[3].grid(True)
-    axes[3].axvspan(axes[3].get_xlim()[0], mbins[1],
+    xlim = axes[3].get_xlim()
+    dx = xlim[1] - xlim[0]
+    axes[3].axvspan(xlim[0] - 0.5 * dx, mbins[1],
                     ymin=0, ymax=1, edgecolor='none', facecolor='gray',
                     linewidth=0, alpha=0.3)
-    
+    axes[3].set_xlim(xlim)
     # plot the difference histogram
     _dbins = np.linspace(dmin, dmax, 100)
     dbins = np.append(dmin - 3. * np.average(np.diff(_dbins)), _dbins)
@@ -1207,17 +1209,20 @@ def compare_maps(filen1, filen2, imgname=None,
     axes[4].tick_params(labelsize=fontsize - 1., top=True, bottom=True,
                         direction='in', which='both')
     axes[4].grid(True)
-    axes[4].axvspan(axes[4].get_xlim()[0], dbins[1],
+    xlim = axes[4].get_xlim()
+    dx = xlim[1] - xlim[0]
+    axes[4].axvspan(xlim[0] - 0.5 * xd, dbins[1],
                     ymin=0, ymax=1, edgecolor='none', facecolor='gray',
                     linewidth=0, alpha=0.3)
-    axes[4].axvspan(dbins[-2], axes[4].get_xlim()[1], 
+    axes[4].axvspan(dbins[-2], xlim[1] + 0.5 * xd, 
                     ymin=0, ymax=1, edgecolor='none', facecolor='gray',
                     linewidth=0, alpha=0.3)
+    axes[4].set_xlim(xlim)
     
     # plot difference vs. value
     h1d, _x, _y = np.histogram2d(_m1, _diff, bins=[mbins, dbins])
     
-    img = axes[5].pcolormesh(mbins, dbins, np.lgo10(h1d).T, cmap=cmaphist)
+    img = axes[5].pcolormesh(mbins, dbins, np.log10(h1d).T, cmap=cmaphist)
     axes[5].set_xlabel('Map 1 values', fontsize=fontsize)
     axes[5].set_ylabel(difflabel, fontsize=fontsize)
     axes[5].tick_params(labelsize=fontsize - 1.)
