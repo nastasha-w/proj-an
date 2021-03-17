@@ -3650,7 +3650,7 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,
     if isinstance(eltab, str):
         vardict.readif(eltab, rawunits=True)
         if ps20tables:
-            table = linetable_PS20(ion, vardict.simfile.z, emission=True)
+            table = linetable_PS20(ion, vardict.simfile.z, emission=False)
             parentelt = table.element.lower()
         else:
             parentelt = ol.elements_ion[ion]
@@ -3662,16 +3662,25 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,
             vardict.readif('Density', rawunits=True)
             if isinstance(hab, str):
                 vardict.readif(hab,rawunits = True)
-                vardict.add_part('lognH', np.log10(vardict.particle[hab]) + np.log10(vardict.particle['Density']) + np.log10( vardict.CGSconv['Density'] / (c.atomw_H * c.u)) )
+                vardict.add_part('lognH',
+                                 np.log10(vardict.particle[hab]) +\
+                                 np.log10(vardict.particle['Density']) +\
+                                 np.log10(vardict.CGSconv['Density'] \
+                                          / (c.atomw_H * c.u)) )
                 if eltab != hab:
                     vardict.delif(hab, last=last)
             else:
-                vardict.add_part('lognH', np.log10(vardict.particle['Density']) + np.log10( vardict.CGSconv['Density'] * hab / (c.atomw_H * c.u)) )
+                vardict.add_part('lognH', 
+                                 np.log10(vardict.particle['Density']) +\
+                                     np.log10(vardict.CGSconv['Density'] *\
+                                              hab / (c.atomw_H * c.u)) )
             vardict.delif('Density', last=last)
         
         if len(vardict.particle['lognH']) > 0:
             print('Min, max, median of particle log10 nH [cgs]: %.5e %.5e %.5e' \
-                % (np.min(vardict.particle['lognH']), np.max(vardict.particle['lognH']), np.median(vardict.particle['lognH'])) )
+                % (np.min(vardict.particle['lognH']),
+                   np.max(vardict.particle['lognH']), 
+                   np.median(vardict.particle['lognH'])) )
         else:
             print('No particles in current selection')
 
@@ -3689,7 +3698,9 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,
             vardict.delif('Temperature',last=last)
         if len(vardict.particle['logT']) > 0:
             print('Min, max, median of particle log temperature [K]: %.5e %.5e %.5e' \
-                % (np.min(vardict.particle['logT']), np.max(vardict.particle['logT']), np.median(vardict.particle['logT'])))
+                % (np.min(vardict.particle['logT']), 
+                   np.max(vardict.particle['logT']), 
+                   np.median(vardict.particle['logT'])))
         if sylviasshtables or ps20tables:
             if ps20tables:
                 table = linetable_PS20(ion, vardict.simfile.z)
@@ -3698,15 +3709,18 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,
                 if isinstance(eltab, str):
                     if 'SmoothedElementAbundance' in eltab:
                         vardict.readif('SmoothedMetallicity', rawunits=True) # dimensionless
-                        vardict.add_part('logZ', np.log10(vardict.particle['SmoothedMetallicity']))
+                        vardict.add_part('logZ', 
+                                         np.log10(vardict.particle['SmoothedMetallicity']))
                         vardict.delif('SmoothedMetallicity', last=last)
                     elif 'ElementAbundance' in eltab:
                         vardict.readif('Metallicity', rawunits=True) # dimensionless
                         vardict.add_part('logZ', np.log10(vardict.particle['Metallicity']))
                         vardict.delif('Metallicity', last=last)
                 elif sylviasshtables:
-                    vardict.add_part('logZ', np.ones(len(vardict.particle['lognH'])) *\
-                                     np.log10(eltab / ol.solar_abunds_ea[ol.elements_ion[ion]] *\
+                    vardict.add_part('logZ', 
+                                     np.ones(len(vardict.particle['lognH'])) *\
+                                     np.log10(eltab / \
+                                              ol.solar_abunds_ea[ol.elements_ion[ion]] *\
                                               ol.Zsun_sylviastables))
                 else: # ps20tables
                     _logZ = np.ones(len(vardict.particle['lognH']))
