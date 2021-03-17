@@ -3447,13 +3447,12 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
             vardict.particle['logZ'][vardict.particle['logZ'] == -np.inf] = -100.
             dellz = True        
         luminosity = table.find_logemission(vardict.particle)        
-        vardict.delif('logT', last=last) 
-        vardict.delif('lognH', last=last)
-                
         if not ps20depletion:
             # luminosity in table = (1 - depletion) * luminosity_if_all_elt_in_gas
             # so divide by depleted fraction to get undepleted emission
             luminosity -= np.log10(1. - table.find_depletion(vardict.particle))
+        vardict.delif('logT', last=last) 
+        vardict.delif('lognH', last=last)
         # rescale to the correct /element/ abundance
         if parentelt == 'hydrogen': # no rescaling if hydrogen
             vardict.delif('logZ', last=(last or dellz)) 
