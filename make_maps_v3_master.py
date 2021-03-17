@@ -3757,7 +3757,7 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,
     return Nion, to_cgs_numdens # array, cgsconversion
 
 
-def Nelt_calc(vardict,excludeSFR,eltab,hab,ion,last=True,updatesel=True,
+def Nelt_calc(vardict, excludeSFR, eltab, hab, ion, last=True, updatesel=True,
               ps20tables=False, ps20depletion=True):
     '''
     ps20tables and ps20depletion mean the element column is calculated with
@@ -5200,7 +5200,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         multipafterW *= Nion_to_coldens(vardict_WQ, Ls, Axis1, Axis2, Axis3,
                                         npix_x, npix_y)
     elif ptypeW == 'coldens' and iseltW:
-        qW, multipafterW = Nelt_calc(vardict_WQ, excludeSFRW, eltabW, ionW,
+        qW, multipafterW = Nelt_calc(vardict_WQ, excludeSFRW, eltabW, habW, 
+                                     ionW,
                                      last=last, updatesel=True,
                                      ps20tables=ps20tables, 
                                      ps20depletion=ps20depletion)
@@ -5248,7 +5249,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         multipafterQ *= Nion_to_coldens(vardict_WQ, Ls, Axis1, Axis2, Axis3,
                                         npix_x, npix_y)
     elif ptypeQ == 'coldens' and iseltQ:
-        qQ, multipafterQ = Nelt_calc(vardict_WQ, excludeSFRQ, eltabQ, ionQ,
+        qQ, multipafterQ = Nelt_calc(vardict_WQ, excludeSFRQ, eltabQ, habQ,
+                                     ionQ,
                                      last=True, updatesel=False,
                                      ps20tables=ps20tables, 
                                      ps20depletion=ps20depletion)
@@ -6388,7 +6390,8 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity,
                 q *= vardict.particle['ipropvol'] 
                 multipafter *= vardict.CGSconv['ipropvol']
     elif ptype in ['Nion', 'Niondens'] and iselt:
-        q, multipafter = Nelt_calc(vardict, excludeSFR, eltab, ion, last=last,
+        q, multipafter = Nelt_calc(vardict, excludeSFR, eltab, hab, ion, 
+                                   last=last,
                                    updatesel=updatesel, ps20tables=ps20tables, 
                                    ps20depletion=ps20depletion,)
         if ptype == 'Niondens':
