@@ -1034,7 +1034,7 @@ def compare_maps(filen1, filen2, imgname=None,
     
     cmapmain = cm.get_cmap(scmapmain)
     cmapmain.set_under('gray')
-    extend_main = 'lower'
+    extend_main = 'min'
     
     cmapdiff = cm.get_cmap(scmapdiff)
     cmapdiff.set_under('magenta')
