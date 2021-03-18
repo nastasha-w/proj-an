@@ -964,14 +964,14 @@ def create_maps(setnum=1, inclps20=True):
         
     if setnum == 3: # depletion studd looked funny; test with Mg, Ne
         opts = [('emission', 
-                 {'Ne 2      12.8101m', 'ps20tables': True,
+                 {'ionW': 'Ne 2      12.8101m', 'ps20tables': True,
                   'ps20depletion': True}),
                 ('coldens',
                  {'ionW': 'ne2', 'ps20tables': True, 'ps20depletion': True}),
                 ('coldens',
                  {'ionW': 'neon', 'ps20tables': True, 'ps20depletion': True}),
                 ('emission',
-                 {'Ne 2      12.8101m', 'ps20tables': True,
+                 {'ionW': 'Ne 2      12.8101m', 'ps20tables': True,
                   'ps20depletion': False}),
                 ('coldens',
                  {'ionW': 'ne2', 'ps20tables': True, 'ps20depletion': False}),
