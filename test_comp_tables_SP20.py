@@ -1351,6 +1351,55 @@ def make_mapcomparison(mapset=1):
             tomatch.append(((mdir + file1, mdir + file2), 
                             {'imgname': outname}))
             
+    elif mapset == 3: # tables with and without depletion
+        searchdir = mdir
+        template = '*test3.7*.hdf5'
+        files = fnmatch.filter(next(os.walk(searchdir))[2], template)
+        #print(files)
+        for file1 in files:
+            file2 = file1.replace('depletion-F', 'depletion-T')
+            if not os.path.isfile(mdir + file2):
+                print('Counterpart {}\nto {}\nnot found'.format(file1, file2))
+                continue
+            
+            outname = file1.replace('depletion-F', 'depletion-F-vs-T')
+            outname = mdir + 'mapcomp_' + outname[:-5] + '.pdf'
+            tomatch.append(((mdir + file1, mdir + file2), 
+                            {'imgname': outname}))
+            
+    elif mapset == 3: # abundance variations (limited set of ions)
+        searchdir = mdir
+        # oxygen
+        fixz_O = '0.00549262436106801massfracAb-0.752massfracHAb'
+        fixz_H = '0.706497848033905massfracAb-0.752massfracHAb'
+        template = '{}*test3.7*.hdf5'.format(fixz_O)
+        files = fnmatch.filter(next(os.walk(searchdir))[2], template)
+        
+        # hydrogen
+        template = '{}*test3.7*.hdf5'.format(fixz_O)
+        files = fnmatch.filter(next(os.walk(searchdir))[2], template)
+        #print(files)
+        for file1 in files:
+            file2 = file1.replace(fixz_O, 'SmAb')
+            file3 = file1.replace(fixz_O, 'PtAb')
+            file2 = file1.replace(fixz_H, 'SmAb')
+            file3 = file1.replace(fixz_H, 'PtAb')
+            if not os.path.isfile(mdir + file2):
+                print('Counterpart {}\nto {}\nnot found'.format(file1, file2))
+                continue
+            
+            outname2 = file1.replace(fixz_O, 'fixedZ-vs-SmAb')
+            outname2 = file1.replace(fixz_H, 'fixedZ-vs-PtAb')            
+            outname2 = mdir + 'mapcomp_' + outname2[:-5] + '.pdf'           
+            tomatch.append(((mdir + file1, mdir + file2), 
+                            {'imgname': outname2}))        
+            
+            outname3 = file1.replace(fixz_O, 'SmAb-vs-PtAb')
+            outname3 = file1.replace(fixz_H, 'SmAb-vs-PtAb')
+            outname3 = mdir + 'mapcomp_' + outname3[:-5] + '.pdf'           
+            tomatch.append(((mdir + file2, mdir + file3), 
+                            {'imgname': outname3}))
+            
     for args, kwargs in tomatch:
         compare_maps(*args, **kwargs)
         
