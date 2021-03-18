@@ -1028,13 +1028,13 @@ def compare_maps(filen1, filen2, imgname=None,
     _half = len(_fn1) // 2
     _natsplit = np.where([char == '_' for char in _fn1])[0]
     split = np.min(_natsplit[_natsplit >= _half])
-    _fn1 = _fn1[:split] + '\n\t' + _fn1[split:]
+    _fn1 = _fn1[:split] + '\n' + _fn1[split:]
 
     _fn2 = filen2.split('/')[-1]
     _half = len(_fn2) // 2
     _natsplit = np.where([char == '_' for char in _fn2])[0]
     split = np.min(_natsplit[_natsplit >= _half])
-    _fn2 = _fn2[:split] + '\n\t' + _fn2[split:]
+    _fn2 = _fn2[:split] + '\n' + _fn2[split:]
     
     title = 'map comparison:\nfile 1: {}\nfile 2: {}'
     title = title.format(_fn1, _fn2)
@@ -1117,7 +1117,7 @@ def compare_maps(filen1, filen2, imgname=None,
     
     fig = plt.figure(figsize=(9.5, 6.))
     grid = gsp.GridSpec(ncols=4, nrows=2, hspace=0.3, wspace=0.45,
-                        width_ratios=[1, 1, 1, 0.3], top=0.8, left=0.07, 
+                        width_ratios=[1, 1, 1, 0.2], top=0.78, left=0.07, 
                         right=0.93)
     axes = [fig.add_subplot(grid[i // 3, i % 3]) for i in range(6)]
     cax_base = fig.add_subplot(grid[:, 3]) 
@@ -1245,9 +1245,9 @@ def compare_maps(filen1, filen2, imgname=None,
                     extend=extend_hist, 
                     fontsize=fontsize, orientation='vertical')
     
-    caxmain.set_aspect(8.)
-    caxdiff.set_aspect(8.)
-    caxhist.set_aspect(8.)
+    caxmain.set_aspect(6.)
+    caxdiff.set_aspect(6.)
+    caxhist.set_aspect(6.)
     if imgname is not None:
         if '/' not in imgname:
             imgname = mdir + imgname
