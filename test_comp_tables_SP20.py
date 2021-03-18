@@ -1248,9 +1248,12 @@ def compare_maps(filen1, filen2, imgname=None,
     caxmain.set_aspect(6.)
     caxdiff.set_aspect(6.)
     caxhist.set_aspect(6.)
-    caxmain.tick_params(labelsize=fontsize - 1.)
-    caxhist.tick_params(labelsize=fontsize - 1.)
-    caxdiff.tick_params(labelsize=fontsize - 1.)
+    caxmain.tick_params(labelsize=fontsize - 1., left=True, labelleft=True,
+                        right=False, labelright=False)
+    caxhist.tick_params(labelsize=fontsize - 1., left=True, labelleft=True,
+                        right=False, labelright=False)
+    caxdiff.tick_params(labelsize=fontsize - 1., left=True, labelleft=True,
+                        right=False, labelright=False)
     caxmain.yaxis.set_label_position('left')
     caxdiff.yaxis.set_label_position('left')
     caxhist.yaxis.set_label_position('left')
