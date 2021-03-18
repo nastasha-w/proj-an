@@ -962,6 +962,40 @@ def create_maps(setnum=1, inclps20=True):
                  {'ionW': 'hydrogen', 'ps20tables': True, 'ps20depletion': True})]
         abundss = ['Sm']
         
+    if setnum == 3: # depletion studd looked funny; test with Mg, Ne
+        opts = [('emission', 
+                 {'Ne 2      12.8101m', 'ps20tables': True,
+                  'ps20depletion': True}),
+                ('coldens',
+                 {'ionW': 'ne2', 'ps20tables': True, 'ps20depletion': True}),
+                ('coldens',
+                 {'ionW': 'neon', 'ps20tables': True, 'ps20depletion': True}),
+                ('emission',
+                 {'Ne 2      12.8101m', 'ps20tables': True,
+                  'ps20depletion': False}),
+                ('coldens',
+                 {'ionW': 'ne2', 'ps20tables': True, 'ps20depletion': False}),
+                ('coldens',
+                 {'ionW': 'neon', 'ps20tables': True, 'ps20depletion': False}),
+                ('emission', 
+                 {'ionW': 'Mg 2      2795.53A', 'ps20tables': True,
+                  'ps20depletion': True}),
+                ('coldens',
+                 {'ionW': 'mg2', 'ps20tables': True, 'ps20depletion': True}),
+                ('coldens',
+                 {'ionW': 'magnesium', 'ps20tables': True, 
+                  'ps20depletion': True}),
+                ('emission', 
+                 {'ionW': 'Mg 2      2795.53A', 'ps20tables': True,
+                  'ps20depletion': False}),
+                ('coldens',
+                 {'ionW': 'mg2', 'ps20tables': True, 'ps20depletion': False}),
+                ('coldens',
+                 {'ionW': 'magnesium', 'ps20tables': True, 
+                  'ps20depletion': False}),
+                ]
+        abundss = ['Sm', 'Pt', 0.1]
+        
     for abunds in abundss:
         for ptype, __kwargs in opts:
             _kwargs = __kwargs.copy()
