@@ -1283,7 +1283,7 @@ def make_mapcomparison(mapset=1):
     
     elif mapset == 2: # compare old and new tables (SP20 branch, no depletion)
         searchdir = mdir
-        template = '*iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F*test3.6*.hdf5'
+        template = '*iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F*test3.7*.hdf5'
         files = fnmatch.filter(next(os.walk(searchdir))[2], template)
         #print(files)
         for file1 in files:
