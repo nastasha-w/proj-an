@@ -1307,7 +1307,7 @@ def make_mapcomparison(mapset=1):
         files = fnmatch.filter(next(os.walk(searchdir))[2], template)
         #print(files)
         for file1 in files:
-            file2 = file1.replace('depletion-F', 'depletion-F')
+            file2 = file1.replace('depletion-F', 'depletion-T')
             if not os.path.isfile(mdir + file2):
                 print('Counterpart {}\nto {}\nnot found'.format(file1, file2))
                 continue
