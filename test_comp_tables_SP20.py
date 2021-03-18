@@ -1301,6 +1301,21 @@ def make_mapcomparison(mapset=1):
             outname = mdir + 'mapcomp_' + outname[:-5] + '.pdf'
             tomatch.append(((mdir + file1, mdir + file2), 
                             {'imgname': outname}))
+    elif mapset == 3: # tables with and without depletion
+        searchdir = mdir
+        template = '*iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F*test3.7*.hdf5'
+        files = fnmatch.filter(next(os.walk(searchdir))[2], template)
+        #print(files)
+        for file1 in files:
+            file2 = file1.replace('depletion-F', 'depletion-F')
+            if not os.path.isfile(mdir + file2):
+                print('Counterpart {}\nto {}\nnot found'.format(file1, file2))
+                continue
+            
+            outname = file1.replace('depletion-F', 'depletion-F-vs-T')
+            outname = mdir + 'mapcomp_' + outname[:-5] + '.pdf'
+            tomatch.append(((mdir + file1, mdir + file2), 
+                            {'imgname': outname}))
             
     for args, kwargs in tomatch:
         compare_maps(*args, **kwargs)
