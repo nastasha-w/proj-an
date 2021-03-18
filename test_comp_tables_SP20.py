@@ -1285,7 +1285,7 @@ def make_mapcomparison(mapset=1):
         searchdir = mdir
         template = 'iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F*test3.6*.hdf5'
         files = fnmatch.filter(next(os.walk(searchdir))[2], template)
-        
+        print(files)
         for file1 in files:
             file2 = file1.replace('_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F', '')
             if 'O--7------22.1012A' in file1:
