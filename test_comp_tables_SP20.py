@@ -1117,7 +1117,7 @@ def compare_maps(filen1, filen2, imgname=None,
     
     fig = plt.figure(figsize=(9.5, 6.))
     grid = gsp.GridSpec(ncols=4, nrows=2, hspace=0.3, wspace=0.45,
-                        width_ratios=[1, 1, 1, 0.2], top=0.78, left=0.07, 
+                        width_ratios=[1, 1, 1, 0.1], top=0.78, left=0.07, 
                         right=0.93)
     axes = [fig.add_subplot(grid[i // 3, i % 3]) for i in range(6)]
     cax_base = fig.add_subplot(grid[:, 3]) 
