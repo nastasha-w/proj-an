@@ -1278,7 +1278,8 @@ def make_mapcomparison(mapset=1):
                 continue
             outname = file1.replace('test3.6', 'test3.6-3.7')
             outname = mdir + 'mapcomp_' + outname[:-5] + '.pdf'
-            tomatch.append(((file1, file2), {'imgname': outname}))
+            tomatch.append(((mdir + file1, mdir + file2), 
+                            {'imgname': outname}))
     
     for args, kwargs in tomatch:
         compare_maps(*args, **kwargs)
