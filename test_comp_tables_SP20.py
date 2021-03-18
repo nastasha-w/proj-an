@@ -11,6 +11,7 @@ test the SP20 tables implementation and compare to Serena Bertone's tables
 import numpy as np
 import h5py
 import os
+import fnmatch
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gsp
@@ -1263,6 +1264,27 @@ def compare_maps(filen1, filen2, imgname=None,
             imgname = mdir + imgname
         plt.savefig(imgname, format=imgname.split('.')[-1], 
                     bbox_inches='tight')
+
+def make_mapcomparison(mapset=1):
+    tomatch = [] 
+    if mapset == 1: # compare SP20tables and master (version 3.6 vs. 3.7) maps
+        # what we're looking for
+        searchdir = mdir
+        files = fnmatch.filter(next(os.walk(searchdir))[2], '*test3.6*.hdf5')
+        for file1 in files:
+            file2 = file1.replace('test3.6', 'test3.7')
+            if not os.path.isfile(mdir + file2):
+                print('Counterpart {}\nto {}\nnot found'.format(file1, file2))
+                continue
+            outname = file1.replace('test3.6', 'test3.6-3.7')
+            outname = mdir + 'mapcomp_' + outname[:-5] + '.pdf'
+            tomatch.append((file1, file2), {'imgname': outname})
+    
+    for args, kwargs in tomatch:
+        compare_maps(*args, **kwargs)
+        
+    
+
 
 # test basic table retrieval and sensitbility
 def plot_tablesets(zs):
