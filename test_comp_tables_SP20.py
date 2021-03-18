@@ -893,6 +893,7 @@ def test_interp(line, table='emission'):
 # absorption maps
 # no-dust maps with both table sets
 # with and without dust depletion
+# master branch runs: just copied the function
 def create_maps(setnum=1, inclps20=True):  
     m3.ol.ndir = mdir
     
@@ -1023,8 +1024,20 @@ def compare_maps(filen1, filen2, imgname=None,
     None.
 
     '''
+    _fn1 = filen1.split('/')[-1]
+    _half = len(_fn1) // 2
+    _natsplit = np.where([char == '_' for char in _fn1])[0]
+    split = np.min(_natsplit[_natsplit >= _half])
+    _fn1 = _fn1[:split] + '\n\t' + _fn1[split:]
+
+    _fn2 = filen2.split('/')[-1]
+    _half = len(_fn2) // 2
+    _natsplit = np.where([char == '_' for char in _fn2])[0]
+    split = np.min(_natsplit[_natsplit >= _half])
+    _fn2 = _fn2[:split] + '\n\t' + _fn2[split:]
+    
     title = 'map comparison:\nfile 1: {}\nfile 2: {}'
-    title = title.format(filen1.split('/')[-1], filen2.split('/')[-1])
+    title = title.format(_fn1, _fn2)
     
     fontsize = 11
     cset =  tc.tol_cset('bright')
@@ -1102,9 +1115,9 @@ def compare_maps(filen1, filen2, imgname=None,
         dmin = -1. * diffmax
         dmax = diffmax
     
-    fig = plt.figure(figsize=(8., 5.5))
+    fig = plt.figure(figsize=(9.5, 6.))
     grid = gsp.GridSpec(ncols=4, nrows=2, hspace=0.3, wspace=0.3,
-                        width_ratios=[1, 1, 1, 0.3], top=0.9)
+                        width_ratios=[1, 1, 1, 0.3], top=0.8)
     axes = [fig.add_subplot(grid[i // 3, i % 3]) for i in range(6)]
     cax_base = fig.add_subplot(grid[:, 3]) 
     grid2 = gsp.GridSpecFromSubplotSpec(ncols=1, nrows=3, 
