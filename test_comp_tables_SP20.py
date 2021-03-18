@@ -1248,6 +1248,13 @@ def compare_maps(filen1, filen2, imgname=None,
     caxmain.set_aspect(6.)
     caxdiff.set_aspect(6.)
     caxhist.set_aspect(6.)
+    caxmain.tick_params(fontsize=fontsize - 1.)
+    caxhist.tick_params(fontsize=fontsize - 1.)
+    caxdiff.tick_params(fontsize=fontsize - 1.)
+    caxmain.yaxis.set_label_position('left')
+    caxdiff.yaxis.set_label_position('left')
+    caxhist.yaxis.set_label_position('left')
+    
     if imgname is not None:
         if '/' not in imgname:
             imgname = mdir + imgname
