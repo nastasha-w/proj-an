@@ -898,7 +898,7 @@ def test_interp(line, table='emission'):
 def create_maps(setnum=1, inclps20=True):  
     m3.ol.ndir = mdir
     
-    if setnum in [1, 2]:
+    if setnum in [1, 2, 3]:
         simnum = 'L0012N0188'
         snapnum = 27
         centre = [6.25, 6.25, 3.125]
