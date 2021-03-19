@@ -779,7 +779,7 @@ def getprofiles_paper3_PS20tables(index):
               'axis': 'z', 'periodic': True, 'kernel': 'C2',
               'log': True, 'saveres': True, 'hdf5': True,
               'simulation': 'eagle', 'ompproj': True,
-              'ps20tables': True, 'depletion': False,
+              'ps20tables': True, 'ps20depletion': False,
               }
     
     halocats = [halocat if '/' in halocat else ol.pdir + halocat \
