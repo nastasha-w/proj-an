@@ -127,6 +127,13 @@ import selecthalos as sh
 import cosmo_utils as cu
 import ion_line_data as ild # for functions to manipulate element/ion names
 
+if sys.version.split('.')[0] == '3':
+    def isstr(x):
+        return isinstance(x, str)
+elif sys.version.split('.')[0] == '2':
+    def isstr(x):
+        return isinstance(x, basestring)
+        
 ##########################
 #      functions 1       #
 ##########################
@@ -1618,9 +1625,9 @@ def find_coolingrates(z, dct, method='per_element', **kwargs):
             last = True
 
         eltab_base = kwargs['abunds']
-        if not (isinstance(eltab_base, str) or isinstance(eltab_base, dict)): # tuple like in make_maps?
+        if not (isstr(eltab_base) or isinstance(eltab_base, dict)): # tuple like in make_maps?
             eltab_base = eltab_base[0]
-        if isinstance(eltab_base,str):
+        if isstr(eltab_base):
             if eltab_base == 'Sm' or 'SmoothedElementAbundance' in eltab_base: # example abundance is accepted
                 eltab_base = 'SmoothedElementAbundance/%s'
             elif eltab_base == 'Pt' or 'ElementAbundance' == eltab_base[:16]: # example abundance is accepted
@@ -2008,7 +2015,7 @@ def find_coolingtimes(z,dct, method = 'per_element', **kwargs):
         delafter_abunds = False
         if not (isinstance(eltab_base, str) or isinstance(eltab_base, dict)): # make_maps-style tuple: none of that nonsense here
             eltab_base = eltab_base[0]
-        if isinstance(eltab_base,str):
+        if isstr(eltab_base):
             if eltab_base == 'Sm' or 'SmoothedElementAbundance' in eltab_base: # example abundance is accepted
                 eltab_base = 'SmoothedElementAbundance/%s'
             elif eltab_base == 'Pt' or 'ElementAbundance' == eltab_base[:16]: # example abundance is accepted
@@ -2672,7 +2679,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
         print('simnum should be a string')
         return 22
     elif simulation == 'c-eagle-hydrangea' and not isinstance(simnum, int):
-        if isinstance(simnum, str):
+        if isstr(simnum):
             if simnum.isdigit():
                 simnum = int(simnum)
             else:
@@ -3370,7 +3377,7 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
         parentelt = ol.elements_ion[ion]
 
     # particle selection
-    if isinstance(eltab, str):
+    if isstr(eltab):
         vardict.readif(eltab, rawunits=True)
         if updatesel and (parentelt not in ['hydrogen', 'helium']):
             vardict.update(vardict.particle[eltab] > 0.)
@@ -3392,7 +3399,7 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
 
     if not vardict.isstored_part('lognH'):
         vardict.readif('Density', rawunits=True)
-        if isinstance(hab, str):
+        if isstr(hab):
             vardict.readif(hab, rawunits=True)
             vardict.add_part('lognH', np.log10(vardict.particle[hab]) +\
                                       np.log10(vardict.particle['Density']) +\
@@ -3429,7 +3436,7 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
 
     if ps20tables: #ps20tables: calculate luminosity
         if 'logZ' not in vardict.particle.keys():
-            if isinstance(eltab, str):
+            if isstr(eltab):
                 if 'SmoothedElementAbundance' in eltab:
                     vardict.readif('SmoothedMetallicity', rawunits=True) # dimensionless
                     vardict.add_part('logZ', np.log10(vardict.particle['SmoothedMetallicity']))
@@ -3472,14 +3479,14 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
             #print('Max log emission (table - assumed abunds): {}'.format(\
             #       np.max(luminosity)))
             vardict.delif('logZ', last=(last or dellz))
-            if isinstance(hab, str):
+            if isstr(hab):
                 vardict.readif(hab, rawunits=True)
                 hmfrac = vardict.particle[hab]
                 if eltab != hab:
                     vardict.delif(hab, last=last)
             else:
                 hmfrac = hab
-            if isinstance(eltab, str):
+            if isstr(eltab):
                 vardict.readif(eltab, rawunits=True)
                 emfrac = vardict.particle[eltab]
                 vardict.delif(eltab, last=last)
@@ -3487,7 +3494,7 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
                 emfrac = eltab
             print(eltab)
             print(emfrac)
-            print(hfrac)
+            print(hab)
             print(hmfrac)
             zscale = emfrac / hmfrac
             del emfrac
@@ -3531,14 +3538,14 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
         if ol.elements_ion[ion] == 'hydrogen': # no rescaling if hydrogen
             zscale = 1.
         else:
-            if isinstance(hab, str):
+            if isstr(hab):
                 vardict.readif(hab, rawunits=True)
                 hmfrac = vardict.particle[hab]
                 if eltab != hab:
                     vardict.delif(hab, last=last)
             else:
                 hmfrac = hab
-            if isinstance(eltab, str):
+            if isstr(eltab):
                 vardict.readif(eltab, rawunits=True)
                 emfrac = vardict.particle[eltab]
                 vardict.delif(eltab, last=last)
@@ -3658,7 +3665,7 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,
             if misc['usechemabundtables'] == 'BenOpp1':
                 ionbal_from_outputs = True
 
-    if isinstance(eltab, str):
+    if isstr(eltab):
         vardict.readif(eltab, rawunits=True)
         if ps20tables:
             table = linetable_PS20(ion, vardict.simfile.z, emission=False)
@@ -3671,7 +3678,7 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,
     if not ionbal_from_outputs: # if not misc option for getting ionfrac from Ben Oppenheimer's modified RECAL-L0025N0752 runs with non-equilibrium ion fractions
         if not vardict.isstored_part('lognH'):
             vardict.readif('Density', rawunits=True)
-            if isinstance(hab, str):
+            if isstr(hab):
                 vardict.readif(hab,rawunits = True)
                 vardict.add_part('lognH',
                                  np.log10(vardict.particle[hab]) +\
@@ -3717,7 +3724,7 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,
                 table = linetable_PS20(ion, vardict.simfile.z)
                 print('Using table for z={:.3f}'.format(vardict.simfile.z))
             if 'logZ' not in vardict.particle.keys():
-                if isinstance(eltab, str):
+                if isstr(eltab):
                     if 'SmoothedElementAbundance' in eltab:
                         vardict.readif('SmoothedMetallicity', rawunits=True) # dimensionless
                         vardict.add_part('logZ', 
@@ -3781,7 +3788,7 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,
 
     vardict.readif('Mass', rawunits=True)
 
-    if isinstance(eltab, str):
+    if isstr(eltab):
         Nion = vardict.particle[eltab] * vardict.particle['ionfrac'] *\
             vardict.particle['Mass']
         vardict.delif('ionfrac',last=last)
@@ -3813,14 +3820,14 @@ def Nelt_calc(vardict, excludeSFR, eltab, hab, ion, last=True, updatesel=True,
     '''
     
 
-    if isinstance(eltab, str):
+    if isstr(eltab):
         vardict.readif(eltab, rawunits=True)
         if updatesel and (ion not in ['hydrogen', 'helium']):
             vardict.update(vardict.particle[eltab] > 0.)
 
     vardict.readif('Mass', rawunits=True)
 
-    if isinstance(eltab, str):
+    if isstr(eltab):
         Nelt = vardict.particle[eltab] * vardict.particle['Mass']
         vardict.delif('Mass',last=last)
         vardict.delif(eltab,last=last)
@@ -3831,7 +3838,7 @@ def Nelt_calc(vardict, excludeSFR, eltab, hab, ion, last=True, updatesel=True,
     if ps20tables and ps20depletion:
         if not vardict.isstored_part('lognH'):
             vardict.readif('Density', rawunits=True)
-            if isinstance(hab, str):
+            if isstr(hab):
                 vardict.readif(hab,rawunits = True)
                 vardict.add_part('lognH', np.log10(vardict.particle[hab]) + np.log10(vardict.particle['Density']) + np.log10( vardict.CGSconv['Density'] / (c.atomw_H * c.u)) )
                 if eltab != hab:
@@ -3868,7 +3875,7 @@ def Nelt_calc(vardict, excludeSFR, eltab, hab, ion, last=True, updatesel=True,
         table = linetable_PS20(dummyion, vardict.simfile.z)
         print('Using table for z={:.3f}'.format(vardict.simfile.z))
         if 'logZ' not in vardict.particle.keys():
-            if isinstance(eltab, str):
+            if isstr(eltab):
                 if 'SmoothedElementAbundance' in eltab:
                     vardict.readif('SmoothedMetallicity', rawunits=True) # dimensionless
                     vardict.add_part('logZ', np.log10(vardict.particle['SmoothedMetallicity']))
@@ -3918,13 +3925,13 @@ def Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=True, updatesel=True, misc
         else:
             UVB = 'HM01'
 
-    if isinstance(hab, str):
+    if isstr(hab):
         vardict.readif(hab, rawunits=True)
 
     if not vardict.isstored_part('nH'):
         vardict.readif('Density', rawunits=True)
         #print('Number of particles in use: %s'%str(np.sum(vardict.readsel.val)))
-        if isinstance(hab, str):
+        if isstr(hab):
             vardict.readif(hab,rawunits = True)
             vardict.add_part('nH', vardict.particle[hab] * vardict.particle['Density'] * vardict.CGSconv['Density'] / (c.atomw_H * c.u) )
             #print('Min, max, median of particle Density: %.5e %.5e %.5e' \
@@ -3972,7 +3979,7 @@ def Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=True, updatesel=True, misc
     vardict.delif('nH', last=last)
     vardict.readif('Mass',rawunits=True)
 
-    if isinstance(hab, str):
+    if isstr(hab):
         vardict.readif(hab,rawunits = True) # may not be saved if nH was already there
         Nion = vardict.particle[hab]*h1hmolfrac*vardict.particle['Mass']
         del h1hmolfrac
@@ -4363,7 +4370,7 @@ def getwishlist(funcname,**kwargs):
             subs = ['getpropvol', 'getlognH', 'getlogT']
             needed = ['lognH','logT','propvol']
             settings = {'logT': kwargs['logT'], 'hab': kwargs['hab'], 'eltab': kwargs['eltab']}
-            if isinstance(kwargs['eltab'],str):
+            if isstr(kwargs['eltab']):
                 needed += [kwargs['eltab']]
             return (needed, subs, settings)
 
@@ -4374,7 +4381,7 @@ def getwishlist(funcname,**kwargs):
             subs = ['getlognH', 'getlogT']
             needed = ['lognH','logT','Mass']
             settings = {'logT': kwargs['logT'], 'hab': kwargs['hab'], 'eltab': kwargs['eltab']}
-            if isinstance(kwargs['eltab'],str):
+            if isstr(kwargs['eltab']):
                 needed += [kwargs['eltab']]
             return (needed, subs, settings)
 
@@ -4385,7 +4392,7 @@ def getwishlist(funcname,**kwargs):
             subs = []
             needed = ['Mass']
             settings = {'eltab': kwargs['eltab']}
-            if isinstance(kwargs['eltab'],str):
+            if isstr(kwargs['eltab']):
                 needed += [kwargs['eltab']]
             return (needed, subs, settings)
 
@@ -4402,7 +4409,7 @@ def getwishlist(funcname,**kwargs):
             subs = []
             needed = ['Density']
             settings = {'hab': kwargs['hab']}
-            if isinstance(kwargs['hab'],str):
+            if isstr(kwargs['hab']):
                 needed += [kwargs['hab']]
             return (needed,subs,settings)
 
@@ -4508,14 +4515,6 @@ def saveattr(grp, name, val):
     meant for relatively simple cases; do not apply to e.g. selection tuples 
     with mixed types
     '''
-    if sys.version.split('.')[0] == '3':
-        def isstr(x):
-            return isinstance(x, str)
-    elif sys.version.split('.')[0] == '2':
-        def isstr(x):
-            return isinstance(x, basestring)
-    else:
-        raise RuntimeError('Only python versions 2 and 3 are supported')
         
     if isinstance(val, dict):
         subgrp = grp.create_group(name)
