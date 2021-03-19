@@ -3492,10 +3492,6 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
                 vardict.delif(eltab, last=last)
             else:
                 emfrac = eltab
-            print(eltab)
-            print(emfrac)
-            print(hab)
-            print(hmfrac)
             zscale = emfrac / hmfrac
             del emfrac
             del hmfrac
