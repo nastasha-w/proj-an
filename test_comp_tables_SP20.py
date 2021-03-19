@@ -1388,8 +1388,8 @@ def make_mapcomparison(mapset=1):
         for file1 in files:
             file2 = file1.replace(fixz_O, 'SmAb')
             file3 = file1.replace(fixz_O, 'PtAb')
-            file2 = file1.replace(fixz_H, 'SmAb')
-            file3 = file1.replace(fixz_H, 'PtAb')
+            file2 = file2.replace(fixz_H, 'SmAb')
+            file3 = file3.replace(fixz_H, 'PtAb')
             if not os.path.isfile(mdir + file2):
                 print('Counterpart {}\nto {}\nnot found'.format(file1, file2))
                 continue
@@ -1398,13 +1398,13 @@ def make_mapcomparison(mapset=1):
                 continue
             
             outname2 = file1.replace(fixz_O, 'fixedZ-vs-SmAb')
-            outname2 = file1.replace(fixz_H, 'fixedZ-vs-PtAb')            
+            outname2 = outname2.replace(fixz_H, 'fixedZ-vs-PtAb')            
             outname2 = mdir + 'mapcomp_' + outname2[:-5] + '.pdf'           
             tomatch.append(((mdir + file1, mdir + file2), 
                             {'imgname': outname2}))        
             
             outname3 = file1.replace(fixz_O, 'SmAb-vs-PtAb')
-            outname3 = file1.replace(fixz_H, 'SmAb-vs-PtAb')
+            outname3 = outname3.replace(fixz_H, 'SmAb-vs-PtAb')
             outname3 = mdir + 'mapcomp_' + outname3[:-5] + '.pdf'           
             tomatch.append(((mdir + file2, mdir + file3), 
                             {'imgname': outname3}))
