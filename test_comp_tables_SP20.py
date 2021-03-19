@@ -1387,6 +1387,9 @@ def make_mapcomparison(mapset=1):
             if not os.path.isfile(mdir + file2):
                 print('Counterpart {}\nto {}\nnot found'.format(file1, file2))
                 continue
+            if not os.path.isfile(mdir + file3):
+                print('Counterpart {}\nto {}\nnot found'.format(file1, file3))
+                continue
             
             outname2 = file1.replace(fixz_O, 'fixedZ-vs-SmAb')
             outname2 = file1.replace(fixz_H, 'fixedZ-vs-PtAb')            
