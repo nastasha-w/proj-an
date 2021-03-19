@@ -1376,8 +1376,14 @@ def make_mapcomparison(mapset=1):
         files = fnmatch.filter(next(os.walk(searchdir))[2], template)
         
         # hydrogen
-        template = '{}*test3.7*.hdf5'.format(fixz_O)
-        files = fnmatch.filter(next(os.walk(searchdir))[2], template)
+        template1 = '*{}*test3.7*.hdf5'.format(fixz_O)
+        files = fnmatch.filter(next(os.walk(searchdir))[2], template1)
+        template2 = '*test3.7*{}*.hdf5'.format(fixz_O)
+        files = files + fnmatch.filter(next(os.walk(searchdir))[2], template2)
+        template3 = '*{}*test3.7*.hdf5'.format(fixz_H)
+        files = files + fnmatch.filter(next(os.walk(searchdir))[2], template3)
+        template4 = '*test3.7*{}*.hdf5'.format(fixz_H)
+        files = files + fnmatch.filter(next(os.walk(searchdir))[2], template4)
         #print(files)
         for file1 in files:
             file2 = file1.replace(fixz_O, 'SmAb')
