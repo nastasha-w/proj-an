@@ -944,7 +944,7 @@ def getprofiles_paper3_PS20tables(index):
         
         create_rprofiles(_mapslices, halocat, args, stampkwlist, rprofkwlist,
                      combrprofkwlist=combrprofkwlist,
-                     deletemaps=True, deletestamps=True, **kwargs)
+                     deletemaps=False, deletestamps=False, **kwargs)
 
 if __name__ == '__main__':
     index = int(sys.argv[1])
