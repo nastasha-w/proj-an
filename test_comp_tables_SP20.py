@@ -1351,23 +1351,23 @@ def make_mapcomparison(mapset=1):
             tomatch.append(((mdir + file1, mdir + file2), 
                             {'imgname': outname}))
             
-    elif mapset == 3: # tables with and without depletion
-        searchdir = mdir
-        template = '*test3.7*.hdf5'
-        files = fnmatch.filter(next(os.walk(searchdir))[2], template)
-        #print(files)
-        for file1 in files:
-            file2 = file1.replace('depletion-F', 'depletion-T')
-            if not os.path.isfile(mdir + file2):
-                print('Counterpart {}\nto {}\nnot found'.format(file1, file2))
-                continue
+    #elif mapset == 3: # tables with and without depletion
+    #    searchdir = mdir
+    #    template = '*test3.7*.hdf5'
+    #    files = fnmatch.filter(next(os.walk(searchdir))[2], template)
+    #    #print(files)
+    #    for file1 in files:
+    #        file2 = file1.replace('depletion-F', 'depletion-T')
+    #        if not os.path.isfile(mdir + file2):
+    #            print('Counterpart {}\nto {}\nnot found'.format(file1, file2))
+    #            continue
+    #        
+    #        outname = file1.replace('depletion-F', 'depletion-F-vs-T')
+    #        outname = mdir + 'mapcomp_' + outname[:-5] + '.pdf'
+    #        tomatch.append(((mdir + file1, mdir + file2), 
+    #                        {'imgname': outname}))
             
-            outname = file1.replace('depletion-F', 'depletion-F-vs-T')
-            outname = mdir + 'mapcomp_' + outname[:-5] + '.pdf'
-            tomatch.append(((mdir + file1, mdir + file2), 
-                            {'imgname': outname}))
-            
-    elif mapset == 3: # abundance variations (limited set of ions)
+    elif mapset == 4: # abundance variations (limited set of ions)
         searchdir = mdir
         # oxygen
         fixz_O = '0.00549262436106801massfracAb-0.752massfracHAb'
