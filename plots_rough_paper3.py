@@ -222,7 +222,7 @@ atomnums = {'hydrogen': 1,\
             }
 
 # check line data for these
-lines_SP20 = ['C  5      40.2678A',
+lines_PS20 = ['C  5      40.2678A',
               'C  6      33.7372A',
               'N  6      29.5343A',
               'N  6      28.7870A',
@@ -269,7 +269,7 @@ nicenames_lines =  {'c5r': 'C V',\
                     'n7': 'N VII',\
                     }
 
-linematch_SP20 = {'C  5      40.2678A': 'c5r',
+linematch_PS20 = {'C  5      40.2678A': 'c5r',
                   'C  6      33.7372A': 'c6',
                   'N  6      29.5343A': 'n6r',
                   'N  6      28.7870A': 'n6-actualr',
@@ -290,11 +290,11 @@ linematch_SP20 = {'C  5      40.2678A': 'c5r',
                   'Fe17      17.0960A': None,
                   'Fe18      16.0720A': None,
                   }  
-_matchedlines = {None if linematch_SP20[line] is None else line 
-                 for line in linematch_SP20}
+_matchedlines = {None if linematch_PS20[line] is None else line 
+                 for line in linematch_PS20}
 _matchedlines -= {None}
-linematch_SB = {linematch_SP20[line]: line for line in _matchedlines}
-def makenicename_SP20(line, ionEspace=' '):
+linematch_SB = {linematch_PS20[line]: line for line in _matchedlines}
+def makenicename_PS20(line, ionEspace=' '):
     part1 = line[:2].strip()
     part2 = line[2:4].strip()
     part2 = ild.arabic_to_roman[int(part2)]
@@ -304,7 +304,7 @@ def makenicename_SP20(line, ionEspace=' '):
                                             sep=ionEspace, E=part3)
     return out
     
-nicenames_SP20_lines = {makenicename_SP20(line) for line in lines_SP20}
+nicenames_PS20_lines = {makenicename_PS20(line) for line in lines_PS20}
     
 def getoutline(linewidth):
     patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"),\
