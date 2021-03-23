@@ -3802,12 +3802,9 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
     #         orientation=c_orientation, clabel=clabel, fontsize=fontsize,\
     #         aspect=c_aspect)
     
-    ## get lines
-    yvals = {}
-    bins = {}
-    
-    filename_SB = rfilebase_SB.format(line=line)
-    filename_PS = rfilebase_SB.format(line=linematch_SB[line].replace(' ', '-'))
+    ## get lines    
+    filename_SB = rfilebase_SB.format(line=SBline)
+    filename_PS = rfilebase_SB.format(line=linematch_SB[SBline].replace(' ', '-'))
        
     yvals_SB, bins_SB = readin_radprof(filename_SB, seltags, ykeys,
                                        runit='pkpc',
