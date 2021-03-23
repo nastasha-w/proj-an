@@ -3918,7 +3918,7 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
                              linestyle=linestyle_perc, color='black',
                              label='median'),
                mpatch.Patch(facecolor=color_PS, alpha=1., label='PS20 tables'),
-               mpatch.Patch(facecolor=color_BS, alpha=1., label='SB tables')
+               mpatch.Patch(facecolor=color_SB, alpha=1., label='SB tables')
                ]
     handles += [mpatch.Patch(facecolor='black', alpha=(1. - (1. - alpha)**i),
                              label='{:.0f}%%'.format(\
