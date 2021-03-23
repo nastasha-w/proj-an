@@ -3811,7 +3811,7 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
     ## get lines    
     PSline = linematch_SB[SBline]
     fig.suptitle('{SB} / {PS}'.format(SB=nicenames_lines[SBline],
-                                      PS=nisenames_PS20_lines[PSline]),
+                                      PS=nicenames_PS20_lines[PSline]),
                  fontsize=fontsize)
     filename_SB = rfilebase_SB.format(line=SBline)
     filename_PS = rfilebase_PS.format(line=PSline.replace(' ', '-'))
