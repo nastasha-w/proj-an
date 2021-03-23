@@ -3803,8 +3803,9 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
     #         aspect=c_aspect)
     
     ## get lines    
+    PSline = linematch_SB[SBline]
     filename_SB = rfilebase_SB.format(line=SBline)
-    filename_PS = rfilebase_PS.format(line=linematch_SB[SBline].replace(' ', '-'))
+    filename_PS = rfilebase_PS.format(line=PSline.replace(' ', '-'))
        
     yvals_SB, bins_SB = readin_radprof(filename_SB, seltags, ykeys,
                                        runit='pkpc',
@@ -3827,14 +3828,14 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
         
         _max = -np.inf
 
-        ed_SB = bins_SB[line][mtag][('mean',)]
+        ed_SB = bins_SB[mtag][('mean',)]
         if not np.allclose(ed_SB[:len(checkbins)], checkbins):
             print(ed_SB[:len(checkbins)])
             print(checkbins)
             msg = 'Did not retrieve the right bins for {line}, {mtag}'
             msg = msg.format(line=line, mtag=mtag)
             raise ValueError(msg)
-        ed_PS = bins_PS[line][mtag][('mean',)]
+        ed_PS = bins_PS[mtag][('mean',)]
         if not np.allclose(ed_PS[:len(checkbins)], checkbins):
             print(ed_PS[:len(checkbins)])
             print(checkbins)
@@ -3845,26 +3846,26 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
         x_SB = 0.5 * (ed_SB[:-1] + ed_SB[1:])
         x_PS = 0.5 * (ed_PS[:-1] + ed_PS[1:])
         
-        ax.fill_between(x_SB, yvals_SB[line][mtag][pkeys[0]], 
-                        yvals_SB[line][mtag][pkeys[-1]], linewidth=1.,
+        ax.fill_between(x_SB, yvals_SB[mtag][pkeys[0]], 
+                        yvals_SB[mtag][pkeys[-1]], linewidth=1.,
                         linestyle=linestyle_perc, color=color_SB, alpha=alpha)
-        ax.fill_between(x_PS, yvals_PS[line][mtag][pkeys[0]], 
-                        yvals_PS[line][mtag][pkeys[-1]], linewidth=1.,
+        ax.fill_between(x_PS, yvals_PS[[mtag][pkeys[0]], 
+                        yvals_PS[mtag][pkeys[-1]], linewidth=1.,
                         linestyle=linestyle_perc, color=color_PS, alpha=alpha)
-        ax.fill_between(x_SB, yvals_SB[line][mtag][pkeys[1]], 
-                        yvals_SB[line][mtag][pkeys[-2]], linewidth=1.,
+        ax.fill_between(x_SB, yvals_SB[mtag][pkeys[1]], 
+                        yvals_SB[mtag][pkeys[-2]], linewidth=1.,
                         linestyle=linestyle_perc, color=color_SB, alpha=alpha)
-        ax.fill_between(x_PS, yvals_PS[line][mtag][pkeys[1]], 
-                        yvals_PS[line][mtag][pkeys[-2]], linewidth=1.,
+        ax.fill_between(x_PS, yvals_PS[mtag][pkeys[1]], 
+                        yvals_PS[mtag][pkeys[-2]], linewidth=1.,
                         linestyle=linestyle_perc, color=color_PS, alpha=alpha)
-        ax.plot(x_SB, yvals_SB[line][mtag][('perc', 50.)], linewidth=2.,
+        ax.plot(x_SB, yvals_SB[mtag][('perc', 50.)], linewidth=2.,
                 path_effects=patheff, linestyle=linestyle_perc, color=color_SB)
-        ax.plot(x_PS, yvals_PS[line][mtag][('perc', 50.)], linewidth=2.,
+        ax.plot(x_PS, yvals_PS[mtag][('perc', 50.)], linewidth=2.,
                 path_effects=patheff, linestyle=linestyle_perc, color=color_PS)
         
-        ax.plot(x_SB, yvals_SB[line][mtag][('mean',)], linewidth=2.,
+        ax.plot(x_SB, yvals_SB[mtag][('mean',)], linewidth=2.,
                 path_effects=patheff, linestyle=linestyle_mean, color=color_SB)
-        ax.plot(x_PS, yvals_PS[line][mtag][('mean',)], linewidth=2.,
+        ax.plot(x_PS, yvals_PS[mtag][('mean',)], linewidth=2.,
                 path_effects=patheff, linestyle=linestyle_mean, color=color_PS)
         
         if hi == len(medges) - 1:
