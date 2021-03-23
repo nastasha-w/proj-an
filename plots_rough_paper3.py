@@ -3815,7 +3815,8 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
                                        runit='pkpc',
                                        separate=False, binset=binset, 
                                        retlog=True, ofmean=True)
-
+    print(yvals_PS.keys())
+    print(bins_PS.keys())
     for hi, hkey in enumerate(medges):
         ax = axes[hi]
         labely = True # hi % ncols == 0
