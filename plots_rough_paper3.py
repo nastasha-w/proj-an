@@ -3694,8 +3694,6 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
     print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb, C2 kernel')
     print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
     
-    
-    
     fontsize = 12
     patheff = [mppe.Normal()]
     #linewidth = 1.5
@@ -3779,7 +3777,7 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
         panelheight = panelwidth    
         figheight = panelheight * ncols + laxheight + hspace * nrows
         height_ratios = [panelheight] * nrows + [laxheight]
-        l_bbox_to_anchor = (0.5, 0.80)
+        l_bbox_to_anchor = (0.5, 0.75)
         l_loc = 'upper center'
         l_ncols = ncols 
     
@@ -3823,8 +3821,8 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
                                        runit='pkpc',
                                        separate=False, binset=binset, 
                                        retlog=True, ofmean=True)
-    print(yvals_PS.keys())
-    print(bins_PS.keys())
+    #print(yvals_PS.keys())
+    #print(bins_PS.keys())
     for hi, hkey in enumerate(medges):
         ax = axes[hi]
         labely = True # hi % ncols == 0
@@ -3920,8 +3918,8 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
                mpatch.Patch(facecolor=color_PS, alpha=1., label='PS20 tables'),
                mpatch.Patch(facecolor=color_SB, alpha=1., label='SB tables')
                ]
-    handles += [mpatch.Patch(facecolor='black', alpha=(1. - (1. - alpha)**i),
-                             label='{:.0f}%%'.format(\
+    handles += [mpatch.Patch(facecolor='black', alpha=alpha**i,
+                             label='{:.0f}%'.format(\
                                 pkeys[len(pkeys) - 1 - i][1] - pkeys[i][1]))\
                     for i in range((len(pkeys) - 1) // 2)]
     lax.legend(handles=handles, fontsize=fontsize, loc=l_loc,\
