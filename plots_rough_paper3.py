@@ -2310,6 +2310,14 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
             for key in temppaths:
                 ypath = ypaths[key]
                 bpath = bpaths[key]
+                if ypath not in fi:
+                    if '_of_mean_log' in ypath:
+                        ypath = ypath.replace('of_mean_log', 'of_mean')
+                    if ypath not in fi:
+                        print('For {seltag}, {ykey}, {key}'.format(
+                            seltag=seltag, ykey=ykey, key=ket))
+                        print('did not find dataset: {}'.format(ypath))
+                        
                 if ypath in fi:
                     vals = fi[ypath][:]
                     if 'logvalues' in fi[ypath].attrs.keys():
