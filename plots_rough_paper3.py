@@ -304,7 +304,7 @@ def makenicename_PS20(line, ionEspace=' '):
                                             sep=ionEspace, E=part3)
     return out
     
-nicenames_PS20_lines = {makenicename_PS20(line) for line in lines_PS20}
+nicenames_PS20_lines = {line: makenicename_PS20(line) for line in lines_PS20}
     
 def getoutline(linewidth):
     patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"),\
