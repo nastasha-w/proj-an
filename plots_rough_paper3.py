@@ -3883,10 +3883,10 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
             text = '${:.1f} \\emdash {:.1f}$'.format(hkey, medges[hi + 1])
         
         _max = max(_max, 
-                   np.max(yvals_PS[line][mtag][('mean',)]),
-                   np.max(yvals_SB[line][mtag][('mean',)]),
-                   np.max(yvals_PS[line][mtag][pkeys[-1]]),
-                   np.max(yvals_SB[line][mtag][pkeys[-1]]),
+                   np.max(yvals_PS[mtag][('mean',)]),
+                   np.max(yvals_SB[mtag][('mean',)]),
+                   np.max(yvals_PS[mtag][pkeys[-1]]),
+                   np.max(yvals_SB[mtag][pkeys[-1]]),
                    )
         ax.text(0.98, 0.98, text, fontsize=fontsize,\
                 transform=ax.transAxes, horizontalalignment='right',\
