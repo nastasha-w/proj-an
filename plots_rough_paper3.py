@@ -3915,13 +3915,15 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
                mlines.Line2D([], [], linewidth=2., path_effects=patheff, 
                              linestyle=linestyle_perc, color='black',
                              label='median'),
-               mpatch.Patch(facecolor=color_PS, alpha=1., label='PS20 tables'),
-               mpatch.Patch(facecolor=color_SB, alpha=1., label='SB tables')
                ]
-    handles += [mpatch.Patch(facecolor='black', alpha=alpha**i,
+    handles += [mpatch.Patch(facecolor='black', 
+                             alpha=1. - (1. - alpha)**(i + 1),
                              label='{:.0f}%'.format(\
                                 pkeys[len(pkeys) - 1 - i][1] - pkeys[i][1]))\
                     for i in range((len(pkeys) - 1) // 2)]
+    handles += [mpatch.Patch(facecolor=color_PS, alpha=1., label='PS20 tables'),
+                mpatch.Patch(facecolor=color_SB, alpha=1., label='SB tables')
+                ]
     lax.legend(handles=handles, fontsize=fontsize, loc=l_loc,\
                bbox_to_anchor=l_bbox_to_anchor, ncol=l_ncols)
     
