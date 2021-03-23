@@ -3804,7 +3804,7 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
     
     ## get lines    
     filename_SB = rfilebase_SB.format(line=SBline)
-    filename_PS = rfilebase_SB.format(line=linematch_SB[SBline].replace(' ', '-'))
+    filename_PS = rfilebase_PS.format(line=linematch_SB[SBline].replace(' ', '-'))
        
     yvals_SB, bins_SB = readin_radprof(filename_SB, seltags, ykeys,
                                        runit='pkpc',
