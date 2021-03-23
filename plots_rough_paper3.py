@@ -221,6 +221,91 @@ atomnums = {'hydrogen': 1,\
             'iron': 26,\
             }
 
+# check line data for these
+lines_SP20 = ['C  5      40.2678A',
+              'C  6      33.7372A',
+              'N  6      29.5343A',
+              'N  6      28.7870A',
+              'N  7      24.7807A',
+              'O  7      21.6020A',
+              'O  7      21.8044A',
+              'O  7      21.8070A',
+              'O  7      22.1012A',
+              'O  8      18.9709A',
+              'Ne 9      13.4471A',
+              'Ne10      12.1375A',
+              'Mg11      9.16875A',
+              'Mg12      8.42141A',
+              'Si13      6.64803A',
+              'Fe17      17.0510A',
+              'Fe17      15.2620A',
+              'Fe17      16.7760A',
+              'Fe17      17.0960A',
+              'Fe18      16.0720A',
+              ]
+
+lines_SB = ['c5r', 'n6-actualr', 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r',
+            'fe18', 'fe17-other1', 'fe19', 'o7r', 'o7iy', 'o7f', 'o8', 'fe17',
+            'c6', 'n7']
+
+nicenames_lines =  {'c5r': 'C V',\
+                    'n6r': 'N VI (f)',\
+                    'n6-actualr': 'N VI',\
+                    'ne9r': 'Ne IX',\
+                    'ne10': 'Ne X',\
+                    'mg11r': 'Mg XI',\
+                    'mg12': 'Mg XII',\
+                    'si13r': 'Si XIII',\
+                    'fe18': 'Fe XVIII',\
+                    'fe17-other1': 'Fe XVII (15.10 A)',\
+                    'fe19': 'Fe XIX',\
+                    'o7r': 'O VII (r)',\
+                    'o7ix': 'O VII (ix)',\
+                    'o7iy': 'O VII (i)',\
+                    'o7f': 'O VII (f)',\
+                    'o8': 'O VIII',\
+                    'fe17': 'Fe XVII (17.05 A)',\
+                    'c6': 'C VI',\
+                    'n7': 'N VII',\
+                    }
+
+linematch_SP20 = {'C  5      40.2678A': 'c5r',
+                  'C  6      33.7372A': 'c6',
+                  'N  6      29.5343A': 'n6r',
+                  'N  6      28.7870A': 'n6-actualr',
+                  'N  7      24.7807A': 'n7',
+                  'O  7      21.6020A': 'o7f',
+                  'O  7      21.8044A': 'o7iy',
+                  'O  7      21.8070A': 'o7iy',
+                  'O  7      22.1012A': 'o7r',
+                  'O  8      18.9709A': 'o8',
+                  'Ne 9      13.4471A': 'ne9r',
+                  'Ne10      12.1375A': 'ne10',
+                  'Mg11      9.16875A': 'mg11r',
+                  'Mg12      8.42141A': 'mg12',
+                  'Si13      6.64803A': 'si13r',
+                  'Fe17      17.0510A': 'fe17',
+                  'Fe17      15.2620A': None,
+                  'Fe17      16.7760A': None,
+                  'Fe17      17.0960A': None,
+                  'Fe18      16.0720A': None,
+                  }  
+_matchedlines = {None if linematch_SP20[line] is None else line 
+                 for line in linematch_SP20}
+_matchedlines -= {None}
+linematch_SB = {linematch_SP20[line]: line for line in _matchedlines}
+def makenicename_SP20(line, ionEspace=' '):
+    part1 = line[:2].strip()
+    part2 = line[2:4].strip()
+    part2 = ild.arabic_to_roman(int(part2))
+    part3 = float(line[4:-1].strip()) # wavelength (A for these lines)
+    part3 = c.planck * c.c / (part3 * 1e-8) / c.ev_to_erg
+    out = '{elt} {stage}{sep}{E} eV'.format(elt=part1, stage=part2, 
+                                            sep=ionEspace, E=part3)
+    return out
+    
+nicenames_SP20_lines = {makenicename_SP20(line) for line in lines_SP20}
+    
 def getoutline(linewidth):
     patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"),\
                mppe.Stroke(linewidth=linewidth + 0.5, foreground="white"),\
@@ -267,7 +352,8 @@ def add_cbar_mass(cax, massedges=mass_edges_standard,\
     returns color bar object, color dictionary (keys: lower mass edges)
     '''
     massedges = np.array(massedges)
-    clist = tc.tol_cmap('rainbow_discrete', lut=len(massedges))(np.linspace(0.,  1., len(massedges)))
+    clist = tc.tol_cmap('rainbow_discrete', 
+                        lut=len(massedges))(np.linspace(0.,  1., len(massedges)))
     keys = sorted(massedges)
     colors = {keys[i]: clist[i] for i in range(len(keys))}
     #del _masks
@@ -3573,6 +3659,269 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
     leg_ins.get_title().set_fontsize(fontsize)
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
+    
+    
+    
+def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
+    '''
+    plot median and scatter of individual halo profiles, comparing Serena
+    Bertone's table 
+    
+    Parameters
+    ----------
+    SBline: str
+        emission line (the SB table name)
+    mmin: float    
+        minimum halo mass to show (log10 Msun, value options: 10.5, 11., 11.5, 
+        ... 14.)
+    bigbins: bool
+        10 pkpc inner bin, then spacing by 0.1 dex (False) or 0.25 dex bins
+        (True). The default is False.
+    '''
+    if SBline == 'all':
+        for line in linematch_SB:
+            plot_radprof5(line, mmin=mmin, bigbins=bigbins)
+    
+    print('Values are calculated from 3.125^2 ckpc^2 pixels')
+    print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb, C2 kernel')
+    print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
+    
+    
+    
+    fontsize = 12
+    patheff = [mppe.Normal()]
+    #linewidth = 1.5
+    #patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),\
+    #           mppe.Stroke(linewidth=linewidth, foreground="w"),\
+    #           mppe.Normal()]
+    #lw2 = 2.3
+    #pe2 = [mppe.Stroke(linewidth=lw2 + 0.7, foreground="b"),\
+    #       mppe.Stroke(linewidth=lw2, foreground="w"),\
+    #       mppe.Normal()]
+        
+    color_SB = _c1.red
+    color_PS = _c1.blue
+    alpha = 0.3
+    linestyle_mean = 'dashed'
+    linestyle_perc = 'solid'
+    
+    # use the pipeline files for SB tables: same pipeline as the new tables
+    if bigbins:
+        rfilebase_SB = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.6_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS_1slice_to-min3p5R200c_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+        rfilebase_PS = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F_L0100N1504_27_test3.7_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS_1slice_to-min3p5R200c_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+        checkbins = [0., 10., 10.**1.25]
+        binset = 'binset_0'
+        binwidth = 0.25
+    else:
+        rfilebase_SB = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_L0100N1504_27_test3.6_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS_1slice_to-min3p5R200c_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+        rfilebase_PS = ol.pdir + 'radprof/' + 'radprof_stamps_emission_{line}_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F_L0100N1504_27_test3.7_SmAb_C2Sm_32000pix_6.25slice_zcen3.125_z-projection_noEOS_1slice_to-min3p5R200c_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+        checkbins = [0., 10., 10.**1.1]
+        binset = 'binset_1'
+        binwidth = 0.1
+    
+    xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
+    ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{photons}\\,\\mathrm{cm}^{-2}\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
+    
+    pkeys = [('perc', 2.), ('perc', 10.), ('perc', 50.),
+             ('perc', 90.), ('perc', 98.)]
+    ykeys = [('mean',)] + pkeys 
+    
+    outname = mdir + 'radprof2d_ofannularmeans_10pkpc-{binwidth}dex-annuli'+\
+              '_L0100N1504_27_'+\
+              'test3.6-7_SmAb_C2Sm_6.25slice_noEOS_1000_centrals' +\
+              'tablecomp_{line}'
+    outname = outname.format(binwidth=binwidth, line=SBline)
+    outname = outname.replace('.', 'p')
+    outname = outname + '.pdf' 
+    
+    checkbins = np.array(checkbins)
+                 
+    medges = np.arange(mmin, 14.1, 0.5)
+    seltag_keys = {medges[i]: 'geq{:.1f}_le{:.1f}'.format(medges[i], medges[i + 1])\
+                               if i < len(medges) - 1 else\
+                               'geq{:.1f}'.format(medges[i])\
+                    for i in range(len(medges))}
+    seltags = [seltag_keys[key] for key in seltag_keys]
+    
+    #numlines = len(lines)
+    nummasses = len(medges)
+    ncols = 4
+    nrows = (nummasses - 1) // ncols + 1
+    figwidth = 11. 
+    laxheight = 1.
+    hspace = 0.15
+    wspace = 0.28
+    
+    if ncols * nrows - nummasses >= 2:
+        lax_below = False
+        _nrows = nrows
+        panelwidth = (figwidth - (ncols * wspace))/ ncols
+        width_ratios = [panelwidth] * ncols
+        panelheight = panelwidth    
+        figheight = panelheight * nrows + hspace * (nrows - 1)
+        height_ratios = [panelheight] * nrows 
+        l_bbox_to_anchor = (0.5, 0.0)
+        l_loc = 'lower center'
+        l_ncols = ncols * nrows - nummasses
+    else:
+        lax_below = True
+        _nrows = nrows + 1
+        panelwidth = (figwidth - (ncols * wspace))/ ncols
+        width_ratios = [panelwidth] * ncols 
+        panelheight = panelwidth    
+        figheight = panelheight * ncols + laxheight + hspace * nrows
+        height_ratios = [panelheight] * nrows + [laxheight]
+        l_bbox_to_anchor = (0.5, 0.80)
+        l_loc = 'upper center'
+        l_ncols = ncols 
+    
+    
+    fig = plt.figure(figsize=(figwidth, figheight))
+    grid = gsp.GridSpec(ncols=ncols, nrows=_nrows, hspace=hspace, wspace=wspace,\
+                        width_ratios=width_ratios, height_ratios=height_ratios)
+    axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(nummasses)]
+    if lax_below:
+        lax = fig.add_subplot(grid[nrows, :])
+    else:
+        ind_min = ncols - (nrows * ncols - nummasses)
+        lax = fig.add_subplot(grid[nrows - 1, ind_min:])
+    lax.axis('off')
+        #_l, _b, _w, _h = (_lax.get_position()).bounds
+        #margin = panelwidth * 0.1 / figwidth
+        #lax = fig.add_axes([_l + margin, _b + margin,\
+        #                    _w - 2.* margin, _h - 2. * margin])
+        
+    labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
+    labelax.tick_params(labelcolor='none', top=False, bottom=False, 
+                        left=False, right=False)
+    labelax.set_xlabel(xlabel, fontsize=fontsize)
+    labelax.set_ylabel(ylabel, fontsize=fontsize)
+    
+    #clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
+    #cbar, colordct = add_cbar_mass(cax, cmapname='rainbow', massedges=medges,\
+    #         orientation=c_orientation, clabel=clabel, fontsize=fontsize,\
+    #         aspect=c_aspect)
+    
+    ## get lines
+    yvals = {}
+    bins = {}
+    
+    filename_SB = rfilebase_SB.format(line=line)
+    filename_PS = rfilebase_SB.format(line=linematch_SB[line].replace(' ', '-'))
+       
+    yvals_SB, bins_SB = readin_radprof(filename_SB, seltags, ykeys,
+                                       runit='pkpc',
+                                       separate=False, binset=binset, 
+                                       retlog=True, ofmean=True)
+    yvals_PS, bins_PS = readin_radprof(filename_PS, seltags, ykeys,
+                                       runit='pkpc',
+                                       separate=False, binset=binset, 
+                                       retlog=True, ofmean=True)
+
+    for hi, hkey in enumerate(medges):
+        ax = axes[hi]
+        labely = True # hi % ncols == 0
+        labelx = True # nummasses -1 - hi < ncols
+        pu.setticks(ax, fontsize=fontsize, labelleft=labely, 
+                    labelbottom=labelx)
+        ax.set_xscale('log')
+        
+        mtag = seltag_keys[hkey]
+        
+        _max = -np.inf
+
+        ed_SB = bins_SB[line][mtag][('mean',)]
+        if not np.allclose(ed_SB[:len(checkbins)], checkbins):
+            print(ed_SB[:len(checkbins)])
+            print(checkbins)
+            msg = 'Did not retrieve the right bins for {line}, {mtag}'
+            msg = msg.format(line=line, mtag=mtag)
+            raise ValueError(msg)
+        ed_PS = bins_PS[line][mtag][('mean',)]
+        if not np.allclose(ed_PS[:len(checkbins)], checkbins):
+            print(ed_PS[:len(checkbins)])
+            print(checkbins)
+            msg = 'Did not retrieve the right bins for {line}, {mtag}'
+            msg = msg.format(line=line, mtag=mtag)
+            raise ValueError(msg)
+        
+        x_SB = 0.5 * (ed_SB[:-1] + ed_SB[1:])
+        x_PS = 0.5 * (ed_PS[:-1] + ed_PS[1:])
+        
+        ax.fill_between(x_SB, yvals_SB[line][mtag][pkeys[0]], 
+                        yvals_SB[line][mtag][pkeys[-1]], linewidth=1.,
+                        linestyle=linestyle_perc, color=color_SB, alpha=alpha)
+        ax.fill_between(x_PS, yvals_PS[line][mtag][pkeys[0]], 
+                        yvals_PS[line][mtag][pkeys[-1]], linewidth=1.,
+                        linestyle=linestyle_perc, color=color_PS, alpha=alpha)
+        ax.fill_between(x_SB, yvals_SB[line][mtag][pkeys[1]], 
+                        yvals_SB[line][mtag][pkeys[-2]], linewidth=1.,
+                        linestyle=linestyle_perc, color=color_SB, alpha=alpha)
+        ax.fill_between(x_PS, yvals_PS[line][mtag][pkeys[1]], 
+                        yvals_PS[line][mtag][pkeys[-2]], linewidth=1.,
+                        linestyle=linestyle_perc, color=color_PS, alpha=alpha)
+        ax.plot(x_SB, yvals_SB[line][mtag][('perc', 50.)], linewidth=2.,
+                path_effects=patheff, linestyle=linestyle_perc, color=color_SB)
+        ax.plot(x_PS, yvals_PS[line][mtag][('perc', 50.)], linewidth=2.,
+                path_effects=patheff, linestyle=linestyle_perc, color=color_PS)
+        
+        ax.plot(x_SB, yvals_SB[line][mtag][('mean',)], linewidth=2.,
+                path_effects=patheff, linestyle=linestyle_mean, color=color_SB)
+        ax.plot(x_PS, yvals_PS[line][mtag][('mean',)], linewidth=2.,
+                path_effects=patheff, linestyle=linestyle_mean, color=color_PS)
+        
+        if hi == len(medges) - 1:
+            text = '$\\geq {:.1f}$'.format(hkey)
+        else:
+            text = '${:.1f} \\emdash {:.1f}$'.format(hkey, medges[hi + 1])
+        
+        _max = max(_max, 
+                   np.max(yvals_PS[line][mtag][('mean',)]),
+                   np.max(yvals_SB[line][mtag][('mean',)]),
+                   np.max(yvals_PS[line][mtag][pkeys[-1]]),
+                   np.max(yvals_SB[line][mtag][pkeys[-1]]),
+                   )
+        ax.text(0.98, 0.98, text, fontsize=fontsize,\
+                transform=ax.transAxes, horizontalalignment='right',\
+                verticalalignment='top')
+        # set limits for panels
+        ylim = ax.get_ylim()
+        ymax = _max
+        ymin = max(ylim[0], ymax - 6.)
+        ymax = ymax + 0.05 * (ymax - ymin)
+        ax.set_ylim(ymin, ymax)
+        
+    # sync plot ranges
+    #xlims = [ax.get_xlim() for ax in axes]
+    #xmin = min([xlim[0] for xlim in xlims])
+    #xmax = max([xlim[1] for xlim in xlims])
+    #[ax.set_xlim(xmin, xmax) for ax in axes]
+
+    # three most energetic ions have very low mean SB -> impose limits
+    #ylims = [ax.get_ylim() for ax in axes]
+    #ymin = -9. #min([ylim[0] for ylim in ylims])
+    #ymax = 2. #max([ylim[1] for ylim in ylims])
+    #[ax.set_ylim(ymin, ymax) for ax in axes]
+    
+    ## legend
+    handles = [mlines.Line2D([], [], linewidth=2., path_effects=patheff, 
+                             linestyle=linestyle_mean, color='black',
+                             label='mean'),
+               mlines.Line2D([], [], linewidth=2., path_effects=patheff, 
+                             linestyle=linestyle_perc, color='black',
+                             label='median'),
+               mpatch.Patch(facecolor=color_PS, alpha=1., label='PS20 tables'),
+               mpatch.Patch(facecolor=color_BS, alpha=1., label='SB tables')
+               ]
+    handles += [mpatch.Patch(facecolor='black', alpha=(1. - (1. - alpha)**i),
+                             label='{:.0f}%%'.format(\
+                                pkeys[len(pkeys) - 1 - i][1] - pkeys[i][1]))\
+                    for i in range((len(pkeys) - 1) // 2)]
+    lax.legend(handles=handles, fontsize=fontsize, loc=l_loc,\
+               bbox_to_anchor=l_bbox_to_anchor, ncol=l_ncols)
+    
+    plt.savefig(outname, format='pdf', bbox_inches='tight')    
+    
     
 def plot_emtables(z=0.1):
     '''
