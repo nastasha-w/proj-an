@@ -3849,7 +3849,7 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
         ax.fill_between(x_SB, yvals_SB[mtag][pkeys[0]], 
                         yvals_SB[mtag][pkeys[-1]], linewidth=1.,
                         linestyle=linestyle_perc, color=color_SB, alpha=alpha)
-        ax.fill_between(x_PS, yvals_PS[[mtag][pkeys[0]], 
+        ax.fill_between(x_PS, yvals_PS[mtag][pkeys[0]], 
                         yvals_PS[mtag][pkeys[-1]], linewidth=1.,
                         linestyle=linestyle_perc, color=color_PS, alpha=alpha)
         ax.fill_between(x_SB, yvals_SB[mtag][pkeys[1]], 
