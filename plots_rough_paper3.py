@@ -297,7 +297,7 @@ linematch_SB = {linematch_SP20[line]: line for line in _matchedlines}
 def makenicename_SP20(line, ionEspace=' '):
     part1 = line[:2].strip()
     part2 = line[2:4].strip()
-    part2 = ild.arabic_to_roman(int(part2))
+    part2 = ild.arabic_to_roman[int(part2)]
     part3 = float(line[4:-1].strip()) # wavelength (A for these lines)
     part3 = c.planck * c.c / (part3 * 1e-8) / c.ev_to_erg
     out = '{elt} {stage}{sep}{E} eV'.format(elt=part1, stage=part2, 
