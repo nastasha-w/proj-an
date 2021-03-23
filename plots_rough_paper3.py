@@ -3779,7 +3779,7 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
         height_ratios = [panelheight] * nrows + [laxheight]
         l_bbox_to_anchor = (0.5, 0.75)
         l_loc = 'upper center'
-        l_ncols = ncols 
+        l_ncols = 3 #ncols 
     
     
     fig = plt.figure(figsize=(figwidth, figheight))
@@ -3796,7 +3796,7 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
         #margin = panelwidth * 0.1 / figwidth
         #lax = fig.add_axes([_l + margin, _b + margin,\
         #                    _w - 2.* margin, _h - 2. * margin])
-        
+    
     labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
     labelax.tick_params(labelcolor='none', top=False, bottom=False, 
                         left=False, right=False)
@@ -3810,6 +3810,9 @@ def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
     
     ## get lines    
     PSline = linematch_SB[SBline]
+    fig.suptitle('{SB} / {PS}'.format(SB=nicenames_lines[SBline],
+                                      PS=nisenames_PS20_lines[PSline]),
+                 fontsize=fontsize)
     filename_SB = rfilebase_SB.format(line=SBline)
     filename_PS = rfilebase_PS.format(line=PSline.replace(' ', '-'))
        
