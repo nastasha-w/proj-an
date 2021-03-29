@@ -6726,11 +6726,14 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
         vardict.add_box('box3', box3)
         vardict.overwrite_box('centre',centre)
         vardict.overwrite_box('Ls',Ls)
-    
-    outfilename = namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,\
-                              L_x, L_y, L_z, centre, Ls_in_Mpc, simfile.boxsize, simfile.h, excludeSFR,\
-                              abunds, ion, parttype, quantity,\
-                              sylviasshtables, bensgadget2tables,\
+
+    outfilename = namehistogram_perparticle(ptype, simnum, snapnum, var, 
+                              simulation,
+                              L_x, L_y, L_z, centre, Ls_in_Mpc, 
+                              simfile.boxsize, simfile.h, excludeSFR,
+                              abunds, ion, parttype, quantity,
+                              sylviasshtables, bensgadget2tables,
+                              ps20tables, ps20depletion,
                               misc)
     axnames = [namehistogram_perparticle_axis(dct) for dct in axesdct]
     groupname = '_'.join(axnames) 

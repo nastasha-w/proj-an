@@ -1619,6 +1619,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
             outname = mdir + outname
         plt.savefig(outname, bbox_inches='tight')
         
+        
 # test basic table retrieval and sensitbility
 def plot_tablesets(zs):
     for z in zs:
