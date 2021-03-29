@@ -6041,7 +6041,9 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
                     print('ps20depletion should be True or False')
                     return 59
             try:
-                table = linetable_PS20(ion, 0.0, emission=ptype=='emission')
+                table = linetable_PS20(ion, 0.0, 
+                                       emission=ptype in ['Luminosity',
+                                                          'Lumdens'])
                 iselt = False
             except ValueError as err:
                 if ptype in ['Nion', 'Niondens'] and ion in ol.elements:
@@ -6347,7 +6349,8 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,
             return 24
         L_x, L_y, L_z = (float(L_x),float(L_y),float(L_z))
 
-    if simulation not in ['eagle', 'bahamas', 'Eagle', 'Bahamas', 'EAGLE', 'BAHAMAS', 'eagle-ioneq']:
+    if simulation not in ['eagle', 'bahamas', 'Eagle', 'Bahamas', 'EAGLE',
+                          'BAHAMAS', 'eagle-ioneq']:
         print('Simulation %s is not a valid choice; should be "eagle", "eagle-ioneq" or "bahamas"'%str(simulation))
         return 30
     elif simulation == 'Eagle' or simulation == 'EAGLE':
