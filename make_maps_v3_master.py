@@ -6569,7 +6569,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
         entires are (the non-None elements of) ptype, exlcudeSFR, abunds, ion, 
         parttype, quantity, mdef, allinR200c, (defaults are same as general/
         weight values)
-        note that bins are always (log) cgs, including for e.g. halo mass
+        note that bins are always (log) cgs, including for e.g. halo mass.
         to get nice bin values in other units (e.g. solar masses, virial radii)
         specify the bins based on those values in cgs units
     logax: boolean, or array of booleans matching axesdct

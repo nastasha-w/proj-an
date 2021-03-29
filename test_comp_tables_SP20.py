@@ -1413,8 +1413,212 @@ def make_mapcomparison(mapset=1):
         compare_maps(*args, **kwargs)
         
     
+def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
+    '''
+    compare histograms in filen1 and filen2. group names are only required if
+    a file contains more than one histogram.
+    
+    Asssumes 3D histograms like used in these tests.
+    '''
+    fontsize = 11.
+    
+    with h5py.File(filen1, 'r') as f:
+        groups = list(f.keys())
+        if len(groups) == 1:
+            weightn1 = groups[0]
+            grp = f[weightn1]
+        elif group1 is None:
+            msg = 'group1 may not be None, since file {} contains multiple'+ \
+                  ' groups:\n{}'
+            msg = msg.format(filen1, groups)
+            raise ValueError(msg)
+        else:
+            weightn1 = group1
+            grp = f[group1]
+        axnames1 = grp[:]
+        bins1 = grp[:]
+        hist1 = grp[:]
+    hist2 = hist1
+    axnames2 = axnames1
+    bins2 = bins1
+    weightn2 = weightn1
+    
+    ndims = 3
+    # expand hist arrays/grids to get a common grid
+    hist1, hist2, bins = cu.combine_hists(hist1, hist2, bins1, bins2,
+                                          rtol=1e-5, atol=1e-8, add=False)
+    binc = [0.5 * (ed[1:] + ed[:-1]) for ed in bins]
+    binw = [np.diff(ed) for ed in bins]
 
-
+    match = np.allclose(hist1, hist2)
+    print('Histogram match: {}'.format(match))
+    
+    ls1 = 'solid'
+    ls2 = 'dashed'
+    cset =  tc.tol_cset('bright')
+    c1 = cset.blue
+    c2 = cset.red
+        
+    fig = plt.figure(figsize=(7., 11.))
+    grid = gsp.GridSpec(ncols=6, nrows=5, top=0.8,
+                        hspace=0.6, wspace=0.35,
+                        height_ratios=[1., 1., 1., 1., 0.25])
+    h1daxes = [fig.add_subplot(grid[0, 2 * i : 2 * i + 2]) \
+               for i in range(ndims)]
+    h2daxes = [[fig.add_subplot(grid[1 + j, 2 * i : 2 * i + 2]) \
+                for j in range(3)] \
+                for i in range(ndims)]
+    cax_img = fig.add_subplot(grid[4, :3])
+    cax_diff = fig.add_subplot(grid[4, 3:])
+    
+    title = 'Histogram 1: {weight}\n'.format(weight=weightn1) + \
+            '\n'.join(['axis {}: {}'.format(num, name) \
+                       for num, name in enumerate(axnames1)])
+    title = title + '\n'
+    title = title + \
+            'Histogram 2: {weight}\n'.format(weight=weightn2) + \
+            '\n'.join(['axis {}: {}'.format(num, name) \
+                       for num, name in enumerate(axnames2)])
+    fig.suptitle(title, fontsize=fontsize)
+    
+    # 1d histograms: project onto one axis
+    for hax in range(ndims):
+        otheraxes = list(range(ndims))
+        otheraxes.remove(hax)
+        
+        _h1 = np.sum(hist1, axis=tuple(otheraxes))
+        _h2 = np.sum(hist2, axis=tuple(otheraxes))
+        
+        ax = h1daxes[hax]
+        ax.bar(binc[hax], _h1, width=binw, bottom=None, align='center',
+               color=c1, alpha=0.3, edgecolor=c1, linestyle=ls1,
+               label='Hist 1')
+        ax.bar(binc[hax], _h2, width=binw, bottom=None, align='center',
+               color=c2, alpha=0.3, edgecolor=c2, linestyle=ls2,
+               label='Hist 2')
+        
+        
+        ax.tick_params(labelsize=fontsize - 1., which='both', direction='in',
+                       bottom=True, left=True, right=True, top=True,
+                       labelleft=True, labelbottom=True)
+        ax.set_ylabel('weight', fontsize=fontsize)
+        ax.set_xlabel('axis {}'.format(hax), fontsize=fontsize)
+        ax.set_yscale('log')
+    
+    # 2d histograms: project into two axes
+    cmap_img = cm.get_cmap('viridis')
+    cmap_img.set_under('white')
+    
+    h2ds1 = [np.sum(hist1, axis=hax) for hax in range(ndims)]
+    h2ds2 = [np.sum(hist2, axis=hax) for hax in range(ndims)]
+    diffs = [h2ds2[i] - h2ds1[i] for i in range(ndims)]
+    
+    vmin = min([np.min(_h[np.isfinite(_h)]) for _h in h2ds1])
+    vmin = min(vmin, min([np.max(_h[np.isfinite(_h)]) for _h in h2ds2]))   
+    vmax = max([np.max(_h[np.isfinite(_h)]) for _h in h2ds1])
+    vmax = min(vmax, max([np.max(_h[np.isfinite(_h)]) for _h in h2ds2]))
+    
+    dmin = min(np.min([_d[np.isfinite(_d)] for _d in diffs]))
+    dmax = max(np.max([_d[np.isfinite(_d)] for _d in diffs]))
+    dmax = max(dmax, np.abs(dmin))
+    dmin = min(-1. * dmax, dmin)
+    
+    clevels = list(np.linspace(vmax - 3., vmax - 0.2, 5))[:-1] +\
+              list(np.linspace(vmax - 0.2, vmax, 3)[:-1]) 
+    if vmax - 3. > vmin + 2.:
+        clevels = list(np.linspace(vmin, vmax - 3., 4))[1:-1] + clevels
+    cmap_contours = cm.get_cmap('plasma_r') 
+    colors_contours = cmap_contours(np.linspace(0., 1., len(clevels)))
+    
+    cmap_diff = cm.get_cmap('RdBu')
+    cmap_diff.set_under('magenta')
+    cmap_diff.set_over('cyan')
+    
+    for hax in range(ndims):
+        _allaxes = range(ndims)
+        pax1 = _allaxes[(hax + 1) % ndims]
+        pax2 = _allaxes[(hax + 2) % ndims]
+        
+        axes = h2daxes[hax]
+        
+        _diff = diffs[hax]
+        _h1 = h2ds1[hax]
+        _h2 = h2ds2[hax]
+        if pax1 < pax2:
+            _h1 = _h1.T
+            _h2 = _h2.T
+            _diff = _diff.T
+        
+        ax.tick_params(labelsize=fontsize - 1.)
+        
+        ax.set_ylabel('weight', fontsize=fontsize)
+        ax.set_xlabel('axis {}'.format(hax), fontsize=fontsize)
+        ax.set_yscale('log')
+                
+        linewidth = 1.
+        patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"),\
+                   mppe.Stroke(linewidth=linewidth + 0.5, foreground="white"),\
+                   mppe.Normal()]
+            
+        img_diff = axes[2].pcolormesh(bins[pax1], bins[pax2], _diff,
+                                      cmap=cmap_diff, vmin=dmin, vmax=dmax)
+            
+        img = axes[0].pcolormesh(bins[pax1], bins[pax2], _h1,
+                                 cmap=cmap_img, vmin=vmin, vmax=vmax)
+        cs = axes[0].contour(bins[pax1], bins[pax2], _h1, levels=clevels,
+                             colors=colors_contours, origin='lower',
+                             linestyles=ls1, linewidths=linewidth)
+        cs2 = axes[2].contour(bins[pax1], bins[pax2], _h1, levels=clevels,
+                             colors=colors_contours, origin='lower',
+                             linestyles=ls1, linewidths=linewidth)
+        plt.setp(cs2.collections, path_effects=patheff)
+        
+        axes[1].pcolormesh(bins[pax1], bins[pax2], _h2,
+                           cmap=cmap_img, vmin=vmin, vmax=vmax)
+        axes[0].contour(bins[pax1], bins[pax2], _h2, levels=clevels,
+                        colors=colors_contours, origin='lower',
+                        linestyles=ls2, linewidths=linewidth)
+        cs2 = axes[2].contour(bins[pax1], bins[pax2], _h2, levels=clevels,
+                              colors=colors_contours, origin='lower',
+                              linestyles=ls2, linewidths=linewidth)
+        plt.setp(cs2.collections, path_effects=patheff)
+        
+        for ax in axes:
+            ax.tick_params(labelsize=fontsize - 1.)
+            ax.set_xlabel('axis {}'.format(pax1), fontsize=fontsize)
+            ax.set_ylabel('axis {}'.format(pax2), fontsize=fontsize)
+        
+        
+        axes[0].text(0.5, 1.02, 'Hist 1', fontsize=fontsize,
+                     transform=axes[0].transAxes,
+                     horizontalalignment='center', verticalalignment='bottom')
+        axes[1].text(0.5, 1.02, 'Hist 2', fontsize=fontsize,
+                     transform=axes[1].transAxes,
+                     horizontalalignment='center', verticalalignment='bottom')
+        axes[2].text(0.5, 1.02, 'Hist 2 - Hist 1', fontsize=fontsize,
+                     transform=axes[2].transAxes,
+                     horizontalalignment='center', verticalalignment='bottom')
+        
+        
+    cbar = pu.add_colorbar(cax_img, img=img, cmap=cmap_img, vmin=vmin,
+                           clabel='weight', fontsize=fontsize, 
+                           orientation='horizontal', extend='min')
+    cax_img.set_aspect(0.125)
+    cax_img.tick_params(labelsize=fontsize - 1.)
+    cbar.add_lines(cs)
+    
+    pu.add_colorbar(cax_diff, img=img_diff, cmap=cmap_diff, vmin=dmin, 
+                    vmax=dmax,
+                    clabel='weight 2 - weight 1', fontsize=fontsize, 
+                    orientation='horizontal', extend='both')
+    cax_diff.set_aspect(0.125)
+    cax_diff.tick_params(labelsize=fontsize - 1.)
+    
+    if outname is not None:
+        if '/' not in outname:
+            outname = mdir + outname
+        plt.savefig(outname, bbox_inches='tight')
+        
 # test basic table retrieval and sensitbility
 def plot_tablesets(zs):
     for z in zs:
