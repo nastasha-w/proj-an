@@ -6044,7 +6044,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
                 table = linetable_PS20(ion, 0.0, emission=ptype=='emission')
                 iselt = False
             except ValueError as err:
-                if ptype == 'coldens' and ion in ol.elements:
+                if ptype in ['Nion', 'Niondens'] and ion in ol.elements:
                     iselt = True
                 else:
                     print(err)
@@ -6102,7 +6102,9 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
         dct['abunds'] = tuple(abunds)
         abunds = tuple(abunds)
         
-        
+        print('After first check block, dct:')
+        print(dct)
+        print(dct_defaults)        
     else: # ptype == basic or halo
         if 'quantity' not in dct.keys():
             print('For ptypes basic, halo, coords, quantity must be specified.\n')
@@ -6229,6 +6231,11 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
         dct['bensgadget2tables'] = bensgadget2tables
         dct['ps20tables'] = ps20tables
         dct['ps20depletion'] = ps20depletion
+        
+        print('After second check block, dct:')
+        print(dct)
+        print(dct_defaults)    
+        
     elif ptype in ['Luminosity', 'Lumdens']:
         dct['sylviasshtables'] = False
         dct['bensgadget2tables'] = False
@@ -6251,6 +6258,10 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
         dct['bensgadget2tables'] = False
         dct['ps20tables'] = False
         dct['ps20depletion'] = False
+        
+        print('After no table interpolation default setting, dct:')
+        print(dct)
+        print(dct_defaults)
                 
     dct['parttype'] = parttype
     
