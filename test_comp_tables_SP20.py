@@ -1424,6 +1424,8 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     
     with h5py.File(filen1, 'r') as f:
         groups = list(f.keys())
+        groups.remove('Units')
+        groups.remove('Header')
         if len(groups) == 1:
             weightn1 = groups[0]
             grp = f[weightn1]
@@ -1435,13 +1437,52 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
         else:
             weightn1 = group1
             grp = f[group1]
-        axnames1 = grp[:]
-        bins1 = grp[:]
-        hist1 = grp[:]
-    hist2 = hist1
-    axnames2 = axnames1
-    bins2 = bins1
-    weightn2 = weightn1
+        keys = list(grp.keys())
+        keys.remove('histogram')
+        keys.remove('binedges')
+        axn = [None] * len(keys)
+        bns = [None] * len(keys)
+        for key in keys:
+            hax = grp[key].attrs('histogram axis')
+            axn[hax] = key
+            bns[hax] = grp[key]['bins'][:]
+        axnames1 = axn
+        bins1 = bns
+        
+        hist1 = grp['histogram'][:]
+        if bool(grp['histogram'].attrs('log')):
+            hist1 = 10**hist1
+            
+    with h5py.File(filen2, 'r') as f:
+        groups = list(f.keys())
+        groups.remove('Units')
+        groups.remove('Header')
+        if len(groups) == 1:
+            weightn2 = groups[0]
+            grp = f[weightn2]
+        elif group2 is None:
+            msg = 'group2 may not be None, since file {} contains multiple'+ \
+                  ' groups:\n{}'
+            msg = msg.format(filen1, groups)
+            raise ValueError(msg)
+        else:
+            weightn2 = group2
+            grp = f[group2]
+        keys = list(grp.keys())
+        keys.remove('histogram')
+        keys.remove('binedges')
+        axn = [None] * len(keys)
+        bns = [None] * len(keys)
+        for key in keys:
+            hax = grp[key].attrs('histogram axis')
+            axn[hax] = key
+            bns[hax] = grp[key]['bins'][:]
+        axnames1 = axn
+        bins2 = bns
+        
+        hist2 = grp['histogram'][:]
+        if bool(grp['histogram'].attrs('log')):
+            hist1 = 10**hist2
     
     ndims = 3
     # expand hist arrays/grids to get a common grid
@@ -1509,8 +1550,8 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     cmap_img = cm.get_cmap('viridis')
     cmap_img.set_under('white')
     
-    h2ds1 = [np.sum(hist1, axis=hax) for hax in range(ndims)]
-    h2ds2 = [np.sum(hist2, axis=hax) for hax in range(ndims)]
+    h2ds1 = [np.log10(np.sum(hist1, axis=hax)) for hax in range(ndims)]
+    h2ds2 = [np.log10(np.sum(hist2, axis=hax)) for hax in range(ndims)]
     diffs = [h2ds2[i] - h2ds1[i] for i in range(ndims)]
     
     vmin = min([np.min(_h[np.isfinite(_h)]) for _h in h2ds1])
@@ -1601,7 +1642,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
         
         
     cbar = pu.add_colorbar(cax_img, img=img, cmap=cmap_img, vmin=vmin,
-                           clabel='weight', fontsize=fontsize, 
+                           clabel='$\\log_{10}$ weight', fontsize=fontsize, 
                            orientation='horizontal', extend='min')
     cax_img.set_aspect(0.125)
     cax_img.tick_params(labelsize=fontsize - 1.)
@@ -1619,7 +1660,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
             outname = mdir + outname
         plt.savefig(outname, bbox_inches='tight')
         
-        
+
 # test basic table retrieval and sensitbility
 def plot_tablesets(zs):
     for z in zs:
