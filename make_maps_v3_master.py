@@ -6397,12 +6397,12 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,
     dct_defaults, parttype = check_particlequantity(dct_defaults, {},
                                                     parttype, simulation)
     axesdct = [check_particlequantity(dct, dct_defaults, parttype, 
-                                      simulation)[0] 
+                                      simulation)
                for dct in axesdct]
     if np.any(np.array([isinstance(dct, int) for dct in axesdct])):
         print('Error in one of the axis particle properties')
         return 38
-
+    axesdct = [_dct_parttype[0] for _dct_parttype in axesdct]
 
     # if nothing has gone wrong, return all input, since setting quantities in functions doesn't work on global variables
     return (0, dct_defaults['ptype'], simnum, snapnum, var, simulation,
