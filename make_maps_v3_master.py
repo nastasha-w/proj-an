@@ -5947,17 +5947,16 @@ def namehistogram_perparticle_axis(dct):
                 iontableind += '_depletion-F'
             stables = iontableind
             
-            if dct['ps20tables']:
-                ion = dct['ion']
-                if ptype in ['Luminosity', 'Lumdens']:
-                    sion = ion.replace(' ', '-')
-                elif ion in ol.elements:
-                    sion = ion
-                else: # couple of input options; standardize output name
-                    _tab = linetable_PS20(ion, 0.0, emission=False)
-                    sion = _tab.elementshort.lower() + str(_tab.ionstage)
-            else:
-                sion = dct['ion']
+            ion = dct['ion']
+            if ptype in ['Luminosity', 'Lumdens']:
+                sion = ion.replace(' ', '-')
+            elif ion in ol.elements:
+                sion = ion
+            else: # couple of input options; standardize output name
+                _tab = linetable_PS20(ion, 0.0, emission=False)
+                sion = _tab.elementshort.lower() + str(_tab.ionstage)
+        else:
+            sion = dct['ion']
         axname = '%s_%s%s_%s%s' %(ptype, sion, sparttype, sabunds, 
                                   stables) +\
                  SFRind
