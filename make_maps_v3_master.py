@@ -6381,6 +6381,8 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,
                     'sylviasshtables': sylviasshtables, 
                     'bensgadget2tables': bensgadget2tables,
                     'ps20tables': ps20tables, 'ps20depletion': ps20depletion}
+    print('dct_defaults for check_particlequantity input:')
+    print(dct_defaults)
     dct_defaults, parttype = check_particlequantity(dct_defaults, {},
                                                     parttype, simulation)
     axesdct = [check_particlequantity(dct, dct_defaults, parttype, 
