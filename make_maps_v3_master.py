@@ -6232,9 +6232,9 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
         dct['ps20tables'] = ps20tables
         dct['ps20depletion'] = ps20depletion
         
-        print('After second check block, dct:')
-        print(dct)
-        print(dct_defaults)    
+        #print('After second check block, dct:')
+        #print(dct)
+        #print(dct_defaults)    
         
     elif ptype in ['Luminosity', 'Lumdens']:
         dct['sylviasshtables'] = False
@@ -6253,15 +6253,15 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
         if not isinstance(ps20depletion, bool):
             print('ps20depletion should be True or False')
             return 48
-    else:
-        dct['sylviasshtables'] = False
-        dct['bensgadget2tables'] = False
-        dct['ps20tables'] = False
-        dct['ps20depletion'] = False
+    #else: # no-check pass-through
+        #dct['sylviasshtables'] = False
+        #dct['bensgadget2tables'] = False
+        #dct['ps20tables'] = False
+        #dct['ps20depletion'] = False
         
-        print('After no table interpolation default setting, dct:')
-        print(dct)
-        print(dct_defaults)
+        #print('After no table interpolation default setting, dct:')
+        #print(dct)
+        #print(dct_defaults)
                 
     dct['parttype'] = parttype
     
