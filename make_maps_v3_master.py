@@ -5997,7 +5997,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
     dct: ptype, excludeSFR, abunds, ion, parttype, quantity, misc
     dct_defaults: same entries, use to set defaults in dct
     '''
-    # largest int used : 47
+    # largest int used : 59
     if 'ptype' in dct:
         ptype = dct['ptype']
     else:
@@ -6008,7 +6008,8 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
         excludeSFR = dct_defaults['excludeSFR']
         dct['excludeSFR'] = excludeSFR
     
-    if ptype not in ['Nion', 'Niondens', 'Luminosity', 'Lumdens', 'basic', 'halo', 'coords']:
+    if ptype not in ['Nion', 'Niondens', 'Luminosity', 'Lumdens',
+                     'basic', 'halo', 'coords']:
         print('ptype should be one of Nion, Niondens, Luminosity, Lumdens, basic, halo, coords (str).\n')
         return 3
     elif ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
@@ -6023,8 +6024,23 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
             abunds = dct_defaults['abunds']
         else:
             abunds = None
-        
+        if 'ps20tables' not in dct:
+            if 'ps20tables' in dct_defaults:
+                dct['ps20tables'] = dct_defaults['ps20tables']
+            else:
+                raise RuntimeError('ps20tables not present in dct_defaults')
+        if not isinstance(dct['ps20tables'], bool):
+            print('ps20tables should be True or False')
+            return 58
         if dct['ps20tables']:
+            if 'ps20depletion' not in dct:
+                if 'ps20depletion' in dct_defaults:
+                    dct['ps20depletion'] = dct_defaults['ps20depletion']
+                else:
+                    raise RuntimeError('ps20depletion not present in dct_defaults')
+                if not isinstance(dct['ps20depletion'], bool):
+                    print('ps20depletion should be True or False')
+                    return 59
             try:
                 table = linetable_PS20(ion, 0.0, emission=ptype=='emission')
                 iselt = False
@@ -6387,7 +6403,6 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,
 
 
 
-# TODO: ps20tables=False, ps20depletion=True,
 def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity,
                     sylviasshtables=False, bensgadget2tables=False,
                     ps20tables=False, ps20depletion=True,

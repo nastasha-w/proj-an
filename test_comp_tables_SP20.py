@@ -1477,7 +1477,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
             hax = grp[key].attrs('histogram axis')
             axn[hax] = key
             bns[hax] = grp[key]['bins'][:]
-        axnames1 = axn
+        axnames2 = axn
         bins2 = bns
         
         hist2 = grp['histogram'][:]
