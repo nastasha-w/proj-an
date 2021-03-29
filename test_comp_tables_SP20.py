@@ -1411,7 +1411,82 @@ def make_mapcomparison(mapset=1):
             
     for args, kwargs in tomatch:
         compare_maps(*args, **kwargs)
-        
+
+def create_hists(setnum=1, inclps20=True):
+    simnum = 'L0012N0188'
+    snapnum = 27
+    var = 'REFERENCE'
+    
+    _axesdct = [{'ptype': 'Niondens', 'ion': 'hydrogen', 
+                 'ps20tables': False},
+                {'ptype': 'basic', 'quantity': 'Temperature', 
+                 'excludeSFR': False}]
+    kwargs_default = {'L_x': 6.25, 'L_y': 6.25, 'L_z': 6.25,
+                      'centre': [3.125, 3.125, 3.125],
+                      'simulation': 'eagle', 'excludeSFR': False, 
+                      'abunds': 'Sm', 'parttype':'0', 'axbins': 0.2,
+                      'sylviasshtables': False, 'bensgadget2tables': False,
+                      'ps20tables': False, 'ps20depletion': True,
+                      'allinR200c': True, 'mdef': '200c',
+                      'Ls_in_Mpc': True, 'misc': None,
+                      'name_append': None, 'logax': True, 'loghist': False}
+    
+    if setnum == 1: 
+        axes = ({'ptype': 'Niondens', 'ion': 'O  7      22.1012A', 
+                 'excludeSFR': 'T4'},
+                'Nion',
+                {'ion': 'O  7      22.1012A', 'excludeSFR': 'T4'})
+        kwvars = [{'ps20tables': False, 'ps20depletion': False},
+                  {'ps20tables': True, 'ps20depletion': False},
+                  {'ps20tables': True, 'ps20depletion': False, 'abunds': 'Pt'},
+                  {'ps20tables': True, 'ps20depletion': False, 'abunds': 0.1},
+                  ]
+    elif setnum == 2: 
+        axes = ({'ptype': 'Lumdens', 'ion': 'O  7      22.1012A', 
+                 'excludeSFR': 'T4'},
+                'Luminosity',
+                {'ion': 'O  7      22.1012A', 'excludeSFR': 'T4'})
+        kwvars = [{'ps20tables': False, 'ps20depletion': False},
+                  {'ps20tables': True, 'ps20depletion': False},
+                  {'ps20tables': True, 'ps20depletion': False, 'abunds': 'Pt'},
+                  {'ps20tables': True, 'ps20depletion': False, 'abunds': 0.1},
+                  ]
+    elif setnum == 3:
+        axes = ({'ptype': 'Niondens', 'ion': 'magnesium', 
+                 'excludeSFR': 'T4'},
+                'Nion',
+                {'ion': 'magnesium', 'excludeSFR': 'T4'})
+        kwvars = [{'ps20tables': False, 'ps20depletion': False},
+                  {'ps20tables': True, 'ps20depletion': False},
+                  {'ps20tables': True, 'ps20depletion': True},
+                  ]
+    elif setnum == 4:
+        axes = ({'ptype': 'Niondens', 'ion': 'Mg 2      2795.53A',
+                 'excludeSFR': 'T4'},
+                'Nion',
+                {'ion': 'Mg 2      2795.53A', 'excludeSFR': 'T4'})
+        kwvars = [{'ps20tables': False, 'ps20depletion': False},
+                  {'ps20tables': True, 'ps20depletion': False},
+                  {'ps20tables': True, 'ps20depletion': True},
+                  ]
+    elif setnum == 5:
+        axes = ({'ptype': 'Lumdens', 'ion': 'Mg 2      2795.53A',
+                 'excludeSFR': 'T4'},
+                'Luminosity',
+                {'ion': 'Mg 2      2795.53A', 'excludeSFR': 'T4'})
+        kwvars = [{'ps20tables': False, 'ps20depletion': False},
+                  {'ps20tables': True, 'ps20depletion': False},
+                  {'ps20tables': True, 'ps20depletion': True},
+                  ]
+    for kw in kwvars:
+        ptype = axes[1]
+        axesdct = _axesdct + axes[0]
+        kw1 = axes[2]
+        kwargs = kwargs_default
+        kwargs.update(kw1)
+        kwargs.update(kw)
+        m3.makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
+                               nameonly=False, **kwargs)        
     
 def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     '''
