@@ -6041,6 +6041,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
                     print('ps20depletion should be True or False')
                     return 59
             try:
+                print('Testing ion validity: {}'.format(ion))
                 table = linetable_PS20(ion, 0.0, 
                                        emission=ptype in ['Luminosity',
                                                           'Lumdens'])
