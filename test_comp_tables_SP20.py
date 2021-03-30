@@ -1751,7 +1751,44 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
             outname = mdir + outname
         plt.savefig(outname, bbox_inches='tight')
         
-
+def plot_histcomp():
+    {'l_o7_ps20_Zfix': 'particlehist_Luminosity_O--7------22.1012A_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F_L0012N0188_27_test3.7_0.0005492624361068011massfracAb-0.752massfracHAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'l_o7_ps20_PtAb': 'particlehist_Luminosity_O--7------22.1012A_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F_L0012N0188_27_test3.7_PtAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'l_o7_ps20_SmAb': 'particlehist_Luminosity_O--7------22.1012A_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F_L0012N0188_27_test3.7_SmAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'l_o7_SBtb_Zfix': 'particlehist_Luminosity_o7r_L0012N0188_27_test3.7_0.0005492624361068011massfracAb-0.752massfracHAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'l_o7_SBtb_PtAb': 'particlehist_Luminosity_o7r_L0012N0188_27_test3.7_PtAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'l_o7_SBtb_SmAb': 'particlehist_Luminosity_o7r_L0012N0188_27_test3.7_SmAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'l_o7_SBtb_old_Zfix': 'particlehist_Luminosity_o7r_L0012N0188_27_test3.6_0.0005492624361068011massfracAb-0.752massfracHAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'l_o7_SBtb_old_PtAb': 'particlehist_Luminosity_o7r_L0012N0188_27_test3.6_PtAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'l_o7_SBtb_old_SmAb': 'particlehist_Luminosity_o7r_L0012N0188_27_test3.6_SmAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'n_o7_ps20_Zfix': 'particlehist_Nion_o7_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F_L0012N0188_27_test3.7_0.0005492624361068011massfracAb-0.752massfracHAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'n_o7_ps20_PtAb': 'particlehist_Nion_o7_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F_L0012N0188_27_test3.7_PtAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'n_o7_ps20_SmAb': 'particlehist_Nion_o7_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F_L0012N0188_27_test3.7_SmAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'n_o7_SBtb_Zfix': 'particlehist_Nion_o7_L0012N0188_27_test3.7_0.0005492624361068011massfracAb-0.752massfracHAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5' ,
+    'n_o7_SBtb_PtAb': 'particlehist_Nion_o7_L0012N0188_27_test3.7_PtAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'n_o7_SBtb_SmAb': 'particlehist_Nion_o7_L0012N0188_27_test3.7_SmAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'n_o7_SBtb_old_Zfix': 'particlehist_Nion_o7_L0012N0188_27_test3.6_0.0005492624361068011massfracAb-0.752massfracHAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'n_o7_SBtb_old_PtAb': 'particlehist_Nion_o7_L0012N0188_27_test3.6_PtAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'n_o7_SBtb_old_SmAb': 'particlehist_Nion_o7_L0012N0188_27_test3.6_SmAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'n_mg_old': 'particlehist_Nion_magnesium_L0012N0188_27_test3.6_SmAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'n_mg': 'particlehist_Nion_magnesium_L0012N0188_27_test3.7_SmAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'n_mg_ps20_nodep': 'particlehist_Nion_magnesium_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F_L0012N0188_27_test3.7_SmAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',    
+    'n_mg_ps20_dep': 'particlehist_Nion_magnesium_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-T_L0012N0188_27_test3.7_SmAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'l_mg2_ps20_nodep': 'particlehist_Luminosity_Mg-2------2795.53A_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F_L0012N0188_27_test3.7_SmAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'l_mg2_ps20_dep': 'particlehist_Luminosity_Mg-2------2795.53A_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-T_L0012N0188_27_test3.7_SmAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'n_mg2_ps20_nodep': 'particlehist_Nion_mg2_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F_L0012N0188_27_test3.7_SmAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    'n_mg2_ps20_dep': 'particlehist_Nion_mg2_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-T_L0012N0188_27_test3.7_SmAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
+    }
+    
+    compseries33_1 = ['l_o7_ps20_Zfix', 'l_o7_ps20_PtAb', 'l_o7_ps20_SmAb',
+                      'l_o7_SBtb_Zfix', 'l_o7_SBtb_PtAb', 'l_o7_SBtb_SmAb',
+                      'l_o7_SBtb_old_Zfix', 'l_o7_SBtb_old_PtAb', 
+                      'l_o7_SBtb_old_SmAb']
+    compseries33_2 = ['n_o7_ps20_Zfix', 'n_o7_ps20_PtAb', 'n_o7_ps20_SmAb',
+                      'n_o7_SBtb_Zfix', 'n_o7_SBtb_PtAb', 'n_o7_SBtb_SmAb',
+                      'n_o7_SBtb_old_Zfix', 'n_o7_SBtb_old_PtAb', 
+                      'n_o7_SBtb_old_SmAb']
+    compare_hists(filen1, filen2, group1=None, group2=None, outname=None)
 # test basic table retrieval and sensitbility
 def plot_tablesets(zs):
     for z in zs:
