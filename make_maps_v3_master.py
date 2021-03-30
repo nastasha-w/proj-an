@@ -6805,10 +6805,7 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
             hed.attrs.create('snapnum', snapnum)
             hed.attrs.create('var', np.string_(var))
             hed.attrs.create('simulation', np.string_(simulation))
-            hed.attrs.create('make_maps_opts_locs.emtab_sylvia_ssh', 
-                             np.string_(str(ol.emtab_sylvia_ssh)))
-            hed.attrs.create('make_maps_opts_locs.iontab_sylvia_ssh', 
-                             np.string_(str(ol.iontab_sylvia_ssh)))
+            
             csm = hed.create_group('cosmopars')
             csm.attrs.create('a', simfile.a)
             csm.attrs.create('z', simfile.z)
@@ -7035,6 +7032,16 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
         saveattr(group, 'misc', misc)
         saveattr(group, 'mdef', mdef)
         saveattr(group, 'allinR200c', allinR200c)
+        saveattr(group, 'make_maps_opts_locs.emtab_sylvia_ssh', 
+                 str(ol.emtab_sylvia_ssh))
+        saveattr(group, 'make_maps_opts_locs.iontab_sylvia_ssh', 
+                 str(ol.iontab_sylvia_ssh))
+        if isinstance(abunds, tuple):
+            saveattr(grp, 'abunds', 'tuple')
+            saveattr(grp, 'abunds0', abunds[0])
+            saveattr(grp, 'abunds1', abunds[1])
+        else:
+            saveattr(grp, 'abunds', abunds)
         
         for i in range(len(edges)):
             bingrp.create_dataset('Axis%i'%(i), data=edges[i])

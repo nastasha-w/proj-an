@@ -1466,7 +1466,8 @@ def create_hists(setnum=1, inclps20=True):
                 'Nion',
                 {'ion': 'magnesium', 'excludeSFR': 'T4'})
         kwvars = [{'ps20tables': False, 'ps20depletion': False},
-                  {'ps20tables': True, 'ps20depletion': False},
+                  {'ps20tables': True, 'ps20depletion': False, 
+                   'name_append': '_ps20tables-T_depletion-F'},
                   {'ps20tables': True, 'ps20depletion': True},
                   ]
     elif setnum == 5:
