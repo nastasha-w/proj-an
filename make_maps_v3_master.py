@@ -6085,17 +6085,20 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
                 print('Abundances must be either smoothed ("Sm") or particle ("Pt") abundances, automatic ("auto"), or a solar units abundance (float)')
                 return 4
             if abunds_from_default: # reconstruct input solar fraction
-                if dct_defaults['iselt']:
-                    abunds[0] = abunds[0] / \
-                        ol.solar_abunds_ea[dct_defaults['ion']]
-                elif dct_defaults['ps20tables']:
-                    def_table = linetable_PS20(dct_defaults['ion'], 0.0, 
-                                               emission=False)
-                    abunds[0] = abunds[0] / \
-                        ol.solar_abunds_ea[def_table.element.lower()]
-                else:
-                    abunds[0] = abunds[0] / \
-                        ol.solar_abunds_ea[ol.elements_ion[dct_defaults['ion']]]
+                if dct_defaults['ptype'] in ['Nion', 'Niondens',
+                                             'Luminosity', 'Lumdens']:
+                    # default actually adjusted -> need to undo
+                    if dct_defaults['ion'] in ol.elements:
+                        abunds[0] = abunds[0] / \
+                            ol.solar_abunds_ea[dct_defaults['ion']]
+                    elif dct_defaults['ps20tables']:
+                        def_table = linetable_PS20(dct_defaults['ion'], 0.0, 
+                                                   emission=False)
+                        abunds[0] = abunds[0] / \
+                            ol.solar_abunds_ea[def_table.element.lower()]
+                    else:
+                        abunds[0] = abunds[0] / \
+                            ol.solar_abunds_ea[ol.elements_ion[dct_defaults['ion']]]
             
             if iselt:
                 abunds[0] = abunds[0] * ol.solar_abunds_ea[ion]
