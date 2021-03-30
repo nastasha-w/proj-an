@@ -1599,8 +1599,8 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     cax_img = fig.add_subplot(grid[4, :3])
     cax_diff = fig.add_subplot(grid[4, 3:])
     
-    weightn1 = filen1
-    weightn2 = filen2
+    weightn1 = filen1.split('/')[-1][:-5]
+    weightn2 = filen2.split('/')[-1][:-5]
     _splitopt = np.where([char == '_' for char in weightn1])[0] 
     _split = _splitopt[np.argmin(np.abs(_splitopt - len(weightn1) // 2))]
     _wn1 = weightn1[:_split] + '\n' + weightn1[_split:]
