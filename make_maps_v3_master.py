@@ -6094,7 +6094,7 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
                     abunds[0] = abunds[0] / \
                         ol.solar_abunds_ea[def_table.element.lower()]
                 else:
-                    abunds[0] = abunds[0] / \ 
+                    abunds[0] = abunds[0] / \
                         ol.solar_abunds_ea[ol.elements_ion[dct_defaults['ion']]]
             
             if iselt:
