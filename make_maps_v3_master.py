@@ -5843,17 +5843,18 @@ def namehistogram_perparticle(ptype, simnum, snapnum, var, simulation,
             iontableind = '_iontab-sylviasHM12shh'
         elif bensgadget2tables:
             iontableind = '_iontab-bensgagdet2'
-    if ps20tables and ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']: 
-        iontableind = '_iontab-PS20'
-        iontab = ol.iontab_sylvia_ssh.split('/')[-1]
-        iontab = iontab[:-5] # remove '.hdf5'
-        iontab = iontab.replace('_', '-')
-        iontableind = iontableind + '-' + iontab
-        if ps20depletion:
-            iontableind += '_depletion-T'
-        else:
-            iontableind += '_depletion-F'
-        if ps20tables:
+    if ptype in ['Nion', 'Niondens', 'Luminosity', 'Lumdens']:
+        if ps20tables: 
+            iontableind = '_iontab-PS20'
+            iontab = ol.iontab_sylvia_ssh.split('/')[-1]
+            iontab = iontab[:-5] # remove '.hdf5'
+            iontab = iontab.replace('_', '-')
+            iontableind = iontableind + '-' + iontab
+            if ps20depletion:
+                iontableind += '_depletion-T'
+            else:
+                iontableind += '_depletion-F'
+                
             if ptype in ['Luminosity', 'Lumdens']:
                 sion = ion.replace(' ', '-')
             elif ion in ol.elements:
