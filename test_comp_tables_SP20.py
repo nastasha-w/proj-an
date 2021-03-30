@@ -1618,7 +1618,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
             'Histogram 2:\n {weight}\n'.format(weight=_wn2) + \
             '\n'.join(['axis {}: {}'.format(num, name) \
                        for num, name in enumerate(axnames2)])
-    fig.suptitle(title, fontsize=fontsize)
+    fig.suptitle(title, fontsize=fontsize - 1)
     
     print(hist1.shape)
     print([len(b) for b in binc])
