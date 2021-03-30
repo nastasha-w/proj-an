@@ -6018,10 +6018,12 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
             return 37
         else:
             ion = dct['ion']
+        abunds_from_default = False
         if 'abunds' in dct.keys():
             abunds = dct['abunds']
         elif 'abunds' in dct_defaults.keys():
             abunds = dct_defaults['abunds']
+            abunds_from_default = True
         else:
             abunds = None
         if 'ps20tables' not in dct:
@@ -6078,12 +6080,25 @@ def check_particlequantity(dct, dct_defaults, parttype, simulation):
             abunds = [abunds, 'auto']
         else:
             abunds = list(abunds) # tuple element assigment is not allowed, sometimes needed
-        if abunds[0] not in ['Sm','Pt','auto']:
+        if abunds[0] not in ['Sm', 'Pt', 'auto']:
             if not isinstance(abunds[0], num.Number):
                 print('Abundances must be either smoothed ("Sm") or particle ("Pt") abundances, automatic ("auto"), or a solar units abundance (float)')
                 return 4
-            elif iselt:
-                abunds[0] = abunds[0] * ol.solar_abunds_ea[ion]
+            if abunds_from_default: # reconstruct input solar fraction
+                if dct_defaults['iselt']:
+                    abunds[0] = abunds[0] / \
+                        ol.solar_abunds_ea[dct_defaults['ion']]
+                elif dct_defaults['ps20tables']:
+                    def_table = linetable_PS20(dct_defaults['ion'], 0.0, 
+                                               emission=False)
+                    abunds[0] = abunds[0] / \
+                        ol.solar_abunds_ea[def_table.element.lower()]
+                else:
+                    abunds[0] = abunds[0] / \ 
+                        ol.solar_abunds_ea[ol.elements_ion[dct_defaults['ion']]]
+            
+            if iselt:
+                abunds[0] = abunds[0] * ol.solar_abunds_ea[ion]]
             elif dct['ps20tables']:
                 abunds[0] = abunds[0] *\
                     ol.solar_abunds_ea[table.element.lower()]
