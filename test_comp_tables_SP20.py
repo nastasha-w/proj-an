@@ -1631,11 +1631,16 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
         _h1 = np.sum(hist1, axis=tuple(otheraxes))
         _h2 = np.sum(hist2, axis=tuple(otheraxes))
         
+        print(hax)
+        print(otheraxes)
+        print(_h1.shape)
+        print(len(binc[hax]))
+        
         ax = h1daxes[hax]
-        ax.bar(binc[hax], _h1, width=binw, bottom=None, align='center',
+        ax.bar(binc[hax], _h1, width=binw[hax], bottom=None, align='center',
                color=c1, alpha=0.3, edgecolor=c1, linestyle=ls1,
                label='Hist 1')
-        ax.bar(binc[hax], _h2, width=binw, bottom=None, align='center',
+        ax.bar(binc[hax], _h2, width=binw[hax], bottom=None, align='center',
                color=c2, alpha=0.3, edgecolor=c2, linestyle=ls2,
                label='Hist 2')
         
