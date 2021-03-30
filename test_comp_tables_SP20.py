@@ -1440,6 +1440,8 @@ def create_hists(setnum=1, inclps20=True):
                   {'ps20tables': True, 'ps20depletion': False},
                   {'ps20tables': True, 'ps20depletion': False, 'abunds': 'Pt'},
                   {'ps20tables': True, 'ps20depletion': False, 'abunds': 0.1},
+                  {'ps20tables': False, 'ps20depletion': False, 'abunds': 'Pt'},
+                  {'ps20tables': False, 'ps20depletion': False, 'abunds': 0.1},
                   ]
     elif setnum == 2: 
         axes = ({'ptype': 'Lumdens', 'ion': 'O  7      22.1012A', 
@@ -1450,6 +1452,8 @@ def create_hists(setnum=1, inclps20=True):
                   {'ps20tables': True, 'ps20depletion': False},
                   {'ps20tables': True, 'ps20depletion': False, 'abunds': 'Pt'},
                   {'ps20tables': True, 'ps20depletion': False, 'abunds': 0.1},
+                  {'ps20tables': False, 'ps20depletion': False, 'abunds': 'Pt'},
+                  {'ps20tables': False, 'ps20depletion': False, 'abunds': 0.1},
                   ]
     elif setnum == 3:
         axes = ({'ptype': 'Niondens', 'ion': 'magnesium', 
@@ -1482,9 +1486,18 @@ def create_hists(setnum=1, inclps20=True):
         ptype = axes[1]
         axesdct = _axesdct + axes[0]
         kw1 = axes[2]
-        kwargs = kwargs_default
+        kwargs = kwargs_default.copy()
         kwargs.update(kw1)
         kwargs.update(kw)
+        if not inclps20:
+            if 'ps20tables' in kwargs:
+                if kwargs['ps20tables']:
+                    continue
+                else:
+                    del kwargs['ps20tables']
+            if 'ps20depletion' in kwargs:
+                del kwargs['ps20depletion']
+                    
         m3.makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                                nameonly=False, **kwargs)        
     
