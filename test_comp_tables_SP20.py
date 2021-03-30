@@ -1591,8 +1591,8 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     c1 = cset.blue
     c2 = cset.red
         
-    fig = plt.figure(figsize=(7., 11.))
-    grid = gsp.GridSpec(ncols=6, nrows=5, top=0.8,
+    fig = plt.figure(figsize=(8., 12.))
+    grid = gsp.GridSpec(ncols=6, nrows=5, top=0.7,
                         hspace=0.6, wspace=0.35,
                         height_ratios=[1., 1., 1., 1., 0.25])
     h1daxes = [fig.add_subplot(grid[0, 2 * i : 2 * i + 2]) \
@@ -1603,15 +1603,25 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     cax_img = fig.add_subplot(grid[4, :3])
     cax_diff = fig.add_subplot(grid[4, 3:])
     
-    title = 'Histogram 1: {weight}\n'.format(weight=weightn1) + \
+    _splitopt = np.where([char == '_' for char in weightn1])[0] 
+    _split = _splitopt[np.argmin(np.abs(_splitopt - len(weightn1) // 2))]
+    _wn1 = weightn1[:_split] + '\n' + weightn1[_split:]
+    _splitopt = np.where([char == '_' for char in weightn2])[0] 
+    _split = _splitopt[np.argmin(np.abs(_splitopt - len(weightn2) // 2))]
+    _wn2 = weightn2[:_split] + '\n' + weightn2[_split:]
+    
+    title = 'Histogram 1:\n {weight}\n'.format(weight=_wn1) + \
             '\n'.join(['axis {}: {}'.format(num, name) \
                        for num, name in enumerate(axnames1)])
     title = title + '\n'
     title = title + \
-            'Histogram 2: {weight}\n'.format(weight=weightn2) + \
+            'Histogram 2:\n {weight}\n'.format(weight=_wn2) + \
             '\n'.join(['axis {}: {}'.format(num, name) \
                        for num, name in enumerate(axnames2)])
     fig.suptitle(title, fontsize=fontsize)
+    
+    print(hist1.shape)
+    print([len(b) for b in binc])
     
     # 1d histograms: project onto one axis
     for hax in range(ndims):
