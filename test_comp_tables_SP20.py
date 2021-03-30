@@ -1518,15 +1518,13 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
         groups.remove('Units')
         groups.remove('Header')
         if len(groups) == 1:
-            weightn1 = groups[0]
-            grp = f[weightn1]
+            grp = f[groups[0]]
         elif group1 is None:
             msg = 'group1 may not be None, since file {} contains multiple'+ \
                   ' groups:\n{}'
             msg = msg.format(filen1, groups)
             raise ValueError(msg)
         else:
-            weightn1 = group1
             grp = f[group1]
         keys = list(grp.keys())
         keys.remove('histogram')
@@ -1549,15 +1547,13 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
         groups.remove('Units')
         groups.remove('Header')
         if len(groups) == 1:
-            weightn2 = groups[0]
-            grp = f[weightn2]
+            grp = f[groups[0]]
         elif group2 is None:
             msg = 'group2 may not be None, since file {} contains multiple'+ \
                   ' groups:\n{}'
-            msg = msg.format(filen1, groups)
+            msg = msg.format(filen2, groups)
             raise ValueError(msg)
         else:
-            weightn2 = group2
             grp = f[group2]
         keys = list(grp.keys())
         keys.remove('histogram')
@@ -1603,6 +1599,8 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     cax_img = fig.add_subplot(grid[4, :3])
     cax_diff = fig.add_subplot(grid[4, 3:])
     
+    weightn1 = filen1
+    weightn2 = filen2
     _splitopt = np.where([char == '_' for char in weightn1])[0] 
     _split = _splitopt[np.argmin(np.abs(_splitopt - len(weightn1) // 2))]
     _wn1 = weightn1[:_split] + '\n' + weightn1[_split:]
@@ -1619,10 +1617,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
             '\n'.join(['axis {}: {}'.format(num, name) \
                        for num, name in enumerate(axnames2)])
     fig.suptitle(title, fontsize=fontsize - 1)
-    
-    print(hist1.shape)
-    print([len(b) for b in binc])
-    
+
     # 1d histograms: project onto one axis
     for hax in range(ndims):
         otheraxes = list(range(ndims))
@@ -1630,11 +1625,6 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
         
         _h1 = np.sum(hist1, axis=tuple(otheraxes))
         _h2 = np.sum(hist2, axis=tuple(otheraxes))
-        
-        print(hax)
-        print(otheraxes)
-        print(_h1.shape)
-        print(len(binc[hax]))
         
         ax = h1daxes[hax]
         ax.bar(binc[hax], _h1, width=binw[hax], bottom=None, align='center',
@@ -1699,11 +1689,11 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
             _h2 = _h2.T
             _diff = _diff.T
         
-        ax.tick_params(labelsize=fontsize - 1.)
+        for ax in axes:
+            ax.tick_params(labelsize=fontsize - 1.)
         
-        ax.set_ylabel('weight', fontsize=fontsize)
-        ax.set_xlabel('axis {}'.format(hax), fontsize=fontsize)
-        ax.set_yscale('log')
+            ax.set_xlabel('axis {}'.format(pax1), fontsize=fontsize)
+            ax.set_ylabel('axis {}'.format(pax2), fontsize=fontsize)
                 
         linewidth = 1.
         patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"),\
@@ -1725,7 +1715,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
         
         axes[1].pcolormesh(bins[pax1], bins[pax2], _h2,
                            cmap=cmap_img, vmin=vmin, vmax=vmax)
-        axes[0].contour(binc[pax1], binc[pax2], _h2, levels=clevels,
+        axes[1].contour(binc[pax1], binc[pax2], _h2, levels=clevels,
                         colors=colors_contours, origin='lower',
                         linestyles=ls2, linewidths=linewidth)
         cs2 = axes[2].contour(binc[pax1], binc[pax2], _h2, levels=clevels,
