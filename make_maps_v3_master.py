@@ -6587,8 +6587,8 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
     quantity
     sylviasshtables DEPRECATED (only available as a choice to apply to all 
                                 weights/axes)
-    ps20tables (only available as a choice to apply to all weights/axes)
-    ps20depletion (only available as a choice to apply to all weights/axes)
+    ps20tables
+    ps20depletion
     bensgadget2tables (only available as a choice to apply to all weights/axes)
     misc
     L_x, L_Y, L_z, centre, Ls_in_Mpc: not currently implemented beyond input
@@ -6642,8 +6642,16 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
     nameonly: return file name, group name tuple
     
     
-    Note: if halo properties are needed, the histogramming will be done with
-    the particle data files, which excludes particles not included in any halo
+    Note
+    ----
+    if halo properties are needed, the histogramming will be done with the 
+        particle data files, which excludes particles not included in any halo
+    The fixed abunds settings don't work very well for hydrogen and helium
+        species: ion fractions and emission are scaled by 
+        abunds * solar fraction, but those are not good approximations for H
+        and He abundancess at a given total metallicity.
+        (Of course, ol.solar_abunds_ea fractions can be used to calculate 
+        the input values that would give something reasonable.)
     
     TODO: wishlisting implementation: avoid double read-ins (currently only
     indirectly done for coords-r3D and region selection)
