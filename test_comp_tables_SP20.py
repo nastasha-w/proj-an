@@ -1434,7 +1434,7 @@ def create_hists(setnum=1, inclps20=True):
         axes = ({'ptype': 'Niondens', 'ion': 'o7', 
                  'excludeSFR': 'T4'},
                 'Nion',
-                {'ion': 'O  7      22.1012A', 'excludeSFR': 'T4'})
+                {'ion': 'o7', 'excludeSFR': 'T4'})
         kwvars = [{'ps20tables': False, 'ps20depletion': False},
                   {'ps20tables': True, 'ps20depletion': False},
                   {'ps20tables': True, 'ps20depletion': False, 'abunds': 'Pt'},
@@ -1460,7 +1460,7 @@ def create_hists(setnum=1, inclps20=True):
                   {'ps20tables': True, 'ps20depletion': False, 'abunds': 'Pt'},
                   {'ps20tables': True, 'ps20depletion': False, 'abunds': 0.1},
                   ]
-    elif setnum == 3:
+    elif setnum == 4:
         axes = ({'ptype': 'Niondens', 'ion': 'magnesium', 
                  'excludeSFR': 'T4'},
                 'Nion',
@@ -1469,7 +1469,7 @@ def create_hists(setnum=1, inclps20=True):
                   {'ps20tables': True, 'ps20depletion': False},
                   {'ps20tables': True, 'ps20depletion': True},
                   ]
-    elif setnum == 4:
+    elif setnum == 5:
         axes = ({'ptype': 'Niondens', 'ion': 'mg2',
                  'excludeSFR': 'T4'},
                 'Nion',
@@ -1477,7 +1477,7 @@ def create_hists(setnum=1, inclps20=True):
         kwvars = [{'ps20tables': True, 'ps20depletion': False},
                   {'ps20tables': True, 'ps20depletion': True},
                   ]
-    elif setnum == 5:
+    elif setnum == 6:
         axes = ({'ptype': 'Lumdens', 'ion': 'Mg 2      2795.53A',
                  'excludeSFR': 'T4'},
                 'Luminosity',
@@ -1488,7 +1488,6 @@ def create_hists(setnum=1, inclps20=True):
     for kw in kwvars:
         ptype = axes[1]
         axesdct = _axesdct + [axes[0]]
-        print(axesdct)
         kw1 = axes[2]
         kwargs = kwargs_default.copy()
         kwargs.update(kw1)
