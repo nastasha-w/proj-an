@@ -1541,7 +1541,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
         bins1 = bns
         
         hist1 = grp['histogram'][:]
-        if bool(grp['histogram'].attrs('log')):
+        if bool(grp['histogram'].attrs['log']):
             hist1 = 10**hist1
             
     with h5py.File(filen2, 'r') as f:
@@ -1572,7 +1572,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
         bins2 = bns
         
         hist2 = grp['histogram'][:]
-        if bool(grp['histogram'].attrs('log')):
+        if bool(grp['histogram'].attrs['log']):
             hist1 = 10**hist2
     
     ndims = 3
