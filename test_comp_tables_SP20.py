@@ -1752,6 +1752,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
         plt.savefig(outname, bbox_inches='tight')
         
 def plot_histcomp():
+    filens = \
     {'l_o7_ps20_Zfix': 'particlehist_Luminosity_O--7------22.1012A_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F_L0012N0188_27_test3.7_0.0005492624361068011massfracAb-0.752massfracHAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
     'l_o7_ps20_PtAb': 'particlehist_Luminosity_O--7------22.1012A_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F_L0012N0188_27_test3.7_PtAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
     'l_o7_ps20_SmAb': 'particlehist_Luminosity_O--7------22.1012A_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F_L0012N0188_27_test3.7_SmAb_x3.125-pm6.25_y3.125-pm6.25_z3.125-pm6.25_T4EOS.hdf5',
@@ -1788,7 +1789,66 @@ def plot_histcomp():
                       'n_o7_SBtb_Zfix', 'n_o7_SBtb_PtAb', 'n_o7_SBtb_SmAb',
                       'n_o7_SBtb_old_Zfix', 'n_o7_SBtb_old_PtAb', 
                       'n_o7_SBtb_old_SmAb']
-    compare_hists(filen1, filen2, group1=None, group2=None, outname=None)
+    
+    for cs in [compseries33_1, compseries33_2]:
+        for it in range(3):
+            key1 = cs[it * 3 + 0]
+            key2 = cs[it * 3 + 1]    
+            outname = 'histcomp_{}_vs_{}.pdf'.format(key1, key2)
+            compare_hists(mdir + filens[key1], mdir + filens[key2], 
+                          group1=None, group2=None, outname=mdir + outname)
+            
+            key1 = cs[it * 3 + 1]
+            key2 = cs[it * 3 + 2]    
+            outname = 'histcomp_{}_vs_{}.pdf'.format(key1, key2)
+            compare_hists(mdir + filens[key1], mdir + filens[key2], 
+                          group1=None, group2=None, outname=mdir + outname)
+            
+        for iZ in range(3):
+            key1 = cs[0 * 3 + iZ]
+            key2 = cs[1 * 3 + iZ]
+            outname = 'histcomp_{}_vs_{}.pdf'.format(key1, key2)
+            compare_hists(mdir + filens[key1], mdir + filens[key2], 
+                          group1=None, group2=None, outname=mdir + outname)
+            
+            key1 = cs[1 * 3 + iZ]
+            key2 = cs[2 * 3 + iZ]    
+            outname = 'histcomp_{}_vs_{}.pdf'.format(key1, key2)
+            compare_hists(mdir + filens[key1], mdir + filens[key2], 
+                          group1=None, group2=None, outname=mdir + outname)
+    
+    key1 = 'n_mg'
+    key2 = 'n_mg_old'
+    outname = 'histcomp_{}_vs_{}.pdf'.format(key1, key2)
+    compare_hists(mdir + filens[key1], mdir + filens[key2], 
+                          group1=None, group2=None, outname=mdir + outname)
+    
+    key1 = 'n_mg_ps20_nodep'
+    key2 = 'n_mg'
+    outname = 'histcomp_{}_vs_{}.pdf'.format(key1, key2)
+    compare_hists(mdir + filens[key1], mdir + filens[key2], 
+                          group1=None, group2=None, outname=mdir + outname)
+    
+    key1 = 'n_mg_ps20_dep'
+    key2 = 'n_mg_ps20_nodep'
+    outname = 'histcomp_{}_vs_{}.pdf'.format(key1, key2)
+    compare_hists(mdir + filens[key1], mdir + filens[key2], 
+                          group1=None, group2=None, outname=mdir + outname)
+    
+    key1 = 'l_mg2_ps20_dep'
+    key2 = 'l_mg2_ps20_nodep'
+    outname = 'histcomp_{}_vs_{}.pdf'.format(key1, key2)
+    compare_hists(mdir + filens[key1], mdir + filens[key2], 
+                          group1=None, group2=None, outname=mdir + outname)
+    
+    key1 = 'n_mg2_ps20_dep'
+    key2 = 'n_mg2_ps20_nodep'
+    outname = 'histcomp_{}_vs_{}.pdf'.format(key1, key2)
+    compare_hists(mdir + filens[key1], mdir + filens[key2], 
+                          group1=None, group2=None, outname=mdir + outname)
+    
+    
+    
 # test basic table retrieval and sensitbility
 def plot_tablesets(zs):
     for z in zs:
