@@ -12,6 +12,7 @@ import numpy as np
 import h5py
 import os
 import fnmatch
+import copy
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gsp
@@ -211,7 +212,7 @@ def plottables_PS20(line, z, table='emission'):
             for i in range(numZ)]
     cax = fig.add_subplot(grid[:, ncols]) 
     
-    cmap = cm.get_cmap('viridis')
+    cmap = copy.copy(cm.get_cmap('viridis'))
     cmap.set_under('white')
     
     for mi, logZ in enumerate(tab.logZsol):
@@ -307,7 +308,7 @@ def plottables_SB(line, z, table='emission'):
     fig, (ax, cax) = plt.subplots(ncols=2, nrows=1,
                                   gridspec_kw={'width_ratios': [5., 1.],
                                                'wspace': 0.3})     
-    cmap = cm.get_cmap('viridis')
+    cmap = copy.copy(cm.get_cmap('viridis'))
     cmap.set_under('white')
     
     zeroval = zeroval_SB
@@ -455,7 +456,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     extent = (lognHcm3[0] - 0.5 * deltanH, lognHcm3[-1] + 0.5 * deltanH,
               logTK[0] - 0.5 * deltaT, logTK[-1] + 0.5 * deltaT)
 
-    cmap_img = cm.get_cmap('viridis')
+    cmap_img = copy.copy(cm.get_cmap('viridis'))
     cmap_img.set_under('white')
         
     vmin = np.min(table_T_nH_SB[table_T_nH_SB > zeroval])
@@ -474,7 +475,7 @@ def compare_tables(line_PS20, line_SB, z, table='emission'):
     if vmax_cie - 3. > vmin + 2.:
         clevels = list(np.linspace(vmin, vmax_cie - 3., 4))[1:-1] + clevels
         
-    cmap_contours = cm.get_cmap('plasma_r') 
+    cmap_contours = copy.copy(cm.get_cmap('plasma_r')) 
     colors_contours = cmap_contours(np.linspace(0., 1., len(clevels)))
     
     fig = plt.figure(figsize=(11., 5.))
@@ -1080,16 +1081,16 @@ def compare_maps(filen1, filen2, imgname=None,
     scmapdiff = 'RdBu'
     scmaphist = 'viridis'
     
-    cmapmain = cm.get_cmap(scmapmain)
+    cmapmain = copy.copy(cm.get_cmap(scmapmain))
     cmapmain.set_under('gray')
     extend_main = 'min'
     
-    cmapdiff = cm.get_cmap(scmapdiff)
+    cmapdiff = copy.copy(cm.get_cmap(scmapdiff))
     cmapdiff.set_under('magenta')
     cmapdiff.set_over('cyan')
     extend_diff = 'both'
     
-    cmaphist = cm.get_cmap(scmaphist)
+    cmaphist = copy.copy(cm.get_cmap(scmaphist))
     cmaphist.set_under('white')
     extend_hist = 'neither'
     histlabel = 'pixel fraction'
@@ -1646,7 +1647,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
             ax.legend(fontsize=fontsize)
     
     # 2d histograms: project into two axes
-    cmap_img = cm.get_cmap('viridis')
+    cmap_img = copy.copy(cm.get_cmap('viridis'))
     cmap_img.set_under('white')
     
     h2ds1 = [np.log10(np.sum(hist1, axis=hax)) for hax in range(ndims)]
@@ -1667,10 +1668,10 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
               list(np.linspace(vmax - 0.2, vmax, 3)[:-1]) 
     if vmax - 3. > vmin + 2.:
         clevels = list(np.linspace(vmin, vmax - 3., 4))[1:-1] + clevels
-    cmap_contours = cm.get_cmap('plasma_r') 
+    cmap_contours = copy.copy(cm.get_cmap('plasma_r')) 
     colors_contours = cmap_contours(np.linspace(0., 1., len(clevels)))
     
-    cmap_diff = cm.get_cmap('RdBu')
+    cmap_diff = copy.copy(cm.get_cmap('RdBu'))
     cmap_diff.set_under('magenta')
     cmap_diff.set_over('cyan')
     
