@@ -1484,7 +1484,7 @@ def create_hists(setnum=1, inclps20=True):
                   ]
     for kw in kwvars:
         ptype = axes[1]
-        axesdct = _axesdct + list(axes[0])
+        axesdct = _axesdct + [axes[0]]
         print(axesdct)
         kw1 = axes[2]
         kwargs = kwargs_default.copy()
