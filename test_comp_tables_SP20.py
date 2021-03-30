@@ -1715,20 +1715,20 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
             
         img = axes[0].pcolormesh(bins[pax1], bins[pax2], _h1,
                                  cmap=cmap_img, vmin=vmin, vmax=vmax)
-        cs = axes[0].contour(bins[pax1], bins[pax2], _h1, levels=clevels,
+        cs = axes[0].contour(binc[pax1], binc[pax2], _h1, levels=clevels,
                              colors=colors_contours, origin='lower',
                              linestyles=ls1, linewidths=linewidth)
-        cs2 = axes[2].contour(bins[pax1], bins[pax2], _h1, levels=clevels,
+        cs2 = axes[2].contour(binc[pax1], binc[pax2], _h1, levels=clevels,
                              colors=colors_contours, origin='lower',
                              linestyles=ls1, linewidths=linewidth)
         plt.setp(cs2.collections, path_effects=patheff)
         
         axes[1].pcolormesh(bins[pax1], bins[pax2], _h2,
                            cmap=cmap_img, vmin=vmin, vmax=vmax)
-        axes[0].contour(bins[pax1], bins[pax2], _h2, levels=clevels,
+        axes[0].contour(binc[pax1], binc[pax2], _h2, levels=clevels,
                         colors=colors_contours, origin='lower',
                         linestyles=ls2, linewidths=linewidth)
-        cs2 = axes[2].contour(bins[pax1], bins[pax2], _h2, levels=clevels,
+        cs2 = axes[2].contour(binc[pax1], binc[pax2], _h2, levels=clevels,
                               colors=colors_contours, origin='lower',
                               linestyles=ls2, linewidths=linewidth)
         plt.setp(cs2.collections, path_effects=patheff)
