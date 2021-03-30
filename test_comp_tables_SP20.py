@@ -1430,9 +1430,8 @@ def create_hists(setnum=1, inclps20=True):
                       'allinR200c': True, 'mdef': '200c',
                       'Ls_in_Mpc': True, 'misc': None,
                       'name_append': None, 'logax': True, 'loghist': False}
-    
     if setnum == 1: 
-        axes = ({'ptype': 'Niondens', 'ion': 'O  7      22.1012A', 
+        axes = ({'ptype': 'Niondens', 'ion': 'o7', 
                  'excludeSFR': 'T4'},
                 'Nion',
                 {'ion': 'O  7      22.1012A', 'excludeSFR': 'T4'})
@@ -1444,16 +1443,22 @@ def create_hists(setnum=1, inclps20=True):
                   {'ps20tables': False, 'ps20depletion': False, 'abunds': 0.1},
                   ]
     elif setnum == 2: 
+        axes = ({'ptype': 'Lumdens', 'ion': 'o7r', 
+                 'excludeSFR': 'T4'},
+                'Luminosity',
+                {'ion': 'o7r', 'excludeSFR': 'T4'})
+        kwvars = [{'ps20tables': False, 'ps20depletion': False},
+                  {'ps20tables': False, 'ps20depletion': False, 'abunds': 'Pt'},
+                  {'ps20tables': False, 'ps20depletion': False, 'abunds': 0.1},
+                  ]
+    elif setnum == 3:
         axes = ({'ptype': 'Lumdens', 'ion': 'O  7      22.1012A', 
                  'excludeSFR': 'T4'},
                 'Luminosity',
                 {'ion': 'O  7      22.1012A', 'excludeSFR': 'T4'})
-        kwvars = [{'ps20tables': False, 'ps20depletion': False},
-                  {'ps20tables': True, 'ps20depletion': False},
+        kwvars = [{'ps20tables': True, 'ps20depletion': False},
                   {'ps20tables': True, 'ps20depletion': False, 'abunds': 'Pt'},
                   {'ps20tables': True, 'ps20depletion': False, 'abunds': 0.1},
-                  {'ps20tables': False, 'ps20depletion': False, 'abunds': 'Pt'},
-                  {'ps20tables': False, 'ps20depletion': False, 'abunds': 0.1},
                   ]
     elif setnum == 3:
         axes = ({'ptype': 'Niondens', 'ion': 'magnesium', 
@@ -1465,12 +1470,11 @@ def create_hists(setnum=1, inclps20=True):
                   {'ps20tables': True, 'ps20depletion': True},
                   ]
     elif setnum == 4:
-        axes = ({'ptype': 'Niondens', 'ion': 'Mg 2      2795.53A',
+        axes = ({'ptype': 'Niondens', 'ion': 'mg2',
                  'excludeSFR': 'T4'},
                 'Nion',
-                {'ion': 'Mg 2      2795.53A', 'excludeSFR': 'T4'})
-        kwvars = [{'ps20tables': False, 'ps20depletion': False},
-                  {'ps20tables': True, 'ps20depletion': False},
+                {'ion': 'mg2', 'excludeSFR': 'T4'})
+        kwvars = [{'ps20tables': True, 'ps20depletion': False},
                   {'ps20tables': True, 'ps20depletion': True},
                   ]
     elif setnum == 5:
@@ -1478,8 +1482,7 @@ def create_hists(setnum=1, inclps20=True):
                  'excludeSFR': 'T4'},
                 'Luminosity',
                 {'ion': 'Mg 2      2795.53A', 'excludeSFR': 'T4'})
-        kwvars = [{'ps20tables': False, 'ps20depletion': False},
-                  {'ps20tables': True, 'ps20depletion': False},
+        kwvars = [{'ps20tables': True, 'ps20depletion': False},
                   {'ps20tables': True, 'ps20depletion': True},
                   ]
     for kw in kwvars:
@@ -1498,7 +1501,6 @@ def create_hists(setnum=1, inclps20=True):
                     del kwargs['ps20tables']
             if 'ps20depletion' in kwargs:
                 del kwargs['ps20depletion']
-                    
         m3.makehistograms_perparticle(ptype, simnum, snapnum, var, axesdct,
                                nameonly=False, **kwargs)        
     

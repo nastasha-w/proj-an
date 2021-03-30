@@ -6284,7 +6284,7 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,
     This is not an exhaustive check; it does handle the default/auto options
     return numbers are not ordered; just search <return ##>
     '''
-    # max used number: 53
+    # max used number: 54
 
     # basic type and valid option checks
     if not isinstance(var, str):
@@ -6395,8 +6395,11 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,
                     'ps20tables': ps20tables, 'ps20depletion': ps20depletion}
     #print('dct_defaults for check_particlequantity input:')
     #print(dct_defaults)
-    dct_defaults, parttype = check_particlequantity(dct_defaults, {},
-                                                    parttype, simulation)
+    ret = check_particlequantity(dct_defaults, {}, parttype, simulation)
+    if isinstance(ret, int):
+        print('Error in the weight particle properties')
+        return 54
+    dct_defaults, parttype = ret
     axesdct = [check_particlequantity(dct, dct_defaults, parttype, 
                                       simulation)
                for dct in axesdct]
