@@ -7037,11 +7037,11 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
         saveattr(group, 'make_maps_opts_locs.iontab_sylvia_ssh', 
                  str(ol.iontab_sylvia_ssh))
         if isinstance(abunds, tuple):
-            saveattr(grp, 'abunds', 'tuple')
-            saveattr(grp, 'abunds0', abunds[0])
-            saveattr(grp, 'abunds1', abunds[1])
+            saveattr(group, 'abunds', 'tuple')
+            saveattr(group, 'abunds0', abunds[0])
+            saveattr(group, 'abunds1', abunds[1])
         else:
-            saveattr(grp, 'abunds', abunds)
+            saveattr(group, 'abunds', abunds)
         
         for i in range(len(edges)):
             bingrp.create_dataset('Axis%i'%(i), data=edges[i])
