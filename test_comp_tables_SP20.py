@@ -1534,7 +1534,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
         axn = [None] * len(keys)
         bns = [None] * len(keys)
         for key in keys:
-            hax = grp[key].attrs('histogram axis')
+            hax = grp[key].attrs['histogram axis']
             axn[hax] = key
             bns[hax] = grp[key]['bins'][:]
         axnames1 = axn
@@ -1565,7 +1565,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
         axn = [None] * len(keys)
         bns = [None] * len(keys)
         for key in keys:
-            hax = grp[key].attrs('histogram axis')
+            hax = grp[key].attrs['histogram axis']
             axn[hax] = key
             bns[hax] = grp[key]['bins'][:]
         axnames2 = axn
