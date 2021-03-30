@@ -1651,6 +1651,9 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
         ax.set_ylabel('weight', fontsize=fontsize)
         ax.set_xlabel('axis {}'.format(hax), fontsize=fontsize)
         ax.set_yscale('log')
+        
+        if hax == 0:
+            ax.legend(fontsize=fontsize)
     
     # 2d histograms: project into two axes
     cmap_img = cm.get_cmap('viridis')
@@ -1665,8 +1668,8 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     vmax = max([np.max(_h[np.isfinite(_h)]) for _h in h2ds1])
     vmax = min(vmax, max([np.max(_h[np.isfinite(_h)]) for _h in h2ds2]))
     
-    dmin = min(np.min([_d[np.isfinite(_d)] for _d in diffs]))
-    dmax = max(np.max([_d[np.isfinite(_d)] for _d in diffs]))
+    dmin = min([np.min(_d[np.isfinite(_d)]) for _d in diffs])
+    dmax = max([np.max(_d[np.isfinite(_d)]) for _d in diffs])
     dmax = max(dmax, np.abs(dmin))
     dmin = min(-1. * dmax, dmin)
     
