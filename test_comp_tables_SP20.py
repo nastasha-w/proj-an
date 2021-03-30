@@ -1589,7 +1589,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     c2 = cset.red
         
     fig = plt.figure(figsize=(8., 12.))
-    grid = gsp.GridSpec(ncols=6, nrows=5, top=0.7,
+    grid = gsp.GridSpec(ncols=6, nrows=5, top=0.82,
                         hspace=0.6, wspace=0.35,
                         height_ratios=[1., 1., 1., 1., 0.25])
     h1daxes = [fig.add_subplot(grid[0, 2 * i : 2 * i + 2]) \
