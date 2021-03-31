@@ -1591,17 +1591,17 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     c1 = cset.blue
     c2 = cset.red
         
-    fig = plt.figure(figsize=(9., 8.))
+    fig = plt.figure(figsize=(12., 8.))
     grid = gsp.GridSpec(ncols=13, nrows=4,
-                        hspace=0.5, wspace=0.35,
-                        height_ratios=[1., 1., 1., 1.])
+                        hspace=0.6, wspace=1.,
+                        height_ratios=[0.75, 1., 1., 1.])
     h1daxes = [fig.add_subplot(grid[1 + i, 0 : 3]) \
                for i in range(ndims)]
     h2daxes = [[fig.add_subplot(grid[1 + j, 3 * (i + 1) : 3 * (i + 2)]) \
                 for j in range(3)] \
                 for i in range(ndims)]
-    cax_img = fig.add_subplot(grid[0, 12])
-    cax_diff = fig.add_subplot(grid[1, 12])
+    cax_img = fig.add_subplot(grid[1, 12])
+    cax_diff = fig.add_subplot(grid[2, 12])
     
     weightn1 = filen1.split('/')[-1][:-5]
     weightn2 = filen2.split('/')[-1][:-5]
@@ -1756,7 +1756,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
         
     cbar = pu.add_colorbar(cax_img, img=img, cmap=cmap_img, vmin=vmin,
                            clabel='$\\log_{10}$ weight', fontsize=fontsize, 
-                           orientation='horizontal', extend='min')
+                           orientation='vertical', extend='min')
     cax_img.set_aspect(0.125)
     cax_img.tick_params(labelsize=fontsize - 1.)
     cbar.add_lines(cs)
@@ -1764,7 +1764,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     pu.add_colorbar(cax_diff, img=img_diff, cmap=cmap_diff, vmin=dmin, 
                     vmax=dmax,
                     clabel='weight 2 - weight 1', fontsize=fontsize, 
-                    orientation='horizontal', extend='both')
+                    orientation='vertical', extend='both')
     cax_diff.set_aspect(0.125)
     cax_diff.tick_params(labelsize=fontsize - 1.)
     
