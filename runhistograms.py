@@ -3406,7 +3406,7 @@ if jobind == 20336:
                          axis='z', velspace=False, offset_los=0., stamps=True,\
                          trackprogress=True)
 
-###### 3d profiles for the PS20 lines TODO: modify
+###### 3d profiles for the PS20 lines 
 ### get 3d profiles
 if jobind in range(20337, 20357):
     p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
