@@ -1596,19 +1596,24 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     cset =  tc.tol_cset('bright')
     c1 = cset.blue
     c2 = cset.red
-        
+    
+    pw_nc = 4
+    ps_nc = 1
+    ncols = pw_nc * 4 + ps_nc * 3 + 1
     fig = plt.figure(figsize=(12., 8.))
-    grid = gsp.GridSpec(ncols=13, nrows=4,
-                        hspace=0.6, wspace=1.,
-                        height_ratios=[0.75, 1., 1., 1.])
-    h1daxes = [fig.add_subplot(grid[1 + i, 0 : 3]) \
+    grid = gsp.GridSpec(ncols=ncols, nrows=4,
+                        hspace=0.7, wspace=1.,
+                        height_ratios=[0.7, 1., 1., 1.])
+    
+    h1daxes = [fig.add_subplot(grid[1 + i, 0 : pw_nc]) \
                for i in range(ndims)]
-    h2daxes = [[fig.add_subplot(grid[1 + j, 3 * (i + 1) : 3 * (i + 2)]) \
+    h2daxes = [[fig.add_subplot(grid[1 + j, (pw_nc + ps_nc) * (i + 1) : 
+                                     (pw_nc + ps_nc) * (i + 1) + pw_nc]) \
                 for j in range(3)] \
                 for i in range(ndims)]
-    cax_img = fig.add_subplot(grid[1, 12])
-    cax_diff = fig.add_subplot(grid[2, 12])
-    matchax = fig.add_subplot(grid[3, 12])
+    cax_img = fig.add_subplot(grid[1, ncols - 1])
+    cax_diff = fig.add_subplot(grid[2, ncols - 1])
+    matchax = fig.add_subplot(grid[3, ncols - 1])
     
     weightn1 = filen1.split('/')[-1][:-5]
     weightn2 = filen2.split('/')[-1][:-5]
@@ -1619,12 +1624,12 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     _split = _splitopt[np.argmin(np.abs(_splitopt - len(weightn2) // 2))]
     _wn2 = weightn2[:_split] + '\n' + weightn2[_split:]
     
-    title1 = 'Histogram 1: sum of weights {}\n'.format(tot1)+\
+    title1 = 'Histogram 1: sum of weights {:.7e}\n'.format(tot1)+\
             '{weight}\n'.format(weight=_wn1) +\
             '\n'.join(['axis {}: {}'.format(num, name) \
                        for num, name in enumerate(axnames1)])
                 
-    title2 = 'Histogram 2: sum of weights {}\n'.format(tot2)+\
+    title2 = 'Histogram 2: sum of weights {:.7e}\n'.format(tot2)+\
              '{weight}\n'.format(weight=_wn2) +\
              '\n'.join(['axis {}: {}'.format(num, name) \
                        for num, name in enumerate(axnames2)])
@@ -1638,6 +1643,11 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     tax2.text(0.5, 1., title2, fontsize=fontsize - 1., 
               transform=tax2.transAxes, horizontalalignment='center',
               verticalalignment='top')
+    
+    matchax.axis('off')
+    matchax.text(0.0, 1., mtext, fontsize=fontsize,
+                 transform=matchax.transAxes, verticalalignment='top',
+                 horizontalalignment='bottom')
 
     # 1d histograms: project onto one axis
     for hax in range(ndims):
@@ -1664,7 +1674,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
         ax.set_yscale('log')
         
         if hax == 0:
-            ax.legend(fontsize=fontsize)
+            ax.legend(fontsize=fontsize - 1., legend_loc='lower center')
     
     # 2d histograms: project into two axes
     cmap_img = copy.copy(cm.get_cmap('viridis'))
@@ -1770,7 +1780,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     
     pu.add_colorbar(cax_diff, img=img_diff, cmap=cmap_diff, vmin=dmin, 
                     vmax=dmax,
-                    clabel='$\\Delta (2 - 1) \\log_{10}$ weight', fontsize=fontsize, 
+                    clabel='$\\Delta \\, \\log_{10}$ weight', fontsize=fontsize, 
                     orientation='vertical', extend='both')
     cax_diff.set_aspect(8.)
     cax_diff.tick_params(labelsize=fontsize - 1.)
