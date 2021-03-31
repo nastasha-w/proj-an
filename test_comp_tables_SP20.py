@@ -1681,7 +1681,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
         ax.set_yscale('log')
         
         if hax == 0:
-            ax.legend(fontsize=fontsize - 1., legend_loc='lower center')
+            ax.legend(fontsize=fontsize - 1., loc='lower center')
     
     # 2d histograms: project into two axes
     cmap_img = copy.copy(cm.get_cmap('viridis'))
