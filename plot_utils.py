@@ -216,7 +216,9 @@ def setticks(ax, fontsize, color='black', labelbottom=True, top=True,\
 
 
 ### functions to make actual plots
-def add_colorbar(ax, img=None, vmin=None, vmax=None, cmap=None, clabel=None, newax=False, extend='neither', fontsize=fontsize, orientation='vertical'):
+def add_colorbar(ax, img=None, vmin=None, vmax=None, cmap=None, clabel=None,
+                 newax=False, extend='neither', fontsize=fontsize,
+                 orientation='vertical'):
     if img is None:
         cmap = mpl.cm.get_cmap(cmap)
         norm = mpl.colors.Normalize(vmin=vmin,vmax=vmax)
@@ -230,6 +232,7 @@ def add_colorbar(ax, img=None, vmin=None, vmax=None, cmap=None, clabel=None, new
     ax.tick_params(labelsize=fontsize-2)
     if clabel is not None:
         cbar.set_label(clabel,fontsize=fontsize)
+    return cbar
 
 def add_2dplot(ax, bins, edges, toplotaxes, log=True, usepcolor=False, pixdens=False, shiftx=0., shifty=0., **kwargs):
     # hist3d can be a histogram of any number >=2 of dimensions
