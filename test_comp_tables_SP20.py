@@ -1588,17 +1588,17 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     c1 = cset.blue
     c2 = cset.red
         
-    fig = plt.figure(figsize=(8., 12.))
-    grid = gsp.GridSpec(ncols=6, nrows=5, top=0.82,
-                        hspace=0.6, wspace=0.35,
-                        height_ratios=[1., 1., 1., 1., 0.25])
-    h1daxes = [fig.add_subplot(grid[0, 2 * i : 2 * i + 2]) \
+    fig = plt.figure(figsize=(9., 8.))
+    grid = gsp.GridSpec(ncols=13, nrows=4,
+                        hspace=0.5, wspace=0.35,
+                        height_ratios=[1., 1., 1., 1.])
+    h1daxes = [fig.add_subplot(grid[1 + i, 0 : 3]) \
                for i in range(ndims)]
-    h2daxes = [[fig.add_subplot(grid[1 + j, 2 * i : 2 * i + 2]) \
+    h2daxes = [[fig.add_subplot(grid[1 + j, 3 * (i + 1) : 3 * (i + 2)]) \
                 for j in range(3)] \
                 for i in range(ndims)]
-    cax_img = fig.add_subplot(grid[4, :3])
-    cax_diff = fig.add_subplot(grid[4, 3:])
+    cax_img = fig.add_subplot(grid[0, 12])
+    cax_diff = fig.add_subplot(grid[1, 12])
     
     weightn1 = filen1.split('/')[-1][:-5]
     weightn2 = filen2.split('/')[-1][:-5]
@@ -1609,15 +1609,23 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     _split = _splitopt[np.argmin(np.abs(_splitopt - len(weightn2) // 2))]
     _wn2 = weightn2[:_split] + '\n' + weightn2[_split:]
     
-    title = 'Histogram 1:\n {weight}\n'.format(weight=_wn1) + \
+    title1 = 'Histogram 1:\n {weight}\n'.format(weight=_wn1) + \
             '\n'.join(['axis {}: {}'.format(num, name) \
                        for num, name in enumerate(axnames1)])
-    title = title + '\n'
-    title = title + \
-            'Histogram 2:\n {weight}\n'.format(weight=_wn2) + \
-            '\n'.join(['axis {}: {}'.format(num, name) \
+                
+    title2 = 'Histogram 2:\n {weight}\n'.format(weight=_wn2) + \
+             '\n'.join(['axis {}: {}'.format(num, name) \
                        for num, name in enumerate(axnames2)])
-    fig.suptitle(title, fontsize=fontsize - 1)
+    tax1 = fig.add_subplot(grid[0, :6])
+    tax2 = fig.add_subplot(grid[0, 7:])
+    tax1.axis('off')
+    tax2.axis('off')
+    tax1.text(0.5, 1., title1, fontsize=fontsize - 1., 
+              transform=tax1.transAxes, horizontalalignment='center',
+              verticalalignment='top')
+    tax2.text(0.5, 1., title2, fontsize=fontsize - 1., 
+              transform=tax2.transAxes, horizontalalignment='center',
+              verticalalignment='top')
 
     # 1d histograms: project onto one axis
     for hax in range(ndims):
