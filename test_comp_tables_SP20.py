@@ -1584,6 +1584,12 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     print('Histogram match: {} (approx),  {} (exact)'.format(match, exmatch))
     tot1 = np.sum(hist1)
     tot2 = np.sum(hist2)
+    if exmatch:
+        mtext = 'same:\nexact'
+    elif match:
+        mtext = 'same:\napprox.'
+    else:
+        mtext = 'same:\nno'
     
     ls1 = 'solid'
     ls2 = 'dashed'
@@ -1602,6 +1608,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
                 for i in range(ndims)]
     cax_img = fig.add_subplot(grid[1, 12])
     cax_diff = fig.add_subplot(grid[2, 12])
+    matchax = fig.add_subplot(grid[3, 12])
     
     weightn1 = filen1.split('/')[-1][:-5]
     weightn2 = filen2.split('/')[-1][:-5]
@@ -1757,15 +1764,15 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     cbar = pu.add_colorbar(cax_img, img=img, cmap=cmap_img, vmin=vmin,
                            clabel='$\\log_{10}$ weight', fontsize=fontsize, 
                            orientation='vertical', extend='min')
-    cax_img.set_aspect(0.125)
+    cax_img.set_aspect(8.)
     cax_img.tick_params(labelsize=fontsize - 1.)
     cbar.add_lines(cs)
     
     pu.add_colorbar(cax_diff, img=img_diff, cmap=cmap_diff, vmin=dmin, 
                     vmax=dmax,
-                    clabel='weight 2 - weight 1', fontsize=fontsize, 
+                    clabel='$\\Delta (2 - 1) \\log_{10}$ weight', fontsize=fontsize, 
                     orientation='vertical', extend='both')
-    cax_diff.set_aspect(0.125)
+    cax_diff.set_aspect(8.)
     cax_diff.tick_params(labelsize=fontsize - 1.)
     
     if outname is not None:
