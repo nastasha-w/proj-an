@@ -50,6 +50,21 @@ lines2 = ['c5r', 'n6r', 'n6-actualr', 'ne9r', 'ne10', 'mg11r', 'mg12',\
 weighttypes.update({'em-{l}'.format(l=line): {'ptype': 'Luminosity',\
                     'ion': line} \
                     for line in lines2}) 
+lines_PS20 = ['C  5      40.2678A', 'C  6      33.7372A', 
+              'N  6      29.5343A', 'N  6      28.7870A',
+              'N  7      24.7807A', 'O  7      21.6020A',
+              'O  7      21.8044A', 'O  7      21.8070A',
+              'O  7      22.1012A', 'O  8      18.9709A',
+              'Ne 9      13.4471A', 'Ne10      12.1375A',
+              'Mg11      9.16875A', 'Mg12      8.42141A',
+              'Si13      6.64803A', 'Fe17      17.0510A',
+              'Fe17      15.2620A', 'Fe17      16.7760A',
+              'Fe17      17.0960A', 'Fe18      16.0720A',
+              ]
+weighttypes.update({'em-{l}'.format(l=line.replace(' ', '-')): \
+                    {'ptype': 'Luminosity', 'ion': line, 'ps20tables': True,
+                     'ps20depletion': False} \
+                    for line in lines_PS20}) 
 
 def dataname(samplen):
     return tdir + 'halodata_%s.txt'%(samplen)
@@ -648,7 +663,7 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
            'nrprof': n_H profile
            'Zrprof': Z profile
            'pds':    n_H, T, Z in course radial bins
-           '{elt}-rprof': Smoothed Z profile for and element (for Mass- and 
+           '{elt}-rprof': Smoothed Z profile for an element (for Mass- and 
            Volume weighttypes)
     idsel: project only a subset of galaxies according to the given list
            useful for testing on a few galaxies
@@ -722,7 +737,17 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
             nonrbins.append(0.1)
         elif axdct == 'Zrprof':
             line = '-'.join(weighttype.split('-')[1:])
-            elt = ol.elements_ion[line]
+            try:
+                elt = ol.elements_ion[line]
+            except KeyError as err: # PS20 line
+                try: 
+                    tab = m3.linetable(line.replace('-', ' '), 0.0, 
+                                       emission=False)
+                    elt = tab.element.lower()
+                except ValueError as err2:
+                    print('Trying to interpret {} as a PS20 line'.format(line))
+                    print(err2)
+                    raise err
             qty = 'SmoothedElementAbundance/{elt}'.format(elt=string.capwords(elt))
             axesdct.append({'ptype': 'basic', 'quantity': qty})
             nonrbins.append(Zbins)
@@ -785,14 +810,21 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
                 if axdct == 'pds':
                     pass
                 else:
-                    rbins = np.array([0., 5., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 125., 150., 175., 200., 250., 300., 350., 400., 450., 500.]) * 1e-3 * c.cm_per_mpc
+                    rbins = np.array([0., 5., 10., 20., 30., 40., 50., 60.,
+                                      70., 80., 90., 100., 125., 150., 175.,
+                                      200., 250., 300., 350., 400., 450.,
+                                      500.]) \
+                            * 1e-3 * c.cm_per_mpc
                     if rbins[-1] < R200c:
                         rbins = np.append(rbins, [R200c])
             else:
                 if axdct == 'pds':
                     pass
                 else:
-                    rbins = np.array([0., 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.25, 1.50, 2., 2.5, 3., 3.5, 4.]) * R200c * c.cm_per_mpc * cosmopars['a']
+                    rbins = np.array([0., 0.01, 0.02, 0.05, 0.1, 0.15, 0.2,
+                                      0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1,
+                                      1.25, 1.50, 2., 2.5, 3., 3.5, 4.]) \
+                            * R200c * c.cm_per_mpc * cosmopars['a']
             cen = [Xcom, Ycom, Zcom]
             L_x, L_y, L_z = (2. * rbins[-1] / c.cm_per_mpc / cosmopars['a'],) * 3
             
@@ -1226,8 +1258,8 @@ def extracthists_ionfrac(samplename='L0100N1504_27_Mh0p5dex_1000',\
             egrp.attrs.create('ions', np.array([np.string_(ion) for ion in eltlist[1:]]))
             egrp.create_dataset('fractions', data=savelist)
 
-def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
-              addedges=(0.0, 1.), logM200min=11.0):
+def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
+              addedges=(0.0, 1.), logM200min=11.0, lineset='SBlines'):
     '''
     generate the histograms for a given sample
     rbinu: used fixed bins in pkpc or in R200c (relevant for stacking)
@@ -1248,10 +1280,23 @@ def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
              histogram)
            - 'addnormed-all': add histograms normalized by the sum of the 
              histogram to the outermost radial bin
+    lineset: which set of lines to use. options are
+           - 'SBlines': lines from Serena Bertone's tables, for paper 3
+           - 'PS20lines': lines from the Ploeckinger & Schaye (2020) tables
+             for paper 3
     '''
     rbinu = 'R200c'
-    outname = ol.pdir + 'luminosities_halos_%s_%s-%s-%s_SmAb.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)
-    weighttypes = ['em-{l}'.format(l=line) for line in lines2]
+    
+    if lineset == 'SBlines':
+        outname = ol.pdir + 'luminosities_halos_%s_%s-%s-%s_SmAb.hdf5'%(samplename,
+                                        str(addedges[0]), str(addedges[1]), rbinu)
+        weighttypes = ['em-{l}'.format(l=line) for line in lines2]
+    elif lineset == 'PS20lines':
+        base = 'luminosities_PS20_depletion-F_halos_%s_%s-%s-%s_SmAb.hdf5'
+        outname = ol.pdir + base%(samplename, 
+                                  str(addedges[0]), str(addedges[1]), rbinu)
+        weighttypes = ['em-{l}'.format(l=line.replace(' ', '-')) \
+                       for line in lines_PS20]
     histtype = 'nrprof' 
     
     if samplename is None:
@@ -1381,8 +1426,9 @@ def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
         ds.attrs.create('axis2', np.array([np.string_('non-star-forming'),\
                                            np.string_('star-forming')]))
 
-def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
-              addedges=(0.0, 1.), weight='Luminosity', logM200min=11.0):
+def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
+              addedges=(0.0, 1.), weight='Luminosity', logM200min=11.0,
+              lineset='SBtables'):
     '''
     generate the histograms for a given sample
     rbinu: used fixed bins in pkpc or in R200c (relevant for stacking)
@@ -1390,11 +1436,21 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
     weight:  'Luminosity': luminosities for the different lines
              'Mass':       gas mass (incl. the different metals for Z)
              'Volume':     gas volume (incl. the different metals for Z)
+    lineset: 'SBtables' or 'PS20tables'
     '''
     rbinu = 'R200c'
     if weight == 'Luminosity':
-        outname = ol.pdir + 'luminosity-weighted-nH-T-Z_halos_%s_%s-%s-%s_SmAb.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)
-        weighttypes = ['em-{l}'.format(l=line) for line in lines2]
+        if lineset == 'SBlines':
+            base = 'luminosity-weighted-nH-T-Z_halos_%s_%s-%s-%s_SmAb.hdf5'
+            outname = ol.pdir + base%(samplename, str(addedges[0]),
+                                      str(addedges[1]), rbinu)
+            weighttypes = ['em-{l}'.format(l=line) for line in lines2]
+        elif lineset == 'PS20lines':
+            base = 'luminosity-weighted-nH-T-Z_PS20_depletion-F_halos_%s_%s-%s-%s_SmAb.hdf5'
+            outname = ol.pdir + base%(samplename, 
+                                      str(addedges[0]), str(addedges[1]), rbinu)
+            weighttypes = ['em-{l}'.format(l=line.replace(' ', '-')) \
+                           for line in lines_PS20]
         histtypes = ['Zrprof', 'nrprof', 'Trprof'] 
     elif weight in ['Mass', 'Volume']:
         outname = ol.pdir + '{weight}-weighted-nH-T-Z_halos_%s_%s-%s-%s_SmAb.hdf5'%(samplename, str(addedges[0]), str(addedges[1]), rbinu)
@@ -1513,7 +1569,7 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
                                 elt = string.capwords(ol.elements_ion[_line])
                             except KeyError as err:
                                 print('tried to retrieve element for line {line}, histtype {ht}, weight {wt}'.format(\
-                                      line=_line, weight=line, ht=histtype))
+                                      line=_line, wt=line, ht=histtype))
                                 print('from file {fl}, galaxy id {gid}'.format(\
                                       fl=ifilen_temp, gid=galid))
                                 raise err

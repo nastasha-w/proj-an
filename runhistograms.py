@@ -3406,6 +3406,199 @@ if jobind == 20336:
                          axis='z', velspace=False, offset_los=0., stamps=True,\
                          trackprogress=True)
 
+###### 3d profiles for the PS20 lines TODO: modify
+### get 3d profiles
+if jobind in range(20337, 20357):
+    p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    lines_PS20 = ['C  5      40.2678A', 'C  6      33.7372A', 
+              'N  6      29.5343A', 'N  6      28.7870A',
+              'N  7      24.7807A', 'O  7      21.6020A',
+              'O  7      21.8044A', 'O  7      21.8070A',
+              'O  7      22.1012A', 'O  8      18.9709A',
+              'Ne 9      13.4471A', 'Ne10      12.1375A',
+              'Mg11      9.16875A', 'Mg12      8.42141A',
+              'Si13      6.64803A', 'Fe17      17.0510A',
+              'Fe17      15.2620A', 'Fe17      16.7760A',
+              'Fe17      17.0960A', 'Fe18      16.0720A',
+              ]
+    weighttype = lines_PS20[jobind - 20337]
+    weighttype = 'em-' + weighttype.replace(' ', '-')
+    for axdct in ['Trprof', 'nrprof', 'Zrprof']:
+        p3g.genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
+                            rbinu='R200c', idsel=None,\
+                            weighttype=weighttype,\
+                            logM200min=11.0, axdct=axdct)  
+     
+# get halo luminosity fraction stats + mass for comparison
+elif jobind in range(20357, 20377):
+    lines_PS20 = ['C  5      40.2678A', 'C  6      33.7372A', 
+              'N  6      29.5343A', 'N  6      28.7870A',
+              'N  7      24.7807A', 'O  7      21.6020A',
+              'O  7      21.8044A', 'O  7      21.8070A',
+              'O  7      22.1012A', 'O  8      18.9709A',
+              'Ne 9      13.4471A', 'Ne10      12.1375A',
+              'Mg11      9.16875A', 'Mg12      8.42141A',
+              'Si13      6.64803A', 'Fe17      17.0510A',
+              'Fe17      15.2620A', 'Fe17      16.7760A',
+              'Fe17      17.0960A', 'Fe18      16.0720A',
+              ]
+    wt = lines_PS20[jobind - 20357]
+    m3.ol.ndir = '/net/luttero/data2/imgs/paper3/lumfracs/'
+    
+    simnum = 'L0100N1504'
+    snapnum = 27
+    var = 'REFERENCE'
+    if wt == 'Mass':
+        ptype = 'basic'
+        kwargs = {'quantity': wt}
+    else:
+        ptype = 'Luminosity'
+        kwargs = {'ion': wt}
+    
+    axesdct = [{'ptype': 'halo', 'quantity': 'Mass'},\
+               {'ptype': 'halo', 'quantity': 'subcat'}]
+    axbins = [np.array([-np.inf, 0., c.solar_mass] +\
+                       list(10**(np.arange(9., 15.5, 0.5)) * c.solar_mass) +\
+                       [np.inf]) ,\
+              3]
+    minval = 2**-149 * c.solar_mass / c.sec_per_year 
+    axbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
+    axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
+    logax = [False, False, False]
+    
+    args = (ptype, simnum, snapnum, var, axesdct)
+    _kwargs = dict(simulation='eagle',\
+                  excludeSFR='T4', abunds='Sm', parttype='0',\
+                  axbins=axbins,\
+                  sylviasshtables=False, bensgadget2tables=False,\
+                  allinR200c=True, mdef='200c',\
+                  L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
+                  misc=None,\
+                  name_append=None, logax=logax, loghist=False,
+                  )
+    _kwargs.update(kwargs)
+    kwargs = _kwargs
+    filen, grpn = m3.makehistograms_perparticle(*args, nameonly=True, **kwargs)
+    done = False
+    if os.path.isfile(filen):
+        with h5py.File(filen) as fi:
+            if grpn in fi:
+                done = True
+    if not done:
+        m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
+    
+# stack emission-weighted profiles    
+elif jobind in range(20377, 20397):
+    p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    lines_PS20 = ['C  5      40.2678A', 'C  6      33.7372A', 
+              'N  6      29.5343A', 'N  6      28.7870A',
+              'N  7      24.7807A', 'O  7      21.6020A',
+              'O  7      21.8044A', 'O  7      21.8070A',
+              'O  7      22.1012A', 'O  8      18.9709A',
+              'Ne 9      13.4471A', 'Ne10      12.1375A',
+              'Mg11      9.16875A', 'Mg12      8.42141A',
+              'Si13      6.64803A', 'Fe17      17.0510A',
+              'Fe17      15.2620A', 'Fe17      16.7760A',
+              'Fe17      17.0960A', 'Fe18      16.0720A',
+              ]
+    weighttype = lines_PS20[jobind - 20377]
+    weighttype = 'em-' + weighttype
+    for axdct in ['Trprof', 'nrprof', 'Zrprof']:    
+        p3g.combhists(samplename='L0100N1504_27_Mh0p5dex_1000', rbinu='R200c',\
+                  idsel=None, weighttype=weighttype,\
+                  binby=('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),\
+                  combmethod='addnormed-R200c', histtype=axdct)
+
+# get total luminosities for comparison
+elif jobind in range(20397, 20417):
+    lines_PS20 = ['C  5      40.2678A', 'C  6      33.7372A', 
+              'N  6      29.5343A', 'N  6      28.7870A',
+              'N  7      24.7807A', 'O  7      21.6020A',
+              'O  7      21.8044A', 'O  7      21.8070A',
+              'O  7      22.1012A', 'O  8      18.9709A',
+              'Ne 9      13.4471A', 'Ne10      12.1375A',
+              'Mg11      9.16875A', 'Mg12      8.42141A',
+              'Si13      6.64803A', 'Fe17      17.0510A',
+              'Fe17      15.2620A', 'Fe17      16.7760A',
+              'Fe17      17.0960A', 'Fe18      16.0720A',
+              ]
+    wt = lines_PS20[jobind - 20397]
+    m3.ol.ndir = '/net/luttero/data2/imgs/paper3/lumfracs/'
+    
+    simnum = 'L0100N1504'
+    snapnum = 27
+    var = 'REFERENCE'
+    if wt == 'Mass':
+        ptype = 'basic'
+        kwargs = {'quantity': wt}
+    else:
+        ptype = 'Luminosity'
+        kwargs = {'ion': wt}
+    
+    axesdct = []
+    axbins = []
+    minval = 2**-149 * c.solar_mass / c.sec_per_year 
+    axbins.append(np.array([-np.inf, minval, np.inf])) # calculate minimum SFR possible in Eagle, use as minimum bin for ISM value
+    axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
+    logax = [False]
+    
+    args = (ptype, simnum, snapnum, var, axesdct)
+    _kwargs = dict(simulation='eagle',\
+                  excludeSFR='T4', abunds='Sm', parttype='0',\
+                  axbins=axbins,\
+                  sylviasshtables=False, bensgadget2tables=False,\
+                  allinR200c=True, mdef='200c',\
+                  L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
+                  misc=None,\
+                  name_append=None, logax=logax, loghist=False,
+                  )
+    _kwargs.update(kwargs)
+    kwargs = _kwargs
+    filen, grpn = m3.makehistograms_perparticle(*args, nameonly=True, **kwargs)
+    done = False
+    if os.path.isfile(filen):
+        with h5py.File(filen, 'a') as fi:
+            if grpn in fi:
+                if 'histogram' in fi[grpn]:
+                    done = True
+                else:
+                    del fi[grpn]
+                    print('Deleting incomplete data group')
+    if not done:
+        m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
+
+# stack emission-weighted profiles    
+elif jobind in range(20417, 20437):
+    p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    lines_PS20 = ['C  5      40.2678A', 'C  6      33.7372A', 
+              'N  6      29.5343A', 'N  6      28.7870A',
+              'N  7      24.7807A', 'O  7      21.6020A',
+              'O  7      21.8044A', 'O  7      21.8070A',
+              'O  7      22.1012A', 'O  8      18.9709A',
+              'Ne 9      13.4471A', 'Ne10      12.1375A',
+              'Mg11      9.16875A', 'Mg12      8.42141A',
+              'Si13      6.64803A', 'Fe17      17.0510A',
+              'Fe17      15.2620A', 'Fe17      16.7760A',
+              'Fe17      17.0960A', 'Fe18      16.0720A',
+              ]
+    weighttype = lines_PS20[jobind - 20417]
+    weighttype = 'em-' + weighttype
+    for axdct in ['Trprof', 'nrprof', 'Zrprof']:    
+        p3g.combhists(samplename='L0100N1504_27_Mh0p5dex_1000', rbinu='R200c',\
+                  idsel=None, weighttype=weighttype,\
+                  binby=('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),\
+                  combmethod='add', histtype=axdct)
+
+elif jobind == 20437:
+    p3g.extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
+              addedges=(0.0, 1.), logM200min=11.0, lineset='PS20lines')
+elif jobind == 20438:
+    p3g.extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
+              addedges=(0.0, 1.), weight='Luminosity', logM200min=11.0,
+              lineset='PS20tables')
+
+
+
 ### also redo for n6-actualr:
 # x p3g.extracthists_luminosity()
 # x p3g.extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
