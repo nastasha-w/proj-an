@@ -1615,6 +1615,15 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     cax_diff = fig.add_subplot(grid[2, ncols - 1])
     matchax = fig.add_subplot(grid[3, ncols - 1])
     
+    if ncols % 2 == 0:
+        si1 = ncols // 2 - 1
+        si2 = ncols // 2 + 1
+    else:
+        si1 = ncols // 2
+        si2 = ncols // 2 + 1
+    tax1 = fig.add_subplot(grid[0, :si1])
+    tax2 = fig.add_subplot(grid[0, si2:])
+    
     weightn1 = filen1.split('/')[-1][:-5]
     weightn2 = filen2.split('/')[-1][:-5]
     _splitopt = np.where([char == '_' for char in weightn1])[0] 
@@ -1633,8 +1642,6 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
              '{weight}\n'.format(weight=_wn2) +\
              '\n'.join(['axis {}: {}'.format(num, name) \
                        for num, name in enumerate(axnames2)])
-    tax1 = fig.add_subplot(grid[0, :6])
-    tax2 = fig.add_subplot(grid[0, 7:])
     tax1.axis('off')
     tax2.axis('off')
     tax1.text(0.5, 1., title1, fontsize=fontsize - 1., 
