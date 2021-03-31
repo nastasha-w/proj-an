@@ -1654,7 +1654,7 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     matchax.axis('off')
     matchax.text(0.0, 1., mtext, fontsize=fontsize,
                  transform=matchax.transAxes, verticalalignment='top',
-                 horizontalalignment='bottom')
+                 horizontalalignment='left')
 
     # 1d histograms: project onto one axis
     for hax in range(ndims):
