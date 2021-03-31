@@ -1580,7 +1580,10 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     binw = [np.diff(ed) for ed in bins]
 
     match = np.allclose(hist1, hist2)
-    print('Histogram match: {}'.format(match))
+    exmatch = np.all(hist1 == hist2)
+    print('Histogram match: {} (approx),  {} (exact)'.format(match, exmatch))
+    tot1 = np.sum(hist1)
+    tot2 = np.sum(hist2)
     
     ls1 = 'solid'
     ls2 = 'dashed'
@@ -1609,11 +1612,13 @@ def compare_hists(filen1, filen2, group1=None, group2=None, outname=None):
     _split = _splitopt[np.argmin(np.abs(_splitopt - len(weightn2) // 2))]
     _wn2 = weightn2[:_split] + '\n' + weightn2[_split:]
     
-    title1 = 'Histogram 1:\n {weight}\n'.format(weight=_wn1) + \
+    title1 = 'Histogram 1: sum of weights {}\n'.format(tot1)+\
+            '{weight}\n'.format(weight=_wn1) +\
             '\n'.join(['axis {}: {}'.format(num, name) \
                        for num, name in enumerate(axnames1)])
                 
-    title2 = 'Histogram 2:\n {weight}\n'.format(weight=_wn2) + \
+    title2 = 'Histogram 2: sum of weights {}\n'.format(tot2)+\
+             '{weight}\n'.format(weight=_wn2) +\
              '\n'.join(['axis {}: {}'.format(num, name) \
                        for num, name in enumerate(axnames2)])
     tax1 = fig.add_subplot(grid[0, :6])
