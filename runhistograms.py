@@ -3423,7 +3423,7 @@ if jobind in range(20337, 20357):
               ]
     weighttype = lines_PS20[jobind - 20337]
     weighttype = 'em-' + weighttype.replace(' ', '-')
-    for axdct in ['Trprof', 'nrprof', 'Zrprof']:
+    for axdct in ['Zrprof']: # 'Trprof', 'nrprof',  # redo only Z after bugfix
         p3g.genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
                             rbinu='R200c', idsel=None,\
                             weighttype=weighttype,\
@@ -3467,13 +3467,14 @@ elif jobind in range(20357, 20377):
     logax = [False, False, False]
     
     args = (ptype, simnum, snapnum, var, axesdct)
-    _kwargs = dict(simulation='eagle',\
-                  excludeSFR='T4', abunds='Sm', parttype='0',\
-                  axbins=axbins,\
-                  sylviasshtables=False, bensgadget2tables=False,\
-                  allinR200c=True, mdef='200c',\
-                  L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
-                  misc=None,\
+    _kwargs = dict(simulation='eagle',
+                  excludeSFR='T4', abunds='Sm', parttype='0',
+                  axbins=axbins,
+                  sylviasshtables=False, bensgadget2tables=False,
+                  ps20tables=True, ps20depletion=False,
+                  allinR200c=True, mdef='200c',
+                  L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,
+                  misc=None,
                   name_append=None, logax=logax, loghist=False,
                   )
     _kwargs.update(kwargs)
@@ -3543,13 +3544,14 @@ elif jobind in range(20397, 20417):
     logax = [False]
     
     args = (ptype, simnum, snapnum, var, axesdct)
-    _kwargs = dict(simulation='eagle',\
-                  excludeSFR='T4', abunds='Sm', parttype='0',\
-                  axbins=axbins,\
-                  sylviasshtables=False, bensgadget2tables=False,\
-                  allinR200c=True, mdef='200c',\
-                  L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,\
-                  misc=None,\
+    _kwargs = dict(simulation='eagle',
+                  excludeSFR='T4', abunds='Sm', parttype='0',
+                  axbins=axbins,
+                  sylviasshtables=False, bensgadget2tables=False,
+                  ps20tables=True, ps20depletion=False,
+                  allinR200c=True, mdef='200c',
+                  L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,
+                  misc=None,
                   name_append=None, logax=logax, loghist=False,
                   )
     _kwargs.update(kwargs)
@@ -3595,7 +3597,7 @@ elif jobind == 20437:
 elif jobind == 20438:
     p3g.extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
               addedges=(0.0, 1.), weight='Luminosity', logM200min=11.0,
-              lineset='PS20tables')
+              lineset='PS20lines')
 
 
 

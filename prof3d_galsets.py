@@ -741,8 +741,8 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
                 elt = ol.elements_ion[line]
             except KeyError as err: # PS20 line
                 try: 
-                    tab = m3.linetable(line.replace('-', ' '), 0.0, 
-                                       emission=False)
+                    tab = m3.linetablePS20(line.replace('-', ' '), 0.0, 
+                                           emission=False)
                     elt = tab.element.lower()
                 except ValueError as err2:
                     print('Trying to interpret {} as a PS20 line'.format(line))
