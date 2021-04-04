@@ -3523,7 +3523,7 @@ elif jobind in range(20397, 20417):
               'Fe17      15.2620A', 'Fe17      16.7760A',
               'Fe17      17.0960A', 'Fe18      16.0720A',
               ]
-    wt = (lines_PS20[jobind - 20397]).replace(' ', '-')
+    wt = lines_PS20[jobind - 20397]
     m3.ol.ndir = '/net/luttero/data2/imgs/paper3/lumfracs/'
     
     simnum = 'L0100N1504'
