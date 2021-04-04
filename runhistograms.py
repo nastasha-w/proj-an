@@ -3502,7 +3502,7 @@ elif jobind in range(20377, 20397):
               'Fe17      15.2620A', 'Fe17      16.7760A',
               'Fe17      17.0960A', 'Fe18      16.0720A',
               ]
-    weighttype = lines_PS20[jobind - 20377]
+    weighttype = (lines_PS20[jobind - 20377]).replace(' ', '-')
     weighttype = 'em-' + weighttype
     for axdct in ['Trprof', 'nrprof', 'Zrprof']:    
         p3g.combhists(samplename='L0100N1504_27_Mh0p5dex_1000', rbinu='R200c',\
@@ -3523,7 +3523,7 @@ elif jobind in range(20397, 20417):
               'Fe17      15.2620A', 'Fe17      16.7760A',
               'Fe17      17.0960A', 'Fe18      16.0720A',
               ]
-    wt = lines_PS20[jobind - 20397]
+    wt = (lines_PS20[jobind - 20397]).replace(' ', '-')
     m3.ol.ndir = '/net/luttero/data2/imgs/paper3/lumfracs/'
     
     simnum = 'L0100N1504'
@@ -3584,7 +3584,7 @@ elif jobind in range(20417, 20437):
               'Fe17      17.0960A', 'Fe18      16.0720A',
               ]
     weighttype = lines_PS20[jobind - 20417]
-    weighttype = 'em-' + weighttype
+    weighttype = 'em-' + weighttype.replace(' ', '-')
     for axdct in ['Trprof', 'nrprof', 'Zrprof']:    
         p3g.combhists(samplename='L0100N1504_27_Mh0p5dex_1000', rbinu='R200c',\
                   idsel=None, weighttype=weighttype,\

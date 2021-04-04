@@ -1290,7 +1290,8 @@ def extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
     if lineset == 'SBlines':
         outname = ol.pdir + 'luminosities_halos_%s_%s-%s-%s_SmAb.hdf5'%(samplename,
                                         str(addedges[0]), str(addedges[1]), rbinu)
-        weighttypes = ['em-{l}'.format(l=line) for line in lines2]
+        weighttypes = ['em-{l}'.format(l=line.replace(' ', '-')) \
+                       for line in lines2]
     elif lineset == 'PS20lines':
         base = 'luminosities_PS20_depletion-F_halos_%s_%s-%s-%s_SmAb.hdf5'
         outname = ol.pdir + base%(samplename, 
