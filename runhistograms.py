@@ -3593,7 +3593,7 @@ elif jobind in range(20417, 20437):
 
 elif jobind == 20437:
     p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
-    p3g.extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
+    p3g.extracthists_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
               addedges=(0.0, 1.), logM200min=11.0, lineset='PS20lines')
 elif jobind == 20438:
     p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'

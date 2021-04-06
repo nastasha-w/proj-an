@@ -1496,7 +1496,8 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
         #ap = hed.attrs['subhalo_aperture_size_Mstar_Mbh_SFR_pkpc']
     
     galdata_all = pd.read_csv(fdata, header=headlen, sep='\t', index_col='galaxyid')
-    galnames_all = {histtype: {line: pd.read_csv(fnames_histtype_line[histtype][line], header=0, sep='\t', index_col='galaxyid')\
+    galnames_all = {histtype: {line: pd.read_csv(fnames_histtype_line[histtype][line],
+                                                 header=0, sep='\t', index_col='galaxyid')\
                                for line in fnames_histtype_line[histtype]}\
                     for histtype in histtypes}
 
