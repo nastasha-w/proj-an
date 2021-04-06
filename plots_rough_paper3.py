@@ -1246,7 +1246,7 @@ def savestamps_v2():
                 'group_out': 'zoom1_small'},\
               ]
                 
-    for line in lines:
+    for line in lines + lines_PS20:
         print(line)
         if line in ['ne10', 'n6-actualr']:
             filen_in = basename.format(line=line)
