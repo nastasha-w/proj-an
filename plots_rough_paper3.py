@@ -1235,6 +1235,7 @@ def savestamps_v2():
     '''
     # slice 3
     basename = 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen21.875_z-projection_noEOS.hdf5'
+    basename_PS20 = 'emission_{line}_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F_L0100N1504_27_test3.7_SmAb_C2Sm_32000pix_6.25slice_zcen21.875_z-projection_noEOS.hdf5'
     
     # sets:
     kwargss = [{'center_out':(50., 50.), 'diameter_out':100., 'resolution_out':250.,\
@@ -1250,6 +1251,8 @@ def savestamps_v2():
         if line in ['ne10', 'n6-actualr']:
             filen_in = basename.format(line=line)
             filen_in = filen_in.replace('test3.5', 'test3.6')
+        elif line in lines_PS20:
+            filen_in = basename_PS20.format(line=line.replace(' ', '-'))
         else:
             filen_in = basename.format(line=line)
         for kwargs in kwargss:
