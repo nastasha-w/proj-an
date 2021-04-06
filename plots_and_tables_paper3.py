@@ -374,7 +374,7 @@ def plotstampzooms_overview():
     lines_med = ['o7r', 'c5r', 'Fe17      17.0510A']
     sliceshift_y = 15. # zoom region overlaps edge -> shift y coordinates up
     
-    filebase = ddir 'stamps/' + \
+    filebase = ddir + 'stamps/' + \
                'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix' + \
                '_6.25slice_zcen21.875_z-projection_noEOS_stamps.hdf5'
     
@@ -424,8 +424,7 @@ def plotstampzooms_overview():
         if line in ['ne10', 'n6-actualr']:
             filen = filen.replace('test3.5', 'test3.6')
         elif line in all_lines_PS20:
-            filen = filen.replace('test3.5', 'test3.7')
-            
+            filen = filen.replace('test3.5', 'test3.7')          
             filen = filen.replace(line, line.replace(' ', '-') + siontab)
         try:
             with h5py.File(filen, 'r') as ft:
