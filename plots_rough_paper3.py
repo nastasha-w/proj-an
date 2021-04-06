@@ -31,6 +31,7 @@ import ion_line_data as ild
 
 mdir = '/net/luttero/data2/imgs/paper3/' #'/net/luttero/data2/imgs/paper3/n6-rf_comp/'
 tmdir = '/net/luttero/data2/imgs/paper3/img_talks/'
+ddir = '/net/luttero/data2/imgs/paper3/datasets/'
 
 rho_to_nh = 0.752 / (c.atomw_H * c.u)
 cosmopars_eagle = {'omegab': c.omegabaryon,
@@ -1271,17 +1272,23 @@ def plotstampzooms_perline(line='all'):
     '''
     # all -> recusive calls for all lines
     if line == 'all':
-        for line in lines:
+        for line in lines + lines_PS20:
             plotstampzooms_perline(line=line)
     
     rsc_slice = 2.
     rsc_zsmall = 1.
     rsc_zbig = 1.
     
-    filebase = ol.pdir + 'stamps/' + 'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_6.25slice_zcen21.875_z-projection_noEOS_stamps.hdf5'
+    filebase = ddir + 'stamps/' + \
+              'emission_{line}_L0100N1504_27_test3.5_SmAb_C2Sm_32000pix_' + \
+              '6.25slice_zcen21.875_z-projection_noEOS_stamps.hdf5'
     filebase = filebase.format(line=line)
     if line in ['ne10', 'n6-actualr']:
         filebase = filebase.replace('test3.5', 'test3.6')
+    elif line in lines_PS20:
+        filebase = filebase.replace('test3.5', 'test3.7')
+        siontab = '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F'
+        filebase.replace(line, line.replace(' ', '-') + siontab)
     grn_slice = 'slice'
     grn_zsmall = 'zoom1_small'
     grn_zbig   = 'zoom1_big'
@@ -1636,7 +1643,7 @@ def plotstampzooms_perline(line='all'):
 
     if outname is not None:
         if '/' not in outname:
-            outname = mdir + outname
+            outname = mdir + 'stamps/' + outname
         if outname[-4:] != '.pdf':
             outname = outname + '.pdf'
         plt.savefig(outname, format='pdf', bbox_inches='tight')
@@ -2219,6 +2226,7 @@ def plotstampzooms_overview():
 ### radial profiles
 
 # subset of galaxies with *full* profile data (all in centrals_1000 have means)
+# not true for PS20 lines
 galids_allprof = [62219791, 61186342, 8016935, 62071929, 60838826, 1796725,
  1567164, 7339947, 1584651, 6173394, 5780339, 6834627, 6458352, 7255767,
  4885143, 6112464, 3416322, 3837043, 4993720, 4640893, 4087110, 13392254,
