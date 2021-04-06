@@ -1272,7 +1272,7 @@ def plotstampzooms_perline(line='all'):
     '''
     # all -> recusive calls for all lines
     if line == 'all':
-        for line in lines + lines_PS20:
+        for line in lines_PS20 + lines:
             plotstampzooms_perline(line=line)
     
     rsc_slice = 2.
@@ -1401,6 +1401,8 @@ def plotstampzooms_perline(line='all'):
         #print(groups)
         #print(snapshots)
         #print(line)
+        print(snapshots[line])
+        print(groups[line])
         if not np.all(snapnum == np.array([snapshots[line][grn] for grn in groups[line]])):
             raise RuntimeError('Stamp snapshots do not match halo catalogue snapshot')
         masses = np.log10(hc['M200c_Msun'][:])
