@@ -1289,7 +1289,7 @@ def plotstampzooms_perline(line='all'):
     elif line in lines_PS20:
         filebase = filebase.replace('test3.5', 'test3.7')
         siontab = '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F'
-        filebase.replace(line, line.replace(' ', '-') + siontab)
+        filebase = filebase.replace(line, line.replace(' ', '-') + siontab)
     grn_slice = 'slice'
     grn_zsmall = 'zoom1_small'
     grn_zbig   = 'zoom1_big'
