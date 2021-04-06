@@ -483,7 +483,7 @@ def plotstampzooms_overview():
     
     print('Using map resolutions:\n{res}'.format(res=resolutions))
     #_lines = sorted(maps.keys(), key=ol.line_eng_ion.get)
-    _lines = sorted(maps.keys(), key=ol.line_eng_ion.get)
+    _lines = sorted(maps.keys(), key=line_energy_ev)
     
     # get halo catalogue data for overplotting
     if '/' not in halocat:
