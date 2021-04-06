@@ -1548,11 +1548,11 @@ def plotstampzooms_perline(line='all'):
         patches = [mpatch.Circle((posx[ind], posy[ind]), scaler200 * rd[ind]) \
                    for ind in range(len(posx))] # x, y axes only
     
-        patheff = [mppe.Stroke(linewidth=1.2, foreground="black"),\
-                       mppe.Stroke(linewidth=0.7, foreground="white"),\
-                       mppe.Normal()] 
+        patheff = [mppe.Stroke(linewidth=1.2, foreground="black"),
+                   mppe.Stroke(linewidth=0.7, foreground="white"),
+                   mppe.Normal()] 
         collection = mcol.PatchCollection(patches)
-        collection.set(edgecolor=colors, facecolor='none', linewidth=0.7,\
+        collection.set(edgecolor=colors, facecolor='none', linewidth=0.7,
                        path_effects=patheff)
         ylim = ax.get_ylim()
         xlim = ax.get_xlim()
@@ -1560,12 +1560,15 @@ def plotstampzooms_perline(line='all'):
         ax.set_xlim(*xlim)
         ax.set_ylim(*ylim)
         
-        patheff_text = [mppe.Stroke(linewidth=2.0, foreground="white"),\
-                        mppe.Stroke(linewidth=0.4, foreground="black"),\
-                        mppe.Normal()]        
-        ltext = nicenames_lines[line]
-        ax.text(0.95, 0.95, ltext, fontsize=fontsize, path_effects=patheff_text,\
-                horizontalalignment='right', verticalalignment='top',\
+        patheff_text = [mppe.Stroke(linewidth=2.0, foreground="white"),
+                        mppe.Stroke(linewidth=0.4, foreground="black"),
+                        mppe.Normal()]     
+        if line in lines_PS20:
+            ltext = line
+        else:
+            ltext = nicenames_lines[line]
+        ax.text(0.95, 0.95, ltext, fontsize=fontsize, path_effects=patheff_text,
+                horizontalalignment='right', verticalalignment='top',
                 transform=ax.transAxes, color='black')
 
         mtext = str(marklength)
