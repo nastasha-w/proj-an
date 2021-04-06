@@ -90,6 +90,7 @@ lines_SP20 = ['C  5      40.2678A',
               'Fe17      17.0960A',
               'Fe18      16.0720A',
               ]
+lines_PS20 = lines_SP20
 
 lines = sorted(lines, key=ol.line_eng_ion.get)
 nicenames_lines =  {'c5r': 'C V',\
