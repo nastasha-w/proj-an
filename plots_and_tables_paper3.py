@@ -990,6 +990,7 @@ def plot_Aeff_galabs():
                   fontsize=fontsize)
     ax.tick_params(labelsize=fontsize-1, direction='in', which='both',\
                    top=True, right=True)
+    ax.grid(b=True)
     #xlim = ax.get_xlim()
     ax.set_xlim(0.1, 3.)
     ax.set_ylim(0.2, 3e4)
