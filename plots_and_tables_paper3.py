@@ -995,7 +995,7 @@ def plot_Aeff_galabs():
     ax.grid(b=True, which='minor', axis='x')
     #xlim = ax.get_xlim()
     ax.set_xlim(0.1, 3.)
-    ax.set_ylim(0.2, 3e4)
+    ax.set_ylim(0.2, 4e4)
     ax.legend(fontsize=fontsize, loc='lower right', framealpha=1.)
     plt.savefig(mdir + 'Aeff_galabs_instruments.pdf', bbox_inches='tight')
 
@@ -1077,7 +1077,7 @@ def plot_minSB():
     
     handles1 = [mlines.Line2D([], [],
                          label=labels[isn] + \
-                         ', S/N in {deltae:.1f} eV'.format(deltae=erngs[isn]),
+                         ', S/N over {deltae:.1f} eV'.format(deltae=erngs[isn]),
                          color=colors[isn])\
                 for isn in names]
     handles2 = [mlines.Line2D([], [],
@@ -1089,7 +1089,8 @@ def plot_minSB():
                          linestyle='solid', color='black', alpha=ag)\
                 for ga, ag in zip(galabs, alphas_g)]
         
-    ax.legend(handles=handles1 + handles2 + handles3, fontsize=fontsize-2)
+    ax.legend(handles=handles1 + handles2 + handles3, fontsize=fontsize-2,
+              loc='upper right', bbox_to_anchor=(0.99, 0.99), framealpha=1.)
     plt.savefig(mdir + 'minSB_instruments_varying_omegatexp.pdf', 
                 bbox_inches='tight')
 
