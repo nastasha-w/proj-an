@@ -856,7 +856,63 @@ def plot_minSB():
                 for ga, ag in zip(galabs, alphas_g)]
         
     ax.legend(handles=handles1 + handles2 + handles3, fontsize=fontsize-2)
-    plt.savefig(mdir + 'minSB_instruments_varying_omegatexp.pdf', bbox_inches='tight')  
+    plt.savefig(mdir + 'minSB_instruments_varying_omegatexp.pdf', bbox_inches='tight')
+    
+
+def save_minSB_grid():
+    outfile = mdir + 'minSB_curves_{ins}.dat'
+    
+    names = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr', 'xrism-resolve']
+    extr_ranges = {'athena-xifu': [2.5],\
+                   'lynx-lxm-main': [4.0],\
+                   'lynx-lxm-uhr': [0.6],\
+                   'xrism-resolve': [10.],\
+                   }   
+    exptimes = [1e6, 1e7]
+    galabs = [True, False]
+    linew_kmps = 100. # model line width
+    nsigma = 5.
+    
+    fmtstring = '{E}\t{minSB}\t{galabs}\t{areatime}\t{linew}\t{nsigma}\t{extr}\n'
+    info_wabs = \
+        '#galactic absorption (if True) comes from' +\
+        '#the  McCammon et al. (2002) diffuse X-ray background model,\n'+\
+        '#using wabs (xspec model) for the galactic  absorption,\n' +\
+        '#with a hydrogen column of 1.8e20 cm**-2 (0.018 parameter value)\n'
+    columns = fmtstring.format(E='input line energy [keV]',
+                               minSB='minimum detectable SB [photons * cm**-2 * s**-1 * sr**-1]',
+                               galabs='including effect of galactic absorption',
+                               areatime='stacked area * exposure time [arcmin**2 * s]',
+                               linew='input line width [km * s**-1]',
+                               nsigma='required detection significance [sigma]',
+                               extr='signal/noise extraction region in the spectrum [full width, eV]')
+    
+    for isn in names:
+        ins = InstrumentModel(instrument=isn)
+        if isn == 'lynx-lxm-uhr':
+            Egrid = np.arange(0.2, 0.9, 0.01)
+        else:
+            Egrid = np.arange(0.2, 3., 0.01)
+        
+        with open(outfile.format(ins=isn), 'w') as fo:
+            fo.write(info_wabs)
+            fo.write(columns)
+            for et in exptimes:
+                for erng in extr_ranges[isn]:
+                    for ga in galabs:
+                        minSB = ins.getminSB_grid(Egrid, 
+                                                  linewidth_kmps=linew_kmps,
+                                                  z=0.0, nsigma=nsigma, 
+                                                  area_texp=et, 
+                                                  extr_range=erng, 
+                                                  incl_galabs=ga)
+                        for _e, _sb in zip(Egrid, minSB):
+                            fo.write(fmtstring.format(E=_e, minSB=_sb,
+                                                      galabs=ga, 
+                                                      areatime=et,
+                                                      linew=linew_kmps,
+                                                      nsigma=nsigma,
+                                                      extr=erng))
 
 def plot_Aeff_galabs():
     names = ['athena-xifu', 'lynx-lxm-main', 'xrism-resolve'] # , 'lynx-lxm-uhr'
