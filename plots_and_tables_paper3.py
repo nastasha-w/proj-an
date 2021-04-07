@@ -947,6 +947,54 @@ def plotstampzooms_overview():
 
 
 
+### instruments and minimum SB
+def plot_Aeff_galabs():
+    datname = ddir + 'Aeff_cm2_{ins}.dat'
+    datname_wabs = ddir + 'wabs_absfrac.dat'
+    Ekey = 'energy [keV]' 
+    Akey = 'effective area [cm**2]'
+    fkey = 'transmitted fraction'
+    
+    names = ['athena-xifu', 'lynx-lxm-main', 'xrism-resolve'] # , 'lynx-lxm-uhr'
+    labels = {'athena-xifu': 'X-IFU',\
+              'lynx-lxm-main': 'LXM',\
+              'lynx-lxm-uhr': 'LXM-UHR',\
+              'xrism-resolve': 'XRISM-R',\
+              }
+    cset = tc.tol_cset('vibrant')
+    colors = {'athena-xifu': cset.blue,\
+              'lynx-lxm-main': cset.orange,\
+              'lynx-lxm-uhr': cset.red,\
+              'xrism-resolve': cset.teal}
+    
+    fig = plt.figure(figsize=(5.5, 5.))
+    ax = fig.gca()
+    fontsize = 12
+    
+    for isn in names:
+        _fn = datname.format(ins=isn)
+        data = pd.read_csv(_fn, header=1, sep='\t')
+        
+        label = labels[isn] 
+        ax.plot(data[Ekey], data[Akey], label=label, color=colors[isn], 
+                linewidth=2)
+        
+    data = pd.read_csv(datname_wabs, header=3, sep='\t')
+    ax.plot(data[Ekey], data[fkey] * 1e4, color='black',
+            label='wabs * 1e4 $\\mathrm{cm}^{2}$')
+                
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('E [keV]', fontsize=fontsize)
+    ax.set_ylabel('$\\mathrm{A}_{\\mathrm{eff}} \\; [\\mathrm{cm}^{2}]$',\
+                  fontsize=fontsize)
+    ax.tick_params(labelsize=fontsize-1, direction='in', which='both',\
+                   top=True, right=True)
+    #xlim = ax.get_xlim()
+    ax.set_xlim(0.1, 3.)
+    ax.set_ylim(0.2, 3e4)
+    ax.legend(fontsize=fontsize, loc='lower right')
+    plt.savefig(mdir + 'Aeff_galabs_instruments.pdf', bbox_inches='tight')
 
 
 

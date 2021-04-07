@@ -930,7 +930,7 @@ def save_Aeff_galabs():
             absfrac = ins.get_galabs(Egrid)
             with open(outname_wabs, 'w') as fo:
                 fo.write(info_wabs)
-                fo.write(fmtstring.format(E='energy [keV]', Aeff='absorbed fraction'))
+                fo.write(fmtstring.format(E='energy [keV]', Aeff='transmitted fraction'))
                 
                 aeff = ins.responses.get_Aeff(Egrid)
                 for _e, _a in zip(Egrid, absfrac):
