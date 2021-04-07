@@ -160,6 +160,7 @@ abbr_to_elt = {'H':  'hydrogen',
                'Si': 'silicon',
                'Fe': 'iron'
                }
+elt_to_abbr = {abbr_to_elt[key]: key for key in abbr_to_elt}
 
 parentelts = {line: abbr_to_elt[line[:2].strip()] for line in all_lines_PS20}
 parentelts.update({line: ol.elements_ion[line] for line in all_lines_SB})
@@ -999,7 +1000,6 @@ def plot_Aeff_galabs():
     plt.savefig(mdir + 'Aeff_galabs_instruments.pdf', bbox_inches='tight')
 
 
-
 def printabundancetable(elts):
     '''
     print the solar abundances of elts in LaTeX table form
@@ -1021,7 +1021,7 @@ def printabundancetable(elts):
     print(head2)
     print(hline)
     for elt in elts:
-        en = element_to_abbr[elt]
+        en = elt_to_abbr[elt]
         
         val_sb = ol.solar_abunds_sb[elt]
         src_sb = ol.sources_abunds_sb[elt]
@@ -1040,4 +1040,97 @@ def printabundancetable(elts):
     print(tend)
 
 
-
+def printlatex_minsb(filen='minSBtable.dat'):
+    
+    df = pd.read_csv(ddir + 'minSB/' + filen, sep='\t')     
+    groupby = ['line name', 'linewidth [km/s]',
+               'sky area * exposure time [arcmin**2 s]', 
+               'full measured spectral range [eV]',
+               'detection significance [sigma]', 
+               'galaxy absorption included in limit',
+               'instrument']
+    df2 = df.groupby(groupby)['minimum detectable SB [phot/s/cm**2/sr]'].mean().reset_index()
+    zopts = df['redshift'].unique()
+    print('Using redshifts: {}'.format(zopts))
+    print('\n\n')
+    
+    # get difference between absorbed/unabsorbed minimum (only depends on line energy)
+    groupby = ['galaxy absorption included in limit',
+               'line name', 'linewidth [km/s]',
+               'sky area * exposure time [arcmin**2 s]', 
+               'full measured spectral range [eV]',
+               'detection significance [sigma]', 
+               'instrument']
+    df3 = df.set_index(groupby) 
+    df3 = df3.loc[True].divide(df3.loc[False])
+    df3.reset_index()
+    df_diff = df3.groupby('line name')['minimum detectable SB [phot/s/cm**2/sr]'].mean().reset_index()
+    df_diff = df_diff.set_index('line name')
+    df_diff = np.log10(df_diff)
+    
+    instruments = df2['instrument'].unique()
+    #_lines =  df2['line name'].unique()
+    omegat = df2['sky area * exposure time [arcmin**2 s]'].unique()
+    #galabs = df2['galaxy absorption included in limit'].unique()
+    
+    omegat_galabs = [(1e7, True), (1e6, True), (1e5, True)]
+    omegat_coln = ['1e7', '1e6', '1e5']
+    nsc = len(omegat_galabs)
+    #subfmt = ' & '.join(['{}'] * nsc)
+    instruments = ['xrism-resolve', 'athena-xifu', 'lynx-lxm-uhr', 'lynx-lxm-main']
+    insnames = ['XRISM Resolve', 'Athena X-IFU', 'LXM UHR', 'LXM main']
+    
+    insfmt = '\\multicolumn{{{nsc}}}{{c}}{{{insn}}}'
+    head1 = 'instrument & ' + ' & '.join([insfmt.format(nsc=nsc, insn=insn)\
+                                                  for insn in insnames]) +\
+            ' & \\multicolumn{1}{c}{$\\Delta_{\\mathrm{wabs}}$} \\\\'
+            
+    head2 = '$\\Delta \\Omega \\, \\Delta \\mathrm{t} \\; [\\mathrm{arcmin}^2 \\mathrm{s}]$'
+    head2 = head2 + ' & ' +  ' & '.join([' & '.join(omegat_coln)] *\
+                                         len(instruments)) +\
+            ' &  \\multicolumn{1}{c}{$[\\log_{10} \\mathrm{SB}]$} \\\\'
+    start = '\\begin{{tabular}}{{{cols}}}'.format(\
+                    cols='l' + 'r' * (nsc * len(instruments) + 1))
+    end = '\\end{tabular}'
+    fmtl = '{line} & ' + ' & '.join(['{}'] * nsc * len(instruments)) + \
+           ' & {delta_wabs:.2f} \\\\'
+    hline = '\\hline'
+    
+    print(start)
+    print(hline)
+    print(head1)
+    print(head2)
+    print(hline)
+    for line in lines:
+        # order of loops is important for consistent results with column names
+        vals = []
+        for ins in instruments:
+            for omegat_target, galabs_target in omegat_galabs:
+                
+                otk = omegat[np.where(np.isclose(omegat, omegat_target))[0][0]]
+                sel = np.logical_and(df2['instrument'] == ins,\
+                                     df2['galaxy absorption included in limit'] == galabs_target)
+                sel = np.logical_and(sel, df2['line name'] == line)
+                sel = np.logical_and(sel, df2['sky area * exposure time [arcmin**2 s]'] == otk)
+                
+                if np.sum(sel) != 1:
+                    print('for line {}, galabs {}, omegat {}, instrument {}'.format(\
+                          line, galabs_target, otk, ins))
+                    print(df2[sel])
+                ind = df2.index[sel][0]
+                val = df2.at[ind, 'minimum detectable SB [phot/s/cm**2/sr]']
+                
+                pval = '-' if val == np.inf else '{:.1f}'.format(np.log10(val))
+                if pval == '-0.0':
+                    pval = '0.0'
+                vals.append(pval)
+        pl = fmtl.format(*tuple(vals), line=nicenames_lines[line], 
+                         delta_wabs=df_diff.at[line, 'minimum detectable SB [phot/s/cm**2/sr]'])
+        print(pl)
+    print(hline)
+    print(end)    
+    # columns: 'line name', 'E rest [keV]', 'linewidth [km/s]', 'redshift',\
+    # 'sky area * exposure time [arcmin**2 s]', 
+    # 'full measured spectral range [eV]', 'detection significance [sigma]',\
+    # 'galaxy absorption included in limit',\
+    # 'minimum detectable SB [phot/s/cm**2/sr]', 'instrument'
