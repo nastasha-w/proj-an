@@ -901,7 +901,49 @@ def plot_Aeff_galabs():
     ax.set_xlim(0.1, 3.)
     ax.set_ylim(0.2, 3e4)
     ax.legend(fontsize=fontsize, loc='lower right')
-    plt.savefig(mdir + 'Aeff_galabs_instruments_varying_omegatexp.pdf', bbox_inches='tight')  
+    plt.savefig(mdir + 'Aeff_galabs_instruments_varying_omegatexp.pdf', bbox_inches='tight')
+
+def save_Aeff_galabs():
+    '''
+    save the data for the effective area and wabs model curves
+
+    Returns
+    -------
+    None.
+
+    '''
+    outname = mdir + 'Aeff_cm2_{ins}.dat'
+    outname_wabs = mdir + 'wabs_absfrac.dat'
+    info_wabs = \
+        '#from the  McCammon et al. (2002) diffuse X-ray background model,\n'+\
+        '#using wabs (xspec model) for the galactic  absorption,\n' +\
+        '#with a hydrogen column of 1.8e20 cm**-2 (0.018 parameter value)\n'
+    
+    names = ['athena-xifu', 'lynx-lxm-main', 'xrism-resolve'] # , 'lynx-lxm-uhr'
+    fmtstring = '{E}\t{Aeff}\n'
+    
+    for isn in names:
+        ins = InstrumentModel(instrument=isn)
+        Egrid = 0.5 * (ins.Egrid[:-1] + ins.Egrid[1:]) 
+        
+        if isn == 'athena-xifu':
+            absfrac = ins.get_galabs(Egrid)
+            with open(outname_wabs) as fo:
+                fo.write(info_wabs)
+                fo.write(fmtstring.format(E='energy [keV]', Aeff='absorbed fraction'))
+                
+                aeff = ins.responses.get_Aeff(Egrid)
+                for _e, _a in zip(Egrid, absfrac):
+                    fo.write(fmtstring.format(E=_e, Aeff=_a))
+            
+        with open(outname.format(ins=isn)) as fo:
+            fo.write('#Data for the {} instrument\n'.format(isn))
+            fo.write(fmtstring.format(E='energy [keV]', Aeff='effective area [cm**2]'))
+            
+            aeff = ins.responses.get_Aeff(Egrid)
+            for _e, _a in zip(Egrid, aeff):
+                fo.write(fmtstring.format(E=_e, Aeff=_a))
+        
     
 
 def plot_equiv_backgrounds(aeff_norm=True):
