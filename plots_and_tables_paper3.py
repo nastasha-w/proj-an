@@ -1018,9 +1018,9 @@ def plot_minSB():
     fontsize = 12
     
     exptimes = [1e6, 1e7]
-    linestyles = ['solid', 'dashed']
+    linestyles = ['solid', 'dotted']
     
-    alphas_g = [1.0, 0.4]
+    alphas_g = [1.0, 0.3]
     galabs = [True, False]
     
     addl = ' {omegat:.0e} am2 s, S/N over {deltae:.1f} eV'
@@ -1073,11 +1073,11 @@ def plot_minSB():
     ax.set_xticks([0.2, 0.3, 0.5, 1., 2., 3.])
     ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
     ax.grid(b=True)
-    ax.tick_params(direction='in', labelsize=fontsize - 1.)
+    ax.tick_params(direction='in', labelsize=fontsize - 1., which='both')
     
     handles1 = [mlines.Line2D([], [],
                          label=labels[isn] + \
-                         ', S/N over {deltae:.1f} eV'.format(deltae=erngs[isn]),
+                         ', S/N in {deltae:.1f} eV'.format(deltae=erngs[isn]),
                          color=colors[isn])\
                 for isn in names]
     handles2 = [mlines.Line2D([], [],
@@ -1090,7 +1090,8 @@ def plot_minSB():
                 for ga, ag in zip(galabs, alphas_g)]
         
     ax.legend(handles=handles1 + handles2 + handles3, fontsize=fontsize-2)
-    plt.savefig(mdir + 'minSB_instruments_varying_omegatexp.pdf', bbox_inches='tight')
+    plt.savefig(mdir + 'minSB_instruments_varying_omegatexp.pdf', 
+                bbox_inches='tight')
 
 def printabundancetable(elts):
     '''
