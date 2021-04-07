@@ -956,15 +956,15 @@ def plot_Aeff_galabs():
     fkey = 'transmitted fraction'
     
     names = ['athena-xifu', 'lynx-lxm-main', 'xrism-resolve'] # , 'lynx-lxm-uhr'
-    labels = {'athena-xifu': 'X-IFU',\
-              'lynx-lxm-main': 'LXM',\
-              'lynx-lxm-uhr': 'LXM-UHR',\
-              'xrism-resolve': 'XRISM-R',\
+    labels = {'athena-xifu': 'X-IFU',
+              'lynx-lxm-main': 'LXM',
+              'lynx-lxm-uhr': 'LXM-UHR',
+              'xrism-resolve': 'XRISM-R',
               }
     cset = tc.tol_cset('vibrant')
-    colors = {'athena-xifu': cset.blue,\
-              'lynx-lxm-main': cset.orange,\
-              'lynx-lxm-uhr': cset.red,\
+    colors = {'athena-xifu': cset.blue,
+              'lynx-lxm-main': cset.orange,
+              'lynx-lxm-uhr': cset.red,
               'xrism-resolve': cset.teal}
     
     fig = plt.figure(figsize=(5.5, 5.))
@@ -1000,7 +1000,44 @@ def plot_Aeff_galabs():
 
 
 
-
+def printabundancetable(elts):
+    '''
+    print the solar abundances of elts in LaTeX table form
+    '''
+    numfmt = 'r@{$\\times$}l'
+    tstart = '\\begin{{tabular}}{{l {numfmt} {numfmt} l }}'.format(numfmt=numfmt)
+    head1 = 'element & \\multicolumn{4}{c}{metallicity} ' + \
+            '& source \\\\'
+    head2 = ' & \\multicolumn{2}{c}{$n_{\\mathrm{elt}} \\,/\\, n_{\\mathrm{H}}$}' +\
+            ' & \\multicolumn{2}{c}{$\\rho_{\\mathrm{elt}} \\,/\\, \\rho_{\\mathrm{tot}}$} \\\\'
+    hline = '\\hline'
+    fillstr = '{elt} & ${num_sb:.2f}$&$10^{{{exp_sb}}}$ & ' + \
+              '${num_ea:.2f}$&$10^{{{exp_ea}}}$ & {src_sb} \\\\'
+    tend = '\\end{tabular}'
+    
+    print(tstart)
+    print(hline)
+    print(head1)
+    print(head2)
+    print(hline)
+    for elt in elts:
+        en = element_to_abbr[elt]
+        
+        val_sb = ol.solar_abunds_sb[elt]
+        src_sb = ol.sources_abunds_sb[elt]
+        exp_sb = int(np.floor(np.log10(val_sb)))
+        num_sb = val_sb / (10** exp_sb)
+        
+        val_ea = ol.solar_abunds_ea[elt]
+        exp_ea = int(np.floor(np.log10(val_ea)))
+        num_ea = val_ea / (10** exp_ea)
+        
+        line = fillstr.format(elt=en, num_sb=num_sb, exp_sb=exp_sb,\
+                              num_ea=num_ea, exp_ea=exp_ea,\
+                              src_sb=src_sb)
+        print(line)
+    print(hline)
+    print(tend)
 
 
 

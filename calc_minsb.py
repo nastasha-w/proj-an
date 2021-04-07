@@ -1085,15 +1085,37 @@ def checkvals_lynx_lxm_uhr():
     plt.savefig(mdir + 'minSB_check_Alexeys-table_vs_arf-rmf-bkg-model.pdf')
     
 
-def savetable_sbmin():
+def savetable_sbmin(lineset='SB'):
     
     nsigma = 5.
     lw = 100.
     zvals = np.arange(0.095, 0.1055, 0.001)
-    lines = ['c5r', 'n6r', 'n6-actualr', 'ne9r', 'ne10', 'mg11r', 'mg12',\
-             'si13r', 'fe18', 'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy',\
-             'o7f', 'o8', 'fe17', 'c6', 'n7']
-    lines.sort(key=ol.line_eng_ion.get)
+    if lineset == 'SB':
+        lines = ['c5r', 'n6r', 'n6-actualr', 'ne9r', 'ne10', 'mg11r', 'mg12',
+                 'si13r', 'fe18', 'fe17-other1', 'fe19', 'o7r', 'o7ix', 
+                 'o7iy', 'o7f', 'o8', 'fe17', 'c6', 'n7']
+        filename = 'minSBtable.dat'
+        
+        sorter_E = ol.line_eng_ion.get
+        lines.sort(key=sorter_E)
+        Erest = [ol.line_eng_ion[line] / c.ev_to_erg * 1e-3 for line in lines]
+        Erest = np.array(Erest)
+    elif lineset == 'PS20_Fe-L-shell': 
+        # other lines are very close to their SB counterparts
+        lines = ['Fe17      17.0510A',
+                 'Fe17      15.2620A', 'Fe17      16.7760A',
+                 'Fe17      17.0960A', 'Fe18      16.0720A']
+        filename = 'minSBtable_PS20_Fe-L-shell.dat'
+        
+        def get_E_kev(line):
+            e_A = float(line.split(' ')[-1][:-1])
+            e_eV = c.planck * c.c / (e_A * 1e-8) / c.ev_to_erg * 1e-3
+            return e_eV
+        Erest = [get_E_kev(line) for line in lines]
+        Erest = np.array(Erest)
+    else:
+        raise ValueError('{} is not a lineset option'.format(lineset))
+        
     instruments = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr',\
                    'xrism-resolve']
     extr_ranges = {'athena-xifu': [2.5],\
@@ -1102,11 +1124,6 @@ def savetable_sbmin():
                    'xrism-resolve': [10.],\
                    }
     omegats = [1e5, 3e5, 1e6, 3e6, 1e7]
-    
-    filename = 'minSBtable.dat'
-    
-    Erest = [ol.line_eng_ion[line] / c.ev_to_erg * 1e-3 for line in lines]
-    Erest = np.array(Erest)
     
     printfmt = '{line}\t{Erest}\t{linewidth}\t{redshift}\t{omegat}\t' + \
                '{extr_range}\t{nsigma}\t{galabs}\t{instrument}\t{minsb}\n'
