@@ -1024,12 +1024,12 @@ def plot_minSB():
     galabs = [True, False]
     
     addl = ' {omegat:.0e} am2 s, S/N over {deltae:.1f} eV'
-    Ekey = 'input line energy [keV]',
-    mkey = 'minimum detectable SB [photons * cm**-2 * s**-1 * sr**-1]',
-    gkey = 'including effect of galactic absorption',
-    tkey = 'stacked area * exposure time [arcmin**2 * s]',
-    wkey = 'input line width [km * s**-1]',
-    skey = 'required detection significance [sigma]',
+    Ekey = 'input line energy [keV]'
+    mkey = 'minimum detectable SB [photons * cm**-2 * s**-1 * sr**-1]'
+    gkey = 'including effect of galactic absorption'
+    tkey = 'stacked area * exposure time [arcmin**2 * s]'
+    wkey = 'input line width [km * s**-1]'
+    skey = 'required detection significance [sigma]'
     rkey = 'signal/noise extraction region in the spectrum [full width, eV]'
     
     erngs = {}
@@ -1077,7 +1077,7 @@ def plot_minSB():
     
     handles1 = [mlines.Line2D([], [],
                          label=labels[isn] + \
-                         ', $\\Delta$E = {deltae:.1f} eV'.format(deltae=erngs[isn]),
+                         ', S/N over {deltae:.1f} eV'.format(deltae=erngs[isn]),
                          color=colors[isn])\
                 for isn in names]
     handles2 = [mlines.Line2D([], [],
