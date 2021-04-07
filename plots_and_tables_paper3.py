@@ -991,6 +991,7 @@ def plot_Aeff_galabs():
     ax.tick_params(labelsize=fontsize-1, direction='in', which='both',\
                    top=True, right=True)
     ax.grid(b=True)
+    ax.grid(b=True, which='minor', axis='x')
     #xlim = ax.get_xlim()
     ax.set_xlim(0.1, 3.)
     ax.set_ylim(0.2, 3e4)
