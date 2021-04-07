@@ -995,7 +995,8 @@ def plot_Aeff_galabs():
     #xlim = ax.get_xlim()
     ax.set_xlim(0.1, 3.)
     ax.set_ylim(0.2, 3e4)
-    ax.legend(fontsize=fontsize, loc='lower right')
+    ax.legend(fontsize=fontsize, loc='lower right', 
+              bbox={'facecolor': 'white', 'alpha': 1.})
     plt.savefig(mdir + 'Aeff_galabs_instruments.pdf', bbox_inches='tight')
 
 
