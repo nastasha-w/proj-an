@@ -1040,8 +1040,28 @@ def printabundancetable(elts):
     print(tend)
 
 
-def printlatex_minsb(filen='minSBtable.dat'):
-    
+def printlatex_minsb(lineset='SB'):
+    '''
+    print a LaTeX table with the minimum SB for the different lines in a set.
+    Combine different sets into one table by hand,
+
+    Parameters
+    ----------
+    lineset : string, optional
+        which lines to print. Options are 'SB' and 'PS20'. The default is 'SB'.
+
+    Returns
+    -------
+    None.
+
+    '''
+    if lineset == 'SB':
+        lines = plot_lines_SB
+        filen='minSBtable.dat'
+    elif lineset == 'PS20':
+        lines = plot_lines_PS20
+        filen = 'minSBtable_PS20_Fe-L-shell.dat'
+        
     df = pd.read_csv(ddir + filen, sep='\t')     
     groupby = ['line name', 'linewidth [km/s]',
                'sky area * exposure time [arcmin**2 s]', 
