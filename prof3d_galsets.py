@@ -1581,7 +1581,7 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
                         else:
                             elt = histtype.split('-')[0] # 'Carbon-rprof'
                         #print(elt)
-                        axname_toaverage = base.format(elt=elt)
+                        axname_toaverage = base.format(elt=string.capwords(elt))
                         
                     try:
                         avax = edgedata_t[axname_toaverage]['histogram axis']
