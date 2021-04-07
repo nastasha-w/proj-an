@@ -928,7 +928,7 @@ def save_Aeff_galabs():
         
         if isn == 'athena-xifu':
             absfrac = ins.get_galabs(Egrid)
-            with open(outname_wabs) as fo:
+            with open(outname_wabs, 'w') as fo:
                 fo.write(info_wabs)
                 fo.write(fmtstring.format(E='energy [keV]', Aeff='absorbed fraction'))
                 
@@ -936,7 +936,7 @@ def save_Aeff_galabs():
                 for _e, _a in zip(Egrid, absfrac):
                     fo.write(fmtstring.format(E=_e, Aeff=_a))
             
-        with open(outname.format(ins=isn)) as fo:
+        with open(outname.format(ins=isn), 'w') as fo:
             fo.write('#Data for the {} instrument\n'.format(isn))
             fo.write(fmtstring.format(E='energy [keV]', Aeff='effective area [cm**2]'))
             
