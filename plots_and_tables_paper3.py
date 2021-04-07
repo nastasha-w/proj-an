@@ -994,8 +994,8 @@ def plot_Aeff_galabs():
     ax.grid(b=True)
     ax.grid(b=True, which='minor', axis='x')
     #xlim = ax.get_xlim()
-    ax.set_xlim(0.1, 3.)
-    ax.set_ylim(0.15, 3e4)
+    ax.set_xlim(0.09, 3.)
+    ax.set_ylim(0.1, 3e4)
     ax.legend(fontsize=fontsize, loc='lower right', framealpha=1.)
     plt.savefig(mdir + 'Aeff_galabs_instruments.pdf', bbox_inches='tight')
 
@@ -1076,7 +1076,7 @@ def plot_minSB():
     ax.tick_params(direction='in', labelsize=fontsize - 1., which='both',
                    top=True, right=True)
     ax.set_xlim(0.18, 3.15)
-    ax.set_ylim(2e-3, 6e4)
+    ax.set_ylim(2e-3, 8e3)
     
     handles1 = [mlines.Line2D([], [],
                          label=labels[isn] + \
