@@ -875,7 +875,7 @@ def save_minSB_grid():
     
     fmtstring = '{E}\t{minSB}\t{galabs}\t{areatime}\t{linew}\t{nsigma}\t{extr}\n'
     info_wabs = \
-        '#galactic absorption (if True) comes from' +\
+        '#galactic absorption (if True) comes from\n' +\
         '#the  McCammon et al. (2002) diffuse X-ray background model,\n'+\
         '#using wabs (xspec model) for the galactic  absorption,\n' +\
         '#with a hydrogen column of 1.8e20 cm**-2 (0.018 parameter value)\n'
