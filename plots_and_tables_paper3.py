@@ -1043,10 +1043,10 @@ def plot_minSB():
                 sel &= data[gkey] == ga
                 _data = data[sel]
                 
-                xv = _data[Ekey]
-                yv = _data[mkey]
+                xv = np.array(_data[Ekey])
+                yv = np.array(_data[mkey])
                 erng = _data[rkey]
-                if not np.allclose(erng, erng[0]):
+                if not np.allclose(erng, erng.at[0]):
                     raise RuntimeError('Multiple extraction ranges for one plot line')
                 erng = erng[0]
                 if isn in erngs:
@@ -1055,10 +1055,10 @@ def plot_minSB():
                 else:
                     erngs[isn] = erng
                 lw_in = _data[wkey]
-                if not np.allclose(lw_in, lw_in[0]):
+                if not np.allclose(lw_in, lw_in.at[0]):
                     raise RuntimeError('Multiple line widths for one plot line')
                 nsigma= _data[skey]
-                if not np.allclose(nsigma, nsigma[0]):
+                if not np.allclose(nsigma, nsigma.at[0]):
                     raise RuntimeError('Multiple line widths for one plot line')
                 
                 label = labels[isn] + addl.format(omegat=et, deltae=erng)
