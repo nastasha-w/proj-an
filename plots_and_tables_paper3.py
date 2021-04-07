@@ -1046,19 +1046,19 @@ def plot_minSB():
                 xv = np.array(_data[Ekey])
                 yv = np.array(_data[mkey])
                 erng = _data[rkey]
-                if not np.allclose(erng, erng.at[0]):
+                if not np.allclose(erng, erng.at[erng.keys()[0]]):
                     raise RuntimeError('Multiple extraction ranges for one plot line')
-                erng = erng[0]
+                erng = erng[erng.keys()[0]]
                 if isn in erngs:
                     if not np.isclose(erngs[isn], erng):
                         raise RuntimeError('Multiple extraction ranges for one instrument')
                 else:
                     erngs[isn] = erng
                 lw_in = _data[wkey]
-                if not np.allclose(lw_in, lw_in.at[0]):
+                if not np.allclose(lw_in, lw_in.at[lw_in.keys()[0]]):
                     raise RuntimeError('Multiple line widths for one plot line')
-                nsigma= _data[skey]
-                if not np.allclose(nsigma, nsigma.at[0]):
+                nsigma = _data[skey]
+                if not np.allclose(nsigma, nsigma.at[nsigma.keys()[0]]):
                     raise RuntimeError('Multiple line widths for one plot line')
                 
                 label = labels[isn] + addl.format(omegat=et, deltae=erng)
