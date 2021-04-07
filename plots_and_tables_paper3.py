@@ -1042,7 +1042,7 @@ def printabundancetable(elts):
 
 def printlatex_minsb(filen='minSBtable.dat'):
     
-    df = pd.read_csv(ddir + 'minSB/' + filen, sep='\t')     
+    df = pd.read_csv(ddir + filen, sep='\t')     
     groupby = ['line name', 'linewidth [km/s]',
                'sky area * exposure time [arcmin**2 s]', 
                'full measured spectral range [eV]',
