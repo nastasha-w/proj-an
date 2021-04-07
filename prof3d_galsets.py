@@ -1563,6 +1563,11 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
                         axname_toaverage = 'Temperature_T4EOS'
                     elif histtype == 'nrprof':
                         axname_toaverage = 'Niondens_hydrogen_SmAb_T4EOS'
+                        if axname_toaverage not in edgedata_t:
+                            siontab = '_PS20-iontab-UVB-dust1-CR1-G1-shield1_depletion-F'
+                            axname_toaverage = 'Niondens_hydrogen_SmAb{}_T4EOS'
+                            axname_toaverage = axname_toaverage.format(siontab)
+                        
                     else:
                         base = 'SmoothedElementAbundance-{elt}_T4EOS'
                         if histtype == 'Zrprof':
