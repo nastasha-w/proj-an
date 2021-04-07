@@ -999,6 +999,98 @@ def plot_Aeff_galabs():
     ax.legend(fontsize=fontsize, loc='lower right', framealpha=1.)
     plt.savefig(mdir + 'Aeff_galabs_instruments.pdf', bbox_inches='tight')
 
+def plot_minSB():
+    names = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr', 'xrism-resolve']
+    labels = {'athena-xifu': 'X-IFU',
+              'lynx-lxm-main': 'LXM-main',
+              'lynx-lxm-uhr': 'LXM-UHR',
+              'xrism-resolve': 'XRISM-R',
+              }
+    cset = tc.tol_cset('vibrant')
+    colors = {'athena-xifu': cset.blue,
+              'lynx-lxm-main': cset.orange,
+              'lynx-lxm-uhr': cset.red,
+              'xrism-resolve': cset.teal
+              }
+    
+    fig = plt.figure(figsize=(5.5, 5.))
+    ax = fig.gca()
+    fontsize = 12
+    
+    exptimes = [1e6, 1e7]
+    linestyles = ['solid', 'dashed']
+    
+    alphas_g = [1.0, 0.4]
+    galabs = [True, False]
+    
+    addl = ' {omegat:.0e} am2 s, S/N over {deltae:.1f} eV'
+    Ekey = 'input line energy [keV]',
+    mkey = 'minimum detectable SB [photons * cm**-2 * s**-1 * sr**-1]',
+    gkey = 'including effect of galactic absorption',
+    tkey = 'stacked area * exposure time [arcmin**2 * s]',
+    wkey = 'input line width [km * s**-1]',
+    skey = 'required detection significance [sigma]',
+    rkey = 'signal/noise extraction region in the spectrum [full width, eV]'
+    
+    erngs = {}
+    for isn in names:
+        fn = ddir + 'minSB_curves_{ins}.dat'.format(ins=isn)
+        data = pd.read_csv(fn, sep='\t', header=4)
+        
+        for et, ls in zip(exptimes, linestyles):
+            for ga, ag in zip(galabs, alphas_g):
+                sel = np.isclose(data[tkey], et)
+                sel &= data[gkey] == ga
+                _data = data[sel]
+                
+                xv = _data[Ekey]
+                yv = _data[mkey]
+                erng = _data[rkey]
+                if not np.allclose(erng, erng[0]):
+                    raise RuntimeError('Multiple extraction ranges for one plot line')
+                erng = erng[0]
+                if isn in erngs:
+                    if not np.isclose(erngs[isn], erng):
+                        raise RuntimeError('Multiple extraction ranges for one instrument')
+                else:
+                    erngs[isn] = erng
+                lw_in = _data[wkey]
+                if not np.allclose(lw_in, lw_in[0]):
+                    raise RuntimeError('Multiple line widths for one plot line')
+                nsigma= _data[skey]
+                if not np.allclose(nsigma, nsigma[0]):
+                    raise RuntimeError('Multiple line widths for one plot line')
+                
+                label = labels[isn] + addl.format(omegat=et, deltae=erng)
+                ax.plot(xv, yv, label=label, color=colors[isn],\
+                        linestyle=ls, alpha=ag)
+            
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('E [keV]', fontsize=fontsize)
+    ax.set_ylabel('$\\min \\mathrm{SB} \\; [\\mathrm{ph} \\; \\mathrm{s}^{-1} \\mathrm{cm}^{-2} \\mathrm{sr}^{-1}]$',\
+                  fontsize=fontsize)
+    ax.set_xticks([0.2, 0.3, 0.5, 1., 2., 3.])
+    ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
+    ax.grid(b=True)
+    ax.tick_params(direction='in', labelsize=fontsize - 1.)
+    
+    handles1 = [mlines.Line2D([], [],
+                         label=labels[isn] + \
+                         ', $\\Delta$E = {deltae:.1f} eV'.format(deltae=erngs[isn]),
+                         color=colors[isn])\
+                for isn in names]
+    handles2 = [mlines.Line2D([], [],
+                         label='{:.0e} $\\mathrm{{arcmin}}^{{2}}$ s'.format(omt),
+                         linestyle=ls, color='gray')\
+                for omt, ls in zip(exptimes, linestyles)]
+    handles3 = [mlines.Line2D([], [],
+                         label='with MW abs.' if ga else 'without MW abs.',
+                         linestyle='solid', color='black', alpha=ag)\
+                for ga, ag in zip(galabs, alphas_g)]
+        
+    ax.legend(handles=handles1 + handles2 + handles3, fontsize=fontsize-2)
+    plt.savefig(mdir + 'minSB_instruments_varying_omegatexp.pdf', bbox_inches='tight')
 
 def printabundancetable(elts):
     '''
