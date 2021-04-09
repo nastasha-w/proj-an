@@ -4427,7 +4427,7 @@ def save_emcurves_PS20(lineset=None, z=0.1, nH='CIE'):
     pre = pre + '\n#Z [mass fraction]: {Z}'.format(Z=Z_use)
     pre = pre + '\n#element abundances [number density / nH]: {}'.format(eltabunds_use)
     head = '\nT\t' + '\t'.join(lineset)
-    fill = '\n{T}\t ' + '\t'.join(['{{{line}}}'.format(line=line.replace('.', 'p')))\
+    fill = '\n{T}\t ' + '\t'.join(['{{{line}}}'.format(line=line.replace('.', 'p'))\
                                       for line in lineset])
     with open(outdir + fname, 'w') as fo:     
         fo.write(pre)
