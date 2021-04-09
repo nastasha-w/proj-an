@@ -982,6 +982,7 @@ def plot_emcurves():
             del lkw['dashes']
         if 'linestyle' in lkw:
             del lkw['linestyle']
+        lineargs[line] = lkw
         
     fname_SB = 'emissivitycurves_z-{z}_nH-{nH}.txt'.format(z=z, nH='CIE')
     fname_PS20_1 = 'emissivitycurves_PS20_z-{z}_nH-{nH}.txt'.format(z=z, nH=1.0)
@@ -1050,7 +1051,7 @@ def plot_emcurves():
             if len(linelabels[line]) > 10:
                 label = linelabels[line]
                 splitpoints = np.where([char == ' ' for char in label])[0]
-                split = splitpoints[np.argmin(np.abs[splitpoints - len(label) // 2])]
+                split = splitpoints[np.argmin(np.abs(splitpoints - len(label) // 2))]
                 label[split] = '\n'
                 linelabels[line] = label
                 
