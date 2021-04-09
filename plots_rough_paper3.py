@@ -4387,7 +4387,7 @@ def save_emcurves_PS20(lineset=None, z=0.1, nH='CIE'):
     curves = {}
     Ts = {}
     nHus = {}
-    for line in lines:
+    for line in lineset:
         table = m3.linetable_PS20(line, z, emission=True)
         table.findemtable()
         
