@@ -943,6 +943,155 @@ def plotstampzooms_overview():
         if outname[-4:] != '.pdf':
             outname = outname + '.pdf'
         plt.savefig(outname, format='pdf', bbox_inches='tight')
+        
+### emissivity curves
+def plot_emcurves():
+    '''
+    contour plots for ions balances + shading for halo masses at different Tvir
+    '''
+    
+    z=0.1
+    outname = mdir + 'emcurves_z{}_HM01_ionizedmu.pdf'.format(str(z).replace('.', 'p'))
+    
+    # eagle cosmology
+    cosmopars = cosmopars_eagle.copy()
+    cosmopars['z'] = z
+    cosmopars['a'] = 1. / (1. + z)
+        
+    lineargs = lineargs_sets.copy()
+    lineargs.update({'fe17': {'linestyle': 'solid',  'color': _c1.yellow}})
+    
+    _linesets = linesets.copy()
+    _linesets[3] = _linesets[3] + ['fe17']
+    
+    linelabels = nicenames_lines.copy()
+    
+    lines = [line for _l in _linesets for line in _l]
+    lines_SB = {line if line in all_lines_SB else None for line in lines}
+    lines_PS20 = {line if line in all_lines_PS20 else None for line in lines}
+    lines_SB -= {None}
+    lines_PS20 -= {None}
+    lines_SB = list(lines_SB)
+    lines_PS20 = list(lines_PS20)
+    lines_SB.sort(key=line_energy_ev)
+    lines_PS20.sort(key=line_energy_ev)
+    
+    for line in lines:
+        lkw = lineargs[line].copy()
+        if 'dashes' in lkw:
+            del lkw['dashes']
+        del lkw['linestyle']
+        
+    fname_SB = 'emissivitycurves_z-{z}_nH-{nH}.txt'.format(z=z, nH='CIE')
+    fname_PS20_1 = 'emissivitycurves_PS20_z-{z}_nH-{nH}.txt'.format(z=z, nH=0.1)
+    fname_PS20_2 = 'emissivitycurves_PS20_z-{z}_nH-{nH}.txt'.format(z=z, nH=0.2)
+    
+    fformat = {'sep':'\t', 'index_col':'T', 'comment':'#'}
+    cdata_SB = pd.read_csv(ddir + fname_SB, **fformat)
+    cdata_PS20_1 = pd.read_csv(ddir + fname_PS20_1, **fformat)
+    cdata_PS20_2 = pd.read_csv(ddir + fname_PS20_2, **fformat)
+    
+    ncols = 2
+    nrows = (len(linesets) - 1) // ncols + 1
+    fig = plt.figure(figsize=(11., 7.))
+    grid = gsp.GridSpec(nrows=nrows, ncols=ncols,  hspace=0.45, wspace=0.0)
+    axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(len(linesets))]
+    
+    xlim = (5.3, 8.5)
+    ylim = (-28., -23.)
+    
+    ylabel = '$\log_{10} \\, \\Lambda \,/\, \\mathrm{n}_{\\mathrm{H}}^{2} \\,/\\, \\mathrm{V} \\; [\\mathrm{erg} \\, \\mathrm{cm}^{3} \\mathrm{s}^{-1}]$'
+    xlabel = r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$'
+    xlabel2 = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}}(\\mathrm{T}_{\\mathrm{200c}}) \\; [\\mathrm{M}_{\\odot}]$'
+    
+    #labelax = fig.add_subplot(grid[:, :], frameon=False)
+    #labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    #labelax.set_xlabel(xlabel, fontsize=fontsize)
+    #labelax.set_ylabel(ylabel, fontsize=fontsize)
+
+    for axi, ax in enumerate(axes):
+        ax.set_xlim(*xlim)
+        ax.set_ylim(*ylim)
+        
+        labely = axi % ncols == 0
+        if labely:
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+        ax.set_xlabel(xlabel, fontsize=fontsize)
+        pu.setticks(ax, fontsize=fontsize, top=False, labeltop=False, 
+                    labelleft=labely)
+        _lines = linesets[axi]
+        ax.grid(b=True)
+        
+        for line in _lines:
+            if line in lines_SB:            
+                kwargs = lineargs[line].copy()
+                kwargs.update({'linestyle': 'solid', 'linewidth': 2})                
+                pe = [mppe.Normal()] #getoutline(kwargs['linewidth'])      
+                xv = cdata_SB.index
+                yv = np.array(cdata_SB[line])
+                ax.plot(xv, yv, path_effects=pe, **kwargs)
+                
+            elif line in lines_PS20:
+                kwargs = lineargs[line].copy()
+                kwargs.update({'linestyle': 'dashed', 'linewidth': 2})                
+                pe = [mppe.Normal()] #getoutline(kwargs['linewidth'])
+                xv = cdata_PS20_1.index
+                yv = np.array(cdata_PS20_1[line])
+                ax.plot(xv,yv, path_effects=pe, **kwargs)
+                
+                kwargs.update({'linestyle': 'dotted', 'linewidth': 2})                
+                pe = [mppe.Normal()] #getoutline(kwargs['linewidth'])
+                xv = cdata_PS20_2.index
+                yv = np.array(cdata_PS20_2[line])
+                ax.plot(xv, yv, path_effects=pe, **kwargs)
+            Tmax = yv[np.argmax(xv)]
+            ax.axvline(Tmax, 0.92, 1., linewidth=3., **lineargs[line])
+            if len(linelabels[line]) > 10:
+                label = linelabels[line]
+                splitpoints = np.where([char == ' ' for char in label])[0]
+                split = splitpoints[np.argmin(np.abs[splitpoints - len(label) // 2])]
+                label[split] = '\n'
+                linelabels[line] = label
+                
+        #xlim = ax.get_xlim()
+        axy2 = ax.twiny()
+        axy2.set_xlim(*xlim)
+        mhalos = np.arange(11.5, 15.1, 0.5)
+        Tvals = np.log10(cu.Tvir_hot(10**mhalos * c.solar_mass,\
+                                     cosmopars=cosmopars))
+        limsel = Tvals >= xlim[0]
+        Tvals = Tvals[limsel]
+        mhalos = mhalos[limsel]
+        Tlabels = ['%.1f'%mh for mh in mhalos]
+        axy2.set_xticks(Tvals)
+        axy2.set_xticklabels(Tlabels)
+        pu.setticks(axy2, fontsize=fontsize, left=False, right=False,
+                    top=True, bottom=False,
+                    labelleft=False, labelright=False,
+                    labeltop=True, labelbottom=False)
+        axy2.minorticks_off()
+        axy2.set_xlabel(xlabel2,
+                        fontsize=fontsize)
+        pe = getoutline(2.)
+        handles = [mlines.Line2D([], [], label=linelabels[line],
+                                 linewidth=2., path_effects=pe, 
+                                 **lineargs[line])\
+                   for line in _lines]
+        #handles2 = [mlines.Line2D([], [], label='$\\mathrm{{n}}_{{\\mathrm{{H}}}} = {:.0f}$'.format(nH),\
+        #                         color='black', **lsargs2[iv])\
+        #           for iv, nH in enumerate(indvals)]
+        #handles3 = [mlines.Line2D([], [], label='CIE',\
+        #                         color='black', **lsargs2[-1])]
+        ax.legend(handles=handles, fontsize=fontsize, ncol=1,\
+                  bbox_to_anchor=(1.0, 1.0), loc='upper right', frameon=True)
+        
+        setname = lineset_names[axi]
+        ax.text(0.05, 0.95, setname, fontsize=fontsize,\
+                horizontalalignment='left', verticalalignment='top',\
+                transform=ax.transAxes,\
+                bbox={'alpha': 0.3, 'facecolor':'white'})
+            
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 
 
