@@ -1047,7 +1047,7 @@ def plot_emcurves():
                 pe = getoutline(kwargs['linewidth'])
                 xv = cdata_PS20_2.index
                 yv = np.array(cdata_PS20_2[line])
-                ax.plot(xv, yv, path_effects=pe, **kwargs)
+                ax.plot(xv, yv + 0.2, path_effects=pe, **kwargs)
                 
             Tmax = yv[np.argmax(xv)]
             ax.axvline(Tmax, 0.92, 1., linewidth=3., **lineargs[line])
