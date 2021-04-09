@@ -1499,7 +1499,7 @@ def printlatex_linedata(emcurve_file):
             _line = line
         else:
             ind = ol.line_nos_ion[line]
-            parentelt = ol.element_ion[line]
+            parentelt = ol.elements_ion[line]
             tablefilename = ol.dir_emtab%(ol.zopts[0]) + parentelt + '.hdf5'
             tablefile = h5py.File(tablefilename, 'r')
             _line = tablefile['lambda'][ind].decode()
