@@ -1454,8 +1454,8 @@ def printlatex_linedata(emcurve_file):
         ps20 = False
     emfrac = 0.1
     columns = ['ion', 'wl', 'E', 'Lmax', 'Tmax', 'Trng', 'ul', 'll', 'name']
-    fillstr = ' \t&'.join(['{{{}}}'.format(col) for col in columns]) \
-              + '\\\\\n'
+    fillstr = ' \t& '.join(['{{{}}}'.format(col) for col in columns]) \
+              + ' \\\\\n'
     hed1_dct = {'ion':  'ion',
                 'wl':   '$\\lambda$',
                 'E':    'E',
@@ -1501,7 +1501,7 @@ def printlatex_linedata(emcurve_file):
             _line = tablefile['lambda'][ind].decode()
             
         ion = _line[:4]
-        wl = float(_line[4:-1])
+        wl = _line[4:-1]
         if _line[-1] != 'A':
             raise NotImplementedError('Only A wavelength interpretation implemented')
         elt = ion[:-2].strip()
@@ -1510,16 +1510,16 @@ def printlatex_linedata(emcurve_file):
         filldct['wl'] = wl
         filldct['ion'] = ion
         E = c.planck * c.c / (wl * 1e-8) / c.ev_to_erg * 1e-3
-        filldct['E'] = E
-        filldct['name'] = _line.replace(' ', '\\\\_')
+        filldct['E'] = sigdig_fmt(E, 4)
+        filldct['name'] = _line.replace(' ', '\\_')
         filldct['ul'] = ''
         filldct['ll'] = ''
         
         T = cdata.index
         L = np.array(cdata[line])
         mi = np.argmax(L)
-        filldct['Lmax'] = L[mi]
-        filldct['Tmax'] = T[mi]
+        filldct['Lmax'] = sigdig_fmt(L[mi], 3)
+        filldct['Tmax'] = '{:.2f}'.format(T[mi])
         Trng = pu.find_intercepts(L, T, np.log10(emfrac) + L[mi])
         if len(Trng) != 2:
             raise RuntimeError('Found T range {} for line {}'.format(Trng, 
