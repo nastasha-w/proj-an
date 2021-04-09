@@ -4427,13 +4427,14 @@ def save_emcurves_PS20(lineset=None, z=0.1, nH='CIE'):
     pre = pre + '\n#Z [mass fraction]: {Z}'.format(Z=Z_use)
     pre = pre + '\n#element abundances [number density / nH]: {}'.format(eltabunds_use)
     head = '\nT\t' + '\t'.join(lineset)
-    fill = '\n{T}\t ' + '\t'.join(['{{{line}}}'.format(line=line)\
+    fill = '\n{T}\t ' + '\t'.join(['{{{line}}}'.format(line=line.replace('.', 'p')))\
                                       for line in lineset])
     with open(outdir + fname, 'w') as fo:     
         fo.write(pre)
         fo.write(head)
         for i in range(len(T)):
-            fo.write(fill.format(T=T[i], **{line: curves[line][i] for line in lineset}))
+            fo.write(fill.format(T=T[i], **{line.replace('.', 'p'): \
+                                            curves[line][i] for line in lineset}))
     
         
 def plot_emcurves(z=0.1):
