@@ -960,6 +960,8 @@ def plot_emcurves():
         
     lineargs = lineargs_sets.copy()
     lineargs.update({'fe17': {'linestyle': 'solid',  'color': _c1.yellow}})
+    lw = 2
+    pe = getoutline(lw)
     
     _linesets = linesets.copy()
     _linesets[3] = _linesets[3] + ['fe17']
@@ -1021,14 +1023,14 @@ def plot_emcurves():
         ax.set_xlabel(xlabel, fontsize=fontsize)
         pu.setticks(ax, fontsize=fontsize, top=False, labeltop=False, 
                     labelleft=labely)
-        _lines = linesets[axi]
+        _lines = _linesets[axi]
         ax.grid(b=True)
         
         for line in _lines:
             if line in lines_SB:            
                 kwargs = lineargs[line].copy()
                 kwargs.update({'linestyle': 'solid', 'linewidth': 2})                
-                pe = [mppe.Normal()] #getoutline(kwargs['linewidth'])      
+                pe = getoutline(kwargs['linewidth'])      
                 xv = cdata_SB.index
                 yv = np.array(cdata_SB[line])
                 ax.plot(xv, yv, path_effects=pe, **kwargs)
@@ -1036,16 +1038,17 @@ def plot_emcurves():
             elif line in lines_PS20:
                 kwargs = lineargs[line].copy()
                 kwargs.update({'linestyle': 'dashed', 'linewidth': 2})                
-                pe = [mppe.Normal()] #getoutline(kwargs['linewidth'])
+                pe = getoutline(kwargs['linewidth'])
                 xv = cdata_PS20_1.index
                 yv = np.array(cdata_PS20_1[line])
                 ax.plot(xv,yv, path_effects=pe, **kwargs)
                 
                 kwargs.update({'linestyle': 'dotted', 'linewidth': 2})                
-                pe = [mppe.Normal()] #getoutline(kwargs['linewidth'])
+                pe = getoutline(kwargs['linewidth'])
                 xv = cdata_PS20_2.index
                 yv = np.array(cdata_PS20_2[line])
                 ax.plot(xv, yv, path_effects=pe, **kwargs)
+                
             Tmax = yv[np.argmax(xv)]
             ax.axvline(Tmax, 0.92, 1., linewidth=3., **lineargs[line])
             if len(linelabels[line]) > 10:
@@ -1075,6 +1078,8 @@ def plot_emcurves():
         axy2.set_xlabel(xlabel2,
                         fontsize=fontsize)
         pe = getoutline(2.)
+        if 'fe17' in _lines:
+            _lines.remove('fe17')
         handles = [mlines.Line2D([], [], label=linelabels[line],
                                  linewidth=2., path_effects=pe, 
                                  **lineargs[line])\
