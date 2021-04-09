@@ -1409,3 +1409,124 @@ def printlatex_minsb(lineset='SB'):
     # 'full measured spectral range [eV]', 'detection significance [sigma]',\
     # 'galaxy absorption included in limit',\
     # 'minimum detectable SB [phot/s/cm**2/sr]', 'instrument'
+
+def sigdig_fmt(val, numdig):
+    '''
+    format for significant digits (no x 10^n notation)
+    '''
+    lead = int(np.floor(np.log10(val)))
+    numtrail = numdig - lead
+    out = str(np.round(val, numtrail - 1))
+    if '.' in out:
+        if out[-2:] == '.0' and len(out) > numdig + 1: 
+            # trailing fp '.0' adds a sig. digit
+            out = out[:-2]
+        elif '.' in out and len(out) < numdig + 1:
+            # trailing zeros removed 
+            out = out + '0' * (numdig + 1 - len(out))
+        if out[:2] == '0.' and len(out) < numtrail + 1:
+            # add more zeros (leading zeros are counted above)
+            out = out + '0' * (numtrail + 1 - len(out))
+    return out
+
+def printlatex_linedata(emcurve_file):
+    '''
+    print a latex table with the line emission curve data. Transitions need to
+    be added afterwards by hand.
+
+    Parameters
+    ----------
+    emcurve_file : string
+        file containing the CIE emission curves.
+
+    Returns
+    -------
+    None.
+
+    '''
+    hline = '\\hline\n'
+    
+    if 'PS20' in emcurve_file:
+        cloudyversion = '17.01'
+        ps20 = True
+    else:
+        cloudyversion = '7.02'
+        ps20 = False
+    emfrac = 0.1
+    columns = ['ion', 'wl', 'E', 'Lmax', 'Tmax', 'Trng', 'ul', 'll', 'name']
+    fillstr = ' \t&'.join(['{{{}}}'.format(col) for col in columns]) \
+              + '\\\\\n'
+    hed1_dct = {'ion':  'ion',
+                'wl':   '$\\lambda$',
+                'E':    'E',
+                'Lmax': '$\\max \, \\Lambda \\,\\mathrm{{n}}_' + \
+                        '\\mathrm{{H}}^{{-2}} \\mathrm{{V}}^{{-1}}$',
+                'Tmax': '$\\mathrm{{T}}_{\\mathrm{peak}}$',
+                'Trng': '$\\mathrm{{T}}_{{{f} '.format(f=emfrac) + \
+                        '\\times \\mathrm{{peak}}}}$',
+                'ul':   'upper level',
+                'll':   'lower level',
+                'name': 'name',
+                }
+    hed2_dct = {'ion':  '',
+                'wl':   '$\\textnormal{{\\AA}}$',
+                'E':    'keV',
+                'Lmax': '$\\log_{{10}} \\, \\mathrm{{erg}} \\, ' + \
+                        '\\mathrm{{cm}}^{{3}} \\mathrm{{s}}^{{-1}}$',
+                'Tmax': ' $\\log_{{10}}$~K',
+                'Trng': ' $\\log_{{10}}$~K',
+                'ul':   '',
+                'll':   '',
+                'name': '{{\\textsc CLOUDY}}~v' + cloudyversion,
+                }
+    print(hline)
+    print(fillstr.format(**hed1_dct))
+    print(fillstr.format(**hed2_dct))
+    print(hline)
+    
+    fformat = {'sep':'\t', 'index_col':'T', 'comment':'#'}
+    cdata = pd.read_csv(ddir + emcurve_file, **fformat)
+    lines = list(cdata.columns)
+    lines.sort(key=line_energy_ev)
+    
+    for line in lines:
+        filldct = {}
+        if ps20:
+            _line = line
+        else:
+            ind = ol.line_nos_ion[line]
+            parentelt = ol.element_ion[line]
+            tablefilename = ol.dir_emtab%(ol.zopts[0]) + parentelt + '.hdf5'
+            tablefile = h5py.File(tablefilename, 'r')
+            _line = tablefile['lambda'][ind].decode()
+            
+        ion = _line[:4]
+        wl = float(_line[4:-1])
+        if _line[-1] != 'A':
+            raise NotImplementedError('Only A wavelength interpretation implemented')
+        elt = ion[:-2].strip()
+        stage = ild.arabic_to_roman[int(ion[2:])]
+        ion = elt + ' ' + stage
+        filldct['wl'] = wl
+        filldct['ion'] = ion
+        E = c.planck * c.c / (wl * 1e-8) / c.ev_to_erg * 1e-3
+        filldct['E'] = E
+        filldct['name'] = _line.replace(' ', '\\\\_')
+        filldct['ul'] = ''
+        filldct['ll'] = ''
+        
+        T = cdata.index
+        L = np.array(cdata[line])
+        mi = np.argmax(L)
+        filldct['Lmax'] = L[mi]
+        filldct['Tmax'] = T[mi]
+        Trng = pu.find_intercepts(L, T, np.log10(emfrac) + L[mi])
+        if len(Trng) != 2:
+            raise RuntimeError('Found T range {} for line {}'.format(Trng, 
+                                                                     line))
+        filldct['Trng'] = '{:.1f}--{:1.f}'.format(*tuple(Trng))
+        print(fillstr.format(**filldct))
+        
+    print(hline)
+    
+    
