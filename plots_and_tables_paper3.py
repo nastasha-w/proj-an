@@ -947,7 +947,7 @@ def plotstampzooms_overview():
 ### emissivity curves
 def plot_emcurves():
     '''
-    contour plots for ions balances + shading for halo masses at different Tvir
+    emissivity as a function of temperature in CIE (nH = 10 cm**-3)
     '''
     
     z=0.1
@@ -959,12 +959,17 @@ def plot_emcurves():
     cosmopars['a'] = 1. / (1. + z)
         
     lineargs = lineargs_sets.copy()
-    lineargs.update({'fe17': {'linestyle': 'solid',  'color': _c1.yellow}})
+    lineargs.update({'fe17': {'linestyle': 'solid',  'color': _c1.yellow},
+                     'C  5      40.2678A': {'linestyle': 'solid',  'color': 'black'},
+                     'C  6      33.7372A': 'solid',  'color': 'black'},
+                     })
     lw = 2
     pe = getoutline(lw)
     
     _linesets = linesets.copy()
     _linesets[3] = ['fe17'] + _linesets[3]
+    _linesets[0] = _linesets[0] + ['C  5      40.2678A']
+    _linesets[1] = _linesets[1] + ['C  6      33.7372A']
     
     linelabels = nicenames_lines.copy()
     
@@ -1035,7 +1040,10 @@ def plot_emcurves():
                 
             elif line in lines_PS20:
                 kwargs = lineargs[line].copy()
-                kwargs.update({'linestyle': 'dashed', 'linewidth': 2})                
+                if line == 'fe17':
+                    kwargs.update({'linestyle': 'dashed', 'linewidth': 2})
+                else:
+                    kwargs.update({'linestyle': 'solid', 'linewidth': 2})                
                 pe = getoutline(kwargs['linewidth'])
                 xv = cdata_PS20.index
                 yv = np.array(cdata_PS20[line])
@@ -1047,8 +1055,9 @@ def plot_emcurves():
                 #yv = np.array(cdata_PS20_2[line])
                 #ax.plot(xv, yv, path_effects=pe, **kwargs)
                 
-            Tmax = xv[np.argmax(yv)]
-            ax.axvline(Tmax, 0.92, 1., linewidth=3., **lineargs[line])
+            if line != 'fe17':
+                Tmax = xv[np.argmax(yv)]
+                ax.axvline(Tmax, 0.92, 1., linewidth=3., **lineargs[line])
             if len(linelabels[line]) > 10:
                 label = linelabels[line]
                 splitpoints = np.where([char == ' ' for char in label])[0]
