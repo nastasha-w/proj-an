@@ -980,7 +980,8 @@ def plot_emcurves():
         lkw = lineargs[line].copy()
         if 'dashes' in lkw:
             del lkw['dashes']
-        del lkw['linestyle']
+        if 'linestyle' in lkw:
+            del lkw['linestyle']
         
     fname_SB = 'emissivitycurves_z-{z}_nH-{nH}.txt'.format(z=z, nH='CIE')
     fname_PS20_1 = 'emissivitycurves_PS20_z-{z}_nH-{nH}.txt'.format(z=z, nH=0.1)
