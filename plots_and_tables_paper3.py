@@ -964,7 +964,7 @@ def plot_emcurves():
     pe = getoutline(lw)
     
     _linesets = linesets.copy()
-    _linesets[3] = _linesets[3] + ['fe17']
+    _linesets[3] = ['fe17'] + _linesets[3]
     
     linelabels = nicenames_lines.copy()
     
@@ -975,8 +975,6 @@ def plot_emcurves():
     lines_PS20 -= {None}
     lines_SB = list(lines_SB)
     lines_PS20 = list(lines_PS20)
-    lines_SB.sort(key=line_energy_ev)
-    lines_PS20.sort(key=line_energy_ev)
     
     for line in lines:
         lkw = lineargs[line].copy()
