@@ -4394,7 +4394,7 @@ def save_emcurves_PS20(lineset=None, z=0.1, nH='CIE'):
         T = np.copy(table.logTK)
                 
         if nH == 'CIE':
-            nH_use = table.table.lognHcm3[-1]
+            nH_use = table.lognHcm3[-1]
         else:
             nH_use = nH
         dct_nH_T_Z = {'lognH': nH_use * np.ones(len(T)),
