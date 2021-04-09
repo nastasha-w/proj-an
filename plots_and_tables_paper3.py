@@ -191,7 +191,7 @@ lineset_names = ['He $\\alpha$ (r)',
 lineargs_sets =\
         {'c5r':  {'linestyle': 'solid',   'color': _c1.blue},
          'c6':   {'linestyle': 'dashed',  'color': _c1.blue},
-         'n6r':  {'linestyle': 'dotted',  'color': _c1.cyan},
+         'n6-actualr':  {'linestyle': 'dotted',  'color': _c1.cyan},
          'n7':   {'linestyle': 'dashed',  'color': _c1.cyan},
          'o7r':  {'linestyle': 'solid',   'color': _c1.green},
          'o7iy': {'dashes': [6, 2],       'color': _c1.yellow},
