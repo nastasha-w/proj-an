@@ -1448,7 +1448,7 @@ def printlatex_linedata(emcurve_file):
     None.
 
     '''
-    hline = '\\hline\n'
+    hline = '\\hline'
     
     if 'PS20' in emcurve_file:
         cloudyversion = '17.01'
@@ -1459,7 +1459,7 @@ def printlatex_linedata(emcurve_file):
     emfrac = 0.1
     columns = ['ion', 'wl', 'E', 'Lmax', 'Tmax', 'Trng', 'ul', 'll', 'name']
     fillstr = ' \t& '.join(['{{{}}}'.format(col) for col in columns]) \
-              + ' \\\\\n'
+              + ' \\\\'
     hed1_dct = {'ion':  'ion',
                 'wl':   '$\\lambda$',
                 'E':    'E',
