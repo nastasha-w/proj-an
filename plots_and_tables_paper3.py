@@ -987,13 +987,13 @@ def plot_emcurves():
         lineargs[line] = lkw
         
     fname_SB = 'emissivitycurves_z-{z}_nH-{nH}.txt'.format(z=z, nH='CIE')
-    fname_PS20_1 = 'emissivitycurves_PS20_z-{z}_nH-{nH}.txt'.format(z=z, nH=1.0)
-    fname_PS20_2 = 'emissivitycurves_PS20_z-{z}_nH-{nH}.txt'.format(z=z, nH=6.0)
+    fname_PS20 = 'emissivitycurves_PS20_z-{z}_nH-{nH}.txt'.format(z=z, nH=1.0)
+    #fname_PS20_2 = 'emissivitycurves_PS20_z-{z}_nH-{nH}.txt'.format(z=z, nH=6.0)
     
     fformat = {'sep':'\t', 'index_col':'T', 'comment':'#'}
     cdata_SB = pd.read_csv(ddir + fname_SB, **fformat)
-    cdata_PS20_1 = pd.read_csv(ddir + fname_PS20_1, **fformat)
-    cdata_PS20_2 = pd.read_csv(ddir + fname_PS20_2, **fformat)
+    cdata_PS20 = pd.read_csv(ddir + fname_PS20_1, **fformat)
+    #cdata_PS20_2 = pd.read_csv(ddir + fname_PS20_2, **fformat)
     
     ncols = 2
     nrows = (len(linesets) - 1) // ncols + 1
@@ -1039,17 +1039,17 @@ def plot_emcurves():
                 kwargs = lineargs[line].copy()
                 kwargs.update({'linestyle': 'dashed', 'linewidth': 2})                
                 pe = getoutline(kwargs['linewidth'])
-                xv = cdata_PS20_1.index
-                yv = np.array(cdata_PS20_1[line])
+                xv = cdata_PS20.index
+                yv = np.array(cdata_PS20[line])
                 ax.plot(xv,yv, path_effects=pe, **kwargs)
                 
-                kwargs.update({'linestyle': 'dotted', 'linewidth': 2})                
-                pe = getoutline(kwargs['linewidth'])
-                xv = cdata_PS20_2.index
-                yv = np.array(cdata_PS20_2[line])
-                ax.plot(xv, yv, path_effects=pe, **kwargs)
+                #kwargs.update({'linestyle': 'dotted', 'linewidth': 2})                
+                #pe = getoutline(kwargs['linewidth'])
+                #xv = cdata_PS20_2.index
+                #yv = np.array(cdata_PS20_2[line])
+                #ax.plot(xv, yv, path_effects=pe, **kwargs)
                 
-            Tmax = yv[np.argmax(xv)]
+            Tmax = xv[np.argmax(yv)]
             ax.axvline(Tmax, 0.92, 1., linewidth=3., **lineargs[line])
             if len(linelabels[line]) > 10:
                 label = linelabels[line]
