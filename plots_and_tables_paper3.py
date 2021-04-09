@@ -1459,25 +1459,25 @@ def printlatex_linedata(emcurve_file):
     hed1_dct = {'ion':  'ion',
                 'wl':   '$\\lambda$',
                 'E':    'E',
-                'Lmax': '$\\max \, \\Lambda \\,\\mathrm{{n}}_' + \
-                        '\\mathrm{{H}}^{{-2}} \\mathrm{{V}}^{{-1}}$',
-                'Tmax': '$\\mathrm{{T}}_{\\mathrm{peak}}$',
+                'Lmax': '$\\max \, \\Lambda \\,\\mathrm{n}_' + \
+                        '\\mathrm{H}^{-2} \\mathrm{V}^{-1}$',
+                'Tmax': '$\\mathrm{T}_{\\mathrm{peak}}$',
                 'Trng': '$\\mathrm{{T}}_{{{f} '.format(f=emfrac) + \
-                        '\\times \\mathrm{{peak}}}}$',
+                        '\\times \\mathrm{peak}}$',
                 'ul':   'upper level',
                 'll':   'lower level',
                 'name': 'name',
                 }
     hed2_dct = {'ion':  '',
-                'wl':   '$\\textnormal{{\\AA}}$',
+                'wl':   '$\\textnormal{\\AA}$',
                 'E':    'keV',
-                'Lmax': '$\\log_{{10}} \\, \\mathrm{{erg}} \\, ' + \
-                        '\\mathrm{{cm}}^{{3}} \\mathrm{{s}}^{{-1}}$',
-                'Tmax': ' $\\log_{{10}}$~K',
-                'Trng': ' $\\log_{{10}}$~K',
+                'Lmax': '$\\log_{10} \\, \\mathrm{erg} \\, ' + \
+                        '\\mathrm{cm}^{3} \\mathrm{s}^{-1}$',
+                'Tmax': ' $\\log_{10}$~K',
+                'Trng': ' $\\log_{10}$~K',
                 'ul':   '',
                 'll':   '',
-                'name': '{{\\textsc CLOUDY}}~v' + cloudyversion,
+                'name': '{\\textsc CLOUDY}~v' + cloudyversion,
                 }
     print(hline)
     print(fillstr.format(**hed1_dct))
@@ -1524,7 +1524,7 @@ def printlatex_linedata(emcurve_file):
         if len(Trng) != 2:
             raise RuntimeError('Found T range {} for line {}'.format(Trng, 
                                                                      line))
-        filldct['Trng'] = '{:.1f}--{:1.f}'.format(*tuple(Trng))
+        filldct['Trng'] = '{:.1f}--{:.1f}'.format(*tuple(Trng))
         print(fillstr.format(**filldct))
         
     print(hline)
