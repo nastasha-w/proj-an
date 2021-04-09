@@ -984,8 +984,8 @@ def plot_emcurves():
             del lkw['linestyle']
         
     fname_SB = 'emissivitycurves_z-{z}_nH-{nH}.txt'.format(z=z, nH='CIE')
-    fname_PS20_1 = 'emissivitycurves_PS20_z-{z}_nH-{nH}.txt'.format(z=z, nH=0.1)
-    fname_PS20_2 = 'emissivitycurves_PS20_z-{z}_nH-{nH}.txt'.format(z=z, nH=0.2)
+    fname_PS20_1 = 'emissivitycurves_PS20_z-{z}_nH-{nH}.txt'.format(z=z, nH=1.0)
+    fname_PS20_2 = 'emissivitycurves_PS20_z-{z}_nH-{nH}.txt'.format(z=z, nH=6.0)
     
     fformat = {'sep':'\t', 'index_col':'T', 'comment':'#'}
     cdata_SB = pd.read_csv(ddir + fname_SB, **fformat)
