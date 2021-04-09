@@ -961,7 +961,7 @@ def plot_emcurves():
     lineargs = lineargs_sets.copy()
     lineargs.update({'fe17': {'linestyle': 'solid',  'color': _c1.yellow},
                      'C  5      40.2678A': {'linestyle': 'solid',  'color': 'black'},
-                     'C  6      33.7372A': 'solid',  'color': 'black'},
+                     'C  6      33.7372A': {'solid',  'color': 'black'},
                      })
     lw = 2
     pe = getoutline(lw)
