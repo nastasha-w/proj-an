@@ -4364,6 +4364,76 @@ def save_emcurves(lineset=None, z=0.1, nH='CIE'):
         fo.write(head)
         for i in range(len(T)):
             fo.write(fill.format(T=T[i], **{line: curves[line][i] for line in lineset}))
+
+def save_emcurves_PS20(lineset=None, z=0.1, nH='CIE'):
+    '''
+    get a table of line emissivity as a function of temperature 
+    
+    input:
+    ------
+    lineset: list of line names (make_maps_v3_master.linetable_PS20), 
+             or None for all lines_PS20
+    z:       redshift of the tables to use
+    nH:      hydrogen number density (log10 cm**-3) to use
+             'CIE' -> highest nH tabulated
+    '''
+    import make_maps_v3_master as m3
+    
+    if lineset is None:
+        lineset = lines_PS20
+    Z_use = ol.Zsun_ea
+    eltabunds_use = ol.solar_abunds_sb.copy() # number density ratios
+    
+    curves = {}
+    Ts = {}
+    nHus = {}
+    for line in lines:
+        table = m3.linetable_PS20(line, z, emission=True)
+        table.findemtable()
+        
+        T = np.copy(table.logTK)
+                
+        if nH == 'CIE':
+            nH_use = table.table.lognHcm3[-1]
+        else:
+            nH_use = nH
+        dct_nH_T_Z = {'lognH': nH_use * np.ones(len(T)),
+                      'logZ': np.log10(Z_use) * np.ones(len(T)),
+                      'logT': T}
+        emcurve = table.find_logemission(dct_nH_T_Z)
+        emcurve -= 2 * nH_use # Lambda / V -> Lambda / V / nH**2
+        dct_Z = {'logZ': np.array([np.log10(Z_use)])}
+        abunds_assumed = table.find_assumedabundance(dct_Z, log=True)
+        emcurve += np.log10(eltabunds_use[table.element.lower()]) \
+                   - abunds_assumed
+        
+        Ts[line] = T
+        curves[line] = emcurve
+        nHus[line] = nH_use
+    
+    T = Ts[lineset[0]]
+    if not np.all([np.all(T == Ts[line]) for line in lineset]):
+        raise RuntimeError('T values did not match between line tables')
+    nHu = nHus[lineset[0]]
+    if not np.all([nHu == nHus[line] for line in lineset]):
+        raise RuntimeError('used nH values did not match between line tables')
+    
+    outdir = mdir + 'datasets/'
+    fname = 'emissivitycurves_PS20_z-{z}_nH-{nH}.txt'.format(z=z, nH=nH_use)
+    pre = '#table: line emissvity log10 Lambda * nH**-2 * V**-1 [erg * cm**3 * s**-1]'
+    pre = pre + '\n#tabulated as a function of log10 T [K] (column T)'
+    pre = pre + '\n#nH [log10 cm**-3]: {nHu}'.format(nHu=nH_use)
+    pre = pre + '\n#z: {z}'.format(z=z)
+    pre = pre + '\n#Z [mass fraction]: {Z}'.format(Z=Z_use)
+    pre = pre + '\n#element abundances [number density / nH]: {}'.format(eltabunds_use)
+    head = '\nT\t' + '\t'.join(lineset)
+    fill = '\n{T}\t ' + '\t'.join(['{{{line}}}'.format(line=line)\
+                                      for line in lineset])
+    with open(outdir + fname, 'w') as fo:     
+        fo.write(pre)
+        fo.write(head)
+        for i in range(len(T)):
+            fo.write(fill.format(T=T[i], **{line: curves[line][i] for line in lineset}))
     
         
 def plot_emcurves(z=0.1):
