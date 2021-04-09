@@ -992,7 +992,7 @@ def plot_emcurves():
     
     fformat = {'sep':'\t', 'index_col':'T', 'comment':'#'}
     cdata_SB = pd.read_csv(ddir + fname_SB, **fformat)
-    cdata_PS20 = pd.read_csv(ddir + fname_PS20_1, **fformat)
+    cdata_PS20 = pd.read_csv(ddir + fname_PS20, **fformat)
     #cdata_PS20_2 = pd.read_csv(ddir + fname_PS20_2, **fformat)
     
     ncols = 2
