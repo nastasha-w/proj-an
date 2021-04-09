@@ -1414,6 +1414,8 @@ def sigdig_fmt(val, numdig):
     '''
     format for significant digits (no x 10^n notation)
     '''
+    minus = '-' if val < 0 else ''
+    val = np.abs(val)
     lead = int(np.floor(np.log10(val)))
     numtrail = numdig - lead
     out = str(np.round(val, numtrail - 1))
@@ -1427,7 +1429,9 @@ def sigdig_fmt(val, numdig):
         if out[:2] == '0.' and len(out) < numtrail + 1:
             # add more zeros (leading zeros are counted above)
             out = out + '0' * (numtrail + 1 - len(out))
-    return out
+    if float(out) == 0.:
+        minus = ''
+    return minus + out
 
 def printlatex_linedata(emcurve_file):
     '''
