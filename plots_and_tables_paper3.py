@@ -1052,7 +1052,7 @@ def plot_emcurves():
                 label = linelabels[line]
                 splitpoints = np.where([char == ' ' for char in label])[0]
                 split = splitpoints[np.argmin(np.abs(splitpoints - len(label) // 2))]
-                label[split] = '\n'
+                label = label[:split] + '\n' + label[split + 1:]
                 linelabels[line] = label
                 
         #xlim = ax.get_xlim()
