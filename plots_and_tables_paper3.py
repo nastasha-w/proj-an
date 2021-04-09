@@ -1509,7 +1509,7 @@ def printlatex_linedata(emcurve_file):
         ion = elt + ' ' + stage
         filldct['wl'] = wl
         filldct['ion'] = ion
-        E = c.planck * c.c / (wl * 1e-8) / c.ev_to_erg * 1e-3
+        E = c.planck * c.c / (float(wl) * 1e-8) / c.ev_to_erg * 1e-3
         filldct['E'] = sigdig_fmt(E, 4)
         filldct['name'] = _line.replace(' ', '\\_')
         filldct['ul'] = ''
