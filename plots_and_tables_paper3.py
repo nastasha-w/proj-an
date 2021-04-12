@@ -1275,7 +1275,7 @@ def plot_barchart_Ls(simple=False):
     
     yc = np.arange((len(keys)  - 1) // ncols + 1, dtype=np.float)  # the label locations
     width = 0.9  # the width of the bars
-    incrspace = 0.3
+    incrspace = 0.15
     morder = ['igm', 'lom'] + list(edges_target[:-1]) + ['over']
     for ki, key in enumerate(keys):
         if not simple:
@@ -1304,6 +1304,7 @@ def plot_barchart_Ls(simple=False):
             if 'Fe17' in key: # longer labels -> need more vertical space
                 yc[ki + 1:] += 2. * incrspace
                 yc[ki]  += incrspace
+                _width += incrspace
             zeropt = yc[ki]
         else:
             _width = width / 7.
