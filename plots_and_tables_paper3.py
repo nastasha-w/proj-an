@@ -1273,7 +1273,7 @@ def plot_barchart_Ls(simple=False):
     colors.update({'lom': c_under, 'igm': c_igm})
     #print(hmedges.keys())
     
-    yc = np.arange((len(keys)  - 1) // ncols + 1)  # the label locations
+    yc = np.arange((len(keys)  - 1) // ncols + 1, dtype=np.float)  # the label locations
     width = 0.9  # the width of the bars
     incrspace = 0.3
     morder = ['igm', 'lom'] + list(edges_target[:-1]) + ['over']
