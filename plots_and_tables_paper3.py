@@ -1144,7 +1144,7 @@ def plot_barchart_Ls(simple=False):
     filenames.update({'Mass': _ddir + filename_M})
     
     labels = nicenames_lines.copy()
-    labels.update({line: line for line in lines}) # easy PS20/SB comp
+    labels.update({line: line.replace(' ' * 6, '\n') for line in lines}) # easy PS20/SB comp
     labels.update({'Mass': 'Mass'})
     # avoid large whitespace just to fit lines names
     #labels['fe17'] = 'Fe XVII\n(17.05 A)'
@@ -1228,7 +1228,7 @@ def plot_barchart_Ls(simple=False):
     morder = ['igm', 'lom'] + list(edges_target[:-1]) + ['over']
     for ki, key in enumerate(keys):
         if not simple:
-            axi = ki % ncols
+            axi = ki // ncols
             ax = axes[axi]
          
         # match halo mass edges:
@@ -1253,7 +1253,7 @@ def plot_barchart_Ls(simple=False):
             zeropt = ki
         else:
             _width = width / 7.
-            zeropt = yc[ki // ncols] - 3.5 * _width
+            zeropt = yc[ki % len(yc)] - 3.5 * _width
         
         baseslice = [slice(None, None, None)] * len(data[key]['halo'].shape)
         
