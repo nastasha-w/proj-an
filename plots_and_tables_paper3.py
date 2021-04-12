@@ -1304,7 +1304,7 @@ def plot_barchart_Ls(simple=False):
             if 'Fe17' in key: # longer labels -> need more vertical space
                 yc[ki + 1:] += 2. * incrspace
                 yc[ki]  += incrspace
-                _width += incrspace
+                #_width += incrspace
             zeropt = yc[ki]
         else:
             _width = width / 7.
