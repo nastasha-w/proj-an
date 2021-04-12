@@ -1301,7 +1301,7 @@ def plot_barchart_Ls(simple=False):
         # total mass fractions
         if simple: 
             _width = width
-            if 'Fe17' in line: # longer labels -> need more vertical space
+            if 'Fe17' in key: # longer labels -> need more vertical space
                 yc[ki + 1:] += 2. * incrspace
                 yc[ki]  += incrspace
             zeropt = yc[ki]
