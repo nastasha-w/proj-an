@@ -1156,16 +1156,16 @@ def plot_barchart_Ls(simple=False):
     # change order because the two two-line names overlap
     # 'n6r',  'o7ix',
     if simple:
-        lines = plot_lines_PS20 + plot_lines_SB
-        lines.sort(key=line_Tmax.get)
+        lines = plot_lines_SB + plot_lines_PS20
+        #lines.sort(key=line_Tmax.get)
         labels = nicenames_lines.copy()
-        for line in labels:
-            if '(' in labels[line]:
-                _label = labels[line]
-                splitpoint = np.where([char == '(' for char in _label])
-                splitpoint = splitpoint[0][0] - 1
-                _label = _label[:splitpoint] + '\n' + _label[splitpoint + 1:]
-                labels[line] = _label
+        #for line in labels:
+        #    _label = labels[line]
+        #    if '(' in _label and len(label) > 10:
+        #        splitpoint = np.where([char == '(' for char in _label])
+        #        splitpoint = splitpoint[0][0] - 1
+        #        _label = _label[:splitpoint] + '\n' + _label[splitpoint + 1:]
+        #        labels[line] = _label
     else:
         lines = all_lines_PS20 + all_lines_SB
         lines.sort(key=line_energy_ev)
