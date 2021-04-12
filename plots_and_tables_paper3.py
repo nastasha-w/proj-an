@@ -230,6 +230,26 @@ line_Tmax = {'c5r':    5.95,
               'fe17-other1': 6.8,
               'fe18':  6.9,
               'fe19':  7.0,
+              'C  5      40.2678A': 6.0,
+              'C  6      33.7372A': 6.1,
+              'N  6      29.5343A': 6.1,
+              'N  6      28.7870A': 6.2,
+              'N  7      24.7807A': 6.3,
+              'O  7      21.6020A': 6.3,
+              'O  7      21.8044A': 6.3,
+              'O  7      21.8070A': 6.3,
+              'O  7      22.1012A': 6.3,
+              'O  8      18.9709A': 6.5,
+              'Ne 9      13.4471A': 6.6,
+              'Ne10      12.1375A': 6.8,
+              'Mg11      9.16875A': 6.8,
+              'Mg12      8.42141A': 7.0,
+              'Si13      6.64803A': 7.0,
+              'Fe17      17.0510A': 6.7,
+              'Fe17      15.2620A': 6.8,
+              'Fe17      16.7760A': 6.7,
+              'Fe17      17.0960A': 6.7,
+              'Fe18      16.0720A': 6.8,
               }
 # Trange: rounded to 0.1 dex, copied by hand from table
 line_Trange = {'c5r':   (5.7, 6.3),
@@ -251,7 +271,27 @@ line_Trange = {'c5r':   (5.7, 6.3),
                'fe17-other1': (6.4, 7.1),
                'fe18':  (6.6, 7.1),
                'fe19':  (6.7, 7.2),
-               }
+               'C  5      40.2678A': (5.7, 6.3),
+               'C  6      33.7372A': (5.9, 6.8),
+               'N  6      29.5343A': (5.8, 6.5),
+               'N  6      28.7870A': (5.9, 6.5),
+               'N  7      24.7807A': (6.1, 7.0),
+               'O  7      21.6020A': (6.0, 6.6),
+               'O  7      21.8044A': (6.0, 6.6),
+               'O  7      21.8070A': (6.0, 6.6),
+               'O  7      22.1012A': (6.0, 6.7),
+               'O  8      18.9709A': (6.2, 7.2),
+               'Ne 9      13.4471A': (6.2, 7.0),
+               'Ne10      12.1375A': (6.5, 7.5),
+               'Mg11      9.16875A': (6.4, 7.2),
+               'Mg12      8.42141A': (6.7, 7.7),
+               'Si13      6.64803A': (6.6, 7.4),
+               'Fe17      17.0510A': (6.3, 7.0),
+               'Fe17      15.2620A': (6.4, 7.0),
+               'Fe17      16.7760A': (6.4, 7.0),
+               'Fe17      17.0960A': (6.3, 7.0),
+               'Fe18      16.0720A': (6.5, 7.1),
+                }
 
 ### galaxies 
 mass_edges_standard = (11., 11.5, 12.0, 12.5, 13.0, 13.5, 14.0)
@@ -1115,8 +1155,27 @@ def plot_barchart_Ls(simple=False):
     
     # change order because the two two-line names overlap
     # 'n6r',  'o7ix',
-    lines = all_lines_PS20 + all_lines_SB
-    lines.sort(key=line_energy_ev)
+    if simple:
+        lines = plot_lines_PS20 + plot_lines_SB
+        lines.sort(key=line_Tmax.get)
+        labels = nicenames_lines.copy()
+        for line in labels:
+            if '(' in labels[line]:
+                _label = labels[line]
+                splitpoint = np.where([char == '(' for char in _label])
+                splitpoint = splitpoint[0][0] - 1
+                _label = _label[:splitpoint] + '\n' + _label[splitpoint + 1:]
+                labels[line] = _label
+    else:
+        lines = all_lines_PS20 + all_lines_SB
+        lines.sort(key=line_energy_ev)
+        labels = nicenames_lines.copy()
+        labels.update({line: line.replace(' ' * 6, '\n') for line in lines}) # easy PS20/SB comp
+    labels.update({'Mass': 'Mass'})
+    # avoid large whitespace just to fit lines names
+    #labels['fe17'] = 'Fe XVII\n(17.05 A)'
+    #labels['fe17-other1'] = 'Fe XVII\n(15.10 A)'
+    keys = ['Mass'] + lines 
     
     # hdf5 group and histogram axis names
     grn_tot = 'StarFormationRate_T4EOS'
@@ -1142,15 +1201,6 @@ def plot_barchart_Ls(simple=False):
                  _ddir + fn_base_PS20.format(line=line.replace(' ', '-'))\
                 for line in lines}
     filenames.update({'Mass': _ddir + filename_M})
-    
-    labels = nicenames_lines.copy()
-    labels.update({line: line.replace(' ' * 6, '\n') for line in lines}) # easy PS20/SB comp
-    labels.update({'Mass': 'Mass'})
-    # avoid large whitespace just to fit lines names
-    #labels['fe17'] = 'Fe XVII\n(17.05 A)'
-    #labels['fe17-other1'] = 'Fe XVII\n(15.10 A)'
-    keys = ['Mass'] + lines 
-    
     
     data = {}
     haxes = {}
