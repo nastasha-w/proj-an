@@ -1180,7 +1180,7 @@ def plot_barchart_Ls(simple=False):
         ax =  fig.add_subplot(grid[0, 0]) 
         cax = fig.add_subplot(grid[1, 0])
     else:
-        figsize = (11., 16.)
+        figsize = (11., 20.)
         height_ratios = [15., 0.5]
         ncols = 3
         fig = plt.figure(figsize=figsize)
