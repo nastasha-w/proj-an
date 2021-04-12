@@ -1228,7 +1228,7 @@ def plot_barchart_Ls(simple=False):
     morder = ['igm', 'lom'] + list(edges_target[:-1]) + ['over']
     for ki, key in enumerate(keys):
         if not simple:
-            axi = ki // ncols
+            axi = ki // len(yc)
             ax = axes[axi]
          
         # match halo mass edges:
