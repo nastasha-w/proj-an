@@ -1102,6 +1102,251 @@ def plot_emcurves():
             
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
+### total luminosity splits
+def plot_barchart_Ls(simple=False):
+    '''
+    simple: total luminosity fractions for different halo masses (True) or 
+            fractions broken down by SF/nSF and subhalo membership category
+    '''
+    outname = mdir + 'luminosity_total_fractions_z0p1{}.pdf'
+    outname = outname.format('_simple' if simple else '')
+    _ddir = ddir + 'lumfracs/'
+    print('Numbers in annotations: log10 L density [erg/s/cMpc**3] rest-frame')
+    
+    # change order because the two two-line names overlap
+    # 'n6r',  'o7ix',
+    lines = all_lines_PS20 + all_lines_SB
+    lines.sort(key=line_energy_ev)
+    
+    # hdf5 group and histogram axis names
+    grn_tot = 'StarFormationRate_T4EOS'
+    grn_halo = 'M200c_halo_allinR200c_subhalo_category_StarFormationRate_T4EOS'
+    axn_sf = 'StarFormationRate_T4EOS'
+    axn_hm = 'M200c_halo_allinR200c'
+    axn_sh = 'subhalo_category'
+    fn_base_SB = 'particlehist_Luminosity_{line}_L0100N1504_27_test3.6' + \
+                 '_SmAb_T4EOS.hdf5'
+    fn_base_PS20 = 'particlehist_Luminosity_{line}_iontab-PS20-UVB-' + \
+                   'dust1-CR1-G1-shield1_depletion-F_L0100N1504_27' + \
+                   '_test3.7_SmAb_T4EOS.hdf5'
+    filename_M = 'particlehist_Mass_L0100N1504_27_test3.6_T4EOS.hdf5'
+    
+    sflabels = {0: 'nSF', 1: 'SF'}
+    shlabels = {0: 'central', 1: 'subhalo', 2: 'unbound'}
+    
+    edges_target = np.arange(11., 15.1, 0.5)
+    mmax_igm = c.solar_mass
+    
+    filenames = {line: _ddir + fn_base_SB.format(line=line) \
+                 if line in all_lines_SB else \
+                 _ddir + fn_base_PS20.format(line=line.replace(' ', '-'))\
+                for line in lines}
+    filenames.update({'Mass': _ddir + filename_M})
+    
+    labels = nicenames_lines.copy()
+    labels.update({line: line for line in lines}) # easy PS20/SB comp
+    labels.update({'Mass': 'Mass'})
+    # avoid large whitespace just to fit lines names
+    #labels['fe17'] = 'Fe XVII\n(17.05 A)'
+    #labels['fe17-other1'] = 'Fe XVII\n(15.10 A)'
+    keys = ['Mass'] + lines 
+    
+    
+    data = {}
+    haxes = {}
+    hmedges = {}
+    for key in keys:
+        filen = filenames[key]
+        data[key] = {}
+        haxes[key] = {}
+        with h5py.File(filen, 'r') as fi:
+            data[key]['tot'] = fi[grn_tot]['histogram'][:]
+            data[key]['halo'] = fi[grn_halo]['histogram'][:]
+            haxes[key]['sf'] = fi[grn_halo][axn_sf].attrs['histogram axis']
+            haxes[key]['hm'] = fi[grn_halo][axn_hm].attrs['histogram axis']
+            haxes[key]['sh'] = fi[grn_halo][axn_sh].attrs['histogram axis']
+            hmedges[key] = fi[grn_halo][axn_hm]['bins'][:]
+            
+            if key == 'Mass':
+                cosmopars = {key: val for key, val in fi['Header/cosmopars'].attrs.items()}
+            
+    if simple:
+        figsize = (5.5, 10.)
+        height_ratios = [8., 1.]
+        ncols = 1
+        fig = plt.figure(figsize=figsize)
+        grid = gsp.GridSpec(nrows=2, ncols=1, hspace=0.2, wspace=0.0,\
+                            height_ratios=height_ratios)
+        ax =  fig.add_subplot(grid[0, 0]) 
+        cax = fig.add_subplot(grid[1, 0])
+    else:
+        figsize = (11., 16.)
+        height_ratios = [15., 0.5]
+        ncols = 3
+        fig = plt.figure(figsize=figsize)
+        grid = gsp.GridSpec(nrows=2, ncols=ncols, hspace=0.2, wspace=0.4,\
+                            height_ratios=height_ratios)
+        axes =  [fig.add_subplot(grid[0, i]) for i in range(ncols)] 
+        cax = fig.add_subplot(grid[1, :])
+        
+    clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
+    massedges = np.array(edges_target)
+    
+    clist = tc.tol_cmap('rainbow_discrete', lut=len(massedges))(np.linspace(0.,  1., len(massedges)))
+    c_under = clist[-1]
+    clist = clist[:-1]
+    c_igm = 'gray'
+    _keys = sorted(massedges)
+    colors = {_keys[i]: clist[i] for i in range(len(_keys) - 1)}
+    #del _masks
+    
+    #print(clist)
+    cmap = mpl.colors.ListedColormap(clist)
+    #cmap.set_over(clist[-1])
+    cmap.set_under(c_under)
+    norm = mpl.colors.BoundaryNorm(massedges, cmap.N)
+    cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,\
+                                norm=norm,\
+                                boundaries=np.append(np.array(massedges[0] - 1.), massedges),\
+                                ticks=massedges,\
+                                spacing='proportional', extend='min',\
+                                orientation='horizontal')
+    # to use 'extend', you must
+    # specify two extra boundaries:
+    # boundaries=[0] + bounds + [13],
+    # extend='both',
+    # ticks=bounds,  # optional
+    cbar.set_label(clabel, fontsize=fontsize)
+    cax.tick_params(labelsize=fontsize - 1)
+    cax.set_aspect(0.1)
+    
+    colors.update({'lom': c_under, 'igm': c_igm})
+    #print(hmedges.keys())
+    
+    yc = np.arange((len(keys)  - 1) // ncols + 1)  # the label locations
+    width = 0.9  # the width of the bars
+    morder = ['igm', 'lom'] + list(edges_target[:-1]) + ['over']
+    for ki, key in enumerate(keys):
+        if not simple:
+            axi = ki % ncols
+            ax = axes[axi]
+         
+        # match halo mass edges:
+        edges_in = hmedges[key]
+        edges_t = 10**edges_target * c.solar_mass
+        
+        e_igm = np.where(np.isclose(edges_in, mmax_igm))[0][0]
+        s_igm = slice(0, e_igm, None)
+        
+        e_dct = {edges_target[i]: np.where(np.isclose(edges_in, edges_t[i]))[0][0]\
+                 for i in range(len(edges_target))}
+        s_dct = {edges_target[i]: slice(e_dct[edges_target[i]],\
+                                        e_dct[edges_target[i + 1]], None) \
+                 for i in range(len(edges_target) - 1)}
+        s_dct['igm'] = s_igm
+        s_dct['lom'] = slice(e_igm, e_dct[edges_target[0]], None)
+        s_dct['over'] = slice(e_dct[edges_target[-1]], None, None)
+        
+        # total mass fractions
+        if simple: 
+            _width = width
+            zeropt = ki
+        else:
+            _width = width / 7.
+            zeropt = yc[ki // ncols] - 3.5 * _width
+        
+        baseslice = [slice(None, None, None)] * len(data[key]['halo'].shape)
+        
+        total = np.sum(data[key]['tot'])
+        
+        # total IGM/ halo mass split
+        cumul = 0.
+        for mk in morder:
+            if mk == 'igm':
+                slices = list(np.copy(baseslice))
+                slices[haxes[key]['hm']] = slice(e_igm, None, None)
+                current = total - np.sum(data[key]['halo'][tuple(slices)])
+                current /= total
+            else:
+                slices = list(np.copy(baseslice))
+                slices[haxes[key]['hm']] = s_dct[mk]
+                current = np.sum(data[key]['halo'][tuple(slices)])
+                current /= total
+            if mk == 'over':
+                if current == 0.:
+                    continue
+                else:
+                    print('Warning: for {line}, a fraction {} is in masses above max'.format(current, line=key))
+            ax.barh(zeropt, current, _width, color=colors[mk], left=cumul)
+            cumul += current
+        # annotate
+        if key != 'Mass':
+            dens = total / (cosmopars['boxsize'] / cosmopars['h'])**3 
+            text = '{:.1f}'.format(np.log10(dens))
+            ax.text(0.99, zeropt, text, fontsize=fontsize,\
+                    horizontalalignment='right',\
+                    verticalalignment='center')
+        if not simple:
+            for sfi in range(2):
+                for shi in range(3):
+                    zeropt += _width
+                    cumul = 0.
+                    for mk in morder:
+                        if mk in ['over', 'igm']:
+                            continue
+                        else:
+                            slices = list(np.copy(baseslice))
+                            slices[haxes[key]['hm']] = s_dct[mk]
+                            slices[haxes[key]['sh']] = shi
+                            slices[haxes[key]['sf']] = sfi
+                            current = np.sum(data[key]['halo'][tuple(slices)])
+                            current /= total
+                        
+                        ax.barh(zeropt, current, _width, color=colors[mk],\
+                                left=cumul)
+                        cumul += current
+                        
+                    slices = list(np.copy(baseslice))
+                    slices[haxes[key]['hm']] = slice(e_igm, None, None)
+                    slices[haxes[key]['sh']] = shi
+                    slices[haxes[key]['sf']] = sfi
+                    subtot = np.sum(data[key]['halo'][tuple(slices)])
+                    text = '{:.1f}'.format(np.log10(subtot / 
+                                                    (cosmopars['boxsize'] / \
+                                                    cosmopars['h'])**3 ))
+                    text = ', '.join([shlabels[shi], sflabels[sfi]]) +\
+                           ': ' + text
+                    ax.text(0.99, zeropt, text, fontsize=fontsize,\
+                            horizontalalignment='right',\
+                            verticalalignment='center')
+    
+    if simple:                
+        pu.setticks(ax, fontsize + 1)
+        ax.set_xlim(0., 1.)
+        ax.minorticks_off()
+        ax.set_yticks(yc)
+        ax.set_yticklabels([labels[key] for key in keys])
+        ax.set_xlabel('fraction of total', fontsize=fontsize)
+    else:
+        for axi, ax in enumerate(axes):
+            pu.setticks(ax, fontsize + 1)
+            ax.set_xlim(0., 1.)
+            ax.minorticks_off()
+            nkeys = len(keys) // ncols
+            if nkeys * ncols + axi < len(keys):
+                nkeys += 1
+            ax.set_yticks(np.arange(nkeys))
+            ax.set_yticklabels([labels[keys[ncols * i + axi]] for i in range(nkeys)])
+            
+            ax.set_xlabel('fraction of total', fontsize=fontsize)
+        
+        ylims = [ax.get_ylim() for ax in axes]
+        y0 = np.min([ylim[0] for ylim in ylims])
+        y1 = np.max([ylim[1] for ylim in ylims])
+        [ax.set_ylim(y0, y1) for ax in axes]
+        
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
+
 
 
 
