@@ -1333,7 +1333,7 @@ def plot_barchart_Ls(simple=False):
             ax.set_xlim(0., 1.)
             ax.minorticks_off()
             nkeys = len(yc)
-            while len(yc) * axi + nkeys < len(keys):
+            while len(yc) * axi + nkeys >= len(keys):
                 nkeys -= 1 # last column 
             ax.set_yticks(np.arange(nkeys))
             ax.set_yticklabels([labels[keys[axi * len(yc) + i]] \
