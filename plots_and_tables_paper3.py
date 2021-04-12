@@ -1428,6 +1428,7 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
 
     linelabels = nicenames_lines.copy()
     _linesets = linesets.copy()
+    #_linesets[3] = [_linesets[3][2], _linesets[3][3], linesets[3][0], linesets[3][1]]
     
     _lines = lines.copy() # new lines added in loop
     for line in _lines:
@@ -1527,10 +1528,6 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
     
     bininds_SB = np.digitize(np.log10(masses_SB), mbins)
     bininds_PS20 = np.digitize(np.log10(masses_PS20), mbins) 
-    
-    _linesets = list(np.copy(linesets))
-    _linesets[3] = list(np.copy(linesets[3]))
-    #_linesets[3] = [_linesets[3][2], _linesets[3][3], linesets[3][0], linesets[3][1]]
     
     if talkversion:
         ncols = 2
