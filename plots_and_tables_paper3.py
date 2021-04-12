@@ -1600,7 +1600,7 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
             cycle = len(lineset)
             #print(lsi)
             #print(cycle)
-            sl = slice(None, None, None)#slice(lsi, None, cycle) # avoid overlapping error bars
+            sl = slice(lsi, None, cycle) # avoid overlapping error bars
             _lsargs = lsargs[line].copy()
             _lsargs['linestyle'] = 'none'
             ax.errorbar(bincen[sl], med[sl], yerr=ud[:, sl],\
@@ -1636,14 +1636,14 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
         x0 = 10.8
         x1 = 14.45
     [ax.set_xlim(x0, x1) for ax in axes]
-    handles = [mlines.Line2D([], [], linestyle='solid', color='black',
-                             label='SB tables'),
-               mlines.Line2D([], [], linestyle='dashed', color='black',
-                             label='PS20 tables')]
-    l3 = axes[0].legend(handles=handles, fontsize=fontsize, 
-                        bbox_to_anchor=(0.5, 1.),
-                        loc='lower center', ncol=2, facecolor=fc) 
-    axes[0].add_artist(l3)
+    #handles = [mlines.Line2D([], [], linestyle='solid', color='black',
+    #                         label='SB tables'),
+    #           mlines.Line2D([], [], linestyle='dashed', color='black',
+    #                         label='PS20 tables')]
+    #l3 = axes[0].legend(handles=handles, fontsize=fontsize, 
+    #                    bbox_to_anchor=(0.5, 1.),
+    #                    loc='lower center', ncol=2, facecolor=fc) 
+    #axes[0].add_artist(l3)
     #ylims = [ax.get_ylim() for ax in axes]
     #y0 = np.min([yl[0] for yl in ylims])
     #y1 = np.max([yl[1] for yl in ylims])
