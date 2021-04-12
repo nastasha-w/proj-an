@@ -1403,7 +1403,243 @@ def plot_barchart_Ls(simple=False):
         
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
+# halo luminosities L200c with scatter 
+def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
+    '''
+    '''
+    
+    outname = 'luminosities_nice_{mi}-{ma}-R200c'.format(\
+                            mi=addedges[0], ma=addedges[1])
+    if talkversion:
+        outdir = tmdir
+        outname = outname + 'talkversion_{}'.format(slidenum)
+        fontsize = 14
+    else:
+        outdir = mdir
+        fontsize = 12
+    outname = outname.replace('.', 'p')
+    outname = outdir + outname + '.pdf'
+    
+    lines = plot_lines_SB + plot_lines_PS20
+    cosmopars = cosmopars_27
+    lsargs = lineargs_sets.copy()
+    linewidth = 2.
+    patheff = getoutline(linewidth)
 
+    linelabels = nicenames_lines.copy()
+    
+    _lines = lines.copy() # new lines added in loop
+    for line in _lines:
+        _label = linelabels[line]
+        if len(_label) > 10 and '(' in _label:
+            split = np.where([char == '(' for char in _label])
+            split = split[0][0] - 1
+            _label = _label[:split] + '\n' + _label[split + 1:]
+        # get an initial comparison of the SB and PS20 tables
+        lkw = lsargs[line]
+        if 'linestyle' in lkw:
+            del lkw['linestyle']
+        if 'dashes' in lkw:
+            del lkw['dashes']
+        if line in linematch_PS20:
+            lkw['linestyle'] = 'dashed'
+            sbline = linematch_PS20[line]
+            if sbline is None:
+                continue
+            lines.append(sbline)
+            linelabels[sbline] = None
+            lsargs[sbline] = lkw
+            lsargs[sbline]['linestyle'] = 'solid'
+        elif line in linematch_SB:
+            lkw['linestyle'] = 'solid'
+            psline = linematch_SB[line]
+            if psline is None:
+                continue
+            lines.append(psline)
+            linelabels[psline] = None
+            lsargs[psline] = lkw
+            lsargs[psline]['linestyle'] = 'dashed'
+            
+            
+    ylabel = '$\\log_{10} \\, \\mathrm{L} \\; [\\mathrm{photons} \\,/\\, 100\\,\\mathrm{ks} \\,/\\, \\mathrm{m}^{2}]$'
+    time = 1e5 #s
+    Aeff = 1e4 # cm^2 
+    ylim = (-3., 4.5)
+             
+    xlabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\odot}]$' 
+    
+    base_SB = 'luminosities_halos_L0100N1504_27_Mh0p5dex_1000_{}-{}-R200c' + \
+              '_SmAb.hdf5'
+    base_PS20 = 'luminosities_PS20_depletion-F_halos_L0100N1504_27_Mh0p5dex' +\
+                '_1000_{}-{}-R200c_SmAb.hdf5'
+    filename_SB = ddir + base_SB.format(str(addedges[0]), str(addedges[1]))
+    filename_PS20 = ddir + base_PS20.format(str(addedges[0]), str(addedges[1]))
+    with h5py.File(filename_SB, 'r') as fi:
+        galids_SB_l = fi['galaxyids'][:]
+        read_lines_SB = [line.decode() for line in fi.attrs['lines']]
+        lums_SB = fi['luminosities'][:]
+        cosmopars = {key: val for key, val in fi['Header/cosmopars'].attrs.items()}
+        
+        ldist = cu.lum_distance_cm(cosmopars['z'], cosmopars=cosmopars)
+        print(ldist)
+        l_to_flux = 1. / (4 * np.pi * ldist**2) * (1. + cosmopars['z']) # photon flux -> compensate for flux decrease due to redshifting in ldist
+        Erest_SB = np.array([line_energy_ev(line) * c.ev_to_erg for line in lines])
+        lums_SB *= 1./ (Erest_SB[np.newaxis, :, np.newaxis]) \
+                   * l_to_flux * Aeff * time
+    with h5py.File(filename_PS20, 'r') as fi:
+        galids_PS20_l = fi['galaxyids'][:]
+        read_lines_PS20 = [line.decode().replace('-', ' ')\
+                           for line in fi.attrs['lines']]
+        lums_PS20 = fi['luminosities'][:]
+        cosmopars = {key: val for key, val in fi['Header/cosmopars'].attrs.items()}
+        
+        ldist = cu.lum_distance_cm(cosmopars['z'], cosmopars=cosmopars)
+        print(ldist)
+        l_to_flux = 1. / (4 * np.pi * ldist**2) * (1. + cosmopars['z']) # photon flux -> compensate for flux decrease due to redshifting in ldist
+        Erest_PS20 = np.array([line_e_ev(line) * c.ev_to_erg \
+                               for line in lines])
+        lums_PS20 *= 1./ (Erest_PS20[np.newaxis, :, np.newaxis]) \
+                     * l_to_flux * Aeff * time
+        
+    file_galdata = ddir + 'halodata_L0100N1504_27_Mh0p5dex_1000.txt'
+    galdata_all = pd.read_csv(file_galdata, header=2, sep='\t', 
+                              index_col='galaxyid')
+    masses_SB = np.array(galdata_all['M200c_Msun'][galids_SB_l])
+    masses_PS20 = np.array(galdata_all['M200c_Msun'][galids_PS20_l])
+    
+    mbins = np.array(list(np.arange(11., 13.05, 0.1)) +\
+                     [13.25, 13.5, 13.75, 14.0, 14.6])
+    bincen = mbins[:-1] + 0.5 * np.diff(mbins)
+    
+    lums_SB = np.log10(np.sum(lums_SB, axis=2))
+    lums_PS20 = np.log10(np.sum(lums_PS20, axis=2))
+    
+    bininds_SB = np.digitize(np.log10(masses_SB), mbins)
+    bininds_PS20 = np.digitize(np.log10(masses_PS20), mbins) 
+    
+    _linesets = list(np.copy(linesets))
+    _linesets[3] = list(np.copy(linesets[3]))
+    #_linesets[3] = [_linesets[3][2], _linesets[3][3], linesets[3][0], linesets[3][1]]
+    
+    if talkversion:
+        ncols = 2
+        figsize = (11., 7.)
+        nrows = (len(linesets) - 1) // ncols + 1
+        fig = plt.figure(figsize=figsize)
+        grid = gsp.GridSpec(nrows=nrows, ncols=ncols, hspace=0.0, wspace=0.0)
+        axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(len(linesets))]
+        
+    else:
+        ncols = 1
+        figsize = (5.5, 12.)
+        nrows = len(linesets)
+        fig = plt.figure(figsize=figsize)
+        grid = gsp.GridSpec(nrows=nrows, ncols=ncols, hspace=0.0, wspace=0.0)
+        axes = [fig.add_subplot(grid[i, 0]) for i in range(nrows)]
+    
+    labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
+    labelax.tick_params(labelcolor='none', top=False, bottom=False,
+                        left=False, right=False)
+    labelax.set_xlabel(xlabel, fontsize=fontsize)
+    labelax.set_ylabel(ylabel, fontsize=fontsize)
+    
+    for axi, ax in enumerate(axes):
+        lineset = _linesets[axi]
+        linesetlabel = lineset_names[axi]
+        
+        labelx = axi >= len(linesets) - ncols
+        labely = axi % ncols == 0
+        #if labelx:
+        #    ax.set_xlabel(xlabel, fontsize=fontsize)
+        #if labely:
+        #    ax.set_ylabel(ylabel, fontsize=fontsize)
+        pu.setticks(ax, fontsize, labelleft=labely, labelbottom=labelx)
+        ax.grid(b=True
+                )
+        _labels = {}
+        for _li, line in enumerate(lineset):
+            label = linelabels[line]
+            if axi == 0 and label == 'O VII (r)':
+                label = 'O VII'
+            _labels[line] = label
+            if talkversion:
+                ncomp = 1 + _li + np.sum([len(_linesets[_axi]) for _axi in range(axi)])
+                if ncomp > slidenum:
+                    continue
+            
+            if line in all_lines_PS20:
+                li = np.where([line == _l for _l in read_lines_PS20])[0][0]
+                lums = lums_PS20[:, li]
+                bininds = bininds_PS20
+            elif line in all_lines_SB:
+                li = np.where([line == _l for _l in read_lines_SB])[0][0]
+                lums = lums_SB[:, li]
+                bininds = bininds_SB
+                
+            med = [np.median(lums[bininds == i]) \
+                   for i in range(1, len(mbins))]
+            ax.plot(bincen, med, label=label, linewidth=linewidth,\
+                    path_effects=patheff, **lsargs[line])
+            
+            ud = [np.percentile(lums[bininds == i], [10., 90.]) \
+                  for i in range(1, len(mbins))]
+            ud = np.array(ud).T
+            ud[0, :] = med - ud[0, :]
+            ud[1, :] = ud[1, :] - med
+            lsi = np.where([l == line for l in lineset])[0][0]
+            cycle = len(lineset)
+            #print(lsi)
+            #print(cycle)
+            sl = slice(None, None, None)#slice(lsi, None, cycle) # avoid overlapping error bars
+            _lsargs = lsargs[line].copy()
+            _lsargs['linestyle'] = 'none'
+            ax.errorbar(bincen[sl], med[sl], yerr=ud[:, sl],\
+                        linewidth=linewidth,\
+                        path_effects=patheff,\
+                        **_lsargs)
+            
+        #handles, labels = ax.get_legend_handles_labels()
+        handles = [mlines.Line2D([], [], linewidth=linewidth,\
+                    path_effects=patheff, label=_labels[line],\
+                    **lsargs[line])\
+                   for line in lineset]
+        isplit = len(handles) // 2
+        h1 = handles[:isplit]
+        h2 = handles[isplit:]
+        fc = (1., 1., 1., 0.)
+        l1 = ax.legend(handles=h2, fontsize=fontsize, bbox_to_anchor=(1.0, 0.),\
+                  loc='lower right', ncol=1, facecolor=fc)  
+        l2 = ax.legend(handles=h1, fontsize=fontsize, bbox_to_anchor=(0.0, 1.0),\
+                  loc='upper left', ncol=1, title=linesetlabel,\
+                  facecolor=fc)  
+        l2.get_title().set_fontsize(fontsize)
+        ax.add_artist(l1)
+        #ax.add_artist(l2) # otherwise, it's plotted twice -> less transparent
+        #ax.text(0.02, 0.98, linesetlabel, fontsize=fontsize,\
+        #        verticalalignment='top', horizontalalignment='left',\
+        #        transform=ax.transAxes)
+    # sync lims
+    xlims = [ax.get_xlim() for ax in axes]
+    x0 = np.min([xl[0] for xl in xlims])
+    x1 = np.max([xl[1] for xl in xlims])
+    if talkversion:
+        x0 = 10.8
+        x1 = 14.45
+    [ax.set_xlim(x0, x1) for ax in axes]
+    handles = [mlines.Line2D([], [], linestyle='solid', color='black',
+                             label='SB tables'),
+               mlines.Line2D([], [], linestyle='dashed', color='black',
+                             label='PS20 tables')]
+    l3 = axes[0].legend(handles=handles, fontsize=fontsize, 
+                        bbox_to_anchor=(0.5, 1.),
+                        loc='lower center', ncol=2, facecolor=fc) 
+    axes[0].add_artist(l3)
+    #ylims = [ax.get_ylim() for ax in axes]
+    #y0 = np.min([yl[0] for yl in ylims])
+    #y1 = np.max([yl[1] for yl in ylims])
+    [ax.set_ylim(*ylim) for ax in axes]
+        
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 
 

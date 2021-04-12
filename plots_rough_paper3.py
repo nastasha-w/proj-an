@@ -3713,7 +3713,7 @@ def plot_radprof4(talkversion=False, slidenum=0, talkvnum=0):
 def plot_radprof5(SBline='all', mmin=10.5, bigbins=False):
     '''
     plot median and scatter of individual halo profiles, comparing Serena
-    Bertone's table 
+    Bertone's tables to the Ploeckinger & Schaye (2020) tables 
     
     Parameters
     ----------
