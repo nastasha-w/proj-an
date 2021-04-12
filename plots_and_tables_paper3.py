@@ -1332,12 +1332,11 @@ def plot_barchart_Ls(simple=False):
             pu.setticks(ax, fontsize + 1)
             ax.set_xlim(0., 1.)
             ax.minorticks_off()
-            nkeys = len(keys) // ncols
-            if nkeys * ncols + axi < len(keys):
-                nkeys += 1
+            nkeys = len(yc)
+            while yc * axi + nkeys < len(keys):
+                nkeys -= 1 # last column 
             ax.set_yticks(np.arange(nkeys))
-            ax.set_yticklabels([labels[keys[ncols * i + axi]] for i in range(nkeys)])
-            
+            ax.set_yticklabels([labels[keys[axi * yc + i]] for i in range(nkeys)])
             ax.set_xlabel('fraction of total', fontsize=fontsize)
         
         ylims = [ax.get_ylim() for ax in axes]
