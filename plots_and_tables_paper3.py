@@ -1275,7 +1275,7 @@ def plot_barchart_Ls(simple=False):
     
     yc = np.arange((len(keys)  - 1) // ncols + 1, dtype=np.float)  # the label locations
     width = 0.9  # the width of the bars
-    incrspace = 0.15
+    incrspace = 0.09
     morder = ['igm', 'lom'] + list(edges_target[:-1]) + ['over']
     for ki, key in enumerate(keys):
         if not simple:
@@ -1377,7 +1377,7 @@ def plot_barchart_Ls(simple=False):
     
     if simple:                
         pu.setticks(ax, fontsize)
-        #ax.tick_params(axis='y', labelsize=fontsize - 3.)
+        ax.tick_params(axis='y', labelsize=fontsize - 1.)
         ax.set_xlim(0., 1.)
         ax.minorticks_off()
         ax.set_yticks(yc)
