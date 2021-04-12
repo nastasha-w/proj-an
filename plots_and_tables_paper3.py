@@ -1478,12 +1478,14 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
         galids_SB_l = fi['galaxyids'][:]
         read_lines_SB = [line.decode() for line in fi.attrs['lines']]
         lums_SB = fi['luminosities'][:]
-        cosmopars = {key: val for key, val in fi['Header/cosmopars'].attrs.items()}
+        cosmopars = {key: val for key, val in \
+                     fi['Header/cosmopars'].attrs.items()}
         
         ldist = cu.lum_distance_cm(cosmopars['z'], cosmopars=cosmopars)
         print(ldist)
         l_to_flux = 1. / (4 * np.pi * ldist**2) * (1. + cosmopars['z']) # photon flux -> compensate for flux decrease due to redshifting in ldist
-        Erest_SB = np.array([line_energy_ev(line) * c.ev_to_erg for line in lines])
+        Erest_SB = np.array([line_energy_ev(line) * c.ev_to_erg \
+                             for line in read_lines_SB])
         lums_SB *= 1./ (Erest_SB[np.newaxis, :, np.newaxis]) \
                    * l_to_flux * Aeff * time
     with h5py.File(filename_PS20, 'r') as fi:
@@ -1496,8 +1498,8 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
         ldist = cu.lum_distance_cm(cosmopars['z'], cosmopars=cosmopars)
         print(ldist)
         l_to_flux = 1. / (4 * np.pi * ldist**2) * (1. + cosmopars['z']) # photon flux -> compensate for flux decrease due to redshifting in ldist
-        Erest_PS20 = np.array([line_e_ev(line) * c.ev_to_erg \
-                               for line in lines])
+        Erest_PS20 = np.array([line_energy_ev(line) * c.ev_to_erg \
+                               for line in read_lines_PS20])
         lums_PS20 *= 1./ (Erest_PS20[np.newaxis, :, np.newaxis]) \
                      * l_to_flux * Aeff * time
         
