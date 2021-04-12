@@ -1427,6 +1427,7 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
     patheff = getoutline(linewidth)
 
     linelabels = nicenames_lines.copy()
+    _linesets = linesets.copy()
     
     _lines = lines.copy() # new lines added in loop
     for line in _lines:
@@ -1435,6 +1436,7 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
             split = np.where([char == '(' for char in _label])
             split = split[0][0] - 1
             _label = _label[:split] + '\n' + _label[split + 1:]
+            linelabels[line] = _label
         # get an initial comparison of the SB and PS20 tables
         lkw = lsargs[line]
         if 'linestyle' in lkw:
@@ -1448,8 +1450,11 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
                 continue
             lines.append(sbline)
             linelabels[sbline] = None
-            lsargs[sbline] = lkw
+            lsargs[sbline] = lkw.copy()
             lsargs[sbline]['linestyle'] = 'solid'
+            
+            _lsi = np.where([line in _ls for _ls in _linesets])[0][0]
+            _linesets[_lsi].append(sbline)
         elif line in linematch_SB:
             lkw['linestyle'] = 'solid'
             psline = linematch_SB[line]
@@ -1457,8 +1462,12 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
                 continue
             lines.append(psline)
             linelabels[psline] = None
-            lsargs[psline] = lkw
+            lsargs[psline] = lkw.copy()
             lsargs[psline]['linestyle'] = 'dashed'
+            
+            _lsi = np.where([line in _ls for _ls in _linesets])[0][0]
+            _linesets[_lsi].append(psline)
+        lsargs[line] = lkw
             
             
     ylabel = '$\\log_{10} \\, \\mathrm{L} \\; [\\mathrm{photons} \\,/\\, 100\\,\\mathrm{ks} \\,/\\, \\mathrm{m}^{2}]$'
