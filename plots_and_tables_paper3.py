@@ -168,9 +168,9 @@ parentelts.update({line: ol.elements_ion[line] for line in all_lines_SB})
 # for setting plotting defaults
 plot_lines_SB = ['c5r', 'c6', 'n6-actualr', 'n7', 'o7r', 'o7iy', 'o7f', 'o8',
                  'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r']
-plot_lines_PS20 = ['Fe17      17.0510A',
-                   'Fe17      15.2620A', 'Fe17      16.7760A',
-                   'Fe17      17.0960A', 'Fe18      16.0720A']
+plot_lines_PS20 = ['Fe17      15.2620A', 'Fe17      16.7760A',
+                   'Fe17      17.0510A', 'Fe17      17.0960A', 
+                   'Fe18      16.0720A']
 plot_lines_default = plot_lines_SB + plot_lines_PS20
 plot_lines_default = sorted(plot_lines_default, key=line_energy_ev)
 
@@ -1159,13 +1159,13 @@ def plot_barchart_Ls(simple=False):
         lines = plot_lines_SB + plot_lines_PS20
         #lines.sort(key=line_Tmax.get)
         labels = nicenames_lines.copy()
-        #for line in labels:
-        #    _label = labels[line]
-        #    if '(' in _label and len(label) > 10:
-        #        splitpoint = np.where([char == '(' for char in _label])
-        #        splitpoint = splitpoint[0][0] - 1
-        #        _label = _label[:splitpoint] + '\n' + _label[splitpoint + 1:]
-        #        labels[line] = _label
+        for line in labels:
+            _label = labels[line]
+            if '(' in _label and len(label) > 10:
+                splitpoint = np.where([char == '(' for char in _label])
+                splitpoint = splitpoint[0][0] - 1
+                _label = _label[:splitpoint] + '\n' + _label[splitpoint + 1:]
+                labels[line] = _label
     else:
         lines = all_lines_PS20 + all_lines_SB
         lines.sort(key=line_energy_ev)
@@ -1225,7 +1225,7 @@ def plot_barchart_Ls(simple=False):
         height_ratios = [8., 1.]
         ncols = 1
         fig = plt.figure(figsize=figsize)
-        grid = gsp.GridSpec(nrows=2, ncols=1, hspace=0.2, wspace=0.0,\
+        grid = gsp.GridSpec(nrows=2, ncols=1, hspace=0.1, wspace=0.0,\
                             height_ratios=height_ratios)
         ax =  fig.add_subplot(grid[0, 0]) 
         cax = fig.add_subplot(grid[1, 0])
@@ -1372,6 +1372,7 @@ def plot_barchart_Ls(simple=False):
     
     if simple:                
         pu.setticks(ax, fontsize + 1)
+        ax.tick_params(axis='y', labelsize=fontsize - 3.)
         ax.set_xlim(0., 1.)
         ax.minorticks_off()
         ax.set_yticks(yc)
