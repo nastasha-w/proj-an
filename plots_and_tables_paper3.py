@@ -1161,7 +1161,7 @@ def plot_barchart_Ls(simple=False):
         labels = nicenames_lines.copy()
         for line in labels:
             _label = labels[line]
-            if '(' in _label and len(label) > 10:
+            if '(' in _label and len(_label) > 10:
                 splitpoint = np.where([char == '(' for char in _label])
                 splitpoint = splitpoint[0][0] - 1
                 _label = _label[:splitpoint] + '\n' + _label[splitpoint + 1:]
