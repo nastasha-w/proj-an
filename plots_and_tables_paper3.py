@@ -1444,31 +1444,33 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
             del lkw['linestyle']
         if 'dashes' in lkw:
             del lkw['dashes']
-        if line in linematch_PS20:
-            lkw['linestyle'] = 'dashed'
-            sbline = linematch_PS20[line]
-            if sbline is None:
-                continue
-            lines.append(sbline)
-            linelabels[sbline] = None
-            lsargs[sbline] = lkw.copy()
-            lsargs[sbline]['linestyle'] = 'solid'
-            
-            _lsi = np.where([line in _ls for _ls in _linesets])[0][0]
-            _linesets[_lsi].append(sbline)
-        elif line in linematch_SB:
-            lkw['linestyle'] = 'solid'
-            psline = linematch_SB[line]
-            if psline is None:
-                continue
-            lines.append(psline)
-            linelabels[psline] = None
-            lsargs[psline] = lkw.copy()
-            lsargs[psline]['linestyle'] = 'dashed'
-            
-            _lsi = np.where([line in _ls for _ls in _linesets])[0][0]
-            _linesets[_lsi].append(psline)
+        lkw['linestyle'] = 'solid'
         lsargs[line] = lkw
+           # if line in linematch_PS20:
+           #     lkw['linestyle'] = 'dashed'
+           #     sbline = linematch_PS20[line]
+           #     if sbline is None:
+           #         continue
+           #     lines.append(sbline)
+           #     linelabels[sbline] = None
+           #     lsargs[sbline] = lkw.copy()
+           #     lsargs[sbline]['linestyle'] = 'solid'
+           #     
+           #     _lsi = np.where([line in _ls for _ls in _linesets])[0][0]
+           #     _linesets[_lsi].append(sbline)
+           # elif line in linematch_SB:
+           #     lkw['linestyle'] = 'solid'
+           #     psline = linematch_SB[line]
+           #     if psline is None:
+           #         continue
+           #     lines.append(psline)
+           #     linelabels[psline] = None
+           #     lsargs[psline] = lkw.copy()
+           #     lsargs[psline]['linestyle'] = 'dashed'
+           #     
+           #     _lsi = np.where([line in _ls for _ls in _linesets])[0][0]
+           #     _linesets[_lsi].append(psline)
+
             
             
     ylabel = '$\\log_{10} \\, \\mathrm{L} \\; [\\mathrm{photons} \\,/\\, 100\\,\\mathrm{ks} \\,/\\, \\mathrm{m}^{2}]$'
