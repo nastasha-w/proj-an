@@ -1275,6 +1275,7 @@ def plot_barchart_Ls(simple=False):
     
     yc = np.arange((len(keys)  - 1) // ncols + 1)  # the label locations
     width = 0.9  # the width of the bars
+    incrspace = 0.3
     morder = ['igm', 'lom'] + list(edges_target[:-1]) + ['over']
     for ki, key in enumerate(keys):
         if not simple:
@@ -1300,7 +1301,10 @@ def plot_barchart_Ls(simple=False):
         # total mass fractions
         if simple: 
             _width = width
-            zeropt = ki
+            if 'Fe17' in line: # longer labels -> need more vertical space
+                yc[ki + 1:] += 2. * incrspace
+                yc[ki]  += incrspace
+            zeropt = yc[ki]
         else:
             _width = width / 7.
             zeropt = yc[ki % len(yc)] - 3.5 * _width
@@ -1371,8 +1375,8 @@ def plot_barchart_Ls(simple=False):
                             verticalalignment='center')
     
     if simple:                
-        pu.setticks(ax, fontsize + 1)
-        ax.tick_params(axis='y', labelsize=fontsize - 3.)
+        pu.setticks(ax, fontsize)
+        #ax.tick_params(axis='y', labelsize=fontsize - 3.)
         ax.set_xlim(0., 1.)
         ax.minorticks_off()
         ax.set_yticks(yc)
