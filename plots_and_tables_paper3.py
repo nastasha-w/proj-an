@@ -2058,6 +2058,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
         _cax.axis('off')
         _l, _b, _w, _h = (_cax.get_position()).bounds
         vert = nrows * ncols - numlines <= 2
+        print(vert)
         if vert:
             wmargin_c = panelwidth * 0.13 / figwidth
             wmargin_l = panelwidth * 0.05 / figwidth
@@ -2106,7 +2107,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
             
             leg_kw = {'loc': 'upper left',
                   'bbox_to_anchor': (0.0, 1.),
-                  'handlelength': 2.,
+                  'handlelength': 1.5,
                   'columnspacing': 1.,
                   }
             insleg_kw = {'loc': 'upper right',
