@@ -2058,7 +2058,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
         _cax.axis('off')
         _l, _b, _w, _h = (_cax.get_position()).bounds
         vert = nrows * ncols - numlines <= 2
-        if vert:
+        if vert or not talkversion:
             wmargin_c = panelwidth * 0.13 / figwidth
             wmargin_l = panelwidth * 0.05 / figwidth
             hmargin_b = panelheight * 0.07 / figheight
@@ -2094,7 +2094,6 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
             vspace = 0.25 * panelheight / figheight
             hspace_c = 0.7 * (_w - 3. * wmargin)
             hspace_l = _w - 3. * wmargin - hspace_c
-            
             
             cax = fig.add_axes([_l + 2. * wmargin + hspace_l, _b + hmargin,\
                                 hspace_c, vspace])
