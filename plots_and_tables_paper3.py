@@ -453,7 +453,7 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
     with h5py.File(filename, 'r') as fi:
         # match groups to seltags
         gkeys = list(fi.keys())
-        gkeys -= {'Header'}
+        gkeys.remove('Header')
         setkeys = [key if 'galset' in key else None for key in gkeys]
         setkeys = list(set(setkeys) - {None})
         
