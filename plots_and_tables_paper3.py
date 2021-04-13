@@ -453,6 +453,7 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
     with h5py.File(filename, 'r') as fi:
         # match groups to seltags
         gkeys = list(fi.keys())
+        gkeys -= {'Header'}
         setkeys = [key if 'galset' in key else None for key in gkeys]
         setkeys = list(set(setkeys) - {None})
         
@@ -2013,7 +2014,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
             raise RuntimeError(msg.format(line, _filen))
             
         filens[line] = _filen
-        print(filens[line])
+        #print(filens[line])
         
     panelheight = panelwidth    
     figheight = panelheight * nrows
