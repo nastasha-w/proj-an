@@ -13,6 +13,8 @@ import numpy as np
 import pandas as pd
 import h5py
 import string
+import os
+import sys
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -32,6 +34,13 @@ import plot_utils as pu
 import make_maps_opts_locs as ol
 import ion_line_data as ild
 
+if sys.version.split('.')[0] == '3':
+    def isstr(x):
+        return isinstance(x, str)
+elif sys.version.split('.')[0] == '2':
+    def isstr(x):
+        return isinstance(x, basestring)
+    
 # directories
 mdir = '/net/luttero/data2/imgs/paper3/img_paper/' 
 tmdir = '/net/luttero/data2/imgs/paper3/img_talks/'
@@ -400,6 +409,145 @@ def add_cbar_mass(cax, massedges=mass_edges_standard,\
     
     return cbar, colors
 
+def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,\
+                   binset='binset_0', retlog=True, ofmean=False):
+    '''
+    from the coldens_rdist radial profile hdf5 file format: 
+    extract the profiles matching the input criteria
+    
+    input:
+    ------
+    filename: name of the hdf5 file containing the profiles
+    seltag:   list (iterable) of seltag attributes for the galaxy/halo set used
+    ys:       list (iterable) of tuples (iterable) containing ytype 
+              ('mean', 'mean_log', 'perc', or 'fcov') and 
+              yval (threashold for 'fcov', percentile (0-100) for 'perc',\
+              ignored for 'mean' and 'mean_log')
+    runits:   units for the bins: 'pkpc' or 'R200c'
+    separate: get individual profiles for the galaxies in this group (subset
+              contained in this file) if True, otherwise, use the combined 
+              profile 
+    binset:   the name of the binset group ('binset_<number>')
+    retlog:   return log unit values (ignored if log/non-log isn't recorded)
+    ofmean:   return statistics of the individual mean profiles instead of the
+              whole sample. Only works if separate is False. (assumed stored 
+              as mean_log)
+    
+    output:
+    -------
+    two dictionaries:
+    y dictionary, bin edges dictionary
+    
+    nested dictionaries containing the retrieved values
+    keys are nested, using the input values as keys:
+    seltag: ys: [galaxyid: (if separate)] array of y values or bin edges
+    
+    '''
+    
+    if '/' not in filename:
+        filename = ol.pdir + 'radprof/' + filename
+
+    spath = '{{gal}}/{runit}_bins/{bin}/{{{{ds}}}}'.format(runit=runit, 
+                                                           bin=binset)
+        
+    with h5py.File(filename, 'r') as fi:
+        # match groups to seltags
+        gkeys = list(fi.keys())
+        setkeys = [key if 'galset' in key else None for key in gkeys]
+        setkeys = list(set(setkeys) - {None})
+        
+        seltags_f = {key: fi[key].attrs['seltag'].decode()\
+                     if 'seltag' in fi[key].attrs.keys() else None \
+                     for key in setkeys}
+        galsets_seltag = {tag: list(set([key if seltags_f[key] == tag else\
+                                         None for key in seltags_f])\
+                                    - {None})\
+                          for tag in seltags}
+        
+        indkeys = list(set(gkeys) - set(setkeys))
+        indgals = [int(key.split('_')[-1]) for key in indkeys]
+        
+        spaths = {}
+        galid_smatch = {}
+        ys_out = {}
+        bins_out = {}
+        for seltag in seltags:
+            keys_tocheck = galsets_seltag[seltag]
+            if len(keys_tocheck) == 0:
+                msg = 'No matches found for seltag {}'
+                raise RuntimeError(msg.format(seltag))
+            
+            if separate: # just pick one; should have the same galaxyids
+                extag = keys_tocheck[0]
+                galids = fi['{gs}/galaxyid'.format(gs=extag)][:]
+                # cross-reference stored galids (should be a smallish number)
+                # and listed set galids
+                galids_use = [galid if galid in indgals else None \
+                              for galid in galids]
+                galids_use = list(set(galids_use) - {None})
+                gb = 'galaxy_{}'
+                spaths.update({galid: spath.format(gal=gb.format(galid))\
+                               for galid in galids_use})
+                galid_smatch.update({galid: seltag for galid in galids_use})
+            else:
+                spaths.update({key: spath.format(gal=key) \
+                               for key in keys_tocheck})
+                galid_smatch.update({key: seltag for key in keys_tocheck})
+        for ytv in ys:
+            ykey = ytv
+            temppaths = spaths.copy()
+            if ytv[0] in ['fcov', 'perc']:
+                ypart = '{}_{:.1f}'.format(*tuple(ytv))
+            else:
+                if ytv[0] == 'm':
+                    ypart = ytv
+                else:
+                    ypart = ytv[0]
+            if ofmean:
+                ypart = ypart + '_of_mean_log'
+            ypaths = {key: temppaths[key].format(ds=ypart) for key in temppaths}
+            bpaths = {key: temppaths[key].format(ds='bin_edges') \
+                      for key in temppaths}
+
+            for key in temppaths:
+                ypath = ypaths[key]
+                bpath = bpaths[key]
+                if ypath not in fi:
+                    if '_of_mean_log' in ypath:
+                        ypath = ypath.replace('of_mean_log', 'of_mean')
+                    if ypath not in fi:
+                        print('For {seltag}, {ykey}, {key}'.format(
+                            seltag=seltag, ykey=ykey, key=key))
+                        print('did not find dataset: {}'.format(ypath))
+                        
+                if ypath in fi:
+                    vals = fi[ypath][:]
+                    if 'logvalues' in fi[ypath].attrs.keys():
+                        logv_s = bool(fi[ypath].attrs['logvalues'])
+                        if 'fcov' in ypath: # logv_s is for 
+                            if retlog:
+                                vals = np.log10(vals)
+                        else:
+                            if retlog and (not logv_s):
+                                vals = np.log10(vals)
+                            elif (not retlog) and logv_s:
+                                vals = 10**vals
+                    bins = fi[bpath][:]
+                
+                    seltag = galid_smatch[key]
+                    if seltag not in ys_out:
+                        ys_out[seltag] = {}
+                        bins_out[seltag] = {}
+                    if isstr(key): # string instance? (hard to test between pytohn 2 and 3 with isinstance)
+                        if ykey not in ys_out[seltag]:
+                            ys_out[seltag][ykey] = {}
+                            bins_out[seltag][ykey] = {}
+                        ys_out[seltag][ykey][key] = vals
+                        bins_out[seltag][ykey][key] = bins
+                    else:
+                        ys_out[seltag][ykey] = vals
+                        bins_out[seltag][ykey] = bins
+    return ys_out, bins_out
 
 ### overview image plot
 def plotstampzooms_overview():
@@ -1664,7 +1812,506 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
         
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
+### main plot, radial profiles (mean and median of annular means), 
+# observablility, detectability
+def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
+    '''
+    plot mean and median profiles for the different lines in different halo 
+    mass bins
+    
+    talkversion: fewer emission lines, add curves one at a time
+    '''
+    
+    print('Values are calculated from 3.125^2 ckpc^2 pixels')
+    print('for means: in annuli of 0-10 pkpc, then 0.25 dex bins up to ~3.5 R200c')
+    #print('for medians: in annuli of 10 pkpc up to 100 pkpc, then 0.1 dex bins up to ~3.5 R200c')
+    print('for median of means: annuli of 0.1 dex starting from 10 pkpc')
+    print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb, C2 kernel')
+    print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
+    
+    # get minimum SB for the different instruments
+    omegat_use = [1e6, 1e7]
+    if talkversion:
+        legendtitle_minsb = 'min. SB ($5\\sigma$) for $\\Delta' +\
+            ' \\Omega \\, \\Delta t =$ \n ${:.0e}, {:.0e}'.format(*tuple(omegat_use))+\
+            '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
+    else:
+        legendtitle_minsb = 'min. SB ($5\\sigma$ detection) for $\\Delta' +\
+            ' \\Omega \\, \\Delta t = {:.0e}, {:.0e}'.format(*tuple(omegat_use))+\
+            '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
+    
+    filen_SB = 'minSBtable.dat'
+    filen_PS20 = 'minSBtable_PS20_Fe-L-shell.dat'
+    df = pd.read_csv(ddir + filen_SB, sep='\t')   
+    _df = pd.read_csv(ddir + filen_PS20, sep='\t')
+    df = pd.concat([df, _df], ignore_index=True)
+    del _df
+    groupby = ['line name', 'linewidth [km/s]',
+               'sky area * exposure time [arcmin**2 s]', 
+               'full measured spectral range [eV]',
+               'detection significance [sigma]', 
+               'galaxy absorption included in limit',
+               'instrument']
+    df2 = df.groupby(groupby)['minimum detectable SB [phot/s/cm**2/sr]'].mean().reset_index()
+    zopts = df['redshift'].unique()
+    print('Using redshifts for min SB: {}'.format(zopts))
+    
+    expectedsame = ['linewidth [km/s]', 'detection significance [sigma]']
+    for colname in expectedsame:
+        if np.allclose(df2[colname], df2.at[0, colname]):
+            print('Using {}: {}'.format(colname, df2.at[0, colname]))
+            del df2[colname]
+            groupby.remove(colname)
+        else:
+            raise RuntimeError('Multiple values for {}; choose one'.format(colname))
+            
+    instruments = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr', 'xrism-resolve']        
+    inslabels = {'athena-xifu': 'Athena X-IFU',
+                 'lynx-lxm-main': 'Lynx Main',
+                 'lynx-lxm-uhr': 'Lynx UHR',
+                 'xrism-resolve': 'XRISM-R'
+                 }        
+    _kwargs = {'facecolor': 'none', 'edgecolor': 'gray'}
+    kwargs_ins = {'athena-xifu':   {'hatch': '||'},
+                  'lynx-lxm-main': {'hatch': '\\\\'},
+                  'lynx-lxm-uhr':  {'hatch': '//'},
+                  'xrism-resolve': {'hatch': '---'},
+                  }        
+    for key in kwargs_ins:
+        kwargs_ins[key].update(_kwargs)
+        
+    # taken from the table in the paper (half of PSF and FOV)
+    xmin_ins = {'athena-xifu':   0.5 * arcmin_to_pkpc(5. / 60., z=0.1),
+                'lynx-lxm-main': 0.5 * arcmin_to_pkpc(0.5 / 60., z=0.1),
+                'lynx-lxm-uhr':  0.5 * arcmin_to_pkpc(0.5 / 60., z=0.1),
+                'xrism-resolve': 0.5 * arcmin_to_pkpc(72. / 60., z=0.1),
+                }   
+    xmax_ins = {'athena-xifu':   0.5 * arcmin_to_pkpc(5., z=0.1),
+                'lynx-lxm-main': 0.5 * arcmin_to_pkpc(5., z=0.1),
+                'lynx-lxm-uhr':  0.5 * arcmin_to_pkpc(1., z=0.1),
+                'xrism-resolve': 0.5 * arcmin_to_pkpc(2.9, z=0.1),
+                }  
+                              
+    if talkversion:
+        fontsize = 14
+    else:
+        fontsize = 12
+    linewidth = 1.5
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),\
+               mppe.Stroke(linewidth=linewidth, foreground="w"),\
+               mppe.Normal()]
+    xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
+    ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; ' + \
+             '[\\mathrm{photons}\\,\\mathrm{cm}^{-2}' + \
+             '\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
+    y2label = '$\\log_{10} \\, \\mathrm{SB} \\; ' + \
+              '[\\mathrm{photons}\\,\\mathrm{m}^{-2} ' + \
+              '(100 \\,\\mathrm{ks})^{-1}(10\\,\\mathrm{arcmin}^{2})^{-1}]$'
+    right_over_left = 1e4 * 1e5 * ((10. * np.pi**2 / 60.**2 / 180**2))
+    # right_over_left = (ph / cm**2 / s / sr)  /  (ph / m**2 / 100 ks / 10 arcmin^2)
+    # right_over_left = m**2 / cm**2 * 100 ks / s * 10 arcmin**2 / rad**2 
+    # value ratio is inverse of unit ratio    
+    ys = [('mean',), ('perc', 50.)]
+    ykey_mean = ('mean',)
+    ykey_median = ('perc', 50.)
+    ls_mean = 'dotted'
+    ls_median = 'solid'
+    
+    outname = 'radprof2d_0.1-0.25dex-annuli_L0100N1504_27_test3.x_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+              'halomasscomp_mean-median'
+    outname = outname.replace('.', 'p')
+    if talkversion:
+        if talkvnum == 0:
+            outname = tmdir + outname + '_talkversion_{}'.format(slidenum)
+        else:
+            outname = tmdir + outname +\
+                      '_talkversion-{}_{}'.format(talkvnum, slidenum)
+    else:
+        outname = mdir + outname
+    outname = outname + '.pdf'
+    
+    if talkversion:
+        if talkvnum == 0:
+            mmin = 11.
+        elif talkvnum in [1, 2, 3]:
+            mmin = 11.5
+    else:
+        mmin = 11.
 
+    medges = np.arange(mmin, 14.1, 0.5)
+    seltag_keys = {medges[i]: 'geq{:.1f}_le{:.1f}'.format(medges[i], medges[i + 1])\
+                               if i < len(medges) - 1 else\
+                               'geq{:.1f}'.format(medges[i])\
+                    for i in range(len(medges))}
+    seltags = [seltag_keys[key] for key in seltag_keys]
+    
+    if talkversion:
+        _lines = ['c6', 'o7r', 'o8', 'mg12']
+        if talkvnum == 2:
+            _lines = ['o7r', 'o8', 'ne10', 'mg12']
+        elif talkvnum == 3:
+            _lines = ['c6', 'n7', 'o8', 'ne10', 'mg12']
+        
+        numlines = len(_lines)
+        fontsize = 14
+        
+        ncols = 3
+        nrows = (numlines - 1) // ncols + 1
+        figwidth = 11. 
+        caxwidth = figwidth / float(ncols + 1)
+        
+    else:
+        _lines = plot_lines_SB + plot_lines_PS20
+        _lines.sort(key=line_energy_ev)
+        numlines = len(_lines)
+        ncols = 4
+        nrows = (numlines - 1) // ncols + 1
+        figwidth = 11. 
+        caxwidth = 1.
+    
+    if ncols * nrows - numlines >= 2:
+        cax_right = False
+        _ncols = ncols
+        panelwidth = figwidth / ncols
+        width_ratios = [panelwidth] * ncols
+        c_orientation = 'horizontal'
+        c_aspect = 0.08
+    else:
+        cax_right = True
+        _ncols = ncols + 1
+        panelwidth = (figwidth - caxwidth) / ncols
+        width_ratios = [panelwidth] * ncols + [caxwidth]
+        c_orientation = 'vertical'
+        c_aspect = 10.
+    
+    rfilebase = 'radprof_stamps_emission_{line}{it}_L0100N1504_27_' + \
+                'test3.{tv}_' + \
+                'SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS' + \
+                '_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000' +\
+                '_centrals_M-ge-10p5.hdf5'
+    siontab = {line: '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F' \
+               if line in all_lines_PS20 else '' for line in _lines}
+    testversion = {line: '7' if line in all_lines_PS20 else '6' \
+                   for line in _lines}
+    binset_mean = 'binset_0'
+    binset_medianofmeans = 'binset_1'
+    cosmopars = cosmopars_27 # for virial radius indicators
+    filens = {}
+    for line in _lines:
+        _filen = ddir + 'radprof/' +\
+                 rfilebase.format(line=line.replace(' ', '-'), 
+                                  it=siontab[line], tv=testversion[line])
+        if not os.path.isfile(_filen):
+            _filen = _filen.replace('zcen-all', 'zcen3.125') # file naming bug
+            if not os.path.isfile(_filen):
+                msg = 'Could not find file for {}: \n {}'
+                raise RuntimeError(msg.format(line, _filen))
+        
+        filens[line] = _filen
+    
+    panelheight = panelwidth    
+    figheight = panelheight * nrows
+    
+    fig = plt.figure(figsize=(figwidth, figheight))
+    grid = gsp.GridSpec(ncols=_ncols, nrows=nrows, hspace=0.0, wspace=0.0,\
+                        width_ratios=width_ratios)
+    axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(numlines)]
+    if cax_right:
+        ncols_insleg = 1 
+        leg_kw = {'loc': 'upper left', 'bbox_to_anchor': (0.15, 1.)}
+        insleg_kw = leg_kw.copy()
+        if nrows > 5: 
+            csl = slice(nrows // 2 - 1, nrows // 2 + 2, None)
+            lsl = slice(0, 1, None)
+            l2sl = slice(1, 2, None)
+        elif nrows > 2:
+            csl = slice(2, None, None)
+            lsl = slice(0, 1, None)
+            l2sl = slice(1, 2, None)
+        elif nrows == 2:
+            csl = slice(1, None, None)
+            lsl = slice(0, 1, None)
+            l2sl = slice(0, 1, None)
+            insleg_kw = {'loc': 'lower left',
+                     'bbox_to_anchor': (0.15, 0.0),
+                     'handlelength': 1.8,
+                     'columnspacing': 0.8,
+                     }
+        else:
+            raise RuntimeError('Could not find a place for the legend and color bar at the right of the plot (1 row)')
+        cax = fig.add_subplot(grid[csl, ncols])
+        lax = fig.add_subplot(grid[lsl, ncols])
+        lax.axis('off')
+        lax2 = fig.add_subplot(grid[l2sl, ncols])
+        lax2.axis('off')
+        
+    else:
+        ind_min = ncols - (nrows * ncols - numlines)
+        _cax = fig.add_subplot(grid[nrows - 1, ind_min:])
+        _cax.axis('off')
+        _l, _b, _w, _h = (_cax.get_position()).bounds
+        vert = nrows * ncols - numlines <= 2
+        if vert:
+            wmargin_c = panelwidth * 0.13 / figwidth
+            wmargin_l = panelwidth * 0.05 / figwidth
+            hmargin_b = panelheight * 0.07 / figheight
+            hmargin_t = panelheight * 0.07 / figheight
+            lspace = 0.3 * panelheight / figheight
+            cspace = _h - hmargin_b - hmargin_t - lspace
+            cax = fig.add_axes([_l + wmargin_c, _b + hmargin_b,\
+                                _w - wmargin_c, cspace])
+            w1 = 0.35 * (_w - 1. * wmargin_l)
+            w2 = 0.65 * (_w - 1. * wmargin_l)
+            lax = fig.add_axes([_l + wmargin_l, _b  + hmargin_b + cspace,\
+                                w1, lspace])
+            lax2 = fig.add_axes([_l + _w - w2 * 0.975, _b  + hmargin_b + cspace,\
+                                w2, lspace])
+                
+            ncols_insleg = (len(instruments) + 1) // 2 
+            
+            leg_kw = {'loc': 'upper left',
+                  'bbox_to_anchor': (0.0, 1.),
+                  'handlelength': 2.,
+                  'columnspacing': 1.,
+                  }
+            insleg_kw = {'loc': 'upper right',
+                  'bbox_to_anchor': (1.0, 1.),
+                  'handlelength': 1.8,
+                  'columnspacing': 0.8,
+                  }
+            
+        else:
+            wmargin = panelwidth * 0.1 / figwidth
+            hmargin = panelheight * 0.05 / figheight
+            
+            vspace = 0.25 * panelheight / figheight
+            hspace_c = 0.7 * (_w - 3. * wmargin)
+            hspace_l = _w - 3. * wmargin - hspace_c
+            
+            
+            cax = fig.add_axes([_l + 2. * wmargin + hspace_l, _b + hmargin,\
+                                hspace_c, vspace])
+            lax = fig.add_axes([_l + wmargin, _b,\
+                                hspace_l, vspace])
+            lax2 = fig.add_axes([_l + wmargin, _b  + vspace + hmargin,\
+                                _w - 2. * wmargin, vspace])    
+            ncols_insleg = 4
+             
+            leg_kw = {'loc': 'center left',
+                      'bbox_to_anchor':(0., 0.5),
+                      'handlelength': 2.,
+                      'columnspacing': 1.,
+                      }
+            insleg_kw = {'loc': 'center left',
+                      'bbox_to_anchor':(0., 0.5),
+                      'handlelength': 2.,
+                      'columnspacing': 1.,
+                      }
+        lax.axis('off')
+        lax2.axis('off')
+        
+        
+    labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
+    labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    labelax.set_ylabel(ylabel, fontsize=fontsize)
+    l2ax = labelax.twinx()
+    l2ax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    l2ax.spines['right'].set_visible(False)
+    l2ax.spines['top'].set_visible(False)
+    l2ax.spines['bottom'].set_visible(False)
+    l2ax.spines['left'].set_visible(False)
+    l2ax.set_ylabel(y2label, fontsize=fontsize)
+    
+    ind_min = ncols - (nrows * ncols - numlines)
+    if nrows * ncols - numlines <= 2:
+        labelax.set_xlabel(xlabel, fontsize=fontsize)    
+    else:
+        labelax1 = fig.add_subplot(grid[:nrows, :ind_min], frameon=False)
+        labelax1.tick_params(labelcolor='none', top=False, bottom=False,
+                             left=False, right=False)
+        labelax1.set_xlabel(xlabel, fontsize=fontsize) 
+        
+        labelax2 = fig.add_subplot(grid[:nrows - 1, ind_min:], frameon=False)
+        labelax2.tick_params(labelcolor='none', top=False, bottom=False,
+                             left=False, right=False)
+        labelax2.set_xlabel(xlabel, fontsize=fontsize) 
+    #l2ax.yaxis.set_label_position('right')
+    #l2ax.axis('off')
+    
+    
+    clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
+    cbar, colordct = add_cbar_mass(cax, massedges=medges,\
+             orientation=c_orientation, clabel=clabel, fontsize=fontsize,\
+             aspect=c_aspect)
+    
+    axes2 =[]
+    for li, line in enumerate(_lines):
+        ax = axes[li]
+        labely = li % ncols == 0
+        labelx = numlines -1 - li < ncols
+        labelright = (li % ncols == ncols - 1) or (li == len(axes) - 1)
+        pu.setticks(ax, fontsize=fontsize, labelleft=labely, labelbottom=labelx,\
+                    right=False)
+        ax.set_xscale('log')
+        ax.grid(b=True)
+        ax2 = ax.twinx()
+        pu.setticks(ax2, fontsize=fontsize, left=False, right=True, bottom=False,\
+                    top=False, labelright=labelright, labelleft=False, labeltop=False,\
+                    labelbottom=False)
+        axes2.append(ax2)
+        
+        filename = filens[line]
+        #print(line)
+        #print(filename)
+        yvals, bins = readin_radprof(filename, seltags, [ykey_mean],
+                                     runit='pkpc', separate=False,
+                                     binset=binset_mean, retlog=True,
+                                     ofmean=True)
+        _yvals, _bins = readin_radprof(filename, seltags, [ykey_median],
+                                       runit='pkpc', separate=False,
+                                     binset=binset_medianofmeans, retlog=True,
+                                     ofmean=True)
+        #print(bins.keys())
+        #print(_bins.keys())
+        for tag in yvals:
+            #print(tag)
+            bins[tag].update(_bins[tag])
+            yvals[tag].update(_yvals[tag])
+        for mi, me in enumerate(medges):
+            tag = seltag_keys[me]
+            
+            # plot profiles
+            for ykey, ls, zo in zip([ykey_mean, ykey_median], 
+                                    [ls_mean, ls_median], 
+                                    [5, 6]):
+                if talkversion:
+                    if talkvnum == 2:
+                        if ykey == ykey_mean:
+                            continue
+                    if ykey == ykey_mean:
+                        yi = 1
+                    elif ykey == ykey_median:
+                        yi = 0
+                    else:
+                        yi = 2 
+                    ncomp = 1 + li * len(medges) * len(ys) \
+                            + yi * len(medges) + mi
+                    if ncomp > slidenum:
+                        continue
+                ed = bins[tag][ykey]
+                vals = yvals[tag][ykey]
+                cens = ed[:-1] + 0.5 * np.diff(ed)
+                ax.plot(cens, vals, color=colordct[me], linewidth=2.,\
+                        path_effects=patheff, linestyle=ls, zorder=zo)
+            
+            # indicate R200c
+            mmin = 10**me
+            if mi < len(medges) - 1:
+                mmax = 10**medges[mi + 1]
+            else:
+                mmax = 10**14.53 # max mass in the box at z=0.1
+            rs = cu.R200c_pkpc(np.array([mmin, mmax]), cosmopars)
+            ax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1, \
+                       color=colordct[me])
+        
+        # might not work for generic lines
+        ion = line.split('-')[0]
+        while not ion[-1].isdigit():
+            ion = ion[:-1]            
+        linelabel = ild.getnicename(ion)
+        if ion == 'o7': # get (i), (r), (f) label:
+            linelabel = nicenames_lines[line]
+            
+        ev = ol.line_eng_ion[line] / c.ev_to_erg
+        numdig = 4
+        lead = int(np.ceil(np.log10(ev)))
+        appr = str(np.round(ev, numdig - lead))
+        if '.' in appr:
+            if len(appr) < numdig + 1: # trailing zeros after decimal point cut off
+                appr = appr + '0' * (numdig + 1 - len(appr))
+            elif len(appr) >= numdig + 2 and appr[-2:] == '.0': # .0 added to floats: remove
+                appr = appr[:-2]
+        eng = '{} eV'.format(appr)
+        linelabel =  eng + '\n' + linelabel 
+        ax.text(0.98, 0.97, linelabel, fontsize=fontsize,\
+                transform=ax.transAxes, horizontalalignment='right',\
+                verticalalignment='top')
+        if li == 0 and not (talkversion and talkvnum == 2):
+            handles = [mlines.Line2D([],[], label=label, color='black', ls=ls,\
+                                     linewidth=2.) \
+                       for ls, label in zip([ls_mean, ls_median], ['mean', 'med. mean'])]
+            lax.legend(handles=handles, fontsize=fontsize, **leg_kw)
+        
+        # add SB mins
+        _sel = df2['galaxy absorption included in limit']
+        _xlim = ax.get_xlim()
+        _ylim = ax.get_ylim()
+        for ins in instruments: 
+            if talkversion and talkvnum == 2:
+                if 'lynx' in ins:
+                    continue
+                
+            sel = np.logical_and(_sel, df2['instrument'] == ins)
+            sel &= df2['line name'] == line
+            
+            minsel = sel & np.isclose(df2['sky area * exposure time [arcmin**2 s]'],
+                                      np.min(omegat_use))
+            maxsel = sel & np.isclose(df2['sky area * exposure time [arcmin**2 s]'],
+                                      np.max(omegat_use))
+            if np.sum(maxsel) != 1 or np.sum(minsel) != 1:
+                msg = 'Something went wrong finding the SB limits:'
+                msg = 'selected {}, {} values'.format(len(minsel), len(maxsel))
+                raise RuntimeError(msg)
+            imin = df2.index[minsel][0]
+            imax = df2.index[maxsel][0]
+            miny = np.log10(df2.at[imin, 'minimum detectable SB [phot/s/cm**2/sr]'])
+            maxy = np.log10(df2.at[imax, 'minimum detectable SB [phot/s/cm**2/sr]'])
+            
+            minx = xmin_ins[ins]
+            maxx = xmax_ins[ins]
+            #print(minx, maxx, miny, maxy)
+            
+            patch = mpatch.Rectangle([minx, miny], maxx - minx, maxy - miny,
+                                     **kwargs_ins[ins])
+            ax.add_artist(patch)
+        ax.set_xlim(*_xlim)
+        ax.set_ylim(*_ylim)
+        
+    # sync plot ranges
+    xlims = [ax.get_xlim() for ax in axes]
+    xmin = min([xlim[0] for xlim in xlims])
+    xmax = max([xlim[1] for xlim in xlims])
+    if talkversion:
+        xmin = 4.
+        xmax = 4.5e3
+    [ax.set_xlim(xmin, xmax) for ax in axes]
+
+    # three most energetic ions have very low mean SB -> impose limits
+    #ylims = [ax.get_ylim() for ax in axes]
+    if talkversion:
+        ymin = -2.95 #min([ylim[0] for ylim in ylims])
+    else:
+        ymin = -3.95
+    ymax = 2. #max([ylim[1] for ylim in ylims])
+    [ax.set_ylim(ymin, ymax) for ax in axes]
+    [ax.set_ylim(ymin + np.log10(right_over_left), 
+                 ymax + np.log10(right_over_left))\
+     for ax in axes2]
+    
+    _inss = list(np.copy(instruments))
+    if talkversion and talkvnum == 2:
+        for ins in instruments:
+            if 'lynx' in ins:
+                _inss.remove(ins)
+            
+    handles_ins = [mpatch.Patch(label=inslabels[ins], **kwargs_ins[ins]) \
+                   for ins in _inss]    
+    leg_ins = lax2.legend(handles=handles_ins, fontsize=fontsize, 
+                          ncol=ncols_insleg, **insleg_kw)
+    leg_ins.set_title(legendtitle_minsb)
+    leg_ins.get_title().set_fontsize(fontsize)
+    
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 ### instruments and minimum SB
 def plot_Aeff_galabs():
