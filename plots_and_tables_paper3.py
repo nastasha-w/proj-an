@@ -2206,7 +2206,9 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                     if ncomp > slidenum:
                         continue
                 ed = bins[tag][ykey]
+                print(ed)
                 vals = yvals[tag][ykey]
+                print(vals)
                 cens = ed[:-1] + 0.5 * np.diff(ed)
                 ax.plot(cens, vals, color=colordct[me], linewidth=2.,\
                         path_effects=patheff, linestyle=ls, zorder=zo)
