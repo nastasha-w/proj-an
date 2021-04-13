@@ -2058,7 +2058,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
         _cax.axis('off')
         _l, _b, _w, _h = (_cax.get_position()).bounds
         vert = nrows * ncols - numlines <= 2
-        if vert or not talkversion:
+        if vert:
             wmargin_c = panelwidth * 0.13 / figwidth
             wmargin_l = panelwidth * 0.05 / figwidth
             hmargin_b = panelheight * 0.07 / figheight
@@ -2086,7 +2086,34 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                   'handlelength': 1.8,
                   'columnspacing': 0.8,
                   }
+        elif not talkversion:
+            wmargin_c = panelwidth * 0.13 / figwidth
+            wmargin_l = panelwidth * 0.05 / figwidth
+            hmargin_b = panelheight * 0.07 / figheight
+            hmargin_t = panelheight * 0.07 / figheight
+            lspace = 0.3 * panelheight / figheight
+            cspace = _h - hmargin_b - hmargin_t - lspace
+            cax = fig.add_axes([_l + wmargin_c, _b + hmargin_b,\
+                                _w - wmargin_c, cspace])
+            w1 = 0.35 * (_w - 1. * wmargin_l)
+            w2 = 0.80 * (_w - 1. * wmargin_l)
+            lax = fig.add_axes([_l + wmargin_l, _b  + hmargin_b + cspace,\
+                                w1, lspace])
+            lax2 = fig.add_axes([_l + _w - w2 * 0.975, _b  + hmargin_b + cspace,\
+                                w2, lspace])
+                
+            ncols_insleg = (len(instruments) + 1) // 2 
             
+            leg_kw = {'loc': 'upper left',
+                  'bbox_to_anchor': (0.0, 1.),
+                  'handlelength': 2.,
+                  'columnspacing': 1.,
+                  }
+            insleg_kw = {'loc': 'upper right',
+                  'bbox_to_anchor': (1.0, 1.),
+                  'handlelength': 1.8,
+                  'columnspacing': 0.8,
+                  }
         else:
             wmargin = panelwidth * 0.1 / figwidth
             hmargin = panelheight * 0.05 / figheight
@@ -2251,7 +2278,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
             handles = [mlines.Line2D([],[], label=label, color='black', ls=ls,
                                      linewidth=2.) \
                        for ls, label in zip([ls_mean, ls_median], 
-                                            ['mean', 'med. mean'])]
+                                            ['mean', 'median'])]
             lax.legend(handles=handles, fontsize=fontsize, **leg_kw)
         
         # add SB mins
