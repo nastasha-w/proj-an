@@ -2009,12 +2009,12 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                     _filen = _filen.replace('Mh0p5dex', 
                                             'L0100N1504_27_Mh0p5dex')
                     if not os.path.isfile(_filen):
-                        msg = 'Could not find file for {}:\n{}' + \
-                              '_{box_snap}_Mh0p5dex'
+                        msg = 'Could not find file for {}:\n{}'
                         raise RuntimeError(msg.format(line, _filen))
             
         filens[line] = _filen
-    
+        print(filens[line])
+        
     panelheight = panelwidth    
     figheight = panelheight * nrows
     
