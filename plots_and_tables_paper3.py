@@ -1987,7 +1987,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
     rfilebase = 'radprof_stamps_emission_{line}{it}_L0100N1504_27_' + \
                 'test3.{tv}_' + \
                 'SmAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_noEOS' + \
-                '_1slice_to-min3p5R200c_L0100N1504_27_Mh0p5dex_1000' +\
+                '_1slice_to-min3p5R200c_Mh0p5dex_1000' +\
                 '_centrals_M-ge-10p5.hdf5'
     siontab = {line: '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F' \
                if line in all_lines_PS20 else '' for line in _lines}
