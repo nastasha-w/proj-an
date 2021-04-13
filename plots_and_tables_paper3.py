@@ -2176,8 +2176,8 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                                      ofmean=True)
         _yvals, _bins = readin_radprof(filename, seltags, [ykey_median],
                                        runit='pkpc', separate=False,
-                                     binset=binset_medianofmeans, retlog=True,
-                                     ofmean=True)
+                                       binset=binset_medianofmeans, 
+                                       retlog=True, ofmean=True)
         #print(bins.keys())
         #print(_bins.keys())
         for tag in yvals:
@@ -2205,10 +2205,12 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                             + yi * len(medges) + mi
                     if ncomp > slidenum:
                         continue
-                ed = bins[tag][ykey]
-                print(ed)
-                vals = yvals[tag][ykey]
-                print(vals)
+                key = list(yvals[tag][ykey].keys())
+                if len(key) > 1:
+                    raise RuntimeError('Multiple galaxy sets for one tag')
+                key = key[0]
+                ed = bins[tag][ykey][key]
+                vals = yvals[tag][ykey][key]
                 cens = ed[:-1] + 0.5 * np.diff(ed)
                 ax.plot(cens, vals, color=colordct[me], linewidth=2.,\
                         path_effects=patheff, linestyle=ls, zorder=zo)
