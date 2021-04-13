@@ -2226,14 +2226,15 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                        color=colordct[me])
         
         # might not work for generic lines
-        ion = line.split('-')[0]
+        ion = line.split('-')[0] # SB lines
+        ion = ion.split('   ')[0] # PS20 lines
         while not ion[-1].isdigit():
             ion = ion[:-1]            
         linelabel = ild.getnicename(ion)
         if ion == 'o7': # get (i), (r), (f) label:
             linelabel = nicenames_lines[line]
             
-        ev = ol.line_eng_ion[line] / c.ev_to_erg
+        ev = line_energy_ev(line)
         numdig = 4
         lead = int(np.ceil(np.log10(ev)))
         appr = str(np.round(ev, numdig - lead))
@@ -2244,13 +2245,14 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                 appr = appr[:-2]
         eng = '{} eV'.format(appr)
         linelabel =  eng + '\n' + linelabel 
-        ax.text(0.98, 0.97, linelabel, fontsize=fontsize,\
-                transform=ax.transAxes, horizontalalignment='right',\
+        ax.text(0.98, 0.97, linelabel, fontsize=fontsize,
+                transform=ax.transAxes, horizontalalignment='right',
                 verticalalignment='top')
         if li == 0 and not (talkversion and talkvnum == 2):
-            handles = [mlines.Line2D([],[], label=label, color='black', ls=ls,\
+            handles = [mlines.Line2D([],[], label=label, color='black', ls=ls,
                                      linewidth=2.) \
-                       for ls, label in zip([ls_mean, ls_median], ['mean', 'med. mean'])]
+                       for ls, label in zip([ls_mean, ls_median], 
+                                            ['mean', 'med. mean'])]
             lax.legend(handles=handles, fontsize=fontsize, **leg_kw)
         
         # add SB mins
