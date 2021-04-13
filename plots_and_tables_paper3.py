@@ -2005,12 +2005,12 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
             _filen = _filen.replace('zcen-all', 'zcen3.125') # file naming bug
             if not os.path.isfile(_filen):
                 if line in ['n6-actualr', 'ne10']: # other file naming thing
-                    _filen = _filen.replace('zcen3.125', 'zcen-all')
+                    #_filen = _filen.replace('zcen3.125', 'zcen-all')
                     _filen = _filen.replace('Mh0p5dex', 
                                             'L0100N1504_27_Mh0p5dex')
-                    if not os.path.isfile(_filen):
-                        msg = 'Could not find file for {}:\n{}'
-                        raise RuntimeError(msg.format(line, _filen))
+        if not os.path.isfile(_filen):
+            msg = 'Could not find file for {}:\n{}'
+            raise RuntimeError(msg.format(line, _filen))
             
         filens[line] = _filen
         print(filens[line])
