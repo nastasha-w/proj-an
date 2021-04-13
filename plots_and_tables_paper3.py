@@ -2068,7 +2068,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
             cax = fig.add_axes([_l + wmargin_c, _b + hmargin_b,
                                 _w - wmargin_c, cspace])
             w1 = 0.35 * (_w - 1. * wmargin_l)
-            w2 = 0.75 * (_w - 1. * wmargin_l)
+            w2 = 0.80 * (_w - 1. * wmargin_l)
             lax = fig.add_axes([_l + wmargin_l, _b  + hmargin_b + cspace,
                                 w1, lspace])
             lax2 = fig.add_axes([_l + w1, _b  + hmargin_b + cspace,
