@@ -1832,7 +1832,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
     
     # get minimum SB for the different instruments
     omegat_use = [1e6, 1e7]
-    if talkversion:
+    if True: #talkversion:
         legendtitle_minsb = 'min. SB ($5\\sigma$) for $\\Delta' +\
             ' \\Omega \\, \\Delta t =$ \n ${:.0e}, {:.0e}'.format(*tuple(omegat_use))+\
             '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
