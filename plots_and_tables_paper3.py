@@ -2404,10 +2404,14 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
     ylabel = '$\\log_{10} \\, \\mathrm{SB}$'          
     ylabel2 = '$\\Delta$'
     
-    titlepart = 'y axis: $\\log_{10} \\, \\mathrm{SB} \\; ' + \
+    titlepart1 = 'y axis: $\\log_{10} \\, \\mathrm{SB} \\; ' + \
                 '[\\mathrm{photons}\\,\\mathrm{cm}^{-2}' + \
                 '\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]' + \
                 ' \\; \\mathrm{and} \\; \\Delta \\, \\log_{10}$ SB'
+    titlepart2 = 'top left: halo mass range in ' +\
+                 ' $\\log_{{10}} \\mathrm{{M}}_{{\\mathrm{{200c}}}}' + \
+                 ' \\,/\\, \\mathrm{{M}}_{{\\odot}}' + \
+                 '; top left: number of haloes'
       
     ykeys = [('mean',), ('perc', 2.), ('perc', 10.), ('perc', 50.), 
              ('perc', 90.), ('perc', 98.)]
@@ -2524,18 +2528,17 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
               'handlelength': 2.,
               'columnspacing': 1.,
               }
-    fig.suptitle(nicenames_lines[line] + ' ' + titlepart, fontsize=fontsize)
+    fig.suptitle('\n'.join([nicenames_lines[line], titlepart1, titlepart2]),
+                fontsize=fontsize)
     
     for mi, mtag in enumerate(medges):
         ax = axes[mi]
         mmin = mtag
         if mi < len(medges) - 1:
-            mlabel = '$\\log_{{10}} \\mathrm{{M}}_{{\\mathrm{{200c}}}}' + \
-                     ' \\,/\\, \\mathrm{{M}}_{{\\odot}} = {} \\emdash {}$'
+            mlabel = '${:.1f} \\emdash {:.1f}$'
             mlabel = mlabel.format(mmin, medges[mi + 1])
         else:
-            mlabel = '$\\log_{{10}} \\mathrm{{M}}_{{\\mathrm{{200c}}}}' + \
-                     ' \\,/\\, \\mathrm{{M}}_{{\\odot}} \\geq {}$'
+            mlabel = '$\\geq {.1f}$'
             mlabel = mlabel.format(mmin)
         seltag = seltag_keys[mmin]
         
@@ -2566,11 +2569,11 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
             color = colors[label]
             filen = rfilebase.format(**filekw)
             
-            yvals, bins, numgals = readin_radprof(filen, seltag, [ykey_mean],
+            yvals, bins, numgals = readin_radprof(filen, [seltag], [ykey_mean],
                                          runit='pkpc', separate=False,
                                          binset=binset_mean, retlog=True,
                                          ofmean=True, retsamplesize=True)
-            _yvals, _bins = readin_radprof(filen, seltags,ykeys_perc,
+            _yvals, _bins = readin_radprof(filen, [seltags], ykeys_perc,
                                            runit='pkpc', separate=False,
                                            binset=binset_perc, 
                                            retlog=True, ofmean=True)
