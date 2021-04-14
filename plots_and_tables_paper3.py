@@ -2538,7 +2538,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
             mlabel = '${:.1f} \\emdash {:.1f}$'
             mlabel = mlabel.format(mmin, medges[mi + 1])
         else:
-            mlabel = '$\\geq {.1f}$'
+            mlabel = '$\\geq {:.1f}$'
             mlabel = mlabel.format(mmin)
         seltag = seltag_keys[mmin]
         
