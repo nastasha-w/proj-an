@@ -2538,8 +2538,8 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
         ax.axis('off')
         _l, _b, _w, _h = (ax.get_position()).bounds
         ftop = 1. / 3.
-        tax = fig.add_axes([_l + _b + (1. - ftop) * _h, _w, ftop * _h])
-        bax = fig.add_axes([_l + _b, _w, (1. - ftop) * _h])
+        tax = fig.add_axes([_l, _b + (1. - ftop) * _h, _w, ftop * _h])
+        bax = fig.add_axes([_l, _b, _w, (1. - ftop) * _h])
         
         pu.setticks(bax, fontsize=fontsize, right=True, top=True, 
                     labelbottom=True)
