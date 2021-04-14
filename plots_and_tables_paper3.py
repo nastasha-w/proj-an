@@ -452,7 +452,7 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,
 
     spath = '{{gal}}/{runit}_bins/{bin}/{{{{ds}}}}'.format(runit=runit, 
                                                            bin=binset)
-        
+    print(seltags)    
     with h5py.File(filename, 'r') as fi:
         # match groups to seltags
         gkeys = list(fi.keys())
@@ -2411,7 +2411,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
     titlepart2 = 'top left: halo mass range in ' +\
                  ' $\\log_{{10}} \\mathrm{{M}}_{{\\mathrm{{200c}}}}' + \
                  ' \\,/\\, \\mathrm{{M}}_{{\\odot}}$' + \
-                 '; top left: number of haloes'
+                 '; top right: number of haloes'
       
     ykeys = [('mean',), ('perc', 2.), ('perc', 10.), ('perc', 50.), 
              ('perc', 90.), ('perc', 98.)]
@@ -2498,7 +2498,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
     seltags = [seltag_keys[key] for key in seltag_keys]
     
     nummasses = len(seltags)
-    ncols = 4
+    ncols = 3
     nrows = (nummasses - 1) // ncols + 1
     _nrows = nrows * 2
     figwidth = 11. 
@@ -2518,7 +2518,8 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
     
     fig = plt.figure(figsize=(figwidth, figheight))
     grid = gsp.GridSpec(ncols=ncols, nrows=_nrows, hspace=0.4, wspace=0.3,
-                        width_ratios=width_ratios)
+                        width_ratios=width_ratios, right=0.05, left=0.95,
+                        top=0.87)
     axes = [fig.add_subplot(grid[i // ncols, i % ncols])\
             for i in range(nummasses)]
     lax = fig.add_subplot(grid[laxsel])
