@@ -2518,7 +2518,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
     
     fig = plt.figure(figsize=(figwidth, figheight))
     grid = gsp.GridSpec(ncols=ncols, nrows=_nrows, hspace=0.4, wspace=0.3,
-                        width_ratios=width_ratios, right=0.95, left=0.05,
+                        width_ratios=width_ratios, right=0.97, left=0.07,
                         top=0.87)
     axes = [fig.add_subplot(grid[i // ncols, i % ncols])\
             for i in range(nummasses)]
@@ -2574,7 +2574,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
                                          runit='pkpc', separate=False,
                                          binset=binset_mean, retlog=True,
                                          ofmean=True, retsamplesize=True)
-            _yvals, _bins = readin_radprof(filen, [seltags], ykeys_perc,
+            _yvals, _bins = readin_radprof(filen, [seltag], ykeys_perc,
                                            runit='pkpc', separate=False,
                                            binset=binset_perc, 
                                            retlog=True, ofmean=True)
