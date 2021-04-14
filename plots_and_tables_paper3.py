@@ -2002,13 +2002,13 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
         _filen = ddir + 'radprof/' +\
                  rfilebase.format(line=line.replace(' ', '-'), 
                                   it=siontab[line], tv=testversion[line])
-        if not os.path.isfile(_filen):
-            _filen = _filen.replace('zcen-all', 'zcen3.125') # file naming bug
-            if not os.path.isfile(_filen):
-                if line in ['n6-actualr', 'ne10']: # other file naming thing
-                    #_filen = _filen.replace('zcen3.125', 'zcen-all')
-                    _filen = _filen.replace('Mh0p5dex', 
-                                            'L0100N1504_27_Mh0p5dex')
+        #if not os.path.isfile(_filen):
+        #    _filen = _filen.replace('zcen-all', 'zcen3.125') # file naming bug
+        #    if not os.path.isfile(_filen):
+        #        if line in ['n6-actualr', 'ne10']: # other file naming thing
+        #            #_filen = _filen.replace('zcen3.125', 'zcen-all')
+        #            _filen = _filen.replace('Mh0p5dex', 
+        #                                    'L0100N1504_27_Mh0p5dex')
         if not os.path.isfile(_filen):
             msg = 'Could not find file for {}:\n{}'
             raise RuntimeError(msg.format(line, _filen))
@@ -2061,7 +2061,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
         if not talkversion:
             wmargin_c = panelwidth * 0.15 / figwidth
             wmargin_l = panelwidth * 0.06 / figwidth
-            hmargin_b = panelheight * 0.07 / figheight
+            hmargin_b = panelheight * 0.05 / figheight
             hmargin_t = panelheight * 0.07 / figheight
             lspace = 0.3 * panelheight / figheight
             cspace = _h - hmargin_b - hmargin_t - lspace
