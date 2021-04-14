@@ -451,8 +451,7 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,
         filename = ol.pdir + 'radprof/' + filename
 
     spath = '{{gal}}/{runit}_bins/{bin}/{{{{ds}}}}'.format(runit=runit, 
-                                                           bin=binset)
-    print(seltags)    
+                                                           bin=binset)   
     with h5py.File(filename, 'r') as fi:
         # match groups to seltags
         gkeys = list(fi.keys())
@@ -2413,8 +2412,8 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
                  ' \\,/\\, \\mathrm{{M}}_{{\\odot}}$' + \
                  '; top right: number of haloes'
       
-    ykeys = [('mean',), ('perc', 2.), ('perc', 10.), ('perc', 50.), 
-             ('perc', 90.), ('perc', 98.)]
+    #ykeys = [('mean',), ('perc', 2.), ('perc', 10.), ('perc', 50.), 
+    #         ('perc', 90.), ('perc', 98.)]
     ykey_mean = ('mean',)
     ykey_median = ('perc', 50.)
     ykeys_rangeout = [('perc', 2.),  ('perc', 98.)]
@@ -2570,14 +2569,20 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
             color = colors[label]
             filen = rfilebase.format(**filekw)
             
-            yvals, bins, numgals = readin_radprof(filen, [seltag], [ykey_mean],
-                                         runit='pkpc', separate=False,
-                                         binset=binset_mean, retlog=True,
-                                         ofmean=True, retsamplesize=True)
-            _yvals, _bins = readin_radprof(filen, [seltag], ykeys_perc,
-                                           runit='pkpc', separate=False,
-                                           binset=binset_perc, 
-                                           retlog=True, ofmean=True)
+            try:
+                yvals, bins, numgals = readin_radprof(filen, [seltag], [ykey_mean],
+                                             runit='pkpc', separate=False,
+                                             binset=binset_mean, retlog=True,
+                                             ofmean=True, retsamplesize=True)
+                _yvals, _bins = readin_radprof(filen, [seltag], ykeys_perc,
+                                               runit='pkpc', separate=False,
+                                               binset=binset_perc, 
+                                               retlog=True, ofmean=True)
+            except RuntimeError as err:
+                print(err)
+                yvals = {}
+                bins = {}
+                numgals = {}
             
             bins[seltag].update(_bins[seltag])
             yvals[seltag].update(_yvals[seltag])
