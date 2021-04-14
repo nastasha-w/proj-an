@@ -2525,7 +2525,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
     lax.axis('off')
     leg_kw = {'loc': 'upper center',
               'bbox_to_anchor':(0.5, 0.95),
-              'ncols': 2,
+              'ncol': 2,
               'handlelength': 2.,
               'columnspacing': 1.,
               }
