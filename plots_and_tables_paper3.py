@@ -554,7 +554,7 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,
                         ys_out[seltag][ykey] = vals
                         bins_out[seltag][ykey] = bins
                     if retsamplesize and not separate:
-                        _path = ypath.split['/'][0] 
+                        _path = ypath.split('/')[0] 
                         _dsn = _path + '/galaxyid'
                         _numgals = len(fi[_dsn])
                         if seltag not in samplesize:
@@ -2410,7 +2410,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
                 ' \\; \\mathrm{and} \\; \\Delta \\, \\log_{10}$ SB'
     titlepart2 = 'top left: halo mass range in ' +\
                  ' $\\log_{{10}} \\mathrm{{M}}_{{\\mathrm{{200c}}}}' + \
-                 ' \\,/\\, \\mathrm{{M}}_{{\\odot}}' + \
+                 ' \\,/\\, \\mathrm{{M}}_{{\\odot}}$' + \
                  '; top left: number of haloes'
       
     ykeys = [('mean',), ('perc', 2.), ('perc', 10.), ('perc', 50.), 
