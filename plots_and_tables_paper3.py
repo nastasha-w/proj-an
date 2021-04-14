@@ -2475,7 +2475,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
                            'L025N0752-Ref': {'box': 'L0025N0752'},
                            'L025N0376': {'box': 'L0025N0376'},
                            }
-    elif convtype == 'resolution':
+    elif convtype == 'slicedepth':
         outname = outname.format(convtype=convtype, 
                                  line=line.replace(' ', '-'),
                                  box='L0100N1504', Lz='6.25-12.5slice')
