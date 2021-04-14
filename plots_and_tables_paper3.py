@@ -2518,7 +2518,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
     
     fig = plt.figure(figsize=(figwidth, figheight))
     grid = gsp.GridSpec(ncols=ncols, nrows=_nrows, hspace=0.4, wspace=0.3,
-                        width_ratios=width_ratios, right=0.05, left=0.95,
+                        width_ratios=width_ratios, right=0.95, left=0.05,
                         top=0.87)
     axes = [fig.add_subplot(grid[i // ncols, i % ncols])\
             for i in range(nummasses)]
