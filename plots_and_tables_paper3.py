@@ -2610,43 +2610,43 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
             ed = bins[seltag][ykey_comp]
             cens = ed[:-1] + 0.5 * np.diff(ed)
             
-            vals = [yvals[seltag][ykey] for ykey in ykeys_rangeout]
-            tax.fill_between(cens, vals[0], vals[1], color=color, 
-                             alpha=alpha_ranges)
-            tax.plot(cens, vals[0], color=color, linewidth=linewidth,
-                     linestyle=linestyle_ykey[ykeys_rangeout[0]],
-                     path_effects=patheff)
-            tax.plot(cens, vals[1], color=color, linewidth=linewidth,
-                     linestyle=linestyle_ykey[ykeys_rangeout[1]],
-                     path_effects=patheff)
-            bax.fill_between(cens, vals[0] - yref, vals[1] - yref, color=color, 
-                             alpha=alpha_ranges)
-            bax.plot(cens, vals[0] - yref, color=color, linewidth=linewidth,
-                     linestyle=linestyle_ykey[ykeys_rangeout[0]],
-                     path_effects=patheff)
-            bax.plot(cens, vals[1] - yref, color=color, linewidth=linewidth,
-                     linestyle=linestyle_ykey[ykeys_rangeout[1]],
-                     path_effects=patheff)
+            # vals = [yvals[seltag][ykey] for ykey in ykeys_rangeout]
+            # tax.fill_between(cens, vals[0], vals[1], color=color, 
+            #                  alpha=alpha_ranges)
+            # tax.plot(cens, vals[0], color=color, linewidth=linewidth,
+            #          linestyle=linestyle_ykey[ykeys_rangeout[0]],
+            #          path_effects=patheff)
+            # tax.plot(cens, vals[1], color=color, linewidth=linewidth,
+            #          linestyle=linestyle_ykey[ykeys_rangeout[1]],
+            #          path_effects=patheff)
+            # bax.fill_between(cens, vals[0] - yref, vals[1] - yref, color=color, 
+            #                  alpha=alpha_ranges)
+            # bax.plot(cens, vals[0] - yref, color=color, linewidth=linewidth,
+            #          linestyle=linestyle_ykey[ykeys_rangeout[0]],
+            #          path_effects=patheff)
+            # bax.plot(cens, vals[1] - yref, color=color, linewidth=linewidth,
+            #          linestyle=linestyle_ykey[ykeys_rangeout[1]],
+            #          path_effects=patheff)
             
-            vals = [yvals[seltag][ykey] for ykey in ykeys_rangein]
-            tax.fill_between(cens, vals[0], vals[1], color=color, 
-                             alpha=alpha_ranges)
-            tax.plot(cens, vals[0], color=color, linewidth=linewidth,
-                     linestyle=linestyle_ykey[ykeys_rangein[0]],
-                     path_effects=patheff)
-            tax.plot(cens, vals[1], color=color, linewidth=linewidth,
-                     linestyle=linestyle_ykey[ykeys_rangein[1]],
-                     path_effects=patheff)
-            bax.fill_between(cens, vals[0] - yref, vals[1] - yref, color=color, 
-                             alpha=alpha_ranges, linewidth=linewidth,
-                             linestyle=linestyle_ykey[ykeys_rangein[0]],
-                             path_effects=patheff)
-            bax.plot(cens, vals[0] - yref, color=color, linewidth=linewidth,
-                     linestyle=linestyle_ykey[ykeys_rangein[0]],
-                     path_effects=patheff)
-            bax.plot(cens, vals[1] - yref, color=color, linewidth=linewidth,
-                     linestyle=linestyle_ykey[ykeys_rangein[1]],
-                     path_effects=patheff)
+            # vals = [yvals[seltag][ykey] for ykey in ykeys_rangein]
+            # tax.fill_between(cens, vals[0], vals[1], color=color, 
+            #                  alpha=alpha_ranges)
+            # tax.plot(cens, vals[0], color=color, linewidth=linewidth,
+            #          linestyle=linestyle_ykey[ykeys_rangein[0]],
+            #          path_effects=patheff)
+            # tax.plot(cens, vals[1], color=color, linewidth=linewidth,
+            #          linestyle=linestyle_ykey[ykeys_rangein[1]],
+            #          path_effects=patheff)
+            # bax.fill_between(cens, vals[0] - yref, vals[1] - yref, color=color, 
+            #                  alpha=alpha_ranges, linewidth=linewidth,
+            #                  linestyle=linestyle_ykey[ykeys_rangein[0]],
+            #                  path_effects=patheff)
+            # bax.plot(cens, vals[0] - yref, color=color, linewidth=linewidth,
+            #          linestyle=linestyle_ykey[ykeys_rangein[0]],
+            #          path_effects=patheff)
+            # bax.plot(cens, vals[1] - yref, color=color, linewidth=linewidth,
+            #          linestyle=linestyle_ykey[ykeys_rangein[1]],
+            #          path_effects=patheff)
             
             vals = yvals[seltag][ykey_mean]
             tax.plot(cens, vals, color=color, linewidth=linewidth,
