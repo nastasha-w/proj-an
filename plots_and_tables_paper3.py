@@ -2612,7 +2612,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
             
             vals = [yvals[seltag][ykey] for ykey in ykeys_rangeout]
             tax.fill_between(cens, vals[0], vals[1], color=color, 
-                             alpha=alpha_ranges, zorder=5)
+                             alpha=alpha_ranges)
             tax.plot(cens, vals[0], color=color, linewidth=linewidth,
                      linestyle=linestyle_ykey[ykeys_rangeout[0]],
                      path_effects=patheff)
@@ -2620,7 +2620,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
                      linestyle=linestyle_ykey[ykeys_rangeout[1]],
                      path_effects=patheff)
             bax.fill_between(cens, vals[0] - yref, vals[1] - yref, color=color, 
-                             alpha=alpha_ranges, zorder=5)
+                             alpha=alpha_ranges)
             bax.plot(cens, vals[0] - yref, color=color, linewidth=linewidth,
                      linestyle=linestyle_ykey[ykeys_rangeout[0]],
                      path_effects=patheff)
@@ -2630,7 +2630,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
             
             vals = [yvals[seltag][ykey] for ykey in ykeys_rangein]
             tax.fill_between(cens, vals[0], vals[1], color=color, 
-                             alpha=alpha_ranges,zorder=5)
+                             alpha=alpha_ranges)
             tax.plot(cens, vals[0], color=color, linewidth=linewidth,
                      linestyle=linestyle_ykey[ykeys_rangein[0]],
                      path_effects=patheff)
@@ -2640,7 +2640,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
             bax.fill_between(cens, vals[0] - yref, vals[1] - yref, color=color, 
                              alpha=alpha_ranges, linewidth=linewidth,
                              linestyle=linestyle_ykey[ykeys_rangein[0]],
-                             path_effects=patheff, zorder=5)
+                             path_effects=patheff)
             bax.plot(cens, vals[0] - yref, color=color, linewidth=linewidth,
                      linestyle=linestyle_ykey[ykeys_rangein[0]],
                      path_effects=patheff)
@@ -2665,25 +2665,26 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
                              path_effects=patheff)
             
             # indicate R200c
-            mmin = 10**mmin
-            if mi < len(medges) - 1:
-                mmax = 10**medges[mi + 1]
-            else:
-                mmax = 10**14.53 # max mass in the box at z=0.1
-            rs = cu.R200c_pkpc(np.array([mmin, mmax]), cosmopars)
-            tax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1, color='gray')
-            bax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1, color='gray')
+            #mmin = 10**mmin
+            #if mi < len(medges) - 1:
+            #    mmax = 10**medges[mi + 1]
+            #else:
+            #    mmax = 10**14.53 # max mass in the box at z=0.1
+            #rs = cu.R200c_pkpc(np.array([mmin, mmax]), cosmopars)
+            #tax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1, color='gray')
+            #bax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1, color='gray')
             
             
     handles = [mpatch.Patch(label=label, color=colors[label], 
+                            edgecolor=colors[label],
                             linestyle='solid', linewidth=linewidth,
                             path_effects=patheff, alpha=alpha_ranges)
                for label in labels]
     handles = handles + \
               [mpatch.Patch(label='{:.0f}%'.format(ykeys[1][1] - ykeys[0][1]), 
-                            color='gray', linewidth=linewidth, 
+                            color='gray', edgecolor='gray', 
+                            linewidth=linewidth, path_effects=patheff,
                             linestyle=linestyle_ykey[ykeys[0]],
-                            path_effects=patheff, 
                             alpha=1. - (1. - alpha_ranges)**(ri + 1))
                for ri, ykeys in enumerate([ykeys_rangein, ykeys_rangeout])]
     handles = handles + \
