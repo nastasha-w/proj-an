@@ -2402,12 +2402,12 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
                mppe.Normal()]
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB}$'          
-    ylabel2 = '$\\Delta'
+    ylabel2 = '$\\Delta$'
     
-    titlepart = 'y axis: $\\log_{10}$ SB ' + \
+    titlepart = 'y axis: $\\log_{10} \\, \\mathrm{SB} \\; ' + \
                 '[\\mathrm{photons}\\,\\mathrm{cm}^{-2}' + \
-                '\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$' + \
-                ' and $\\Delta \\log_{10}$ SB'
+                '\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]' + \
+                ' \\; \\mathrm{and} \\; \\Delta \\, \\log_{10}$ SB'
       
     ykeys = [('mean',), ('perc', 2.), ('perc', 10.), ('perc', 50.), 
              ('perc', 90.), ('perc', 98.)]
@@ -2433,6 +2433,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
                 'SmAb_C2Sm_{npix}pix_6.25slice_zcen-all_z-projection_noEOS' +\
                 '_{nsl}slice_to-min3p5R200c_Mh0p5dex_1000' +\
                 '_centrals_M-ge-10p5.hdf5'
+    rfilebase = ddir + 'radprof/' + rfilebase
     siontab = '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F' \
                if line in all_lines_PS20 else ''
     testversion = '7' if line in all_lines_PS20 else '6'
