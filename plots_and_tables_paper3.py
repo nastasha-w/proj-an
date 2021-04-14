@@ -2516,7 +2516,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
     figheight = panelheight * _nrows
     
     fig = plt.figure(figsize=(figwidth, figheight))
-    grid = gsp.GridSpec(ncols=ncols, nrows=_nrows, hspace=0.4, wspace=0.3,
+    grid = gsp.GridSpec(ncols=ncols, nrows=_nrows, hspace=0.2, wspace=0.3,
                         width_ratios=width_ratios, right=0.97, left=0.07,
                         top=0.87)
     axes = [fig.add_subplot(grid[i // ncols, i % ncols])\
@@ -2599,7 +2599,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
                     #ed_ref = bins[seltag][ykey_comp]
                     #xref = 0.5 * (ed_ref[:-1] + ed_ref[1:])
                     yref = yvals[seltag][ykey_comp]
-            tax.text(0.98, 0.97 - 0.15 * li, str(_ng), fontsize=fontsize,
+            tax.text(0.98, 0.97 - 0.07 * li, str(_ng), fontsize=fontsize,
                      color=color, transform=tax.transAxes,
                      horizontalalignment='right', verticalalignment='top')
             if seltag not in yvals:
