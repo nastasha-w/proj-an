@@ -2401,10 +2401,13 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
                mppe.Stroke(linewidth=linewidth, foreground="w"),\
                mppe.Normal()]
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
-    ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; ' + \
-             '[\\mathrm{photons}\\,\\mathrm{cm}^{-2}' + \
-             '\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$'
-    ylabel2 = '$\\Delta \\, \\log_{10}$ SB'
+    ylabel = '$\\log_{10} \\, \\mathrm{SB}$'          
+    ylabel2 = '$\\Delta'
+    
+    titlepart = 'y axis: $\\log_{10}$ SB ' + \
+                '[\\mathrm{photons}\\,\\mathrm{cm}^{-2}' + \
+                '\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]$' + \
+                ' and $\\Delta \\log_{10}$ SB'
       
     ykeys = [('mean',), ('perc', 2.), ('perc', 10.), ('perc', 50.), 
              ('perc', 90.), ('perc', 98.)]
@@ -2520,7 +2523,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
               'handlelength': 2.,
               'columnspacing': 1.,
               }
-    fig.suptitle(nicenames_lines[line], fontsize=fontsize)
+    fig.suptitle(nicenames_lines[line] + ' ' + titlepart, fontsize=fontsize)
     
     for mi, mtag in enumerate(medges):
         ax = axes[mi]
@@ -2537,7 +2540,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
         
         ax.axis('off')
         _l, _b, _w, _h = (ax.get_position()).bounds
-        ftop = 1. / 3.
+        ftop = 2. / 3.
         tax = fig.add_axes([_l, _b + (1. - ftop) * _h, _w, ftop * _h])
         bax = fig.add_axes([_l, _b, _w, (1. - ftop) * _h])
         
