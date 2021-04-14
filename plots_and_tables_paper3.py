@@ -2675,25 +2675,25 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
             #bax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1, color='gray')
             
             
-    # handles = [mpatch.Patch(label=label, color=colors[label], 
-    #                         edgecolor=colors[label],
-    #                         linestyle='solid', linewidth=linewidth,
-    #                         path_effects=patheff, alpha=alpha_ranges)
-    #            for label in labels]
-    # handles = handles + \
-    #           [mpatch.Patch(label='{:.0f}%'.format(ykeys[1][1] - ykeys[0][1]), 
-    #                         color='gray', edgecolor='gray', 
-    #                         linewidth=linewidth, path_effects=patheff,
-    #                         linestyle=linestyle_ykey[ykeys[0]],
-    #                         alpha=1. - (1. - alpha_ranges)**(ri + 1))
-    #            for ri, ykeys in enumerate([ykeys_rangein, ykeys_rangeout])]
-    # handles = handles + \
-    #           [mlines.Line2D([], [], label=label, color='gray', 
-    #                          linewidth=linewidth,
-    #                          linestyle=linestyle_ykey[ykey]) \
-    #            for label, ykey in zip(['median', 'mean'], 
-    #                                   [ykey_median, ykey_mean])]    
-    #lax.legend(handles=handles, fontsize=fontsize, **leg_kw)
+    handles = [mpatch.Patch(label=label, color=colors[label], 
+                            edgecolor=colors[label],
+                            linestyle='solid', linewidth=linewidth,
+                            path_effects=patheff, alpha=alpha_ranges)
+                for label in labels]
+    handles = handles + \
+              [mpatch.Patch(label='{:.0f}%'.format(ykeys[1][1] - ykeys[0][1]), 
+                            color='gray', edgecolor='gray', 
+                            linewidth=linewidth, path_effects=patheff,
+                            linestyle=linestyle_ykey[ykeys[0]],
+                            alpha=1. - (1. - alpha_ranges)**(ri + 1))
+                for ri, ykeys in enumerate([ykeys_rangein, ykeys_rangeout])]
+    handles = handles + \
+              [mlines.Line2D((), (), label=label, color='gray', 
+                              linewidth=linewidth,
+                              linestyle=linestyle_ykey[ykey]) \
+                for label, ykey in zip(['median', 'mean'], 
+                                      [ykey_median, ykey_mean])]    
+    lax.legend(handles=handles, fontsize=fontsize, **leg_kw)
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 ### instruments and minimum SB
