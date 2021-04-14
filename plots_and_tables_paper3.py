@@ -2523,8 +2523,8 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
             for i in range(nummasses)]
     lax = fig.add_subplot(grid[laxsel])
     lax.axis('off')
-    leg_kw = {'loc': 'upper center',
-              'bbox_to_anchor':(0.5, 0.95),
+    leg_kw = {'loc': 'upper right',
+              'bbox_to_anchor':(1., 0.95),
               'ncol': 2,
               'handlelength': 2.,
               'columnspacing': 1.,
