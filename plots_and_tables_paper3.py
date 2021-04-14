@@ -2554,6 +2554,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
         bax.grid(b=True)
         pu.setticks(tax, fontsize=fontsize, right=True, top=True,
                     labelbottom=False)
+        tax.set_xscale('log')
         tax.grid(b=True)
         
         bax.set_xlabel(xlabel, fontsize=fontsize)
@@ -2670,9 +2671,9 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
             else:
                 mmax = 10**14.53 # max mass in the box at z=0.1
             rs = cu.R200c_pkpc(np.array([mmin, mmax]), cosmopars)
-            ax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1, color='gray')
-        
-        
+            tax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1, color='gray')
+            bax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1, color='gray')
+            
             
     handles = [mpatch.Patch(label=label, color=colors[label], 
                             linestyle='solid', linewidth=linewidth,
@@ -2686,7 +2687,8 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
                             alpha=1. - (1. - alpha_ranges)**(ri + 1))
                for ri, ykeys in enumerate([ykeys_rangein, ykeys_rangeout])]
     handles = handles + \
-              [mlines.Line2D(label=label, color='gray', linewidth=linewidth,
+              [mlines.Line2D([], [], label=label, color='gray', 
+                             linewidth=linewidth,
                              linestyle=linestyle_ykey[ykey]) \
                for label, ykey in zip(['median', 'mean'], 
                                       [ykey_median, ykey_mean])]    
