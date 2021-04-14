@@ -2416,14 +2416,14 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
     #         ('perc', 90.), ('perc', 98.)]
     ykey_mean = ('mean',)
     ykey_median = ('perc', 50.)
-    ykeys_rangeout = [('perc', 2.),  ('perc', 98.)]
+    #ykeys_rangeout = [('perc', 2.),  ('perc', 98.)]
     ykeys_rangein  = [('perc', 10.), ('perc', 90.)]
     linestyle_ykey = {ykey_mean: 'dashdot',
                    ykey_median: 'solid'}
-    linestyle_ykey.update({ykey: 'dotted' for ykey in ykeys_rangeout})
+    #linestyle_ykey.update({ykey: 'dotted' for ykey in ykeys_rangeout})
     linestyle_ykey.update({ykey: 'dashed' for ykey in ykeys_rangein})
     ykey_comp = ykey_median
-    ykeys_perc = [ykey_median] + ykeys_rangeout + ykeys_rangein
+    ykeys_perc = [ykey_median] + ykeys_rangein # + ykeys_rangeout 
     alpha_ranges = 0.3
     
     outname = 'radprof2d_convtest-{convtype}_{line}_0.1-0.25dex-annuli' + \
@@ -2572,7 +2572,8 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
             filen = rfilebase.format(**filekw)
             
             try:
-                yvals, bins, numgals = readin_radprof(filen, [seltag], [ykey_mean],
+                yvals, bins, numgals = readin_radprof(filen, [seltag], 
+                                                      [ykey_mean],
                                              runit='pkpc', separate=False,
                                              binset=binset_mean, retlog=True,
                                              ofmean=True, retsamplesize=True)
@@ -2611,23 +2612,23 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
             ed = bins[seltag][ykey_comp]
             cens = ed[:-1] + 0.5 * np.diff(ed)
             
-            vals = [yvals[seltag][ykey] for ykey in ykeys_rangeout]
-            tax.fill_between(cens, vals[0], vals[1], color=color, 
-                              alpha=alpha_ranges)
-            tax.plot(cens, vals[0], color=color, linewidth=linewidth,
-                     linestyle=linestyle_ykey[ykeys_rangeout[0]],
-                     path_effects=patheff)
-            tax.plot(cens, vals[1], color=color, linewidth=linewidth,
-                     linestyle=linestyle_ykey[ykeys_rangeout[1]],
-                     path_effects=patheff)
-            bax.fill_between(cens, vals[0] - yref, vals[1] - yref, color=color, 
-                              alpha=alpha_ranges)
-            bax.plot(cens, vals[0] - yref, color=color, linewidth=linewidth,
-                     linestyle=linestyle_ykey[ykeys_rangeout[0]],
-                     path_effects=patheff)
-            bax.plot(cens, vals[1] - yref, color=color, linewidth=linewidth,
-                     linestyle=linestyle_ykey[ykeys_rangeout[1]],
-                     path_effects=patheff)
+            # vals = [yvals[seltag][ykey] for ykey in ykeys_rangeout]
+            # tax.fill_between(cens, vals[0], vals[1], color=color, 
+            #                   alpha=alpha_ranges)
+            # tax.plot(cens, vals[0], color=color, linewidth=linewidth,
+            #          linestyle=linestyle_ykey[ykeys_rangeout[0]],
+            #          path_effects=patheff)
+            # tax.plot(cens, vals[1], color=color, linewidth=linewidth,
+            #          linestyle=linestyle_ykey[ykeys_rangeout[1]],
+            #          path_effects=patheff)
+            # bax.fill_between(cens, vals[0] - yref, vals[1] - yref, color=color, 
+            #                   alpha=alpha_ranges)
+            # bax.plot(cens, vals[0] - yref, color=color, linewidth=linewidth,
+            #          linestyle=linestyle_ykey[ykeys_rangeout[0]],
+            #          path_effects=patheff)
+            # bax.plot(cens, vals[1] - yref, color=color, linewidth=linewidth,
+            #          linestyle=linestyle_ykey[ykeys_rangeout[1]],
+            #          path_effects=patheff)
             
             vals = [yvals[seltag][ykey] for ykey in ykeys_rangein]
             tax.fill_between(cens, vals[0], vals[1], color=color, 
@@ -2685,7 +2686,7 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
                             linewidth=linewidth, path_effects=patheff,
                             linestyle=linestyle_ykey[ykeys[0]],
                             alpha=1. - (1. - alpha_ranges)**(ri + 1))
-                for ri, ykeys in enumerate([ykeys_rangein, ykeys_rangeout])]
+                for ri, ykeys in enumerate([ykeys_rangein])] #, ykeys_rangeout
     handles = handles + \
               [mlines.Line2D((), (), label=label, color='gray', 
                               linewidth=linewidth,
