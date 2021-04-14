@@ -2579,10 +2579,8 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
                                            binset=binset_perc, 
                                            retlog=True, ofmean=True)
             
-            for tag in ykeys:
-                #print(tag)
-                bins[tag].update(_bins[tag])
-                yvals[tag].update(_yvals[tag])
+            bins[seltag].update(_bins[seltag])
+            yvals[seltag].update(_yvals[seltag])
             
             if seltag not in yvals:
                 _ng = 0
