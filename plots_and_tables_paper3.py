@@ -689,7 +689,8 @@ def readin_3dprof_stacked(filename, Zelt='oxygen', weight='Mass',
                             msg = 'none of axes {} not found in group'+\
                                   ' {} of file {}'
                             raise IOError(msg.format(opts, grp_t, filename))
-                
+                    axns[akey] = opts[ai]
+                    
                 for axn in [profq, 'r3d']:
                     edges[axn] = np.array(grp_t[axns[axn] + '/bins'])
                     if not bool(grp_t[axns[axn]].attrs['log']):
