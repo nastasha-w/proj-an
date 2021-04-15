@@ -685,7 +685,7 @@ def readin_3dprof_stacked(filename, Zelt='oxygen', weight='Mass',
                     ai = 0
                     while opts[ai] not in grp_t:
                         ai += 1
-                        if ai >= len len(opts):
+                        if ai >= len(opts):
                             msg = 'none of axes {} not found in group'+\
                                   ' {} of file {}'
                             raise IOError(msg.format(opts, grp_t, filename))
@@ -2997,7 +2997,7 @@ def plot_radprof3d(weightset=1, M200cslice=None):
         maxx = np.max(xlims[:, 1])
         [axes[i, xi].set_xlim(minx, maxx) for i in range(nprof)]
     
-    plt.savefig(outname, format='pdf', box_inches='tight')
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
     
 
 # convergence tests: simulation box size and resolution, slice depth of maps 
