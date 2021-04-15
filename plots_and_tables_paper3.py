@@ -2722,8 +2722,8 @@ def plot_radprof3d(weightset=1, M200cslice=None):
     axweights = {0: ['Mass', 'Volume']}
     axweights.update({i + 1: [ws[i]] for i in range(len(ws))})
     elt = string.capwords(parentelts[ws[0]])
-    Zsol = ol.solar_abunds_ea[ol.elements_ion[ws[0]]]
-    print('Using {elt} metallicity, solar value {Zsol}'.format(elt=elt,\
+    Zsol = ol.solar_abunds_ea[elt.lower()]
+    print('Using {elt} metallicity, solar value {Zsol}'.format(elt=elt,
           Zsol=Zsol))
         
     fontsize = 12
