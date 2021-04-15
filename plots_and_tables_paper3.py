@@ -2246,12 +2246,12 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                             + yi * len(medges) + mi
                     if ncomp > slidenum:
                         continue
-                key = list(yvals[tag][ykey].keys())
-                if len(key) > 1:
-                    raise RuntimeError('Multiple galaxy sets for one tag')
-                key = key[0]
-                ed = bins[tag][ykey][key]
-                vals = yvals[tag][ykey][key]
+                #key = list(yvals[tag][ykey].keys())
+                #if len(key) > 1:
+                #    raise RuntimeError('Multiple galaxy sets for one tag')
+                #key = key[0]
+                ed = bins[tag][ykey] #[key]
+                vals = yvals[tag][ykey] #[key]
                 cens = ed[:-1] + 0.5 * np.diff(ed)
                 ax.plot(cens, vals, color=colordct[me], linewidth=2.,\
                         path_effects=patheff, linestyle=ls, zorder=zo)
