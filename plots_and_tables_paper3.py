@@ -3813,3 +3813,5 @@ if __name__ == '__main__':
         plot_barchart_Ls(simple=False)
         plot_luminosities_nice(addedges=(0., 1.), talkversion=False)
         plot_radprof_main(talkversion=False)
+        for i in range(1, 17):
+            plot_radprof3d(weightset=i, M200cslice=slice(None, None, 2)) 
