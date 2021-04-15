@@ -184,7 +184,8 @@ plot_lines_default = plot_lines_SB + plot_lines_PS20
 plot_lines_default = sorted(plot_lines_default, key=line_energy_ev)
 
 # colors
-_c1 = tc.tol_cset('bright') # tip: don't use 'wine' and 'green' in the same plot (muted scheme)
+# tip: don't use 'wine' and 'green' in the same plot (muted scheme)
+_c1 = tc.tol_cset('bright') 
 
 linesets = [['c5r', 'n6-actualr', 'o7r', 'ne9r', 'mg11r', 'si13r'],
             ['c6', 'n7', 'o8', 'ne10', 'mg12'],
@@ -308,8 +309,9 @@ mass_edges_standard = (11., 11.5, 12.0, 12.5, 13.0, 13.5, 14.0)
 
 def getsamplemedianmass():
     mass_edges = mass_edges_standard
-    galdataf = mdir + '3dprof/' + 'halodata_L0100N1504_27_Mh0p5dex_1000.txt'
-    galdata_all = pd.read_csv(galdataf, header=2, sep='\t', index_col='galaxyid')
+    galdataf = ddir + 'halodata_L0100N1504_27_Mh0p5dex_1000.txt'
+    galdata_all = pd.read_csv(galdataf, header=2, sep='\t', 
+                              index_col='galaxyid')
     
     masses = np.log10(np.array(galdata_all['M200c_Msun']))
     minds = np.digitize(masses, mass_edges)
@@ -370,19 +372,21 @@ def arcmin_to_pkpc(angle_arcmin, z, cosmopars=None):
 
 ### misc utils
 def getoutline(linewidth):
-    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"),\
-               mppe.Stroke(linewidth=linewidth + 0.5, foreground="white"),\
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"),
+               mppe.Stroke(linewidth=linewidth + 0.5, foreground="white"),
                mppe.Normal()]
     return patheff
 
-def add_cbar_mass(cax, massedges=mass_edges_standard,\
-             orientation='vertical', clabel=None, fontsize=fontsize, aspect=10.):
+def add_cbar_mass(cax, massedges=mass_edges_standard,
+                  orientation='vertical', clabel=None, fontsize=fontsize,
+                  aspect=10.):
     '''
     returns color bar object, color dictionary (keys: lower mass edges)
     '''
     massedges = np.array(massedges)
     clist = tc.tol_cmap('rainbow_discrete', 
-                        lut=len(massedges))(np.linspace(0.,  1., len(massedges)))
+                        lut=len(massedges))(np.linspace(0.,  1., 
+                                                        len(massedges)))
     keys = sorted(massedges)
     colors = {keys[i]: clist[i] for i in range(len(keys))}
     #del _masks
@@ -391,11 +395,12 @@ def add_cbar_mass(cax, massedges=mass_edges_standard,\
     cmap = mpl.colors.ListedColormap(clist[:-1])
     cmap.set_over(clist[-1])
     norm = mpl.colors.BoundaryNorm(massedges, cmap.N)
-    cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,\
-                                norm=norm,\
-                                boundaries=np.append(massedges, np.array(massedges[-1] + 1.)),\
-                                ticks=massedges,\
-                                spacing='proportional', extend='max',\
+    bounds = np.append(massedges, np.array(massedges[-1] + 1.))
+    cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,
+                                norm=norm,
+                                boundaries=bounds,
+                                ticks=massedges,
+                                spacing='proportional', extend='max',
                                 orientation=orientation)
     # to use 'extend', you must
     # specify two extra boundaries:
@@ -419,7 +424,8 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,
     input:
     ------
     filename: name of the hdf5 file containing the profiles
-    seltag:   list (iterable) of seltag attributes for the galaxy/halo set used
+    seltag:   list (iterable) of seltag attributes for the galaxy/halo set 
+              used
     ys:       list (iterable) of tuples (iterable) containing ytype 
               ('mean', 'mean_log', 'perc', or 'fcov') and 
               yval (threashold for 'fcov', percentile (0-100) for 'perc',\
@@ -510,7 +516,8 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,
                     ypart = ytv[0]
             if ofmean:
                 ypart = ypart + '_of_mean_log'
-            ypaths = {key: temppaths[key].format(ds=ypart) for key in temppaths}
+            ypaths = {key: temppaths[key].format(ds=ypart) \
+                      for key in temppaths}
             bpaths = {key: temppaths[key].format(ds='bin_edges') \
                       for key in temppaths}
 
@@ -543,7 +550,9 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,
                     if seltag not in ys_out:
                         ys_out[seltag] = {}
                         bins_out[seltag] = {}
-                    if separate:# isstr(key) # string instance? (hard to test between pytohn 2 and 3 with isinstance)
+                    # isstr(key) # string instance? 
+                    #(hard to test between pytohn 2 and 3 with isinstance)
+                    if separate:
                         if ykey not in ys_out[seltag]:
                             ys_out[seltag][ykey] = {}
                             bins_out[seltag][ykey] = {}
@@ -566,34 +575,41 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,
     return out
 
 def readin_3dprof_stacked(filename, Zelt='oxygen', weight='Mass',
-                          combmethod='addnormed-R200c', rbinu='R200c',
-                          ):
+                          combmethod='addnormed-R200c', rbinu='R200c'):
     '''
     read in the 3d profiles for the selected halo masses. Only works if the 
     file actually contains the requested data, and assumes group names and 
     stack axes from the paper 3 stacks (tgrpns) 
     
-    input:
-    ------
-    filename:      (string) hdf5 file with the stacked data
-    Zelt:          (string) which element to use for metallicities
-    weight:        the histogram weight
-    combmethod:    one of the histogram combination methods from 
-                   prof3d_galsets, e.g. 'add' or 'addnormed-R200c'
-    rbinu:         radial bin units: 'R200c' or 'pkpc'
+    Parameters
+    ----------
+    filename: str 
+        hdf5 file with the stacked data
+    Zelt: str 
+        which element to use for metallicities
+    weight: str
+        the histogram weight
+    combmethod: str   
+        one of the histogram combination methods from prof3d_galsets, e.g.,
+        'add' or 'addnormed-R200c'
+    rbinu: str 
+        radial bin units: 'R200c' or 'pkpc'
     
-    returns: (hists, edges, galaxyids)
-    --------
+    Returns 
+    -------
+    (hists, edges, galaxyids)
     hists:   nested dictionary: the first set of keys is log10(M200c / Msun)
              for the lower edge of each halo mass bin for which data is stored
              the second level of keys is the radial profile type:
-               'T' for temperature, 'n' for hydrogen number density, 
-               'Z' for metallcity, and 'weight' for the cumulative profiles
+               'T' for temperature, 
+               'n' for hydrogen number density, 
+               'Z' for metallcity, and 
+               'weight' for the cumulative profiles
              each histogram has dimensions [radius, profile type], except for
              'weight', which just contains the cumulative values
     edges:   dictionary with the same structure as hists, but contains a list 
              of the histogram bin edges [radial edges, profile type edges], 
-             excpet for 'weight', which only contains [radial edges] 
+             except for 'weight', which only contains [radial edges] 
              (an array in a list) 
     galaxyids: the galaxyids that went into each stack (dictionary with the 
               same halo mass keys)    
@@ -606,17 +622,28 @@ def readin_3dprof_stacked(filename, Zelt='oxygen', weight='Mass',
     '''
 
     elt = string.capwords(Zelt)
-    tgrpns = {'T': '3Dradius_Temperature_T4EOS_StarFormationRate_T4EOS',\
-              'n': '3Dradius_Niondens_hydrogen_SmAb_T4EOS_StarFormationRate_T4EOS',\
-              'Z': '3Dradius_SmoothedElementAbundance-{elt}_T4EOS_StarFormationRate_T4EOS'.format(\
-                                                      elt=elt),\
+    # priority order for trying tgrpns in the list
+    # in practice, just different options for Mass/Volume/SB lines and the
+    # PS20 lines
+    # only presence of the group is tested, 
+    # not whether all the data is there too
+    tgrpns = {'T': ['3Dradius_Temperature_T4EOS_StarFormationRate_T4EOS'],
+              'n': ['3Dradius_Niondens_hydrogen_SmAb_T4EOS'+\
+                    '_StarFormationRate_T4EOS',
+                    '3Dradius_Niondens_hydrogen_SmAb_PS20-iontab-UVB-dust1'+\
+                    '-CR1-G1-shield1_depletion-F_T4EOS_StarFormationRate'+\
+                    '_T4EOS'],
+              'Z': ['3Dradius_SmoothedElementAbundance' +\
+                    '-{elt}_T4EOS_StarFormationRate_T4EOS'.format(elt=elt)],
               }
-    axns  = {'r3d':  '3Dradius',\
-             'T':    'Temperature_T4EOS',\
-             'n':    'Niondens_hydrogen_SmAb_T4EOS',\
-             'Z':    'SmoothedElementAbundance-{elt}_T4EOS'.format(elt=elt),\
-            }
-    axnl = ['n', 'T', 'Z']
+    axn_opts = {'r3d': ['3Dradius'],
+                'T':   ['Temperature_T4EOS'],
+                'n':   ['Niondens_hydrogen_SmAb_T4EOS',
+                        'Niondens_hydrogen_SmAb_PS20-iontab-UVB'+\
+                        '-dust1-CR1-G1-shield1_depletion-F_T4EOS'],
+                'Z':   ['SmoothedElementAbundance-{elt}_T4EOS'.format(
+                        elt=elt)],
+                }
     
     mgrpn = 'L0100N1504_27_Mh0p5dex_1000/%s-%s'%(combmethod, rbinu)
     
@@ -627,11 +654,19 @@ def readin_3dprof_stacked(filename, Zelt='oxygen', weight='Mass',
     
     with h5py.File(filename, 'r') as fi:
         for profq in tgrpns:
-            tgrpn = tgrpns[profq]
+            tgrpn_opts = tgrpns[profq]
+            ti = 0
+            while tgrpn_opts[ti] not in fi:
+                ti += 1
+                if ti >= len(tgrpn_opts):
+                    msg = 'file {}\ncontained none of the groups\n{}'
+                    raise IOError(msg.format(filename, tgrpn_opts))
+            tgrpn = tgrpn_opts[ti]
             grp = fi[tgrpn + '/' + mgrpn]
             sgrpns = list(grp.keys())
             massbins = [grpn.split('_')[-1] for grpn in sgrpns]    
-            massbins = [[np.log10(float(val)) for val in binn.split('-')] for binn in massbins]
+            massbins = [[np.log10(float(val)) for val in binn.split('-')] 
+                        for binn in massbins]
             
             for mi in range(len(sgrpns)):
                 mkey = massbins[mi][0]
@@ -643,6 +678,17 @@ def readin_3dprof_stacked(filename, Zelt='oxygen', weight='Mass',
                 
                 edges = {}
                 axes = {}
+                
+                axns = {}
+                for akey in axn_opts:
+                    opts = axn_opts[akey]
+                    ai = 0
+                    while opts[ai] not in grp_t:
+                        ai += 1
+                        if ai >= len len(opts):
+                            msg = 'none of axes {} not found in group'+\
+                                  ' {} of file {}'
+                            raise IOError(msg.format(opts, grp_t, filename))
                 
                 for axn in [profq, 'r3d']:
                     edges[axn] = np.array(grp_t[axns[axn] + '/bins'])
@@ -661,10 +707,15 @@ def readin_3dprof_stacked(filename, Zelt='oxygen', weight='Mass',
                 
                 if combmethod == 'addnormed-R200c':
                     if rbinu != 'R200c':
-                        raise ValueError('The combination method addnormed-R200c only works with rbin units R200c')
+                        msg = 'The combination method addnormed-R200c only' +\
+                              ' works with rbin units R200c'
+                        raise ValueError(msg)
                     _i = np.where(np.isclose(edges['r3d'], 0.))[0]
                     if len(_i) != 1:
-                        raise RuntimeError('For addnormed-R200c combination, no or multiple radial edges are close to R200c:\nedges [R200c] were: %s'%(str(edges['r3d'])))
+                        msg = 'For addnormed-R200c combination, no or' + \
+                              ' multiple radial edges are close to R200c:\n'+\
+                              'edges [R200c] were: %s'%(str(edges['r3d']))
+                        raise RuntimeError(msg)
                     _i = _i[0]
                     _a = list(range(len(hist.shape)))
                     _s = [slice(None, None, None) for dummy in _a]
@@ -672,10 +723,15 @@ def readin_3dprof_stacked(filename, Zelt='oxygen', weight='Mass',
                     norm_t = np.sum(hist[tuple(_s)])
                 elif combmethod == 'add':
                     if rbinu != 'R200c':
-                        raise ValueError('The combination method addnormed-R200c only works with rbin units R200c')
+                        msg = 'The combination method addnormed-R200c only' +\
+                              ' works with rbin units R200c'
+                        raise ValueError(msg)
                     _i = np.where(np.isclose(edges['r3d'], 0.))[0]
                     if len(_i) != 1:
-                        raise RuntimeError('For addnormed-R200c combination, no or multiple radial edges are close to R200c:\nedges [R200c] were: %s'%(str(edges['r3d'])))
+                        msg = 'For addnormed-R200c combination, no or ' + \
+                              'multiple radial edges are close to R200c:\n'+\
+                              'edges [R200c] were: %s'%(str(edges['r3d']))
+                        raise RuntimeError(msg)
                     _i = _i[0]
                     _a = list(range(len(hist.shape)))
                     _s = [slice(None, None, None) for dummy in _a]
@@ -691,7 +747,8 @@ def readin_3dprof_stacked(filename, Zelt='oxygen', weight='Mass',
                 
                 hist_t = np.copy(hist)
                 
-                # deal with edge units (r3d is already in R200c units if R200c-stacked)
+                # deal with edge units 
+                # (r3d is already in R200c units if R200c-stacked)
                 if edges_r[0] == -np.inf: # reset centre bin position
                     edges_r[0] = 2. * edges_r[1] - edges_r[2] 
                 if edges_y[0] == -np.inf: # reset centre bin position
@@ -705,13 +762,15 @@ def readin_3dprof_stacked(filename, Zelt='oxygen', weight='Mass',
                 hist_t = np.sum(hist_t, axis=tuple(sax))
                 if yax < rax:
                     hist_t = hist_t.T
-                #hist_t /= (np.diff(edges_r)[:, np.newaxis] * np.diff(edges_y)[np.newaxis, :])
+                #hist_t /= (np.diff(edges_r)[:, np.newaxis] \
+                #          * np.diff(edges_y)[np.newaxis, :])
                 
                 hists_main[mkey][profq] = hist_t
                 edges_main[mkey][profq] = [edges_r, edges_y]
                 #print(hist_t.shape)
                 
-                # add in cumulative plot for the weight (from one of the profiles)
+                # add in cumulative plot for the weight 
+                # (from one of the profiles)
                 if profq == 'n':
                     hist_t = np.copy(hist)
                     sax = list(range(len(hist_t.shape)))
@@ -793,19 +852,21 @@ def plotstampzooms_overview():
             with h5py.File(filen, 'r') as ft:
                 for grn in groups[line]:
                     if grn not in ft:
-                        print('Could not find the group {grp} for {line}: {filen}.'.format(\
-                              line=line, filen=filen, grp=grn))
+                        msg = 'Could not find the group {grp} for {line}:'+\
+                              ' {filen}'
+                        print(msg.format(line=line, filen=filen, grp=grn))
                         continue
                     grp = ft[grn] 
                     maps[line][grn] = grp['map'][:]
                     cosmopars = {key: val for key, val in \
                         grp['Header_in/inputpars/cosmopars'].attrs.items()}
                     cosmoparss[line][grn] = cosmopars
-                    L_x = grp['Header_in/inputpars'].attrs['L_x'] 
-                    L_y = grp['Header_in/inputpars'].attrs['L_y']
-                    L_z = grp['Header_in/inputpars'].attrs['L_z']
-                    centre = np.array(grp['Header_in/inputpars'].attrs['centre'])
-                    LsinMpc = bool(grp['Header_in/inputpars'].attrs['LsinMpc'])
+                    inpath = 'Header_in/inputpars'
+                    L_x = grp[inpath].attrs['L_x'] 
+                    L_y = grp[inpath].attrs['L_y']
+                    L_z = grp[inpath].attrs['L_z']
+                    centre = np.array(grp[inpath].attrs['centre'])
+                    LsinMpc = bool(grp[inpath].attrs['LsinMpc'])
                     Ls = np.array([L_x, L_y, L_z])
                     if not LsinMpc:
                         Ls /= cosmopars['h']
@@ -826,23 +887,28 @@ def plotstampzooms_overview():
                     paxes[line][grn] = (axis1, axis2, axis3)
                     extent_x = Ls[axis1]
                     extent_y = Ls[axis2]
-                    snapshots[line][grn] = grp['Header_in/inputpars'].attrs['snapnum']
+                    snapshots[line][grn] = grp[inpath].attrs['snapnum']
                     
                     if bool(grp['map'].attrs['subregion']):
-                        extents[line][grn] = np.array([np.array(grp['map'].attrs['edges_axis0_cMpc']),\
-                                                       np.array(grp['map'].attrs['edges_axis1_cMpc'])])
+                        e0 = np.array(grp['map'].attrs['edges_axis0_cMpc'])
+                        e1 = np.array(grp['map'].attrs['edges_axis1_cMpc'])
+                        extents[line][grn] = np.array([e0, e1])
                     else:
-                        extents[line][grn] = np.array([[0., extent_x],\
+                        extents[line][grn] = np.array([[0., extent_x],
                                                        [0., extent_y]])
-                    depths[line][grn] = (centre[axis3] - 0.5 * Ls[axis3], centre[axis3] + 0.5 * Ls[axis3]) 
-                    resolutions[line][grn] = ((extents[line][grn][0][1] - extents[line][grn][0][0])\
-                                               * 1e3 * cosmopars['a'] / maps[line][grn].shape[0],\
-                                              (extents[line][grn][1][1] - extents[line][grn][1][0])\
-                                               * 1e3 * cosmopars['a'] / maps[line][grn].shape[1])
+                    depths[line][grn] = (centre[axis3] - 0.5 * Ls[axis3], 
+                                         centre[axis3] + 0.5 * Ls[axis3]) 
+                    r0 = (extents[line][grn][0][1] - \
+                          extents[line][grn][0][0])\
+                         * 1e3 * cosmopars['a'] / maps[line][grn].shape[0]
+                    r1 = (extents[line][grn][1][1] -  \
+                          extents[line][grn][1][0])\
+                         * 1e3 * cosmopars['a'] / maps[line][grn].shape[1]
+                    resolutions[line][grn] = (r0, r1)
                 
         except IOError:
-            print('Could not find the file for {line}: {filen}.'.format(\
-                  line=line, filen=filen))
+            msg = 'Could not find the file for {line}: {filen}.'
+            print(msg.format(line=line, filen=filen))
     
     print('Using map resolutions:\n{res}'.format(res=resolutions))
     #_lines = sorted(maps.keys(), key=ol.line_eng_ion.get)
@@ -853,14 +919,17 @@ def plotstampzooms_overview():
         halocat = ol.pdir + halocat
     with h5py.File(halocat, 'r') as hc:
         snapnum = hc['Header'].attrs['snapnum']
-        cosmopars = {key: val for key, val in hc['Header/cosmopars'].attrs.items()}
-        if not np.all(snapnum == np.array([snapshots[line][grn] \
-                                           for line in _lines for grn in groups[line]])):
-            raise RuntimeError('Stamp snapshots do not match halo catalogue snapshot')
+        cosmopars = {key: val for key, val \
+                     in hc['Header/cosmopars'].attrs.items()}
+        snaps = np.array([snapshots[line][grn] for line in _lines \
+                          for grn in groups[line]])
+        if not np.all(snapnum == snaps):
+            msg = 'Stamp snapshots do not match halo catalogue snapshot'
+            raise RuntimeError(msg)
         masses = np.log10(hc['M200c_Msun'][:])
         radii = hc['R200c_pkpc'] / cosmopars['a'] * 1e-3
-        pos = np.array([hc['Xcom_cMpc'][:],\
-                        hc['Ycom_cMpc'][:],\
+        pos = np.array([hc['Xcom_cMpc'][:],
+                        hc['Ycom_cMpc'][:],
                         hc['Zcom_cMpc'][:]])
         msel = masses >= minhalomass
         masses = masses[msel]
@@ -868,9 +937,9 @@ def plotstampzooms_overview():
         pos = pos[:, msel]
     
     # this is all very fine-tuned by hand
-    patheff_text = [mppe.Stroke(linewidth=2.0, foreground="white"),\
-                            mppe.Stroke(linewidth=0.4, foreground="black"),\
-                            mppe.Normal()]  
+    patheff_text = [mppe.Stroke(linewidth=2.0, foreground="white"),
+                    mppe.Stroke(linewidth=0.4, foreground="black"),
+                    mppe.Normal()]  
     
     panelsize_large = 3.
     panelsize_small = panelsize_large * 0.5
@@ -880,7 +949,8 @@ def plotstampzooms_overview():
     nrows_small = (len(lines) - len(lines_med) - 2) // ncol_small + 1
     
     figwidth =  2. * panelsize_large + 1. * panelsize_med + 2. * margin
-    figheight = 1. * panelsize_large + nrows_small * panelsize_small + 2. * margin
+    figheight = 1. * panelsize_large + nrows_small * panelsize_small \
+                + 2. * margin
     
     fig = plt.figure(figsize=(figwidth, figheight))
     
@@ -898,13 +968,18 @@ def plotstampzooms_overview():
     
     #[left, bottom, width, height]
     # focus lines: top row
-    axes[line_focus][grn_zbig]  = fig.add_axes([_x0, _y1 - _ps1_l, _ps0_l, _ps1_l])
-    axes[line_focus][grn_slice] = fig.add_axes([_x0 + _ps0_l, _y1 - _ps1_l, _ps0_l, _ps1_l])
-    #axes[line_focus][grn_zsmall] = fig.add_axes([_x0 + 2. * _ps0_l, _y1 - _ps1_m, _ps0_m, _ps1_m])
+    axes[line_focus][grn_zbig]  = fig.add_axes([_x0, _y1 - _ps1_l,
+                                                _ps0_l, _ps1_l])
+    axes[line_focus][grn_slice] = fig.add_axes([_x0 + _ps0_l, _y1 - _ps1_l,
+                                                _ps0_l, _ps1_l])
+    #axes[line_focus][grn_zsmall] = fig.add_axes([_x0 + 2. * _ps0_l, 
+    #                                             _y1 - _ps1_m, 
+    #                                             _ps0_m, _ps1_m])
     # right column: medium-panel lines
     for li, line in enumerate([line_focus] + lines_med):
         bottom = _y1 - (li + 1.) * _ps1_m
-        axes[line][grn_zsmall] = fig.add_axes([_x0 + 2. * _ps0_l, bottom, _ps0_m, _ps1_m])
+        axes[line][grn_zsmall] = fig.add_axes([_x0 + 2. * _ps0_l, bottom, 
+                                               _ps0_m, _ps1_m])
     # block: small panel lines
     slines = list(np.copy(_lines)) 
     for line in lines_med + [line_focus]:
@@ -925,8 +1000,10 @@ def plotstampzooms_overview():
     # lower right: color bars
     
     
-    clabel_img = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{ph.} \\, \\mathrm{cm}^{-2} \\mathrm{s}^{-1} \\mathrm{sr}^{-1}]$'
-    clabel_hmass = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
+    clabel_img = '$\\log_{10} \\, \\mathrm{SB} \\; [\\mathrm{ph.} \\,' + \
+                 ' \\mathrm{cm}^{-2} \\mathrm{s}^{-1} \\mathrm{sr}^{-1}]$'
+    clabel_hmass = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\;' +\
+                   ' [\\mathrm{M}_{\\odot}]$'
     
     if ncol_small * nrows_small <= len(slines) + 2:
         clabel_over_bar = True 
@@ -938,7 +1015,8 @@ def plotstampzooms_overview():
         width = min(_width, 2. * _ps0_s)
         left = left + 0.5 * (_width - width)
         cax1  = fig.add_axes([left + _x0, bottom + texth, width, _ht])
-        cax2  = fig.add_axes([left + _x0, bottom + 2. * texth + _ht, width, _ht])
+        cax2  = fig.add_axes([left + _x0, bottom + 2. * texth + _ht, 
+                              width, _ht])
     else:
         clabel_over_bar = False
         _ht = _ps1_s
@@ -954,12 +1032,12 @@ def plotstampzooms_overview():
         _cl = None
     else:
         _cl = clabel_hmass
-    cbar, colordct = add_cbar_mass(cax2, massedges=mass_edges_standard,\
-             orientation='horizontal', clabel=_cl, fontsize=fontsize,\
+    cbar, colordct = add_cbar_mass(cax2, massedges=mass_edges_standard,
+             orientation='horizontal', clabel=_cl, fontsize=fontsize,
              aspect=c_aspect)
     if clabel_over_bar:
-        cax2.text(0.5, 0.5, clabel_hmass, fontsize=fontsize,\
-                  path_effects=patheff_text, transform=cax2.transAxes,\
+        cax2.text(0.5, 0.5, clabel_hmass, fontsize=fontsize,
+                  path_effects=patheff_text, transform=cax2.transAxes,
                   verticalalignment='center', horizontalalignment='center')
     print('Max value in maps: {}'.format(max([np.max(maps[line][grn])\
           for line in _lines for grn in groups[line]])))
@@ -1025,18 +1103,20 @@ def plotstampzooms_overview():
             
             margin = np.max(radii)
             zrange = depths[line][grn]
-            xrange = [extents[line][grn][0][0] - margin,\
+            xrange = [extents[line][grn][0][0] - margin,
                       extents[line][grn][0][1] + margin]
-            yrange = [extents[line][grn][1][0] - margin,\
+            yrange = [extents[line][grn][1][0] - margin,
                       extents[line][grn][1][1] + margin]
                 
             ax.set_facecolor(cmap_img(0.))    
             _img = maps[line][grn]
-            _img[_img < vmin] = vmin # avoid weird outlines at img ~ vmin in image
-            img = ax.imshow(_img.T, origin='lower', interpolation='nearest',\
-                      extent=(extents[line][grn][0][0], extents[line][grn][0][1],\
-                              extents[line][grn][1][0], extents[line][grn][1][1]),\
-                      cmap=cmap_img, vmin=vmin, vmax=vmax) 
+            # avoid weird outlines at img ~ vmin in image
+            _img[_img < vmin] = vmin 
+            extent = (extents[line][grn][0][0], extents[line][grn][0][1],
+                      extents[line][grn][1][0], extents[line][grn][1][1])
+            img = ax.imshow(_img.T, origin='lower', interpolation='nearest',
+                            extent=extent, cmap=cmap_img, vmin=vmin, 
+                            vmax=vmax) 
                       
             hsel = np.ones(len(posx), dtype=bool)
             cosmopars = cosmoparss[line][grn]
@@ -1055,7 +1135,8 @@ def plotstampzooms_overview():
             # add periodic repetitions if the plotted edges are periodic
             if xrange[1] - xrange[0] > boxsize - 2. * margin or\
                yrange[1] - yrange[0] > boxsize - 2. * margin:
-               _p = cu.pad_periodic([posx, posy], margin, boxsize, additional=[ms, rd])
+               _p = cu.pad_periodic([posx, posy], margin, boxsize, 
+                                    additional=[ms, rd])
                
                posx = _p[0][0]
                posy = _p[0][1]
@@ -1074,7 +1155,8 @@ def plotstampzooms_overview():
                    _m.append(yrange[1] - boxsize)
                _margin = margin + max(_m)
                print(_margin)
-               _p = cu.pad_periodic([posx, posy], _margin, boxsize, additional=[ms, rd])
+               _p = cu.pad_periodic([posx, posy], _margin, boxsize, 
+                                    additional=[ms, rd])
                
                posx = _p[0][0]
                posy = _p[0][1]
@@ -1082,19 +1164,20 @@ def plotstampzooms_overview():
                rd = _p[1][1]
             
             me = np.array(sorted(list(colordct.keys())) + [17.])
-            mi = np.max(np.array([np.searchsorted(me, ms) - 1,\
-                                  np.zeros(len(ms), dtype=np.int)]),\
+            mi = np.max(np.array([np.searchsorted(me, ms) - 1,
+                                  np.zeros(len(ms), dtype=np.int)]),
                         axis=0)
             colors = np.array([colordct[me[i]] for i in mi])
             
-            patches = [mpatch.Circle((posx[ind], posy[ind]), scaler200 * rd[ind]) \
+            patches = [mpatch.Circle((posx[ind], posy[ind]), 
+                                     scaler200 * rd[ind]) \
                        for ind in range(len(posx))] # x, y axes only
         
-            patheff = [mppe.Stroke(linewidth=1.2, foreground="black"),\
-                           mppe.Stroke(linewidth=0.7, foreground="white"),\
-                           mppe.Normal()] 
+            patheff = [mppe.Stroke(linewidth=1.2, foreground="black"),
+                       mppe.Stroke(linewidth=0.7, foreground="white"),
+                       mppe.Normal()] 
             collection = mcol.PatchCollection(patches)
-            collection.set(edgecolor=colors, facecolor='none', linewidth=0.7,\
+            collection.set(edgecolor=colors, facecolor='none', linewidth=0.7,
                            path_effects=patheff)
             ylim = ax.get_ylim()
             xlim = ax.get_xlim()
@@ -1103,8 +1186,9 @@ def plotstampzooms_overview():
             ax.set_ylim(*ylim)
             
             ltext = nicenames_lines[line]
-            ax.text(0.95, 0.95, ltext, fontsize=fontsize, path_effects=patheff_text,\
-                    horizontalalignment='right', verticalalignment='top',\
+            ax.text(0.95, 0.95, ltext, fontsize=fontsize, 
+                    path_effects=patheff_text,
+                    horizontalalignment='right', verticalalignment='top',
                     transform=ax.transAxes, color='black')
     
             mtext = str(marklength)
@@ -1116,7 +1200,8 @@ def plotstampzooms_overview():
             xr = xlim[1] - xlim[0]
             yr = ylim[1] - ylim[0]
             if marklength > 2.5 * xr:
-                print('Marklength {} is too large for the plotted range'.format(marklength))
+                msg = 'Marklength {} is too large for the plotted range'
+                print(msg.format(marklength))
                 continue
             
             if line == line_focus and grn != grn_zsmall:
@@ -1132,27 +1217,28 @@ def plotstampzooms_overview():
             ypos = ylim[0] + 0.07 * yr # * _ps1_l / y_this
             xcen = xs + 0.5 * marklength
             
-            patheff = [mppe.Stroke(linewidth=3.0, foreground="white"),\
-                       mppe.Stroke(linewidth=2.0, foreground="black"),\
+            patheff = [mppe.Stroke(linewidth=3.0, foreground="white"),
+                       mppe.Stroke(linewidth=2.0, foreground="black"),
                        mppe.Normal()] 
-            ax.plot([xs, xs + marklength], [ypos, ypos], color='black',\
+            ax.plot([xs, xs + marklength], [ypos, ypos], color='black',
                     path_effects=patheff, linewidth=2)
-            ax.text(xcen, ypos + 0.01 * yr * _ps1_l / y_this,\
+            ax.text(xcen, ypos + 0.01 * yr * _ps1_l / y_this,
                     mtext, fontsize=fontsize,\
-                    path_effects=patheff_text, horizontalalignment='center',\
+                    path_effects=patheff_text, horizontalalignment='center',
                     verticalalignment='bottom', color='black')
             
-            if grn in [grn_zsmall, grn_zbig]: # add dotted circles for haloes just over the slice edges
+            if grn in [grn_zsmall, grn_zbig]:
+                 # add dotted circles for haloes just over the slice edges
                 posx = pos[axis1]
                 posy = pos[axis2]
                 posz = pos[axis3]
                 margin = np.max(radii) # cMpc
                 
-                zrange1 = [depths[line][grn][1],  depths[line][grn][1] + margin]
+                zrange1 = [depths[line][grn][1], depths[line][grn][1] + margin]
                 zrange2 = [depths[line][grn][0] - margin, depths[line][grn][0]]
-                xrange = [extents[line][grn][0][0] - margin,\
+                xrange = [extents[line][grn][0][0] - margin,
                           extents[line][grn][0][1] + margin]
-                yrange = [extents[line][grn][1][0] - margin,\
+                yrange = [extents[line][grn][1][0] - margin,
                           extents[line][grn][1][1] + margin]
                           
                 hsel = np.ones(len(posx), dtype=bool)
@@ -1170,7 +1256,8 @@ def plotstampzooms_overview():
                 ms = masses[hsel]
                 rd = radii[hsel]
                 
-                # haloes are not just generally close to the edges, but within r200c of them
+                # haloes are not just generally close to the edges, 
+                # but within r200c of them
                 hsel =  np.abs((posz + 0.5 * boxsize - depths[line][grn][1]) \
                                % boxsize - 0.5 * boxsize) < rd
                 hsel &= np.abs((posz + 0.5 * boxsize - depths[line][grn][0]) \
@@ -1185,7 +1272,8 @@ def plotstampzooms_overview():
                 # add periodic repetitions if the plotted edges are periodic
                 if xrange[1] - xrange[0] > boxsize - 2. * margin or\
                    yrange[1] - yrange[0] > boxsize - 2. * margin:
-                   _p = cu.pad_periodic([posx, posy], margin, boxsize, additional=[ms, rd])
+                   _p = cu.pad_periodic([posx, posy], margin, boxsize, 
+                                        additional=[ms, rd])
                    
                    posx = _p[0][0]
                    posy = _p[0][1]
@@ -1203,7 +1291,8 @@ def plotstampzooms_overview():
                    if yrange[1] > boxsize:
                        _m.append(yrange[1] - boxsize)
                    _margin = margin + max(_m)
-                   _p = cu.pad_periodic([posx, posy], _margin, boxsize, additional=[ms, rd])
+                   _p = cu.pad_periodic([posx, posy], _margin, boxsize, 
+                                        additional=[ms, rd])
                    
                    posx = _p[0][0]
                    posy = _p[0][1]
@@ -1211,19 +1300,21 @@ def plotstampzooms_overview():
                    rd = _p[1][1]
                 
                 me = np.array(sorted(list(colordct.keys())) + [17.])
-                mi = np.max(np.array([np.searchsorted(me, ms) - 1,\
-                                      np.zeros(len(ms), dtype=np.int)]),\
+                mi = np.max(np.array([np.searchsorted(me, ms) - 1,
+                                      np.zeros(len(ms), dtype=np.int)]),
                             axis=0)
                 colors = np.array([colordct[me[i]] for i in mi])
                 
-                patches = [mpatch.Circle((posx[ind], posy[ind]), scaler200 * rd[ind]) \
+                patches = [mpatch.Circle((posx[ind], posy[ind]), 
+                                         scaler200 * rd[ind]) \
                            for ind in range(len(posx))] # x, y axes only
             
-                patheff = [mppe.Stroke(linewidth=1.2, foreground="black"),\
-                               mppe.Stroke(linewidth=0.7, foreground="white"),\
+                patheff = [mppe.Stroke(linewidth=1.2, foreground="black"),
+                               mppe.Stroke(linewidth=0.7, foreground="white"),
                                mppe.Normal()] 
                 collection = mcol.PatchCollection(patches)
-                collection.set(edgecolor=colors, facecolor='none', linewidth=0.7,\
+                collection.set(edgecolor=colors, facecolor='none', 
+                               linewidth=0.7,
                                path_effects=patheff, linestyle='dotted')
                 ylim = ax.get_ylim()
                 xlim = ax.get_xlim()
@@ -1236,21 +1327,24 @@ def plotstampzooms_overview():
                 square_big = extents[line][grn_zbig]
                 square_small = extents[line][grn_zsmall]
                 lw_square = 1.2
-                _patheff = [mppe.Stroke(linewidth=1.5, foreground="white"),\
-                           mppe.Stroke(linewidth=lw_square, foreground="black"),\
-                           mppe.Normal()] 
+                _patheff = [mppe.Stroke(linewidth=1.5, foreground="white"),
+                            mppe.Stroke(linewidth=lw_square, 
+                                        foreground="black"),
+                            mppe.Normal()] 
                 
-                _lx = [square_big[0][0], square_big[0][0], square_big[0][1],\
-                       square_big[0][1], square_big[0][0]]
-                _ly = [square_big[1][0], square_big[1][1], square_big[1][1],\
-                       square_big[1][0], square_big[1][0]]
-                ax.plot(_lx, _ly, color='black', path_effects=_patheff,\
+                _lx = (square_big[0][0], square_big[0][0], square_big[0][1],
+                       square_big[0][1], square_big[0][0])
+                _ly = (square_big[1][0], square_big[1][1], square_big[1][1],
+                       square_big[1][0], square_big[1][0])
+                ax.plot(_lx, _ly, color='black', path_effects=_patheff,
                         linewidth=lw_square)
-                _lx = [square_small[0][0], square_small[0][0], square_small[0][1],\
-                       square_small[0][1], square_small[0][0]]
-                _ly = [square_small[1][0], square_small[1][1], square_small[1][1],\
-                       square_small[1][0], square_small[1][0]]
-                ax.plot(_lx, _ly, color='black', path_effects=_patheff,\
+                _lx = (square_small[0][0], square_small[0][0], 
+                       square_small[0][1], square_small[0][1], 
+                       square_small[0][0])
+                _ly = (square_small[1][0], square_small[1][1], 
+                       square_small[1][1], square_small[1][0], 
+                       square_small[1][0])
+                ax.plot(_lx, _ly, color='black', path_effects=_patheff,
                         linewidth=lw_square)
                 
                 xlim = ax.get_xlim()
@@ -1259,11 +1353,13 @@ def plotstampzooms_overview():
                     xi = 1
                 else:
                     xi = 0
-                ax.plot([square_big[0][xi], xlim[xi]], [square_big[1][0], ylim[0]],\
-                        color='black', path_effects=_patheff,\
+                ax.plot((square_big[0][xi], xlim[xi]), 
+                        (square_big[1][0], ylim[0]),
+                        color='black', path_effects=_patheff,
                         linewidth=lw_square)
-                ax.plot([square_big[0][xi], xlim[xi]], [square_big[1][1], ylim[1]],\
-                        color='black', path_effects=_patheff,\
+                ax.plot((square_big[0][xi], xlim[xi]), 
+                        (square_big[1][1], ylim[1]),
+                        color='black', path_effects=_patheff,
                         linewidth=lw_square)
                 
                 if direction_small == 'right':
@@ -1271,26 +1367,29 @@ def plotstampzooms_overview():
                 else:
                     xi = 0
                 ylow = ylim[1] - (ylim[1] - ylim[0]) * (_ps1_m / _ps1_l)
-                ax.plot([square_small[0][xi], xlim[xi]], [square_small[1][0], ylow],\
-                        color='black', path_effects=_patheff,\
+                ax.plot((square_small[0][xi], xlim[xi]), 
+                        (square_small[1][0], ylow),
+                        color='black', path_effects=_patheff,
                         linewidth=lw_square)
-                ax.plot([square_small[0][xi], xlim[xi]], [square_small[1][1], ylim[1]],\
-                        color='black', path_effects=_patheff,\
+                ax.plot((square_small[0][xi], xlim[xi]), 
+                        (square_small[1][1], ylim[1]),
+                        color='black', path_effects=_patheff,
                         linewidth=lw_square)
             elif line == line_focus:
                 lw_square = 1.2
-                _patheff = [mppe.Stroke(linewidth=1.5, foreground="white"),\
-                           mppe.Stroke(linewidth=lw_square, foreground="black"),\
-                           mppe.Normal()] 
-                _lx = [xlim[0], xlim[0], xlim[1], xlim[1], xlim[0]]
-                _ly = [ylim[0], ylim[1], ylim[1], ylim[0], ylim[0]]
-                ax.plot(_lx, _ly, color='black', path_effects=_patheff,\
+                _patheff = [mppe.Stroke(linewidth=1.5, foreground="white"),
+                            mppe.Stroke(linewidth=lw_square, 
+                                        foreground="black"),
+                            mppe.Normal()] 
+                _lx = (xlim[0], xlim[0], xlim[1], xlim[1], xlim[0])
+                _ly = (ylim[0], ylim[1], ylim[1], ylim[0], ylim[0])
+                ax.plot(_lx, _ly, color='black', path_effects=_patheff,
                         linewidth=lw_square)
                 
     plt.colorbar(img, cax=cax1, orientation='horizontal', extend='both')
     if clabel_over_bar:
-        cax1.text(0.5, 0.5, clabel_img, fontsize=fontsize,\
-                  path_effects=patheff_text, transform=cax1.transAxes,\
+        cax1.text(0.5, 0.5, clabel_img, fontsize=fontsize,
+                  path_effects=patheff_text, transform=cax1.transAxes,
                   verticalalignment='center', horizontalalignment='center')
     else:
         cax1.set_xlabel(clabel_img, fontsize=fontsize)
@@ -1313,7 +1412,8 @@ def plot_emcurves():
     '''
     
     z=0.1
-    outname = mdir + 'emcurves_z{}_HM01_ionizedmu.pdf'.format(str(z).replace('.', 'p'))
+    base = 'emcurves_z{}_HM01_ionizedmu.pdf'
+    outname = mdir + base.format(str(z).replace('.', 'p'))
     
     # eagle cosmology
     cosmopars = cosmopars_eagle.copy()
@@ -1348,7 +1448,8 @@ def plot_emcurves():
         
     fname_SB = 'emissivitycurves_z-{z}_nH-{nH}.txt'.format(z=z, nH='CIE')
     fname_PS20 = 'emissivitycurves_PS20_z-{z}_nH-{nH}.txt'.format(z=z, nH=1.0)
-    #fname_PS20_2 = 'emissivitycurves_PS20_z-{z}_nH-{nH}.txt'.format(z=z, nH=6.0)
+    #fname_PS20_2 = 'emissivitycurves_PS20_z-{z}_nH-{nH}.txt'.format(z=z, 
+    #                                                                nH=6.0)
     
     fformat = {'sep':'\t', 'index_col':'T', 'comment':'#'}
     cdata_SB = pd.read_csv(ddir + fname_SB, **fformat)
@@ -1358,18 +1459,23 @@ def plot_emcurves():
     ncols = 2
     nrows = (len(linesets) - 1) // ncols + 1
     fig = plt.figure(figsize=(11., 7.))
-    grid = gsp.GridSpec(nrows=nrows, ncols=ncols,  hspace=0.45, wspace=0.0)
-    axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(len(linesets))]
+    grid = gsp.GridSpec(nrows=nrows, ncols=ncols, hspace=0.45, wspace=0.0)
+    axes = [fig.add_subplot(grid[i // ncols, i % ncols]) \
+            for i in range(len(linesets))]
     
     xlim = (5.3, 8.5)
     ylim = (-28., -23.)
     
-    ylabel = '$\log_{10} \\, \\Lambda \,/\, \\mathrm{n}_{\\mathrm{H}}^{2} \\,/\\, \\mathrm{V} \\; [\\mathrm{erg} \\, \\mathrm{cm}^{3} \\mathrm{s}^{-1}]$'
-    xlabel = r'$\log_{10} \, \mathrm{T} \; [\mathrm{K}]$'
-    xlabel2 = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}}(\\mathrm{T}_{\\mathrm{200c}}) \\; [\\mathrm{M}_{\\odot}]$'
+    ylabel = '$\log_{10} \\, \\Lambda \,/\, \\mathrm{n}_{\\mathrm{H}}^{2} '+\
+             '\\,/\\,'' \\mathrm{V} \\; [\\mathrm{erg} \\, \\mathrm{cm}^{3}'+\
+             ' \\mathrm{s}^{-1}]$'
+    xlabel =  '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
+    xlabel2 = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}}'+\
+              '(\\mathrm{T}_{\\mathrm{200c}}) \\; [\\mathrm{M}_{\\odot}]$'
     
     #labelax = fig.add_subplot(grid[:, :], frameon=False)
-    #labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    #labelax.tick_params(labelcolor='none', top=False, bottom=False, 
+    #                    left=False, right=False)
     #labelax.set_xlabel(xlabel, fontsize=fontsize)
     #labelax.set_ylabel(ylabel, fontsize=fontsize)
 
@@ -1418,7 +1524,8 @@ def plot_emcurves():
             if len(linelabels[line]) > 10:
                 label = linelabels[line]
                 splitpoints = np.where([char == ' ' for char in label])[0]
-                split = splitpoints[np.argmin(np.abs(splitpoints - len(label) // 2))]
+                ssel = np.argmin(np.abs(splitpoints - len(label) // 2))
+                split = splitpoints[ssel]
                 label = label[:split] + '\n' + label[split + 1:]
                 linelabels[line] = label
                 
@@ -1426,7 +1533,7 @@ def plot_emcurves():
         axy2 = ax.twiny()
         axy2.set_xlim(*xlim)
         mhalos = np.arange(11.5, 15.1, 0.5)
-        Tvals = np.log10(cu.Tvir_hot(10**mhalos * c.solar_mass,\
+        Tvals = np.log10(cu.Tvir_hot(10**mhalos * c.solar_mass,
                                      cosmopars=cosmopars))
         limsel = Tvals >= xlim[0]
         Tvals = Tvals[limsel]
@@ -1448,18 +1555,19 @@ def plot_emcurves():
                                  linewidth=2., path_effects=pe, 
                                  **lineargs[line])\
                    for line in _lines]
-        #handles2 = [mlines.Line2D((), (), label='$\\mathrm{{n}}_{{\\mathrm{{H}}}} = {:.0f}$'.format(nH),\
+        #label = '$\\mathrm{{n}}_{{\\mathrm{{H}}}} = {:.0f}$'.format(nH)
+        #handles2 = [mlines.Line2D((), (), label=label,
         #                         color='black', **lsargs2[iv])\
         #           for iv, nH in enumerate(indvals)]
-        #handles3 = [mlines.Line2D((), (), label='CIE',\
+        #handles3 = [mlines.Line2D((), (), label='CIE',
         #                         color='black', **lsargs2[-1])]
         ax.legend(handles=handles, fontsize=fontsize, ncol=1,\
                   bbox_to_anchor=(1.0, 1.0), loc='upper right', frameon=True)
         
         setname = lineset_names[axi]
-        ax.text(0.05, 0.95, setname, fontsize=fontsize,\
-                horizontalalignment='left', verticalalignment='top',\
-                transform=ax.transAxes,\
+        ax.text(0.05, 0.95, setname, fontsize=fontsize,
+                horizontalalignment='left', verticalalignment='top',
+                transform=ax.transAxes,
                 bbox={'alpha': 0.3, 'facecolor':'white'})
             
     plt.savefig(outname, format='pdf', bbox_inches='tight')
@@ -1473,7 +1581,8 @@ def plot_barchart_Ls(simple=False):
     outname = mdir + 'luminosity_total_fractions_z0p1{}.pdf'
     outname = outname.format('_simple' if simple else '')
     _ddir = ddir + 'lumfracs/'
-    print('Numbers in annotations: log10 L density [erg/s/cMpc**3] rest-frame')
+    msg = 'Numbers in annotations: log10 L density [erg/s/cMpc**3] rest-frame'
+    print(msg)
     
     # change order because the two two-line names overlap
     # 'n6r',  'o7ix',
@@ -1492,7 +1601,8 @@ def plot_barchart_Ls(simple=False):
         lines = all_lines_PS20 + all_lines_SB
         lines.sort(key=line_energy_ev)
         labels = nicenames_lines.copy()
-        labels.update({line: line.replace(' ' * 6, '\n') for line in lines}) # easy PS20/SB comp
+        # easy PS20/SB comp
+        labels.update({line: line.replace(' ' * 6, '\n') for line in lines}) 
     labels.update({'Mass': 'Mass'})
     # avoid large whitespace just to fit lines names
     #labels['fe17'] = 'Fe XVII\n(17.05 A)'
@@ -1540,14 +1650,15 @@ def plot_barchart_Ls(simple=False):
             hmedges[key] = fi[grn_halo][axn_hm]['bins'][:]
             
             if key == 'Mass':
-                cosmopars = {key: val for key, val in fi['Header/cosmopars'].attrs.items()}
+                cosmopars = {key: val for key, val in\
+                             fi['Header/cosmopars'].attrs.items()}
             
     if simple:
         figsize = (5.5, 10.)
         height_ratios = [8., 1.]
         ncols = 1
         fig = plt.figure(figsize=figsize)
-        grid = gsp.GridSpec(nrows=2, ncols=1, hspace=0.1, wspace=0.0,\
+        grid = gsp.GridSpec(nrows=2, ncols=1, hspace=0.1, wspace=0.0,
                             height_ratios=height_ratios)
         ax =  fig.add_subplot(grid[0, 0]) 
         cax = fig.add_subplot(grid[1, 0])
@@ -1556,15 +1667,17 @@ def plot_barchart_Ls(simple=False):
         height_ratios = [15., 0.5]
         ncols = 3
         fig = plt.figure(figsize=figsize)
-        grid = gsp.GridSpec(nrows=2, ncols=ncols, hspace=0.2, wspace=0.4,\
+        grid = gsp.GridSpec(nrows=2, ncols=ncols, hspace=0.2, wspace=0.4,
                             height_ratios=height_ratios)
         axes =  [fig.add_subplot(grid[0, i]) for i in range(ncols)] 
         cax = fig.add_subplot(grid[1, :])
         
-    clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
+    clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}}'+ \
+             ' \\; [\\mathrm{M}_{\\odot}]$'
     massedges = np.array(edges_target)
     
-    clist = tc.tol_cmap('rainbow_discrete', lut=len(massedges))(np.linspace(0.,  1., len(massedges)))
+    _list = tc.tol_cmap('rainbow_discrete', lut=len(massedges))
+    clist = _list(np.linspace(0.,  1., len(massedges)))
     c_under = clist[-1]
     clist = clist[:-1]
     c_igm = 'gray'
@@ -1577,11 +1690,12 @@ def plot_barchart_Ls(simple=False):
     #cmap.set_over(clist[-1])
     cmap.set_under(c_under)
     norm = mpl.colors.BoundaryNorm(massedges, cmap.N)
-    cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,\
-                                norm=norm,\
-                                boundaries=np.append(np.array(massedges[0] - 1.), massedges),\
-                                ticks=massedges,\
-                                spacing='proportional', extend='min',\
+    bounds = np.append(np.array(massedges[0] - 1.), massedges)
+    cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,
+                                norm=norm,
+                                boundaries=bounds,
+                                ticks=massedges,
+                                spacing='proportional', extend='min',
                                 orientation='horizontal')
     # to use 'extend', you must
     # specify two extra boundaries:
@@ -1595,7 +1709,8 @@ def plot_barchart_Ls(simple=False):
     colors.update({'lom': c_under, 'igm': c_igm})
     #print(hmedges.keys())
     
-    yc = np.arange((len(keys)  - 1) // ncols + 1, dtype=np.float)  # the label locations
+    # the label locations (updatable)
+    yc = np.arange((len(keys)  - 1) // ncols + 1, dtype=np.float)  
     width = 0.9  # the width of the bars
     incrspace = 0.09
     morder = ['igm', 'lom'] + list(edges_target[:-1]) + ['over']
@@ -1611,9 +1726,10 @@ def plot_barchart_Ls(simple=False):
         e_igm = np.where(np.isclose(edges_in, mmax_igm))[0][0]
         s_igm = slice(0, e_igm, None)
         
-        e_dct = {edges_target[i]: np.where(np.isclose(edges_in, edges_t[i]))[0][0]\
+        e_dct = {edges_target[i]: np.where(np.isclose(edges_in, 
+                                                      edges_t[i]))[0][0]\
                  for i in range(len(edges_target))}
-        s_dct = {edges_target[i]: slice(e_dct[edges_target[i]],\
+        s_dct = {edges_target[i]: slice(e_dct[edges_target[i]],
                                         e_dct[edges_target[i + 1]], None) \
                  for i in range(len(edges_target) - 1)}
         s_dct['igm'] = s_igm
@@ -1653,7 +1769,9 @@ def plot_barchart_Ls(simple=False):
                 if current == 0.:
                     continue
                 else:
-                    print('Warning: for {line}, a fraction {} is in masses above max'.format(current, line=key))
+                    msg = 'Warning: for {line}, a fraction {} is in masses'+\
+                          ' above max'
+                    print(msg.format(current, line=key))
             ax.barh(zeropt, current, _width, color=colors[mk], left=cumul)
             cumul += current
         # annotate
@@ -1679,7 +1797,7 @@ def plot_barchart_Ls(simple=False):
                             current = np.sum(data[key]['halo'][tuple(slices)])
                             current /= total
                         
-                        ax.barh(zeropt, current, _width, color=colors[mk],\
+                        ax.barh(zeropt, current, _width, color=colors[mk],
                                 left=cumul)
                         cumul += current
                         
@@ -1693,8 +1811,8 @@ def plot_barchart_Ls(simple=False):
                                                     cosmopars['h'])**3 ))
                     text = ', '.join([shlabels[shi], sflabels[sfi]]) +\
                            ': ' + text
-                    ax.text(0.99, zeropt, text, fontsize=fontsize,\
-                            horizontalalignment='right',\
+                    ax.text(0.99, zeropt, text, fontsize=fontsize,
+                            horizontalalignment='right',
                             verticalalignment='center')
     
     if simple:                
@@ -1750,7 +1868,6 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
 
     linelabels = nicenames_lines.copy()
     _linesets = linesets.copy()
-    #_linesets[3] = [_linesets[3][2], _linesets[3][3], linesets[3][0], linesets[3][1]]
     
     _lines = lines.copy() # new lines added in loop
     for line in _lines:
@@ -1795,16 +1912,18 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
 
             
             
-    ylabel = '$\\log_{10} \\, \\mathrm{L} \\; [\\mathrm{photons} \\,/\\, 100\\,\\mathrm{ks} \\,/\\, \\mathrm{m}^{2}]$'
+    ylabel = '$\\log_{10} \\, \\mathrm{L} \\; [\\mathrm{photons} '+\
+             '\\,/\\, 100\\,\\mathrm{ks} \\,/\\, \\mathrm{m}^{2}]$'
     time = 1e5 #s
     Aeff = 1e4 # cm^2 
     ylim = (-3., 4.5)
              
-    xlabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\odot}]$' 
+    xlabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} '+\
+             '\\; [\\mathrm{M}_{\odot}]$' 
     
     base_SB = 'luminosities_halos_L0100N1504_27_Mh0p5dex_1000_{}-{}-R200c' + \
               '_SmAb.hdf5'
-    base_PS20 = 'luminosities_PS20_depletion-F_halos_L0100N1504_27_Mh0p5dex' +\
+    base_PS20 = 'luminosities_PS20_depletion-F_halos_L0100N1504_27_Mh0p5dex'+\
                 '_1000_{}-{}-R200c_SmAb.hdf5'
     filename_SB = ddir + base_SB.format(str(addedges[0]), str(addedges[1]))
     filename_PS20 = ddir + base_PS20.format(str(addedges[0]), str(addedges[1]))
@@ -1817,7 +1936,9 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
         
         ldist = cu.lum_distance_cm(cosmopars['z'], cosmopars=cosmopars)
         print(ldist)
-        l_to_flux = 1. / (4 * np.pi * ldist**2) * (1. + cosmopars['z']) # photon flux -> compensate for flux decrease due to redshifting in ldist
+        # photon flux -> compensate for flux decrease 
+        # due to redshifting in ldist
+        l_to_flux = 1. / (4 * np.pi * ldist**2) * (1. + cosmopars['z']) 
         Erest_SB = np.array([line_energy_ev(line) * c.ev_to_erg \
                              for line in read_lines_SB])
         lums_SB *= 1./ (Erest_SB[np.newaxis, :, np.newaxis]) \
@@ -1827,11 +1948,14 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
         read_lines_PS20 = [line.decode().replace('-', ' ')\
                            for line in fi.attrs['lines']]
         lums_PS20 = fi['luminosities'][:]
-        cosmopars = {key: val for key, val in fi['Header/cosmopars'].attrs.items()}
+        cosmopars = {key: val for key, val in \
+                     fi['Header/cosmopars'].attrs.items()}
         
         ldist = cu.lum_distance_cm(cosmopars['z'], cosmopars=cosmopars)
         print(ldist)
-        l_to_flux = 1. / (4 * np.pi * ldist**2) * (1. + cosmopars['z']) # photon flux -> compensate for flux decrease due to redshifting in ldist
+        # photon flux -> compensate for flux decrease 
+        # due to redshifting in ldist
+        l_to_flux = 1. / (4 * np.pi * ldist**2) * (1. + cosmopars['z']) 
         Erest_PS20 = np.array([line_energy_ev(line) * c.ev_to_erg \
                                for line in read_lines_PS20])
         lums_PS20 *= 1./ (Erest_PS20[np.newaxis, :, np.newaxis]) \
@@ -1859,7 +1983,8 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
         nrows = (len(linesets) - 1) // ncols + 1
         fig = plt.figure(figsize=figsize)
         grid = gsp.GridSpec(nrows=nrows, ncols=ncols, hspace=0.0, wspace=0.0)
-        axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(len(linesets))]
+        axes = [fig.add_subplot(grid[i // ncols, i % ncols]) \
+                for i in range(len(linesets))]
         
     else:
         ncols = 1
@@ -1895,7 +2020,8 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
                 label = 'O VII'
             _labels[line] = label
             if talkversion:
-                ncomp = 1 + _li + np.sum([len(_linesets[_axi]) for _axi in range(axi)])
+                ncomp = 1 + _li + np.sum([len(_linesets[_axi]) \
+                                          for _axi in range(axi)])
                 if ncomp > slidenum:
                     continue
             
@@ -1925,14 +2051,14 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
             sl = slice(lsi, None, cycle) # avoid overlapping error bars
             _lsargs = lsargs[line].copy()
             _lsargs['linestyle'] = 'none'
-            ax.errorbar(bincen[sl], med[sl], yerr=ud[:, sl],\
-                        linewidth=linewidth,\
-                        path_effects=patheff,\
+            ax.errorbar(bincen[sl], med[sl], yerr=ud[:, sl],
+                        linewidth=linewidth,
+                        path_effects=patheff,
                         **_lsargs)
             
         #handles, labels = ax.get_legend_handles_labels()
-        handles = [mlines.Line2D((), (), linewidth=linewidth,\
-                    path_effects=patheff, label=_labels[line],\
+        handles = [mlines.Line2D((), (), linewidth=linewidth,
+                    path_effects=patheff, label=_labels[line],
                     **lsargs[line])\
                    for line in lineset]
         isplit = len(handles) // 2
@@ -1960,8 +2086,8 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
             ax.add_artist(l1)
         
         #ax.add_artist(l2) # otherwise, it's plotted twice -> less transparent
-        #ax.text(0.02, 0.98, linesetlabel, fontsize=fontsize,\
-        #        verticalalignment='top', horizontalalignment='left',\
+        #ax.text(0.02, 0.98, linesetlabel, fontsize=fontsize,
+        #        verticalalignment='top', horizontalalignment='left',
         #        transform=ax.transAxes)
     # sync lims
     xlims = [ax.get_xlim() for ax in axes]
@@ -1997,21 +2123,24 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
     '''
     
     print('Values are calculated from 3.125^2 ckpc^2 pixels')
-    print('for means: in annuli of 0-10 pkpc, then 0.25 dex bins up to ~3.5 R200c')
-    #print('for medians: in annuli of 10 pkpc up to 100 pkpc, then 0.1 dex bins up to ~3.5 R200c')
+    print('for means: in annuli of 0-10 pkpc, then 0.25 dex bins up to '+\
+          '~3.5 R200c')
     print('for median of means: annuli of 0.1 dex starting from 10 pkpc')
-    print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb, C2 kernel')
+    print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb,'+\
+          ' C2 kernel')
     print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
     
     # get minimum SB for the different instruments
     omegat_use = [1e6, 1e7]
     if True: #talkversion:
         legendtitle_minsb = 'min. SB ($5\\sigma$) for $\\Delta' +\
-            ' \\Omega \\, \\Delta t =$ \n ${:.0e}, {:.0e}'.format(*tuple(omegat_use))+\
+            ' \\Omega \\, \\Delta t =$ \n '+\
+            '${:.0e}, {:.0e}'.format(*tuple(omegat_use)) +\
             '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
     else:
         legendtitle_minsb = 'min. SB ($5\\sigma$ detection) for $\\Delta' +\
-            ' \\Omega \\, \\Delta t = {:.0e}, {:.0e}'.format(*tuple(omegat_use))+\
+            ' \\Omega \\, \\Delta t = '+\
+            '{:.0e}, {:.0e}'.format(*tuple(omegat_use))+\
             '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
     
     filen_SB = 'minSBtable.dat'
@@ -2026,7 +2155,8 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                'detection significance [sigma]', 
                'galaxy absorption included in limit',
                'instrument']
-    df2 = df.groupby(groupby)['minimum detectable SB [phot/s/cm**2/sr]'].mean().reset_index()
+    col = 'minimum detectable SB [phot/s/cm**2/sr]'
+    df2 = df.groupby(groupby)[col].mean().reset_index()
     zopts = df['redshift'].unique()
     print('Using redshifts for min SB: {}'.format(zopts))
     
@@ -2037,9 +2167,11 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
             del df2[colname]
             groupby.remove(colname)
         else:
-            raise RuntimeError('Multiple values for {}; choose one'.format(colname))
+            msg = 'Multiple values for {}; choose one'
+            raise RuntimeError(msg.format(colname))
             
-    instruments = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr', 'xrism-resolve']        
+    instruments = ['athena-xifu', 'lynx-lxm-main', 'lynx-lxm-uhr', 
+                   'xrism-resolve']        
     inslabels = {'athena-xifu': 'Athena X-IFU',
                  'lynx-lxm-main': 'Lynx Main',
                  'lynx-lxm-uhr': 'Lynx UHR',
@@ -2082,7 +2214,8 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
               '[\\mathrm{photons}\\,\\mathrm{m}^{-2} ' + \
               '(100 \\,\\mathrm{ks})^{-1}(10\\,\\mathrm{arcmin}^{2})^{-1}]$'
     right_over_left = 1e4 * 1e5 * ((10. * np.pi**2 / 60.**2 / 180**2))
-    # right_over_left = (ph / cm**2 / s / sr)  /  (ph / m**2 / 100 ks / 10 arcmin^2)
+    # right_over_left = (ph / cm**2 / s / sr)  /  
+    #                   (ph / m**2 / 100 ks / 10 arcmin^2)
     # right_over_left = m**2 / cm**2 * 100 ks / s * 10 arcmin**2 / rad**2 
     # value ratio is inverse of unit ratio    
     ys = [('mean',), ('perc', 50.)]
@@ -2091,7 +2224,8 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
     ls_mean = 'dotted'
     ls_median = 'solid'
     
-    outname = 'radprof2d_0.1-0.25dex-annuli_L0100N1504_27_test3.x_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
+    outname = 'radprof2d_0.1-0.25dex-annuli_L0100N1504_27_test3.x'+\
+              '_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
               'halomasscomp_mean-median'
     outname = outname.replace('.', 'p')
     if talkversion:
@@ -2113,7 +2247,8 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
         mmin = 11.
 
     medges = np.arange(mmin, 14.1, 0.5)
-    seltag_keys = {medges[i]: 'geq{:.1f}_le{:.1f}'.format(medges[i], medges[i + 1])\
+    s1 = 'geq{:.1f}_le{:.1f}'
+    seltag_keys = {medges[i]: s1.format(medges[i], medges[i + 1])\
                                if i < len(medges) - 1 else\
                                'geq{:.1f}'.format(medges[i])\
                     for i in range(len(medges))}
@@ -2193,9 +2328,10 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
     figheight = panelheight * nrows
     
     fig = plt.figure(figsize=(figwidth, figheight))
-    grid = gsp.GridSpec(ncols=_ncols, nrows=nrows, hspace=0.0, wspace=0.0,\
+    grid = gsp.GridSpec(ncols=_ncols, nrows=nrows, hspace=0.0, wspace=0.0,
                         width_ratios=width_ratios)
-    axes = [fig.add_subplot(grid[i // ncols, i % ncols]) for i in range(numlines)]
+    axes = [fig.add_subplot(grid[i // ncols, i % ncols]) \
+            for i in range(numlines)]
     if cax_right:
         ncols_insleg = 1 
         leg_kw = {'loc': 'upper left', 'bbox_to_anchor': (0.15, 1.)}
@@ -2218,7 +2354,9 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                      'columnspacing': 0.8,
                      }
         else:
-            raise RuntimeError('Could not find a place for the legend and color bar at the right of the plot (1 row)')
+            msg = 'Could not find a place for the legend and color bar at'+\
+                  ' the right of the plot (1 row)'
+            raise RuntimeError(msg)
         cax = fig.add_subplot(grid[csl, ncols])
         lax = fig.add_subplot(grid[lsl, ncols])
         lax.axis('off')
@@ -2266,14 +2404,15 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
             hmargin_t = panelheight * 0.07 / figheight
             lspace = 0.3 * panelheight / figheight
             cspace = _h - hmargin_b - hmargin_t - lspace
-            cax = fig.add_axes([_l + wmargin_c, _b + hmargin_b,\
+            cax = fig.add_axes([_l + wmargin_c, _b + hmargin_b,
                                 _w - wmargin_c, cspace])
             w1 = 0.35 * (_w - 1. * wmargin_l)
             w2 = 0.65 * (_w - 1. * wmargin_l)
-            lax = fig.add_axes([_l + wmargin_l, _b  + hmargin_b + cspace,\
+            lax = fig.add_axes([_l + wmargin_l, _b  + hmargin_b + cspace,
                                 w1, lspace])
-            lax2 = fig.add_axes([_l + _w - w2 * 0.975, _b  + hmargin_b + cspace,\
-                                w2, lspace])
+            lax2 = fig.add_axes([_l + _w - w2 * 0.975, 
+                                 _b  + hmargin_b + cspace,
+                                 w2, lspace])
                 
             ncols_insleg = (len(instruments) + 1) // 2 
             
@@ -2295,11 +2434,11 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
             hspace_c = 0.7 * (_w - 3. * wmargin)
             hspace_l = _w - 3. * wmargin - hspace_c
             
-            cax = fig.add_axes([_l + 2. * wmargin + hspace_l, _b + hmargin,\
+            cax = fig.add_axes([_l + 2. * wmargin + hspace_l, _b + hmargin,
                                 hspace_c, vspace])
-            lax = fig.add_axes([_l + wmargin, _b,\
+            lax = fig.add_axes([_l + wmargin, _b,
                                 hspace_l, vspace])
-            lax2 = fig.add_axes([_l + wmargin, _b  + vspace + hmargin,\
+            lax2 = fig.add_axes([_l + wmargin, _b  + vspace + hmargin,
                                 _w - 2. * wmargin, vspace])    
             ncols_insleg = 4
              
@@ -2318,10 +2457,12 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
         
         
     labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
-    labelax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    labelax.tick_params(labelcolor='none', top=False, bottom=False, 
+                        left=False, right=False)
     labelax.set_ylabel(ylabel, fontsize=fontsize)
     l2ax = labelax.twinx()
-    l2ax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    l2ax.tick_params(labelcolor='none', top=False, bottom=False, 
+                     left=False, right=False)
     l2ax.spines['right'].set_visible(False)
     l2ax.spines['top'].set_visible(False)
     l2ax.spines['bottom'].set_visible(False)
@@ -2345,9 +2486,10 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
     #l2ax.axis('off')
     
     
-    clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
-    cbar, colordct = add_cbar_mass(cax, massedges=medges,\
-             orientation=c_orientation, clabel=clabel, fontsize=fontsize,\
+    clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; '+\
+             '[\\mathrm{M}_{\\odot}]$'
+    cbar, colordct = add_cbar_mass(cax, massedges=medges,
+             orientation=c_orientation, clabel=clabel, fontsize=fontsize,
              aspect=c_aspect)
     
     axes2 =[]
@@ -2356,14 +2498,14 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
         labely = li % ncols == 0
         labelx = numlines -1 - li < ncols
         labelright = (li % ncols == ncols - 1) or (li == len(axes) - 1)
-        pu.setticks(ax, fontsize=fontsize, labelleft=labely, labelbottom=labelx,\
-                    right=False)
+        pu.setticks(ax, fontsize=fontsize, labelleft=labely, 
+                    labelbottom=labelx, right=False)
         ax.set_xscale('log')
         ax.grid(b=True)
         ax2 = ax.twinx()
-        pu.setticks(ax2, fontsize=fontsize, left=False, right=True, bottom=False,\
-                    top=False, labelright=labelright, labelleft=False, labeltop=False,\
-                    labelbottom=False)
+        pu.setticks(ax2, fontsize=fontsize, left=False, right=True, 
+                    bottom=False, top=False, labelright=labelright, 
+                    labelleft=False, labeltop=False, labelbottom=False)
         axes2.append(ax2)
         
         filename = filens[line]
@@ -2411,7 +2553,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                 ed = bins[tag][ykey] #[key]
                 vals = yvals[tag][ykey] #[key]
                 cens = ed[:-1] + 0.5 * np.diff(ed)
-                ax.plot(cens, vals, color=colordct[me], linewidth=2.,\
+                ax.plot(cens, vals, color=colordct[me], linewidth=2.,
                         path_effects=patheff, linestyle=ls, zorder=zo)
             
             # indicate R200c
@@ -2421,7 +2563,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
             else:
                 mmax = 10**14.53 # max mass in the box at z=0.1
             rs = cu.R200c_pkpc(np.array([mmin, mmax]), cosmopars)
-            ax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1, \
+            ax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1,
                        color=colordct[me])
         
         # might not work for generic lines
@@ -2438,9 +2580,11 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
         lead = int(np.ceil(np.log10(ev)))
         appr = str(np.round(ev, numdig - lead))
         if '.' in appr:
-            if len(appr) < numdig + 1: # trailing zeros after decimal point cut off
+            # trailing zeros after decimal point cut off
+            if len(appr) < numdig + 1: 
                 appr = appr + '0' * (numdig + 1 - len(appr))
-            elif len(appr) >= numdig + 2 and appr[-2:] == '.0': # .0 added to floats: remove
+            # .0 added to floats: remove
+            elif len(appr) >= numdig + 2 and appr[-2:] == '.0': 
                 appr = appr[:-2]
         eng = '{} eV'.format(appr)
         linelabel =  eng + '\n' + linelabel 
@@ -2465,19 +2609,18 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                 
             sel = np.logical_and(_sel, df2['instrument'] == ins)
             sel &= df2['line name'] == line
-            
-            minsel = sel & np.isclose(df2['sky area * exposure time [arcmin**2 s]'],
-                                      np.min(omegat_use))
-            maxsel = sel & np.isclose(df2['sky area * exposure time [arcmin**2 s]'],
-                                      np.max(omegat_use))
+            col = 'sky area * exposure time [arcmin**2 s]'
+            minsel = sel & np.isclose(df2[col], np.min(omegat_use))
+            maxsel = sel & np.isclose(df2[col], np.max(omegat_use))
             if np.sum(maxsel) != 1 or np.sum(minsel) != 1:
                 msg = 'Something went wrong finding the SB limits:'
                 msg = 'selected {}, {} values'.format(len(minsel), len(maxsel))
                 raise RuntimeError(msg)
             imin = df2.index[minsel][0]
             imax = df2.index[maxsel][0]
-            miny = np.log10(df2.at[imin, 'minimum detectable SB [phot/s/cm**2/sr]'])
-            maxy = np.log10(df2.at[imax, 'minimum detectable SB [phot/s/cm**2/sr]'])
+            col = 'minimum detectable SB [phot/s/cm**2/sr]'
+            miny = np.log10(df2.at[imin, col])
+            maxy = np.log10(df2.at[imax, col])
             
             minx = xmin_ins[ins]
             maxx = xmax_ins[ins]
@@ -2526,23 +2669,29 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 
-def plot_radprof3d(weightset=1, M200cslice=(None, None, None)):
+def plot_radprof3d(weightset=1, M200cslice=None):
     '''
     plot: cumulative profile of weight, rho profile, T profile, Z profile
     rows show different weights
     
     input:
     ------
-    weightset: int, which set of weight to plot. Always: M/V weighted and 
-               some ions from the same element
+    weightset: int
+        which set of weight to plot. Always: M/V weighted and some lines from 
+        the same element
+    M200cslice: slice object or None
+        Which halo mass ranges (M200c, 0.5 dex starting at 10**11 Msun) to
+        include in the plot. The default (if None) is every other mass bin.
     '''
     
     inclSF = True #False is not implemented in the histogram extraction
-    outdir = '/net/luttero/data2/imgs/paper3/3dprof/'
-    outname = outdir + 'radprof1_L0100N1504_27_Mh0p5dex_1000_{}_set{ws}.pdf'.format('wSF' if inclSF else 'nSF',\
-                                                                     ws=weightset)
+    outname = mdir + 'prof3d_L0100N1504_27_Mh0p5dex_1000_{}_set{ws}.pdf'
+    outname = outname.format('wSF' if inclSF else 'nSF', ws=weightset)
     # for halo mass selections
-    massslice = slice(None, None, 2)
+    if M200cslice is None:
+        massslice = slice(None, None, 2)
+    else:
+        massslice = M200cslice
     minrshow = np.log10(0.1) # log10 R200c
     
     # 'n6r', 'o7ix', 
@@ -2575,14 +2724,16 @@ def plot_radprof3d(weightset=1, M200cslice=(None, None, None)):
     Zsol = ol.solar_abunds_ea[ol.elements_ion[ws[0]]]
     print('Using {elt} metallicity, solar value {Zsol}'.format(elt=elt,\
           Zsol=Zsol))
-    
+        
     fontsize = 12
     percentile = 0.50
     rbinu = 'R200c'
     combmethods = ['add', 'addnormed-R200c']
+    comblabels = {'add': 'L median',
+                  'addnormed-R200c': 'L / $\\mathrm{L}_{\\mathrm{200c}}$'}
     print('Showing percentile ' + str(percentile))
-    alphas = {'add': 0.4,\
-              'addnormed-R200c': 1.,\
+    alphas = {'add': 0.4,
+              'addnormed-R200c': 1.,
               }
     linestyles = {weight: 'solid' for weight in weights}
     linestyles.update({'Volume': 'dashed'})
@@ -2590,7 +2741,9 @@ def plot_radprof3d(weightset=1, M200cslice=(None, None, None)):
     print(title)
     
     # snapshot 27
-    cosmopars = cosmopars_27 # avoid having to read in the halo catalogue just for this; copied from there
+    # avoid having to read in the halo catalogue just for this; 
+    # copied from there
+    cosmopars = cosmopars_27 
     
     axlabels = {'T': '$\\log_{10} \\, \\mathrm{T} \; [\\mathrm{K}]$',
                 'n': '$\\log_{10} \\, \\mathrm{n}(\\mathrm{H}) \\;'+\
@@ -2601,12 +2754,21 @@ def plot_radprof3d(weightset=1, M200cslice=(None, None, None)):
                 }
     axnl = {0: 'weight', 1: 'n', 2: 'T', 3: 'Z'}
     
-    filebase_line = 'particlehist_Luminosity_{line}_L0100N1504_27_test3.6_SmAb_T4EOS_galcomb.hdf5'
-    filebase_basic = 'particlehist_{qt}_L0100N1504_27_test3.6_T4EOS_galcomb.hdf5'
-    filenames = {weight: ol.ndir + filebase_line.format(line=weight)\
-                 if weight in ol.elements_ion.keys() else\
-                 ol.ndir + filebase_basic.format(\
-                   qt='propvol' if weight == 'Volume' else weight)\
+    filebase_line_SB = 'particlehist_Luminosity_{line}_L0100N1504_27'+\
+                       '_test3.6_SmAb_T4EOS_galcomb.hdf5'
+    filebase_line_PS20 = 'particlehist_Luminosity_{line}'+\
+                         '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F'+\
+                         '_L0100N1504_27_test3.7_SmAb_T4EOS_galcomb.hdf5'                   
+    filebase_basic = 'particlehist_{qt}_L0100N1504_27_test3.6_T4EOS'+\
+                     '_galcomb.hdf5'
+    _dir = ddir + 'histograms/'
+    filenames = {weight: _dir + filebase_line_SB.format(line=weight)\
+                        if weight in all_lines_SB else\
+                        _dir + filebase_line_PS20.format(
+                            line=weight.replace(' ', '-')) \
+                        if weight in all_lines_PS20 else \
+                        _dir + filebase_basic.format(
+                            qt='propvol' if weight == 'Volume' else weight)\
                  for weight in weights}
     # read in data: stacked histograms -> process to plottables
     hists = {}
@@ -2627,12 +2789,13 @@ def plot_radprof3d(weightset=1, M200cslice=(None, None, None)):
     #nmassbins = len(hists[combmethods[0]][weights[0]])
     nprof = 4 # cumulative, n, T, Z
     
+    width_ratios = [panelwidth] * len(axweights) + [caxwidth]
     fig = plt.figure(figsize=(len(axweights) * panelwidth + caxwidth,
                               nprof * panelheight + toplabelheight))
     grid = gsp.GridSpec(nrows=nprof, ncols=len(axweights) + 1,
                         hspace=0.0, wspace=0.0,
-                        width_ratios=[panelwidth] * len(axweights) + [caxwidth],
-                        height_ratios=[panelheight] * nprof,\
+                        width_ratios=width_ratios,
+                        height_ratios=[panelheight] * nprof,
                         top=0.97, bottom=0.05)
     axes = np.array([[fig.add_subplot(grid[yi, xi])\
                       for xi in range(len(axweights))]\
@@ -2642,8 +2805,8 @@ def plot_radprof3d(weightset=1, M200cslice=(None, None, None)):
 
     massedges = np.array([11., 11.5, 12., 12.5, 13., 13.5, 14.])
     massedges.sort()
-    clist = tc.tol_cmap('rainbow_discrete', 
-                        lut=len(massedges))(np.linspace(0.,  1., len(massedges)))
+    _list = tc.tol_cmap('rainbow_discrete', lut=len(massedges))
+    clist = _list(np.linspace(0.,  1., len(massedges)))
     massincl = massedges[massslice]
     massexcl = np.array([ed not in massincl for ed in massedges])
     clist[massexcl] = np.array([1., 1., 1., 1.])
@@ -2667,7 +2830,8 @@ def plot_radprof3d(weightset=1, M200cslice=(None, None, None)):
     # boundaries=[0] + bounds + [13],
     # extend='both',
     # ticks=bounds,  # optional
-    clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\; [\\mathrm{M}_{\\odot}]$'
+    clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\;'+\
+             ' [\\mathrm{M}_{\\odot}]$'
     cbar.set_label(clabel, fontsize=fontsize)
     cax.tick_params(labelsize=fontsize - 1)
     cax.set_aspect(8.)
@@ -2675,12 +2839,13 @@ def plot_radprof3d(weightset=1, M200cslice=(None, None, None)):
     xlabel = '$\\log_{10} \\, \\mathrm{r} \\, / \\,'+ \
              ' \\mathrm{R}_\\mathrm{200c}}$'
     linewidth = 1.
-    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"),\
-               mppe.Stroke(linewidth=linewidth, foreground="w"),\
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"),
+               mppe.Stroke(linewidth=linewidth, foreground="w"),
                mppe.Normal()]
     linewidth_thick = 2.
-    patheff_thick = [mppe.Stroke(linewidth=linewidth_thick + 0.5, foreground="black"),\
-                     mppe.Stroke(linewidth=linewidth_thick, foreground="w"),\
+    patheff_thick = [mppe.Stroke(linewidth=linewidth_thick + 0.5, 
+                                 foreground="black"),
+                     mppe.Stroke(linewidth=linewidth_thick, foreground="w"),
                      mppe.Normal()]
      
     #fig.suptitle(title, fontsize=fontsize + 2)
@@ -2696,7 +2861,7 @@ def plot_radprof3d(weightset=1, M200cslice=(None, None, None)):
             _weights = axweights[mi]
             
             # set up axis
-            pu.setticks(ax, top=True, left=True, labelleft=labely,\
+            pu.setticks(ax, top=True, left=True, labelleft=labely,
                         labelbottom=labelx, fontsize=fontsize)
             ax.grid(b=True)
             
@@ -2725,23 +2890,27 @@ def plot_radprof3d(weightset=1, M200cslice=(None, None, None)):
                         if yq != 'weight':
                             edges_y = _edges[mkey][yq][1]
                             hist = _hists[mkey][yq]
-                            hist = np.append(np.sum(hist[:si, :], axis=0)[np.newaxis, :],\
-                                             hist[si:, :], axis=0)
+                            re = np.sum(hist[:si, :], axis=0)[np.newaxis, :]
+                            hist = np.append(re, hist[si:, :], axis=0)
                             if yq == 'Z':
                                 edges_y -= np.log10(Zsol)
-                            perclines = pu.percentiles_from_histogram(hist, edges_y, axis=1,\
-                                                                      percentiles=np.array([percentile]))
+                            perclines = pu.percentiles_from_histogram(hist, 
+                                        edges_y, axis=1, 
+                                        percentiles=np.array([percentile]))
                             mid_r = edges_r[:-1] + 0.5 * np.diff(edges_r)
                             mid_r = mid_r[si - 1:]
                             
                             
                             pi = 0
-                            ax.plot(mid_r, perclines[pi], color=color,\
-                                    linestyle=linestyles[weight], alpha=alphas[cmb],\
-                                    path_effects=patheff_thick, linewidth=linewidth_thick)
+                            ax.plot(mid_r, perclines[pi], color=color,
+                                    linestyle=linestyles[weight], 
+                                    alpha=alphas[cmb],
+                                    path_effects=patheff_thick, 
+                                    linewidth=linewidth_thick)
                             
                         else:
-                            if weight == 'Volume': # just takes up space in a cumulative profile
+                            # just takes up space in a cumulative profile
+                            if weight == 'Volume': 
                                 continue
                             hist = _hists[mkey][yq][si:]
                             edges_r = edges_r[si:]
@@ -2749,51 +2918,57 @@ def plot_radprof3d(weightset=1, M200cslice=(None, None, None)):
                             #    numgal = len(galids_main[mkey])
                             #    hist /= float(numgal)
                                 
-                            ax.plot(edges_r, np.log10(hist), color=color,\
-                                        linestyle=linestyles[weight], alpha=alphas[cmb],\
-                                        path_effects=patheff_thick, linewidth=linewidth_thick)
+                            ax.plot(edges_r, np.log10(hist), color=color,
+                                        linestyle=linestyles[weight], 
+                                        alpha=alphas[cmb],
+                                        path_effects=patheff_thick, 
+                                        linewidth=linewidth_thick)
                         
                         # add CIE T indicators
                         if weight in line_Tmax and yq == 'T':
                             Tcen = line_Tmax[weight]
                             Tran = line_Trange[weight]
-                            ax.axhline(Tcen, color='black', linestyle='solid',\
+                            ax.axhline(Tcen, color='black', linestyle='solid',
                                        linewidth=linewidth)
-                            ax.axhline(Tran[0], color='black', linestyle='dotted',\
+                            ax.axhline(Tran[0], color='black', 
+                                       linestyle='dotted',
                                        linewidth=linewidth)
-                            ax.axhline(Tran[1], color='black', linestyle='dotted',\
+                            ax.axhline(Tran[1], color='black', 
+                                       linestyle='dotted',
                                        linewidth=linewidth)
                         # add Tvir indicator
                         elif weight == 'Mass' and yq == 'T':
                             medm = 10**medianmasses[cmkey] # M200c [Msun]
                             Tv = cu.Tvir(medm, cosmopars=cosmopars, mu=0.59)
-                            ax.axhline(np.log10(Tv), color=color,\
-                                    linestyle='dotted', linewidth=linewidth,\
-                                    path_effects=patheff)
+                            ax.axhline(np.log10(Tv), color=color,
+                                       linestyle='dotted', 
+                                       linewidth=linewidth,
+                                       path_effects=patheff)
                             
             if ti == 0 and len(_weights) > 1:
-                handles = [mlines.Line2D([], [], linestyle=linestyles[weight],\
-                                         color='black', alpha=1., linewidth=linewidth_thick,\
+                handles = [mlines.Line2D((), (), linestyle=linestyles[weight],
+                                         color='black', alpha=1., 
+                                         linewidth=linewidth_thick,
                                          label=weight) for weight in _weights]
                 labels = [weight[0] for weight in _weights]
-                ax.legend(handles, labels, fontsize=fontsize, bbox_to_anchor=(1., 0.),\
-                          loc='lower right')
+                ax.legend(handles, labels, fontsize=fontsize, 
+                          bbox_to_anchor=(1., 0.), loc='lower right')
             elif ti == 0:
                 plabel = _weights[0]
                 if plabel in nicenames_lines:
                     plabel = nicenames_lines[plabel]
-                ax.text(0.05, 0.95, plabel, fontsize=fontsize,\
-                        horizontalalignment='left', verticalalignment='top',\
+                ax.text(0.05, 0.95, plabel, fontsize=fontsize,
+                        horizontalalignment='left', verticalalignment='top',
                         transform=ax.transAxes)
             if ti == 0 and mi == 1:
-                handles = [mlines.Line2D([], [], linestyle='solid', color='black',\
-                                         alpha=alphas[cmb], linewidth=linewidth_thick,\
-                                         label=cmb) for cmb in combmethods]
-                labels = ['add' if cmb == 'add' else\
-                          'norm.' if cmb == 'addnormed-R200c' else\
-                          cmb for cmb in combmethods]
-                ax.legend(handles, labels, fontsize=fontsize, bbox_to_anchor=(1., 0.),\
-                          loc='lower right')
+                handles = [mlines.Line2D((), (), linestyle='solid', 
+                                         color='black', alpha=alphas[cmb], 
+                                         linewidth=linewidth_thick, 
+                                         label=comblabels[cmb])\
+                           for cmb in combmethods]
+                #labels = [comblabels[cmb] for cmb in combmethods]
+                ax.legend(handles=handles, fontsize=fontsize, 
+                          bbox_to_anchor=(1., 0.), loc='lower right')
                 
     # sync y limits on plots
     for yi in range(nprof):
@@ -2809,7 +2984,8 @@ def plot_radprof3d(weightset=1, M200cslice=(None, None, None)):
         elif axnl[yi] == 'weight':
             y0min = -2.5
             y1max = 1.
-        ylims = np.array([axes[yi, mi].get_ylim() for mi in range(len(axweights))])
+        ylims = np.array([axes[yi, mi].get_ylim() \
+                          for mi in range(len(axweights))])
         miny = max(np.min(ylims[:, 0]), y0min)
         maxy = min(np.max(ylims[:, 1]), y1max)
         # for Z and cumulative
@@ -2840,10 +3016,11 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
     '''
     
     print('Values are calculated from 3.125^2 ckpc^2 pixels')
-    print('for means: in annuli of 0-10 pkpc, then 0.25 dex bins up to ~3.5 R200c')
-    #print('for medians: in annuli of 10 pkpc up to 100 pkpc, then 0.1 dex bins up to ~3.5 R200c')
+    print('for means: in annuli of 0-10 pkpc, then 0.25 dex bins up to'+\
+          ' ~3.5 R200c')
     print('for median of means: annuli of 0.1 dex starting from 10 pkpc')
-    print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb, C2 kernel')
+    print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb,'+\
+          ' C2 kernel')
     print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
     
     if line == 'all':
@@ -2853,8 +3030,8 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
  
     fontsize = 12
     linewidth = 1.5
-    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),\
-               mppe.Stroke(linewidth=linewidth, foreground="w"),\
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),
+               mppe.Stroke(linewidth=linewidth, foreground="w"),
                mppe.Normal()]
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB}$'          
@@ -2928,7 +3105,8 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
                   'L025N0752-Ref': _c1.purple,
                   'L025N0376': _c1.red}
         filefills_base.update({'nsl': '1', 'npix': '8000'})
-        filefills_label = {'L025N0752-Recal': {'box': 'L0025N0752RECALIBRATED'},
+        filefills_label = {'L025N0752-Recal': {'box': 
+                                               'L0025N0752RECALIBRATED'},
                            'L025N0752-Ref': {'box': 'L0025N0752'},
                            'L025N0376': {'box': 'L0025N0376'},
                            }
@@ -2947,7 +3125,8 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
     
     mmin = 10.5
     medges = np.arange(mmin, 14.1, 0.5)
-    seltag_keys = {medges[i]: 'geq{:.1f}_le{:.1f}'.format(medges[i], medges[i + 1])\
+    ssel = 'geq{:.1f}_le{:.1f}'
+    seltag_keys = {medges[i]: ssel.format(medges[i], medges[i + 1])\
                                if i < len(medges) - 1 else\
                                'geq{:.1f}'.format(medges[i])\
                     for i in range(len(medges))}
@@ -3078,8 +3257,8 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
             # tax.plot(cens, vals[1], color=color, linewidth=linewidth,
             #          linestyle=linestyle_ykey[ykeys_rangeout[1]],
             #          path_effects=patheff)
-            # bax.fill_between(cens, vals[0] - yref, vals[1] - yref, color=color, 
-            #                   alpha=alpha_ranges)
+            # bax.fill_between(cens, vals[0] - yref, vals[1] - yref, 
+            #                   color=color, alpha=alpha_ranges)
             # bax.plot(cens, vals[0] - yref, color=color, linewidth=linewidth,
             #          linestyle=linestyle_ykey[ykeys_rangeout[0]],
             #          path_effects=patheff)
@@ -3161,7 +3340,7 @@ def plot_Aeff_galabs():
     Akey = 'effective area [cm**2]'
     fkey = 'transmitted fraction'
     
-    names = ['athena-xifu', 'lynx-lxm-main', 'xrism-resolve'] # , 'lynx-lxm-uhr'
+    names = ['athena-xifu', 'lynx-lxm-main', 'xrism-resolve']#, 'lynx-lxm-uhr'
     labels = {'athena-xifu': 'X-IFU',
               'lynx-lxm-main': 'LXM',
               'lynx-lxm-uhr': 'LXM-UHR',
@@ -3192,9 +3371,9 @@ def plot_Aeff_galabs():
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_xlabel('E [keV]', fontsize=fontsize)
-    ax.set_ylabel('$\\mathrm{A}_{\\mathrm{eff}} \\; [\\mathrm{cm}^{2}]$',\
+    ax.set_ylabel('$\\mathrm{A}_{\\mathrm{eff}} \\; [\\mathrm{cm}^{2}]$',
                   fontsize=fontsize)
-    ax.tick_params(labelsize=fontsize-1, direction='in', which='both',\
+    ax.tick_params(labelsize=fontsize-1, direction='in', which='both',
                    top=True, right=True)
     ax.grid(b=True)
     ax.grid(b=True, which='minor', axis='x')
@@ -3252,19 +3431,23 @@ def plot_minSB():
                 yv = np.array(_data[mkey])
                 erng = _data[rkey]
                 if not np.allclose(erng, erng.at[erng.keys()[0]]):
-                    raise RuntimeError('Multiple extraction ranges for one plot line')
+                    msg = 'Multiple extraction ranges for one plot line'
+                    raise RuntimeError(msg)
                 erng = erng[erng.keys()[0]]
                 if isn in erngs:
                     if not np.isclose(erngs[isn], erng):
-                        raise RuntimeError('Multiple extraction ranges for one instrument')
+                        msg = 'Multiple extraction ranges for one instrument'
+                        raise RuntimeError(msg)
                 else:
                     erngs[isn] = erng
                 lw_in = _data[wkey]
                 if not np.allclose(lw_in, lw_in.at[lw_in.keys()[0]]):
-                    raise RuntimeError('Multiple line widths for one plot line')
+                    msg = 'Multiple line widths for one plot line'
+                    raise RuntimeError(msg)
                 nsigma = _data[skey]
                 if not np.allclose(nsigma, nsigma.at[nsigma.keys()[0]]):
-                    raise RuntimeError('Multiple line widths for one plot line')
+                    msg = 'Multiple line widths for one plot line'
+                    raise RuntimeError(msg)
                 
                 label = labels[isn] + addl.format(omegat=et, deltae=erng)
                 ax.plot(xv, yv, label=label, color=colors[isn],\
@@ -3273,7 +3456,8 @@ def plot_minSB():
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_xlabel('E [keV]', fontsize=fontsize)
-    ax.set_ylabel('$\\min \\mathrm{SB} \\; [\\mathrm{ph} \\; \\mathrm{s}^{-1} \\mathrm{cm}^{-2} \\mathrm{sr}^{-1}]$',\
+    ax.set_ylabel('$\\min \\mathrm{SB} \\; [\\mathrm{ph} \\; '+\
+                  '\\mathrm{s}^{-1} \\mathrm{cm}^{-2} \\mathrm{sr}^{-1}]$',
                   fontsize=fontsize)
     ax.set_xticks([0.2, 0.3, 0.5, 1., 2., 3.])
     ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
@@ -3283,13 +3467,15 @@ def plot_minSB():
     ax.set_xlim(0.18, 3.15)
     ax.set_ylim(2e-3, 8e3)
     
+    _label = ', S/N over {deltae:.1f} eV'
     handles1 = [mlines.Line2D((), (),
                          label=labels[isn] + \
-                         ', S/N over {deltae:.1f} eV'.format(deltae=erngs[isn]),
+                         _label.format(deltae=erngs[isn]),
                          color=colors[isn])\
                 for isn in names]
+    label = '{:.0e} $\\mathrm{{arcmin}}^{{2}}$ s'
     handles2 = [mlines.Line2D((), (),
-                         label='{:.0e} $\\mathrm{{arcmin}}^{{2}}$ s'.format(omt),
+                         label=label.format(omt),
                          linestyle=ls, color='gray')\
                 for omt, ls in zip(exptimes, linestyles)]
     handles3 = [mlines.Line2D((), (),
@@ -3307,11 +3493,14 @@ def printabundancetable(elts):
     print the solar abundances of elts in LaTeX table form
     '''
     numfmt = 'r@{$\\times$}l'
-    tstart = '\\begin{{tabular}}{{l {numfmt} {numfmt} l }}'.format(numfmt=numfmt)
+    tstart = '\\begin{{tabular}}{{l {numfmt} {numfmt} l }}'
+    tstart = tstart.format(numfmt=numfmt)
     head1 = 'element & \\multicolumn{4}{c}{metallicity} ' + \
             '& source \\\\'
-    head2 = ' & \\multicolumn{2}{c}{$n_{\\mathrm{elt}} \\,/\\, n_{\\mathrm{H}}$}' +\
-            ' & \\multicolumn{2}{c}{$\\rho_{\\mathrm{elt}} \\,/\\, \\rho_{\\mathrm{tot}}$} \\\\'
+    head2 = ' & \\multicolumn{2}{c}{$n_{\\mathrm{elt}} \\,/\\, '+\
+            'n_{\\mathrm{H}}$}' +\
+            ' & \\multicolumn{2}{c}{$\\rho_{\\mathrm{elt}} \\,/\\, '+\
+            '\\rho_{\\mathrm{tot}}$} \\\\'
     hline = '\\hline'
     fillstr = '{elt} & ${num_sb:.2f}$&$10^{{{exp_sb}}}$ & ' + \
               '${num_ea:.2f}$&$10^{{{exp_ea}}}$ & {src_sb} \\\\'
@@ -3371,12 +3560,14 @@ def printlatex_minsb(lineset='SB'):
                'detection significance [sigma]', 
                'galaxy absorption included in limit',
                'instrument']
-    df2 = df.groupby(groupby)['minimum detectable SB [phot/s/cm**2/sr]'].mean().reset_index()
+    col = 'minimum detectable SB [phot/s/cm**2/sr]'
+    df2 = df.groupby(groupby)[col].mean().reset_index()
     zopts = df['redshift'].unique()
     print('Using redshifts: {}'.format(zopts))
     print('\n\n')
     
-    # get difference between absorbed/unabsorbed minimum (only depends on line energy)
+    # get difference between absorbed/unabsorbed minimum 
+    #(only depends on line energy)
     groupby = ['galaxy absorption included in limit',
                'line name', 'linewidth [km/s]',
                'sky area * exposure time [arcmin**2 s]', 
@@ -3386,7 +3577,8 @@ def printlatex_minsb(lineset='SB'):
     df3 = df.set_index(groupby) 
     df3 = df3.loc[True].divide(df3.loc[False])
     df3.reset_index()
-    df_diff = df3.groupby('line name')['minimum detectable SB [phot/s/cm**2/sr]'].mean().reset_index()
+    col = 'minimum detectable SB [phot/s/cm**2/sr]'
+    df_diff = df3.groupby('line name')[col].mean().reset_index()
     df_diff = df_diff.set_index('line name')
     df_diff = np.log10(df_diff)
     
@@ -3399,7 +3591,8 @@ def printlatex_minsb(lineset='SB'):
     omegat_coln = ['1e7', '1e6', '1e5']
     nsc = len(omegat_galabs)
     #subfmt = ' & '.join(['{}'] * nsc)
-    instruments = ['xrism-resolve', 'athena-xifu', 'lynx-lxm-uhr', 'lynx-lxm-main']
+    instruments = ['xrism-resolve', 'athena-xifu', 'lynx-lxm-uhr', 
+                   'lynx-lxm-main']
     insnames = ['XRISM Resolve', 'Athena X-IFU', 'LXM UHR', 'LXM main']
     
     insfmt = '\\multicolumn{{{nsc}}}{{c}}{{{insn}}}'
@@ -3407,7 +3600,8 @@ def printlatex_minsb(lineset='SB'):
                                                   for insn in insnames]) +\
             ' & \\multicolumn{1}{c}{$\\Delta_{\\mathrm{wabs}}$} \\\\'
             
-    head2 = '$\\Delta \\Omega \\, \\Delta \\mathrm{t} \\; [\\mathrm{arcmin}^2 \\mathrm{s}]$'
+    head2 = '$\\Delta \\Omega \\, \\Delta \\mathrm{t} \\; '+\
+            '[\\mathrm{arcmin}^2 \\mathrm{s}]$'
     head2 = head2 + ' & ' +  ' & '.join([' & '.join(omegat_coln)] *\
                                          len(instruments)) +\
             ' &  \\multicolumn{1}{c}{$[\\log_{10} \\mathrm{SB}]$} \\\\'
@@ -3430,14 +3624,16 @@ def printlatex_minsb(lineset='SB'):
             for omegat_target, galabs_target in omegat_galabs:
                 
                 otk = omegat[np.where(np.isclose(omegat, omegat_target))[0][0]]
-                sel = np.logical_and(df2['instrument'] == ins,\
-                                     df2['galaxy absorption included in limit'] == galabs_target)
+                galkey = 'galaxy absorption included in limit'
+                sel = np.logical_and(df2['instrument'] == ins,
+                                     df2[galkey] == galabs_target)
                 sel = np.logical_and(sel, df2['line name'] == line)
-                sel = np.logical_and(sel, df2['sky area * exposure time [arcmin**2 s]'] == otk)
+                col = 'sky area * exposure time [arcmin**2 s]'
+                sel = np.logical_and(sel, df2[col] == otk)
                 
                 if np.sum(sel) != 1:
-                    print('for line {}, galabs {}, omegat {}, instrument {}'.format(\
-                          line, galabs_target, otk, ins))
+                    msg = 'for line {}, galabs {}, omegat {}, instrument {}'
+                    print(msg.format(line, galabs_target, otk, ins))
                     print(df2[sel])
                 ind = df2.index[sel][0]
                 val = df2.at[ind, 'minimum detectable SB [phot/s/cm**2/sr]']
@@ -3446,8 +3642,9 @@ def printlatex_minsb(lineset='SB'):
                 if pval == '-0.0':
                     pval = '0.0'
                 vals.append(pval)
+        col = 'minimum detectable SB [phot/s/cm**2/sr]'
         pl = fmtl.format(*tuple(vals), line=nicenames_lines[line], 
-                         delta_wabs=df_diff.at[line, 'minimum detectable SB [phot/s/cm**2/sr]'])
+                         delta_wabs=df_diff.at[line, col])
         print(pl)
     print(hline)
     print(end)    
@@ -3554,7 +3751,8 @@ def printlatex_linedata(emcurve_file):
         ion = _line[:4]
         wl = _line[4:-1]
         if _line[-1] != 'A':
-            raise NotImplementedError('Only A wavelength interpretation implemented')
+            msg = 'Only A wavelength interpretation implemented'
+            raise NotImplementedError(msg)
         elt = ion[:-2].strip()
         stage = ild.arabic_to_roman[int(ion[2:])]
         ion = elt + ' ' + stage
