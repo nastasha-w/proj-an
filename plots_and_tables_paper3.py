@@ -680,7 +680,7 @@ def readin_3dprof_stacked(filename, Zelt='oxygen', weight='Mass',
                 axes = {}
                 
                 axns = {}
-                for akey in axn_opts:
+                for akey in [profq, 'r3d']:
                     opts = axn_opts[akey]
                     ai = 0
                     while opts[ai] not in grp_t:
