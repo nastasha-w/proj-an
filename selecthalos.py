@@ -1137,6 +1137,25 @@ L0100N1504_23_Mh0p5dex_7000 = Galaxyselector(halocat_L0100N1504_23, selections=M
 L0100N1504_23_Mh0p5dex_1000 = Galaxyselector(halocat_L0100N1504_23, selections=Mh_sels, names=Mh_names, number=1000, seed=0)
 L0100N1504_23_Mh0p5dex_100 = Galaxyselector(halocat_L0100N1504_23, selections=Mh_sels, names=Mh_names, number=100, seed=0) 
 
+
+# L0100N1504 snapshot 23, all centrals
+halocat_L0100N1504_19 = ol.pdir + 'catalogue_RefL0100N1504_snap19_aperture30.hdf5'
+
+Mh_edges = np.array([9., 9.5, 10., 10.5, 11., 11.5, 12., 12.5, 13., 13.5, 14.])
+Mh_mins = list(Mh_edges)
+Mh_maxs = list(Mh_edges[1:]) + [None]
+Mh_sels = [[('M200c_Msun', 10**Mh_mins[i], 10**Mh_maxs[i])] if Mh_maxs[i] is not None else\
+            [('M200c_Msun', 10**Mh_mins[i], None)]\
+            for i in range(len(Mh_mins))]
+Mh_names =[ 'geq%s_le%s'%(Mh_mins[i], Mh_maxs[i]) if Mh_maxs[i] is not None else\
+             'geq%s'%(Mh_mins[i])\
+            for i in range(len(Mh_mins))]
+
+L0100N1504_19_Mh0p5dex_1000 = Galaxyselector(halocat_L0100N1504_19, 
+                                             selections=Mh_sels,
+                                             names=Mh_names, number=1000, 
+                                             seed=0)
+
 def getmstarbins(m200cbins=(10., 10.5, 11., 11.5, 12., 12.5, 13., 13.5, 14.0),\
                  halocat=halocat_L0100N1504_27,\
                  method='maxpurefrac', plot=True):

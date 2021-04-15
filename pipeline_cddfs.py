@@ -236,11 +236,11 @@ def create_histset(bins, args, kwargs, mapslices=1,
             The default is 0.
         resreduce : int, optional
             Factor by which to reduce the resolution of the map before 
-            histogramming. Must divide the number of pixels in each dimension. The
-            default is 1.
+            histogramming. Must divide the number of pixels in each dimension. 
+            The default is 1.
         includeinf : bool, optional
-            Check if the left- and rightmost bin edges are -/+ infinity, and add 
-            those values if not. The default is True.
+            Check if the left- and rightmost bin edges are -/+ infinity, and 
+            add those values if not. The default is True.
     deletemaps : bool, optional
         delete the created maps after making the histograms. Pre-existing maps
         are left alone. The default is False.
@@ -389,6 +389,68 @@ def rungrids_emlines(index):
         
         create_histset(bins, args, kwargs, mapslices=_mapslices,
                        deletemaps=True, kwargs_hist=kwargs_hist)
+
+def rungrids_xrayabs(index):
+    '''
+    generate the histograms for line emission line convergence tests
+
+    Parameters
+    ----------
+    index : int
+        which set of histograms to generate. The fast 
+        index sets the ion to run, the slow index sets the redshift.
+
+    Returns
+    -------
+    None.
+
+    '''
+    
+    ions = ['o7', 'o8', 'fe17', 'ne9', 'ne10', 'c5', 'c6']
+    snapshots = [27, 19]
+    
+    ionind = index // len(snapshots)
+    ion = ions[ionind]
+    snapnum = index % len(snapshots)
+    
+    
+    simnums = ['L0100N1504']
+    varlist = ['REFERENCE']
+    npix = [32000]
+    centres = [[50.] * 3]
+    mapslices = [16]
+    kwargs_hist = [{'add': 1, 'addoffset':0, 'resreduce':1}]
+    centre = [50., 50., 50.]
+    ptypeW = 'coldens'
+    
+    kwargs = {'abundsW': 'Pt', 'excludeSFRW': 'T4', 'ptypeQ': None,
+              'axis': 'z', 'periodic': True, 'kernel': 'C2',
+              'log': True, 'saveres': True, 'hdf5': True,
+              'simulation': 'eagle', 'ompproj': True,
+              }
+    bins = np.arange(-28., 25.01, 0.05)
+    bins = np.array([-np.inf] + list(bins) + [np.inf])
+    
+    for simnum, var, _npix, centre, _mapslices in\
+        zip(simnums, varlist, npix, centres, mapslices):
+        
+        L_x, L_y, L_z = (centre[0] * 2.,) * 3
+        npix_x, npix_y = (_npix,) * 2
+        args = (simnum, snapnum, centre, L_x, L_y, L_z,
+                npix_x, npix_y, ptypeW)
+        kwargs['var'] = var
+        kwargs['ionW'] = ion
+        
+        print('Calling create_histset with')
+        print(args)
+        print(kwargs)
+        #print(bins)
+        print('mapslices: {}'.format(_mapslices))
+        print(kwargs_hist)
+        print('\n')
+        
+        create_histset(bins, args, kwargs, mapslices=_mapslices,
+                       deletemaps=False, kwargs_hist=kwargs_hist)
         
 if __name__ == '__main__':
     index = int(sys.argv[1])
@@ -397,4 +459,6 @@ if __name__ == '__main__':
     
     if index >=0 and index < 36:
         rungrids_emlines(index)
-    
+        
+    elif index >= 36 and index < 40:
+        rungrids_xrayabs(index - 36)
