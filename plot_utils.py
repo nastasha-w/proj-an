@@ -288,10 +288,12 @@ def add_2dplot(ax, bins, edges, toplotaxes, log=True, usepcolor=False, pixdens=F
         vmax = np.max(imgtoplot[np.isfinite(imgtoplot)])
     return img, vmin, vmax
 
-def add_2dhist_contours(ax, bins, edges, toplotaxes,\
-                        mins=None, maxs=None, histlegend=True, fraclevels=True,\
-                        levels=None, legend=True, dimlabels=None, legendlabel=None,\
-                        legendlabel_pre=None, shiftx=0., shifty=0., dimshifts=None, **kwargs):
+def add_2dhist_contours(ax, bins, edges, toplotaxes,
+                        mins=None, maxs=None, histlegend=True, 
+                        fraclevels=True, levels=None, legend=True, 
+                        dimlabels=None, legendlabel=None,
+                        legendlabel_pre=None, shiftx=0., shifty=0., 
+                        dimshifts=None, **kwargs):
     '''
     colors, linestyles: through kwargs
     othersmin and othersmax should be indices along the corresponding histogram axes
