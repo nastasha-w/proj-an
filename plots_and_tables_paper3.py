@@ -2999,7 +2999,353 @@ def plot_radprof3d(weightset=1, M200cslice=None):
         [axes[i, xi].set_xlim(minx, maxx) for i in range(nprof)]
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
+
+### total L-weighted stuff within R200c, halo-to-halo variations
+def plot_r200Lw_halodist(weightset=1, inclSF=True):
+    '''
+    plot: compare L-weighted and unweighted average quantities from histogram
+          combinations and extracted in prof3d_galsets
     
+    Parameters
+    ----------
+    weightset: int
+        which set of weight to plot. Always: M/V weighted and some ions from 
+        the same element
+    inclSF: bool   
+        include SF gas in the average weighting (M/V/L)
+    '''
+    
+    outdir = mdir
+    outname = outdir + 'totLw-halos_L0100N1504_27_Mh0p5dex_1000_0-1-R200c'+\
+              '_{}_set{ws}.pdf'
+    outname = outname.format('wSF' if inclSF else 'nSF',ws=weightset)
+    #addedges = (0., 1.)
+    # for halo mass selections
+    
+    # 'n6r', 'o7ix',
+    weightsets = {1: ['c5r', 'c6'],
+                  2: ['n6-actualr', 'n7'],
+                  3: ['ne9r', 'ne10'],
+                  4: ['mg11r', 'mg12'],
+                  5: ['si13r'],
+                  6: ['o7r', 'o8'],
+                  7: ['o7r', 'o7iy', 'o7f'],
+                  8: ['fe17', 'fe17-other1', 'fe18', 'fe19'],
+                  9: ['C  5      40.2678A', 'C  6      33.7372A'],
+                  10: ['N  6      28.7870A', 'N  7      24.7807A'],
+                  11: ['O  7      22.1012A', 'O  8      18.9709A'],
+                  12: ['O  7      22.1012A', 'O  7      21.8070A',
+                       'O  7      21.6020A'],
+                  13: ['Ne 9      13.4471A', 'Ne10      12.1375A'],
+                  14: ['Mg11      9.16875A', 'Mg12      8.42141A'],
+                  15: ['Si13      6.64803A'],
+                  16: ['Fe17      17.0510A', 'Fe17      15.2620A', 
+                       'Fe17      16.7760A', 'Fe17      17.0960A', 
+                       'Fe18      16.0720A'],
+                  }
+    
+    ws = weightsets[weightset]
+    weights = ['Mass', 'Volume'] + ws
+    axweights = {0: ['Mass', 'Volume']}
+    axweights.update({i + 1: [ws[i]] for i in range(len(ws))})
+    elt = string.capwords(parentelts[ws[0]])
+    Zsol = ol.solar_abunds_ea[elt.lower()]
+    print('Using {elt} metallicity, solar value {Zsol}'.format(elt=elt,\
+          Zsol=Zsol))
+    
+    fontsize = 12
+    #percentile = 0.50
+    #rbinu = 'R200c'
+    combmethods = ['mean', 'median']
+    alphas = {'mean': 0.45,
+              'median': 1.,
+              }
+    alpha_shade = 0.25
+    linestyles = {weight: 'solid' for weight in weights}
+    linestyles.update({'Volume': 'dashed'})
+    colors = {weight: 'black' for weight in weights}
+    colors.update({'Mass': _c1.green, 'Volume': 'black'})
+    color_Tindic = _c1.red
+    color_leg = 'black'
+    title = 'L-weighted averages within $\\mathrm{R}_{\\mathrm{200c}}$'
+    print(title)
+    
+    # snapshot 27
+    # avoid having to read in the halo catalogue just for this; 
+    cosmopars = cosmopars_27
+    
+    axlabels = {'T': '$\\log_{10} \\, \\langle\\mathrm{T}'+\
+                     '\\rangle_{\\mathrm{200c}} \; [\mathrm{K}]$',
+                'n': '$\\log_{10} \\, \\langle\\mathrm{n}(\\mathrm{H})'+\
+                     '\\rangle_{\\mathrm{200c}} \\; [\\mathrm{cm}^{-3}]$',
+                'Z': '$\\log_{10} \\, \\langle\\mathrm{Z}'+\
+                     '\\rangle_{\\mathrm{200c}} \\; [\mathrm{Z}_{\\odot}]$',
+                }
+    axnl = {1: 'n', 0: 'T', 2: 'Z'}
+    
+    # set up plot grid
+    panelwidth = 3.
+    panelheight = 2.5
+    toplabelheight = 0.0
+    #nmassbins = len(hists[combmethods[0]][weights[0]])
+    nprof = 3
+    
+    fig = plt.figure(figsize=(len(axweights) * panelwidth,
+                              nprof * panelheight + toplabelheight))
+    grid = gsp.GridSpec(nrows=nprof, ncols=len(axweights),
+                        hspace=0.0, wspace=0.0,
+                        width_ratios=[panelwidth] * len(axweights),
+                        height_ratios=[panelheight] * nprof,
+                        top=0.95, bottom=0.07)
+    axes = np.array([[fig.add_subplot(grid[yi, xi])\
+                      for xi in range(len(axweights))]\
+                      for yi in range(nprof)])
+    
+    mbins = np.array(list(np.arange(11., 13.05, 0.1)) +\
+                     [13.25, 13.5, 13.75, 14.0, 14.6])
+    #massexcl = np.array([ed not in massincl for ed in massedges])
+
+    linewidth_thick = 2.
+    patheff_thick = [mppe.Stroke(linewidth=linewidth_thick + 0.5, 
+                                 foreground="black"),
+                     mppe.Stroke(linewidth=linewidth_thick, foreground="w"),
+                     mppe.Normal()]
+     
+    ## from collated individual halo values
+    galdataf = ddir + 'halodata_L0100N1504_27_Mh0p5dex_1000.txt'
+    galdata_all = pd.read_csv(galdataf, header=2, sep='\t', 
+                              index_col='galaxyid')
+    xlabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\;'+\
+             ' [\\mathrm{M}_{\\odot}]$'
+             
+    fbase_mv = '{wt}-weighted-nH-T-Z_halos_L0100N1504_27_Mh0p5dex_1000'+\
+               '_0.0-1.0-R200c_SmAb.hdf5'
+    fname_PS20 = 'luminosity-weighted-nH-T-Z_PS20_depletion-F_halos'+\
+                 '_L0100N1504_27_Mh0p5dex_1000_0.0-1.0-R200c_SmAb.hdf5'
+    fname_SB = 'luminosity-weighted-nH-T-Z_halos_L0100N1504_27_Mh0p5dex'+\
+               '_1000_0.0-1.0-R200c_SmAb.hdf5'
+    filens_weight = {weight: ddir + fname_SB if weight in all_lines_SB else\
+                             ddir + fname_PS20 if weight in all_lines_PS20 \
+                             else\
+                             ddir + fbase_mv.format(wt=weight.lower())\
+                     for weight in axweights}
+    
+    for mi in axweights:
+        for ti in range(nprof):
+            # where are we
+            ax = axes[ti, mi]
+            labelx = ti == nprof - 1
+            labely = mi == 0
+            yq = axnl[ti] # 'n', 'T', or 'Z'
+            _weights = axweights[mi]
+            
+            # set up axis
+            pu.setticks(ax, top=True, left=True, labelleft=labely,
+                        labelbottom=labelx, fontsize=fontsize)
+            ax.grid(b=True)            
+            if labelx:
+                ax.set_xlabel(xlabel, fontsize=fontsize)
+            if labely:
+                ax.set_ylabel(axlabels[yq], fontsize=fontsize)
+
+            # plot stacked histogram
+            dsname_w = 'weight_total'
+            if yq == 'T':
+                dsname = 'Temperature_T4EOS'
+            elif yq == 'n':
+                dsname = 'Niondens_hydrogen_SmAb' 
+            else:
+                dsname = 'SmoothedElementAbundance-{elt}' 
+            for weight in _weights: # ['Mass', 'Volume'] + line labels
+                # read-in data for the hdf5 files
+                _filen = filens_weight[weight]
+                if weight in ['Mass', 'Volume']:
+                    wkey = weight
+                    dsname = dsname.format(elt=elt)
+                else:
+                    wkey = 'em-' + weight
+                    dsname = dsname.format(elt='parent')
+                #galax = 0
+                weightax = 1
+                sfax = 2
+                
+                with h5py.File(_filen, 'r') as fi:
+                    _galids = fi['galaxyids'][:]
+                    
+                    wcols = np.array([wt.decode() for wt in\
+                                      fi.attrs['weight']])
+                    wind = np.where(wcols == wkey)[0][0]
+                    sel = [slice(None, None, None)] * 3
+                    sel[weightax] = wind
+                    
+                    wvals = fi[dsname_w][tuple(sel)]
+                    wunits = fi[dsname_w].attrs['units'].decode()
+                    if 'log' in wunits:
+                        wvals = 10**wvals
+                        
+                    avvals = fi[dsname][tuple(sel)]
+                    if sfax > weightax:
+                        sfax -= 1
+                    avunits = fi[dsname].attrs['units'].decode()
+                    if inclSF:
+                        if 'log10' in avunits:
+                            #print('log units {}'.format(yq))
+                            #print(np.any(np.isnan(avvals)))
+                            #print(np.any(np.isnan(avvals[wvals != 0.])))
+                             # will be 0./0. = np.NaN otherwise -> set to zero
+                            avvals[wvals == 0.] = -np.inf
+                            avvals = np.log10(np.sum(10**avvals * wvals,
+                                                     axis=sfax)\
+                                              / np.sum(wvals, axis=sfax))
+                            wvals = np.sum(wvals, axis=sfax)
+                            avvals[wvals == 0.] = -np.inf
+                            #print(np.any(np.isnan(avvals)))
+                            #print(np.any(np.isnan(avvals[wvals != 0.])))
+                        else:
+                            #print(np.any(np.isnan(avvals)))
+                            #print(np.any(np.isnan(avvals[wvals != 0.])))
+                            avvals[wvals == 0.] = 0.
+                            avvals = np.sum(avvals * wvals, axis=sfax)\
+                                            / np.sum(wvals, axis=sfax)
+                            wvals = np.sum(wvals, axis=sfax)
+                            avvals[wvals == 0.] = 0.
+                            #print(np.any(np.isnan(avvals)))
+                            #print(np.any(np.isnan(avvals[wvals != 0.])))
+                    else:
+                        nsfsel = [slice(None, None, None)] * 2
+                        nsfsel[sfax] = 0 # 0 -> non-SF, 1 -> SF
+                        avvals = avvals[tuple(nsfsel)]
+                        wvals = wvals[tuple(nsfsel)]
+                        
+                    if np.any(np.isnan(avvals)):
+                        msg = '{} NaN values found' 
+                        print(msg.format(np.sum(np.isnan(avvals))))
+                        msg = 'Found NaN averages with non-zero weights: '+\
+                              '{wt}, {yq}'
+                        raise RuntimeError(msg.format(wt=weight, yq=dsname))
+
+                if 'log10' in avunits:
+                    avvals = 10**avvals
+                if yq == 'Z':
+                    avvals *= 1. / Zsol
+                            
+                logmasses =  np.array(np.log10(galdata_all.loc[_galids, 
+                                                               'M200c_Msun']))
+                minds = np.digitize(logmasses, mbins) - 1
+                xpoints = 0.5 * (mbins[:-1] + mbins[1:])
+                ygroups = [avvals[minds == i] for i in range(len(mbins) - 1)]
+                wgroups = [wvals[minds == i] for i in range(len(mbins) - 1)]
+                
+                wav = np.array([np.average(ygroups[i], weights=wgroups[i]) \
+                                for i in range(len(xpoints))])
+                percpoints = [10., 50., 90.]
+                #pys = np.array([np.percentile(ygroups[i], percpoints) \
+                #                for i in range(len(xpoints))])
+                pys, (outliers_x, outliers_y), xmininds = \
+                    pu.get_perc_and_points(logmasses, avvals, mbins,
+                        percentiles=tuple(percpoints), mincount_x=10,
+                        getoutliers_y=True, getmincounts_x=True,
+                        x_extremes_only=True)
+                _xp = np.append([-10.], xpoints)
+                _xp = np.append(xpoints, [100.])
+                
+                if 'log10' in avunits:
+                    wav = np.log10(wav)
+                    pys = np.log10(pys)
+                    
+                #ax.plot(xpoints, pys[:, 1], color=colors[weight],\
+                #        linestyle=linestyles[weight], alpha=alphas['median'],\
+                #        path_effects=patheff_thick, linewidth=linewidth_thick)
+                #ax.fill_between(xpoints, pys[:, 0], pys[:, 2], facecolor=colors[weight],\
+                #        linestyle=linestyles[weight], alpha=alpha_shade)
+                ax.plot(_xp, pys[xmininds, 1], color=colors[weight],
+                        linestyle=linestyles[weight], alpha=alphas['median'],
+                        path_effects=patheff_thick, linewidth=linewidth_thick)
+                ax.fill_between(_xp, pys[:, 0], pys[:, 2], 
+                                facecolor=colors[weight],
+                                linestyle=linestyles[weight], 
+                                alpha=alpha_shade)
+                ax.scatter(outliers_x, outliers_y, color=colors[weight],
+                           alpha = alpha_shade * 0.5)
+                        #path_effects=patheff_thick, linewidth=linewidth_thick)
+                ax.plot(xpoints, wav, color=colors[weight],\
+                        linestyle=linestyles[weight], alpha=alphas['mean'],\
+                        path_effects=patheff_thick, linewidth=linewidth_thick)
+                
+                # add CIE T indicators
+                if weight in line_Tmax and yq == 'T':
+                    Tcen = line_Tmax[weight]
+                    Tran = line_Trange[weight]
+                    ax.axhline(Tcen, color=color_Tindic, linestyle='solid',\
+                               linewidth=linewidth_thick)
+                    ax.axhline(Tran[0], color=color_Tindic, linestyle='dotted',\
+                               linewidth=linewidth_thick)
+                    ax.axhline(Tran[1], color=color_Tindic, linestyle='dotted',\
+                               linewidth=linewidth_thick)
+                # add Tvir indicator
+                elif weight == 'Mass' and yq == 'T':
+                    xvals = 10**xpoints # M200c [Msun]
+                    Tv = cu.Tvir(xvals, cosmopars=cosmopars, mu=0.59)
+                    ax.plot(xpoints, np.log10(Tv), color=color_Tindic,\
+                            linestyle='solid', linewidth=linewidth_thick)
+            
+            l1set = False
+            if ti == 0 and len(_weights) > 1:
+                handles = [mlines.Line2D([], [], linestyle=linestyles[weight],\
+                                         color=colors[weight], alpha=1., linewidth=linewidth_thick,\
+                                         label=weight) for weight in _weights]
+                labels = [weight[0] for weight in _weights]
+                l1 = ax.legend(handles, labels, fontsize=fontsize, bbox_to_anchor=(0., 1.),\
+                               loc='upper left')
+                l1set = True
+            if ti == 0 and len(_weights) <= 1:
+                plabel = _weights[0]
+                if plabel in nicenames_lines:
+                    plabel = nicenames_lines[plabel]
+                bbox = {'boxstyle': 'round', 'facecolor': 'white', 'alpha':0.3}
+                ax.text(0.05, 0.95, plabel, fontsize=fontsize,
+                        horizontalalignment='left', verticalalignment='top',
+                        transform=ax.transAxes, bbox=bbox)
+            if ti == 0 and mi == 0:
+                handles = [mlines.Line2D((), (), linestyle='solid', 
+                                         color=color_leg, alpha=alphas[cmb], 
+                                         linewidth=linewidth_thick,
+                                         label=cmb) for cmb in combmethods]
+                handles = handles + [mpatch.Patch(edgecolor='none', 
+                    facecolor=color_leg, alpha=alpha_shade,
+                    label='{:.0f}%'.format(percpoints[2] - percpoints[0]))]
+                ax.legend(handles=handles, fontsize=fontsize, 
+                          bbox_to_anchor=(1.01, -0.01), loc='lower right')
+                if l1set:
+                    ax.add_artist(l1)
+                    
+    # sync y limits on plots
+    for yi in range(nprof):
+        if axnl[yi] == 'T':
+            y0min = 3.5
+            y1max = 8.
+        elif axnl[yi] == 'n':
+            y0min = -6.5
+            y1max = 0.5
+        elif axnl[yi] == 'Z':
+            y0min = -2.5
+            y1max = 0.8
+        elif axnl[yi] == 'weight':
+            y0min = -2.5
+            y1max = 1.
+        ylims = np.array([axes[yi, mi].get_ylim() for mi in range(len(axweights))])
+        miny = max(np.min(ylims[:, 0]), y0min)
+        maxy = min(np.max(ylims[:, 1]), y1max)
+        # for Z and cumulative
+        miny = max(miny, maxy - 10.)
+        [[axes[yi, mi].set_ylim(miny, maxy) for mi in range(len(axweights))]]
+    for xi in range(len(axweights)):
+        xlims = np.array([axes[i, xi].get_xlim() for i in range(nprof)])
+        minx = np.min(xlims[:, 0])
+        maxx = np.max(xlims[:, 1])
+        [axes[i, xi].set_xlim(minx, maxx) for i in range(nprof)]
+    
+    plt.savefig(outname, format='pdf', box_inches='tight')
 
 # convergence tests: simulation box size and resolution, slice depth of maps 
 def plot_radprof_conv(convtype='boxsize', line='all'):
