@@ -3128,7 +3128,7 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
                              ddir + fname_PS20 if weight in all_lines_PS20 \
                              else\
                              ddir + fbase_mv.format(wt=weight.lower())\
-                     for weight in axweights}
+                     for weight in weights}
     
     for mi in axweights:
         for ti in range(nprof):
