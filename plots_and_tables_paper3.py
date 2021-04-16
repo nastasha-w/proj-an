@@ -3239,38 +3239,41 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
                 wav = np.array([np.average(ygroups[i], weights=wgroups[i]) \
                                 for i in range(len(xpoints))])
                 percpoints = [10., 50., 90.]
-                #pys = np.array([np.percentile(ygroups[i], percpoints) \
-                #                for i in range(len(xpoints))])
-                pys, (outliers_x, outliers_y), xmininds = \
-                    pu.get_perc_and_points(logmasses, avvals, mbins,
-                        percentiles=tuple(percpoints), mincount_x=10,
-                        getoutliers_y=True, getmincounts_x=True,
-                        x_extremes_only=True)
-                _xp = np.append([-10.], xpoints)
-                _xp = np.append(xpoints, [100.])
+                pys = np.array([np.percentile(ygroups[i], percpoints) \
+                                for i in range(len(xpoints))])
+                #pys, (outliers_x, outliers_y), xmininds = \
+                #    pu.get_perc_and_points(logmasses, avvals, mbins,
+                #        percentiles=tuple(percpoints), mincount_x=10,
+                #        getoutliers_y=True, getmincounts_x=True,
+                #        x_extremes_only=True)
+                #_xp = np.append([-10.], xpoints)
+                #_xp = np.append(xpoints, [100.])
                 
                 if 'log10' in avunits:
                     wav = np.log10(wav)
                     pys = np.log10(pys)
-                    outliers_y = np.log10(outliers_y)
+                    #outliers_y = np.log10(outliers_y)
                     
-                #ax.plot(xpoints, pys[:, 1], color=colors[weight],
-                #        linestyle=linestyles[weight], alpha=alphas['median'],
-                #        path_effects=patheff_thick, linewidth=linewidth_thick)
-                #ax.fill_between(xpoints, pys[:, 0], pys[:, 2], 
-                #                facecolor=colors[weight],
-                #        linestyle=linestyles[weight], alpha=alpha_shade)
-                ax.plot(_xp[xmininds], pys[xmininds, 1], color=colors[weight],
+                ax.plot(xpoints, pys[:, 1], color=colors[weight],
                         linestyle=linestyles[weight], alpha=alphas['median'],
                         path_effects=patheff_thick, linewidth=linewidth_thick)
-                ax.fill_between(_xp[xmininds], pys[xmininds, 0], 
-                                pys[xmininds, 2], 
+                ax.fill_between(xpoints, pys[:, 0], pys[:, 2], 
                                 facecolor=colors[weight],
                                 linestyle=linestyles[weight], 
                                 alpha=alpha_shade)
-                ax.scatter(outliers_x, outliers_y, color=colors[weight],
-                           alpha = alpha_shade * 0.5, s=5)
-                        #path_effects=patheff_thick, linewidth=linewidth_thick)
+                # ax.plot(_xp[xmininds], pys[xmininds, 1], 
+                #         color=colors[weight],
+                #         linestyle=linestyles[weight], alpha=alphas['median'],
+                #         path_effects=patheff_thick, 
+                #         linewidth=linewidth_thick)
+                # ax.fill_between(_xp[xmininds], pys[xmininds, 0], 
+                #                 pys[xmininds, 2], 
+                #                 facecolor=colors[weight],
+                #                 linestyle=linestyles[weight], 
+                #                 alpha=alpha_shade)
+                #ax.scatter(outliers_x, outliers_y, color=colors[weight],
+                #           alpha = alpha_shade * 0.5, s=5)
+                #        path_effects=patheff_thick, linewidth=linewidth_thick)
                 ax.plot(xpoints, wav, color=colors[weight],\
                         linestyle=linestyles[weight], alpha=alphas['mean'],
                         path_effects=patheff_thick, linewidth=linewidth_thick)
