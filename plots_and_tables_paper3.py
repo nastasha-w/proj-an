@@ -3253,15 +3253,17 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
                     wav = np.log10(wav)
                     pys = np.log10(pys)
                     
-                #ax.plot(xpoints, pys[:, 1], color=colors[weight],\
-                #        linestyle=linestyles[weight], alpha=alphas['median'],\
+                #ax.plot(xpoints, pys[:, 1], color=colors[weight],
+                #        linestyle=linestyles[weight], alpha=alphas['median'],
                 #        path_effects=patheff_thick, linewidth=linewidth_thick)
-                #ax.fill_between(xpoints, pys[:, 0], pys[:, 2], facecolor=colors[weight],\
+                #ax.fill_between(xpoints, pys[:, 0], pys[:, 2], 
+                #                facecolor=colors[weight],
                 #        linestyle=linestyles[weight], alpha=alpha_shade)
-                ax.plot(_xp, pys[xmininds, 1], color=colors[weight],
+                ax.plot(_xp[xmininds], pys[xmininds, 1], color=colors[weight],
                         linestyle=linestyles[weight], alpha=alphas['median'],
                         path_effects=patheff_thick, linewidth=linewidth_thick)
-                ax.fill_between(_xp, pys[:, 0], pys[:, 2], 
+                ax.fill_between(_xp[xmininds], pys[xmininds, 0], 
+                                pys[xmininds, 2], 
                                 facecolor=colors[weight],
                                 linestyle=linestyles[weight], 
                                 alpha=alpha_shade)
@@ -3269,40 +3271,45 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
                            alpha = alpha_shade * 0.5)
                         #path_effects=patheff_thick, linewidth=linewidth_thick)
                 ax.plot(xpoints, wav, color=colors[weight],\
-                        linestyle=linestyles[weight], alpha=alphas['mean'],\
+                        linestyle=linestyles[weight], alpha=alphas['mean'],
                         path_effects=patheff_thick, linewidth=linewidth_thick)
                 
                 # add CIE T indicators
                 if weight in line_Tmax and yq == 'T':
                     Tcen = line_Tmax[weight]
                     Tran = line_Trange[weight]
-                    ax.axhline(Tcen, color=color_Tindic, linestyle='solid',\
+                    ax.axhline(Tcen, color=color_Tindic, 
+                               linestyle='solid',
                                linewidth=linewidth_thick)
-                    ax.axhline(Tran[0], color=color_Tindic, linestyle='dotted',\
+                    ax.axhline(Tran[0], color=color_Tindic, 
+                               linestyle='dotted',
                                linewidth=linewidth_thick)
-                    ax.axhline(Tran[1], color=color_Tindic, linestyle='dotted',\
+                    ax.axhline(Tran[1], color=color_Tindic, 
+                               linestyle='dotted',
                                linewidth=linewidth_thick)
                 # add Tvir indicator
                 elif weight == 'Mass' and yq == 'T':
                     xvals = 10**xpoints # M200c [Msun]
                     Tv = cu.Tvir(xvals, cosmopars=cosmopars, mu=0.59)
-                    ax.plot(xpoints, np.log10(Tv), color=color_Tindic,\
+                    ax.plot(xpoints, np.log10(Tv), color=color_Tindic,
                             linestyle='solid', linewidth=linewidth_thick)
             
             l1set = False
             if ti == 0 and len(_weights) > 1:
-                handles = [mlines.Line2D([], [], linestyle=linestyles[weight],\
-                                         color=colors[weight], alpha=1., linewidth=linewidth_thick,\
+                handles = [mlines.Line2D([], [], linestyle=linestyles[weight],
+                                         color=colors[weight], alpha=1., 
+                                         linewidth=linewidth_thick,
                                          label=weight) for weight in _weights]
                 labels = [weight[0] for weight in _weights]
-                l1 = ax.legend(handles, labels, fontsize=fontsize, bbox_to_anchor=(0., 1.),\
-                               loc='upper left')
+                l1 = ax.legend(handles, labels, fontsize=fontsize, 
+                               bbox_to_anchor=(0., 1.), loc='upper left')
                 l1set = True
             if ti == 0 and len(_weights) <= 1:
                 plabel = _weights[0]
                 if plabel in nicenames_lines:
                     plabel = nicenames_lines[plabel]
-                bbox = {'boxstyle': 'round', 'facecolor': 'white', 'alpha':0.3}
+                bbox = {'boxstyle': 'round', 'facecolor': 'white', 
+                        'alpha': 0.3}
                 ax.text(0.05, 0.95, plabel, fontsize=fontsize,
                         horizontalalignment='left', verticalalignment='top',
                         transform=ax.transAxes, bbox=bbox)
@@ -3333,7 +3340,8 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
         elif axnl[yi] == 'weight':
             y0min = -2.5
             y1max = 1.
-        ylims = np.array([axes[yi, mi].get_ylim() for mi in range(len(axweights))])
+        ylims = np.array([axes[yi, mi].get_ylim() \
+                          for mi in range(len(axweights))])
         miny = max(np.min(ylims[:, 0]), y0min)
         maxy = min(np.max(ylims[:, 1]), y1max)
         # for Z and cumulative
