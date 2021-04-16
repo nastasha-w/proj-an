@@ -3252,6 +3252,7 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
                 if 'log10' in avunits:
                     wav = np.log10(wav)
                     pys = np.log10(pys)
+                    outliers_y = np.log10(outliers_y)
                     
                 #ax.plot(xpoints, pys[:, 1], color=colors[weight],
                 #        linestyle=linestyles[weight], alpha=alphas['median'],
@@ -3268,7 +3269,7 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
                                 linestyle=linestyles[weight], 
                                 alpha=alpha_shade)
                 ax.scatter(outliers_x, outliers_y, color=colors[weight],
-                           alpha = alpha_shade * 0.5)
+                           alpha = alpha_shade * 0.5, s=5)
                         #path_effects=patheff_thick, linewidth=linewidth_thick)
                 ax.plot(xpoints, wav, color=colors[weight],\
                         linestyle=linestyles[weight], alpha=alphas['mean'],
@@ -3353,7 +3354,8 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
         maxx = np.max(xlims[:, 1])
         [axes[i, xi].set_xlim(minx, maxx) for i in range(nprof)]
     
-    plt.savefig(outname, format='pdf', box_inches='tight')
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
+    
 
 # convergence tests: simulation box size and resolution, slice depth of maps 
 def plot_radprof_conv(convtype='boxsize', line='all'):
