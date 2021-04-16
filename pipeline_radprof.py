@@ -1209,7 +1209,7 @@ def get_xrayabs(index):
     
     ionind = index // len(snapshots)
     ion = ions[ionind]
-    snapnum = index % len(snapshots)
+    snapnum = snapshots[index % len(snapshots)]
     
 
     simnums = ['L0100N1504']
@@ -1404,7 +1404,7 @@ def get_xrayabs(index):
         
         create_rprofiles(_mapslices, halocat, args, stampkwlist, rprofkwlist,
                      combrprofkwlist=combrprofkwlist,
-                     deletemaps=True, deletestamps=True, **kwargs)
+                     deletemaps=False, deletestamps=False, **kwargs)
         
         
 if __name__ == '__main__':
