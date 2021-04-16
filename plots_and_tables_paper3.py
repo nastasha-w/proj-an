@@ -3163,7 +3163,9 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
                     wkey = weight
                     dsname = dsname.format(elt=elt)
                 else:
-                    wkey = 'em-' + weight.replace(' ', '-')
+                    wkey = weight.replace(' ', '-')
+                    if weight in all_lines_SB:
+                        wkey = 'em-' + wkey
                     dsname = dsname.format(elt='parent')
                 #galax = 0
                 weightax = 1
