@@ -3034,7 +3034,7 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
                   9: ['C  5      40.2678A', 'C  6      33.7372A'],
                   10: ['N  6      28.7870A', 'N  7      24.7807A'],
                   11: ['O  7      22.1012A', 'O  8      18.9709A'],
-                  12: ['O  7      22.1012A', 'O  7      21.8070A',
+                  12: ['O  7      22.1012A', 'O  7      21.8044A',
                        'O  7      21.6020A'],
                   13: ['Ne 9      13.4471A', 'Ne10      12.1375A'],
                   14: ['Mg11      9.16875A', 'Mg12      8.42141A'],
@@ -4176,3 +4176,4 @@ if __name__ == '__main__':
         plot_radprof_main(talkversion=False)
         for i in range(1, 17):
             plot_radprof3d(weightset=i, M200cslice=slice(None, None, 2)) 
+            ptp3.plot_r200Lw_halodist(weightset=i, inclSF=False) 
