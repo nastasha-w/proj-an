@@ -1374,7 +1374,7 @@ def get_xrayabs(index):
                                         np.log10(stampkw['rmax_r200c']) \
                                         - 0.001, 0.05)                    
                     rbins_R200c = 10.**(logbins)
-                    rbins_R200c = np.append([0.], )
+                    rbins_R200c = np.append([0.], rbins_R200c)
                     rbins_R200c = np.append(rbins_R200c, 
                                             [stampkw['rmax_r200c']])
                     rkw1 = rkw.copy()
