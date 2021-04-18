@@ -1384,10 +1384,12 @@ def get_xrayabs(index):
                     numradd = 1
                     
                     _templist_cp = []
-                    for _ckw in combrprofkw_base:
-                        ckw = _ckw.copy()
-                        ckw['galaxyid'] = rkw['galaxyid']
-                        _templist_cp.append(ckw)
+                    
+                    if rkw['separateprofiles']:
+                        for _ckw in combrprofkw_base:
+                            ckw = _ckw.copy()
+                            ckw['galaxyid'] = rkw['galaxyid']
+                            _templist_cp.append(ckw)
                     templist_cp = templist_cp + [_templist_cp] * numradd
                 
             rprofkwlist.append(templist_rp)
