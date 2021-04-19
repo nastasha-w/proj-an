@@ -1423,6 +1423,6 @@ if __name__ == '__main__':
     elif index < 61:
         getconvtest_paper3_PS20tables(index - 56)
     
-    elif index < 75:
+    elif index < 79:
         get_xrayabs(index - 61)
         

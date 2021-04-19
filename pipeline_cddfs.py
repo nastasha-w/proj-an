@@ -406,7 +406,7 @@ def rungrids_xrayabs(index):
 
     '''
     
-    ions = ['o7', 'o8', 'fe17', 'ne9', 'ne10', 'c5', 'c6']
+    ions = ['o7', 'o8', 'fe17', 'ne9', 'ne10', 'c5', 'c6', 'n6', 'n7']
     snapshots = [27, 19]
     
     ionind = index // len(snapshots)
@@ -460,5 +460,5 @@ if __name__ == '__main__':
     if index >=0 and index < 36:
         rungrids_emlines(index)
         
-    elif index >= 36 and index < 40:
+    elif index >= 36 and index < 44:
         rungrids_xrayabs(index - 36)
