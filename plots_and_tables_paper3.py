@@ -3696,7 +3696,8 @@ def plot_radprof_conv(convtype='boxsize', line='all', scatter=True):
                             linestyle='solid', linewidth=linewidth,
                             path_effects=patheff, alpha=alpha_ranges)
                 for label in labels]
-    handles = handles + \
+    if scatter:
+        handles = handles + \
               [mpatch.Patch(label='{:.0f}%'.format(ykeys[1][1] - ykeys[0][1]), 
                             color='gray', edgecolor='gray', 
                             linewidth=linewidth, path_effects=patheff,
