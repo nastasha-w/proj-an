@@ -3395,7 +3395,7 @@ def plot_radprof_conv(convtype='boxsize', line='all', scatter=True):
     if line == 'all':
         lines = plot_lines_SB + plot_lines_PS20
         for line in lines:
-            plot_radprof_conv(convtype=convtype, line=line)
+            plot_radprof_conv(convtype=convtype, line=line, scatter=scatter)
  
     fontsize = 12
     linewidth = 1.5
