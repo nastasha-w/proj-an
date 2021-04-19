@@ -1204,7 +1204,7 @@ def get_xrayabs(index):
     '''
     
     # only needed for the lines actually used in the paper
-    ions = ['o7', 'o8', 'fe17', 'ne9', 'ne10', 'c5', 'c6']
+    ions = ['o7', 'o8', 'fe17', 'ne9', 'ne10', 'c5', 'c6', 'n6', 'n7']
     snapshots = [27, 19]
     
     ionind = index // len(snapshots)
