@@ -7,6 +7,8 @@ Created on Tue Apr  6 14:23:37 2021
 
 make the plots, and some of the tables, from paper 3: 
 CGM soft X-ray emission in EAGLE
+
+more options and earlier versions in plots_rough_paper3
 """
 
 import numpy as np
@@ -3363,7 +3365,7 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
     
 
 # convergence tests: simulation box size and resolution, slice depth of maps 
-def plot_radprof_conv(convtype='boxsize', line='all'):
+def plot_radprof_conv(convtype='boxsize', line='all', scatter=True):
     '''
     plot mean and median profiles for the different lines in different halo 
     mass bins, comparing different profile origins
@@ -3375,6 +3377,11 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
         'slicedepth'.
     line: str
         Which emission lines to use; 'all' means all the default lines
+    scatter: bool
+        include scatter at fixed halo mass in the plot, and show differences
+        relative to a reference median value (True), or exclude the scatter,
+        and show each statistical measure (mean/median) relative to its 
+        respective value in the reference setup (False)
     '''
     
     print('Values are calculated from 3.125^2 ckpc^2 pixels')
@@ -3424,6 +3431,8 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
     
     outname = 'radprof2d_convtest-{convtype}_{line}_0.1-0.25dex-annuli' + \
              '_{box}_27_test3.x_SmAb_C2Sm_{Lz}_noEOS_1000_centrals'
+    if not scatter:
+        outname = outname + '_noscatter'
     outname = outname.replace('.', 'p')
     outname = mdir + '../convtest/' + outname + '.pdf'
     
@@ -3597,6 +3606,11 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
                     #ed_ref = bins[seltag][ykey_comp]
                     #xref = 0.5 * (ed_ref[:-1] + ed_ref[1:])
                     yref = yvals[seltag][ykey_comp]
+                    if scatter:
+                        yref_mean = np.NaN
+                    else:
+                        yref_mean = yvals[seltag][ykey_mean]
+                    
             tax.text(0.98, 0.97 - 0.07 * li, str(_ng), fontsize=fontsize,
                      color=color, transform=tax.transAxes,
                      horizontalalignment='right', verticalalignment='top')
@@ -3629,28 +3643,32 @@ def plot_radprof_conv(convtype='boxsize', line='all'):
             #          path_effects=patheff)
             
             vals = [yvals[seltag][ykey] for ykey in ykeys_rangein]
-            tax.fill_between(cens, vals[0], vals[1], color=color, 
-                              alpha=alpha_ranges)
-            tax.plot(cens, vals[0], color=color, linewidth=linewidth,
-                      linestyle=linestyle_ykey[ykeys_rangein[0]],
-                      path_effects=patheff)
-            tax.plot(cens, vals[1], color=color, linewidth=linewidth,
-                      linestyle=linestyle_ykey[ykeys_rangein[1]],
-                      path_effects=patheff)
-            bax.fill_between(cens, vals[0] - yref, vals[1] - yref, color=color, 
-                              alpha=alpha_ranges)
-            bax.plot(cens, vals[0] - yref, color=color, linewidth=linewidth,
-                      linestyle=linestyle_ykey[ykeys_rangein[0]],
-                      path_effects=patheff)
-            bax.plot(cens, vals[1] - yref, color=color, linewidth=linewidth,
-                      linestyle=linestyle_ykey[ykeys_rangein[1]],
-                      path_effects=patheff)
+            if scatter:
+                tax.fill_between(cens, vals[0], vals[1], color=color, 
+                                 alpha=alpha_ranges)
+                tax.plot(cens, vals[0], color=color, linewidth=linewidth,
+                         linestyle=linestyle_ykey[ykeys_rangein[0]],
+                         path_effects=patheff)
+                tax.plot(cens, vals[1], color=color, linewidth=linewidth,
+                         linestyle=linestyle_ykey[ykeys_rangein[1]],
+                         path_effects=patheff)
+                bax.fill_between(cens, vals[0] - yref, vals[1] - yref, 
+                                 color=color, alpha=alpha_ranges)
+                bax.plot(cens, vals[0] - yref, color=color, 
+                         linewidth=linewidth,
+                         linestyle=linestyle_ykey[ykeys_rangein[0]],
+                         path_effects=patheff)
+                bax.plot(cens, vals[1] - yref, color=color, 
+                         linewidth=linewidth,
+                         linestyle=linestyle_ykey[ykeys_rangein[1]],
+                         path_effects=patheff)
             
             vals = yvals[seltag][ykey_mean]
             tax.plot(cens, vals, color=color, linewidth=linewidth,
                              linestyle=linestyle_ykey[ykey_mean],
                              path_effects=patheff)
-            bax.plot(cens, vals - yref, color=color, linewidth=linewidth,
+            _ref = yref if scatter else yref_mean
+            bax.plot(cens, vals - _ref, color=color, linewidth=linewidth,
                              linestyle=linestyle_ykey[ykey_mean],
                              path_effects=patheff)
             
@@ -4176,4 +4194,4 @@ if __name__ == '__main__':
         plot_radprof_main(talkversion=False)
         for i in range(1, 17):
             plot_radprof3d(weightset=i, M200cslice=slice(None, None, 2)) 
-            ptp3.plot_r200Lw_halodist(weightset=i, inclSF=False) 
+            plot_r200Lw_halodist(weightset=i, inclSF=False) 
