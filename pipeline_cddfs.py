@@ -411,7 +411,7 @@ def rungrids_xrayabs(index):
     
     ionind = index // len(snapshots)
     ion = ions[ionind]
-    snapnum = index % len(snapshots)
+    snapnum = snapshots[index % len(snapshots)]
     
     
     simnums = ['L0100N1504']
