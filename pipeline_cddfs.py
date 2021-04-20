@@ -460,5 +460,5 @@ if __name__ == '__main__':
     if index >=0 and index < 36:
         rungrids_emlines(index)
         
-    elif index >= 36 and index < 44:
+    elif index >= 36 and index < 54:
         rungrids_xrayabs(index - 36)
