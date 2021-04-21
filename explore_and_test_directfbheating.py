@@ -116,8 +116,9 @@ def plot_tcorr():
     plt.title('color: ' + labels[amax_key] + sf)
     plt.savefig(name, bbox_inches='tight')
 
-def plot_phasediagram_selcut(deltat_myr):
-    name = mdir + 'phasediagram_fbseldiff_{simnum}_{snap}_{var}.pdf'
+def plot_phasediagram_acut(deltat_myr):
+    name = mdir + 'phasediagram_amaxseldiff_{simnum}_{snap}_{var}'+\
+                  '_deltat-{deltat}-Myr.pdf'
     name = name.format(simnum=simfile.simnum, snap=simfile.snapnum, 
                        var=simfile.var, deltat=deltat_myr)
     
@@ -136,36 +137,87 @@ def plot_phasediagram_selcut(deltat_myr):
     anow = simfile.a
     deltat = deltat_myr * c.sec_per_megayear
     time_now = cu.t_expfactor(anow, cosmopars=simfile)
-    acut = cu.expfactor_t(time_now + deltat, cosmopars=simfile)
-    tcut = 7.499
-    
-    sel = amax >= acut 
-    sel |= tmax < 10**tcut
+    acut = cu.expfactor_t(time_now - deltat, cosmopars=simfile)  
+    sel = amax > acut 
+    print('selected {} / {} particles'.format(np.sum(sel), len(sel)))
     
     hist_all, xb, yb = np.histogram2d(xvals, yvals, bins=[xbins, ybins])
-    hist_sub, xb, yb = np.histogram2d(xvals[sel], yvals[sel], 
+    hist_exc, xb, yb = np.histogram2d(xvals[sel], yvals[sel], 
                                       bins=[xbins, ybins])
     loghist = np.log10(hist_all)
     levels = np.arange(0, np.ceil(np.max(loghist)), 1)
     xc = 0.5 * (xbins[:-1] + xbins[1:])
     yc = 0.5 * (ybins[:-1] + ybins[1:])
     plt.contour(xc, yc, loghist.T, levels=levels, colors='black')
-    plt.pcolormesh(xbins, ybins, np.log10(hist_all.T - hist_sub.T))
+    plt.pcolormesh(xbins, ybins, np.log10(hist_exc.T))
     plt.grid(b=True)
     plt.colorbar()
     
     plt.xlabel('log10 ' + labels[dens_key])
     plt.ylabel('log10 ' + labels[tnow_key])
-    title = 'contours: SPH particles (factor of 10 steps),'+\
-            ' colors: log selection difference'
+    title = 'contours: all SPH particles (factor of 10 steps),'+\
+            ' colors: excluded gas'
+    plt.title(title)
+    plt.savefig(name, bbox_inches='tight')
+    
+    
+def plot_phasediagram_selcut(deltat_myr):
+    name = mdir + 'phasediagram_fbseldiff_{simnum}_{snap}_{var}' +\
+                  '_deltat-{deltat}-Myr.pdf'
+    name = name.format(simnum=simfile.simnum, snap=simfile.snapnum, 
+                       var=simfile.var, deltat=deltat_myr)
+    
+    xvals = np.log10(dens)
+    minx = np.min(xvals)
+    maxx = np.max(xvals)
+    delta = 0.1
+    xbins = np.arange(minx, maxx + 1.01 * delta, delta)
+    
+    yvals = np.log10(tnow)
+    miny = np.min(yvals)
+    maxy = np.max(yvals)
+    delta = 0.05
+    ybins = np.arange(miny, maxy + 1.01 * delta, delta)    
+    
+    anow = simfile.a
+    deltat = deltat_myr * c.sec_per_megayear
+    time_now = cu.t_expfactor(anow, cosmopars=simfile)
+    acut = cu.expfactor_t(time_now - deltat, cosmopars=simfile)
+    tcut = 7.499
+    
+    sel = amax > acut 
+    sel &= tmax >= 10**tcut
+    print('selected {} / {} particles'.format(np.sum(sel), len(sel)))
+    
+    hist_all, xb, yb = np.histogram2d(xvals, yvals, bins=[xbins, ybins])
+    hist_exc, xb, yb = np.histogram2d(xvals[sel], yvals[sel], 
+                                      bins=[xbins, ybins])
+    loghist = np.log10(hist_all)
+    levels = np.arange(0, np.ceil(np.max(loghist)), 1)
+    xc = 0.5 * (xbins[:-1] + xbins[1:])
+    yc = 0.5 * (ybins[:-1] + ybins[1:])
+    plt.contour(xc, yc, loghist.T, levels=levels, colors='black')
+    plt.pcolormesh(xbins, ybins, np.log10(hist_exc.T))
+    plt.grid(b=True)
+    plt.colorbar()
+    
+    plt.xlabel('log10 ' + labels[dens_key])
+    plt.ylabel('log10 ' + labels[tnow_key])
+    title = 'contours: all SPH particles (factor of 10 steps),'+\
+            ' colors: excluded gas'
     plt.title(title)
     plt.savefig(name, bbox_inches='tight')
     
     
 def plot_all():
     plot_tmaxhist()
-    
-    
+    plot_tmax_amax()
+    plot_tcorr()
+    t_myr = np.array([0., 1., 1e2, 1e3, 1e4])
+    for t in t_myr:
+        plot_phasediagram_acut(t)
+        plot_phasediagram_selcut(t)
+        
 if __name__ == '__main__':
     args = sys.argv[1:]
     if len(args) not in [2, 3]:
