@@ -55,6 +55,7 @@ def plot_tmaxhist():
     plt.xlabel('log10 ' + labels[tmax_key])
     plt.ylabel('SPH particle count')
     plt.savefig(name, bbox_inches='tight')
+    plt.close()
 
 def plot_tmax_amax():
     name = mdir + 'tmax_amax_hist_{simnum}_{snap}_{var}.pdf'
@@ -84,6 +85,7 @@ def plot_tmax_amax():
     
     plt.title('log10 SPH particle count')
     plt.savefig(name, bbox_inches='tight')
+    plt.close()
 
 def plot_tcorr():
     name = mdir + 'tmax_tnow_hist_{simnum}_{snap}_{var}.pdf'
@@ -115,6 +117,7 @@ def plot_tcorr():
     sf = ', subsample factor {}'.format(subsample)
     plt.title('color: ' + labels[amax_key] + sf)
     plt.savefig(name, bbox_inches='tight')
+    plt.close()
 
 def plot_phasediagram_acut(deltat_myr):
     name = mdir + 'phasediagram_amaxseldiff_{simnum}_{snap}_{var}'+\
@@ -159,7 +162,7 @@ def plot_phasediagram_acut(deltat_myr):
             ' colors: excluded gas'
     plt.title(title)
     plt.savefig(name, bbox_inches='tight')
-    
+    plt.close()
     
 def plot_phasediagram_selcut(deltat_myr):
     name = mdir + 'phasediagram_fbseldiff_{simnum}_{snap}_{var}' +\
@@ -207,7 +210,7 @@ def plot_phasediagram_selcut(deltat_myr):
             ' colors: excluded gas'
     plt.title(title)
     plt.savefig(name, bbox_inches='tight')
-    
+    plt.close()
     
 def plot_all():
     plot_tmaxhist()
