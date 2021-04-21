@@ -1370,7 +1370,7 @@ def get_xrayabs(index):
                     #maxdist_pkpc = stampkw['rmax_r200c'] * \
                      #              cu.R200c_pkpc(minmass_Msun, cosmopars)
                     #print('Using maxdist_pkpc {}'.format(maxdist_pkpc))
-                    logbins = np.arange(0.05, 
+                    logbins = np.arange(-2., 
                                         np.log10(stampkw['rmax_r200c']) \
                                         - 0.001, 0.05)                    
                     rbins_R200c = 10.**(logbins)
