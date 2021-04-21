@@ -213,7 +213,7 @@ def plot_all():
     plot_tmaxhist()
     plot_tmax_amax()
     plot_tcorr()
-    t_myr = np.array([0., 1., 1e2, 1e3, 1e4])
+    t_myr = np.array([0., 1., 2., 3., 5., 10., 20., 30., 50., 1e2, 1e3, 1e4])
     for t in t_myr:
         plot_phasediagram_acut(t)
         plot_phasediagram_selcut(t)
@@ -231,4 +231,5 @@ if __name__ == '__main__':
         var = 'REFERENCE'
     set_simfile(simnum, snapnum, var)
     read_simdata(simfile)
+    plot_all()
     
