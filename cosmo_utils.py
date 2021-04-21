@@ -350,6 +350,97 @@ def rhom(z, cosmopars=None):
     rhom = rhoc0 * omegam0 * (1. + _z)**3
     return rhom
 
+def expfactor_t(time, cosmopars=None):
+    '''
+    calculate the expansion factor at time t, for a matter + cosmological 
+    constant cosmology
+
+    Parameters
+    ----------
+    time : float
+        cosmic time (> 0, since aexp = 0).
+    cosmopars : dict or Simfile object, optional
+        cosmological parameters. The default is None, meaning the eagle 
+        cosmological parameters are used. (The redshift and expansion factor
+        of the cosmopars or Simfile object are ignored.)
+        
+    Raises
+    ------
+    NotImplementedError
+        the cosmological parameters are not for a flat LambdaCDM cosmology.
+        
+    Returns
+    -------
+    the expasion factor a [s] (float)
+    '''
+    if cosmopars is None:
+        hpar = c.hubbleparam 
+        omega0 = c.omega0
+        omegalambda = c.omegalambda
+    elif isinstance(cosmopars, dict):
+        hpar = cosmopars['h']
+        omega0 = cosmopars['omegam']
+        omegalambda = cosmopars['omegalambda']
+    else:
+        hpar = cosmopars.h 
+        omega0 = cosmopars.omegam
+        omegalambda = cosmopars.omegalambda
+    if not np.isclose(omegalambda + omega0, 1.):
+        msg = 'expfactor_t only works for flat universes;'+\
+              ' received Omega_0 = {o0}, Omega_Lambda = {ol}'
+        raise NotImplementedError(msg.format(o0=omega0, ol=omegalambda))
+    hzero = hpar * c.hubble
+    ft = np.tanh(1.5 * np.sqrt(omegalambda) * time * hzero)**2
+    aexp = (omega0 / omegalambda * ft / (1. - ft))**(1./3.)
+    return aexp
+
+def t_expfactor(aexp, cosmopars=None):
+    '''
+    calculate the cosmic time (since the big bang) at a given expansion factor
+    (cosmological parameter a)
+
+    Parameters
+    ----------
+    aexp : float
+        cosmological expansion factor a.
+    cosmopars : dict or Simfile object, optional
+        cosmological parameters. The default is None, meaning the eagle 
+        cosmological parameters are used. (The redshift and expansion factor
+        of the cosmopars or Simfile object are ignored.)
+
+    Raises
+    ------
+    NotImplementedError
+        the cosmological parameters are not for a flat LambdaCDM cosmology.
+
+    Returns
+    -------
+    time : float
+        the cosmological time (since the big bang) in seconds.
+
+    '''
+    if cosmopars is None:
+        hpar = c.hubbleparam 
+        omega0 = c.omega0
+        omegalambda = c.omegalambda
+    elif isinstance(cosmopars, dict):
+        hpar = cosmopars['h']
+        omega0 = cosmopars['omegam']
+        omegalambda = cosmopars['omegalambda']
+    else:
+        hpar = cosmopars.h 
+        omega0 = cosmopars.omegam
+        omegalambda = cosmopars.omegalambda
+    if not np.isclose(omegalambda + omega0, 1.):
+        msg = 'expfactor_t only works for flat universes;'+\
+              ' received Omega_0 = {o0}, Omega_Lambda = {ol}'
+        raise NotImplementedError(msg.format(o0=omega0, ol=omegalambda))
+    hzero = hpar * c.hubble
+    oa = omegalambda * aexp**3
+    fa = np.arctanh(np.sqrt(oa / (omega0 + oa)))
+    time = 1. / (1.5 * np.sqrt(omegalambda) * hzero) * fa
+    return time
+    
 def conc_mass_MS15(Mh, cosmopars=None):
     '''
     Schaller et al. 2015 Eagle concentration-mass relation: 
