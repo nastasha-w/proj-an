@@ -230,6 +230,6 @@ if __name__ == '__main__':
     else:
         var = 'REFERENCE'
     set_simfile(simnum, snapnum, var)
-    read_simdata(simfile)
+    read_simdata()
     plot_all()
     
