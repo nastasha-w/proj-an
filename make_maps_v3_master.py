@@ -3217,7 +3217,8 @@ halosel:   only include particles belonging to FOF halos meeting these
                   group
 '''
     
-def selecthaloparticles(vardict, halosel, nameonly=False, last=True, **kwargs):
+def selecthaloparticles(vardict, halosel, nameonly=False, last=True, 
+                        **kwargs):
     '''
     vardict:   instance for particle data, used to generate simfile for subfind
                files & selection is applied to this
@@ -3267,8 +3268,12 @@ def selecthaloparticles(vardict, halosel, nameonly=False, last=True, **kwargs):
     if not set(kwargs.keys()).issubset(kwargs_allowed):
         print('Warning: kwargs %s in selecthalosparticles are ignored'%(set(kwargs.keys()) - kwargs_allowed))
         
-    simfile_sf = pc.Simfile(vardict.simfile.simnum, vardict.simfile.snapnum, vardict.simfile.var, file_type='sub', simulation=vardict.simfile.simulation)
-    groupnums = sh.selecthalos_subfindfiles(simfile_sf, halosel, mdef=mdef, aperture=aperture, nameonly=nameonly)
+    simfile_sf = pc.Simfile(vardict.simfile.simnum, vardict.simfile.snapnum, 
+                            vardict.simfile.var, file_type='sub', 
+                            simulation=vardict.simfile.simulation)
+    groupnums = sh.selecthalos_subfindfiles(simfile_sf, halosel, mdef=mdef, 
+                                            aperture=aperture, 
+                                            nameonly=nameonly)
     if nameonly:
         #split off '_endhalosel' 
         groupnums = groupnums.split('_')
@@ -3288,9 +3293,10 @@ def selecthaloparticles(vardict, halosel, nameonly=False, last=True, **kwargs):
     try:
         vardict.readif('GroupNumber', rawunits=True)
     except IOError as err:
-        print('The mysterious error has arisen; status data:')
+        print('A mysterious error has arisen; status data:')
         print('trying to read data from: %s'%(vardict.simfile.readfile))
-        print('vardict status: read in %s'%(', '.join([key for key in vardict.particle])))
+        print('vardict status: read in %s'%(', '.join([key for key in \
+                                                       vardict.particle])))
         if len(vardict.particle) == 0:
             # try if it's a general file problem:
             vardict.readif('Mass', rawunits=True)
@@ -5162,7 +5168,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     else:
         region = None
 
-    vardict_WQ = pc.Vardict(simfile, parttype, wishlist, region=region, readsel=pc.Sel())
+    vardict_WQ = pc.Vardict(simfile, parttype, wishlist, region=region, 
+                            readsel=pc.Sel())
     vardict_WQ.add_box('centre', centre)
     vardict_WQ.add_box('Ls', Ls)
 
@@ -5704,7 +5711,9 @@ def gethalomass(vardict, mdef='200c', allinR200c=True):
     if not isinstance(allinR200c, bool):
         raise ValueError('allinR200c should be a boolean')
         
-    simfile_sf = pc.Simfile(vardict.simfile.simnum, vardict.simfile.snapnum, vardict.simfile.var, file_type='sub', simulation=vardict.simfile.simulation)
+    simfile_sf = pc.Simfile(vardict.simfile.simnum, vardict.simfile.snapnum, 
+                            vardict.simfile.var, file_type='sub', 
+                            simulation=vardict.simfile.simulation)
     # 2-step mass conversion because converting directly to cgs causes float32 to overflow
     masses_halo = simfile_sf.readarray(dsname, rawunits=True)
     mconv = simfile_sf.CGSconvtot / c.solar_mass
