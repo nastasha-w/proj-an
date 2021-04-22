@@ -266,7 +266,7 @@ def run_phasediagrams_LMweighted(index, checkindex=False):
     
     m3.ol.ndir = mdir + 'data/'
     
-    simnum = 'L0012N0188'
+    simnum = 'L0100N1504'
     snapnum = 27
     var = 'REFERENCE'
     PS20tab = _weight in all_lines_PS20
