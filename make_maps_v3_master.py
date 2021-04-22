@@ -6323,7 +6323,9 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,
     if not isinstance(sylviasshtables, bool):
         print('syvliasshtables should be True or False')
         return 41
-    elif sylviasshtables and not np.any([ptype in ['Nion', 'Niondens']] + [_dct['ptype'] in ['Nion', 'Niondens'] for _dct in axesdct]):
+    elif sylviasshtables and not np.any([ptype in ['Nion', 'Niondens']] +\
+                                        [_dct['ptype'] in ['Nion', 'Niondens']\
+                                         for _dct in axesdct]):
         print('Warning: the option sylviasshtables only applies to ion numbers or densities; it will be ignored altogether here')
         return 42
     if not isinstance(bensgadget2tables, bool):
