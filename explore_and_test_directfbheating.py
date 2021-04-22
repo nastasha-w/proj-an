@@ -300,7 +300,7 @@ def run_phasediagrams_LMweighted(index, checkindex=False):
     
     t_myr = np.array([0., 1., 2., 3., 5., 10., 20., 30., 50., 1e2, 2e2, 
                       3e2, 1e3, 1e4])
-    t_myr = t_myr.sort()
+    t_myr.sort()
     _simfile = pc.Simfile(simnum, snapnum, var)
     anow = _simfile.a
     deltat = t_myr * c.sec_per_megayear
