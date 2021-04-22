@@ -258,8 +258,8 @@ def run_phasediagrams_LMweighted(index, checkindex=False):
     weights = ['Mass'] + _lines
     htypes = ['all', 'halo']
     slow = len(weights)
-    _weight = weights[index // slow]
-    htype = htypes[index % slow]
+    _weight = weights[index % slow]
+    htype = htypes[index // slow]
     if checkindex:
         print(_weight, htype)
         return _weight, htype
