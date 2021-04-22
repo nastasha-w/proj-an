@@ -346,6 +346,7 @@ def run_phasediagrams_LMweighted(index, checkindex=False):
 if __name__ == '__main__':
     args = sys.argv[1:]
     if args[1] == 'runpdhists':
+        print('running phase diagram hists')
         checkindex = '--checkindex' in args
         index = int(args[2])
         run_phasediagrams_LMweighted(index, checkindex=checkindex)
