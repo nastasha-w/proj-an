@@ -252,7 +252,18 @@ def plot_all():
     for t in t_myr:
         plot_phasediagram_acut(t)
         plot_phasediagram_selcut(t)
-        
+
+def readin_phasediagrams_LMweighted(filename):
+    if '/' not in filename:
+        filename = mdir + 'data/' + filename
+    
+    with h5py.File(filename) as f:
+        keys = list(f.keys())
+        keys.remove('Header')
+        keys.remove('units')
+    
+    
+    
 def run_phasediagrams_LMweighted(index, checkindex=False):
     _lines = lines_paper
     weights = ['Mass'] + _lines
