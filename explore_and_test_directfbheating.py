@@ -450,7 +450,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
             hi = np.where(np.isclose(hbins, 10**mbin * c.solar_mass))[0][0]
             hsel = [slice(None, None, None)] * len(dct['hist'].shape)
             hsel[hax] = slice(hi, hi + 1, None)
-            hist = np.copy(dct['hist'][tuple(hsel)])
+            hist = np.sum(dct['hist'][tuple(hsel)], axis=hax)
             
         tnow_ax = dct['axes']['Tnow']
         dens_ax = dct['axes']['dens']
