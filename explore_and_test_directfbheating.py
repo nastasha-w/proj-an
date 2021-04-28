@@ -455,7 +455,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
         tnow_ax = dct['axes']['Tnow']
         dens_ax = dct['axes']['dens']
         tnow_bins = dct['bins']['Tnow']
-        dens_bins = dct['bins']['dens'] * 0.752 / (c.atomw_h * c.u)
+        dens_bins = dct['bins']['dens'] * 0.752 / (c.atomw_H * c.u)
         
         tnow_c = 0.5 * (tnow_bins[:-1] + tnow_bins[1:])
         dens_c = 0.5 * (dens_bins[:-1] + dens_bins[1:])
