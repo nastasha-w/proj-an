@@ -522,7 +522,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
                 'using different minimum past maximum temperature cuts:\n' +\
                 'for SNe and AGN feedback (top) and AGN only (bottom)\n'+\
                 'and different maximum times since that maximum was attained'
-        tax.text(0., 1., title, fontsize=fontsize, transform=tax.tranAxes,
+        tax.text(0., 1., title, fontsize=fontsize, transform=tax.transAxes,
                  horizontalalignment='left', verticalalignment='top')
         
         cutlabel = '$\\log_{{10}} \\, \\mathm{{T}}_{{\\mathrm{{max}}}}' +\
