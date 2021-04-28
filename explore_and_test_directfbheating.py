@@ -12,6 +12,15 @@ import sys
 import os
 import h5py
 
+import matplotlib as mpl
+import matplotlib.cm as cm
+import matplotlib.gridspec as gsp
+import matplotlib.lines as mlines
+import matplotlib.collections as mcol
+import matplotlib.patheffects as mppe
+import matplotlib.patches as mpatch
+import matplotlib.ticker as ticker
+
 import projection_classes as pc
 import eagle_constants_and_units as c
 import cosmo_utils as cu
@@ -50,6 +59,7 @@ plot_lines_PS20 = ['Fe17      15.2620A', 'Fe17      16.7760A',
                    'Fe17      17.0510A', 'Fe17      17.0960A', 
                    'Fe18      16.0720A']
 lines_paper = plot_lines_SB + plot_lines_PS20
+siontab = '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F'
 
 def set_simfile(simnum, snapnum, var='REFERENCE'):
     global simfile
@@ -252,17 +262,6 @@ def plot_all():
     for t in t_myr:
         plot_phasediagram_acut(t)
         plot_phasediagram_selcut(t)
-
-def readin_phasediagrams_LMweighted(filename):
-    if '/' not in filename:
-        filename = mdir + 'data/' + filename
-    
-    with h5py.File(filename) as f:
-        keys = list(f.keys())
-        keys.remove('Header')
-        keys.remove('units')
-    
-    
     
 def run_phasediagrams_LMweighted(index, checkindex=False):
     _lines = lines_paper
@@ -353,7 +352,233 @@ def run_phasediagrams_LMweighted(index, checkindex=False):
                 done = True
     if not done:
         m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
+
+def readin_phasediagrams_LMweighted(filename):
+    '''
+    read in the hdf5 histogram data for phase information plots with halo mass
+    and direct feedback info
+
+    Parameters
+    ----------
+    filename : str
+        name of the hdf5 histogram file.
+
+    Returns
+    -------
+    dct_all : dct
+        dictionary containing the histogram ('hist'), axis bin edges ('bins'),
+        and which axes in the histogram they correspond to ('axes'). Contains
+        the histogram for all gas in the simulation.
+    dct_hm : dct
+        same as dct_all, but includes an axis for the halo mass, and only 
+        particles in haloes.
+    cosmopars : dct
+        dictionary containing cosmological parameters
+
+    '''
+    if '/' not in filename:
+        filename = mdir + 'data/' + filename
     
+    edgekeys = {'M200c': 'M200c_halo_allinR200c',
+                'Tmax': 'MaximumTemperature_T4EOS',
+                'Tnow': 'Temperature_T4EOS',
+                'dens': 'Density_T4EOS',
+                'amax': 'AExpMaximumTemperature_T4EOS'}
+    
+    with h5py.File(filename) as f:
+        key_hm = 'M200c_halo_allinR200c_Temperature_T4EOS_Density_T4EOS' + \
+                 '_AExpMaximumTemperature_T4EOS_MaximumTemperature_T4EOS'
+        key_all = 'Temperature_T4EOS_Density_T4EOS_AExpMaximumTemperature' + \
+                  '_T4EOS_MaximumTemperature_T4EOS'
+        dct_all = {}
+        dct_hm = {}
+        for gkey, dct in zip([key_hm, key_all], [dct_hm, dct_all]):
+            grp = f[gkey]
+            dct['bins'] = {}
+            dct['axes'] = {}
+            for ekey in edgekeys:
+                if edgekeys[ekey] in grp:
+                    egrp = grp[edgekeys[ekey]]
+                    bins = egrp['bins'][:]
+                    axis = egrp.attrs['histogram axis']
+                    dct['bins'][ekey] = bins
+                    dct['axes'][ekey] = axis
+            dct['hist'] = grp['histogram'][:]
+            if bool(grp['histogram'].attrs['log']):
+                dct['hist'] = 10**dct['hist']
+        cosmopars = {key: val for key, val \
+                          in f['Header/cosmopars'].attrs.items()}
+    return dct_all, dct_hm, cosmopars
+
+def deltat_from_acut(acut, cosmopars):
+    time_now = cu.t_expfactor(cosmopars['a'], cosmopars=cosmopars)
+    time_cut = cu.t_expfactor(acut, cosmopars=cosmopars) 
+    deltat = time_now - time_cut
+    deltat *= 1. / c.sec_per_megayear
+    return deltat
+    
+def plot_phasediagram_selcut_fromsaved(args, weightname='Mass'):
+    
+    dct_all = args[0]
+    dct_hm = args[1]
+    cosmopars = args[2]
+    
+    snecut = 7.499
+    agncut = 8.499
+    massbins_check = np.arange(10.5, 14.6, 0.5)
+    
+    outdir = mdir + 'phasediagrams/'
+    outbase = 'phasedigram_L0100N1504_27_{weight}_selcuts_{massrange}.pdf'
+    fontsize = 12
+    
+    for mi, mbin in enumerate(massbins_check):
+        mrange = 'M200c-{:.1f}-{:.1f}'.format(mbin, mbin + 0.5) \
+                 if mi < len(massbins_check) - 2 else \
+                 'M200c-{:.1f}-inf'.format(mbin) \
+                 if mi == len(massbins_check) - 2 else \
+                 'all-gas'
+        outname = outdir + outbase.format(weight=weightname, massrange=mrange)
+        
+        if mi == len(massbins_check) - 1:
+            dct = dct_all
+            hist = np.copy(dct['hist'])
+            hax = 100
+        else:
+            dct = dct_hm
+            hax = dct['axes']['M200c']
+            hbins = dct['bins']['M200c']
+            hi = np.where(np.isclose(hbins, mbin))[0][0]
+            hsel = [slice(None, None, None)] * len(dct['hist'].shape)
+            hsel[hax] = slice(hi, hi + 1, None)
+            hist = np.copy(dct['hist'][tuple(hsel)])
+            
+        tnow_ax = dct['axes']['tnow']
+        dens_ax = dct['axes']['dens']
+        tnow_bins = dct['bins']['tnow']
+        dens_bins = dct['bins']['dens'] * 0.752 / (c.atomw_h * c.u)
+        
+        tnow_c = 0.5 * (tnow_bins[:-1] + tnow_bins[1:])
+        dens_c = 0.5 * (dens_bins[:-1] + dens_bins[1:])
+        
+        tmax_ax = dct['axes']['tmax']
+        tmax_bins = dct['axes']['tmax']
+        
+        amax_ax = dct['axes']['amax']
+        deltat_bins = deltat_from_acut(dct['bins']['amax'], cosmopars)  
+        
+        if tnow_ax > hax:
+            tnow_ax = tnow_ax - 1
+        if dens_ax > hax:
+            dens_ax = dens_ax - 1
+        if tmax_ax > hax:
+            tmax_ax = tmax_ax - 1
+        if amax_ax > hax:
+            amax_ax = amax_ax - 1
+        
+        total = np.sum(hist, axis=(tmax_ax, amax_ax))
+        if tnow_ax > dens_ax:
+            total = total.T
+        
+        vmax = np.log10(np.max(total))
+        vmin = np.log10(np.min(total[total > 0.]))
+        levels = np.arange(vmin, vmax, 1.)
+        if len(levels) > 5:
+            levels = np.linspace(vmin + 1, vmax - 1, 5)
+        cmap = cm.get_cmap('viridis')
+
+        numtbins = len(deltat_bins) - 1
+        
+        panelwidth = 2.5
+        ncols = 4
+        nrows = (numtbins - 1) // ncols + 1
+        width = ncols * panelwidth
+        height_ratios = [panelwidth * 1.25] + [panelwidth] * (2 * ncols)
+        height = sum(height_ratios)
+        
+        fig = plt.figure(figsize=(width, height))
+        grid = gsp.GridSpec(nrows=1 + 2 * nrows, ncols=ncols, 
+                            hspace=0.0, wspace=0.0, 
+                            height_ratios=height_ratios)
+        axes1 = [fig.add_subplot(grid[1 + i // ncols, i % ncols]) \
+                 for i in range(numtbins)]
+        axes2 = [fig.add_subplot(grid[1 + nrows + i // ncols, i % ncols]) \
+                 for i in range(numtbins)]
+            
+        _ax = fig.add_subplot(grid[0, :])
+        _l, _b, _w, _h = (_ax.get_position()).bounds
+        hmargin = _h * 0.1
+        __h = _h - hmargin
+        pwidth = __h * height / width
+        cwidth = 0.3 * pwidth
+        wmargin = 0.1 * pwidth
+        twidth = _w - (pwidth + cwidth + 2. * wmargin)
+        
+        totax = fig.add_axes([_l, _b + hmargin, __h, pwidth])
+        cax = fig.add_axes([_l + pwidth + wmargin, _b + hmargin, __h, cwidth])
+        tax = fig.add_axes([_l + pwidth + cwidth + 2. * wmargin, 
+                            _b + hmargin, __h, twidth])
+        title = 'weight: {}\n'.format(weightname) +\
+                'distribution of the weighted quantity in phase space,\n'+\
+                'using different minimum past maximum temperature cuts:\n' +\
+                'for SNe and AGN feedback (top) and AGN only (bottom)\n'+\
+                'and different maximum times since that maximum was attained'
+        tax.text(0., 1., title, fontsize=fontsize, transform=tax.tranAxes,
+                 horizontalalignment='left', verticalalignment='top')
+        
+        cutlabel = '$\\log_{{10}} \\, \\mathm{{T}}_{{\\mathrm{{max}}}}' +\
+                   ' \\,/\\, \\mathrm{{K}} \\geq {Tcut:.1f}, ' +\
+                   '\\Delta \\, \\mathrm{{t}} \\,/\\, \\mathrm{{Myr}} <'+\
+                   '{deltat:.0f}'
+        img = totax.pcolormesh(dens_bins, tnow_bins, np.log10(total), 
+                               cmap=cmap, vmin=vmin, vmax=vmax)
+        cbar = plt.colorbar(img, cax=cax, extend='neither', 
+                            orientation='vertical', aspect=8.)   
+        cset = totax.contour(dens_c, deltat_bins, total, levels=levels,
+                             color='black')
+        cbar.add_lines(cset)
+        cax.set_ylabel('$\\log_{10} weight$', fontsize=fontsize)
+        cax.tick_params(labelsize=fontsize - 1.)
+        
+        for Tcut, axset in zip([snecut, agncut], [axes1, axes2]):
+            for ti, deltat in enumerate(deltat_bins[:-1]):
+                ax = axset[ti]
+                ax.contour(dens_c, tnow_c, total, levels=levels,
+                           color='black')
+                label = cutlabel.format(deltat=deltat, Tcut=Tcut)
+                ax.text(1., 0., label, fontsize=fontsize, 
+                        transform=ax.transAxes, horizontalalignment='right',
+                        verticalalignment='bottom')
+                sel = [slice(None, None, None)] * len(hist.shape)
+                tmax_ci = np.where(np.isclose(Tcut, tmax_bins))[0][0]
+                sel[tmax_ax] = slice(tmax_ci, None, None)
+                sel[amax_ax] = slice(ti, None, None)
+                subtot = np.sum(hist[tuple(sel)], axis=(amax_ax, tmax_ax))
+                if tnow_ax > dens_ax:
+                    subtot = subtot.T
+                ax.pcolormesh(dens_bins, tnow_bins, np.log10(subtot), 
+                              cmap=cmap, vmin=vmin, vmax=vmax)
+                
+    
+        plt.savefig(outname, bbox_inches='tight')
+        
+def plot_all_phaseinfo_cuts():
+    weights = ['Mass'] + lines_paper
+    filebase = 'particlehist_{weight}_L0100N1504_27_test3.7_SmAb_T4EOS.hdf5'
+    for weight in weights:
+        if weight == 'Mass':
+            wfill = weight
+            wname = 'Mass [g]'
+        elif weight in all_lines_PS20:
+            wfill = 'Luminosity_{wt}{it}'.format(wt=weight.replace(' ', '-'),
+                                                 it=siontab)
+            wname = 'L({}) [erg/s]'.format(weight)
+        elif weight in all_lines_SB:
+            wfill = 'Luminosity_{wt}'.format(wt=weight.replace(' ', '-'))
+            wname = 'L({}) [erg/s]'.format(weight)
+        filen = mdir + 'data/' + filebase.format(weight=wfill)
+        
+        args = readin_phasediagrams_LMweighted(filen)
+        plot_phasediagram_selcut_fromsaved(*args, weightname=wname)
         
 if __name__ == '__main__':
     args = sys.argv[1:]
