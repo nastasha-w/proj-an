@@ -599,7 +599,7 @@ def plot_all_phaseinfo_cuts():
             wfill = 'Luminosity_{wt}'.format(wt=weight.replace(' ', '-'))
             wname = 'L({}) [erg/s]'.format(weight)
         filen = mdir + 'data/' + filebase.format(weight=wfill)
-        if weight == 'Mass'
+        if weight == 'Mass':
             filen = filen.replace('_SmAb', '')
         
         args = readin_phasediagrams_LMweighted(filen)
