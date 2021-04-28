@@ -538,7 +538,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
         cset = totax.contour(dens_c, tnow_c, np.log10(total), levels=levels,
                              colors='black')
         cbar.add_lines(cset)
-        cax.set_ylabel('$\\log_{10} weight$', fontsize=fontsize)
+        cax.set_ylabel('$\\log_{10}$ weight', fontsize=fontsize)
         cax.tick_params(labelsize=fontsize - 1.)
         
         for Tcut, axset in zip([snecut, agncut], [axes1, axes2]):
