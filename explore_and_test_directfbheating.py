@@ -456,7 +456,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
         tnow_ax = dct['axes']['Tnow']
         dens_ax = dct['axes']['dens']
         tnow_bins = dct['bins']['Tnow']
-        dens_bins = dct['bins']['dens'] * 0.752 / (c.atomw_H * c.u)
+        dens_bins = dct['bins']['dens'] + np.log10(0.752 / (c.atomw_H * c.u))
         
         tnow_c = 0.5 * (tnow_bins[:-1] + tnow_bins[1:])
         dens_c = 0.5 * (dens_bins[:-1] + dens_bins[1:])
@@ -494,7 +494,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
         ncols = 4
         nrows = (numtbins - 1) // ncols + 1
         width = ncols * panelwidth
-        height_ratios = [panelwidth * 1.25] + [panelwidth] * (2 * ncols)
+        height_ratios = [panelwidth * 1. / 0.75] + [panelwidth] * (2 * ncols)
         height = sum(height_ratios)
         
         fig = plt.figure(figsize=(width, height))
@@ -509,22 +509,23 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
         _ax = fig.add_subplot(grid[0, :])
         _ax.axis('off')
         _l, _b, _w, _h = (_ax.get_position()).bounds
-        hmargin = _h * 0.1
+        hmargin = _h * 0.25
         __h = _h - hmargin
         pwidth = __h * height / width
         cwidth = 0.3 * pwidth
         wmargin = 0.1 * pwidth
-        twidth = _w - (pwidth + cwidth + 2. * wmargin)
+        twidth = _w - (pwidth + cwidth + 3. * wmargin)
         
         totax = fig.add_axes([_l, _b + hmargin, pwidth, __h])
         cax = fig.add_axes([_l + pwidth + wmargin, _b + hmargin, cwidth, __h])
-        tax = fig.add_axes([_l + pwidth + cwidth + 2. * wmargin, 
+        tax = fig.add_axes([_l + pwidth + cwidth + 3. * wmargin, 
                             _b + hmargin, twidth, __h])
+        tax.axis('off')
         title = 'weight: {}\n'.format(weightname) +\
-                'distribution of the weighted quantity in phase space,\n'+\
-                'using different minimum past maximum temperature cuts:\n' +\
-                'for SNe and AGN feedback (top) and AGN only (bottom)\n'+\
-                'and different maximum times since that maximum was attained'
+                'distribution of the weighted quantity in\nphase space, '+\
+                'using different minimum \n past maximum temperature cuts:\n'+\
+                'for SNe and AGN feedback (top)\nand AGN only (bottom)\n'+\
+                'and different maximum times since\nthat maximum was attained'
         tax.text(0., 1., title, fontsize=fontsize, transform=tax.transAxes,
                  horizontalalignment='left', verticalalignment='top')
         
@@ -533,7 +534,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
         img = totax.pcolormesh(dens_bins, tnow_bins, np.log10(total), 
                                cmap=cmap, vmin=vmin, vmax=vmax)
         cbar = plt.colorbar(img, cax=cax, extend='neither', 
-                            orientation='vertical', aspect=12.)   
+                            orientation='vertical', aspect=15.)   
         cset = totax.contour(dens_c, tnow_c, np.log10(total), levels=levels,
                              colors='black')
         cbar.add_lines(cset)
@@ -546,9 +547,9 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
                 ax.contour(dens_c, tnow_c, np.log10(total), levels=levels,
                            colors='black')
                 label = cutlabel.format(deltat=deltat, Tcut=Tcut)
-                ax.text(1., 0., label, fontsize=fontsize, 
+                ax.text(1., 1., label, fontsize=fontsize, 
                         transform=ax.transAxes, horizontalalignment='right',
-                        verticalalignment='bottom')
+                        verticalalignment='top')
                 sel = [slice(None, None, None)] * len(hist.shape)
                 tmax_ci = np.where(np.isclose(Tcut, tmax_bins))[0][0]
                 sel[tmax_ax] = slice(tmax_ci, None, None)
