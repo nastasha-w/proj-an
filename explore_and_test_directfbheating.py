@@ -385,7 +385,7 @@ def readin_phasediagrams_LMweighted(filename):
                 'dens': 'Density_T4EOS',
                 'amax': 'AExpMaximumTemperature_T4EOS'}
     
-    with h5py.File(filename) as f:
+    with h5py.File(filename, 'r') as f:
         key_hm = 'M200c_halo_allinR200c_Temperature_T4EOS_Density_T4EOS' + \
                  '_AExpMaximumTemperature_T4EOS_MaximumTemperature_T4EOS'
         key_all = 'Temperature_T4EOS_Density_T4EOS_AExpMaximumTemperature' + \
@@ -417,7 +417,7 @@ def deltat_from_acut(acut, cosmopars):
     deltat *= 1. / c.sec_per_megayear
     return deltat
     
-def plot_phasediagram_selcut_fromsaved(args, weightname='Mass'):
+def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
     
     dct_all = args[0]
     dct_hm = args[1]
