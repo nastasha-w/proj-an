@@ -514,11 +514,11 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
         pwidth = __h * height / width
         cwidth = 0.3 * pwidth
         wmargin = 0.1 * pwidth
-        twidth = _w - (pwidth + cwidth + 3. * wmargin)
+        twidth = _w - (pwidth + cwidth + 5. * wmargin)
         
         totax = fig.add_axes([_l, _b + hmargin, pwidth, __h])
         cax = fig.add_axes([_l + pwidth + wmargin, _b + hmargin, cwidth, __h])
-        tax = fig.add_axes([_l + pwidth + cwidth + 3. * wmargin, 
+        tax = fig.add_axes([_l + pwidth + cwidth + 5. * wmargin, 
                             _b + hmargin, twidth, __h])
         tax.axis('off')
         title = 'weight: {}\n'.format(weightname) +\
@@ -547,7 +547,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
                 ax.contour(dens_c, tnow_c, np.log10(total), levels=levels,
                            colors='black')
                 label = cutlabel.format(deltat=deltat, Tcut=Tcut)
-                ax.text(1., 1., label, fontsize=fontsize, 
+                ax.text(0.98, 0.98, label, fontsize=fontsize, 
                         transform=ax.transAxes, horizontalalignment='right',
                         verticalalignment='top')
                 sel = [slice(None, None, None)] * len(hist.shape)
