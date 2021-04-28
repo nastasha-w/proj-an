@@ -24,6 +24,7 @@ import matplotlib.ticker as ticker
 import projection_classes as pc
 import eagle_constants_and_units as c
 import cosmo_utils as cu
+import plot_utils as pu
 import make_maps_v3_master as m3
 
 mdir = '/net/luttero/data1/line_em_abs/v3_master_tests/exclude_direct_fb/'
@@ -431,7 +432,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
     outbase = 'phasedigram_L0100N1504_27_{weight}_selcuts_{massrange}.pdf'
     fontsize = 12
     
-    for mi, mbin in enumerate(massbins_check):
+    for mi, mbin in enumerate(massbins_check[:2]):
         mrange = 'M200c-{:.1f}-{:.1f}'.format(mbin, mbin + 0.5) \
                  if mi < len(massbins_check) - 2 else \
                  'M200c-{:.1f}-inf'.format(mbin) \
@@ -484,7 +485,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
         vmin = np.log10(np.min(total[total > 0.]))
         levels = np.arange(vmin, vmax, 1.)
         if len(levels) > 5:
-            levels = np.linspace(vmin + 1, vmax - 1, 5)
+            levels = np.linspace(max(vmin + 1, vmax - 6), vmax - 1, 5)
         cmap = cm.get_cmap('viridis')
 
         numtbins = len(deltat_bins) - 1
@@ -529,12 +530,12 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
         cutlabel = '$\\log_{{10}} \\, \\mathm{{T}}_{{\\mathrm{{max}}}}' +\
                    ' \\,/\\, \\mathrm{{K}} \\geq {Tcut:.1f}, ' +\
                    '\\Delta \\, \\mathrm{{t}} \\,/\\, \\mathrm{{Myr}} <'+\
-                   '{deltat:.0f}'
+                   '{deltat:.0f}$'
         img = totax.pcolormesh(dens_bins, tnow_bins, np.log10(total), 
                                cmap=cmap, vmin=vmin, vmax=vmax)
         cbar = plt.colorbar(img, cax=cax, extend='neither', 
                             orientation='vertical', aspect=12.)   
-        cset = totax.contour(dens_c, tnow_c, total, levels=levels,
+        cset = totax.contour(dens_c, tnow_c, np.log10(total), levels=levels,
                              colors='black')
         cbar.add_lines(cset)
         cax.set_ylabel('$\\log_{10} weight$', fontsize=fontsize)
@@ -543,16 +544,14 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
         for Tcut, axset in zip([snecut, agncut], [axes1, axes2]):
             for ti, deltat in enumerate(deltat_bins[:-1]):
                 ax = axset[ti]
-                ax.contour(dens_c, tnow_c, total, levels=levels,
+                ax.contour(dens_c, tnow_c, np.log10(total), levels=levels,
                            colors='black')
                 label = cutlabel.format(deltat=deltat, Tcut=Tcut)
                 ax.text(1., 0., label, fontsize=fontsize, 
                         transform=ax.transAxes, horizontalalignment='right',
                         verticalalignment='bottom')
                 sel = [slice(None, None, None)] * len(hist.shape)
-                print(tmax_bins, Tcut)
-                tmax_ci = np.where(np.isclose(Tcut, tmax_bins, 
-                                              rtol=1e-3, atol=0.001))[0][0]
+                tmax_ci = np.where(np.isclose(Tcut, tmax_bins))[0][0]
                 sel[tmax_ax] = slice(tmax_ci, None, None)
                 sel[amax_ax] = slice(ti, None, None)
                 subtot = np.sum(hist[tuple(sel)], axis=(amax_ax, tmax_ax))
@@ -561,7 +560,28 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
                 ax.pcolormesh(dens_bins, tnow_bins, np.log10(subtot), 
                               cmap=cmap, vmin=vmin, vmax=vmax)
                 
-    
+                pu.setticks(ax, labelsize=fontsize - 1, labelbottom=False, 
+                            labelleft=False)
+                ax.grid(b=True)
+        labelax = fig.add_subplot(grid[1:, :], frameon=False)
+        labelax.tick_params(labelcolor='none', top=False, bottom=False, 
+                            left=False, right=False)
+        xlabel = '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\,'+\
+                 ' [\\mathrm{cm}^{-3}]$'
+        ylabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
+        labelax.set_xlabel(xlabel, fontsize=fontsize)
+        labelax.set_ylabel(ylabel, fontsize=fontsize)
+        totax.set_xlabel(xlabel, fontsize=fontsize)
+        totax.set_ylabel(ylabel, fontsize=fontsize)
+        pu.setticks(totax, fontsize=fontsize - 1)
+        for i in range(numtbins):
+            if i >= numtbins - ncols:
+                axes1[i].tick_params(labelbottom=True)
+                axes2[i].tick_params(labelbottom=True)
+            if i % ncols == 0:
+                axes1[i].tick_params(labelleft=True)
+                axes2[i].tick_params(labelleft=True)
+                
         plt.savefig(outname, bbox_inches='tight')
         
 def plot_all_phaseinfo_cuts():
@@ -582,6 +602,7 @@ def plot_all_phaseinfo_cuts():
         
         args = readin_phasediagrams_LMweighted(filen)
         plot_phasediagram_selcut_fromsaved(*args, weightname=wname)
+        plt.close('all')
         
 if __name__ == '__main__':
     args = sys.argv[1:]
