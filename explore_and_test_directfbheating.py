@@ -432,7 +432,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
     outbase = 'phasedigram_L0100N1504_27_{weight}_selcuts_{massrange}.pdf'
     fontsize = 12
     
-    for mi, mbin in enumerate(massbins_check[:2]):
+    for mi, mbin in enumerate(massbins_check):
         mrange = 'M200c-{:.1f}-{:.1f}'.format(mbin, mbin + 0.5) \
                  if mi < len(massbins_check) - 2 else \
                  'M200c-{:.1f}-inf'.format(mbin) \
