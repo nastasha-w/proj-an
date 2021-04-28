@@ -594,7 +594,7 @@ def plot_all_phaseinfo_cuts():
         elif weight in all_lines_PS20:
             wfill = 'Luminosity_{wt}{it}'.format(wt=weight.replace(' ', '-'),
                                                  it=siontab)
-            wname = 'L({}) [erg/s]'.format(weight)
+            wname = 'L {} [erg/s]'.format(weight)
         elif weight in all_lines_SB:
             wfill = 'Luminosity_{wt}'.format(wt=weight.replace(' ', '-'))
             wname = 'L({}) [erg/s]'.format(weight)
