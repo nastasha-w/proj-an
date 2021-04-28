@@ -464,7 +464,8 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
         tmax_bins = dct['axes']['Tmax']
         
         amax_ax = dct['axes']['amax']
-        deltat_bins = deltat_from_acut(dct['bins']['amax'], cosmopars)  
+        deltat_bins = deltat_from_acut(dct['bins']['amax'], cosmopars) 
+        deltat_bins[0] = 0.
         
         if tnow_ax > hax:
             tnow_ax = tnow_ax - 1
@@ -532,9 +533,9 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
         img = totax.pcolormesh(dens_bins, tnow_bins, np.log10(total), 
                                cmap=cmap, vmin=vmin, vmax=vmax)
         cbar = plt.colorbar(img, cax=cax, extend='neither', 
-                            orientation='vertical', aspect=8.)   
+                            orientation='vertical', aspect=12.)   
         cset = totax.contour(dens_c, tnow_c, total, levels=levels,
-                             color='black')
+                             colors='black')
         cbar.add_lines(cset)
         cax.set_ylabel('$\\log_{10} weight$', fontsize=fontsize)
         cax.tick_params(labelsize=fontsize - 1.)
@@ -543,12 +544,13 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
             for ti, deltat in enumerate(deltat_bins[:-1]):
                 ax = axset[ti]
                 ax.contour(dens_c, tnow_c, total, levels=levels,
-                           color='black')
+                           colors='black')
                 label = cutlabel.format(deltat=deltat, Tcut=Tcut)
                 ax.text(1., 0., label, fontsize=fontsize, 
                         transform=ax.transAxes, horizontalalignment='right',
                         verticalalignment='bottom')
                 sel = [slice(None, None, None)] * len(hist.shape)
+                print(tmax_bins, tcut)
                 tmax_ci = np.where(np.isclose(Tcut, tmax_bins, 
                                               rtol=1e-3, atol=0.001))[0][0]
                 sel[tmax_ax] = slice(tmax_ci, None, None)
