@@ -549,8 +549,8 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
                         transform=ax.transAxes, horizontalalignment='right',
                         verticalalignment='bottom')
                 sel = [slice(None, None, None)] * len(hist.shape)
-                tmax_ci = np.where(np.isclose(Tcut, tmax_bins), 
-                                   rtol=1e-3, atol=0.001)[0][0]
+                tmax_ci = np.where(np.isclose(Tcut, tmax_bins, 
+                                              rtol=1e-3, atol=0.001))[0][0]
                 sel[tmax_ax] = slice(tmax_ci, None, None)
                 sel[amax_ax] = slice(ti, None, None)
                 subtot = np.sum(hist[tuple(sel)], axis=(amax_ax, tmax_ax))
