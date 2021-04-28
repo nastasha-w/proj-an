@@ -597,7 +597,7 @@ def plot_all_phaseinfo_cuts():
             wname = 'L {} [erg/s]'.format(weight)
         elif weight in all_lines_SB:
             wfill = 'Luminosity_{wt}'.format(wt=weight.replace(' ', '-'))
-            wname = 'L({}) [erg/s]'.format(weight)
+            wname = 'L {} [erg/s]'.format(weight)
         filen = mdir + 'data/' + filebase.format(weight=wfill)
         if weight == 'Mass':
             filen = filen.replace('_SmAb', '')
