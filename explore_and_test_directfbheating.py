@@ -452,16 +452,16 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
             hsel[hax] = slice(hi, hi + 1, None)
             hist = np.copy(dct['hist'][tuple(hsel)])
             
-        tnow_ax = dct['axes']['tnow']
+        tnow_ax = dct['axes']['Tnow']
         dens_ax = dct['axes']['dens']
-        tnow_bins = dct['bins']['tnow']
+        tnow_bins = dct['bins']['Tnow']
         dens_bins = dct['bins']['dens'] * 0.752 / (c.atomw_h * c.u)
         
         tnow_c = 0.5 * (tnow_bins[:-1] + tnow_bins[1:])
         dens_c = 0.5 * (dens_bins[:-1] + dens_bins[1:])
         
-        tmax_ax = dct['axes']['tmax']
-        tmax_bins = dct['axes']['tmax']
+        tmax_ax = dct['axes']['Tmax']
+        tmax_bins = dct['axes']['Tmax']
         
         amax_ax = dct['axes']['amax']
         deltat_bins = deltat_from_acut(dct['bins']['amax'], cosmopars)  
