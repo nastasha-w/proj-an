@@ -418,7 +418,8 @@ def deltat_from_acut(acut, cosmopars):
     deltat *= 1. / c.sec_per_megayear
     return deltat
     
-def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
+def plot_phasediagram_selcut_fromsaved(*args, weight_fn='Mass',
+                                       weightname='Mass [g]'):
     
     dct_all = args[0]
     dct_hm = args[1]
@@ -438,7 +439,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
                  'M200c-{:.1f}-inf'.format(mbin) \
                  if mi == len(massbins_check) - 2 else \
                  'all-gas'
-        outname = outdir + outbase.format(weight=weightname, massrange=mrange)
+        outname = outdir + outbase.format(weight=weight_fn, massrange=mrange)
         
         if mi == len(massbins_check) - 1:
             dct = dct_all
@@ -598,18 +599,21 @@ def plot_all_phaseinfo_cuts():
             while '  ' in _wt:
                 _wt = _wt.replace('  ', ' ')
             wname = 'L {} [erg/s]'.format(_wt)
+            wt = 'Luminosity_{}'.format(weight.format(' ', '-'))
         elif weight in all_lines_SB:
             wfill = 'Luminosity_{wt}'.format(wt=weight.replace(' ', '-'))
             _wt = weight
             while '  ' in _wt:
                 _wt = _wt.replace('  ', ' ')
             wname = 'L {} [erg/s]'.format(_wt)
+            wt = 'Luminosity_{}'.format(weight)
         filen = mdir + 'data/' + filebase.format(weight=wfill)
         if weight == 'Mass':
             filen = filen.replace('_SmAb', '')
         
         args = readin_phasediagrams_LMweighted(filen)
-        plot_phasediagram_selcut_fromsaved(*args, weightname=wname)
+        plot_phasediagram_selcut_fromsaved(*args, weight_fn=wt, 
+                                           weightname=wname)
         plt.close('all')
         
 if __name__ == '__main__':
