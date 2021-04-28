@@ -533,7 +533,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
                                cmap=cmap, vmin=vmin, vmax=vmax)
         cbar = plt.colorbar(img, cax=cax, extend='neither', 
                             orientation='vertical', aspect=8.)   
-        cset = totax.contour(dens_c, tnow_bins, total, levels=levels,
+        cset = totax.contour(dens_c, tnow_c, total, levels=levels,
                              color='black')
         cbar.add_lines(cset)
         cax.set_ylabel('$\\log_{10} weight$', fontsize=fontsize)
