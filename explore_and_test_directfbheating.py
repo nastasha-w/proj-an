@@ -500,13 +500,14 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
         fig = plt.figure(figsize=(width, height))
         grid = gsp.GridSpec(nrows=1 + 2 * nrows, ncols=ncols, 
                             hspace=0.0, wspace=0.0, 
-                            height_ratios=height_ratios)
+                            height_ratios=height_ratios, top=0.95)
         axes1 = [fig.add_subplot(grid[1 + i // ncols, i % ncols]) \
                  for i in range(numtbins)]
         axes2 = [fig.add_subplot(grid[1 + nrows + i // ncols, i % ncols]) \
                  for i in range(numtbins)]
             
         _ax = fig.add_subplot(grid[0, :])
+        _ax.axis('off')
         _l, _b, _w, _h = (_ax.get_position()).bounds
         hmargin = _h * 0.1
         __h = _h - hmargin
@@ -515,10 +516,10 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
         wmargin = 0.1 * pwidth
         twidth = _w - (pwidth + cwidth + 2. * wmargin)
         
-        totax = fig.add_axes([_l, _b + hmargin, __h, pwidth])
-        cax = fig.add_axes([_l + pwidth + wmargin, _b + hmargin, __h, cwidth])
+        totax = fig.add_axes([_l, _b + hmargin, pwidth, __h])
+        cax = fig.add_axes([_l + pwidth + wmargin, _b + hmargin, cwidth, __h])
         tax = fig.add_axes([_l + pwidth + cwidth + 2. * wmargin, 
-                            _b + hmargin, __h, twidth])
+                            _b + hmargin, twidth, __h])
         title = 'weight: {}\n'.format(weightname) +\
                 'distribution of the weighted quantity in phase space,\n'+\
                 'using different minimum past maximum temperature cuts:\n' +\
@@ -527,9 +528,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
         tax.text(0., 1., title, fontsize=fontsize, transform=tax.transAxes,
                  horizontalalignment='left', verticalalignment='top')
         
-        cutlabel = '$\\log_{{10}} \\, \\mathrm{{T}}_{{\\mathrm{{max}}}}' +\
-                   ' \\,/\\, \\mathrm{{K}} \\geq {Tcut:.1f}, ' +\
-                   '\\Delta \\, \\mathrm{{t}} \\,/\\, \\mathrm{{Myr}} <'+\
+        cutlabel = '$\\Delta \\, \\mathrm{{t}} \\,/\\, \\mathrm{{Myr}} <'+\
                    '{deltat:.0f}$'
         img = totax.pcolormesh(dens_bins, tnow_bins, np.log10(total), 
                                cmap=cmap, vmin=vmin, vmax=vmax)
