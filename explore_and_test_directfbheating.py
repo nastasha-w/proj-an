@@ -527,7 +527,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
         tax.text(0., 1., title, fontsize=fontsize, transform=tax.transAxes,
                  horizontalalignment='left', verticalalignment='top')
         
-        cutlabel = '$\\log_{{10}} \\, \\mathm{{T}}_{{\\mathrm{{max}}}}' +\
+        cutlabel = '$\\log_{{10}} \\, \\mathrm{{T}}_{{\\mathrm{{max}}}}' +\
                    ' \\,/\\, \\mathrm{{K}} \\geq {Tcut:.1f}, ' +\
                    '\\Delta \\, \\mathrm{{t}} \\,/\\, \\mathrm{{Myr}} <'+\
                    '{deltat:.0f}$'
