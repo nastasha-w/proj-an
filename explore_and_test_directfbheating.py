@@ -594,10 +594,16 @@ def plot_all_phaseinfo_cuts():
         elif weight in all_lines_PS20:
             wfill = 'Luminosity_{wt}{it}'.format(wt=weight.replace(' ', '-'),
                                                  it=siontab)
-            wname = 'L {} [erg/s]'.format(weight)
+            _wt = weight
+            while '  ' in _wt:
+                _wt = _wt.replace('  ', ' ')
+            wname = 'L {} [erg/s]'.format(_wt)
         elif weight in all_lines_SB:
             wfill = 'Luminosity_{wt}'.format(wt=weight.replace(' ', '-'))
-            wname = 'L {} [erg/s]'.format(weight)
+            _wt = weight
+            while '  ' in _wt:
+                _wt = _wt.replace('  ', ' ')
+            wname = 'L {} [erg/s]'.format(_wt)
         filen = mdir + 'data/' + filebase.format(weight=wfill)
         if weight == 'Mass':
             filen = filen.replace('_SmAb', '')
