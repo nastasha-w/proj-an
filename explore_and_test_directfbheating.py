@@ -560,7 +560,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
                 ax.pcolormesh(dens_bins, tnow_bins, np.log10(subtot), 
                               cmap=cmap, vmin=vmin, vmax=vmax)
                 
-                pu.setticks(ax, labelsize=fontsize - 1, labelbottom=False, 
+                pu.setticks(ax, fontsize=fontsize - 1, labelbottom=False, 
                             labelleft=False)
                 ax.grid(b=True)
         labelax = fig.add_subplot(grid[1:, :], frameon=False)
