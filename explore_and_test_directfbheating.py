@@ -461,7 +461,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weightname='Mass [g]'):
         dens_c = 0.5 * (dens_bins[:-1] + dens_bins[1:])
         
         tmax_ax = dct['axes']['Tmax']
-        tmax_bins = dct['axes']['Tmax']
+        tmax_bins = dct['bins']['Tmax']
         
         amax_ax = dct['axes']['amax']
         deltat_bins = deltat_from_acut(dct['bins']['amax'], cosmopars) 
