@@ -847,7 +847,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     plt.savefig(outname, bbox_inches='tight')
     
 def plot_all_nH_cuts():
-    weights = ['Mass'] + lines_paper[:2]
+    weights = ['Mass'] + lines_paper
     filebase = 'particlehist_{weight}_L0100N1504_27_test3.7_SmAb_T4EOS.hdf5'
     for weight in weights:
         if weight == 'Mass':
