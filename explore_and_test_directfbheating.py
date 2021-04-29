@@ -654,9 +654,9 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     grid = gsp.GridSpec(nrows=1 + 2 * nrows, ncols=ncols, 
                         hspace=0.0, wspace=0.0, 
                         height_ratios=height_ratios, top=0.95)
-    axes_cumul = [fig.add_subplot(grid[2 * (i // ncols), i % ncols]) \
+    axes_cumul = [fig.add_subplot(grid[1 + 2 * (i // ncols), i % ncols]) \
                   for i in range(len(massbins_check))]
-    axes_diff  = [fig.add_subplot(grid[1 + 2 * (i // ncols), i % ncols]) \
+    axes_diff  = [fig.add_subplot(grid[2 + 2 * (i // ncols), i % ncols]) \
                   for i in range(len(massbins_check))]
         
     _ax = fig.add_subplot(grid[0, :])
@@ -788,7 +788,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
         
         ax_cumul.text(0.0, 0.0, mrange, fontsize=fontsize, 
                       transform=ax_cumul.transAxes, 
-                      horizontalalignment='right',
+                      horizontalalignment='left',
                       verticalalignment='bottom')
         
         for Tcut, ls in zip([snecut, agncut], [ls_sne, ls_agn]):
@@ -802,7 +802,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
                 ax_diff.bar(dens_c, np.log10(subtot / dens_w), bottom=None, 
                             align='center', width=dens_w, color='none', 
                             edgecolor=colors[deltat], linestyle=ls)
-                y_cumul = np.append(np.cumsum/(subtot[::-1])[::-1], [0.])
+                y_cumul = np.append(np.cumsum(subtot[::-1])[::-1], [0.])
                 ax_cumul.plot(dens_bins, np.log10(y_cumul), 
                               color=colors[deltat], linestyle=ls)
                 
