@@ -688,7 +688,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
                for ls, label in zip([ls_sne, ls_agn, ls_all], 
                                     ['all fb', 'AGN fb', 'total'])]
     lax.legend(handles=handles, fontsize=fontsize, loc='upper left',
-               ncol=3)
+               ncol=3, bbox_to_anchor=(0., 1.))
     lax.axis('off')
     clabel = 'max $\\Delta \\, \\mathrm{{t}} \\,/\\, \\mathrm{{Myr}}$ since fb'
     tedges = np.array(deltat_bins[:-1])
@@ -713,9 +713,11 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
                                      orientation='horizontal')
 
     cbar.set_label(clabel, fontsize=fontsize)
-    cax.tick_params(labelsize=fontsize - 1)
-    cax.set_xticks(ticks, labels=ticklabels)
-    cax.set_aspect(0.1)
+    cax.xaxis.set_label_position('top')
+    cax.tick_params(labelsize=fontsize - 1, labelbottom=False, bottom=False,
+                    labeltop=True, top=True, rotation=45.)
+    cax.set_xticklabels(ticks, labels=ticklabels)
+    cax.set_aspect(0.12)
     
     labelax = fig.add_subplot(grid[1:, :], frameon=False)
     labelax.tick_params(labelcolor='none', top=False, bottom=False, 
