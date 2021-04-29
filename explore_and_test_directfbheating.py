@@ -665,22 +665,21 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     hmargin = _h * 0.1
     __h = _h - hmargin
     eqwidth = __h * height / width
-    cwidth = 0.2 * eqwidth
+    cwidth = 0.45 * _w
     wmargin = 0.05 * eqwidth
-    lwidth = 0.3 * eqwidth
-    twidth = _w - (lwidth + cwidth + 5. * wmargin)
+    lwidth = cwidth
+    twidth = _w - (max(lwidth, cwidth) + wmargin)
     
-    cax = fig.add_axes([_l, _b + hmargin, cwidth, __h])
-    lax = fig.add_axes([_l + cwidth + 5. * wmargin, 
-                        _b + hmargin, lwidth, __h])
-    tax = fig.add_axes([_l + cwidth + 5. * wmargin + lwidth  + wmargin, 
+    cax = fig.add_axes([_l, _b + hmargin, cwidth, __h * 0.3])
+    lax = fig.add_axes([_l, _b + hmargin + __h * 0.7, lwidth, __h * 0.3])
+    tax = fig.add_axes([_l + cwidth + wmargin , 
                         _b + hmargin, twidth, __h])
     tax.axis('off')
     title = 'weight: {}\n'.format(weightname) +\
-            'distribution of the weighted quantity with density, '+\
-            'using\ndifferent minimum past maximum temperature cuts:\n'+\
-            'for SNe and AGN feedback (all fb) and AGN only\n(AGN fb) '+\
-            'and different maximum times since that\nmaximum was attained'
+            'distribution of the weighted quantity\nwith density, '+\
+            'using different minimum\npast maximum temperature cuts:\n'+\
+            'for SNe and AGN feedback (all fb)\nand AGN only (AGN fb) '+\
+            'and\ndifferent maximum times since that\nmaximum was attained'
     tax.text(0., 1., title, fontsize=fontsize, transform=tax.transAxes,
              horizontalalignment='left', verticalalignment='top')
     
@@ -688,7 +687,8 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
                              linestyle=ls)\
                for ls, label in zip([ls_sne, ls_agn, ls_all], 
                                     ['all fb', 'AGN fb', 'total'])]
-    lax.legend(handles=handles, fontsize=fontsize, loc='upper left')
+    lax.legend(handles=handles, fontsize=fontsize, loc='upper left',
+               legend_ncols=3)
     lax.axis('off')
     clabel = 'max $\\Delta \\, \\mathrm{{t}} \\,/\\, \\mathrm{{Myr}}$ since fb'
     tedges = np.array(deltat_bins[:-1])
@@ -710,12 +710,12 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
                                      boundaries=bounds,
                                      ticks=ticks,
                                      spacing='uniform', extend='neither',
-                                     orientation='vertical')
+                                     orientation='horizontal')
 
     cbar.set_label(clabel, fontsize=fontsize)
-    cax.set_yticks(ticks, labels=ticklabels)
     cax.tick_params(labelsize=fontsize - 1)
-    cax.set_aspect(8.)
+    cax.set_xticks(ticks, labels=ticklabels)
+    cax.set_aspect(0.1)
     
     labelax = fig.add_subplot(grid[1:, :], frameon=False)
     labelax.tick_params(labelcolor='none', top=False, bottom=False, 
