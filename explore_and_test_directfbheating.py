@@ -713,7 +713,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
                                      orientation='vertical')
 
     cbar.set_label(clabel, fontsize=fontsize)
-    cax.ticks(ticks, labels=ticklabels)
+    cax.yaxis.setticks(ticks, labels=ticklabels)
     cax.tick_params(labelsize=fontsize - 1)
     cax.set_aspect(15.)
     
