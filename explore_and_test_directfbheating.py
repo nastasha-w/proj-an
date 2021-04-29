@@ -679,7 +679,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
             'distribution of the weighted quantity with\ndensity, '+\
             'using different minimum past\nmaximum temperature cuts:\n'+\
             'for SNe and AGN feedback (all fb) and AGN\nonly (AGN fb) '+\
-            'and different maximum times since that\nmaximum was attained'
+            'and different maximum times\nsince that maximum was attained'
     tax.text(0., 0., title, fontsize=fontsize, transform=tax.transAxes,
              horizontalalignment='left', verticalalignment='bottom')
     
