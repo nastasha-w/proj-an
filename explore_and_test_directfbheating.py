@@ -665,7 +665,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     hmargin = _h * 0.1
     __h = _h - hmargin
     eqwidth = __h * height / width
-    cwidth = 0.15 * eqwidth
+    cwidth = 0.2 * eqwidth
     wmargin = 0.05 * eqwidth
     lwidth = 0.4 * eqwidth
     twidth = _w - (lwidth + cwidth + 3. * wmargin)
@@ -702,7 +702,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     cmap = mpl.colors.ListedColormap(clist)
     #cmap.set_over(clist[-1])
     norm = mpl.colors.BoundaryNorm(tedges, cmap.N)
-    bounds = np.append(tedges - 0.5, tedges[-1] + 0.5)
+    bounds = np.linespace(0., 1., len(tedges) + 1)
     ticks = 0.5 * (bounds[:-1] + bounds[1:])
     ticklabels = ['{:.0f}'.format(te) for te in tedges]
     cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,
@@ -715,7 +715,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     cbar.set_label(clabel, fontsize=fontsize)
     cax.set_yticks(ticks, labels=ticklabels)
     cax.tick_params(labelsize=fontsize - 1)
-    cax.set_aspect(15.)
+    cax.set_aspect(8.)
     
     labelax = fig.add_subplot(grid[1:, :], frameon=False)
     labelax.tick_params(labelcolor='none', top=False, bottom=False, 
@@ -779,9 +779,11 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
             ax_cumul.set_ylabel(ylabel_cumul, fontsize=fontsize)
             ax_diff.set_ylabel(ylabel_diff, fontsize=fontsize)
         
-        ax_diff.bar(dens_c, np.log10(total / dens_w), bottom=None, 
-                    align='center', width=dens_w, color='none', 
-                    edgecolor='black', linestyle=ls_all)
+        #ax_diff.bar(dens_c, np.log10(total / dens_w), bottom=None, 
+        #            align='center', width=dens_w, color='none', 
+        #            edgecolor='black', linestyle=ls_all)
+        ax_diff.plot(dens_c, np.log10(total / dens_w), color='black', 
+                      linestyle=ls_all)
         y_cumul = np.append(np.cumsum(total[::-1])[::-1], [0.])
         ax_cumul.plot(dens_bins, np.log10(y_cumul), color='black', 
                       linestyle=ls_all)
@@ -799,9 +801,11 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
                 sel[amax_ax] = slice(ti, None, None)
                 subtot = np.sum(hist[tuple(sel)], axis=(amax_ax, tmax_ax))
                 
-                ax_diff.bar(dens_c, np.log10(subtot / dens_w), bottom=None, 
-                            align='center', width=dens_w, color='none', 
-                            edgecolor=colors[deltat], linestyle=ls)
+                #ax_diff.bar(dens_c, np.log10(subtot / dens_w), bottom=None, 
+                #            align='center', width=dens_w, color='none', 
+                #            edgecolor=colors[deltat], linestyle=ls)
+                ax_diff.plot(dens_c, np.log10(subtot / dens_w),
+                             color=colors[deltat], linestyle=ls)
                 y_cumul = np.append(np.cumsum(subtot[::-1])[::-1], [0.])
                 ax_cumul.plot(dens_bins, np.log10(y_cumul), 
                               color=colors[deltat], linestyle=ls)
@@ -818,15 +822,15 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     # sync axis ranges
     yrs = [ax.get_ylim() for ax in axes_diff]
     ymin = min([yr[0]for yr in yrs])
-    ymax = min([yr[1]for yr in yrs])
+    ymax = max([yr[1]for yr in yrs])
     [ax.set_ylim(ymin, ymax) for ax in axes_diff]
     yrs = [ax.get_ylim() for ax in axes_cumul]
     ymin = min([yr[0]for yr in yrs])
-    ymax = min([yr[1]for yr in yrs])
+    ymax = max([yr[1]for yr in yrs])
     [ax.set_ylim(ymin, ymax) for ax in axes_cumul]
     xrs = [ax.get_xlim() for ax in np.append(axes_diff, axes_cumul)]
     xmin = min([xr[0]for xr in xrs])
-    xmax = min([xr[1]for xr in xrs])
+    xmax = max([xr[1]for xr in xrs])
     [ax.set_xlim(xmin, xmax) for ax in np.append(axes_diff, axes_cumul)]
     
     outname = outdir + outbase.format(weight=weight_fn)        
