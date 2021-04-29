@@ -727,7 +727,9 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     ylabel_diff = 'weight / $\\Delta \\, \\log_{10} \\mathrm{n}_{\\mathrm{H}}$'
     ylabel_cumul = 'weight ($ > \\log_{10} \\mathrm{n}_{\\mathrm{H}}$)'
     labelax.set_xlabel(xlabel, fontsize=fontsize)
-        
+    
+    max_cumul = -np.inf
+    max_diff = -np.inf
     for mi, mbin in enumerate(massbins_check):
         mrange = 'M200c: {:.1f}-{:.1f}'.format(mbin, mbin + 0.5) \
                  if mi < len(massbins_check) - 2 else \
@@ -784,10 +786,12 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
         #ax_diff.bar(dens_c, np.log10(total / dens_w), bottom=None, 
         #            align='center', width=dens_w, color='none', 
         #            edgecolor='black', linestyle=ls_all)
-        ax_diff.plot(dens_c, np.log10(total / dens_w), color='black', 
-                      linestyle=ls_all)
-        y_cumul = np.append(np.cumsum(total[::-1])[::-1], [0.])
-        ax_cumul.plot(dens_bins, np.log10(y_cumul), color='black', 
+        y_diff = np.log10(total / dens_w)
+        max_diff = max(max_diff, np.max(y_diff))
+        ax_diff.plot(dens_c, y_diff, color='black', linestyle=ls_all)
+        y_cumul = np.log10(np.append(np.cumsum(total[::-1])[::-1], [0.]))
+        max_cumul = max(max_cumul, y_cumul[0])
+        ax_cumul.plot(dens_bins, y_cumul, color='black', 
                       linestyle=ls_all)
         
         ax_cumul.text(0.02, 0.02, mrange, fontsize=fontsize, 
@@ -824,12 +828,14 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     # sync axis ranges
     yrs = [ax.get_ylim() for ax in axes_diff]
     ymin = min([yr[0]for yr in yrs])
-    ymax = max([yr[1]for yr in yrs])
+    #ymax = max([yr[1]for yr in yrs])
+    ymax = max_diff + 0.2
     ymin = max(ymin, ymax - 10.)
     [ax.set_ylim(ymin, ymax) for ax in axes_diff]
     yrs = [ax.get_ylim() for ax in axes_cumul]
     ymin = min([yr[0]for yr in yrs])
-    ymax = max([yr[1]for yr in yrs])
+    #ymax = max([yr[1]for yr in yrs])
+    ymax = max_cumul + 0.2
     ymin = max(ymin, ymax - 10.)
     [ax.set_ylim(ymin, ymax) for ax in axes_cumul]
     xrs = [ax.get_xlim() for ax in np.append(axes_diff, axes_cumul)]
