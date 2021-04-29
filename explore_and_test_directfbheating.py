@@ -688,7 +688,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
                for ls, label in zip([ls_sne, ls_agn, ls_all], 
                                     ['all fb', 'AGN fb', 'total'])]
     lax.legend(handles=handles, fontsize=fontsize, loc='upper left',
-               legend_ncol=3)
+               ncol=3)
     lax.axis('off')
     clabel = 'max $\\Delta \\, \\mathrm{{t}} \\,/\\, \\mathrm{{Myr}}$ since fb'
     tedges = np.array(deltat_bins[:-1])
