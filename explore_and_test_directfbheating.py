@@ -647,7 +647,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     ncols = 2
     nrows = (len(massbins_check) - 1) // ncols + 1
     width = ncols * panelwidth
-    height_ratios = [panelwidth] + [0.5 * panelwidth] * (2 * nrows)
+    height_ratios = [0.75 * panelwidth] + [0.33 * panelwidth] * (2 * nrows)
     height = sum(height_ratios)
     
     fig = plt.figure(figsize=(width, height))
@@ -667,20 +667,20 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     eqwidth = __h * height / width
     cwidth = 0.2 * eqwidth
     wmargin = 0.05 * eqwidth
-    lwidth = 0.4 * eqwidth
-    twidth = _w - (lwidth + cwidth + 3. * wmargin)
+    lwidth = 0.3 * eqwidth
+    twidth = _w - (lwidth + cwidth + 5. * wmargin)
     
     cax = fig.add_axes([_l, _b + hmargin, cwidth, __h])
-    lax = fig.add_axes([_l + cwidth + 3. * wmargin, 
+    lax = fig.add_axes([_l + cwidth + 5. * wmargin, 
                         _b + hmargin, lwidth, __h])
-    tax = fig.add_axes([_l + cwidth + 3. * wmargin + lwidth  + wmargin, 
+    tax = fig.add_axes([_l + cwidth + 5. * wmargin + lwidth  + wmargin, 
                         _b + hmargin, twidth, __h])
     tax.axis('off')
     title = 'weight: {}\n'.format(weightname) +\
-            'distribution of the weighted quantity with density,\n'+\
-            'using different minimum past maximum temperature cuts:\n'+\
-            'for SNe and AGN feedback (all fb) and AGN only (AGN fb)\n'+\
-            'and different maximum times since that maximum \n was attained'
+            'distribution of the weighted quantity with density, '+\
+            'using\ndifferent minimum past maximum temperature cuts:\n'+\
+            'for SNe and AGN feedback (all fb) and AGN only\n(AGN fb)'+\
+            'and different maximum times since that\nmaximum was attained'
     tax.text(0., 1., title, fontsize=fontsize, transform=tax.transAxes,
              horizontalalignment='left', verticalalignment='top')
     
@@ -701,9 +701,9 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     #print(clist)
     cmap = mpl.colors.ListedColormap(clist)
     #cmap.set_over(clist[-1])
-    norm = mpl.colors.BoundaryNorm(tedges, cmap.N)
     bounds = np.linspace(0., 1., len(tedges) + 1)
     ticks = 0.5 * (bounds[:-1] + bounds[1:])
+    norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
     ticklabels = ['{:.0f}'.format(te) for te in tedges]
     cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,
                                      norm=norm,
@@ -788,7 +788,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
         ax_cumul.plot(dens_bins, np.log10(y_cumul), color='black', 
                       linestyle=ls_all)
         
-        ax_cumul.text(0.0, 0.0, mrange, fontsize=fontsize, 
+        ax_cumul.text(0.02, 0.02, mrange, fontsize=fontsize, 
                       transform=ax_cumul.transAxes, 
                       horizontalalignment='left',
                       verticalalignment='bottom')
