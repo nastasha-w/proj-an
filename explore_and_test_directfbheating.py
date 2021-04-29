@@ -825,10 +825,12 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     yrs = [ax.get_ylim() for ax in axes_diff]
     ymin = min([yr[0]for yr in yrs])
     ymax = max([yr[1]for yr in yrs])
+    ymin = max(ymin, ymax - 10.)
     [ax.set_ylim(ymin, ymax) for ax in axes_diff]
     yrs = [ax.get_ylim() for ax in axes_cumul]
     ymin = min([yr[0]for yr in yrs])
     ymax = max([yr[1]for yr in yrs])
+    ymin = max(ymin, ymax - 10.)
     [ax.set_ylim(ymin, ymax) for ax in axes_cumul]
     xrs = [ax.get_xlim() for ax in np.append(axes_diff, axes_cumul)]
     xmin = min([xr[0]for xr in xrs])
