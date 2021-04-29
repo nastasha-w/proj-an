@@ -677,10 +677,10 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
                         _b + hmargin, twidth, __h])
     tax.axis('off')
     title = 'weight: {}\n'.format(weightname) +\
-            'distribution of the weighted quantity with density\n, '+\
-            'using different minimum \npast maximum temperature cuts:\n'+\
-            'for SNe and AGN feedback (all fb)\nand AGN only (AGN fb)\n'+\
-            'and different maximum times since\nthat maximum was attained'
+            'distribution of the weighted quantity with density,\n'+\
+            'using different minimum past maximum temperature cuts:\n'+\
+            'for SNe and AGN feedback (all fb) and AGN only (AGN fb)\n'+\
+            'and different maximum times since that maximum \n was attained'
     tax.text(0., 1., title, fontsize=fontsize, transform=tax.transAxes,
              horizontalalignment='left', verticalalignment='top')
     
@@ -689,7 +689,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
                for ls, label in zip([ls_sne, ls_agn, ls_all], 
                                     ['all fb', 'AGN fb', 'total'])]
     lax.legend(handles=handles, fontsize=fontsize, loc='upper left')
-    
+    lax.axis('off')
     clabel = 'max $\\Delta \\, \\mathrm{{t}} \\,/\\, \\mathrm{{Myr}}$ since fb'
     tedges = np.array(deltat_bins[:-1])
     clist = tc.tol_cmap('rainbow_discrete', 
@@ -713,7 +713,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
                                      orientation='vertical')
 
     cbar.set_label(clabel, fontsize=fontsize)
-    cax.yaxis.setticks(ticks, labels=ticklabels)
+    cax.set_yticks(ticks, labels=ticklabels)
     cax.tick_params(labelsize=fontsize - 1)
     cax.set_aspect(15.)
     
