@@ -21,6 +21,8 @@ import matplotlib.patheffects as mppe
 import matplotlib.patches as mpatch
 import matplotlib.ticker as ticker
 
+import tol_colors as tc
+
 import projection_classes as pc
 import eagle_constants_and_units as c
 import cosmo_utils as cu
@@ -495,7 +497,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weight_fn='Mass',
         ncols = 4
         nrows = (numtbins - 1) // ncols + 1
         width = ncols * panelwidth
-        height_ratios = [panelwidth * 1. / 0.75] + [panelwidth] * (2 * ncols)
+        height_ratios = [panelwidth * 1. / 0.75] + [panelwidth] * (2 * nrows)
         height = sum(height_ratios)
         
         fig = plt.figure(figsize=(width, height))
@@ -600,7 +602,7 @@ def plot_all_phaseinfo_cuts():
             while '  ' in _wt:
                 _wt = _wt.replace('  ', ' ')
             wname = 'L {} [erg/s]'.format(_wt)
-            wt = 'Luminosity_{}'.format(weight.format(' ', '-'))
+            wt = 'Luminosity_{}'.format(weight.replace(' ', '-'))
         elif weight in all_lines_SB:
             wfill = 'Luminosity_{wt}'.format(wt=weight.replace(' ', '-'))
             _wt = weight
@@ -616,7 +618,221 @@ def plot_all_phaseinfo_cuts():
         plot_phasediagram_selcut_fromsaved(*args, weight_fn=wt, 
                                            weightname=wname)
         plt.close('all')
+
+def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
+                                 weightname='Mass [g]'):
+    
+    dct_all = args[0]
+    dct_hm = args[1]
+    cosmopars = args[2]
+    for key in dct_all['bins']:
+        if not np.allclose(dct_all['bins'][key], dct_hm['bins'][key]):
+            msg = 'Bins in halo and all gas histograms should match (key: {})'
+            raise ValueError(msg.format(key))
+    deltat_bins = deltat_from_acut(dct_all['bins']['amax'], cosmopars) 
+    deltat_bins[0] = deltat_from_acut(0., cosmopars)
+    
+    snecut = 7.499
+    agncut = 8.499
+    massbins_check = np.arange(10.5, 14.6, 0.5)
+    
+    outdir = mdir
+    outbase = 'nHdist_L0100N1504_27_{weight}_selcuts.pdf'
+    fontsize = 12
+    ls_agn = 'dashed'
+    ls_sne = 'solid'
+    ls_all = 'dotted'
+    
+    panelwidth = 5.
+    ncols = 2
+    nrows = (massbins_check - 1) // ncols + 1
+    width = ncols * panelwidth
+    height_ratios = [panelwidth] + [0.5 * panelwidth] * (2 * nrows)
+    height = sum(height_ratios)
+    
+    fig = plt.figure(figsize=(width, height))
+    grid = gsp.GridSpec(nrows=1 + 2 * nrows, ncols=ncols, 
+                        hspace=0.0, wspace=0.0, 
+                        height_ratios=height_ratios, top=0.95)
+    axes_cumul = [fig.add_subplot(grid[2 * (i // ncols), i % ncols]) \
+                  for i in range(len(massbins_check))]
+    axes_diff  = [fig.add_subplot(grid[1 + 2 * (i // ncols), i % ncols]) \
+                  for i in range(len(massbins_check))]
         
+    _ax = fig.add_subplot(grid[0, :])
+    _ax.axis('off')
+    _l, _b, _w, _h = (_ax.get_position()).bounds
+    hmargin = _h * 0.1
+    __h = _h - hmargin
+    eqwidth = __h * height / width
+    cwidth = 0.3 * eqwidth
+    wmargin = 0.1 * eqwidth
+    lwidth = 0.8 * eqwidth
+    twidth = _w - (lwidth + cwidth + 5. * wmargin)
+    
+    cax = fig.add_axes([_l, _b + hmargin, cwidth, __h])
+    lax = fig.add_axes([_l + cwidth + 5. * wmargin, 
+                        _b + hmargin, lwidth, __h])
+    tax = fig.add_axes([_l + cwidth + 5. * wmargin + lwidth  + wmargin, 
+                        _b + hmargin, twidth, __h])
+    tax.axis('off')
+    title = 'weight: {}\n'.format(weightname) +\
+            'distribution of the weighted quantity with density\n, '+\
+            'using different minimum \n past maximum temperature cuts:\n'+\
+            'for SNe and AGN feedback (all fb)\nand AGN only (AGN fb)\n'+\
+            'and different maximum times since\nthat maximum was attained'
+    tax.text(0., 1., title, fontsize=fontsize, transform=tax.transAxes,
+             horizontalalignment='left', verticalalignment='top')
+    
+    handles = [mlines.Line2d((), (), color='gray', label=label, 
+                             linestyle=ls)\
+               for ls, label in zip([ls_sne, ls_agn, ls_all], 
+                                    ['all fb', 'AGN fb', 'total'])]
+    lax.legend(handles=handles, fontsize=fontsize, legend_loc='upper left')
+    
+    clabel = 'max $\\Delta \\, \\mathrm{{t}} \\,/\\, \\mathrm{{Myr}}$ since fb'
+    tedges = np.array(deltat_bins[:-1])
+    clist = tc.tol_cmap('rainbow_discrete', 
+                        lut=len(tedges))(np.linspace(0.,  1., len(tedges)))
+    keys = sorted(tedges)
+    colors = {keys[i]: clist[len(clist) - 1 - i] for i in range(len(keys))}
+    #del _masks
+    
+    #print(clist)
+    cmap = mpl.colors.ListedColormap(clist)
+    #cmap.set_over(clist[-1])
+    norm = mpl.colors.BoundaryNorm(tedges, cmap.N)
+    bounds = np.append(tedges - 0.5, tedges[-1] + 0.5)
+    ticks = 0.5 * (bounds[:-1] + bounds[1:])
+    ticklabels = ['{:.0f}'.format(te) for te in tedges]
+    cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,
+                                     norm=norm,
+                                     boundaries=bounds,
+                                     ticks=ticks,
+                                     spacing='uniform', extend='neither',
+                                     orientation='vertical')
+
+    cbar.set_label(clabel, fontsize=fontsize)
+    cax.ticks(ticks, labels=ticklabels)
+    cax.tick_params(labelsize=fontsize - 1)
+    cax.set_aspect(15.)
+    
+    labelax = fig.add_subplot(grid[1:, :], frameon=False)
+    labelax.tick_params(labelcolor='none', top=False, bottom=False, 
+                        left=False, right=False)
+    xlabel = '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\,'+\
+             ' [\\mathrm{cm}^{-3}]$'
+    ylabel_diff = 'weight / $\\Delta \\, \\log_{10} \\mathrm{n}_{\\mathrm{H}}$'
+    ylabel_cumul = 'weight ($ > \\log_{10} \\mathrm{n}_{\\mathrm{H}}$)'
+    labelax.set_xlabel(xlabel, fontsize=fontsize)
+        
+    for mi, mbin in enumerate(massbins_check):
+        mrange = 'M200c: {:.1f}-{:.1f}'.format(mbin, mbin + 0.5) \
+                 if mi < len(massbins_check) - 2 else \
+                 'M200c: > {:.1f}'.format(mbin) \
+                 if mi == len(massbins_check) - 2 else \
+                 'all gas'     
+        
+        if mi == len(massbins_check) - 1:
+            dct = dct_all
+            tnow_ax = dct['axes']['Tnow']
+            hist = np.sum(dct['hist'], axis=tnow_ax)
+            hax = 100
+        else:
+            dct = dct_hm
+            hax = dct['axes']['M200c']
+            hbins = dct['bins']['M200c']
+            tnow_ax = dct['axes']['Tnow']
+            hi = np.where(np.isclose(hbins, 10**mbin * c.solar_mass))[0][0]
+            hsel = [slice(None, None, None)] * len(dct['hist'].shape)
+            hsel[hax] = slice(hi, hi + 1, None)
+            hist = np.sum(dct['hist'][tuple(hsel)], axis=(hax, tnow_ax))
+            
+        dens_ax = dct['axes']['dens']
+        dens_bins = dct['bins']['dens'] + np.log10(0.752 / (c.atomw_H * c.u))
+        dens_c = 0.5 * (dens_bins[:-1] + dens_bins[1:])
+        dens_w =  np.diff(dens_bins)
+        
+        tmax_ax = dct['axes']['Tmax']
+        tmax_bins = dct['bins']['Tmax']
+        amax_ax = dct['axes']['amax']
+        
+        if dens_ax > hax:
+            dens_ax = dens_ax - 1
+        if dens_ax >= tnow_ax:
+            dens_ax = dens_ax - 1
+        if tmax_ax > hax:
+            tmax_ax = tmax_ax - 1
+        if tmax_ax >= tnow_ax:
+            tmax_ax = tmax_ax - 1
+        if amax_ax > hax:
+            amax_ax = amax_ax - 1
+        if amax_ax >= tnow_ax: 
+            amax_ax = amax_ax - 1
+        
+        total = np.sum(hist, axis=(tmax_ax, amax_ax))
+        
+        axi = (mi + 1) % len(massbins_check)
+        ax_diff = axes_diff[axi]
+        ax_cumul = axes_cumul[axi]
+        if axi % ncols == 0:
+            ax_cumul.set_ylabel(ylabel_cumul, fontsize=fontsize)
+            ax_diff.set_ylabel(ylabel_diff, fontsize=fontsize)
+        
+        ax_diff.bar(dens_c, np.log10(total / dens_w), bottom=None, 
+                    align='center', width=dens_w, color='none', 
+                    edgecolor='black', linestyle=ls_all)
+        y_cumul = np.append(np.cumsum(total[::-1])[::-1], [0.])
+        ax_cumul.plot(dens_bins, np.log10(y_cumul), color='black', 
+                      linestyle=ls_all)
+        
+        ax_cumul.text(0.0, 0.0, mrange, fontsize=fontsize, 
+                      transform=ax_cumul.transAxes, 
+                      horizontalalignment='right',
+                      verticalalignment='bottom')
+        
+        for Tcut, ls in zip([snecut, agncut], [ls_sne, ls_agn]):
+            for ti, deltat in enumerate(deltat_bins[:-1]):            
+                sel = [slice(None, None, None)] * len(hist.shape)
+                tmax_ci = np.where(np.isclose(Tcut, tmax_bins))[0][0]
+                sel[tmax_ax] = slice(tmax_ci, None, None)
+                sel[amax_ax] = slice(ti, None, None)
+                subtot = np.sum(hist[tuple(sel)], axis=(amax_ax, tmax_ax))
+                
+                ax_diff.bar(dens_c, np.log10(subtot / dens_w), bottom=None, 
+                            align='center', width=dens_w, color='none', 
+                            edgecolor=colors[deltat], linestyle=ls)
+                y_cumul = np.append(np.cumsum/(subtot[::-1])[::-1], [0.])
+                ax_cumul.plot(dens_bins, np.log10(y_cumul), 
+                              color=colors[deltat], linestyle=ls)
+                
+                pu.setticks(ax_cumul, fontsize=fontsize - 1, 
+                            labelbottom=False, 
+                            labelleft=axi % ncols == 0)
+                pu.setticks(ax_diff, fontsize=fontsize - 1, 
+                            labelbottom=axi % (nrows) == nrows - 1, 
+                            labelleft=axi % ncols == 0)
+                ax_cumul.grid(b=True)
+                ax_diff.grid(b=True)
+    
+    # sync axis ranges
+    yrs = [ax.get_ylim() for ax in axes_diff]
+    ymin = min([yr[0]for yr in yrs])
+    ymax = min([yr[1]for yr in yrs])
+    [ax.set_ylim(ymin, ymax) for ax in axes_diff]
+    yrs = [ax.get_ylim() for ax in axes_cumul]
+    ymin = min([yr[0]for yr in yrs])
+    ymax = min([yr[1]for yr in yrs])
+    [ax.set_ylim(ymin, ymax) for ax in axes_cumul]
+    xrs = [ax.get_xlim() for ax in np.append(axes_diff, axes_cumul)]
+    xmin = min([xr[0]for xr in xrs])
+    xmax = min([xr[1]for xr in xrs])
+    [ax.set_xlim(xmin, xmax) for ax in np.append(axes_diff, axes_cumul)]
+    
+    outname = outdir + outbase.format(weight=weight_fn)        
+    plt.savefig(outname, bbox_inches='tight')
+        
+     
 if __name__ == '__main__':
     args = sys.argv[1:]
     if args[0] == 'runpdhists':
