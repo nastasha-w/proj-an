@@ -702,7 +702,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     cmap = mpl.colors.ListedColormap(clist)
     #cmap.set_over(clist[-1])
     norm = mpl.colors.BoundaryNorm(tedges, cmap.N)
-    bounds = np.linespace(0., 1., len(tedges) + 1)
+    bounds = np.linspace(0., 1., len(tedges) + 1)
     ticks = 0.5 * (bounds[:-1] + bounds[1:])
     ticklabels = ['{:.0f}'.format(te) for te in tedges]
     cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,
