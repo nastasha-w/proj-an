@@ -645,7 +645,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     
     panelwidth = 5.
     ncols = 2
-    nrows = (massbins_check - 1) // ncols + 1
+    nrows = (len(massbins_check) - 1) // ncols + 1
     width = ncols * panelwidth
     height_ratios = [panelwidth] + [0.5 * panelwidth] * (2 * nrows)
     height = sum(height_ratios)
