@@ -647,7 +647,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     ncols = 2
     nrows = (len(massbins_check) - 1) // ncols + 1
     width = ncols * panelwidth
-    height_ratios = [0.75 * panelwidth] + [0.33 * panelwidth] * (2 * nrows)
+    height_ratios = [0.5 * panelwidth] + [0.4 * panelwidth] * (2 * nrows)
     height = sum(height_ratios)
     
     fig = plt.figure(figsize=(width, height))
@@ -679,7 +679,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     title = 'weight: {}\n'.format(weightname) +\
             'distribution of the weighted quantity with density, '+\
             'using\ndifferent minimum past maximum temperature cuts:\n'+\
-            'for SNe and AGN feedback (all fb) and AGN only\n(AGN fb)'+\
+            'for SNe and AGN feedback (all fb) and AGN only\n(AGN fb) '+\
             'and different maximum times since that\nmaximum was attained'
     tax.text(0., 1., title, fontsize=fontsize, transform=tax.transAxes,
              horizontalalignment='left', verticalalignment='top')
@@ -814,7 +814,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
                             labelbottom=False, 
                             labelleft=axi % ncols == 0)
                 pu.setticks(ax_diff, fontsize=fontsize - 1, 
-                            labelbottom=axi % (nrows) == nrows - 1, 
+                            labelbottom=axi >= len(massbins_check) - ncols, 
                             labelleft=axi % ncols == 0)
                 ax_cumul.grid(b=True)
                 ax_diff.grid(b=True)
