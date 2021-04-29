@@ -668,23 +668,23 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     cwidth = 0.3 * eqwidth
     wmargin = 0.1 * eqwidth
     lwidth = 0.8 * eqwidth
-    twidth = _w - (lwidth + cwidth + 5. * wmargin)
+    twidth = _w - (lwidth + cwidth + 3. * wmargin)
     
     cax = fig.add_axes([_l, _b + hmargin, cwidth, __h])
-    lax = fig.add_axes([_l + cwidth + 5. * wmargin, 
+    lax = fig.add_axes([_l + cwidth + 3. * wmargin, 
                         _b + hmargin, lwidth, __h])
-    tax = fig.add_axes([_l + cwidth + 5. * wmargin + lwidth  + wmargin, 
+    tax = fig.add_axes([_l + cwidth + 3. * wmargin + lwidth  + wmargin, 
                         _b + hmargin, twidth, __h])
     tax.axis('off')
     title = 'weight: {}\n'.format(weightname) +\
             'distribution of the weighted quantity with density\n, '+\
-            'using different minimum \n past maximum temperature cuts:\n'+\
+            'using different minimum \npast maximum temperature cuts:\n'+\
             'for SNe and AGN feedback (all fb)\nand AGN only (AGN fb)\n'+\
             'and different maximum times since\nthat maximum was attained'
     tax.text(0., 1., title, fontsize=fontsize, transform=tax.transAxes,
              horizontalalignment='left', verticalalignment='top')
     
-    handles = [mlines.Line2d((), (), color='gray', label=label, 
+    handles = [mlines.Line2D((), (), color='gray', label=label, 
                              linestyle=ls)\
                for ls, label in zip([ls_sne, ls_agn, ls_all], 
                                     ['all fb', 'AGN fb', 'total'])]
