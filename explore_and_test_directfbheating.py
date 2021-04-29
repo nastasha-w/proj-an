@@ -625,7 +625,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     dct_all = args[0]
     dct_hm = args[1]
     cosmopars = args[2]
-    for key in dct_all['bins']:
+    for key in ['amax', 'Tmax']:
         if not np.allclose(dct_all['bins'][key], dct_hm['bins'][key]):
             msg = 'Bins in halo and all gas histograms should match (key: {})'
             raise ValueError(msg.format(key))
