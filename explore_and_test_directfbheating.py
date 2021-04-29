@@ -647,7 +647,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     ncols = 2
     nrows = (len(massbins_check) - 1) // ncols + 1
     width = ncols * panelwidth
-    height_ratios = [0.5 * panelwidth] + [0.4 * panelwidth] * (2 * nrows)
+    height_ratios = [0.4 * panelwidth] + [0.4 * panelwidth] * (2 * nrows)
     height = sum(height_ratios)
     
     fig = plt.figure(figsize=(width, height))
@@ -662,7 +662,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     _ax = fig.add_subplot(grid[0, :])
     _ax.axis('off')
     _l, _b, _w, _h = (_ax.get_position()).bounds
-    hmargin = _h * 0.1
+    hmargin = _h * 0.05
     __h = _h - hmargin
     #eqwidth = __h * height / width
     cwidth = 0.49 * _w
@@ -676,10 +676,10 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
                         _b + hmargin, twidth, __h])
     tax.axis('off')
     title = 'weight: {}\n'.format(weightname) +\
-            'distribution of the weighted quantity\nwith density, '+\
-            'using different minimum\npast maximum temperature cuts:\n'+\
-            'for SNe and AGN feedback (all fb)\nand AGN only (AGN fb) '+\
-            'and\ndifferent maximum times since that\nmaximum was attained'
+            'distribution of the weighted quantity with\ndensity, '+\
+            'using different minimum past\nmaximum temperature cuts:\n'+\
+            'for SNe and AGN feedback (all fb) and AGN\nonly (AGN fb) '+\
+            'and different maximum times since that\nmaximum was attained'
     tax.text(0., 0., title, fontsize=fontsize, transform=tax.transAxes,
              horizontalalignment='left', verticalalignment='bottom')
     
