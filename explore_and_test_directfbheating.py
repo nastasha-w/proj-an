@@ -837,8 +837,39 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     
     outname = outdir + outbase.format(weight=weight_fn)        
     plt.savefig(outname, bbox_inches='tight')
+    
+def plot_all_nH_cuts():
+    weights = ['Mass'] + lines_paper[:2]
+    filebase = 'particlehist_{weight}_L0100N1504_27_test3.7_SmAb_T4EOS.hdf5'
+    for weight in weights:
+        if weight == 'Mass':
+            wfill = weight
+            wname = 'Mass [g]'
+            wt = weight
+        elif weight in all_lines_PS20:
+            wfill = 'Luminosity_{wt}{it}'.format(wt=weight.replace(' ', '-'),
+                                                 it=siontab)
+            _wt = weight
+            while '  ' in _wt:
+                _wt = _wt.replace('  ', ' ')
+            wname = 'L {} [erg/s]'.format(_wt)
+            wt = 'Luminosity_{}'.format(weight.replace(' ', '-'))
+        elif weight in all_lines_SB:
+            wfill = 'Luminosity_{wt}'.format(wt=weight.replace(' ', '-'))
+            _wt = weight
+            while '  ' in _wt:
+                _wt = _wt.replace('  ', ' ')
+            wname = 'L {} [erg/s]'.format(_wt)
+            wt = 'Luminosity_{}'.format(weight)
+        filen = mdir + 'data/' + filebase.format(weight=wfill)
+        if weight == 'Mass':
+            filen = filen.replace('_SmAb', '')
         
-     
+        args = readin_phasediagrams_LMweighted(filen)
+        plot_nHdist_selcut_fromsaved(*args, weight_fn=wt, 
+                                           weightname=wname)
+        plt.close('all')
+        
 if __name__ == '__main__':
     args = sys.argv[1:]
     if args[0] == 'runpdhists':
