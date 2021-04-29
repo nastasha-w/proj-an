@@ -664,15 +664,15 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     _l, _b, _w, _h = (_ax.get_position()).bounds
     hmargin = _h * 0.1
     __h = _h - hmargin
-    eqwidth = __h * height / width
-    cwidth = 0.45 * _w
-    wmargin = 0.05 * eqwidth
+    #eqwidth = __h * height / width
+    cwidth = 0.49 * _w
+    wmargin = 0.02 * _w
     lwidth = cwidth
     twidth = _w - (max(lwidth, cwidth) + wmargin)
     
     cax = fig.add_axes([_l, _b + hmargin, cwidth, __h * 0.3])
     lax = fig.add_axes([_l, _b + hmargin + __h * 0.7, lwidth, __h * 0.3])
-    tax = fig.add_axes([_l + cwidth + wmargin , 
+    tax = fig.add_axes([_l + max(lwidth, cwidth) + wmargin , 
                         _b + hmargin, twidth, __h])
     tax.axis('off')
     title = 'weight: {}\n'.format(weightname) +\
@@ -680,15 +680,15 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
             'using different minimum\npast maximum temperature cuts:\n'+\
             'for SNe and AGN feedback (all fb)\nand AGN only (AGN fb) '+\
             'and\ndifferent maximum times since that\nmaximum was attained'
-    tax.text(0., 1., title, fontsize=fontsize, transform=tax.transAxes,
-             horizontalalignment='left', verticalalignment='top')
+    tax.text(0., 0., title, fontsize=fontsize, transform=tax.transAxes,
+             horizontalalignment='left', verticalalignment='bottom')
     
     handles = [mlines.Line2D((), (), color='gray', label=label, 
                              linestyle=ls)\
                for ls, label in zip([ls_sne, ls_agn, ls_all], 
                                     ['all fb', 'AGN fb', 'total'])]
-    lax.legend(handles=handles, fontsize=fontsize, loc='upper left',
-               ncol=3, bbox_to_anchor=(0., 1.))
+    lax.legend(handles=handles, fontsize=fontsize, loc='upper center',
+               ncol=3, bbox_to_anchor=(0.5, 1.))
     lax.axis('off')
     clabel = 'max $\\Delta \\, \\mathrm{{t}} \\,/\\, \\mathrm{{Myr}}$ since fb'
     tedges = np.array(deltat_bins[:-1])
@@ -717,7 +717,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     cax.tick_params(labelsize=fontsize - 1, labelbottom=False, bottom=False,
                     labeltop=True, top=True, rotation=45.)
     cax.set_xticklabels(labels=ticklabels)
-    cax.set_aspect(0.12)
+    cax.set_aspect(0.1)
     
     labelax = fig.add_subplot(grid[1:, :], frameon=False)
     labelax.tick_params(labelcolor='none', top=False, bottom=False, 
