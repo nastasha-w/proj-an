@@ -716,7 +716,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     cax.xaxis.set_label_position('top')
     cax.tick_params(labelsize=fontsize - 1, labelbottom=False, bottom=False,
                     labeltop=True, top=True, rotation=45.)
-    cax.set_xticklabels(ticks, labels=ticklabels)
+    cax.set_xticklabels(labels=ticklabels)
     cax.set_aspect(0.12)
     
     labelax = fig.add_subplot(grid[1:, :], frameon=False)
