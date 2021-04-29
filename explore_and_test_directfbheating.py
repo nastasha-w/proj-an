@@ -665,9 +665,9 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
     hmargin = _h * 0.1
     __h = _h - hmargin
     eqwidth = __h * height / width
-    cwidth = 0.3 * eqwidth
-    wmargin = 0.1 * eqwidth
-    lwidth = 0.8 * eqwidth
+    cwidth = 0.15 * eqwidth
+    wmargin = 0.05 * eqwidth
+    lwidth = 0.4 * eqwidth
     twidth = _w - (lwidth + cwidth + 3. * wmargin)
     
     cax = fig.add_axes([_l, _b + hmargin, cwidth, __h])
@@ -688,7 +688,7 @@ def plot_nHdist_selcut_fromsaved(*args, weight_fn='Mass',
                              linestyle=ls)\
                for ls, label in zip([ls_sne, ls_agn, ls_all], 
                                     ['all fb', 'AGN fb', 'total'])]
-    lax.legend(handles=handles, fontsize=fontsize, legend_loc='upper left')
+    lax.legend(handles=handles, fontsize=fontsize, loc='upper left')
     
     clabel = 'max $\\Delta \\, \\mathrm{{t}} \\,/\\, \\mathrm{{Myr}}$ since fb'
     tedges = np.array(deltat_bins[:-1])
