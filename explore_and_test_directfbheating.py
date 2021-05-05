@@ -634,7 +634,7 @@ def plot_phasediagram2_selcut_fromsaved(*args, weight_fn='Mass',
     
     amax_ax = dct['axes']['amax']
     deltat_bins = deltat_from_acut(dct['bins']['amax'], cosmopars) 
-    deltat_bins[0] = 0.
+    deltat_bins[0] = deltat_from_acut(0., cosmopars)
         
     total = np.sum(hist, axis=(tmax_ax, amax_ax))
     if tnow_ax > dens_ax:
@@ -697,8 +697,10 @@ def plot_phasediagram2_selcut_fromsaved(*args, weight_fn='Mass',
     
     cutlabel_deltat = '$\\Delta \\, \\mathrm{{t}} \\,/\\, \\mathrm{{Myr}} <'+\
                       '{deltat:.0f}$'
-    cutlabel_tmax = '$\\log_{{10}} \\, \\mathrm{{T}}_{{\\mathrm{{max}}}} '+\
-                    '\\,/\\, \\mathrm{{K}} = {tmin:.1f} \\emdash {tmax:.1f}$'
+    #cutlabel_tmax = '$\\log_{{10}} \\, \\mathrm{{T}}_{{\\mathrm{{max}}}} '+\
+    #                '\\,/\\, \\mathrm{{K}} = {tmin:.1f} \\emdash {tmax:.1f}$'
+    cutlabel_tmax = '$\\mathrm{{T}}_{{\\mathrm{{max}}}}: '+\
+                    '{tmin:.1f} \\endash {tmax:.1f}$'
     
     img = totax.pcolormesh(dens_bins, tnow_bins, np.log10(total), 
                            cmap=cmap, vmin=vmin, vmax=vmax)
@@ -720,12 +722,12 @@ def plot_phasediagram2_selcut_fromsaved(*args, weight_fn='Mass',
                     transform=ax.transAxes, horizontalalignment='right',
                     verticalalignment='top')
             label = cutlabel_tmax.format(tmin=tmax_bins[tmax_i0],
-                                         tmax=tmax_bins[tmax_i1])
+                                         tmax=tmax_bins[tmax_i0 + tmax_i1])
             ax.text(0.98, 0.02, label, fontsize=fontsize, 
                     transform=ax.transAxes, horizontalalignment='right',
                     verticalalignment='bottom')
             sel = [slice(None, None, None)] * len(hist.shape)
-            sel[tmax_ax] = slice(tmax_i0, tmax_i1, None)
+            sel[tmax_ax] = slice(tmax_i0, tmax_i0 + tmax_i1, None)
             sel[amax_ax] = slice(ti, None, None)
             subtot = np.sum(hist[tuple(sel)], axis=(amax_ax, tmax_ax))
             if tnow_ax > dens_ax:
