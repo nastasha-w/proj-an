@@ -738,6 +738,10 @@ def plot_phasediagram2_selcut_fromsaved(*args, weight_fn='Mass',
             pu.setticks(ax, fontsize=fontsize - 1, labelbottom=False, 
                         labelleft=False)
             ax.grid(b=True)
+            if not agnlim:
+                ax.axvline(-2., color='red', linestyle='dotted', linewidth=1.)
+                ax.axhline(tmax_bins[tmax_i0] - 0.1, color='red',
+                           linestyle='dotted', linewidth=1.)
     labelax = fig.add_subplot(grid[1:, :], frameon=False)
     labelax.tick_params(labelcolor='none', top=False, bottom=False, 
                         left=False, right=False)
