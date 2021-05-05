@@ -651,7 +651,7 @@ def plot_phasediagram2_selcut_fromsaved(*args, weight_fn='Mass',
     snei0 = np.where(np.isclose(snecut, tmax_bins))[0][0]
     agni0 = np.where(np.isclose(agncut, tmax_bins))[0][0]
     numbins_tmax_sne = agni0 - snei0
-    numbins_tmax_agn = len(tmax_bins) - agni0 
+    numbins_tmax_agn = len(tmax_bins) - agni0 - 1
     if agnlim:
         numbins_tmax = numbins_tmax_agn
         tmax_i0 = agni0
