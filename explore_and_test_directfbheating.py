@@ -362,7 +362,7 @@ def run_phasediagrams_LMweighted(index, checkindex=False):
     if not done:
         m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
 
-def readin_phasediagrams_LMweighted(filename):
+def readin_phasediagrams_LMweighted(filename, setnum=1):
     '''
     read in the hdf5 histogram data for phase information plots with halo mass
     and direct feedback info
@@ -395,10 +395,17 @@ def readin_phasediagrams_LMweighted(filename):
                 'amax': 'AExpMaximumTemperature_T4EOS'}
     
     with h5py.File(filename, 'r') as f:
+        if setnum == 1:
+            add_all = ''
+            add_hm = ''
+        else:
+            add_all = '_set{}'.format(setnum)
+            add_hm = ''
         key_hm = 'M200c_halo_allinR200c_Temperature_T4EOS_Density_T4EOS' + \
-                 '_AExpMaximumTemperature_T4EOS_MaximumTemperature_T4EOS'
+                 '_AExpMaximumTemperature_T4EOS_MaximumTemperature_T4EOS' +\
+                 add_hm
         key_all = 'Temperature_T4EOS_Density_T4EOS_AExpMaximumTemperature' + \
-                  '_T4EOS_MaximumTemperature_T4EOS'
+                  '_T4EOS_MaximumTemperature_T4EOS' + add_all
         dct_all = {}
         dct_hm = {}
         for gkey, dct in zip([key_hm, key_all], [dct_hm, dct_all]):
@@ -592,6 +599,160 @@ def plot_phasediagram_selcut_fromsaved(*args, weight_fn='Mass',
                 axes2[i].tick_params(labelleft=True)
                 
         plt.savefig(outname, bbox_inches='tight')
+
+def plot_phasediagram2_selcut_fromsaved(*args, weight_fn='Mass',
+                                        weightname='Mass [g]', agncut=False):
+    dct = args[0]
+    #dct_hm = args[1]
+    if len(args) == 3:
+        cosmopars = args[2]
+    else:
+        cosmopars = args[1]
+    
+    snecut = 7.499
+    agncut = 8.499
+    
+    outdir = mdir + 'phasediagrams/'
+    outbase = 'phasedigram_L0100N1504_27_{weight}_selcuts_Tmaxvar_{fbc}.pdf'
+    fontsize = 12
+    
+    fbc = 'agn' if agncut else 'sne'
+    outname = outdir + outbase.format(weight=weight_fn, fbc=fbc)
+        
+    hist = np.copy(dct['hist'])
+            
+    tnow_ax = dct['axes']['Tnow']
+    dens_ax = dct['axes']['dens']
+    tnow_bins = dct['bins']['Tnow']
+    dens_bins = dct['bins']['dens'] + np.log10(0.752 / (c.atomw_H * c.u))
+    
+    tnow_c = 0.5 * (tnow_bins[:-1] + tnow_bins[1:])
+    dens_c = 0.5 * (dens_bins[:-1] + dens_bins[1:])
+    
+    tmax_ax = dct['axes']['Tmax']
+    tmax_bins = dct['bins']['Tmax']
+    
+    amax_ax = dct['axes']['amax']
+    deltat_bins = deltat_from_acut(dct['bins']['amax'], cosmopars) 
+    deltat_bins[0] = 0.
+        
+    total = np.sum(hist, axis=(tmax_ax, amax_ax))
+    if tnow_ax > dens_ax:
+        total = total.T
+        
+    vmax = np.log10(np.max(total))
+    vmin = np.log10(np.min(total[total > 0.]))
+    levels = np.arange(vmin, vmax, 1.)
+    if len(levels) > 5:
+        levels = np.linspace(max(vmin + 1, vmax - 6), vmax - 1, 5)
+    cmap = cm.get_cmap('viridis')
+
+    numtbins = len(deltat_bins) - 1
+    snei0 = np.where(np.isclose(snecut, tmax_bins))[0][0]
+    agni0 = np.where(np.isclose(agncut, tmax_bins))[0][0]
+    numbins_tmax_sne = agni0 - snei0
+    numbins_tmax_agn = len(tmax_bins) - agni0 
+    if agncut:
+        numbins_tmax = numbins_tmax_agn
+        tmax_i0 = agni0
+    else:
+        numbins_tmax = numbins_tmax_sne
+        tmax_i0 = snei0
+        
+    panelwidth = 2.
+    ncols = numbins_tmax
+    nrows = (numtbins - 1) // ncols + 1
+    width = ncols * panelwidth
+    height_ratios = [panelwidth * 1. / 0.75] + [panelwidth] * (2 * nrows)
+    height = sum(height_ratios)
+    
+    fig = plt.figure(figsize=(width, height))
+    grid = gsp.GridSpec(nrows=1 + nrows, ncols=ncols, 
+                        hspace=0.0, wspace=0.0, 
+                        height_ratios=height_ratios, top=0.95)
+    axes = [[fig.add_subplot(grid[1 + i, j]) \
+             for j in range(numbins_tmax)] for i in range(numtbins)]
+        
+    _ax = fig.add_subplot(grid[0, :])
+    _ax.axis('off')
+    _l, _b, _w, _h = (_ax.get_position()).bounds
+    hmargin = _h * 0.25
+    __h = _h - hmargin
+    pwidth = __h * height / width
+    cwidth = 0.3 * pwidth
+    wmargin = 0.1 * pwidth
+    twidth = _w - (pwidth + cwidth + 5. * wmargin)
+    
+    totax = fig.add_axes([_l, _b + hmargin, pwidth, __h])
+    cax = fig.add_axes([_l + pwidth + wmargin, _b + hmargin, cwidth, __h])
+    tax = fig.add_axes([_l + pwidth + cwidth + 5. * wmargin, 
+                        _b + hmargin, twidth, __h])
+    tax.axis('off')
+    title = 'weight: {}\n'.format(weightname) +\
+            'distribution of the weighted quantity in\nphase space, '+\
+            'using different minimum \n past maximum temperature cuts\n'+\
+            'and different maximum times since\nthat maximum was attained'
+    tax.text(0., 1., title, fontsize=fontsize, transform=tax.transAxes,
+             horizontalalignment='left', verticalalignment='top')
+    
+    cutlabel_deltat = '$\\Delta \\, \\mathrm{{t}} \\,/\\, \\mathrm{{Myr}} <'+\
+                      '{deltat:.0f}$'
+    cutlabel_tmax = '$\\log_{{10}} \\, \\mathrm{{T}}_{{\\mathrm{{max}}}} '+\
+                    '\\,/\\, \\mathrm{{K}} = {tmin:.1f}$ \\emdash {tmax:.1f}'
+    
+    img = totax.pcolormesh(dens_bins, tnow_bins, np.log10(total), 
+                           cmap=cmap, vmin=vmin, vmax=vmax)
+    cbar = plt.colorbar(img, cax=cax, extend='neither', 
+                        orientation='vertical', aspect=15.)   
+    cset = totax.contour(dens_c, tnow_c, np.log10(total), levels=levels,
+                         colors='black')
+    cbar.add_lines(cset)
+    cax.set_ylabel('$\\log_{10}$ weight', fontsize=fontsize)
+    cax.tick_params(labelsize=fontsize - 1.)
+    
+    for tmax_i1 in range(1, numbins_tmax + 1):
+        for ti, deltat in enumerate(deltat_bins[:-1]):
+            ax = axes[ti][tmax_i1 - 1]
+            ax.contour(dens_c, tnow_c, np.log10(total), levels=levels,
+                       colors='black')
+            label = cutlabel_deltat.format(deltat=deltat)
+            ax.text(0.98, 0.98, label, fontsize=fontsize, 
+                    transform=ax.transAxes, horizontalalignment='right',
+                    verticalalignment='top')
+            label = cutlabel_tmax.format(tmin=tmax_bins[tmax_i0],
+                                         tmax=tmax_bins[tmax_i1])
+            ax.text(0.98, 0.02, label, fontsize=fontsize, 
+                    transform=ax.transAxes, horizontalalignment='right',
+                    verticalalignment='ottom')
+            sel = [slice(None, None, None)] * len(hist.shape)
+            sel[tmax_ax] = slice(tmax_i0, tmax_i1, None)
+            sel[amax_ax] = slice(ti, None, None)
+            subtot = np.sum(hist[tuple(sel)], axis=(amax_ax, tmax_ax))
+            if tnow_ax > dens_ax:
+                subtot = subtot.T
+            ax.pcolormesh(dens_bins, tnow_bins, np.log10(subtot), 
+                          cmap=cmap, vmin=vmin, vmax=vmax)
+            
+            pu.setticks(ax, fontsize=fontsize - 1, labelbottom=False, 
+                        labelleft=False)
+            ax.grid(b=True)
+    labelax = fig.add_subplot(grid[1:, :], frameon=False)
+    labelax.tick_params(labelcolor='none', top=False, bottom=False, 
+                        left=False, right=False)
+    xlabel = '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\,'+\
+             ' [\\mathrm{cm}^{-3}]$'
+    ylabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
+    labelax.set_xlabel(xlabel, fontsize=fontsize)
+    labelax.set_ylabel(ylabel, fontsize=fontsize)
+    totax.set_xlabel(xlabel, fontsize=fontsize)
+    totax.set_ylabel(ylabel, fontsize=fontsize)
+    pu.setticks(totax, fontsize=fontsize - 1)
+    for i in range(numtbins):
+        axes[i][0].tick_params(labelleft=True)      
+    for j in range(numbins_tmax):
+        axes[numtbins - 1][i].tick_params(labelbottom=True)
+            
+    plt.savefig(outname, bbox_inches='tight')
         
 def plot_all_phaseinfo_cuts():
     weights = ['Mass'] + lines_paper
