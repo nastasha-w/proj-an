@@ -311,8 +311,10 @@ def run_phasediagrams_LMweighted(index, checkindex=False):
     # axesdct.append({'ptype': 'basic', 'quantity': 'StarFormationRate'})
     # logax = logax + [False]
     
-    t_myr = np.array([0., 1., 2., 3., 5., 10., 20., 30., 50., 1e2, 2e2, 
-                      3e2, 1e3, 1e4])
+    #t_myr = np.array([0., 1., 2., 3., 5., 10., 20., 30., 50., 1e2, 2e2, 
+    #                  3e2, 1e3, 1e4])
+    # second go at it
+    t_myr = np.array([0., 1., 2., 3., 5., 10., 30., 1e2, 1e4])
     t_myr.sort()
     _simfile = pc.Simfile(simnum, snapnum, var)
     anow = _simfile.a
@@ -320,8 +322,10 @@ def run_phasediagrams_LMweighted(index, checkindex=False):
     time_now = cu.t_expfactor(anow, cosmopars=_simfile)
     acut = cu.expfactor_t(time_now - deltat, cosmopars=_simfile)  
     abins = np.array([-np.inf] + list(acut[::-1]) + [np.inf])
-    tmaxbins = [-np.inf, 7.499, 8.499, np.inf]
-    
+    #tmaxbins = [-np.inf, 7.499, 8.499, np.inf]
+    # second go
+    tmaxbins = [-np.inf, 7.499, 7.6, 7.7, 7.8, 7., 8., 8.499, 
+                8.6, 8.7, 8.8, 8.9, 9.0, np.inf]
     baseaxes = [{'ptype': 'basic', 'quantity': 'Temperature'},
                 {'ptype': 'basic', 'quantity': 'Density'},
                 {'ptype': 'basic', 'quantity': 'AExpMaximumTemperature'},
@@ -334,6 +338,8 @@ def run_phasediagrams_LMweighted(index, checkindex=False):
     axbins = axbins + basebins
     logax = logax + baselog
 
+    name_append = '_set2'
+    
     args = (ptype, simnum, snapnum, var, axesdct)
     _kwargs = dict(simulation='eagle',
                    excludeSFR='T4', abunds='Sm', parttype='0',
@@ -343,7 +349,7 @@ def run_phasediagrams_LMweighted(index, checkindex=False):
                    allinR200c=True, mdef='200c',
                    L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,
                    misc=None,
-                   name_append=None, logax=logax, loghist=False,
+                   name_append=name_append, logax=logax, loghist=False,
                    )
     _kwargs.update(kwargs)
     kwargs = _kwargs

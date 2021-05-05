@@ -130,7 +130,9 @@ galdata_meas = [{'z': 0.04562, 'r': 0.295, 'mstar': ( 9.5,  0.5, 0.5)},\
                 {'z': 0.04608, 'r': 1.500, 'mstar': (10.95, 0.2, 0.2)},\
                 ]
 
-cosmopars_ea_27 = {'a': 0.9085634947881763, 'boxsize': 67.77, 'h': 0.6777, 'omegab': 0.0482519, 'omegalambda': 0.693, 'omegam': 0.307, 'z': 0.10063854175996956}
+cosmopars_ea_27 = {'a': 0.9085634947881763, 'boxsize': 67.77, 'h': 0.6777,
+                   'omegab': 0.0482519, 'omegalambda': 0.693, 'omegam': 0.307, 
+                   'z': 0.10063854175996956}
 
 # galaxies seem to be sort of ok down to this mass in Schaye et al. (2015)
 galsel_default = [('Mstar_Msun', 10**9, None)]
