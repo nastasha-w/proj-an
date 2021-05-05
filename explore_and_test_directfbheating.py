@@ -750,7 +750,7 @@ def plot_phasediagram2_selcut_fromsaved(*args, weight_fn='Mass',
     for i in range(numtbins):
         axes[i][0].tick_params(labelleft=True)      
     for j in range(numbins_tmax):
-        axes[numtbins - 1][i].tick_params(labelbottom=True)
+        axes[numtbins - 1][j].tick_params(labelbottom=True)
             
     plt.savefig(outname, bbox_inches='tight')
         
