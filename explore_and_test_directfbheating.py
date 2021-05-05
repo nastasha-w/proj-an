@@ -660,8 +660,8 @@ def plot_phasediagram2_selcut_fromsaved(*args, weight_fn='Mass',
         tmax_i0 = snei0
         
     panelwidth = 2.
-    ncols = numtbins
-    nrows = numbins_tmax
+    ncols = numbins_tmax
+    nrows = numtbins 
     width = ncols * panelwidth
     height_ratios = [panelwidth * 1. / 0.75] + [panelwidth] * (nrows)
     height = sum(height_ratios)
