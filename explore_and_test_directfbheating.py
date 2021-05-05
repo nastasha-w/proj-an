@@ -723,7 +723,7 @@ def plot_phasediagram2_selcut_fromsaved(*args, weight_fn='Mass',
                                          tmax=tmax_bins[tmax_i1])
             ax.text(0.98, 0.02, label, fontsize=fontsize, 
                     transform=ax.transAxes, horizontalalignment='right',
-                    verticalalignment='ottom')
+                    verticalalignment='bottom')
             sel = [slice(None, None, None)] * len(hist.shape)
             sel[tmax_ax] = slice(tmax_i0, tmax_i1, None)
             sel[amax_ax] = slice(ti, None, None)
