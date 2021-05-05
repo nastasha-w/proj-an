@@ -601,7 +601,7 @@ def plot_phasediagram_selcut_fromsaved(*args, weight_fn='Mass',
         plt.savefig(outname, bbox_inches='tight')
 
 def plot_phasediagram2_selcut_fromsaved(*args, weight_fn='Mass',
-                                        weightname='Mass [g]', agncut=False):
+                                        weightname='Mass [g]', agnlim=False):
     dct = args[0]
     #dct_hm = args[1]
     if len(args) == 3:
@@ -616,7 +616,7 @@ def plot_phasediagram2_selcut_fromsaved(*args, weight_fn='Mass',
     outbase = 'phasedigram_L0100N1504_27_{weight}_selcuts_Tmaxvar_{fbc}.pdf'
     fontsize = 12
     
-    fbc = 'agn' if agncut else 'sne'
+    fbc = 'agn' if agnlim else 'sne'
     outname = outdir + outbase.format(weight=weight_fn, fbc=fbc)
         
     hist = np.copy(dct['hist'])
@@ -652,7 +652,7 @@ def plot_phasediagram2_selcut_fromsaved(*args, weight_fn='Mass',
     agni0 = np.where(np.isclose(agncut, tmax_bins))[0][0]
     numbins_tmax_sne = agni0 - snei0
     numbins_tmax_agn = len(tmax_bins) - agni0 
-    if agncut:
+    if agnlim:
         numbins_tmax = numbins_tmax_agn
         tmax_i0 = agni0
     else:
@@ -698,7 +698,7 @@ def plot_phasediagram2_selcut_fromsaved(*args, weight_fn='Mass',
     cutlabel_deltat = '$\\Delta \\, \\mathrm{{t}} \\,/\\, \\mathrm{{Myr}} <'+\
                       '{deltat:.0f}$'
     cutlabel_tmax = '$\\log_{{10}} \\, \\mathrm{{T}}_{{\\mathrm{{max}}}} '+\
-                    '\\,/\\, \\mathrm{{K}} = {tmin:.1f}$ \\emdash {tmax:.1f}'
+                    '\\,/\\, \\mathrm{{K}} = {tmin:.1f} \\emdash {tmax:.1f}$'
     
     img = totax.pcolormesh(dens_bins, tnow_bins, np.log10(total), 
                            cmap=cmap, vmin=vmin, vmax=vmax)
