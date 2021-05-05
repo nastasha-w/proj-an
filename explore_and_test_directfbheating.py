@@ -324,7 +324,7 @@ def run_phasediagrams_LMweighted(index, checkindex=False):
     abins = np.array([-np.inf] + list(acut[::-1]) + [np.inf])
     #tmaxbins = [-np.inf, 7.499, 8.499, np.inf]
     # second go
-    tmaxbins = [-np.inf, 7.499, 7.6, 7.7, 7.8, 7., 8., 8.499, 
+    tmaxbins = [-np.inf, 7.499, 7.6, 7.7, 7.8, 7.9, 8., 8.499, 
                 8.6, 8.7, 8.8, 8.9, 9.0, np.inf]
     baseaxes = [{'ptype': 'basic', 'quantity': 'Temperature'},
                 {'ptype': 'basic', 'quantity': 'Density'},
