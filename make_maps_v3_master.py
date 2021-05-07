@@ -4540,7 +4540,11 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,
          var, axis, log, velcut,
          periodic, kernel, saveres,
          simulation, LsinMpc, misc, ompproj, numslices,
-         halosel, kwargs_halosel, cosmopars, override_simdatapath, groupnums):
+         halosel, kwargs_halosel, 
+         excludedirectfb, deltalogT_directfb, 
+         deltatMyr_directfb, inclhotgas_maxlognH_snfb,
+         logTK_agnfb, logTK_snfb,
+         cosmopars, override_simdatapath, groupnums):
     '''
     save projmap, minval, maxval with npzname and the processed input 
     parameters
@@ -4593,6 +4597,13 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,
         saveattr(hed, 'psi', psi)
         saveattr(hed, 'override_simdatapath', override_simdatapath)
         
+        saveattr(hed, 'excludedirectfb', excludedirectfb)
+        saveattr(hed, 'deltalogT_directfb', deltalogT_directfb)
+        saveattr(hed, 'deltatMyr_directfb', deltatMyr_directfb)
+        saveattr(hed, 'inclhotgas_maxlognH_snfb', inclhotgas_maxlognH_snfb)
+        saveattr(hed, 'logTK_agnfb', logTK_agnfb)
+        saveattr(hed, 'logTK_snfb', logTK_snfb)
+        
         saveattr(hed, 'cosmopars', cosmopars)
         
         saveattr(hed, 'make_maps_opts_locs.emtab_sylvia_ssh', 
@@ -4635,19 +4646,22 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,
         
 ##########################################################################################
 
-def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-         ptypeW,\
+def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
+         ptypeW,
          ionW=None, abundsW='auto', quantityW=None,
          ionQ=None, abundsQ='auto', quantityQ=None, ptypeQ=None,
          excludeSFRW=False, excludeSFRQ=False, parttype='0',
-         theta=0.0, phi=0.0, psi=0.0, \
+         theta=0.0, phi=0.0, psi=0.0,
          sylviasshtables=False, bensgadget2tables=False,
          ps20tables=False, ps20depletion=True,
-         var='auto', axis='z',log=True, velcut=False,\
-         periodic=True, kernel='C2', saveres=False,\
-         simulation='eagle', LsinMpc=None,\
-         select=None, misc=None, halosel=None, kwargs_halosel=None,\
-         ompproj=False, nameonly=False, numslices=None, hdf5=False,\
+         var='auto', axis='z',log=True, velcut=False,
+         periodic=True, kernel='C2', saveres=False,
+         simulation='eagle', LsinMpc=None,
+         select=None, misc=None, halosel=None, kwargs_halosel=None,
+         excludedirectfb=False, deltalogT_directfb=0.2, 
+         deltatMyr_directfb=10., inclhotgas_maxlognH_snfb=-2.,
+         logTK_agnfb=8.499, logTK_snfb=7.499,
+         ompproj=False, nameonly=False, numslices=None, hdf5=False,
          override_simdatapath=None):
 
     """
@@ -4898,6 +4912,44 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         than the default tables from Serena Bertone that are consistent with 
         Eagle cooling. These tables exist for a limited number of ions, but 
         include O I - VIII.
+    excludedirectfb: bool
+        exclude some gas from projection, based mainly on the 
+        MaximumTemperature of the gas and the time this maximum temperature 
+        was reached. The gas that seems to have been ditrectly heated by AGN 
+        or SN feedback is excluded. Defaults for the various parameters 
+        controlling the selection of the excluded gas are based on inspections 
+        of the gas phase diagram in EAGLE L0100N1504 (REFERENCE) at different 
+        time difference and temeprature range cuts. The default is False.
+    logTK_agnfb: float
+        the temperature difference [log10 K] used for the AGN feedback. If
+        exlcudedirectfb, this is used as the minimum value for the gas maximum
+        temperature used to define gas assumed to have been directly heated by
+        AGN feedback. The default is 8.499 (Eagle Reference, small margin).
+    logTK_snfb: float
+        the temperature difference [log10 K] used for the SN feedback. If
+        exlcudedirectfb, this is used as the minimum value for the gas maximum
+        temperature used to define gas assumed to have been directly heated by
+        SN feedback. The default is 7.499 (Eagle, small margin).
+    deltalogT_directfb: float
+        The range of temperatures [log10] used to define feedback-affected
+        gas. Gas with maximum log temperatures between logTK_snfb and 
+        logTK_snfb + deltalogT_directfb, and logTK_agnfb and logTK_agnfb + 
+        deltalogT_directfb, reached within the last deltatMyr_directfb, is
+        considered feedback-affected and excluded. A value of np.inf (no 
+        maximum) is allowed. The default is 0.2.
+    deltatMyr_directfb: float
+        The maximum time since the maximum temperature was reached where gas 
+        is still classified as feedback-affected [Myr]. The default is 10. 
+    inclhotgas_maxlognH_snfb: float
+        Gas with a maximum temperature of 10**7.5 K or higher can also arise 
+        due to e.g., virial socks in clusters. In order to *not* exclude this 
+        gas, low density gas with a (current) temperature [K] > 
+        10**(logTK_snfb - 0.1) is exempted from the exclusion criteria above. 
+        Low density is defined as 
+        log10(Density [g / sm**-3] * 0.752 / m_p [g]) 
+            < inclhotgas_maxlognH_snfb.
+        A value of -np.inf (no exemptions to the exclusion) is allowed.
+        The default is -2.
                
     --------------
     output control
@@ -5418,7 +5470,11 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                  var, axis, log, velcut,
                                  periodic, kernel, saveres,
                                  simulation, LsinMpc, misc, ompproj, numslices,
-                                 halosel, kwargs_halosel, cosmopars, 
+                                 halosel, kwargs_halosel, 
+                                 excludedirectfb, deltalogT_directfb, 
+                                 deltatMyr_directfb, inclhotgas_maxlognH_snfb,
+                                 logTK_agnfb, logTK_snfb,
+                                 cosmopars, 
                                  override_simdatapath, None)
                 else:
                     np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW)
@@ -5438,7 +5494,11 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                  var, axis, log, velcut,
                                  periodic, kernel, saveres,
                                  simulation, LsinMpc, misc, ompproj, numslices,
-                                 halosel, kwargs_halosel, cosmopars, 
+                                 halosel, kwargs_halosel, 
+                                 excludedirectfb, deltalogT_directfb, 
+                                 deltatMyr_directfb, inclhotgas_maxlognH_snfb,
+                                 logTK_agnfb, logTK_snfb,
+                                 cosmopars, 
                                  override_simdatapath, groupnums)
                 else:
                     np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW,
@@ -5465,8 +5525,14 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      ps20tables, ps20depletion,
                                      var, axis, log, velcut,
                                      periodic, kernel, saveres,
-                                     simulation, LsinMpc, misc, ompproj, numslices,
-                                     halosel, kwargs_halosel, cosmopars, 
+                                     simulation, LsinMpc, misc, ompproj, 
+                                     numslices,
+                                     halosel, kwargs_halosel, 
+                                     excludedirectfb, deltalogT_directfb, 
+                                     deltatMyr_directfb, 
+                                     inclhotgas_maxlognH_snfb,
+                                     logTK_agnfb, logTK_snfb,
+                                     cosmopars, 
                                      override_simdatapath, None)
                     else:
                         np.savez(resfile2, arr_0=resQ, minfinite=minQ, max=maxQ)
@@ -5485,7 +5551,12 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      var, axis, log, velcut,
                                      periodic, kernel, saveres,
                                      simulation, LsinMpc, misc, ompproj, numslices,
-                                     halosel, kwargs_halosel, cosmopars, 
+                                     halosel, kwargs_halosel, 
+                                     excludedirectfb, deltalogT_directfb, 
+                                     deltatMyr_directfb, 
+                                     inclhotgas_maxlognH_snfb,
+                                     logTK_agnfb, logTK_snfb,
+                                     cosmopars, 
                                      override_simdatapath, groupnums)
                     else:
                         np.savez(resfile2, arr_0=resQ, minfinite=minQ, max=maxQ, groupnums=groupnums)
@@ -5590,8 +5661,14 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      ps20tables, ps20depletion,
                                      var, axis, log, velcut,
                                      periodic, kernel, saveres,
-                                     simulation, LsinMpc, misc, ompproj, numslices,
-                                     halosel, kwargs_halosel, cosmopars, 
+                                     simulation, LsinMpc, misc, ompproj, 
+                                     numslices,
+                                     halosel, kwargs_halosel, 
+                                     excludedirectfb, deltalogT_directfb, 
+                                     deltatMyr_directfb, 
+                                     inclhotgas_maxlognH_snfb,
+                                     logTK_agnfb, logTK_snfb,
+                                     cosmopars, 
                                      override_simdatapath, None)
                     else:
                         np.savez(subresfile, arr_0=resW, minfinite=minW, max=maxW)
@@ -5610,8 +5687,14 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      ps20tables, ps20depletion,
                                      var, axis, log, velcut,
                                      periodic, kernel, saveres,
-                                     simulation, LsinMpc, misc, ompproj, numslices,
-                                     halosel, kwargs_halosel, cosmopars, 
+                                     simulation, LsinMpc, misc, ompproj, 
+                                     numslices,
+                                     halosel, kwargs_halosel, 
+                                     excludedirectfb, deltalogT_directfb, 
+                                     deltatMyr_directfb, 
+                                     inclhotgas_maxlognH_snfb,
+                                     logTK_agnfb, logTK_snfb,
+                                     cosmopars, 
                                      override_simdatapath, groupnums)
                     else:
                         np.savez(subresfile, arr_0=resW, minfinite=minW, 
@@ -5639,8 +5722,14 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                          ps20tables, ps20depletion,
                                          var, axis, log, velcut,
                                          periodic, kernel, saveres,
-                                         simulation, LsinMpc, misc, ompproj, numslices,
-                                         halosel, kwargs_halosel, cosmopars, 
+                                         simulation, LsinMpc, misc, ompproj, 
+                                         numslices,
+                                         halosel, kwargs_halosel, 
+                                         excludedirectfb, deltalogT_directfb, 
+                                         deltatMyr_directfb, 
+                                         inclhotgas_maxlognH_snfb,
+                                         logTK_agnfb, logTK_snfb,
+                                         cosmopars, 
                                          override_simdatapath, None)
                         else:
                             np.savez(subresfile2, arr_0=resQ, minfinite=minQ, max=maxQ)
@@ -5659,8 +5748,14 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                          ps20tables, ps20depletion,
                                          var, axis, log, velcut,
                                          periodic, kernel, saveres,
-                                         simulation, LsinMpc, misc, ompproj, numslices,
-                                         halosel, kwargs_halosel, cosmopars, 
+                                         simulation, LsinMpc, misc, ompproj, 
+                                         numslices,
+                                         halosel, kwargs_halosel, 
+                                         excludedirectfb, deltalogT_directfb, 
+                                         deltatMyr_directfb, 
+                                         inclhotgas_maxlognH_snfb,
+                                         logTK_agnfb, logTK_snfb,
+                                         cosmopars, 
                                          override_simdatapath, groupnums)
                         else:
                             np.savez(subresfile2, arr_0=resQ, minfinite=minQ, 
