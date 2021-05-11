@@ -30,6 +30,9 @@ import plot_utils as pu
 import make_maps_v3_master as m3
 
 mdir = '/net/luttero/data1/line_em_abs/v3_master_tests/exclude_direct_fb/'
+mapdir = mdir + 'maps/'
+m3.ol.ndir = mapdir
+
 
 tnow_key = 'PartType0/Temperature'                                                                                                                                   
 tmax_key = 'PartType0/MaximumTemperature'                                                                                                                            
@@ -1050,6 +1053,45 @@ def plot_all_nH_cuts():
         plot_nHdist_selcut_fromsaved(*args, weight_fn=wt, 
                                            weightname=wname)
         plt.close('all')
+        
+def run_maps(index):
+    
+    simnum = 'L0012N0188'
+    snapnum = 27
+    centre = [3.125, 3.125, 3.125]
+    L_x, L_y, L_z = (6.25, ) * 3
+    npix_x, npix_y = (400, ) * 2 
+    ptypeW = 'basic'
+    
+    # small differnces, most likely, so turn off ompproj for exact comparisons
+    args = (simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, ptypeW)
+    kwargs_default = {'ionW': None, 'abundsW': None, 'quantityW': 'Mass',
+                      'ionQ': None, 'abundsQ': None, 'ptypeQ': 'basic',
+                      'quantityQ': 'Temperature',
+                      'excludeSFRW': 'T4', 'excludeSFRQ': 'T4', 
+                      'parttype': '0', 'var': 'REFERENCE', 'axis': 'z',
+                      'log': True, 'ompproj': False, 'hdf5': True, 
+                      'saveres': True, 'periodic': False,
+                      }
+    kwargs_iter = [{'deltatMyr_directfb': 10., 
+                    'inclhotgas_maxlognH_snfb': -2.,
+                    'logTK_agnfb': 8.499, 'logTK_snfb': 7.499,
+                    'excludedirectfb': False, 'deltalogT_directfb': 0.2,
+                    'quantityQ': 'Temperature'},
+                   {'deltatMyr_directfb': 10., 
+                    'inclhotgas_maxlognH_snfb': -2.,
+                    'logTK_agnfb': 8.499, 'logTK_snfb': 7.499,
+                    'excludedirectfb': False, 'deltalogT_directfb': 0.2,
+                    'quantityQ': 'Density'},
+                   ]
+    kwargs_iter = [{'quantityQ': 'Temperature'},
+                   {'quantityQ': 'Density'},
+                   ]
+    for _kwargs in kwargs_iter:
+        kwargs = kwargs_default.copy()
+        kwargs.update(_kwargs)
+        m3.make_map(*args, **kwargs)
+        
         
 if __name__ == '__main__':
     args = sys.argv[1:]
