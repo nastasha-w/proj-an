@@ -2222,9 +2222,13 @@ def translate(old_dct, old_nm, centre, boxsize, periodic):
 
 def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
                npix_x, L_x, L_y, L_z, centre, BoxSize, hconst,
-               excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,
+               excludeSFRW, excludeSFRQ, velcut, sylviasshtables, 
+               bensgadget2tables,
                ps20tables, ps20depletion,
-               axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, quantityW, quantityQ,
+               axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, 
+               quantityW, quantityQ,
+               excludedirectfb, deltalogT_directfb, deltatMyr_directfb, 
+               inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,
                simulation, LsinMpc, halosel, kwargs_halosel, misc, hdf5):
     # some messiness is hard to avoid, but it's contained
     # Ls and centre have not been converted to Mpc when this function is called
@@ -2414,6 +2418,15 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
                 halostr = '_halosel-%s-endhalosel'%kwargs_halosel['label']
     else:
         halostr = ''
+    
+    if excludedirectfb: 
+        sfb = '_exclfb_TSN-{tsnfb}_TAGN-{tagnfb}_Trng-{deltaT}_{deltat}-Myr'
+        sfb = sfb.format(tsnfb=logTK_snfb, tagnfb=logTK_agnfb, 
+                         deltaT=deltalogT_directfb, deltat=deltatMyr_directfb)
+        if inclhotgas_maxlognH_snfb > -np.inf:
+            sfb = sfb + '_inclSN-nH-lt-{}'.format(inclhotgas_maxlognH_snfb)
+    else:
+        sfb = ''
         
     # putting it together: ptypeQ = None is set to get resfile for W
     if ptypeQ is None: #output outputW name
@@ -2426,7 +2439,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
                                abunds=sabundsW, kernel=kernel, npix=npix_x,
                                depth=sLp)
             resfile = ol.ndir + base + zcen + xypos + axind + SFRindW +\
-                      halostr + vind
+                      halostr + vind + sfb
 
         elif ptypeW == 'basic':
             base = '{qW}{parttype}_{sim}_{snap}_test{ver}' + \
@@ -2435,7 +2448,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
                                snap=snapnum, ver=str(version), kernel=kernel, 
                                npix=npix_x, depth=sLp)
             resfile = ol.ndir + base + zcen + xypos + axind + SFRindW +\
-                      halostr + vind
+                      halostr + vind + sfb
 
     if ptypeQ is not None: # naming for quantityQ output
         qty_base = '{ptype}_{ion}_{abunds}{iontab}{sfgas}'
@@ -2458,7 +2471,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
         base = base.format(qQ=squantityQ, qW=squantityW, parttype=sparttype,
                             sim=ssimnum, snap=snapnum, ver=str(version),
                             kernel=kernel, npix=npix_x, depth=sLp)
-        resfile = ol.ndir + base + zcen + xypos + axind + halostr + vind
+        resfile = ol.ndir + base + zcen + xypos + axind + halostr + vind + sfb
 
 
     #if misc is not None:
@@ -2496,6 +2509,8 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
          periodic, kernel, saveres,
          simulation, LsinMpc,
          select, misc, ompproj, numslices, halosel, kwargs_halosel,
+         excludedirectfb, deltalogT_directfb, deltatMyr_directfb, 
+         inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,
          hdf5, override_simdatapath):
 
     '''
@@ -2503,7 +2518,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
     This is not an exhaustive check; it does handle the default/auto options
     return numbers are not ordered; just search <return ##>
     '''
-    # max used number: 55
+    # max used number: 62
 
     # basic type and valid option checks
     if not isinstance(var, str):
@@ -2513,11 +2528,12 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
         print('%s is not a kernel option. Options are: \n' % kernel)
         print(ol.kernel_list)
         return 2
-    if axis not in ['x','y','z']:
+    if axis not in ['x', 'y', 'z']:
         print('Axis must be "x", "y", or "z".')
         return 11
-    if (theta,psi,phi) != (0.,0.,0.):
-        print('Warning: rotation is not implemented in this code!\n  Using zero rotation version')
+    if (theta, psi, phi) != (0., 0., 0.):
+        print('Warning: rotation is not implemented in this code!\n'+\
+              'Using zero rotation version')
     if type(periodic) != bool:
         print('periodic should be True or False.\n')
         return 12
@@ -2659,7 +2675,8 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
     if simulation not in ['eagle', 'bahamas', 'Eagle', 'Bahamas', 'EAGLE',
                           'BAHAMAS', 'eagle-ioneq', 'c-eagle-hydrangea', 'CE',
                           'hydrangea', 'CEH']:
-        print('Simulation %s is not a valid choice; should be "eagle", "eagle-ioneq", "c-eagle-hydrangea" or "bahamas"'%str(simulation))
+        print('Simulation %s is not a valid choice; should be "eagle",'+\
+              ' "eagle-ioneq", "c-eagle-hydrangea" or "bahamas"'%str(simulation))
         return 30
     elif simulation == 'Eagle' or simulation == 'EAGLE':
         simulation = 'eagle'
@@ -2895,6 +2912,40 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
     if parttype != '0': #EOS is only relevant for parttype 0 (gas)
         excludeSFRW = False
         excludeSFRQ = False
+    
+    if parttype != '0': # parameter only applies to gas
+        excludedirectfb = False
+    if not isinstance(excludedirectfb, bool):
+        print('excludedirectfb should be True or False')
+        return 61    
+    if excludedirectfb: # otherwise these parameters are ignored anyway
+        if not isinstance(deltatMyr_directfb, num.Number):
+            print('deltatMyr_directfb should be a float')
+            return 56
+        else:
+            deltatMyr_directfb = float(deltatMyr_directfb)
+        if not isinstance(deltalogT_directfb, num.Number):
+            print('deltalogT_directfb should be a float')
+            return 57
+        else:
+            deltalogT_directfb = float(deltalogT_directfb)
+        if not isinstance(inclhotgas_maxlognH_snfb, num.Number):
+            print('inclhotgas_maxlognH_snfb should be a float '+\
+                  '(-inf for no exception)')
+            return 58
+        else:
+            inclhotgas_maxlognH_snfb = float(inclhotgas_maxlognH_snfb)
+        if not isinstance(logTK_agnfb, num.Number):
+            print('logTK_agnfb should be a float')
+            return 59
+        else:
+            logTK_agnfb = float(logTK_agnfb)
+        if not isinstance(logTK_snfb, num.Number):
+            print('logTK_snfb should be a float')
+            return 60
+        else:
+            logTK_snfb = float(logTK_snfb)
+    
 
     # if nothing has gone wrong, return all input, since setting quantities in functions doesn't work on global variables
     return 0, iseltW, iseltQ, simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
@@ -2908,7 +2959,10 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
-         halosel, kwargs_halosel, hdf5, override_simdatapath
+         halosel, kwargs_halosel,\
+         excludedirectfb, deltalogT_directfb, deltatMyr_directfb,\
+         inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,\
+         hdf5, override_simdatapath
 
 
 
@@ -5023,6 +5077,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
          periodic, kernel, saveres,
          simulation, LsinMpc,
          select, misc, ompproj, numslices, halosel, kwargs_halosel,
+         excludedirectfb, deltalogT_directfb, deltatMyr_directfb,
+         inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,
          hdf5, override_simdatapath)
     if isinstance(res, int):
         raise ValueError("inputcheck returned error code %i"%res)
@@ -5038,7 +5094,10 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
-         halosel, kwargs_halosel, hdf5, override_simdatapath = res[1:]
+         halosel, kwargs_halosel,\
+         excludedirectfb, deltalogT_directfb, deltatMyr_directfb,\
+         inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,\
+         hdf5, override_simdatapath = res[1:]
 
     print('Processed input:')
     print((':\t%s\t'.join(['simnum', 'snapnum', 'simulation', 'var', 'parttype', '']))\
@@ -5165,6 +5224,9 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                          bensgadget2tables, ps20tables, ps20depletion,                          
                          axis, var, abundsW, ionW, parttype, None, 
                          abundsQ, ionQ, quantityW, quantityQ,
+                         excludedirectfb, deltalogT_directfb, 
+                         deltatMyr_directfb, inclhotgas_maxlognH_snfb, 
+                         logTK_agnfb, logTK_snfb,
                          simulation, LsinMpc, halosel, kwargs_halosel, 
                          misc, hdf5)
     if ptypeQ !=None:
@@ -5176,6 +5238,9 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                               bensgadget2tables,  ps20tables, ps20depletion,
                               axis, var, abundsW, ionW, parttype, 
                               ptypeQ, abundsQ, ionQ, quantityW, quantityQ,
+                              excludedirectfb, deltalogT_directfb, 
+                              deltatMyr_directfb, inclhotgas_maxlognH_snfb, 
+                              logTK_agnfb, logTK_snfb,
                               simulation, LsinMpc, halosel, kwargs_halosel,
                               misc, hdf5)
     del vardict_temp
@@ -5256,20 +5321,35 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
     # only remaining checks on excludeSFR are for 'T4' and 'from'
 
     if excludeSFRW in ['from','only']: # only select EOS particles; difference in only in the emission calculation
-        vardict_WQ.readif('OnEquationOfState',rawunits =True)
+        vardict_WQ.readif('OnEquationOfState',rawunits=True)
         eossel = pc.Sel({'arr': vardict_WQ.particle['OnEquationOfState'] > 0.})
         vardict_WQ.delif('OnEquationOfState')
         vardict_WQ.update(eossel) #should significantly reduce memory impact of coordinate storage
         del eossel
 
     elif excludeSFRW == True: # only select non-EOS particles
-        vardict_WQ.readif('OnEquationOfState',rawunits =True)
+        vardict_WQ.readif('OnEquationOfState',rawunits=True)
         eossel = pc.Sel({'arr': vardict_WQ.particle['OnEquationOfState'] <= 0.})
         vardict_WQ.delif('OnEquationOfState')
         vardict_WQ.update(eossel) #will have less impact on coordinate storage
         del eossel
     # False and T4 require no up-front or general particle selection, just one instance in the temperature read-in
 
+    # apply any exclusions of feedback-heated gas
+    excludedirectfb=False, deltalogT_directfb=0.2, 
+         deltatMyr_directfb=10., inclhotgas_maxlognH_snfb=-2.,
+         logTK_agnfb=8.499, logTK_snfb=7.499,
+    if excludedirectfb:
+        vardict_WQ.readif('MaximumTemperature', rawunits=True)
+        tmax_units = vardict_WQ.CGSconv['MaximumTemperature']
+        tmin_sne = 10**logTK_snfb / tmax_units
+        tmax_sne = 10**(logTK_snfb + deltalogT_directfb) / tmax_units
+        tmin_agn = 10**logTK_agnfb / tmax_units
+        tmax_agn = 10**(logTK_agnfb + deltalogT_directfb) / tmax_units
+        
+        
+        
+        vardict_WQ.delif('MaximumTemperature')
 
     # calculate the quantities to project: save outside vardict (and no links in it) to prevent modification by the next calculation
     if ptypeQ is None:
@@ -5604,20 +5684,41 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                     L_z_temp = L_z / float(numslices)
                     centre_temp[Axis3] = centre_temp[Axis3] - (numslices + 1.)*L_z_temp/2. + sliceind*L_z_temp
 
-                subresfile = nameoutput(ptypeW, simnum, snapnum, version, kernel,
-                         npix_x, L_x_temp, L_y_temp, L_z_temp, centre_temp, simfile.boxsize, simfile.h,
-                         excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,
-                         ps20tables, ps20depletion,
-                         axis, var, abundsW, ionW, parttype, None, abundsQ, ionQ, quantityW, quantityQ,
-                         simulation, LsinMpc, misc)
+                subresfile = nameoutput(ptypeW, simnum, snapnum, version, 
+                                        kernel, npix_x, 
+                                        L_x_temp, L_y_temp, L_z_temp, 
+                                        centre_temp, simfile.boxsize, 
+                                        simfile.h, 
+                                        excludeSFRW, excludeSFRQ, velcut, 
+                                        sylviasshtables, bensgadget2tables,
+                                        ps20tables, ps20depletion,
+                                        axis, var, abundsW, ionW, parttype, 
+                                        None, abundsQ, ionQ, quantityW, 
+                                        quantityQ,
+                                        excludedirectfb, deltalogT_directfb, 
+                                        deltatMyr_directfb, 
+                                        inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,
+                                        simulation, LsinMpc, misc)
                 print('Saving W result to %s'%subresfile)
                 if ptypeQ !=None:
-                    subresfile2 = nameoutput(ptypeW, simnum, snapnum, version, kernel,
-                              npix_x, L_x_temp, L_y_temp, L_z_temp, centre_temp, simfile.boxsize, simfile.h,
-                              excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,
-                              ps20tables, ps20depletion,
-                              axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, quantityW, quantityQ,
-                              simulation, LsinMpc, misc)
+                    subresfile2 = nameoutput(ptypeW, simnum, snapnum, version, 
+                                             kernel, npix_x, 
+                                             L_x_temp, L_y_temp, L_z_temp, 
+                                             centre_temp, simfile.boxsize, 
+                                             simfile.h,
+                                             excludeSFRW, excludeSFRQ, velcut,
+                                             sylviasshtables, 
+                                             bensgadget2tables,
+                                             ps20tables, ps20depletion,
+                                             axis, var, abundsW, ionW,
+                                             parttype, ptypeQ, abundsQ, ionQ, 
+                                             quantityW, quantityQ,
+                                             excludedirectfb, 
+                                             deltalogT_directfb, 
+                                             deltatMyr_directfb, 
+                                             inclhotgas_maxlognH_snfb, 
+                                             logTK_agnfb, logTK_snfb,
+                                             simulation, LsinMpc, misc)
                     print('Saving Q result to %s'%subresfile2)
 
             projdict = {'lsmooth': lsmooth, 
@@ -5732,7 +5833,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                                          cosmopars, 
                                          override_simdatapath, None)
                         else:
-                            np.savez(subresfile2, arr_0=resQ, minfinite=minQ, max=maxQ)
+                            np.savez(subresfile2, arr_0=resQ, minfinite=minQ, 
+                                     max=maxQ)
                     else:
                         if hdf5:
                             savemap_hdf5(subresfile2, resQ, minQ, maxQ,
