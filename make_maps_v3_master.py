@@ -5336,9 +5336,6 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
     # False and T4 require no up-front or general particle selection, just one instance in the temperature read-in
 
     # apply any exclusions of feedback-heated gas
-    excludedirectfb=False, deltalogT_directfb=0.2, 
-         deltatMyr_directfb=10., inclhotgas_maxlognH_snfb=-2.,
-         logTK_agnfb=8.499, logTK_snfb=7.499,
     if excludedirectfb:
         vardict_WQ.readif('MaximumTemperature', rawunits=True)
         tmax_units = vardict_WQ.CGSconv['MaximumTemperature']
@@ -5347,9 +5344,41 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
         tmin_agn = 10**logTK_agnfb / tmax_units
         tmax_agn = 10**(logTK_agnfb + deltalogT_directfb) / tmax_units
         
+        anow = vardict_WQ.simfile.a
+        deltat = deltatMyr_directfb * c.sec_per_megayear
+        time_now = cu.t_expfactor(anow, cosmopars=vardict_WQ.simfile)
+        amax = cu.expfactor_t(time_now - deltat, cosmopars=vardict_WQ.simfile)        
         
+        if inclhotgas_maxlognH_snfb > -np.inf:
+            vardict_WQ.readif('Density', rawunits=True)
+            rho_units = vardict_WQ.CGSconv['Density']
+            rhomin = 10**(inclhotgas_maxlognH_snfb) * c.atomw_H * c.u \
+                     / 0.752 / rho_units
+            _sel = vardict_WQ.particle['Density'] > rhomin
+            vardict_WQ.delif('Density', last=False)
+            vardict_WQ.readif('Temperature', rawunits=True)
+            temp_units = vardict_WQ.CGSconv['Temperature']
+            tempmin = 10**(logTK_snfb - 0.1) / temp_units
+            _sel |= vardict_WQ.particle['Temperature'] < tempmin
+            vardict_WQ.delif('Temperature', last=False)
+        else:
+            _sel = np.ones(len(vardict_WQ.particle['MaximumTemperature']),
+                           dtype=bool)
+        _sel &= vardict_WQ.particle['MaximumTemperature'] >= tmin_sne
+        _sel &= vardict_WQ.particle['MaximumTemperature'] < tmax_sne
         
-        vardict_WQ.delif('MaximumTemperature')
+        __sel = vardict_WQ.particle['MaximumTemperature'] >= tmin_agn
+        __sel &= vardict_WQ.particle['MaximumTemperature'] < tmax_agn
+        _sel |= __sel
+        del __sel
+        vardict_WQ.delif('MaximumTemperature', last=False)
+        
+        vardict_WQ.readif('AExpMaxmimumTemperature')
+        _sel &= vardict_WQ.particle['AExpMaximumTemperature'] < amax
+        vardict_WQ.delif('AExpMaximumTemperature', last=False)
+        _sel = pc.Sel({'arr': np.logical_not(_sel)})
+        vardict_WQ.update(_sel)        
+        del _sel
 
     # calculate the quantities to project: save outside vardict (and no links in it) to prevent modification by the next calculation
     if ptypeQ is None:
