@@ -5409,7 +5409,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
         ax2.grid(b=True)
         if inclhotgas_maxlognH_snfb > -np.inf:
             ax2.axhline(np.log10(tempmax), linestyle='dotted', color='green')
-            ax2.axvline(np.log10(rhomin), linestyle='dotted', color='green')
+            ax2.axvline(np.log10(rhomin * rho_units), 
+                        linestyle='dotted', color='green')
         
         vardict_WQ.delif('AExpMaximumTemperature')
         vardict_WQ.delif('MaximumTemperature')
