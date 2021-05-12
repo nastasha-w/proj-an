@@ -1118,65 +1118,126 @@ def run_maps():
 def compare_maps():
     path = mdir + 'maps/'
     outdir = mdir + 'mapcomp/'
-    fn_old_dens = path + 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7' + \
-                  '_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_' + \
-                  'y3.125-pm6.25_z-projection_master.hdf5'
-    fn_old_mass = path + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_'+\
-                  'zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS'+\
-                  '_master.hdf5'
-    fn_old_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_'+\
-                  'test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_'+\
-                  'y3.125-pm6.25_z-projection_master.hdf5'
+    # fn_old_dens = path + 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7' + \
+    #               '_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_' + \
+    #               'y3.125-pm6.25_z-projection_master.hdf5'
+    # fn_old_mass = path + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_'+\
+    #               'zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS'+\
+    #               '_master.hdf5'
+    # fn_old_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_'+\
+    #               'test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_'+\
+    #               'y3.125-pm6.25_z-projection_master.hdf5'
      
-    fn_new_dens = path + 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7' + \
-                  '_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_' + \
-                  'y3.125-pm6.25_z-projection.hdf5'
-    fn_new_mass = path + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_'+\
-                  'zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS'+\
-                  '.hdf5'
-    fn_new_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_'+\
-                  'test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_'+\
-                  'y3.125-pm6.25_z-projection.hdf5'
+    # fn_new_dens = path + 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7' + \
+    #               '_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_' + \
+    #               'y3.125-pm6.25_z-projection.hdf5'
+    # fn_new_mass = path + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_'+\
+    #               'zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS'+\
+    #               '.hdf5'
+    # fn_new_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_'+\
+    #               'test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_'+\
+    #               'y3.125-pm6.25_z-projection.hdf5'
     
-    fn_def_dens = path + 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7_'+\
-                  'C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125'+\
-                  '-pm6.25_z-projection_exclfb_TSN-7.499_TAGN-8.499_'+\
+    # fn_def_dens = path + 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7_'+\
+    #               'C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125'+\
+    #               '-pm6.25_z-projection_exclfb_TSN-7.499_TAGN-8.499_'+\
+    #               'Trng-0.2_10.0-Myr_inclSN-nH-lt--2.0.hdf5'
+    # fn_def_mass = path + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice'+\
+    #               '_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_'+\
+    #               'T4EOS_exclfb_TSN-7.499_TAGN-8.499_Trng-0.2_10.0-Myr_'+\
+    #               'inclSN-nH-lt--2.0.hdf5'
+    # fn_def_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_'+\
+    #               'test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25'+\
+    #               '_y3.125-pm6.25_z-projection_exclfb_TSN-7.499_TAGN-8.499'+\
+    #               '_Trng-0.2_10.0-Myr_inclSN-nH-lt--2.0.hdf5'
+                  
+    # fn_nonHcut_dens = path + 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_'+\
+    #               'test3.7_C2Sm'+\
+    #               '_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_'+\
+    #               'z-projection_exclfb_TSN-7.499_TAGN-8.499_Trng-0.2_'+\
+    #               '10.0-Myr.hdf5'
+    # fn_nonHcut_mass = path + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_'+\
+    #               '6.25slice_'+\
+    #               'zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS'+\
+    #               '_exclfb_TSN-7.499_TAGN-8.499_Trng-0.2_10.0-Myr.hdf5'            
+    
+    # fn_lTrng_mass = path + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice'+\
+    #               '_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS'+\
+    #               '_exclfb_TSN-7.499_TAGN-8.499_Trng-0.5_10.0-Myr'+\
+    #               '_inclSN-nH-lt--2.0.hdf5'
+    # fn_lTrng_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_'+\
+    #               'test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_'+\
+    #               'y3.125-pm6.25_z-projection_exclfb_TSN-7.499_TAGN-8.499'+\
+    #               '_Trng-0.5_10.0-Myr_inclSN-nH-lt--2.0.hdf5'
+                  
+    # fn_ldeltat_mass = path + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_'+\
+    #               '6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_'+\
+    #               'z-projection_T4EOS_exclfb_TSN-7.499_TAGN-8.499_'+\
+    #               'Trng-0.2_100.0-Myr_inclSN-nH-lt--2.0.hdf5'
+    # fn_ldeltat_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_'+\
+    #               'test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_'+\
+    #               'y3.125-pm6.25_z-projection_exclfb_TSN-7.499_TAGN-8.499'+\
+    #               '_Trng-0.2_100.0-Myr_inclSN-nH-lt--2.0.hdf5'
+                  
+    fn_old_dens = path + 'Density_T4EOS_Mass_T4EOS_L0025N0376_27_test3.7' + \
+                  '_C2Sm_400pix_6.25slice_zcen3.125' + \
+                  '_z-projection_master.hdf5'
+    fn_old_mass = path + 'Mass_L0025N0376_27_test3.7_C2Sm_400pix_6.25slice_'+\
+                  'zcen3.125_z-projection_T4EOS'+\
+                  '_master.hdf5'
+    fn_old_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0025N0376_27_'+\
+                  'test3.7_C2Sm_400pix_6.25slice_zcen3.125'+\
+                  '_z-projection_master.hdf5'
+     
+    fn_new_dens = path + 'Density_T4EOS_Mass_T4EOS_L0025N0376_27_test3.7' + \
+                  '_C2Sm_400pix_6.25slice_zcen3.125' + \
+                  '_z-projection.hdf5'
+    fn_new_mass = path + 'Mass_L0025N0376_27_test3.7_C2Sm_400pix_6.25slice_'+\
+                  'zcen3.125_z-projection_T4EOS'+\
+                  '.hdf5'
+    fn_new_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0025N0376_27_'+\
+                  'test3.7_C2Sm_400pix_6.25slice_zcen3.125'+\
+                  '_z-projection.hdf5'
+    
+    fn_def_dens = path + 'Density_T4EOS_Mass_T4EOS_L0025N0376_27_test3.7_'+\
+                  'C2Sm_400pix_6.25slice_zcen3.125'+\
+                  '_z-projection_exclfb_TSN-7.499_TAGN-8.499_'+\
                   'Trng-0.2_10.0-Myr_inclSN-nH-lt--2.0.hdf5'
-    fn_def_mass = path + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice'+\
-                  '_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_'+\
+    fn_def_mass = path + 'Mass_L0025N0376_27_test3.7_C2Sm_400pix_6.25slice'+\
+                  '_zcen3.125_z-projection_'+\
                   'T4EOS_exclfb_TSN-7.499_TAGN-8.499_Trng-0.2_10.0-Myr_'+\
                   'inclSN-nH-lt--2.0.hdf5'
-    fn_def_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_'+\
-                  'test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25'+\
-                  '_y3.125-pm6.25_z-projection_exclfb_TSN-7.499_TAGN-8.499'+\
+    fn_def_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0025N0376_27_'+\
+                  'test3.7_C2Sm_400pix_6.25slice_zcen3.125'+\
+                  '_z-projection_exclfb_TSN-7.499_TAGN-8.499'+\
                   '_Trng-0.2_10.0-Myr_inclSN-nH-lt--2.0.hdf5'
                   
-    fn_nonHcut_dens = path + 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_'+\
+    fn_nonHcut_dens = path + 'Density_T4EOS_Mass_T4EOS_L0025N0376_27_'+\
                   'test3.7_C2Sm'+\
-                  '_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_'+\
+                  '_400pix_6.25slice_zcen3.125_'+\
                   'z-projection_exclfb_TSN-7.499_TAGN-8.499_Trng-0.2_'+\
                   '10.0-Myr.hdf5'
-    fn_nonHcut_mass = path + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_'+\
+    fn_nonHcut_mass = path + 'Mass_L0025N0376_27_test3.7_C2Sm_400pix_'+\
                   '6.25slice_'+\
-                  'zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS'+\
+                  'zcen3.125_z-projection_T4EOS'+\
                   '_exclfb_TSN-7.499_TAGN-8.499_Trng-0.2_10.0-Myr.hdf5'            
     
-    fn_lTrng_mass = path + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice'+\
-                  '_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS'+\
+    fn_lTrng_mass = path + 'Mass_L0025N0376_27_test3.7_C2Sm_400pix_6.25slice'+\
+                  '_zcen3.125_z-projection_T4EOS'+\
                   '_exclfb_TSN-7.499_TAGN-8.499_Trng-0.5_10.0-Myr'+\
                   '_inclSN-nH-lt--2.0.hdf5'
-    fn_lTrng_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_'+\
-                  'test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_'+\
-                  'y3.125-pm6.25_z-projection_exclfb_TSN-7.499_TAGN-8.499'+\
+    fn_lTrng_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0025N0376_27_'+\
+                  'test3.7_C2Sm_400pix_6.25slice_zcen3.125'+\
+                  '_z-projection_exclfb_TSN-7.499_TAGN-8.499'+\
                   '_Trng-0.5_10.0-Myr_inclSN-nH-lt--2.0.hdf5'
                   
-    fn_ldeltat_mass = path + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_'+\
-                  '6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_'+\
+    fn_ldeltat_mass = path + 'Mass_L0025N0376_27_test3.7_C2Sm_400pix_'+\
+                  '6.25slice_zcen3.125_'+\
                   'z-projection_T4EOS_exclfb_TSN-7.499_TAGN-8.499_'+\
                   'Trng-0.2_100.0-Myr_inclSN-nH-lt--2.0.hdf5'
-    fn_ldeltat_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_'+\
-                  'test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_'+\
-                  'y3.125-pm6.25_z-projection_exclfb_TSN-7.499_TAGN-8.499'+\
+    fn_ldeltat_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0025N0376_27_'+\
+                  'test3.7_C2Sm_400pix_6.25slice_zcen3.125'+\
+                  '_z-projection_exclfb_TSN-7.499_TAGN-8.499'+\
                   '_Trng-0.2_100.0-Myr_inclSN-nH-lt--2.0.hdf5'
     
         
