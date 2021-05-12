@@ -1117,6 +1117,7 @@ def run_maps():
 
 def compare_maps():
     path = mdir + 'maps/'
+    outdir = mdir + 'mapcomp/'
     fn_old_dens = path + 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7' + \
                   '_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_' + \
                   'y3.125-pm6.25_z-projection_master.hdf5'
@@ -1126,7 +1127,7 @@ def compare_maps():
     fn_old_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_'+\
                   'test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_'+\
                   'y3.125-pm6.25_z-projection_master.hdf5'
- 
+     
     fn_new_dens = path + 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7' + \
                   '_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_' + \
                   'y3.125-pm6.25_z-projection.hdf5'
@@ -1137,8 +1138,87 @@ def compare_maps():
                   'test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_'+\
                   'y3.125-pm6.25_z-projection.hdf5'
     
-
-    tct.compare_maps(filen1, filen2, imgname=None, mapmin=None, diffmax=None) 
+    fn_def_dens = path + 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7_'+\
+                  'C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125'+\
+                  '-pm6.25_z-projection_exclfb_TSN-7.499_TAGN-8.499_'+\
+                  'Trng-0.2_10.0-Myr_inclSN-nH-lt--2.0.hdf5'
+    fn_def_mass = path + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice'+\
+                  '_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_'+\
+                  'T4EOS_exclfb_TSN-7.499_TAGN-8.499_Trng-0.2_10.0-Myr_'+\
+                  'inclSN-nH-lt--2.0.hdf5'
+    fn_def_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_'+\
+                  'test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25'+\
+                  '_y3.125-pm6.25_z-projection_exclfb_TSN-7.499_TAGN-8.499'+\
+                  '_Trng-0.2_10.0-Myr_inclSN-nH-lt--2.0.hdf5'
+                  
+    fn_nonHcut_dens = path + 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_'+\
+                  'test3.7_C2Sm'+\
+                  '_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_'+\
+                  'z-projection_exclfb_TSN-7.499_TAGN-8.499_Trng-0.2_'+\
+                  '10.0-Myr.hdf5'
+    fn_nonHcut_mass = path + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_'+\
+                  '6.25slice_'+\
+                  'zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS'+\
+                  '_exclfb_TSN-7.499_TAGN-8.499_Trng-0.2_10.0-Myr.hdf5'            
+    
+    fn_lTrng_mass = path + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice'+\
+                  '_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS'+\
+                  '_exclfb_TSN-7.499_TAGN-8.499_Trng-0.5_10.0-Myr'+\
+                  '_inclSN-nH-lt--2.0.hdf5'
+    fn_lTrng_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_'+\
+                  'test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_'+\
+                  'y3.125-pm6.25_z-projection_exclfb_TSN-7.499_TAGN-8.499'+\
+                  '_Trng-0.5_10.0-Myr_inclSN-nH-lt--2.0.hdf5'
+                  
+    fn_ldeltat_mass = path + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_'+\
+                  '6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_'+\
+                  'z-projection_T4EOS_exclfb_TSN-7.499_TAGN-8.499_'+\
+                  'Trng-0.2_100.0-Myr_inclSN-nH-lt--2.0.hdf5'
+    fn_ldeltat_temp = path + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_'+\
+                  'test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_'+\
+                  'y3.125-pm6.25_z-projection_exclfb_TSN-7.499_TAGN-8.499'+\
+                  '_Trng-0.2_100.0-Myr_inclSN-nH-lt--2.0.hdf5'
+                  
+    tct.compare_maps(fn_new_mass, fn_old_mass, 
+                     imgname=outdir + 'mapcomp_new-old_Mass.pdf', 
+                     mapmin=None, diffmax=None)
+    tct.compare_maps(fn_new_dens, fn_old_dens, 
+                     imgname=outdir + 'mapcomp_new-old_Density.pdf', 
+                     mapmin=None, diffmax=None)
+    tct.compare_maps(fn_new_temp, fn_old_temp, 
+                     imgname=outdir + 'mapcomp_new-old_Temperature.pdf', 
+                     mapmin=None, diffmax=None)
+    tct.compare_maps(fn_def_mass, fn_new_mass, 
+                     imgname=outdir + 'mapcomp_excl-default_Mass.pdf', 
+                     mapmin=None, diffmax=None)
+    tct.compare_maps(fn_def_dens, fn_new_dens, 
+                     imgname=outdir + 'mapcomp_excl-default_Density.pdf', 
+                     mapmin=None, diffmax=None)
+    tct.compare_maps(fn_def_temp, fn_new_temp, 
+                     imgname=outdir + 'mapcomp_excl-default_Temperature.pdf', 
+                     mapmin=None, diffmax=None)
+    
+    tct.compare_maps(fn_nonHcut_mass, fn_def_mass, 
+                     imgname=outdir + 'mapcomp_excl-default-nonHcut_Mass.pdf', 
+                     mapmin=None, diffmax=None)
+    tct.compare_maps(fn_nonHcut_dens, fn_def_dens, 
+                     imgname=outdir + \
+                             'mapcomp_excl-default-nonHcut_Density.pdf', 
+                     mapmin=None, diffmax=None)
+    tct.compare_maps(fn_ldeltat_mass, fn_def_mass, 
+                     imgname=outdir + 'mapcomp_excl-default-ldeltat_Mass.pdf', 
+                     mapmin=None, diffmax=None)
+    tct.compare_maps(fn_ldeltat_temp, fn_def_temp, 
+                     imgname=outdir + \
+                             'mapcomp_excl-default-ldeltat_Temperature.pdf', 
+                     mapmin=None, diffmax=None)
+    tct.compare_maps(fn_lTrng_mass, fn_def_mass, 
+                     imgname=outdir + 'mapcomp_excl-default-lTrng_Mass.pdf', 
+                     mapmin=None, diffmax=None)
+    tct.compare_maps(fn_lTrng_temp, fn_def_temp, 
+                     imgname=outdir + \
+                             'mapcomp_excl-default-lTrng_Temperature.pdf', 
+                     mapmin=None, diffmax=None)
     
 if __name__ == '__main__':
     args = sys.argv[1:]

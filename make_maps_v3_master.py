@@ -5358,8 +5358,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
             vardict_WQ.delif('Density', last=False)
             vardict_WQ.readif('Temperature', rawunits=True)
             temp_units = vardict_WQ.CGSconv['Temperature']
-            tempmin = 10**(logTK_snfb - 0.1) / temp_units
-            _sel |= vardict_WQ.particle['Temperature'] < tempmin
+            tempmax = 10**(logTK_snfb - 0.1) / temp_units
+            _sel |= vardict_WQ.particle['Temperature'] < tempmax
             vardict_WQ.delif('Temperature', last=False)
         else:
             _sel = np.ones(len(vardict_WQ.particle['MaximumTemperature']),
@@ -5379,6 +5379,42 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
         _sel = pc.Sel({'arr': np.logical_not(_sel)})
         vardict_WQ.update(_sel)        
         del _sel
+        
+        ## debug 
+        vardict_WQ.readif('AExpMaximumTemperature')
+        vardict_WQ.readif('MaximumTemperature')
+        vardict_WQ.readif('Temperature')
+        vardict_WQ.readif('Density')
+        
+        import matplotlib.pyplot as plt
+        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2)
+        ax1.plot(vardict_WQ.particle['AExpMaximumTemperature'],
+                 np.log10(vardict_WQ.particle['MaximumTemperature']),
+                 marker='o', linestyle='none', color='black', alpha=0.1)
+        ax1.set_xlabel('AExpMaximumTemperature')
+        ax1.set_ylabel('log10 MaximumTemperature [K]')
+        ax1.axhline(np.log10(tmin_sne), linestyle='dotted', color='blue')
+        ax1.axhline(np.log10(tmax_sne), linestyle='dotted', color='blue')
+        ax1.axhline(np.log10(tmin_agn), linestyle='dotted', color='red')
+        ax1.axhline(np.log10(tmax_agn), linestyle='dotted', color='red')
+        ax1.axvline(amax, linestyle='dotted', color='gray')
+        
+        ax1.plot(np.log10(vardict_WQ.particle['Density']),
+                 np.log10(vardict_WQ.particle['Temperature']),
+                 marker='o', linestyle='none', color='black', alpha=0.1)
+        ax1.set_xlabel('log10 Density [g / cm**3]')
+        ax1.set_ylabel('log10 Temperature [K]')
+        ax1.grid(b=True)
+        if inclhotgas_maxlognH_snfb > -np.inf:
+            ax1.axhline(np.log10(tempmax), linestyle='dotted', color='green')
+            ax1.axvline(np.log10(rhomin), linestyle='dotted', color='green')
+        
+        vardict_WQ.delif('AExpMaximumTemperature')
+        vardict_WQ.delif('MaximumTemperature')
+        vardict_WQ.delif('Temperature')
+        vardict_WQ.rdelif('Density')
+        return None
+        
 
     # calculate the quantities to project: save outside vardict (and no links in it) to prevent modification by the next calculation
     if ptypeQ is None:
