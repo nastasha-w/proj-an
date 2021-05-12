@@ -1057,10 +1057,10 @@ def plot_all_nH_cuts():
         
 def run_maps():
     
-    simnum = 'L0012N0188'
+    simnum = 'L0025N0376'
     snapnum = 27
-    centre = [3.125, 3.125, 3.125]
-    L_x, L_y, L_z = (6.25, ) * 3
+    centre = [12.5, 12.5, 3.125]
+    L_x, L_y, L_z = (25., 25., 6.25)
     npix_x, npix_y = (400, ) * 2 
     ptypeW = 'basic'
     
@@ -1178,7 +1178,8 @@ def compare_maps():
                   'test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_'+\
                   'y3.125-pm6.25_z-projection_exclfb_TSN-7.499_TAGN-8.499'+\
                   '_Trng-0.2_100.0-Myr_inclSN-nH-lt--2.0.hdf5'
-                  
+    
+        
     tct.compare_maps(fn_new_mass, fn_old_mass, 
                      imgname=outdir + 'mapcomp_new-old_Mass.pdf', 
                      mapmin=None, diffmax=None)
