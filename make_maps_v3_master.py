@@ -5374,7 +5374,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
         vardict_WQ.delif('MaximumTemperature', last=False)
         
         vardict_WQ.readif('AExpMaximumTemperature')
-        _sel &= vardict_WQ.particle['AExpMaximumTemperature'] < amax
+        _sel &= vardict_WQ.particle['AExpMaximumTemperature'] > amax
         vardict_WQ.delif('AExpMaximumTemperature', last=False)
         _sel = pc.Sel({'arr': np.logical_not(_sel)})
         vardict_WQ.update(_sel)        
