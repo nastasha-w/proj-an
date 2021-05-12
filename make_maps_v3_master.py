@@ -5380,43 +5380,43 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
         vardict_WQ.update(_sel)        
         del _sel
         
-        ## debug 
-        vardict_WQ.readif('AExpMaximumTemperature')
-        vardict_WQ.readif('MaximumTemperature')
-        vardict_WQ.readif('Temperature')
-        vardict_WQ.readif('Density')
+        # ## debug 
+        # vardict_WQ.readif('AExpMaximumTemperature')
+        # vardict_WQ.readif('MaximumTemperature')
+        # vardict_WQ.readif('Temperature')
+        # vardict_WQ.readif('Density')
         
-        import matplotlib.pyplot as plt
-        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2)
-        ax1.plot(vardict_WQ.particle['AExpMaximumTemperature'],
-                 np.log10(vardict_WQ.particle['MaximumTemperature']),
-                 marker='o', linestyle='none', color='black', alpha=0.05,
-                 markersize=3)
-        ax1.set_xlabel('AExpMaximumTemperature')
-        ax1.set_ylabel('log10 MaximumTemperature [K]')
-        ax1.axhline(np.log10(tmin_sne), linestyle='dotted', color='blue')
-        ax1.axhline(np.log10(tmax_sne), linestyle='dotted', color='blue')
-        ax1.axhline(np.log10(tmin_agn), linestyle='dotted', color='red')
-        ax1.axhline(np.log10(tmax_agn), linestyle='dotted', color='red')
-        ax1.axvline(amax, linestyle='dotted', color='gray')
+        # import matplotlib.pyplot as plt
+        # fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2)
+        # ax1.plot(vardict_WQ.particle['AExpMaximumTemperature'],
+        #          np.log10(vardict_WQ.particle['MaximumTemperature']),
+        #          marker='o', linestyle='none', color='black', alpha=0.05,
+        #          markersize=3)
+        # ax1.set_xlabel('AExpMaximumTemperature')
+        # ax1.set_ylabel('log10 MaximumTemperature [K]')
+        # ax1.axhline(np.log10(tmin_sne), linestyle='dotted', color='blue')
+        # ax1.axhline(np.log10(tmax_sne), linestyle='dotted', color='blue')
+        # ax1.axhline(np.log10(tmin_agn), linestyle='dotted', color='red')
+        # ax1.axhline(np.log10(tmax_agn), linestyle='dotted', color='red')
+        # ax1.axvline(amax, linestyle='dotted', color='gray')
         
-        ax2.plot(np.log10(vardict_WQ.particle['Density']),
-                 np.log10(vardict_WQ.particle['Temperature']),
-                 marker='o', linestyle='none', color='black', alpha=0.05, 
-                 markersize=3)
-        ax2.set_xlabel('log10 Density [g / cm**3]')
-        ax2.set_ylabel('log10 Temperature [K]')
-        ax2.grid(b=True)
-        if inclhotgas_maxlognH_snfb > -np.inf:
-            ax2.axhline(np.log10(tempmax), linestyle='dotted', color='green')
-            ax2.axvline(np.log10(rhomin * rho_units), 
-                        linestyle='dotted', color='green')
+        # ax2.plot(np.log10(vardict_WQ.particle['Density']),
+        #          np.log10(vardict_WQ.particle['Temperature']),
+        #          marker='o', linestyle='none', color='black', alpha=0.05, 
+        #          markersize=3)
+        # ax2.set_xlabel('log10 Density [g / cm**3]')
+        # ax2.set_ylabel('log10 Temperature [K]')
+        # ax2.grid(b=True)
+        # if inclhotgas_maxlognH_snfb > -np.inf:
+        #     ax2.axhline(np.log10(tempmax), linestyle='dotted', color='green')
+        #     ax2.axvline(np.log10(rhomin * rho_units), 
+        #                 linestyle='dotted', color='green')
         
-        vardict_WQ.delif('AExpMaximumTemperature')
-        vardict_WQ.delif('MaximumTemperature')
-        vardict_WQ.delif('Temperature')
-        vardict_WQ.delif('Density')
-        return None
+        # vardict_WQ.delif('AExpMaximumTemperature')
+        # vardict_WQ.delif('MaximumTemperature')
+        # vardict_WQ.delif('Temperature')
+        # vardict_WQ.delif('Density')
+        # return None
         
 
     # calculate the quantities to project: save outside vardict (and no links in it) to prevent modification by the next calculation
