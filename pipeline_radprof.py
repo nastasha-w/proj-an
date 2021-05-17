@@ -1477,7 +1477,8 @@ def getprofiles_directfbtest(index):
         deltat_Myr = 10.
     elif simset == 2:
         deltat_Myr = 30.
-        
+    ps20tables = line in all_lines_PS20
+    
     kwargs = {'abundsW': 'Sm', 'excludeSFRW': True, 'ptypeQ': None,
               'axis': 'z', 'periodic': True, 'kernel': 'C2',
               'log': True, 'saveres': True, 'hdf5': True,
@@ -1485,7 +1486,8 @@ def getprofiles_directfbtest(index):
               'excludedirectfb': True, 'deltalogT_directfb': 0.2, 
               'deltatMyr_directfb': deltat_Myr, 
               'inclhotgas_maxlognH_snfb': -2.,
-              'logTK_agnfb': 8.499, 'logTK_snfb': 7.499}
+              'logTK_agnfb': 8.499, 'logTK_snfb': 7.499,
+              'ps20tables': ps20tables, 'ps20depletion': False,}
     
     halocats = [halocat if '/' in halocat else ol.pdir + halocat \
                 for halocat in halocats]
