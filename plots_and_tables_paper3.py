@@ -440,7 +440,7 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,
     retlog:   return log unit values (ignored if log/non-log isn't recorded)
     ofmean:   return statistics of the individual mean profiles instead of the
               whole sample. Only works if separate is False. (assumed stored 
-              as mean_log)
+              as)
     retsamplesize: bool
         return the number of galaxies in each seltag sample. Only if separate
         is False.

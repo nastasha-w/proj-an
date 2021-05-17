@@ -2222,9 +2222,13 @@ def translate(old_dct, old_nm, centre, boxsize, periodic):
 
 def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
                npix_x, L_x, L_y, L_z, centre, BoxSize, hconst,
-               excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,
+               excludeSFRW, excludeSFRQ, velcut, sylviasshtables, 
+               bensgadget2tables,
                ps20tables, ps20depletion,
-               axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, quantityW, quantityQ,
+               axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, 
+               quantityW, quantityQ,
+               excludedirectfb, deltalogT_directfb, deltatMyr_directfb, 
+               inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,
                simulation, LsinMpc, halosel, kwargs_halosel, misc, hdf5):
     # some messiness is hard to avoid, but it's contained
     # Ls and centre have not been converted to Mpc when this function is called
@@ -2414,6 +2418,15 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
                 halostr = '_halosel-%s-endhalosel'%kwargs_halosel['label']
     else:
         halostr = ''
+    
+    if excludedirectfb: 
+        sfb = '_exclfb_TSN-{tsnfb}_TAGN-{tagnfb}_Trng-{deltaT}_{deltat}-Myr'
+        sfb = sfb.format(tsnfb=logTK_snfb, tagnfb=logTK_agnfb, 
+                         deltaT=deltalogT_directfb, deltat=deltatMyr_directfb)
+        if inclhotgas_maxlognH_snfb > -np.inf:
+            sfb = sfb + '_inclSN-nH-lt-{}'.format(inclhotgas_maxlognH_snfb)
+    else:
+        sfb = ''
         
     # putting it together: ptypeQ = None is set to get resfile for W
     if ptypeQ is None: #output outputW name
@@ -2426,7 +2439,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
                                abunds=sabundsW, kernel=kernel, npix=npix_x,
                                depth=sLp)
             resfile = ol.ndir + base + zcen + xypos + axind + SFRindW +\
-                      halostr + vind
+                      halostr + vind + sfb
 
         elif ptypeW == 'basic':
             base = '{qW}{parttype}_{sim}_{snap}_test{ver}' + \
@@ -2435,7 +2448,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
                                snap=snapnum, ver=str(version), kernel=kernel, 
                                npix=npix_x, depth=sLp)
             resfile = ol.ndir + base + zcen + xypos + axind + SFRindW +\
-                      halostr + vind
+                      halostr + vind + sfb
 
     if ptypeQ is not None: # naming for quantityQ output
         qty_base = '{ptype}_{ion}_{abunds}{iontab}{sfgas}'
@@ -2458,7 +2471,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
         base = base.format(qQ=squantityQ, qW=squantityW, parttype=sparttype,
                             sim=ssimnum, snap=snapnum, ver=str(version),
                             kernel=kernel, npix=npix_x, depth=sLp)
-        resfile = ol.ndir + base + zcen + xypos + axind + halostr + vind
+        resfile = ol.ndir + base + zcen + xypos + axind + halostr + vind + sfb
 
 
     #if misc is not None:
@@ -2496,6 +2509,8 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
          periodic, kernel, saveres,
          simulation, LsinMpc,
          select, misc, ompproj, numslices, halosel, kwargs_halosel,
+         excludedirectfb, deltalogT_directfb, deltatMyr_directfb, 
+         inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,
          hdf5, override_simdatapath):
 
     '''
@@ -2503,7 +2518,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
     This is not an exhaustive check; it does handle the default/auto options
     return numbers are not ordered; just search <return ##>
     '''
-    # max used number: 55
+    # max used number: 62
 
     # basic type and valid option checks
     if not isinstance(var, str):
@@ -2513,11 +2528,12 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
         print('%s is not a kernel option. Options are: \n' % kernel)
         print(ol.kernel_list)
         return 2
-    if axis not in ['x','y','z']:
+    if axis not in ['x', 'y', 'z']:
         print('Axis must be "x", "y", or "z".')
         return 11
-    if (theta,psi,phi) != (0.,0.,0.):
-        print('Warning: rotation is not implemented in this code!\n  Using zero rotation version')
+    if (theta, psi, phi) != (0., 0., 0.):
+        print('Warning: rotation is not implemented in this code!\n'+\
+              'Using zero rotation version')
     if type(periodic) != bool:
         print('periodic should be True or False.\n')
         return 12
@@ -2659,7 +2675,8 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
     if simulation not in ['eagle', 'bahamas', 'Eagle', 'Bahamas', 'EAGLE',
                           'BAHAMAS', 'eagle-ioneq', 'c-eagle-hydrangea', 'CE',
                           'hydrangea', 'CEH']:
-        print('Simulation %s is not a valid choice; should be "eagle", "eagle-ioneq", "c-eagle-hydrangea" or "bahamas"'%str(simulation))
+        print('Simulation %s is not a valid choice; should be "eagle",'+\
+              ' "eagle-ioneq", "c-eagle-hydrangea" or "bahamas"'%str(simulation))
         return 30
     elif simulation == 'Eagle' or simulation == 'EAGLE':
         simulation = 'eagle'
@@ -2895,6 +2912,40 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
     if parttype != '0': #EOS is only relevant for parttype 0 (gas)
         excludeSFRW = False
         excludeSFRQ = False
+    
+    if parttype != '0': # parameter only applies to gas
+        excludedirectfb = False
+    if not isinstance(excludedirectfb, bool):
+        print('excludedirectfb should be True or False')
+        return 61    
+    if excludedirectfb: # otherwise these parameters are ignored anyway
+        if not isinstance(deltatMyr_directfb, num.Number):
+            print('deltatMyr_directfb should be a float')
+            return 56
+        else:
+            deltatMyr_directfb = float(deltatMyr_directfb)
+        if not isinstance(deltalogT_directfb, num.Number):
+            print('deltalogT_directfb should be a float')
+            return 57
+        else:
+            deltalogT_directfb = float(deltalogT_directfb)
+        if not isinstance(inclhotgas_maxlognH_snfb, num.Number):
+            print('inclhotgas_maxlognH_snfb should be a float '+\
+                  '(-inf for no exception)')
+            return 58
+        else:
+            inclhotgas_maxlognH_snfb = float(inclhotgas_maxlognH_snfb)
+        if not isinstance(logTK_agnfb, num.Number):
+            print('logTK_agnfb should be a float')
+            return 59
+        else:
+            logTK_agnfb = float(logTK_agnfb)
+        if not isinstance(logTK_snfb, num.Number):
+            print('logTK_snfb should be a float')
+            return 60
+        else:
+            logTK_snfb = float(logTK_snfb)
+    
 
     # if nothing has gone wrong, return all input, since setting quantities in functions doesn't work on global variables
     return 0, iseltW, iseltQ, simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
@@ -2908,7 +2959,10 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
-         halosel, kwargs_halosel, hdf5, override_simdatapath
+         halosel, kwargs_halosel,\
+         excludedirectfb, deltalogT_directfb, deltatMyr_directfb,\
+         inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,\
+         hdf5, override_simdatapath
 
 
 
@@ -4546,7 +4600,11 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,
          var, axis, log, velcut,
          periodic, kernel, saveres,
          simulation, LsinMpc, misc, ompproj, numslices,
-         halosel, kwargs_halosel, cosmopars, override_simdatapath, groupnums):
+         halosel, kwargs_halosel, 
+         excludedirectfb, deltalogT_directfb, 
+         deltatMyr_directfb, inclhotgas_maxlognH_snfb,
+         logTK_agnfb, logTK_snfb,
+         cosmopars, override_simdatapath, groupnums):
     '''
     save projmap, minval, maxval with npzname and the processed input 
     parameters
@@ -4599,6 +4657,13 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,
         saveattr(hed, 'psi', psi)
         saveattr(hed, 'override_simdatapath', override_simdatapath)
         
+        saveattr(hed, 'excludedirectfb', excludedirectfb)
+        saveattr(hed, 'deltalogT_directfb', deltalogT_directfb)
+        saveattr(hed, 'deltatMyr_directfb', deltatMyr_directfb)
+        saveattr(hed, 'inclhotgas_maxlognH_snfb', inclhotgas_maxlognH_snfb)
+        saveattr(hed, 'logTK_agnfb', logTK_agnfb)
+        saveattr(hed, 'logTK_snfb', logTK_snfb)
+        
         saveattr(hed, 'cosmopars', cosmopars)
         
         saveattr(hed, 'make_maps_opts_locs.emtab_sylvia_ssh', 
@@ -4641,19 +4706,22 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,
         
 ##########################################################################################
 
-def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
-         ptypeW,\
+def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
+         ptypeW,
          ionW=None, abundsW='auto', quantityW=None,
          ionQ=None, abundsQ='auto', quantityQ=None, ptypeQ=None,
          excludeSFRW=False, excludeSFRQ=False, parttype='0',
-         theta=0.0, phi=0.0, psi=0.0, \
+         theta=0.0, phi=0.0, psi=0.0,
          sylviasshtables=False, bensgadget2tables=False,
          ps20tables=False, ps20depletion=True,
-         var='auto', axis='z',log=True, velcut=False,\
-         periodic=True, kernel='C2', saveres=False,\
-         simulation='eagle', LsinMpc=None,\
-         select=None, misc=None, halosel=None, kwargs_halosel=None,\
-         ompproj=False, nameonly=False, numslices=None, hdf5=False,\
+         var='auto', axis='z',log=True, velcut=False,
+         periodic=True, kernel='C2', saveres=False,
+         simulation='eagle', LsinMpc=None,
+         select=None, misc=None, halosel=None, kwargs_halosel=None,
+         excludedirectfb=False, deltalogT_directfb=0.2, 
+         deltatMyr_directfb=10., inclhotgas_maxlognH_snfb=-2.,
+         logTK_agnfb=8.499, logTK_snfb=7.499,
+         ompproj=False, nameonly=False, numslices=None, hdf5=False,
          override_simdatapath=None):
 
     """
@@ -4904,6 +4972,44 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
         than the default tables from Serena Bertone that are consistent with 
         Eagle cooling. These tables exist for a limited number of ions, but 
         include O I - VIII.
+    excludedirectfb: bool
+        exclude some gas from projection, based mainly on the 
+        MaximumTemperature of the gas and the time this maximum temperature 
+        was reached. The gas that seems to have been ditrectly heated by AGN 
+        or SN feedback is excluded. Defaults for the various parameters 
+        controlling the selection of the excluded gas are based on inspections 
+        of the gas phase diagram in EAGLE L0100N1504 (REFERENCE) at different 
+        time difference and temeprature range cuts. The default is False.
+    logTK_agnfb: float
+        the temperature difference [log10 K] used for the AGN feedback. If
+        exlcudedirectfb, this is used as the minimum value for the gas maximum
+        temperature used to define gas assumed to have been directly heated by
+        AGN feedback. The default is 8.499 (Eagle Reference, small margin).
+    logTK_snfb: float
+        the temperature difference [log10 K] used for the SN feedback. If
+        exlcudedirectfb, this is used as the minimum value for the gas maximum
+        temperature used to define gas assumed to have been directly heated by
+        SN feedback. The default is 7.499 (Eagle, small margin).
+    deltalogT_directfb: float
+        The range of temperatures [log10] used to define feedback-affected
+        gas. Gas with maximum log temperatures between logTK_snfb and 
+        logTK_snfb + deltalogT_directfb, and logTK_agnfb and logTK_agnfb + 
+        deltalogT_directfb, reached within the last deltatMyr_directfb, is
+        considered feedback-affected and excluded. A value of np.inf (no 
+        maximum) is allowed. The default is 0.2.
+    deltatMyr_directfb: float
+        The maximum time since the maximum temperature was reached where gas 
+        is still classified as feedback-affected [Myr]. The default is 10. 
+    inclhotgas_maxlognH_snfb: float
+        Gas with a maximum temperature of 10**7.5 K or higher can also arise 
+        due to e.g., virial socks in clusters. In order to *not* exclude this 
+        gas, low density gas with a (current) temperature [K] > 
+        10**(logTK_snfb - 0.1) is exempted from the exclusion criteria above. 
+        Low density is defined as 
+        log10(Density [g / sm**-3] * 0.752 / m_p [g]) 
+            < inclhotgas_maxlognH_snfb.
+        A value of -np.inf (no exemptions to the exclusion) is allowed.
+        The default is -2.
                
     --------------
     output control
@@ -4977,6 +5083,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          periodic, kernel, saveres,
          simulation, LsinMpc,
          select, misc, ompproj, numslices, halosel, kwargs_halosel,
+         excludedirectfb, deltalogT_directfb, deltatMyr_directfb,
+         inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,
          hdf5, override_simdatapath)
     if isinstance(res, int):
         raise ValueError("inputcheck returned error code %i"%res)
@@ -4992,7 +5100,10 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
          simulation, LsinMpc, misc, ompproj, numslices,\
-         halosel, kwargs_halosel, hdf5, override_simdatapath = res[1:]
+         halosel, kwargs_halosel,\
+         excludedirectfb, deltalogT_directfb, deltatMyr_directfb,\
+         inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,\
+         hdf5, override_simdatapath = res[1:]
 
     print('Processed input:')
     print((':\t%s\t'.join(['simnum', 'snapnum', 'simulation', 'var', 'parttype', '']))\
@@ -5119,6 +5230,9 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                          bensgadget2tables, ps20tables, ps20depletion,                          
                          axis, var, abundsW, ionW, parttype, None, 
                          abundsQ, ionQ, quantityW, quantityQ,
+                         excludedirectfb, deltalogT_directfb, 
+                         deltatMyr_directfb, inclhotgas_maxlognH_snfb, 
+                         logTK_agnfb, logTK_snfb,
                          simulation, LsinMpc, halosel, kwargs_halosel, 
                          misc, hdf5)
     if ptypeQ !=None:
@@ -5130,6 +5244,9 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                               bensgadget2tables,  ps20tables, ps20depletion,
                               axis, var, abundsW, ionW, parttype, 
                               ptypeQ, abundsQ, ionQ, quantityW, quantityQ,
+                              excludedirectfb, deltalogT_directfb, 
+                              deltatMyr_directfb, inclhotgas_maxlognH_snfb, 
+                              logTK_agnfb, logTK_snfb,
                               simulation, LsinMpc, halosel, kwargs_halosel,
                               misc, hdf5)
     del vardict_temp
@@ -5211,20 +5328,103 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
     # only remaining checks on excludeSFR are for 'T4' and 'from'
 
     if excludeSFRW in ['from','only']: # only select EOS particles; difference in only in the emission calculation
-        vardict_WQ.readif('OnEquationOfState',rawunits =True)
+        vardict_WQ.readif('OnEquationOfState',rawunits=True)
         eossel = pc.Sel({'arr': vardict_WQ.particle['OnEquationOfState'] > 0.})
         vardict_WQ.delif('OnEquationOfState')
         vardict_WQ.update(eossel) #should significantly reduce memory impact of coordinate storage
         del eossel
 
     elif excludeSFRW == True: # only select non-EOS particles
-        vardict_WQ.readif('OnEquationOfState',rawunits =True)
+        vardict_WQ.readif('OnEquationOfState',rawunits=True)
         eossel = pc.Sel({'arr': vardict_WQ.particle['OnEquationOfState'] <= 0.})
         vardict_WQ.delif('OnEquationOfState')
         vardict_WQ.update(eossel) #will have less impact on coordinate storage
         del eossel
     # False and T4 require no up-front or general particle selection, just one instance in the temperature read-in
 
+    # apply any exclusions of feedback-heated gas
+    if excludedirectfb:
+        vardict_WQ.readif('MaximumTemperature', rawunits=True)
+        tmax_units = vardict_WQ.CGSconv['MaximumTemperature']
+        tmin_sne = 10**logTK_snfb / tmax_units
+        tmax_sne = 10**(logTK_snfb + deltalogT_directfb) / tmax_units
+        tmin_agn = 10**logTK_agnfb / tmax_units
+        tmax_agn = 10**(logTK_agnfb + deltalogT_directfb) / tmax_units
+        
+        anow = vardict_WQ.simfile.a
+        deltat = deltatMyr_directfb * c.sec_per_megayear
+        time_now = cu.t_expfactor(anow, cosmopars=vardict_WQ.simfile)
+        amax = cu.expfactor_t(time_now - deltat, cosmopars=vardict_WQ.simfile)        
+        
+        if inclhotgas_maxlognH_snfb > -np.inf:
+            vardict_WQ.readif('Density', rawunits=True)
+            rho_units = vardict_WQ.CGSconv['Density']
+            rhomin = 10**(inclhotgas_maxlognH_snfb) * c.atomw_H * c.u \
+                     / 0.752 / rho_units
+            _sel = vardict_WQ.particle['Density'] > rhomin
+            vardict_WQ.delif('Density', last=False)
+            vardict_WQ.readif('Temperature', rawunits=True)
+            temp_units = vardict_WQ.CGSconv['Temperature']
+            tempmax = 10**(logTK_snfb - 0.1) / temp_units
+            _sel |= vardict_WQ.particle['Temperature'] < tempmax
+            vardict_WQ.delif('Temperature', last=False)
+        else:
+            _sel = np.ones(len(vardict_WQ.particle['MaximumTemperature']),
+                           dtype=bool)
+        _sel &= vardict_WQ.particle['MaximumTemperature'] >= tmin_sne
+        _sel &= vardict_WQ.particle['MaximumTemperature'] < tmax_sne
+        
+        __sel = vardict_WQ.particle['MaximumTemperature'] >= tmin_agn
+        __sel &= vardict_WQ.particle['MaximumTemperature'] < tmax_agn
+        _sel |= __sel
+        del __sel
+        vardict_WQ.delif('MaximumTemperature', last=False)
+        
+        vardict_WQ.readif('AExpMaximumTemperature')
+        _sel &= vardict_WQ.particle['AExpMaximumTemperature'] > amax
+        vardict_WQ.delif('AExpMaximumTemperature', last=False)
+        _sel = pc.Sel({'arr': np.logical_not(_sel)})
+        vardict_WQ.update(_sel)        
+        del _sel
+        
+        ## debug 
+        vardict_WQ.readif('AExpMaximumTemperature')
+        vardict_WQ.readif('MaximumTemperature')
+        vardict_WQ.readif('Temperature')
+        vardict_WQ.readif('Density')
+        
+        import matplotlib.pyplot as plt
+        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2)
+        ax1.plot(vardict_WQ.particle['AExpMaximumTemperature'],
+                  np.log10(vardict_WQ.particle['MaximumTemperature']),
+                  marker='o', linestyle='none', color='black', alpha=0.05,
+                  markersize=3)
+        ax1.set_xlabel('AExpMaximumTemperature')
+        ax1.set_ylabel('log10 MaximumTemperature [K]')
+        ax1.axhline(np.log10(tmin_sne), linestyle='dotted', color='blue')
+        ax1.axhline(np.log10(tmax_sne), linestyle='dotted', color='blue')
+        ax1.axhline(np.log10(tmin_agn), linestyle='dotted', color='red')
+        ax1.axhline(np.log10(tmax_agn), linestyle='dotted', color='red')
+        ax1.axvline(amax, linestyle='dotted', color='gray')
+        
+        ax2.plot(np.log10(vardict_WQ.particle['Density']),
+                  np.log10(vardict_WQ.particle['Temperature']),
+                  marker='o', linestyle='none', color='black', alpha=0.05, 
+                  markersize=3)
+        ax2.set_xlabel('log10 Density [g / cm**3]')
+        ax2.set_ylabel('log10 Temperature [K]')
+        ax2.grid(b=True)
+        if inclhotgas_maxlognH_snfb > -np.inf:
+            ax2.axhline(np.log10(tempmax), linestyle='dotted', color='green')
+            ax2.axvline(np.log10(rhomin * rho_units), 
+                        linestyle='dotted', color='green')
+        
+        vardict_WQ.delif('AExpMaximumTemperature')
+        vardict_WQ.delif('MaximumTemperature')
+        vardict_WQ.delif('Temperature')
+        vardict_WQ.delif('Density')
+        return None
+        
 
     # calculate the quantities to project: save outside vardict (and no links in it) to prevent modification by the next calculation
     if ptypeQ is None:
@@ -5425,7 +5625,11 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                  var, axis, log, velcut,
                                  periodic, kernel, saveres,
                                  simulation, LsinMpc, misc, ompproj, numslices,
-                                 halosel, kwargs_halosel, cosmopars, 
+                                 halosel, kwargs_halosel, 
+                                 excludedirectfb, deltalogT_directfb, 
+                                 deltatMyr_directfb, inclhotgas_maxlognH_snfb,
+                                 logTK_agnfb, logTK_snfb,
+                                 cosmopars, 
                                  override_simdatapath, None)
                 else:
                     np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW)
@@ -5445,7 +5649,11 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                  var, axis, log, velcut,
                                  periodic, kernel, saveres,
                                  simulation, LsinMpc, misc, ompproj, numslices,
-                                 halosel, kwargs_halosel, cosmopars, 
+                                 halosel, kwargs_halosel, 
+                                 excludedirectfb, deltalogT_directfb, 
+                                 deltatMyr_directfb, inclhotgas_maxlognH_snfb,
+                                 logTK_agnfb, logTK_snfb,
+                                 cosmopars, 
                                  override_simdatapath, groupnums)
                 else:
                     np.savez(resfile, arr_0=resW, minfinite=minW, max=maxW,
@@ -5472,8 +5680,14 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      ps20tables, ps20depletion,
                                      var, axis, log, velcut,
                                      periodic, kernel, saveres,
-                                     simulation, LsinMpc, misc, ompproj, numslices,
-                                     halosel, kwargs_halosel, cosmopars, 
+                                     simulation, LsinMpc, misc, ompproj, 
+                                     numslices,
+                                     halosel, kwargs_halosel, 
+                                     excludedirectfb, deltalogT_directfb, 
+                                     deltatMyr_directfb, 
+                                     inclhotgas_maxlognH_snfb,
+                                     logTK_agnfb, logTK_snfb,
+                                     cosmopars, 
                                      override_simdatapath, None)
                     else:
                         np.savez(resfile2, arr_0=resQ, minfinite=minQ, max=maxQ)
@@ -5492,7 +5706,12 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      var, axis, log, velcut,
                                      periodic, kernel, saveres,
                                      simulation, LsinMpc, misc, ompproj, numslices,
-                                     halosel, kwargs_halosel, cosmopars, 
+                                     halosel, kwargs_halosel, 
+                                     excludedirectfb, deltalogT_directfb, 
+                                     deltatMyr_directfb, 
+                                     inclhotgas_maxlognH_snfb,
+                                     logTK_agnfb, logTK_snfb,
+                                     cosmopars, 
                                      override_simdatapath, groupnums)
                     else:
                         np.savez(resfile2, arr_0=resQ, minfinite=minQ, max=maxQ, groupnums=groupnums)
@@ -5540,20 +5759,41 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                     L_z_temp = L_z / float(numslices)
                     centre_temp[Axis3] = centre_temp[Axis3] - (numslices + 1.)*L_z_temp/2. + sliceind*L_z_temp
 
-                subresfile = nameoutput(ptypeW, simnum, snapnum, version, kernel,
-                         npix_x, L_x_temp, L_y_temp, L_z_temp, centre_temp, simfile.boxsize, simfile.h,
-                         excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,
-                         ps20tables, ps20depletion,
-                         axis, var, abundsW, ionW, parttype, None, abundsQ, ionQ, quantityW, quantityQ,
-                         simulation, LsinMpc, misc)
+                subresfile = nameoutput(ptypeW, simnum, snapnum, version, 
+                                        kernel, npix_x, 
+                                        L_x_temp, L_y_temp, L_z_temp, 
+                                        centre_temp, simfile.boxsize, 
+                                        simfile.h, 
+                                        excludeSFRW, excludeSFRQ, velcut, 
+                                        sylviasshtables, bensgadget2tables,
+                                        ps20tables, ps20depletion,
+                                        axis, var, abundsW, ionW, parttype, 
+                                        None, abundsQ, ionQ, quantityW, 
+                                        quantityQ,
+                                        excludedirectfb, deltalogT_directfb, 
+                                        deltatMyr_directfb, 
+                                        inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,
+                                        simulation, LsinMpc, misc)
                 print('Saving W result to %s'%subresfile)
                 if ptypeQ !=None:
-                    subresfile2 = nameoutput(ptypeW, simnum, snapnum, version, kernel,
-                              npix_x, L_x_temp, L_y_temp, L_z_temp, centre_temp, simfile.boxsize, simfile.h,
-                              excludeSFRW, excludeSFRQ, velcut, sylviasshtables, bensgadget2tables,
-                              ps20tables, ps20depletion,
-                              axis, var, abundsW, ionW, parttype, ptypeQ, abundsQ, ionQ, quantityW, quantityQ,
-                              simulation, LsinMpc, misc)
+                    subresfile2 = nameoutput(ptypeW, simnum, snapnum, version, 
+                                             kernel, npix_x, 
+                                             L_x_temp, L_y_temp, L_z_temp, 
+                                             centre_temp, simfile.boxsize, 
+                                             simfile.h,
+                                             excludeSFRW, excludeSFRQ, velcut,
+                                             sylviasshtables, 
+                                             bensgadget2tables,
+                                             ps20tables, ps20depletion,
+                                             axis, var, abundsW, ionW,
+                                             parttype, ptypeQ, abundsQ, ionQ, 
+                                             quantityW, quantityQ,
+                                             excludedirectfb, 
+                                             deltalogT_directfb, 
+                                             deltatMyr_directfb, 
+                                             inclhotgas_maxlognH_snfb, 
+                                             logTK_agnfb, logTK_snfb,
+                                             simulation, LsinMpc, misc)
                     print('Saving Q result to %s'%subresfile2)
 
             projdict = {'lsmooth': lsmooth, 
@@ -5597,8 +5837,14 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      ps20tables, ps20depletion,
                                      var, axis, log, velcut,
                                      periodic, kernel, saveres,
-                                     simulation, LsinMpc, misc, ompproj, numslices,
-                                     halosel, kwargs_halosel, cosmopars, 
+                                     simulation, LsinMpc, misc, ompproj, 
+                                     numslices,
+                                     halosel, kwargs_halosel, 
+                                     excludedirectfb, deltalogT_directfb, 
+                                     deltatMyr_directfb, 
+                                     inclhotgas_maxlognH_snfb,
+                                     logTK_agnfb, logTK_snfb,
+                                     cosmopars, 
                                      override_simdatapath, None)
                     else:
                         np.savez(subresfile, arr_0=resW, minfinite=minW, max=maxW)
@@ -5617,8 +5863,14 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                      ps20tables, ps20depletion,
                                      var, axis, log, velcut,
                                      periodic, kernel, saveres,
-                                     simulation, LsinMpc, misc, ompproj, numslices,
-                                     halosel, kwargs_halosel, cosmopars, 
+                                     simulation, LsinMpc, misc, ompproj, 
+                                     numslices,
+                                     halosel, kwargs_halosel, 
+                                     excludedirectfb, deltalogT_directfb, 
+                                     deltatMyr_directfb, 
+                                     inclhotgas_maxlognH_snfb,
+                                     logTK_agnfb, logTK_snfb,
+                                     cosmopars, 
                                      override_simdatapath, groupnums)
                     else:
                         np.savez(subresfile, arr_0=resW, minfinite=minW, 
@@ -5646,11 +5898,18 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                          ps20tables, ps20depletion,
                                          var, axis, log, velcut,
                                          periodic, kernel, saveres,
-                                         simulation, LsinMpc, misc, ompproj, numslices,
-                                         halosel, kwargs_halosel, cosmopars, 
+                                         simulation, LsinMpc, misc, ompproj, 
+                                         numslices,
+                                         halosel, kwargs_halosel, 
+                                         excludedirectfb, deltalogT_directfb, 
+                                         deltatMyr_directfb, 
+                                         inclhotgas_maxlognH_snfb,
+                                         logTK_agnfb, logTK_snfb,
+                                         cosmopars, 
                                          override_simdatapath, None)
                         else:
-                            np.savez(subresfile2, arr_0=resQ, minfinite=minQ, max=maxQ)
+                            np.savez(subresfile2, arr_0=resQ, minfinite=minQ, 
+                                     max=maxQ)
                     else:
                         if hdf5:
                             savemap_hdf5(subresfile2, resQ, minQ, maxQ,
@@ -5666,8 +5925,14 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y, \
                                          ps20tables, ps20depletion,
                                          var, axis, log, velcut,
                                          periodic, kernel, saveres,
-                                         simulation, LsinMpc, misc, ompproj, numslices,
-                                         halosel, kwargs_halosel, cosmopars, 
+                                         simulation, LsinMpc, misc, ompproj, 
+                                         numslices,
+                                         halosel, kwargs_halosel, 
+                                         excludedirectfb, deltalogT_directfb, 
+                                         deltatMyr_directfb, 
+                                         inclhotgas_maxlognH_snfb,
+                                         logTK_agnfb, logTK_snfb,
+                                         cosmopars, 
                                          override_simdatapath, groupnums)
                         else:
                             np.savez(subresfile2, arr_0=resQ, minfinite=minQ, 
@@ -6332,7 +6597,9 @@ def inputcheck_particlehist(ptype, simnum, snapnum, var, simulation,
     if not isinstance(sylviasshtables, bool):
         print('syvliasshtables should be True or False')
         return 41
-    elif sylviasshtables and not np.any([ptype in ['Nion', 'Niondens']] + [_dct['ptype'] in ['Nion', 'Niondens'] for _dct in axesdct]):
+    elif sylviasshtables and not np.any([ptype in ['Nion', 'Niondens']] +\
+                                        [_dct['ptype'] in ['Nion', 'Niondens']\
+                                         for _dct in axesdct]):
         print('Warning: the option sylviasshtables only applies to ion numbers or densities; it will be ignored altogether here')
         return 42
     if not isinstance(bensgadget2tables, bool):
