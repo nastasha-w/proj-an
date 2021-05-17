@@ -1667,4 +1667,7 @@ if __name__ == '__main__':
     
     elif index < 79:
         get_xrayabs(index - 61)
+    
+    elif index < 133:
+        getprofiles_directfbtest(index - 79)
         
