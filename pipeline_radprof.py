@@ -35,6 +35,9 @@ import pipeline_cddfs as pcd
 import cosmo_utils as cu
 import selecthalos as sh
 
+# on cosma; file name limits?
+shortdir = '/cosma5/data/dp004/dc-wije1/t/'
+
 all_lines_SB = ['c5r', 'n6r', 'n6-actualr', 'ne9r', 'ne10', 'mg11r', 'mg12',
                 'si13r', 'fe18', 'fe17-other1', 'fe19', 'o7r', 'o7ix', 'o7iy',
                 'o7f', 'o8', 'fe17', 'c6', 'n7']
@@ -218,14 +221,29 @@ def create_stampfiles(mapslices, catname, args, stampkwlist,
         del _kw['outname']
         
         print('Saving stamps in {}'.format(outname))
-        crd.rdists_sl_from_selection(filebase, szcens, L_x, npix_x,
-                                     rmin_r200c, rmax_r200c,
-                                     catname,
-                                     [('galaxyid', galaxyid)], maxnum,
-                                     axis=axis, outname=outname,
-                                     stamps=True,
-                                     trackprogress=True, 
-                                     **_kw)
+        try:
+            crd.rdists_sl_from_selection(filebase, szcens, L_x, npix_x,
+                                         rmin_r200c, rmax_r200c,
+                                         catname,
+                                         [('galaxyid', galaxyid)], maxnum,
+                                         axis=axis, outname=outname,
+                                         stamps=True,
+                                         trackprogress=True, 
+                                         **_kw)
+        except IOError:# file name too long?
+            _outname = outname
+            _outname = _outname.split('/')[-1]
+            _outname = shortdir + outname
+            crd.rdists_sl_from_selection(filebase, szcens, L_x, npix_x,
+                                         rmin_r200c, rmax_r200c,
+                                         catname,
+                                         [('galaxyid', galaxyid)], maxnum,
+                                         axis=axis, outname=_outname,
+                                         stamps=True,
+                                         trackprogress=True, 
+                                         **_kw)
+            os.rename(_outname, outname)
+
         stampfiles.append(outname)
         
     if deletemaps:
@@ -1464,9 +1482,6 @@ def getprofiles_directfbtest(index):
     snapnum = 27
     
     stampkwlist = [{'numsl': 1, 'offset_los': 0., 'velspace': False,
-                    'outname': None, 'rmax_r200c': 3.5,
-                    'mindist_pkpc': None, 'galaxyid': None},
-                   {'numsl': 2, 'offset_los': 0., 'velspace': False,
                     'outname': None, 'rmax_r200c': 3.5,
                     'mindist_pkpc': None, 'galaxyid': None},
                    ] 
