@@ -2752,8 +2752,11 @@ def plot_radprof3d(weightset=1, M200cslice=None):
                 'n': '$\\log_{10} \\, \\mathrm{n}(\\mathrm{H}) \\;'+\
                      ' [\\mathrm{cm}^{-3}]$',
                 'Z': '$\\log_{10} \\, \\mathrm{Z} \\; [\\mathrm{Z}_{\\odot}]$',
-                'weight': '$\\log_{10} \\, \\mathrm{amount}(< r) \\,/\\,'+\
-                          '\\mathrm{amount}(< \\mathrm{R}_{\\mathrm{200c}})$',
+                'weight': ['$\\log_{10} \\, \\mathrm{M}(< r) \\,/\\,'+\
+                           '\\mathrm{M}(< \\mathrm{R}_{\\mathrm{200c}})$',
+                           '$\\log_{10} \\, \\mathrm{L}(< r) \\,/\\,'+\
+                           '\\mathrm{L}(< \\mathrm{R}_{\\mathrm{200c}})$'
+                           ]
                 }
     # weight: '$\\log_{10} \\, \\mathrm{\\Sigma}(< r) \\,/\\,'+\
     # ' \\mathrm{\\Sigma}(< \\mathrm{R}_{\\mathrm{200c}})$',
@@ -2873,7 +2876,14 @@ def plot_radprof3d(weightset=1, M200cslice=None):
             if labelx:
                 ax.set_xlabel(xlabel, fontsize=fontsize)
             if labely:
-                ax.set_ylabel(axlabels[yq], fontsize=fontsize)
+                if yq == 'weight':
+                    _yl = axlabels[yq][0]
+                else:
+                    _yl = axlabels[yq]
+                ax.set_ylabel(_yl, fontsize=fontsize)
+            if mi == len(axweights) - 1 and yq == 'weight':
+                ax.set_ylabel(axlabels[yq][1], fontsize=fontsize)
+                ax.yaxis.set_label_position('right')
             
             # plot stacked histogram
             for weight in _weights:
