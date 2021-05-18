@@ -2680,7 +2680,7 @@ def plot_radprof3d(weightset=1, M200cslice=None):
     input:
     ------
     weightset: int
-        which set of weight to plot. Always: M/V weighted and some lines from 
+        which set of weights to plot. Always: M/V weighted and some lines from 
         the same element
     M200cslice: slice object or None
         Which halo mass ranges (M200c, 0.5 dex starting at 10**11 Msun) to
@@ -2731,9 +2731,9 @@ def plot_radprof3d(weightset=1, M200cslice=None):
     fontsize = 12
     percentile = 0.50
     rbinu = 'R200c'
-    combmethods = ['add', 'addnormed-R200c']
-    comblabels = {'add': 'L median',
-                  'addnormed-R200c': 'L / $\\mathrm{L}_{\\mathrm{200c}}$'}
+    combmethods = ['addnormed-R200c'] # 'add', 
+    #comblabels = {'add': 'L median',
+    #              'addnormed-R200c': 'L / $\\mathrm{L}_{\\mathrm{200c}}$'}
     print('Showing percentile ' + str(percentile))
     alphas = {'add': 0.4,
               'addnormed-R200c': 1.,
@@ -2752,9 +2752,11 @@ def plot_radprof3d(weightset=1, M200cslice=None):
                 'n': '$\\log_{10} \\, \\mathrm{n}(\\mathrm{H}) \\;'+\
                      ' [\\mathrm{cm}^{-3}]$',
                 'Z': '$\\log_{10} \\, \\mathrm{Z} \\; [\\mathrm{Z}_{\\odot}]$',
-                'weight': '$\\log_{10} \\, \\mathrm{\\Sigma}(< r) \\,/\\,'+\
-                         ' \\mathrm{\\Sigma}(< \\mathrm{R}_{\\mathrm{200c}})$',
+                'weight': '$\\log_{10} \\, \\mathrm{amount}(< r) \\,/\\,'+\
+                          '\\mathrm{amount}(< \\mathrm{R}_{\\mathrm{200c}})$',
                 }
+    # weight: '$\\log_{10} \\, \\mathrm{\\Sigma}(< r) \\,/\\,'+\
+    # ' \\mathrm{\\Sigma}(< \\mathrm{R}_{\\mathrm{200c}})$',
     axnl = {0: 'weight', 1: 'n', 2: 'T', 3: 'Z'}
     
     filebase_line_SB = 'particlehist_Luminosity_{line}_L0100N1504_27'+\
@@ -2948,14 +2950,22 @@ def plot_radprof3d(weightset=1, M200cslice=None):
                                        linewidth=linewidth,
                                        path_effects=patheff)
                             
-            if ti == 0 and len(_weights) > 1:
+            # if ti == 0 and len(_weights) > 1:
+            #     handles = [mlines.Line2D((), (), linestyle=linestyles[weight],
+            #                              color='black', alpha=1., 
+            #                              linewidth=linewidth_thick,
+            #                              label=weight) for weight in _weights]
+            #     labels = [weight for weight in _weights]
+            #     ax.legend(handles, labels, fontsize=fontsize, 
+            #               bbox_to_anchor=(1., 0.), loc='lower right')
+            if ti != 0 and len(_weights) > 1:
                 handles = [mlines.Line2D((), (), linestyle=linestyles[weight],
                                          color='black', alpha=1., 
                                          linewidth=linewidth_thick,
                                          label=weight) for weight in _weights]
                 labels = [weight[0] for weight in _weights]
-                ax.legend(handles, labels, fontsize=fontsize, 
-                          bbox_to_anchor=(1., 0.), loc='lower right')
+                ax.legend(handles, labels, fontsize=fontsize)
+                #, bbox_to_anchor=(1., 1.), loc='upper right'
             elif ti == 0:
                 plabel = _weights[0]
                 if plabel in nicenames_lines:
@@ -2963,15 +2973,15 @@ def plot_radprof3d(weightset=1, M200cslice=None):
                 ax.text(0.05, 0.95, plabel, fontsize=fontsize,
                         horizontalalignment='left', verticalalignment='top',
                         transform=ax.transAxes)
-            if ti == 0 and mi == 1:
-                handles = [mlines.Line2D((), (), linestyle='solid', 
-                                         color='black', alpha=alphas[cmb], 
-                                         linewidth=linewidth_thick, 
-                                         label=comblabels[cmb])\
-                           for cmb in combmethods]
-                #labels = [comblabels[cmb] for cmb in combmethods]
-                ax.legend(handles=handles, fontsize=fontsize, 
-                          bbox_to_anchor=(1., 0.), loc='lower right')
+            # if ti == 0 and mi == 1:
+            #     handles = [mlines.Line2D((), (), linestyle='solid', 
+            #                              color='black', alpha=alphas[cmb], 
+            #                              linewidth=linewidth_thick, 
+            #                              label=comblabels[cmb])\
+            #                for cmb in combmethods]
+            #     #labels = [comblabels[cmb] for cmb in combmethods]
+            #     ax.legend(handles=handles, fontsize=fontsize, 
+            #               bbox_to_anchor=(1., 0.), loc='lower right')
                 
     # sync y limits on plots
     for yi in range(nprof):
