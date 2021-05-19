@@ -446,15 +446,26 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
             print('Running {tag} with outer bin {}'.format(rbins[-1],
                                                            tag=rkw['grptag']))
             print('for {} galaxies'.format(len(galids)))
-                       
-            outfilen = crd.getprofiles_fromstamps(stampfilen, rbins, galids,
+            
+            if not os.path.isfile(stampfilen):
+                _stampfilen = shorten_filename(stampfilen)
+            else:
+                _stampfilen = stampfilen
+            outfilen = crd.getprofiles_fromstamps(_stampfilen, rbins, galids,
                                                   nameonly=True, 
                                                   halocat=catname,
                                                   **rkw)
             #print('Saving radial profiles in {}'.format(outfilen))
-            
-            crd.getprofiles_fromstamps(stampfilen, rbins, galids,
-                                       nameonly=False, halocat=catname, **rkw)
+            try:
+                crd.getprofiles_fromstamps(_stampfilen, rbins, galids,
+                                           nameonly=False, halocat=catname, 
+                                           **rkw)
+            except IOError:
+                outfilen = shorten_filename(outfilen)
+                crd.getprofiles_fromstamps(_stampfilen, rbins, galids,
+                                           nameonly=False, halocat=catname, 
+                                           **rkw)
+                
             # add header info to the profile file
             with h5py.File(outfilen, 'a') as _f:
                 if not 'Header' in _f:
