@@ -233,7 +233,11 @@ def create_stampfiles(mapslices, catname, args, stampkwlist,
         except IOError:# file name too long?
             _outname = outname
             _outname = _outname.split('/')[-1]
-            _outname = shortdir + outname
+            _outname = _outname.replace(
+                'iontab-PS20-UVB-dust1-CR1-G1-shield1', 'PS20tab-def')
+            _outname = _outname.replace()
+            _outname = shortdir + _outname
+            
             crd.rdists_sl_from_selection(filebase, szcens, L_x, npix_x,
                                          rmin_r200c, rmax_r200c,
                                          catname,
