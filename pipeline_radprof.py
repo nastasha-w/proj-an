@@ -56,6 +56,17 @@ all_lines_PS20 = ['C  5      40.2678A', 'C  6      33.7372A',
 # stamps contain Header info from the maps in their Header group
 # radial profile files do not -> copy over in the pipeline
 
+def shorten_filename(outname):
+    _outname = outname
+    _outname = _outname.split('/')[-1]
+    _outname = _outname.replace(
+        'iontab-PS20-UVB-dust1-CR1-G1-shield1', 'PS20tab-def')
+    _outname = _outname.replace('TSN-7.499_TAGN-8.499',
+                                'Tmindef')
+    _outname = _outname.replace('inclSN-nH-lt--2.0', 'lonH-in')
+    _outname = shortdir + _outname
+    return _outname
+
 def create_stampfiles(mapslices, catname, args, stampkwlist, 
                       deletemaps=False, **kwargs):
     '''
@@ -231,15 +242,7 @@ def create_stampfiles(mapslices, catname, args, stampkwlist,
                                          trackprogress=True, 
                                          **_kw)
         except IOError:# file name too long?
-            _outname = outname
-            _outname = _outname.split('/')[-1]
-            _outname = _outname.replace(
-                'iontab-PS20-UVB-dust1-CR1-G1-shield1', 'PS20tab-def')
-            _outname = _outname.replace('TSN-7.499_TAGN-8.499',
-                                        'Tmindef')
-            _outname = _outname.replace('inclSN-nH-lt--2.0', 'lonH-in')
-            _outname = shortdir + _outname
-            
+            _outname = shorten_filename(outname)
             crd.rdists_sl_from_selection(filebase, szcens, L_x, npix_x,
                                          rmin_r200c, rmax_r200c,
                                          catname,
@@ -248,8 +251,7 @@ def create_stampfiles(mapslices, catname, args, stampkwlist,
                                          stamps=True,
                                          trackprogress=True, 
                                          **_kw)
-            os.rename(_outname, outname)
-
+            outname = _outname
         stampfiles.append(outname)
         
     if deletemaps:
@@ -391,6 +393,8 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
             stampkwlist_run.append(stampkw)
             inds_createnew.append(ni)
         elif not os.path.isfile(stampfilen):
+            if os.path.isfile(shorten_filename(stampfilen)):
+                continue
             newstamps.append(stampfilen)
             stampkwlist_run.append(stampkw)
             inds_createnew.append(ni)
@@ -418,6 +422,8 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
         #print('making radial profiles for stamps: {}'.format(stampkw))
             
         stampfilen = stampkw['outname']
+        if not os.path.isfile(stampfilen):
+            stampfilen = shorten_filename(stampfilen)
         if '/' not in stampfilen:
             stampfilen = ol.pdir + 'stamps/' + stampfilen
         
@@ -470,7 +476,6 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
                         _galids = galids
                     if _galids is None:
                         _galids = galids
-                        
                         
                     crd.combineprofiles(outfilen, rbins, _galids,
                             runit=rkw['runit'], ytype_in=rkw['ytype'], 
