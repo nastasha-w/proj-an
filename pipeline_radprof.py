@@ -235,7 +235,9 @@ def create_stampfiles(mapslices, catname, args, stampkwlist,
             _outname = _outname.split('/')[-1]
             _outname = _outname.replace(
                 'iontab-PS20-UVB-dust1-CR1-G1-shield1', 'PS20tab-def')
-            _outname = _outname.replace()
+            _outname = _outname.replace('TSN-7.499_TAGN-8.499',
+                                        'Tmindef')
+            _outname = _outname.replace('inclSN-nH-lt--2.0', 'lonH-in')
             _outname = shortdir + _outname
             
             crd.rdists_sl_from_selection(filebase, szcens, L_x, npix_x,
