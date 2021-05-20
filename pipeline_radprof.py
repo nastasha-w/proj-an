@@ -461,7 +461,11 @@ def create_rprofiles(mapslices, catname, args, stampkwlist, rprofkwlist,
                                            nameonly=False, halocat=catname, 
                                            **rkw)
             except IOError:
+                msg = 'Saving file as\n{new}\ninstead of\n{old}'
+                print(msg.format(new=shorten_filename(outfilen), 
+                                 old=outfilen))
                 outfilen = shorten_filename(outfilen)
+                rkw['outfile'] = outfilen
                 crd.getprofiles_fromstamps(_stampfilen, rbins, galids,
                                            nameonly=False, halocat=catname, 
                                            **rkw)
