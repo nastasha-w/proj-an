@@ -3538,8 +3538,8 @@ def plot_radprof_conv(convtype='boxsize', line='all', scatter=True):
         filefills_base.update({'box': 'L0100N1504', 'npix': '32000', 
                                'nsl': '1'})
         fbpart = '_TSN-7.499_TAGN-8.499_Trng-0.2_{deltat}-Myr'+\
-                     '_inclSN-nH-lt--2.0' if line in all_lines_PS20 else \
-                     '_exclfb_Tmindef_Trng-0.2_{deltat}-Myr_lonH-in'   
+                 '_inclSN-nH-lt--2.0' if line in all_lines_SB else \
+                 '_exclfb_Tmindef_Trng-0.2_{deltat}-Myr_lonH-in'   
         filefills_label = {labels[0]: {'exclfb': '', 'it': siontab_long},
                            labels[1]: {'tv': '7', 'it': siontab_short,
                                        'exclfb': fbpart.format(deltat=3.)},
