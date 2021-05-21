@@ -3527,7 +3527,7 @@ def plot_radprof_conv(convtype='boxsize', line='all', scatter=True):
         rfilebase = ddir + 'radprof/' + rfilebase
         siontab_long = '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F' \
                         if line in all_lines_PS20 else ''
-        siontab_short = 'PS20tab-def_depletion-F' \
+        siontab_short = '_PS20tab-def_depletion-F' \
                         if line in all_lines_PS20 else ''       
 
         colors = {labels[0]: _c1.blue,
