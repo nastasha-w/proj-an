@@ -3393,8 +3393,8 @@ def plot_radprof_conv(convtype='boxsize', line='all', scatter=True):
     Parameters
     ----------
     convtype: str
-        What convergence/effect to test: 'boxsize', 'resolution', or
-        'slicedepth'.
+        What convergence/effect to test: 'boxsize', 'resolution',
+        'slicedepth', or 'directfb-deltat'.
     line: str
         Which emission lines to use; 'all' means all the default lines
     scatter: bool
@@ -3513,7 +3513,41 @@ def plot_radprof_conv(convtype='boxsize', line='all', scatter=True):
         filefills_label = {labels[0]: {'nsl': '1'},
                            labels[1]: {'nsl': '2'},
                            }
-    
+    elif convtype == 'directfb-deltat':
+        outname = outname.format(convtype=convtype, 
+                                 line=line.replace(' ', '-'),
+                                 box='L0100N1504', Lz='6.25slice')
+        labels = ['all gas', 'feedback $< 3$ Myr', 'feedback $< 10$ Myr',
+                  'feedback $< 30$ Myr']
+        rfilebase = 'radprof_stamps_emission_{line}{it}_{box}_27_'+\
+                    'test3.{tv}_SmAb_C2Sm_{npix}pix_6.25slice_zcen-all'+\
+                    '_z-projection_noEOS{exclfb}_{nsl}slice'+\
+                    '_to-min3p5R200c_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+
+        rfilebase = ddir + 'radprof/' + rfilebase
+        siontab_long = '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F' \
+                        if line in all_lines_PS20 else ''
+        siontab_short = 'PS20tab-def_depletion-F' \
+                        if line in all_lines_PS20 else ''       
+
+        colors = {labels[0]: _c1.blue,
+                  labels[1]: _c1.cyan,
+                  labels[1]: _c1.green,
+                  labels[1]: _c1.yellow,
+                  }
+        filefills_base.update({'box': 'L0100N1504', 'npix': '32000'})
+        fbpart = '_TSN-7.499_TAGN-8.499_Trng-0.2_{deltat}-Myr'+\
+                     '_inclSN-nH-lt--2.0' if line in all_lines_PS20 else \
+                     '_exclfb_Tmindef_Trng-0.2_{deltat}-Myr_lonH-in'    
+        filefills_label = {labels[0]: {'exclfb': '', 'it': siontab_long},
+                           labels[1]: {'tv': '7', 'it': siontab_short,
+                                       'exclfb': fbpart.format(deltat=3.)},
+                           labels[2]: {'tv': '7', 'it': siontab_short,
+                                       'exclfb': fbpart.format(deltat=10.)},
+                           labels[3]: {'tv': '7', 'it': siontab_short,
+                                       'exclfb': fbpart.format(deltat=30.)},
+                           }
+        
     mmin = 10.5
     medges = np.arange(mmin, 14.1, 0.5)
     ssel = 'geq{:.1f}_le{:.1f}'
