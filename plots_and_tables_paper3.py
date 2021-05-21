@@ -3517,8 +3517,8 @@ def plot_radprof_conv(convtype='boxsize', line='all', scatter=True):
         outname = outname.format(convtype=convtype, 
                                  line=line.replace(' ', '-'),
                                  box='L0100N1504', Lz='6.25slice')
-        labels = ['all gas', 'feedback $< 3$ Myr', 'feedback $< 10$ Myr',
-                  'feedback $< 30$ Myr']
+        labels = ['all gas', 'fb $< 3$ Myr', 'fb $< 10$ Myr',
+                  'fb $< 30$ Myr']
         rfilebase = 'radprof_stamps_emission_{line}{it}_{box}_27_'+\
                     'test3.{tv}_SmAb_C2Sm_{npix}pix_6.25slice_zcen-all'+\
                     '_z-projection_noEOS{exclfb}_{nsl}slice'+\
