@@ -3532,8 +3532,8 @@ def plot_radprof_conv(convtype='boxsize', line='all', scatter=True):
 
         colors = {labels[0]: _c1.blue,
                   labels[1]: _c1.cyan,
-                  labels[1]: _c1.green,
-                  labels[1]: _c1.yellow,
+                  labels[2]: _c1.green,
+                  labels[3]: _c1.yellow,
                   }
         filefills_base.update({'box': 'L0100N1504', 'npix': '32000', 
                                'nsl': '1'})
