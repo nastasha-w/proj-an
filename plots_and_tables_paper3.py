@@ -3939,8 +3939,6 @@ def plot_radprof_fbeffect(convtype='deltat', line='all', scatter=False):
             mlabel = '$\\geq {:.1f}$'
             mlabel = mlabel.format(mmin)
         seltag = seltag_keys[mmin]
-        rmin_indic = cu.R200c_pkpc(10**mmin, cosmopars_27)
-        rmax_indic = cu.R200c_pkpc(10**(mmin + 0.5), cosmopars_27)
         
         ax.axis('off')
         _l, _b, _w, _h = (ax.get_position()).bounds
@@ -4086,6 +4084,7 @@ def plot_radprof_fbeffect(convtype='deltat', line='all', scatter=False):
             bax.axvspan(0.1 * rs[0], 0.1 * rs[1], ymin=0, ymax=1, alpha=0.1, 
                         color='gray')
             xlim = tax.get_xlim()
+            print(xlim)
             tax.text((0.5 * (rs[0] + rs[1]) - xlim[0]) / (xlim[1] - xlim[0]),
                      0.98, '$\\mathrm{R}_{\\mathrm{200c}}$', 
                      fontsize=fontsize - 1, transform=tax.transAxes,
@@ -4094,12 +4093,17 @@ def plot_radprof_fbeffect(convtype='deltat', line='all', scatter=False):
                      0.98, '0.1 $\\mathrm{R}_{\\mathrm{200c}}$', 
                      fontsize=fontsize - 1, transform=tax.transAxes,
                      horizontalalignment='center', verticalalignment='top')
-            tax.axhline(-2., color='black', linewidth=1.)
+            tax.axhline(-2., color='black', linewidth=1., linestyle='dotted',
+                        zorder=0.)
             
-            bax.axhline(0., color='black', linewidth=1.)
-            bax.axhline(-0.1, color='black', linewidth=1.)
-            bax.axhline(-0.2, color='gray', linewidth=1.)
-            bax.axhline(-0.5, color='red', linewidth=1.)
+            bax.axhline(0., color='black', linewidth=1., linestyle='dotted',
+                        zorder=0.)
+            bax.axhline(-0.1, color='black', linewidth=1., linestyle='dotted',
+                        zorder=0.)
+            bax.axhline(-0.2, color='gray', linewidth=1., linestyle='dotted',
+                        zorder=0.)
+            bax.axhline(-0.5, color='red', linewidth=1., linestyle='dotted',
+                        zorder=0.)
             
             
     handles = [mpatch.Patch(label=label, color=colors[label], 
