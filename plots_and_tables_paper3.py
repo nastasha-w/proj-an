@@ -4085,12 +4085,16 @@ def plot_radprof_fbeffect(convtype='deltat', line='all', scatter=False):
                         color='gray')
             xlim = tax.get_xlim()
             print(xlim)
-            tax.text((0.5 * (rs[0] + rs[1]) - xlim[0]) / (xlim[1] - xlim[0]),
-                     0.98, '$\\mathrm{R}_{\\mathrm{200c}}$', 
+            xp = (0.5 * (np.log10(rs[0]) + np.log10(rs[1])) \
+                  - np.log10(xlim[0])) \
+                 / (np.log10(xlim[1]) - np.log10(xlim[0]))
+            tax.text(xp, 0.98, '$\\mathrm{R}_{\\mathrm{200c}}$', 
                      fontsize=fontsize - 1, transform=tax.transAxes,
                      horizontalalignment='center', verticalalignment='top')
-            tax.text((0.05 * (rs[0] + rs[1]) - xlim[0]) / (xlim[1] - xlim[0]),
-                     0.98, '0.1 $\\mathrm{R}_{\\mathrm{200c}}$', 
+            xp = (0.5 * (np.log10(rs[0]) + np.log10(rs[1])) - 1.\
+                  - np.log10(xlim[0])) \
+                 / (np.log10(xlim[1]) - np.log10(xlim[0]))
+            tax.text(xp, 0.98, '0.1 $\\mathrm{R}_{\\mathrm{200c}}$', 
                      fontsize=fontsize - 1, transform=tax.transAxes,
                      horizontalalignment='center', verticalalignment='top')
             tax.axhline(-2., color='black', linewidth=1., linestyle='dotted',
