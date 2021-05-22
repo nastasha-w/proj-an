@@ -3767,6 +3767,362 @@ def plot_radprof_conv(convtype='boxsize', line='all', scatter=True):
                                       [ykey_median, ykey_mean])]    
     lax.legend(handles=handles, fontsize=fontsize, **leg_kw)
     plt.savefig(outname, format='pdf', bbox_inches='tight')
+    
+def plot_radprof_fbeffect(convtype='deltat', line='all', scatter=False):
+    '''
+    plot mean and median profiles for the different lines in different halo 
+    mass bins, comparing different profile origins
+    
+    Parameters
+    ----------
+    convtype: str
+        What convergence/effect to test: 'deltat'.
+    line: str
+        Which emission lines to use; 'all' means all the default lines
+    scatter: bool
+        include scatter at fixed halo mass in the plot, and show differences
+        relative to a reference median value (True), or exclude the scatter,
+        and show each statistical measure (mean/median) relative to its 
+        respective value in the reference setup (False)
+    '''
+    
+    print('Values are calculated from 3.125^2 ckpc^2 pixels')
+    print('for means: in annuli of 0-10 pkpc, then 0.25 dex bins up to'+\
+          ' ~3.5 R200c')
+    print('for median of means: annuli of 0.1 dex starting from 10 pkpc')
+    print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb,'+\
+          ' C2 kernel')
+    print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
+    
+    if line == 'all':
+        lines = plot_lines_SB + plot_lines_PS20
+        for line in lines:
+            plot_radprof_conv(convtype=convtype, line=line, scatter=scatter)
+ 
+    fontsize = 12
+    linewidth = 1.5
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),
+               mppe.Stroke(linewidth=linewidth, foreground="w"),
+               mppe.Normal()]
+    xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
+    ylabel = '$\\log_{10} \\, \\mathrm{SB}$'          
+    ylabel2 = '$\\Delta$'
+    
+    titlepart1 = 'y axis: $\\log_{10} \\, \\mathrm{SB} \\; ' + \
+                '[\\mathrm{photons}\\,\\mathrm{cm}^{-2}' + \
+                '\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]' + \
+                ' \\; \\mathrm{and} \\; \\Delta \\, \\log_{10}$ SB'
+    titlepart2 = 'bottom left: halo mass range in ' +\
+                 ' $\\log_{{10}} \\mathrm{{M}}_{{\\mathrm{{200c}}}}' + \
+                 ' \\,/\\, \\mathrm{{M}}_{{\\odot}}$' + \
+                 '; top right: number of haloes'
+      
+    #ykeys = [('mean',), ('perc', 2.), ('perc', 10.), ('perc', 50.), 
+    #         ('perc', 90.), ('perc', 98.)]
+    ykey_mean = ('mean',)
+    ykey_median = ('perc', 50.)
+    #ykeys_rangeout = [('perc', 2.),  ('perc', 98.)]
+    ykeys_rangein  = [('perc', 10.), ('perc', 90.)]
+    linestyle_ykey = {ykey_mean: 'dashdot',
+                   ykey_median: 'solid'}
+    #linestyle_ykey.update({ykey: 'dotted' for ykey in ykeys_rangeout})
+    linestyle_ykey.update({ykey: 'dashed' for ykey in ykeys_rangein})
+    ykey_comp = ykey_median
+    ykeys_perc = [ykey_median] + ykeys_rangein # + ykeys_rangeout 
+    alpha_ranges = 0.3
+    
+    outname = 'radprof2d_convtest-directfb-{convtype}_{line}'+\
+              '_0.1-0.25dex-annuli' + \
+             '_{box}_27_test3.x_SmAb_C2Sm_{Lz}_noEOS_1000_centrals'
+    if not scatter:
+        outname = outname + '_noscatter'
+    outname = outname.replace('.', 'p')
+    outname = mdir + '../convtest/' + outname + '.pdf'
+    
+    rfilebase = 'radprof_stamps_emission_{line}{it}_{box}_27_'+\
+                'test3.{tv}_SmAb_C2Sm_{npix}pix_6.25slice_zcen-all'+\
+                '_z-projection_noEOS{exclfb}_{nsl}slice'+\
+                '_to-min3p5R200c_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+    rfilebase = ddir + 'radprof/' + rfilebase
+    siontab_long = '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F' \
+                    if line in all_lines_PS20 else ''
+    siontab_short = '_PS20tab-def_depletion-F' \
+                    if line in all_lines_PS20 else ''  
+    testversion = '7' if line in all_lines_PS20 else '6'
+    filefills_base = {'line': line.replace(' ', '-'),
+                      'tv': testversion,
+                      'it': siontab}
+    
+    # match binsets to normalize differences properly
+    binset_mean = 'binset_1'
+    binset_perc = 'binset_1'
+    #cosmopars = cosmopars_27 # for virial radius indicators
+
+    if convtype == 'deltat':
+        outname = outname.format(convtype=convtype, 
+                                 line=line.replace(' ', '-'),
+                                 box='L0100N1504', Lz='6.25slice')
+        labels = ['all gas', 'fb $< 3$ Myr', 'fb $< 10$ Myr',
+                  'fb $< 30$ Myr']
+
+        colors = {labels[0]: _c1.blue,
+                  labels[1]: _c1.cyan,
+                  labels[2]: _c1.green,
+                  labels[3]: _c1.yellow,
+                  }
+        filefills_base.update({'box': 'L0100N1504', 'npix': '32000', 
+                               'nsl': '1'})
+        fbpart = '_exclfb_TSN-7.499_TAGN-8.499_Trng-0.2_{deltat}-Myr'+\
+                 '_inclSN-nH-lt--2.0' if line in all_lines_SB else \
+                 '_exclfb_Tmindef_Trng-0.2_{deltat}-Myr_lonH-in'   
+        filefills_label = {labels[0]: {'exclfb': '', 'it': siontab_long},
+                           labels[1]: {'tv': '7', 'it': siontab_short,
+                                       'exclfb': fbpart.format(deltat=3.)},
+                           labels[2]: {'tv': '7', 'it': siontab_short,
+                                       'exclfb': fbpart.format(deltat=10.)},
+                           labels[3]: {'tv': '7', 'it': siontab_short,
+                                       'exclfb': fbpart.format(deltat=30.)},
+                           }
+        
+    mmin = 10.5
+    medges = np.arange(mmin, 14.1, 0.5)
+    ssel = 'geq{:.1f}_le{:.1f}'
+    seltag_keys = {medges[i]: ssel.format(medges[i], medges[i + 1])\
+                               if i < len(medges) - 1 else\
+                               'geq{:.1f}'.format(medges[i])\
+                    for i in range(len(medges))}
+    seltags = [seltag_keys[key] for key in seltag_keys]
+    
+    nummasses = len(seltags)
+    ncols = 3
+    nrows = (nummasses - 1) // ncols + 1
+    _nrows = nrows * 2
+    figwidth = 11. 
+
+    panelwidth = figwidth / ncols
+    width_ratios = [panelwidth] * ncols
+    panelheight = 1.5 * panelwidth
+    
+    if nummasses == nrows * ncols:
+        _nrows = nrows + 1
+        laxsel = (nrows, slice(None, None, None))
+    else:
+        _nrows = nrows
+        laxsel = (nrows - 1, slice(nummasses % ncols, None, None))
+        
+    figheight = panelheight * _nrows
+    
+    fig = plt.figure(figsize=(figwidth, figheight))
+    grid = gsp.GridSpec(ncols=ncols, nrows=_nrows, hspace=0.2, wspace=0.3,
+                        width_ratios=width_ratios, right=0.97, left=0.07,
+                        top=0.93)
+    axes = [fig.add_subplot(grid[i // ncols, i % ncols])\
+            for i in range(nummasses)]
+    lax = fig.add_subplot(grid[laxsel])
+    lax.axis('off')
+    leg_kw = {'loc': 'upper right',
+              'bbox_to_anchor':(1., 0.95),
+              'ncol': 2,
+              'handlelength': 2.,
+              'columnspacing': 1.,
+              }
+    fig.suptitle('\n'.join([nicenames_lines[line], titlepart1, titlepart2]),
+                fontsize=fontsize)
+    
+    for mi, mtag in enumerate(medges):
+        ax = axes[mi]
+        mmin = mtag
+        if mi < len(medges) - 1:
+            mlabel = '${:.1f} \\emdash {:.1f}$'
+            mlabel = mlabel.format(mmin, medges[mi + 1])
+        else:
+            mlabel = '$\\geq {:.1f}$'
+            mlabel = mlabel.format(mmin)
+        seltag = seltag_keys[mmin]
+        rmin_indic = cu.R200c_pkpc(10**mmin, cosmopars_27)
+        rmax_indic = cu.R200c_pkpc(10**(mmin + 0.5), cosmopars_27)
+        
+        ax.axis('off')
+        _l, _b, _w, _h = (ax.get_position()).bounds
+        ftop = 2. / 3.
+        tax = fig.add_axes([_l, _b + (1. - ftop) * _h, _w, ftop * _h])
+        bax = fig.add_axes([_l, _b, _w, (1. - ftop) * _h])
+        
+        pu.setticks(bax, fontsize=fontsize, right=True, top=True, 
+                    labelbottom=True)
+        bax.set_xscale('log')
+        bax.grid(b=True)
+        pu.setticks(tax, fontsize=fontsize, right=True, top=True,
+                    labelbottom=False)
+        tax.set_xscale('log')
+        tax.grid(b=True)
+        
+        bax.set_xlabel(xlabel, fontsize=fontsize)
+        bax.set_ylabel(ylabel2, fontsize=fontsize)
+        tax.set_ylabel(ylabel, fontsize=fontsize)
+        tax.text(0.02, 0.02, mlabel, color='black', fontsize=fontsize,
+                 transform=tax.transAxes, verticalalignment='bottom',
+                 horizontalalignment='left')
+        
+        for li, label in enumerate(labels):
+            filekw = filefills_base.copy()
+            filekw.update(filefills_label[label])
+            color = colors[label]
+            filen = rfilebase.format(**filekw)
+            
+            try:
+                yvals, bins, numgals = readin_radprof(filen, [seltag], 
+                                                      [ykey_mean],
+                                             runit='pkpc', separate=False,
+                                             binset=binset_mean, retlog=True,
+                                             ofmean=True, retsamplesize=True)
+                _yvals, _bins = readin_radprof(filen, [seltag], ykeys_perc,
+                                               runit='pkpc', separate=False,
+                                               binset=binset_perc, 
+                                               retlog=True, ofmean=True)
+                bins[seltag].update(_bins[seltag])
+                yvals[seltag].update(_yvals[seltag])
+            except RuntimeError as err:
+                print(err)
+                yvals = {}
+                bins = {}
+                numgals = {}
+            
+            if seltag not in yvals:
+                _ng = 0
+                if li == 0:
+                    yref = np.NaN 
+            else:
+                _ng = numgals[seltag][ykey_mean]
+                if li == 0:
+                    #ed_ref = bins[seltag][ykey_comp]
+                    #xref = 0.5 * (ed_ref[:-1] + ed_ref[1:])
+                    yref = yvals[seltag][ykey_comp]
+                    if scatter:
+                        yref_mean = np.NaN
+                    else:
+                        yref_mean = yvals[seltag][ykey_mean]
+                    
+            tax.text(0.98, 0.97 - 0.07 * li, str(_ng), fontsize=fontsize,
+                     color=color, transform=tax.transAxes,
+                     horizontalalignment='right', verticalalignment='top')
+            if seltag not in yvals:
+                continue
+            
+            # might be stuck at a previous value if no haloes for the ref 
+            # volume in a halo mass bin, but present for others
+        
+            
+            ed = bins[seltag][ykey_comp]
+            cens = ed[:-1] + 0.5 * np.diff(ed)
+            
+            # vals = [yvals[seltag][ykey] for ykey in ykeys_rangeout]
+            # tax.fill_between(cens, vals[0], vals[1], color=color, 
+            #                   alpha=alpha_ranges)
+            # tax.plot(cens, vals[0], color=color, linewidth=linewidth,
+            #          linestyle=linestyle_ykey[ykeys_rangeout[0]],
+            #          path_effects=patheff)
+            # tax.plot(cens, vals[1], color=color, linewidth=linewidth,
+            #          linestyle=linestyle_ykey[ykeys_rangeout[1]],
+            #          path_effects=patheff)
+            # bax.fill_between(cens, vals[0] - yref, vals[1] - yref, 
+            #                   color=color, alpha=alpha_ranges)
+            # bax.plot(cens, vals[0] - yref, color=color, linewidth=linewidth,
+            #          linestyle=linestyle_ykey[ykeys_rangeout[0]],
+            #          path_effects=patheff)
+            # bax.plot(cens, vals[1] - yref, color=color, linewidth=linewidth,
+            #          linestyle=linestyle_ykey[ykeys_rangeout[1]],
+            #          path_effects=patheff)
+            
+            vals = [yvals[seltag][ykey] for ykey in ykeys_rangein]
+            if scatter:
+                tax.fill_between(cens, vals[0], vals[1], color=color, 
+                                 alpha=alpha_ranges)
+                tax.plot(cens, vals[0], color=color, linewidth=linewidth,
+                         linestyle=linestyle_ykey[ykeys_rangein[0]],
+                         path_effects=patheff)
+                tax.plot(cens, vals[1], color=color, linewidth=linewidth,
+                         linestyle=linestyle_ykey[ykeys_rangein[1]],
+                         path_effects=patheff)
+                bax.fill_between(cens, vals[0] - yref, vals[1] - yref, 
+                                 color=color, alpha=alpha_ranges)
+                bax.plot(cens, vals[0] - yref, color=color, 
+                         linewidth=linewidth,
+                         linestyle=linestyle_ykey[ykeys_rangein[0]],
+                         path_effects=patheff)
+                bax.plot(cens, vals[1] - yref, color=color, 
+                         linewidth=linewidth,
+                         linestyle=linestyle_ykey[ykeys_rangein[1]],
+                         path_effects=patheff)
+            
+            vals = yvals[seltag][ykey_mean]
+            tax.plot(cens, vals, color=color, linewidth=linewidth,
+                             linestyle=linestyle_ykey[ykey_mean],
+                             path_effects=patheff)
+            _ref = yref if scatter else yref_mean
+            bax.plot(cens, vals - _ref, color=color, linewidth=linewidth,
+                             linestyle=linestyle_ykey[ykey_mean],
+                             path_effects=patheff)
+            
+            vals = yvals[seltag][ykey_median]
+            tax.plot(cens, vals, color=color, linewidth=linewidth,
+                             linestyle=linestyle_ykey[ykey_median],
+                             path_effects=patheff)
+            bax.plot(cens, vals - yref, color=color, linewidth=linewidth,
+                             linestyle=linestyle_ykey[ykey_median],
+                             path_effects=patheff)
+            
+            # indicate R200c
+            mmin = 10**mmin
+            if mi < len(medges) - 1:
+                mmax = 10**medges[mi + 1]
+            else:
+                mmax = 10**14.53 # max mass in the box at z=0.1
+            rs = cu.R200c_pkpc(np.array([mmin, mmax]), cosmopars_27)
+            tax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1, color='gray')
+            bax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1, color='gray')
+            tax.axvspan(0.1 * rs[0], 0.1 * rs[1], ymin=0, ymax=1, alpha=0.1, 
+                        color='gray')
+            bax.axvspan(0.1 * rs[0], 0.1 * rs[1], ymin=0, ymax=1, alpha=0.1, 
+                        color='gray')
+            xlim = tax.get_xlim()
+            tax.text((0.5 * (rs[0] + rs[1]) - xlim[0]) / (xlim[1] - xlim[0]),
+                     0.98, '$\\mathrm{R}_{\\mathrm{200c}}$', 
+                     fontsize=fontsize - 1, transform=tax.transAxes,
+                     horizontalalignment='center', verticalalignment='top')
+            tax.text((0.05 * (rs[0] + rs[1]) - xlim[0]) / (xlim[1] - xlim[0]),
+                     0.98, '0.1 $\\mathrm{R}_{\\mathrm{200c}}$', 
+                     fontsize=fontsize - 1, transform=tax.transAxes,
+                     horizontalalignment='center', verticalalignment='top')
+            tax.axhline(-2., color='black', linewidth=1.)
+            
+            bax.axhline(0., color='black', linewidth=1.)
+            bax.axhline(-0.1, color='black', linewidth=1.)
+            bax.axhline(-0.2, color='gray', linewidth=1.)
+            bax.axhline(-0.5, color='red', linewidth=1.)
+            
+            
+    handles = [mpatch.Patch(label=label, color=colors[label], 
+                            edgecolor=colors[label],
+                            linestyle='solid', linewidth=linewidth,
+                            path_effects=patheff, alpha=alpha_ranges)
+                for label in labels]
+    if scatter:
+        handles = handles + \
+              [mpatch.Patch(label='{:.0f}%'.format(ykeys[1][1] - ykeys[0][1]), 
+                            color='gray', edgecolor='gray', 
+                            linewidth=linewidth, path_effects=patheff,
+                            linestyle=linestyle_ykey[ykeys[0]],
+                            alpha=1. - (1. - alpha_ranges)**(ri + 1))
+                for ri, ykeys in enumerate([ykeys_rangein])] #, ykeys_rangeout
+    handles = handles + \
+              [mlines.Line2D((), (), label=label, color='gray', 
+                              linewidth=linewidth,
+                              linestyle=linestyle_ykey[ykey]) \
+                for label, ykey in zip(['median', 'mean'], 
+                                      [ykey_median, ykey_mean])]    
+    lax.legend(handles=handles, fontsize=fontsize, **leg_kw)
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 ### instruments and minimum SB
 def plot_Aeff_galabs():
