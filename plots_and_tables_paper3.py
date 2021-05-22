@@ -3800,8 +3800,8 @@ def plot_radprof_fbeffect(convtype='deltat', line='all', scatter=False):
             plot_radprof_conv(convtype=convtype, line=line, scatter=scatter)
  
     fontsize = 12
-    linewidth = 1.5
-    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),
+    linewidth = 1.
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.3, foreground="b"),
                mppe.Stroke(linewidth=linewidth, foreground="w"),
                mppe.Normal()]
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
@@ -4091,12 +4091,12 @@ def plot_radprof_fbeffect(convtype='deltat', line='all', scatter=False):
             tax.text(xp, 0.98, '$\\mathrm{R}_{\\mathrm{200c}}$', 
                      fontsize=fontsize - 1, transform=tax.transAxes,
                      horizontalalignment='center', verticalalignment='top')
-            xp = (0.5 * (np.log10(rs[0]) + np.log10(rs[1])) - 1.\
-                  - np.log10(xlim[0])) \
-                 / (np.log10(xlim[1]) - np.log10(xlim[0]))
-            tax.text(xp, 0.98, '0.1 $\\mathrm{R}_{\\mathrm{200c}}$', 
-                     fontsize=fontsize - 1, transform=tax.transAxes,
-                     horizontalalignment='center', verticalalignment='top')
+            # xp = (0.5 * (np.log10(rs[0]) + np.log10(rs[1])) - 1.\
+            #       - np.log10(xlim[0])) \
+            #      / (np.log10(xlim[1]) - np.log10(xlim[0]))
+            # tax.text(xp, 0.98, '0.1 $\\mathrm{R}_{\\mathrm{200c}}$', 
+            #          fontsize=fontsize - 1, transform=tax.transAxes,
+            #          horizontalalignment='center', verticalalignment='top')
             tax.axhline(-2., color='black', linewidth=1., linestyle='dotted',
                         zorder=0.)
             
