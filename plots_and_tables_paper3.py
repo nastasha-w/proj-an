@@ -3797,7 +3797,8 @@ def plot_radprof_fbeffect(convtype='deltat', line='all', scatter=False):
     if line == 'all':
         lines = plot_lines_SB + plot_lines_PS20
         for line in lines:
-            plot_radprof_conv(convtype=convtype, line=line, scatter=scatter)
+            plot_radprof_fbeffect(convtype=convtype, line=line, 
+                                  scatter=scatter)
  
     fontsize = 12
     linewidth = 1.
@@ -4084,7 +4085,6 @@ def plot_radprof_fbeffect(convtype='deltat', line='all', scatter=False):
             bax.axvspan(0.1 * rs[0], 0.1 * rs[1], ymin=0, ymax=1, alpha=0.1, 
                         color='gray')
             xlim = tax.get_xlim()
-            print(xlim)
             xp = (0.5 * (np.log10(rs[0]) + np.log10(rs[1])) \
                   - np.log10(xlim[0])) \
                  / (np.log10(xlim[1]) - np.log10(xlim[0]))
