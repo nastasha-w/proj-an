@@ -4195,7 +4195,6 @@ def saveregions_fbeffect(line):
     for label in labels:
         filekw = filefills_base.copy()
         filekw.update(filefills_label[label])
-        color = colors[label]
         filen = rfilebase.format(**filekw)
         filens[label] = filen
             
