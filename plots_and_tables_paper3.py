@@ -4247,7 +4247,7 @@ def saveregions_fbeffect(line):
         hed.create_dataset('profiles', data=np.array([np.string_(label) \
                                                 for label in labels[1:]]))
         hed['galaxyids'].attrs.create('dim', 1)
-        hed.create_dataset('radial extents', data=np.array(rminmax))
+        hed.create_dataset('radial extents', data=np.array(radregions_R200c))
         hed['radial extents'].attrs.create('dim', 2)
         hed['radial extents'].attrs.create('units', np.string_('R200c'))
         
