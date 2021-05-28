@@ -4163,8 +4163,7 @@ def saveregions_fbeffect(line):
     binset = 'binset_1'
     #cosmopars = cosmopars_27 # for virial radius indicators
 
-    outname = outname.format(convtype=convtype, 
-                             line=line.replace(' ', '-'),
+    outname = outname.format(line=line.replace(' ', '-'),
                              box='L0100N1504', Lz='6.25slice')
     labels = ['all gas', 'deltat 3 Myr', 'deltat 10 Myr', 'deltat 30 Myr']
     filefills_base.update({'box': 'L0100N1504', 'npix': '32000', 
