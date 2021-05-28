@@ -4236,20 +4236,20 @@ def saveregions_fbeffect(line):
         fo['maxdiffs'].attrs.create('info', np.string_(_s))               
         
         hed = fo.create_group('Header')
-        _a = np.array([[np.string_(label), np.string_(filens[label])] \
-                      for label in labels])
-        hed.create_dataset('profile files', data=_a)
-        _a = np.array([np.string_('galaxyid'), np.string_('profile'), 
-                       np.string_('radial extent')])
-        hed.create_dataset('dimension', data=_a)
-        hed.create_dataset('galaxyids', data=galdata.index)
-        hed['galaxyids'].attrs.create('dim', 0)
-        hed.create_dataset('profiles', data=np.array([np.string_(label) \
-                                                for label in labels[1:]]))
-        hed['galaxyids'].attrs.create('dim', 1)
-        hed.create_dataset('radial extents', data=np.array(radregions_R200c))
-        hed['radial extents'].attrs.create('dim', 2)
-        hed['radial extents'].attrs.create('units', np.string_('R200c'))
+        # _a = np.array([[np.string_(label), np.string_(filens[label])] \
+        #               for label in labels])
+        # hed.create_dataset('profile files', data=_a)
+        # _a = np.array([np.string_('galaxyid'), np.string_('profile'), 
+        #                np.string_('radial extent')])
+        # hed.create_dataset('dimension', data=_a)
+        # hed.create_dataset('galaxyids', data=np.array(galdata.index))
+        # hed['galaxyids'].attrs.create('dim', 0)
+        # hed.create_dataset('profiles', data=np.array([np.string_(label) \
+        #                                         for label in labels[1:]]))
+        # hed['galaxyids'].attrs.create('dim', 1)
+        # hed.create_dataset('radial extents', data=np.array(radregions_R200c))
+        # hed['radial extents'].attrs.create('dim', 2)
+        # hed['radial extents'].attrs.create('units', np.string_('R200c'))
         
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
