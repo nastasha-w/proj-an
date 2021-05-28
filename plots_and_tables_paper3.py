@@ -4132,6 +4132,129 @@ def plot_radprof_fbeffect(convtype='deltat', line='all', scatter=False):
     lax.legend(handles=handles, fontsize=fontsize, **leg_kw)
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
+def saveregions_fbeffect(line):
+    if line == 'all':
+        lines = plot_lines_SB + plot_lines_PS20
+        for line in lines:
+            saveregions_fbeffect(line)
+    
+    outname = 'affectedregions_directfb_{line}'+\
+              '_0.1dex-annuli' + \
+              '_{box}_27_test3.x_SmAb_C2Sm_{Lz}_noEOS_1000_centrals'
+
+    outname = outname.replace('.', 'p')
+    outname = mdir + '../datasets/' + outname + '.hdf5'
+    
+    rfilebase = 'radprof_stamps_emission_{line}{it}_{box}_27_'+\
+                'test3.{tv}_SmAb_C2Sm_{npix}pix_6.25slice_zcen-all'+\
+                '_z-projection_noEOS{exclfb}_{nsl}slice'+\
+                '_to-min3p5R200c_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+    rfilebase = ddir + 'radprof/' + rfilebase
+    siontab_long = '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F' \
+                    if line in all_lines_PS20 else ''
+    siontab_short = '_PS20tab-def_depletion-F' \
+                    if line in all_lines_PS20 else ''  
+    testversion = '7' if line in all_lines_PS20 else '6'
+    filefills_base = {'line': line.replace(' ', '-'),
+                      'tv': testversion,
+                      'it': siontab}
+    
+    # match binsets to normalize differences properly
+    binset = 'binset_1'
+    #cosmopars = cosmopars_27 # for virial radius indicators
+
+    outname = outname.format(convtype=convtype, 
+                             line=line.replace(' ', '-'),
+                             box='L0100N1504', Lz='6.25slice')
+    labels = ['all gas', 'deltat 3 Myr', 'deltat 10 Myr', 'deltat 30 Myr']
+    filefills_base.update({'box': 'L0100N1504', 'npix': '32000', 
+                           'nsl': '1'})
+    fbpart = '_exclfb_TSN-7.499_TAGN-8.499_Trng-0.2_{deltat}-Myr'+\
+             '_inclSN-nH-lt--2.0' if line in all_lines_SB else \
+             '_exclfb_Tmindef_Trng-0.2_{deltat}-Myr_lonH-in'   
+    filefills_label = {labels[0]: {'exclfb': '', 'it': siontab_long},
+                       labels[1]: {'tv': '7', 'it': siontab_short,
+                                   'exclfb': fbpart.format(deltat=3.)},
+                       labels[2]: {'tv': '7', 'it': siontab_short,
+                                   'exclfb': fbpart.format(deltat=10.)},
+                       labels[3]: {'tv': '7', 'it': siontab_short,
+                                   'exclfb': fbpart.format(deltat=30.)},
+                       }
+    radregions_R200c = [(0., np.inf), (0., 1.), (0.1, 1.), (0.15, 1.)]    
+    
+    galdata = pd.read_csv(ddir + 'data_L0100N1504_27_Mh0p5dex_1000.txt', 
+                          sep='\t', index='galaxyid')  
+    mmin = 10.5
+    numgals = np.sum(galdata['M200c_Msun'] > 10**mmin)
+    hpathbase = 'galaxy_{galid}/pkpc_bins/{binset}/'
+    maxdiffs = np.empty((numgals, len(labels) - 1, len(radregions_R200c))) 
+    maxdiffs *= np.NaN
+    
+    filens = {}
+    for label in labels:
+        filekw = filefills_base.copy()
+        filekw.update(filefills_label[label])
+        color = colors[label]
+        filen = rfilebase.format(**filekw)
+        filens[label] = filen
+            
+    for gi, galid in enumerate(galdata.index[:10]):
+        hpath = hpathbase.format(galid=galid, binset=binset)
+        R200c_pkpc = galdata.at[galid, 'R200c_pkpc']
+        M200c_Msun = galdata.at[galid, 'M200c_Msun']
+        if M200c_Msun < 10**mmin:
+            continue
+        
+        _vals = {}
+        _bins = {}
+        for label in labels:
+            filen = filens[label]            
+            with fi as h5py.File(filen, 'r'):
+                bins_pkpc = fi[hpath + 'bin_edges']
+                vals = fi[hpath + 'mean']
+                if not bool(fi[hpath + 'mean'].attrs['logvalues']):
+                    vals = np.log10(vals)
+                _bins[label] = bins_pkpc / R200c_pkpc
+                _vals[label] = vals
+        maxdiffs[galid] = {}
+        for li, label in enumerate(labels[1:]):
+            maxdiffs[galid][label] = {}
+            if not np.allclose(_bins[label], _bins[labels[0]]):
+                msg = 'Different bin edges for {l0}, {l1}, galaxyid {galid}' 
+                raise ValueError(msg.format(l0=labels[0], l1=label, 
+                                            galid=galid))
+            rs = _bins[labels[0]]
+            diff = vals[labels[0]] - _vals[label]
+            
+            for ri, (rmin, rmax) in enumerate(radregions_R200c):
+                ri0 = max(np.searchsorted(rs, rmin, side='right') - 1, 0)
+                ri1 = min(np.searchsorted(rs, rmax, side='left'), len(rs) - 1)
+                maxdiffs[gi][li][ri] = np.max(diff[ri0 : ri1])
+    with h5py.File(outname, 'w') as fo:
+        fo.create_dataset('maxdiffs', data=maxdiffs)
+        _s = 'maximum relative difference [dex]'
+        fo['maxdiffs'].attrs.create('units', np.string_(_s)) 
+        _s = 'difference of annular means: profile - {}'.format(labels[0])
+        fo['maxdiffs'].attrs.create('info', np.string_(su))               
+        
+        hed = fo.create_group('Header')
+        a = np.array([[np.string_(label), np.string_(filens[label])] \
+                      for label in labels])
+        hed.create_dataset('profile files', data=a)
+        a = np.array([np.string_('galaxyid'), np.string_('profile'), 
+                      np.string_('radial extent')])
+        hed.create_dataset('dimension', data=a)
+        hed.create_dataset('galaxyids', data=galdata.index)
+        hed['galaxyids'].attrs.create('dim', 0)
+        hed.create_dataset('profiles', data=np.array([np.string_(label) \
+                                                for label in labels[1:]]))
+        hed['galaxyids'].attrs.create('dim', 1)
+        hed.create_dataset('radial extents', data=np.array(rminmax))
+        hed['radial extents'].attrs.create('dim', 2)
+        hed['radial extents'].attrs.create('units', np.string_('R200c'))
+        
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
+
 ### instruments and minimum SB
 def plot_Aeff_galabs():
     datname = ddir + 'Aeff_cm2_{ins}.dat'
