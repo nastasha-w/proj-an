@@ -4230,12 +4230,12 @@ def saveregions_fbeffect(line):
                 maxdiffs[gi][li][ri] = np.max(diff[ri0 : ri1])
     with h5py.File(outname, 'w') as fo:
         fo.create_dataset('maxdiffs', data=maxdiffs)
-        _s = 'maximum relative difference [dex]'
-        fo['maxdiffs'].attrs.create('units', np.string_(_s)) 
-        _s = 'difference of annular means: profile - {}'.format(labels[0])
-        fo['maxdiffs'].attrs.create('info', np.string_(_s))               
+        # _s = 'maximum relative difference [dex]'
+        # fo['maxdiffs'].attrs.create('units', np.string_(_s)) 
+        # _s = 'difference of annular means: profile - {}'.format(labels[0])
+        # fo['maxdiffs'].attrs.create('info', np.string_(_s))               
         
-        hed = fo.create_group('Header')
+        # hed = fo.create_group('Header')
         # _a = np.array([[np.string_(label), np.string_(filens[label])] \
         #               for label in labels])
         # hed.create_dataset('profile files', data=_a)
