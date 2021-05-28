@@ -4182,7 +4182,7 @@ def saveregions_fbeffect(line):
     radregions_R200c = [(0., np.inf), (0., 1.), (0.1, 1.), (0.15, 1.)]    
     
     galdata = pd.read_csv(ddir + 'data_L0100N1504_27_Mh0p5dex_1000.txt', 
-                          sep='\t', index='galaxyid')  
+                          sep='\t', index_col='galaxyid')  
     mmin = 10.5
     numgals = np.sum(galdata['M200c_Msun'] > 10**mmin)
     hpathbase = 'galaxy_{galid}/pkpc_bins/{binset}/'
