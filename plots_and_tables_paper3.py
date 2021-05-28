@@ -4209,7 +4209,7 @@ def saveregions_fbeffect(line):
         _bins = {}
         for label in labels:
             filen = filens[label]            
-            with fi as h5py.File(filen, 'r'):
+            with h5py.File(filen, 'r') as fi:
                 bins_pkpc = fi[hpath + 'bin_edges']
                 vals = fi[hpath + 'mean']
                 if not bool(fi[hpath + 'mean'].attrs['logvalues']):
