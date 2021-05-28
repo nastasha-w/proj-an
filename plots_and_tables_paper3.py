@@ -4216,9 +4216,7 @@ def saveregions_fbeffect(line):
                     vals = np.log10(vals)
                 _bins[label] = bins_pkpc / R200c_pkpc
                 _vals[label] = vals
-        maxdiffs[galid] = {}
         for li, label in enumerate(labels[1:]):
-            maxdiffs[galid][label] = {}
             if not np.allclose(_bins[label], _bins[labels[0]]):
                 msg = 'Different bin edges for {l0}, {l1}, galaxyid {galid}' 
                 raise ValueError(msg.format(l0=labels[0], l1=label, 
