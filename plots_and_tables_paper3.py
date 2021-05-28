@@ -4222,7 +4222,7 @@ def saveregions_fbeffect(line):
                 raise ValueError(msg.format(l0=labels[0], l1=label, 
                                             galid=galid))
             rs = _bins[labels[0]]
-            diff = vals[labels[0]] - _vals[label]
+            diff = _vals[labels[0]] - _vals[label]
             
             for ri, (rmin, rmax) in enumerate(radregions_R200c):
                 ri0 = max(np.searchsorted(rs, rmin, side='right') - 1, 0)
