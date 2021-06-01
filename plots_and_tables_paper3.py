@@ -4301,7 +4301,7 @@ def plot_size_fbeffect(region_R200c=(0., np.inf), deltat_Myr=10.,
             affected = maxvals > difflevel
             masses = np.log10(galdata['M200c_Msun'][galids]) 
             mbins = np.digitize(masses, medges) - 1
-            fracs = [float(np.sum(affected(mbins == i))) \
+            fracs = [float(np.sum(affected[mbins == i])) \
                      / float(np.sum(mbins == i))\
                      for i in range(len(medges))]
             for ml, frac in zip(medges, fracs):
