@@ -4313,7 +4313,7 @@ def plot_size_fbeffect(region_R200c=(0., np.inf), deltat_Myr=10.,
                 curves_mlower[ml].append(frac)
     
     fig = plt.figure(figsize=(5.5, 5.))
-    grid = gsp.GridSpec(nrows=1, ncols=2, wspace=0.0)
+    grid = gsp.GridSpec(nrows=1, ncols=2, wspace=0.0, width_ratios=[5., 1.])
     ax = fig.add_subplot(grid[0, 0])
     cax = fig.add_subplot(grid[0, 1])
     
@@ -4327,11 +4327,11 @@ def plot_size_fbeffect(region_R200c=(0., np.inf), deltat_Myr=10.,
         
     ax.set_ylabel(ylabel, fontsize=fontsize)
     ax.tick_params(direction='in', labelsize=fontsize - 1)
-    ax.yaxis.grid(True, which='major')
+    ax.grid(True, which='major')
     ax.set_xticks(xpoints)
     ax.set_xticklabels([nicenames_lines[line] for line in lines])
     ax.xaxis.set_minor_locator(plt.NullLocator())
-    ax.tick_params(axis='x', rotation=45)
+    ax.tick_params(axis='x', rotation=60)
     fig.suptitle(title, fontsize=fontsize)
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     
