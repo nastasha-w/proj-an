@@ -4333,7 +4333,7 @@ def plot_size_fbeffect(region_R200c=(0., np.inf), deltat_Myr=10.,
     ax.set_xticklabels(linelabels, minor=False)
     
     ax.grid(True, which='major')
-    ax.tick_params(axis='x', rotation=60)
+    ax.tick_params(axis='x', rotation=90)
     fig.suptitle(title, fontsize=fontsize)
     plt.savefig(outname, format='pdf', bbox_inches='tight')
     
