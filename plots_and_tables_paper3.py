@@ -4317,7 +4317,7 @@ def plot_size_fbeffect(region_R200c=(0., np.inf), deltat_Myr=10.,
                   aspect=10.)   
     
     xpoints = np.arange(len(lines))
-    for ml, mk in curves_mlower:
+    for ml in curves_mlower:
         ax.plot(xpoints, curves_mlower[ml], marker='o', color=colors[ml])
     ax.set_ylabel(ylabel, fontsize=fontsize)
     pu.setticks(ax, fontsize)
