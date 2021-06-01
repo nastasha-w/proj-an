@@ -4255,19 +4255,24 @@ def plot_size_fbeffect(region_R200c=(0., np.inf), deltat_Myr=10.,
                        difflevel=0.1):
     outname = 'convtest_fbeffect_summary_diff-gtr-{maxdiff}'+\
               '_{rmin}-{rmax}-R200c_deltat-{deltat}-Myr.pdf'
-    outname = mdir + 'convtest/' + outname.format(maxdiff=difflevel, 
-                                                  rmin=region_R200c[0],
-                                                  rmax=region_R200c[1],
-                                                  deltat=deltat_Myr)
+    outname = '/' + '/'.join(mdir.split('/')[:-1]) +\
+              '/convtest/' + outname.format(maxdiff=difflevel, 
+                                           rmin=region_R200c[0],
+                                           rmax=region_R200c[1],
+                                           deltat=deltat_Myr)
     dfn = 'affectedregions_directfb_{line}_0p1dex-annuli_L0100N1504_27'+\
           '_test3px_SmAb_C2Sm_6.25slice_noEOS_1000_centrals.hdf5'
     
     ylabel = '$\\mathrm{{f}}(\\Delta \\, '+\
-             '\\mathrm{{SB}}({rmin} \\emdash {rmax} '+\
-             '\\mathrm{{R}}_{{\\mathrm{{R200c}}}}) > {difflevel})$'
+             '\\mathrm{{SB}}({rmin} \\,\\emdash \\, {rmax} '+\
+             '\\; \\mathrm{{R}}_{{\\mathrm{{R200c}}}}) > {difflevel})$'
     title = 'fraction of affected haloes with feedback < {deltat:.0f} Myr ago'
-    clabel = '\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\;'+\
-             ' [\\mathrm{M}_{\\odot}]'
+    clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\;'+\
+             ' [\\mathrm{M}_{\\odot}]$'
+    ylabel = ylabel.format(rmin=region_R200c[0], rmax=region_R200c[1],
+                           difflevel=difflevel)
+    title = title.format(deltat=deltat_Myr)
+             
     fontsize = 12
     lines = plot_lines_default
     medges = np.arange(10.5, 14.1, 0.5)
@@ -4308,7 +4313,7 @@ def plot_size_fbeffect(region_R200c=(0., np.inf), deltat_Myr=10.,
                 curves_mlower[ml].append(frac)
     
     fig = plt.figure(figsize=(5.5, 5.))
-    grid = gsp.GridSpec(nrows=1, ncols=2, wspace=0.2)
+    grid = gsp.GridSpec(nrows=1, ncols=2, wspace=0.02)
     ax = fig.add_subplot(grid[0, 0])
     cax = fig.add_subplot(grid[0, 1])
     
@@ -4319,10 +4324,13 @@ def plot_size_fbeffect(region_R200c=(0., np.inf), deltat_Myr=10.,
     xpoints = np.arange(len(lines))
     for ml in curves_mlower:
         ax.plot(xpoints, curves_mlower[ml], marker='o', color=colors[ml])
+        
     ax.set_ylabel(ylabel, fontsize=fontsize)
-    pu.setticks(ax, fontsize)
+    ax.tick_params(direction='in', labelsize=fontsize - 1)
+    ax.yaxis.grid(True, which='major')
     ax.set_xticks(xpoints)
     ax.set_xticklabels([nicenames_lines[line] for line in lines])
+    ax.xaxis.set_minor_locator(plt.NullLocator())
     ax.tick_params(axis='x', rotation=45)
     fig.suptitle(title, fontsize=fontsize)
     plt.savefig(outname, format='pdf', bbox_inches='tight')
