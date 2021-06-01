@@ -4327,8 +4327,8 @@ def plot_size_fbeffect(region_R200c=(0., np.inf), deltat_Myr=10.,
         
     ax.set_ylabel(ylabel, fontsize=fontsize)
     ax.tick_params(direction='in', labelsize=fontsize - 1)
-    ax.set_xticks(xpoints)
-    ax.set_xticklabels([nicenames_lines[line] for line in lines])
+    ax.set_xticks(xpoints, minor=False)
+    ax.set_xticklabels([nicenames_lines[line] for line in lines], minor=False)
     
     ax.grid(True, which='major')
     ax.tick_params(axis='x', rotation=60)
