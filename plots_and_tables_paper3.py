@@ -4251,7 +4251,82 @@ def saveregions_fbeffect(line):
         hed['radial extents'].attrs.create('dim', 2)
         hed['radial extents'].attrs.create('units', np.string_('R200c'))
         
-
+def plot_size_fbeffect(region_R200c=(0., np.inf), deltat_Myr=10., 
+                       difflevel=0.1):
+    outname = 'convtest_fbeffect_summary_diff-gtr-{maxdiff}'+\
+              '_{rmin}-{rmax}-R200c_deltat-{deltat}-Myr.pdf'
+    outname = mdir + 'convtest/' + outname.format(maxdiff=difflevel, 
+                                                  rmin=region_R200c[0],
+                                                  rmax=region_R200c[1],
+                                                  deltat=deltat_Myr)
+    dfn = 'affectedregions_directfb_{line}_0p1dex-annuli_L0100N1504_27'+\
+          '_test3px_SmAb_C2Sm_6.25slice_noEOS_1000_centrals.hdf5'
+    
+    ylabel = '$\\mathrm{{f}}(\\Delta \\, '+\
+             '\\mathrm{{SB}}({rmin} \\emdash {rmax} '+\
+             '\\mathrm{{R}}_{{\\mathrm{{R200c}}}}) > {difflevel})$'
+    title = 'fraction of affected haloes with feedback < {deltat:.0f} Myr ago'
+    clabel = '\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\;'+\
+             ' [\\mathrm{M}_{\\odot}]'
+    fontsize = 12
+    lines = plot_lines_default
+    medges = np.arange(10.5, 14.1, 0.5)
+    
+    galdata = pd.read_csv(ddir + 'data_L0100N1504_27_Mh0p5dex_1000.txt', 
+                          sep='\t', index_col='galaxyid', comment='#') 
+    
+    curves_mlower = {ml: [] for ml in medges}
+    
+    for line in lines:
+        _dfn = dfn.format(line=line.replace(' ', '-'))
+        with h5py.File(ddir + _dfn, 'r') as df:
+            hed = df['Header']
+            dtopts = [_.decode() for _ in hed['profiles'][:]]
+            dtpos = hed['profiles'].attrs['dim']
+            ms = '{:.0f} Myr'.format(deltat_Myr)
+            dtind = np.where([ms in dtopt for dtopt in dtopts])[0][0]
+            
+            rdopts = hed['radial extents'][:]
+            rdpos = hed['radial extents'].attrs['dim']
+            rdind = np.where([np.allclose(region_R200c, rdopt) 
+                              for rdopt in rdopts])
+            
+            galids = hed['galaxyids'][:]
+            
+            sel = [slice(None, None, None)] * len(df['maxdiffs'].shape)
+            sel[rdpos] = rdind
+            sel[dtpos] = dtind
+            maxvals = df['maxdiffs'][tuple(sel)]
+            
+            affected = maxvals > difflevel
+            masses = np.log10(galdata['M200c_Msun'][galids]) 
+            mbins = np.digitize(masses, medges) - 1
+            fracs = [float(np.sum(affected(mbins == i))) \
+                     / float(np.sum(mbins == i))\
+                     for i in range(len(medges))]
+            for ml, frac in zip(medges, fracs):
+                curves_mlower[ml].append(frac)
+    
+    fig = plt.figure(figsize=(5.5, 5.))
+    grid = gsp.GridSpec(nrows=1, ncols=2, wspace=0.2)
+    ax = fig.add_subplot(grid[0, 0])
+    cax = fig.add_subplot(grid[0, 1])
+    
+    cbar, colors = add_cbar_mass(cax, massedges=medges, orientation='vertical', 
+                  clabel=clabel, fontsize=fontsize,
+                  aspect=10.)   
+    
+    xpoints = np.arange(len(lines))
+    for ml, mk in curves_mlower:
+        ax.plot(xpoints, curves_mlower[ml], marker='o', color=colors[ml])
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    pu.setticks(ax, fontsize)
+    ax.set_xticks(xpoints)
+    ax.set_xticklabels([nicenames_lines[line] for line in lines])
+    ax.tick_params(axis='x', rotation=45)
+    fig.suptitle(title, fontsize=fontsize)
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
+    
 ### instruments and minimum SB
 def plot_Aeff_galabs():
     datname = ddir + 'Aeff_cm2_{ins}.dat'
