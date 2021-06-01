@@ -4255,7 +4255,7 @@ def plot_size_fbeffect(region_R200c=(0., np.inf), deltat_Myr=10.,
                        difflevel=0.1):
     outname = 'convtest_fbeffect_summary_diff-gtr-{maxdiff}'+\
               '_{rmin}-{rmax}-R200c_deltat-{deltat}-Myr.pdf'
-    outname = '/' + '/'.join(mdir.split('/')[:-1]) +\
+    outname = '/'.join(mdir.split('/')[:-2]) +\
               '/convtest/' + outname.format(maxdiff=difflevel, 
                                            rmin=region_R200c[0],
                                            rmax=region_R200c[1],
@@ -4265,7 +4265,7 @@ def plot_size_fbeffect(region_R200c=(0., np.inf), deltat_Myr=10.,
     
     ylabel = '$\\mathrm{{f}}(\\Delta \\, '+\
              '\\mathrm{{SB}}({rmin} \\,\\emdash \\, {rmax} '+\
-             '\\; \\mathrm{{R}}_{{\\mathrm{{R200c}}}}) > {difflevel})$'
+             '\\; \\mathrm{{R}}_{{\\mathrm{{200c}}}}) > {difflevel})$'
     title = 'fraction of affected haloes with feedback < {deltat:.0f} Myr ago'
     clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\;'+\
              ' [\\mathrm{M}_{\\odot}]$'
@@ -4313,7 +4313,7 @@ def plot_size_fbeffect(region_R200c=(0., np.inf), deltat_Myr=10.,
                 curves_mlower[ml].append(frac)
     
     fig = plt.figure(figsize=(5.5, 5.))
-    grid = gsp.GridSpec(nrows=1, ncols=2, wspace=0.02)
+    grid = gsp.GridSpec(nrows=1, ncols=2, wspace=0.0)
     ax = fig.add_subplot(grid[0, 0])
     cax = fig.add_subplot(grid[0, 1])
     
