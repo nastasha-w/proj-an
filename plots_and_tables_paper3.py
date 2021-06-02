@@ -4159,8 +4159,8 @@ def plot_sample_fbeffect():
           ' C2 kernel')
     print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
     
-    lines_masses = [('o8', 12.0), ('si13r', 12.0)]
-    ylim_t = (-3.5, 0.2)
+    lines_masses = [('o8', 12.0), ('si13r', 12.0), ('si13r', 13.0)]
+    ylim_t = (-4.5, 1.2)
     ylim_b = (-1.0, 0.05)
     fontsize = 12
     linewidth = 1.2
@@ -4201,7 +4201,7 @@ def plot_sample_fbeffect():
     rfilebase = ddir + 'radprof/' + rfilebase
     filefills_base = {'box': 'L0100N1504', 'npix': '32000', 'nsl': '1'}
     
-    binset_mean = 'binset_1'
+    binset_mean = 'binset_0'
     binset_perc = 'binset_1'
     
     labels = ['all gas', 'fb $< 3$ Myr', 'fb $< 10$ Myr',
@@ -4277,13 +4277,14 @@ def plot_sample_fbeffect():
     
         ax = axes[axi]
         if mmin < 14.:
-            mlabel = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}}'+\
-                     '\\; [\\mathrm{{M}}_{{\\odot}}] = '+\
-                     '{:.1f} \\emdash {:.1f}$'
+            #mlabel = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}}'+\
+            #         '\\; [\\mathrm{{M}}_{{\\odot}}] = '+\
+            mlabel ='{:.1f} \\emdash {:.1f}$'
             mlabel = mlabel.format(mmin, mmin + 0.5)
         else:
-            mlabel = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}}'+\
-                     '\\; [\\mathrm{{M}}_{{\\odot}}] \\geq {:.1f}'
+            #mlabel = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}}'+\
+            #         '\\; [\\mathrm{{M}}_{{\\odot}}] \\geq {:.1f}'
+            mlabel = '\\geq {:.1f}'
             mlabel = mlabel.format(mmin)
         seltag = seltag_keys[mmin]
         
@@ -4307,13 +4308,13 @@ def plot_sample_fbeffect():
         if left:
             bax.set_ylabel(ylabel2, fontsize=fontsize)
             tax.set_ylabel(ylabel, fontsize=fontsize)
-        tax.text(0.02, 0.02, mlabel, color='black', fontsize=fontsize,
+        tax.text(0.02, 0.02, mlabel, color='black', fontsize=fontsize - 1,
                  transform=tax.transAxes, verticalalignment='bottom',
                  horizontalalignment='left')
         tax.text(0.98, 0.98, nicenames_lines[line], color='black', 
-                 fontsize=fontsize,
-                 transform=tax.transAxes, verticalalignment='bottom',
-                 horizontalalignment='left')
+                 fontsize=fontsize - 1,
+                 transform=tax.transAxes, verticalalignment='top',
+                 horizontalalignment='right')
         
         for li, label in enumerate(labels):
             filekw = filefills_base.copy()
