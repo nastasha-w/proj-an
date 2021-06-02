@@ -4169,7 +4169,7 @@ def plot_sample_fbeffect():
                mppe.Normal()]
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
     ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; '+\
-             '[\\mathrm{ph} \\, \\mathrm{cm}^{-2} \\mathmrm{s}^{-1} '+\
+             '[\\mathrm{ph} \\, \\mathrm{cm}^{-2} \\mathrm{s}^{-1} '+\
              '\\mathrm{sr}^{-1}]$'          
     ylabel2 = '$\\Delta \\, \\log_{10} \\, \\mathrm{SB}$'
     
@@ -4385,12 +4385,12 @@ def plot_sample_fbeffect():
                      path_effects=patheff)
             
             # indicate R200c
-            mmin = 10**mmin
-            if mmin < 10.**14.:
-                mmax = 10**0.5 * mmin
+            _mmin = 10**mmin
+            if mmin < 14.:
+                _mmax = 10**0.5 * _mmin
             else:
-                mmax = 10**14.53 # max mass in the box at z=0.1
-            rs = cu.R200c_pkpc(np.array([mmin, mmax]), cosmopars_27)
+                _mmax = 10**14.53 # max mass in the box at z=0.1
+            rs = cu.R200c_pkpc(np.array([_mmin, _mmax]), cosmopars_27)
             tax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1, color='gray')
             bax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1, color='gray')
             tax.axvspan(0.1 * rs[0], 0.1 * rs[1], ymin=0, ymax=1, alpha=0.1, 
