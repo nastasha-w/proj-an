@@ -4277,12 +4277,12 @@ def plot_sample_fbeffect():
     
         ax = axes[axi]
         if mmin < 14.:
-            mlabel = '$\\log_{{10}} \\, \\mathrm{{M}}}_{{\\mathrm{{200c}}}}'+\
+            mlabel = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}}'+\
                      '\\; [\\mathrm{{M}}_{{\\odot}}] = '+\
                      '{:.1f} \\emdash {:.1f}$'
             mlabel = mlabel.format(mmin, mmin + 0.5)
         else:
-            mlabel = '$\\log_{{10}} \\, \\mathrm{{M}}}_{{\\mathrm{{200c}}}}'+\
+            mlabel = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}}'+\
                      '\\; [\\mathrm{{M}}_{{\\odot}}] \\geq {:.1f}'
             mlabel = mlabel.format(mmin)
         seltag = seltag_keys[mmin]
