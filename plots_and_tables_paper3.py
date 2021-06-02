@@ -4160,11 +4160,11 @@ def plot_sample_fbeffect():
     print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
     
     lines_masses = [('o8', 12.0), ('si13r', 12.0), ('si13r', 13.0)]
-    ylim_t = (-4.5, 1.2)
-    ylim_b = (-1.0, 0.05)
+    ylim_t = (-4.5, 1.3)
+    ylim_b = (-1.0, 0.1)
     fontsize = 12
-    linewidth = 1.2
-    patheff = [mppe.Stroke(linewidth=linewidth + 0.4, foreground="b"),
+    linewidth = 1.5
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),
                mppe.Stroke(linewidth=linewidth, foreground="w"),
                mppe.Normal()]
     xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
@@ -4227,11 +4227,14 @@ def plot_sample_fbeffect():
         _nrows = nrows + 1
         laxsel = (nrows, slice(None, None, None))
         lax_under = True
+        height_ratios = [panelheight] * nrows
     else:
         _nrows = nrows
         laxsel = (nrows - 1, slice(nummasses % ncols, None, None))
         lax_under = False
-    figheight = panelheight * _nrows
+        height_ratios = [panelheight] * nrows + [1.5]
+    figheight = sum(height_ratios)
+
     
     fig = plt.figure(figsize=(figwidth, figheight))
     grid = gsp.GridSpec(ncols=ncols, nrows=_nrows, hspace=0.2, wspace=0.0,
@@ -4242,7 +4245,7 @@ def plot_sample_fbeffect():
     lax.axis('off')
     leg_kw = {'loc': 'upper center' if lax_under else 'upper right',
               'bbox_to_anchor': (0.5, 0.95) if lax_under else (1., 0.95),
-              'ncol': int(np.floor(ncols * 1.7)) if lax_under else 2,
+              'ncol': int(np.floor(ncols * 2.)) if lax_under else 2,
               'handlelength': 2.,
               'columnspacing': 1.,
               }
@@ -4279,12 +4282,12 @@ def plot_sample_fbeffect():
         if mmin < 14.:
             #mlabel = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}}'+\
             #         '\\; [\\mathrm{{M}}_{{\\odot}}] = '+\
-            mlabel ='${:.1f} \\emdash {:.1f}$'
+            mlabel ='$\\mathrm{{M}}_{{\\mathrm{{200c}}}}: {:.1f} \\emdash {:.1f}$'
             mlabel = mlabel.format(mmin, mmin + 0.5)
         else:
             #mlabel = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}}'+\
             #         '\\; [\\mathrm{{M}}_{{\\odot}}] \\geq {:.1f}$'
-            mlabel = '$\\geq {:.1f}$'
+            mlabel = '$\\mathrm{{M}}_{{\\mathrm{{200c}}}}: \\geq {:.1f}$'
             mlabel = mlabel.format(mmin)
         seltag = seltag_keys[mmin]
         
@@ -4299,10 +4302,13 @@ def plot_sample_fbeffect():
                     labelbottom=True, labelleft=left)
         bax.set_xscale('log')
         bax.grid(b=True)
+        bax.xaxis.grid(b=True)
+        bax.yaxis.grid(b=True, which='both')
         pu.setticks(tax, fontsize=fontsize, right=True, top=True,
                     labelbottom=False, labelleft=left)
         tax.set_xscale('log')
-        tax.grid(b=True)
+        tax.xaxis.grid(b=True)
+        tax.yaxis.grid(b=True)
         
         bax.set_xlabel(xlabel, fontsize=fontsize)
         if left:
@@ -4311,7 +4317,7 @@ def plot_sample_fbeffect():
         tax.text(0.02, 0.02, mlabel, color='black', fontsize=fontsize - 1,
                  transform=tax.transAxes, verticalalignment='bottom',
                  horizontalalignment='left')
-        tax.text(0.98, 0.98, nicenames_lines[line], color='black', 
+        tax.text(0.98, 0.95, nicenames_lines[line], color='black', 
                  fontsize=fontsize - 1,
                  transform=tax.transAxes, verticalalignment='top',
                  horizontalalignment='right')
@@ -4411,7 +4417,7 @@ def plot_sample_fbeffect():
             tax.text(xp, 0.98, '0.1 $\\mathrm{R}_{\\mathrm{200c}}$', 
                       fontsize=fontsize - 1, transform=tax.transAxes,
                       horizontalalignment='center', verticalalignment='top')
-            tax.axhline(-2., color='black', linewidth=1., linestyle='dotted',
+            tax.axhline(-2., color='black', linewidth=1., linestyle='dashed',
                         zorder=0.)
             
             bax.set_ylim(ylim_b)
