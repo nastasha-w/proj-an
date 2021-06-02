@@ -4279,12 +4279,12 @@ def plot_sample_fbeffect():
         if mmin < 14.:
             #mlabel = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}}'+\
             #         '\\; [\\mathrm{{M}}_{{\\odot}}] = '+\
-            mlabel ='{:.1f} \\emdash {:.1f}$'
+            mlabel ='${:.1f} \\emdash {:.1f}$'
             mlabel = mlabel.format(mmin, mmin + 0.5)
         else:
             #mlabel = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}}'+\
-            #         '\\; [\\mathrm{{M}}_{{\\odot}}] \\geq {:.1f}'
-            mlabel = '\\geq {:.1f}'
+            #         '\\; [\\mathrm{{M}}_{{\\odot}}] \\geq {:.1f}$'
+            mlabel = '$\\geq {:.1f}$'
             mlabel = mlabel.format(mmin)
         seltag = seltag_keys[mmin]
         
