@@ -4227,7 +4227,7 @@ def plot_sample_fbeffect():
         _nrows = nrows + 1
         laxsel = (nrows, slice(None, None, None))
         lax_under = True
-        height_ratios = [panelheight] * nrows + [0.25]
+        height_ratios = [panelheight] * nrows + [0.35]
     else:
         _nrows = nrows
         laxsel = (nrows - 1, slice(nummasses % ncols, None, None))
@@ -4236,7 +4236,7 @@ def plot_sample_fbeffect():
     figheight = sum(height_ratios)
 
     fig = plt.figure(figsize=(figwidth, figheight))
-    grid = gsp.GridSpec(ncols=ncols, nrows=_nrows, hspace=0.27, wspace=0.0,
+    grid = gsp.GridSpec(ncols=ncols, nrows=_nrows, hspace=0.3, wspace=0.0,
                         width_ratios=width_ratios, right=0.97, left=0.07,
                         height_ratios=height_ratios)
     axes = [fig.add_subplot(grid[i // ncols, i % ncols])\
