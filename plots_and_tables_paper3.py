@@ -4227,7 +4227,7 @@ def plot_sample_fbeffect():
         _nrows = nrows + 1
         laxsel = (nrows, slice(None, None, None))
         lax_under = True
-        height_ratios = [panelheight] * nrows + [0.7]
+        height_ratios = [panelheight] * nrows + [0.4]
     else:
         _nrows = nrows
         laxsel = (nrows - 1, slice(nummasses % ncols, None, None))
