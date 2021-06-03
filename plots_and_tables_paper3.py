@@ -4221,7 +4221,7 @@ def plot_sample_fbeffect():
 
     panelwidth = figwidth / ncols
     width_ratios = [panelwidth] * ncols
-    panelheight = 1.2 * panelwidth
+    panelheight = 1.3 * panelwidth
     
     if nummasses == nrows * ncols:
         _nrows = nrows + 1
