@@ -4221,7 +4221,7 @@ def plot_sample_fbeffect():
 
     panelwidth = figwidth / ncols
     width_ratios = [panelwidth] * ncols
-    panelheight = 1. * panelwidth
+    panelheight = 1.2 * panelwidth
     
     if nummasses == nrows * ncols:
         _nrows = nrows + 1
@@ -4236,7 +4236,7 @@ def plot_sample_fbeffect():
     figheight = sum(height_ratios)
 
     fig = plt.figure(figsize=(figwidth, figheight))
-    grid = gsp.GridSpec(ncols=ncols, nrows=_nrows, hspace=0.2, wspace=0.0,
+    grid = gsp.GridSpec(ncols=ncols, nrows=_nrows, hspace=0.25, wspace=0.0,
                         width_ratios=width_ratios, right=0.97, left=0.07,
                         height_ratios=height_ratios)
     axes = [fig.add_subplot(grid[i // ncols, i % ncols])\
