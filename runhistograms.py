@@ -3652,7 +3652,7 @@ elif jobind in [20448, 20449]:
     axdcts += ['Trprof', 'nrprof']
     weighttypes = ['Mass', 'Volume']
     
-    weighttype = weighttypes[jobind - 20447]
+    weighttype = weighttypes[jobind - 20448]
     for axdct in axdcts:
         p3g.genhists_luminositydist(samplename=samplen,
                             rbinu='R200c', idsel=None,
@@ -3663,7 +3663,7 @@ elif jobind in [20450, 20451]:
     p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
     samplen = 'RecalL0025N0752_27_Mh0p5dex_1000'
     weighttypes = ['Mass', 'Volume']
-    weighttype = weighttypes[jobind - 20449]
+    weighttype = weighttypes[jobind - 20450]
     
     p3g.extract_totweighted_luminosity(samplename=samplen,
               addedges=(0.0, 1.), weight=weighttype, logM200min=11.0,
@@ -3673,17 +3673,14 @@ elif jobind in [20452, 20453]:
     p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
     samplen = 'RecalL0025N0752_27_Mh0p5dex_1000'
     binning = ('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5]))
-    weighttypes = ['o7r', 'o8', 'Fe17      17.0510A', 'si13r']
-    weighttype = (weighttypes[jobind - 20377]).replace(' ', '-')
-    weighttype = 'em-' + weighttype
-    
+
     metals = ['Carbon', 'Nitrogen', 'Oxygen', 'Neon', 'Magnesium',
                   'Iron', 'Silicon']
     axdcts = ['{elt}-rprof'.format(elt=elt) for elt in metals]
     axdcts += ['Trprof', 'nrprof']
     weighttypes = ['Mass', 'Volume']
     
-    weighttype = weighttypes[jobind - 20447]
+    weighttype = weighttypes[jobind - 20452]
     for axdct in axdcts:   
         p3g.combhists(samplename=samplen, rbinu='R200c',
                   idsel=None, weighttype=weighttype,
