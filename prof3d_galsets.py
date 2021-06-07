@@ -23,15 +23,22 @@ tdir = '/net/luttero/data2/imgs/CGM/3dprof/'
 
 defaults = {'sample': 'L0100N1504_27_Mh0p5dex_1000'}
 
-samples = {'L0100N1504_27_Mh0p5dex_1000': sh.L0100N1504_27_Mh0p5dex_1000,\
-           'L0100N1504_27_Mstar-Mh0p5dex-match_1000': sh.L0100N1504_27_Mstar_Mhbinmatch_1000}
+samples = {'L0100N1504_27_Mh0p5dex_1000': sh.L0100N1504_27_Mh0p5dex_1000,
+           'L0100N1504_27_Mstar-Mh0p5dex-match_1000': 
+               sh.L0100N1504_27_Mstar_Mhbinmatch_1000,
+           'RecalL0025N0752_27_Mh0p5dex_1000': 
+               sh.RecalL0025N0752_27_Mh0p5dex_1000}
 
-weighttypes = {'Mass': {'ptype': 'basic', 'quantity': 'Mass'},\
-               'Volume': {'ptype': 'basic', 'quantity': 'propvol'},\
-               'gas':   {'ptype': 'basic', 'quantity': 'Mass', 'parttype': '0'},\
-               'stars': {'ptype': 'basic', 'quantity': 'Mass', 'parttype': '4'},\
-               'BHs':   {'ptype': 'basic', 'quantity': 'Mass', 'parttype': '5'},\
-               'DM':    {'ptype': 'basic', 'quantity': 'Mass', 'parttype': '1'},\
+weighttypes = {'Mass': {'ptype': 'basic', 'quantity': 'Mass'},
+               'Volume': {'ptype': 'basic', 'quantity': 'propvol'},
+               'gas':   {'ptype': 'basic', 'quantity': 'Mass', 
+                         'parttype': '0'},
+               'stars': {'ptype': 'basic', 'quantity': 'Mass', 
+                         'parttype': '4'},
+               'BHs':   {'ptype': 'basic', 'quantity': 'Mass', 
+                         'parttype': '5'},
+               'DM':    {'ptype': 'basic', 'quantity': 'Mass', 
+                         'parttype': '1'},
                }
 weighttypes.update({ion: {'ptype': 'Nion', 'ion': ion} for ion in\
                     ['o1', 'o2', 'o3', 'o4', 'o5', 'o6', 'o7', 'o8', 'oxygen',\
