@@ -3600,7 +3600,99 @@ elif jobind == 20438:
     p3g.extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
               addedges=(0.0, 1.), weight='Luminosity', logM200min=11.0,
               lineset='PS20lines')
+    
 
+###### 3d profiles for the convergence test 
+### get 3d profiles
+if jobind in range(20438, 20442):
+    p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    samplen = 'RecalL0025N0752_27_Mh0p5dex_1000'
+    weighttypes = ['o7r', 'o8', 'Fe17      17.0510A', 'si13r']
+    weighttype = weighttypes[jobind - 20438]
+    weighttype = 'em-' + weighttype.replace(' ', '-')
+    for axdct in ['Zrprof', 'Trprof', 'nrprof']:
+        p3g.genhists_luminositydist(samplename=samplen,
+                            rbinu='R200c', idsel=None,\
+                            weighttype=weighttype,\
+                            logM200min=11.0, axdct=axdct)  
+     
+
+# stack emission-weighted profiles    
+elif jobind in range(20442, 20446):
+    p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    samplen = 'RecalL0025N0752_27_Mh0p5dex_1000'
+    binning = ('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5]))
+    weighttypes = ['o7r', 'o8', 'Fe17      17.0510A', 'si13r']
+    weighttype = (weighttypes[jobind - 20377]).replace(' ', '-')
+    weighttype = 'em-' + weighttype
+    for axdct in ['Trprof', 'nrprof', 'Zrprof']:    
+        p3g.combhists(samplename=samplen, rbinu='R200c',
+                  idsel=None, weighttype=weighttype,
+                  binby=binning,
+                  combmethod='addnormed-R200c', histtype=axdct)
+        p3g.combhists(samplename=samplen, rbinu='R200c',
+                  idsel=None, weighttype=weighttype,
+                  binby=binning,
+                  combmethod='add', histtype=axdct)
+
+elif jobind == 20446:
+    p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    samplen = 'RecalL0025N0752_27_Mh0p5dex_1000'
+    
+    p3g.extract_totweighted_luminosity(samplename=samplen,
+              addedges=(0.0, 1.), weight='Luminosity', logM200min=11.0,
+              lineset='convtest')
+    
+elif jobind in [20447, 20448]:
+    p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    samplen = 'RecalL0025N0752_27_Mh0p5dex_1000'
+    metals = ['Carbon', 'Nitrogen', 'Oxygen', 'Neon', 'Magnesium',
+                  'Iron', 'Silicon']
+    axdcts = ['{elt}-rprof'.format(elt=elt) for elt in metals]
+    axdcts += ['Trprof', 'nrprof']
+    weighttypes = ['Mass', 'Volume']
+    
+    weighttype = weighttypes[jobind - 20447]
+    for axdct in axdcts:
+        p3g.genhists_luminositydist(samplename=samplen,
+                            rbinu='R200c', idsel=None,
+                            weighttype=weighttype,
+                            logM200min=11.0, axdct=axdct)  
+    
+elif jobind in [20449, 20500]:
+    p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    samplen = 'RecalL0025N0752_27_Mh0p5dex_1000'
+    weighttypes = ['Mass', 'Volume']
+    weighttype = weighttypes[jobind - 20449]
+    
+    p3g.extract_totweighted_luminosity(samplename=samplen,
+              addedges=(0.0, 1.), weight=weighttype, logM200min=11.0,
+              lineset='convtest')
+    
+elif jobind in [20501, 20502]:
+    p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    samplen = 'RecalL0025N0752_27_Mh0p5dex_1000'
+    binning = ('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5]))
+    weighttypes = ['o7r', 'o8', 'Fe17      17.0510A', 'si13r']
+    weighttype = (weighttypes[jobind - 20377]).replace(' ', '-')
+    weighttype = 'em-' + weighttype
+    
+    metals = ['Carbon', 'Nitrogen', 'Oxygen', 'Neon', 'Magnesium',
+                  'Iron', 'Silicon']
+    axdcts = ['{elt}-rprof'.format(elt=elt) for elt in metals]
+    axdcts += ['Trprof', 'nrprof']
+    weighttypes = ['Mass', 'Volume']
+    
+    weighttype = weighttypes[jobind - 20447]
+    for axdct in axdcts:   
+        p3g.combhists(samplename=samplen, rbinu='R200c',
+                  idsel=None, weighttype=weighttype,
+                  binby=binning,
+                  combmethod='addnormed-R200c', histtype=axdct)
+        p3g.combhists(samplename=samplen, rbinu='R200c',
+                  idsel=None, weighttype=weighttype,
+                  binby=binning,
+                  combmethod='add', histtype=axdct)
 
 
 ### also redo for n6-actualr:
