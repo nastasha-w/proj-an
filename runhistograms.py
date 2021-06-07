@@ -3608,7 +3608,7 @@ if jobind in range(20439, 20443):
     p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
     samplen = 'RecalL0025N0752_27_Mh0p5dex_1000'
     weighttypes = ['o7r', 'o8', 'Fe17      17.0510A', 'si13r']
-    weighttype = weighttypes[jobind - 20438]
+    weighttype = weighttypes[jobind - 20439]
     weighttype = 'em-' + weighttype.replace(' ', '-')
     for axdct in ['Zrprof', 'Trprof', 'nrprof']:
         p3g.genhists_luminositydist(samplename=samplen,
@@ -3623,7 +3623,7 @@ elif jobind in range(20443, 20447):
     samplen = 'RecalL0025N0752_27_Mh0p5dex_1000'
     binning = ('M200c_Msun', 10**np.array([11., 11.5, 12., 12.5, 13., 13.5]))
     weighttypes = ['o7r', 'o8', 'Fe17      17.0510A', 'si13r']
-    weighttype = (weighttypes[jobind - 20377]).replace(' ', '-')
+    weighttype = (weighttypes[jobind - 20443]).replace(' ', '-')
     weighttype = 'em-' + weighttype
     for axdct in ['Trprof', 'nrprof', 'Zrprof']:    
         p3g.combhists(samplename=samplen, rbinu='R200c',
