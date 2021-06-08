@@ -1614,11 +1614,13 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
                         edges_t[rax] *= (1. / R200c)
                     
                     try:
-                        ind1 = np.where(np.isclose(edges_t[rax], addedges[0]))[0][0]
+                        ind1 = np.where(np.isclose(edges_t[rax], 
+                                                   addedges[0]))[0][0]
                     except IndexError:
                         raise RuntimeError('Could not find a histogram edge matching %f for galaxy %i, ion %s'%(addedges[0], galid, ion))
                     try:
-                        ind2 = np.where(np.isclose(edges_t[rax], addedges[1]))[0][0]
+                        ind2 = np.where(np.isclose(edges_t[rax], 
+                                                   addedges[1]))[0][0]
                     except IndexError:
                         raise RuntimeError('Could not find a histogram edge matching %f for galaxy %i, ion %s'%(addedges[1], galid, ion))
                     
@@ -1638,7 +1640,8 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
                     avedges = edges_t[avax]
                     avcens = 0.5 * (avedges[:-1] + avedges[1:])
                     if avedges[-1] == np.inf:
-                        avcens[-1] = avedges[-2] + 0.5 * (avedges[-2] - avedges[-3])
+                        avcens[-1] = avedges[-2] + \
+                                     0.5 * (avedges[-2] - avedges[-3])
                     if avlog:
                         avcens = 10**avcens
                     #sumaxes = list(range(len(hist_t.shape)))
@@ -1647,9 +1650,11 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
                     shapeav = [np.newaxis] * len(hist_t.shape)
                     shapeav[avax] = slice(None, None, None)
                     shapeav = tuple(shapeav)
-                    av_nsf = np.sum(hist_t[tuple(addsel_nsf)] * avcens[shapeav]\
+                    av_nsf = np.sum(hist_t[tuple(addsel_nsf)] \
+                                    * avcens[shapeav]\
                                     ) / tempsum_nsf
-                    av_sf  = np.sum(hist_t[tuple(addsel_sf)] * avcens[shapeav]\
+                    av_sf  = np.sum(hist_t[tuple(addsel_sf)] \
+                                    * avcens[shapeav]\
                                     ) / tempsum_sf  
                     if avlog:
                         av_nsf = np.log10(av_nsf)
@@ -1667,7 +1672,8 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
             if savetot:
                 egrp = fo
                 if weight == 'Luminosity':
-                    lines = ['-'.join(weight.split('-')[1:]) for weight in weighttypes]
+                    lines = ['-'.join(weight.split('-')[1:]) \
+                             for weight in weighttypes]
                     units = 'erg/s'
                 else:
                     lines = weighttypes
@@ -1675,14 +1681,16 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
                         units = 'g'
                     elif weight == 'Volume':
                         units = 'cm**-3'
-                egrp.attrs.create('weight', np.array([np.string_(line) for line in lines]))
+                egrp.attrs.create('weight', np.array([np.string_(line) \
+                                                      for line in lines]))
                 
                 ds = egrp.create_dataset('weight_total', data=savelist_tot)
                 ds.attrs.create('units', np.string_(units))
                 ds.attrs.create('axis0', np.string_('galaxyid'))
                 ds.attrs.create('axis1', np.string_('weight'))
-                ds.attrs.create('axis2', np.array([np.string_('non-star-forming'),\
-                                                   np.string_('star-forming')]))
+                ds.attrs.create('axis2', 
+                                np.array([np.string_('non-star-forming'),
+                                          np.string_('star-forming')]))
         
             if histtype == 'Trprof':
                 dsname = 'Temperature_T4EOS'
@@ -1702,7 +1710,8 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
                 dsname = base.format(elt=elt)
             egrp = fo
             if weight == 'Luminosity':
-                lines = ['-'.join(weight.split('-')[1:]) for weight in weighttypes]
+                lines = ['-'.join(weight.split('-')[1:]) \
+                         for weight in weighttypes]
             else:
                 lines = weighttypes
             #egrp.attrs.create('weight', np.array([np.string_(line) for line in lines]))
@@ -1711,7 +1720,7 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
             ds.attrs.create('units', np.string_(units))
             ds.attrs.create('axis0', np.string_('galaxyid'))
             ds.attrs.create('axis1', np.string_('weight'))
-            ds.attrs.create('axis2', np.array([np.string_('non-star-forming'),\
+            ds.attrs.create('axis2', np.array([np.string_('non-star-forming'),
                                                np.string_('star-forming')]))
         
 def addhalomasses_hists_ionfrac(samplename='L0100N1504_27_Mh0p5dex_1000',\
