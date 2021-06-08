@@ -3185,12 +3185,12 @@ def plot_radprof3d_convtest(weightset=1, M200cslice=None):
                              _dir + filebase_basic.format(
                               qt='propvol' if weight == 'Volume' else weight)\
                       for weight in weights}
-    filebase_line_SB = 'particlehist_Luminosity_{line}_RecalL0100N1504_27'+\
+    filebase_line_SB = 'particlehist_Luminosity_{line}_RecalL0025N0752_27'+\
                        '_test3.7_SmAb_T4EOS_galcomb.hdf5'
     filebase_line_PS20 = 'particlehist_Luminosity_{line}'+\
                          '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F'+\
-                         '_RecalL0100N1504_27_test3.7_SmAb_T4EOS_galcomb.hdf5'                   
-    filebase_basic = 'particlehist_{qt}_RecalL0100N1504_27_test3.7_T4EOS'+\
+                         '_RecalL0025N0752_27_test3.7_SmAb_T4EOS_galcomb.hdf5'                   
+    filebase_basic = 'particlehist_{qt}_RecalL0025N0752_27_test3.7_T4EOS'+\
                      '_galcomb.hdf5'                     
     filenames_L025 = {weight: _dir + filebase_line_SB.format(line=weight)\
                              if weight in all_lines_SB else\
