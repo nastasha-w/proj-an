@@ -3895,7 +3895,7 @@ def plot_r200Lw_halodist_convtest(weightset=1, inclSF=True):
                       for yi in range(nprof)])
     
     mbins = np.array(list(np.arange(11., 13.05, 0.1)) +\
-                     [13.25, 13.5, 13.75, 14.0, 14.6])
+                     [13.25])
     #massexcl = np.array([ed not in massincl for ed in massedges])
 
     linewidth_thick = 2.
