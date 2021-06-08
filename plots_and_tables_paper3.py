@@ -3397,7 +3397,7 @@ def plot_radprof3d_convtest(weightset=1, M200cslice=None):
                                          linewidth=linewidth_thick,
                                          label=weight) for weight in _weights]
                 labels = labels + [weight[0] + ' L025' for weight in _weights]
-                ax.legend(handles, labels, fontsize=fontsize, ncols=2)
+                ax.legend(handles, labels, fontsize=fontsize, ncol=2)
                 #, bbox_to_anchor=(1., 1.), loc='upper right'
             elif ti == 0:
                 plabel = _weights[0]
