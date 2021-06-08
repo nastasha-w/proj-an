@@ -3384,7 +3384,7 @@ def plot_radprof3d_convtest(weightset=1, M200cslice=None):
             #     labels = [weight for weight in _weights]
             #     ax.legend(handles, labels, fontsize=fontsize, 
             #               bbox_to_anchor=(1., 0.), loc='lower right')
-            if ti != 0 and len(_weights) > 1:
+            if ti == 1 and len(_weights) > 1:
                 handles = [mlines.Line2D((), (),
                                          linestyle=linestyles_L100[weight],
                                          color='black', alpha=1., 
@@ -3396,8 +3396,9 @@ def plot_radprof3d_convtest(weightset=1, M200cslice=None):
                                          color='black', alpha=1., 
                                          linewidth=linewidth_thick,
                                          label=weight) for weight in _weights]
-                labels = labels + [weight[0] + ' L025' for weight in _weights]
-                ax.legend(handles, labels, fontsize=fontsize, ncol=2)
+                labels = labels + [weight[0] + ' L25' for weight in _weights]
+                ax.legend(handles, labels, fontsize=fontsize - 2, ncol=2,
+                          handlelength=2., columnspacing=1.)
                 #, bbox_to_anchor=(1., 1.), loc='upper right'
             elif ti == 0:
                 plabel = _weights[0]
