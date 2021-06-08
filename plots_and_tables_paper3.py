@@ -3201,11 +3201,15 @@ def plot_radprof3d_convtest(weightset=1, M200cslice=None):
                               qt='propvol' if weight == 'Volume' else weight)\
                       for weight in weights}
     # read in data: stacked histograms -> process to plottables
-    hists = {}
-    edges = {}
+    hists_L100 = {}
+    edges_L100 = {}
+    hists_L025 = {}
+    edges_L025 = {}
     for cbm in combmethods:
-        hists[cbm] = {}
-        edges[cbm] = {}
+        hists_L100[cbm] = {}
+        edges_L100[cbm] = {}
+        hists_L025[cbm] = {}
+        edges_L025[cbm] = {}
         for weight in weights:
             hists_L100[cbm][weight], edges_L100[cbm][weight], _ =\
             readin_3dprof_stacked(filenames_L100[weight], Zelt=elt, 
