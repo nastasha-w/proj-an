@@ -4094,7 +4094,8 @@ def plot_r200Lw_halodist_convtest(weightset=1, inclSF=True):
                                       fi.attrs['weight']])
                     print(wcols)
                     print(wkey)
-                    wind = np.where(wcols == 'em-' + wkey)[0][0]
+                    wcomp = 'em-' + wkey if wkey in all_lines else wkey
+                    wind = np.where(wcols == wcomp)[0][0]
                     sel = [slice(None, None, None)] * 3
                     sel[weightax] = wind
                     
