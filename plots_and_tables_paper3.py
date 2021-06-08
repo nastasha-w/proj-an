@@ -3290,7 +3290,7 @@ def plot_radprof3d_convtest(weightset=1, M200cslice=None):
                              
                             pi = 0
                             ax.plot(mid_r, perclines[pi], color=color,
-                                    linestyle=linestyles[weight], 
+                                    linestyle=linestyles_L100[weight], 
                                     alpha=alphas[cmb],
                                     path_effects=patheff_thick, 
                                     linewidth=linewidth_thick)
@@ -3306,7 +3306,7 @@ def plot_radprof3d_convtest(weightset=1, M200cslice=None):
                             #    hist /= float(numgal)
                                 
                             ax.plot(edges_r, np.log10(hist), color=color,
-                                        linestyle=linestyles[weight], 
+                                        linestyle=linestyles_L100[weight], 
                                         alpha=alphas[cmb],
                                         path_effects=patheff_thick, 
                                         linewidth=linewidth_thick)
@@ -3334,7 +3334,7 @@ def plot_radprof3d_convtest(weightset=1, M200cslice=None):
                              
                             pi = 0
                             ax.plot(mid_r, perclines[pi], color=color,
-                                    linestyle=linestyles[weight], 
+                                    linestyle=linestyles_L025[weight], 
                                     alpha=alphas[cmb],
                                     path_effects=patheff_thick, 
                                     linewidth=linewidth_thick)
@@ -3350,7 +3350,7 @@ def plot_radprof3d_convtest(weightset=1, M200cslice=None):
                             #    hist /= float(numgal)
                                 
                             ax.plot(edges_r, np.log10(hist), color=color,
-                                        linestyle=linestyles[weight], 
+                                        linestyle=linestyles_L025[weight], 
                                         alpha=alphas[cmb],
                                         path_effects=patheff_thick, 
                                         linewidth=linewidth_thick)
