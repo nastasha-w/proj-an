@@ -4094,7 +4094,8 @@ def plot_r200Lw_halodist_convtest(weightset=1, inclSF=True):
                                       fi.attrs['weight']])
                     print(wcols)
                     print(wkey)
-                    wcomp = 'em-' + wkey if wkey in all_lines else wkey
+                    #wcomp = 'em-' + wkey if wkey in all_lines else wkey
+                    wcomp = wkey
                     wind = np.where(wcols == wcomp)[0][0]
                     sel = [slice(None, None, None)] * 3
                     sel[weightax] = wind
@@ -4233,7 +4234,7 @@ def plot_r200Lw_halodist_convtest(weightset=1, inclSF=True):
                                          label=weight) for weight in _weights]
                 labels = labels + [weight[0] + ' L25' for weight in _weights]
                 l1 = ax.legend(handles, labels, fontsize=fontsize - 2, 
-                               bbox_to_anchor=(0., 0.42), loc='center left',
+                               bbox_to_anchor=(0., 0.405), loc='center left',
                                handlelength=1.5, columnspacing=1., ncol=2)
                 l1set = True
             if ti == 0 and len(_weights) <= 1:
