@@ -3894,7 +3894,7 @@ def plot_r200Lw_halodist_convtest(weightset=1, inclSF=True):
                       for xi in range(len(axweights))]\
                       for yi in range(nprof)])
     
-    mbins = np.array(list(np.arange(11., 13.05, 0.1)))
+    mbins = np.array(list(np.arange(11., 12.55, 0.1)) + [12.75, 13.])
     
     #massexcl = np.array([ed not in massincl for ed in massedges])
 
