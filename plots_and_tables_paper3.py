@@ -577,7 +577,8 @@ def readin_radprof(filename, seltags, ys, runit='pkpc', separate=False,
     return out
 
 def readin_3dprof_stacked(filename, Zelt='oxygen', weight='Mass',
-                          combmethod='addnormed-R200c', rbinu='R200c'):
+                          combmethod='addnormed-R200c', rbinu='R200c',
+                          galset='L0100N1504_27_Mh0p5dex_1000'):
     '''
     read in the 3d profiles for the selected halo masses. Only works if the 
     file actually contains the requested data, and assumes group names and 
@@ -596,7 +597,10 @@ def readin_3dprof_stacked(filename, Zelt='oxygen', weight='Mass',
         'add' or 'addnormed-R200c'
     rbinu: str 
         radial bin units: 'R200c' or 'pkpc'
-    
+    galset: str
+        galset name used in prof3d_galsets. The default is 
+        'L0100N1504_27_Mh0p5dex_1000'.
+        
     Returns 
     -------
     (hists, edges, galaxyids)
@@ -647,7 +651,7 @@ def readin_3dprof_stacked(filename, Zelt='oxygen', weight='Mass',
                         elt=elt)],
                 }
     
-    mgrpn = 'L0100N1504_27_Mh0p5dex_1000/%s-%s'%(combmethod, rbinu)
+    mgrpn = '%s/%s-%s'%(galset, combmethod, rbinu)
     
     # read in data: stacked histograms -> process to plottables
     hists_main = {}
@@ -3217,7 +3221,8 @@ def plot_radprof3d_convtest(weightset=1, M200cslice=None):
             print(filenames_L025[weight])
             hists_L025[cbm][weight], edges_L025[cbm][weight], _ =\
             readin_3dprof_stacked(filenames_L025[weight], Zelt=elt, 
-                                  weight=weight, combmethod=cbm, rbinu=rbinu)
+                                  weight=weight, combmethod=cbm, rbinu=rbinu,
+                                  galset='RecalL0025N0752_27_Mh0p5dex_1000')
     for mi in axweights:
         for ti in range(nprof):
             # where are we
