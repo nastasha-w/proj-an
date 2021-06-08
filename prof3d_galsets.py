@@ -1460,7 +1460,7 @@ def extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',
             weighttypes = ['em-{l}'.format(l=line.replace(' ', '-')) \
                            for line in lines_PS20]
         elif lineset == 'convtest':
-            base = 'luminosity-weighted-nH-T-Z_Sb-PS20_depletion-F_halos_%s_%s-%s-%s_SmAb.hdf5'
+            base = 'luminosity-weighted-nH-T-Z_SB-PS20_depletion-F_halos_%s_%s-%s-%s_SmAb.hdf5'
             outname = ol.pdir + base%(samplename, 
                                       str(addedges[0]), str(addedges[1]), rbinu)
             _lines = ['o7r', 'o8', 'Fe17      17.0510A', 'si13r']
