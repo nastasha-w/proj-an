@@ -3928,14 +3928,11 @@ def plot_r200Lw_halodist_convtest(weightset=1, inclSF=True):
                           for weight in weights}
     fbase_mv = '{wt}-weighted-nH-T-Z_halos_RecalL0025N0752_27_Mh0p5dex_1000'+\
                '_0.0-1.0-R200c_SmAb.hdf5'
-    fname_PS20 = 'luminosity-weighted-nH-T-Z_PS20_depletion-F_halos'+\
+    fname_lines = 'luminosity-weighted-nH-T-Z_SB-PS20_depletion-F_halos'+\
                  '_RecalL0025N0752_27_Mh0p5dex_1000_0.0-1.0-R200c_SmAb.hdf5'
-    fname_SB = 'luminosity-weighted-nH-T-Z_halos_RecalL0025N0752_27_Mh0p5dex'+\
-               '_1000_0.0-1.0-R200c_SmAb.hdf5'
-    filens_weight_L025 = {weight: ddir + fname_SB \
-                                  if weight in all_lines_SB else\
-                                  ddir + fname_PS20 \
-                                  if weight in all_lines_PS20  else\
+    all_lines = all_lines_SB + all_lines_PS20
+    filens_weight_L025 = {weight: ddir + fname_lines \
+                                  if weight in all_lines else\
                                   ddir + fbase_mv.format(wt=weight.lower())\
                           for weight in weights}
     
