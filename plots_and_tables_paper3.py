@@ -3214,6 +3214,7 @@ def plot_radprof3d_convtest(weightset=1, M200cslice=None):
             hists_L100[cbm][weight], edges_L100[cbm][weight], _ =\
             readin_3dprof_stacked(filenames_L100[weight], Zelt=elt, 
                                   weight=weight, combmethod=cbm, rbinu=rbinu)
+            print(filenames_L025[weight])
             hists_L025[cbm][weight], edges_L025[cbm][weight], _ =\
             readin_3dprof_stacked(filenames_L025[weight], Zelt=elt, 
                                   weight=weight, combmethod=cbm, rbinu=rbinu)
