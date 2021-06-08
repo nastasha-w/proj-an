@@ -3048,7 +3048,7 @@ def plot_radprof3d_convtest(weightset=1, M200cslice=None):
     outname = outname.format('wSF' if inclSF else 'nSF', ws=weightset)
     # for halo mass selections
     if M200cslice is None:
-        massslice = slice(0, 5, None)
+        massslice = np.array([0, 2, 3]) #slice(0, 5, None)
     else:
         massslice = M200cslice
     minrshow = np.log10(0.1) # log10 R200c
@@ -3218,7 +3218,6 @@ def plot_radprof3d_convtest(weightset=1, M200cslice=None):
             hists_L100[cbm][weight], edges_L100[cbm][weight], _ =\
             readin_3dprof_stacked(filenames_L100[weight], Zelt=elt, 
                                   weight=weight, combmethod=cbm, rbinu=rbinu)
-            print(filenames_L025[weight])
             hists_L025[cbm][weight], edges_L025[cbm][weight], _ =\
             readin_3dprof_stacked(filenames_L025[weight], Zelt=elt, 
                                   weight=weight, combmethod=cbm, rbinu=rbinu,
