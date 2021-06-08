@@ -3375,8 +3375,8 @@ def plot_radprof3d_convtest(weightset=1, M200cslice=None):
             #     ax.legend(handles, labels, fontsize=fontsize, 
             #               bbox_to_anchor=(1., 0.), loc='lower right')
             if ti != 0 and len(_weights) > 1:
-                handles = [mlines.Line2D((), (), l
-                                         inestyle=linestyles_L100[weight],
+                handles = [mlines.Line2D((), (),
+                                         linestyle=linestyles_L100[weight],
                                          color='black', alpha=1., 
                                          linewidth=linewidth_thick,
                                          label=weight) for weight in _weights]
