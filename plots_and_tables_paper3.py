@@ -3855,8 +3855,8 @@ def plot_r200Lw_halodist_convtest(weightset=1, inclSF=True):
     linestyles.update({'Volume': 'dashed'})
     colors_L100 = {weight: 'black' for weight in weights}
     colors_L100.update({'Mass': _c1.green, 'Volume': 'black'})
-    colors_L025 = {weight: _c1.blue for weight in weights}
-    colors_L025.update({'Mass': _c1.cyan, 'Volume': _c1.blue})
+    colors_L025 = {weight: _c1.purple for weight in weights}
+    colors_L025.update({'Mass': _c1.blue, 'Volume': _c1.purple})
 
     color_Tindic = _c1.red
     color_leg = 'black'
@@ -4217,7 +4217,7 @@ def plot_r200Lw_halodist_convtest(weightset=1, inclSF=True):
                             linestyle='solid', linewidth=linewidth_thick)
             
             l1set = False
-            if ti == 0 and len(_weights) > 1:
+            if ti == 1 and len(_weights) > 1: #
                 handles = [mlines.Line2D([], [], linestyle=linestyles[weight],
                                          color=colors_L100[weight], alpha=1., 
                                          linewidth=linewidth_thick,
@@ -4230,8 +4230,8 @@ def plot_r200Lw_halodist_convtest(weightset=1, inclSF=True):
                                          label=weight) for weight in _weights]
                 labels = labels + [weight[0] + ' L025' for weight in _weights]
                 l1 = ax.legend(handles, labels, fontsize=fontsize - 2, 
-                               bbox_to_anchor=(0., 1.), loc='upper left',
-                               handlelength=1.5, columnspacing=1.,)
+                               bbox_to_anchor=(1., 1.), loc='upper right',
+                               handlelength=1.5, columnspacing=1., ncol=2)
                 l1set = True
             if ti == 0 and len(_weights) <= 1:
                 plabel = _weights[0]
