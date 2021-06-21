@@ -63,13 +63,15 @@ n_jobs = int(os.environ['OMP_NUM_THREADS']) # not shared-memory, I think, but a 
 
 ### updated model 2020-02-25 (received) + 2021 referee report O VI rev.
 # pre ref. rep. commented out
+# : 2020-02-25 update model
+# : 2021 referee revision model (2 absorber UV analysis)
 # selection2 absorbers include the FUV O VI +- 1 sigma range for the revised
 # (2-absorber) FUV analysis 
 # UV priors
 # table 2 log No6, Delta log No6
 _o6_c1 = (13.46, 0.16) 
 _o6_c2 = (13.68, 0.10)
-o6_uv = np.log10(10**_o6_c1[0] + 10**_o6_c2[0]), 
+o6_uv = np.log10(10**_o6_c1[0] + 10**_o6_c2[0])
 sigma_o6_uv = 1./ (10**_o6_c1[0] + 10**_o6_c2[0]) *\
               np.sqrt(10**(2. * _o6_c1[0]) * _o6_c1[1]**2 +\
                       10**(2. * _o6_c2[0]) * _o6_c2[1]**2)
