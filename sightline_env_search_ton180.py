@@ -1883,14 +1883,14 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
     if prop == 'neighbor_dist_pmpc':
         if cumulative:
             legendloc = 'upper right' #'lower right'
-            legendanchor = (0.95, 0.95) #(1., 0.4 + 0.07 * len(ionsels))
+            legendanchor = (0.98, 0.98) #(1., 0.4 + 0.07 * len(ionsels))
             legendncol = 1 #if handles1 == [] else 2
             legendframe = True
             
             infov = 'top' #'bottom'
             infoh = 'right'
-            infox = 0.95
-            infoy = 0.82
+            infox = 0.96
+            infoy = 0.72
             infobbox = None
         else:
             legendloc = 'upper right'
