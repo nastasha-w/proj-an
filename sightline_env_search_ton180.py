@@ -22,6 +22,8 @@ import cosmo_utils as cu
 import ion_line_data as ild
 
 import plot_utils as pu
+import tol_colors as tc
+
 
 # put stored files here
 ddir = '/net/quasar/data2/wijers/slcat/'
@@ -1546,11 +1548,22 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
                 'suv': slab model at the o6/UV redshift
                 'sxr': slab model at the o7/X-ray redshift
     '''
-    histfiles = {'2dmatch_sameslice': (ddir + 'savedhists_sightlinecat_z-0.1_selection1_nearest-neighbor-match_nngb-5_nsl-0.5.hdf5', 1),\
-                 '2dmatch_2slice': (ddir + 'savedhists_sightlinecat_z-0.1_selection1_nearest-neighbor-match_nngb-5_nsl-1.0.hdf5', 0),\
-                 '3dmatch': (ddir + 'savedhists_sightlinecat_z-0.1_selection1_nearest-neighbor-match_nngb-5_nsl-3.0.hdf5', 1),\
-                 '2dmatch_sameslice_meas2': (ddir + 'savedshists_sightlinecat_z-0.1_selection2_nearest-neighbor-match_nngb-5_nsl-0.5.hdf5', 0),\
-                 '2dmatch_2slice_meas2': (ddir + 'savedshists_sightlinecat_z-0.1_selection2_nearest-neighbor-match_nngb-5_nsl-1.0.hdf5', 0),\
+    histfiles = {'2dmatch_sameslice': (ddir + 'savedhists_sightlinecat_z-0.1_selection1'+\
+                                       '_nearest-neighbor-match_nngb-5_nsl-0.5.hdf5', 1),
+                 '2dmatch_2slice': (ddir + 'savedhists_sightlinecat_z-0.1_selection1'+\
+                                    '_nearest-neighbor-match_nngb-5_nsl-1.0.hdf5', 0),
+                 '3dmatch': (ddir + 'savedhists_sightlinecat_z-0.1_selection1_nearest'+\
+                             '-neighbor-match_nngb-5_nsl-3.0.hdf5', 1),
+                 '2dmatch_sameslice_meas2': (ddir + 'savedshists_sightlinecat_z-0.1_'+\
+                                                    'selection2_nearest-neighbor-match'+\
+                                                    '_nngb-5_nsl-0.5.hdf5', 0),
+                 '2dmatch_2slice_meas2': (ddir + 'savedshists_sightlinecat_z-0.1_'+\
+                                                 'selection2_nearest-neighbor-match_'+\
+                                                 'nngb-5_nsl-1.0.hdf5', 0),\
+                 '2dmatch_sameslice_meas3': (ddir + 'savedshists_sightlinecat_z-0.1_'+\
+                                                    'coldens-2021-2absorber-update1_'+\
+                                                    'nearest-neighbor-match_nngb-5_nsl'+\
+                                                    '-0.5.hdf5', 0)
                  }
     if cumulative:
         maxfracplot = 5e-3
@@ -1558,13 +1571,14 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
     else:
         maxfracplot = 1e-4
         mincumulplot = 0.999
+    cset = tc.tol_cset('vibrant')
     
     # axis label, name of the hdf5 groups containing the histograms
     if toplot == 'dist2d':
         prop = 'neighbor_dist_pmpc'
         xlabel = '$\\mathrm{{r}}_{{\\perp}} \\; [\\mathrm{pMpc}]$'
         if histfile == 'auto':
-            hkey = '2dmatch_sameslice'
+            hkey = '2dmatch_sameslice_meas3' #'2dmatch_sameslice'
         else:
             hkey = histfile
     elif toplot == 'dist3d':
@@ -1731,7 +1745,8 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
         galdata_obs = sorted(galdata_meas, key=lambda x: x['r'])
     
     nngb = len(galdata_obs)
-    colors_nn = {i: 'C{i}'.format(i=i%10) for i in range(nngb)}
+    #colors_nn = {i: 'C{i}'.format(i=i%10) for i in range(nngb)}
+    colors_nn = {i: cset[i] for i in range(nngb)}
     
     ## set up figure
     fig = plt.figure(figsize=(5.5, 5.))
@@ -1783,7 +1798,7 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
         
         for nn in range(nngb):
             if cumulative:
-                ax.plot(edges, np.append([0.], cumul[nn]), color=colors_nn[nn],\
+                ax.plot(edges, 1. - np.append([0.], cumul[nn]), color=colors_nn[nn],\
                     linestyle=ls_ionsel[_ionsel], linewidth=lw)
             else:
                 ax.step(edges[:-1], hists[nn], where='post', color=colors_nn[nn],\
