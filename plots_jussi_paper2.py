@@ -114,7 +114,7 @@ class HandlerDashedLines(mlh.HandlerLineCollection):
             except IndexError:
                 lw = orig_handle.get_linewidths()[0]
             if dashes is not None:
-                if dashes[0] is not None:
+                if dashes[0] is not None and dashes[1] is not None:
                     legline.set_dashes(dashes[1])
             legline.set_color(color)
             legline.set_transform(trans)
