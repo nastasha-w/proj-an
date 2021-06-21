@@ -61,10 +61,20 @@ n_jobs = int(os.environ['OMP_NUM_THREADS']) # not shared-memory, I think, but a 
 #zuv = 0.04582
 #zx  = 0.0459
 
-### updated model 2020-02-25 (received)
+### updated model 2020-02-25 (received) + 2021 referee report O VI rev.
+# pre ref. rep. commented out
+# selection2 absorbers include the FUV O VI +- 1 sigma range for the revised
+# (2-absorber) FUV analysis 
 # UV priors
-o6_uv = 13.76
-sigma_o6_uv = 0.08
+# table 2 log No6, Delta log No6
+_o6_c1 = (13.46, 0.16) 
+_o6_c2 = (13.68, 0.10)
+o6_uv = np.log10(10**_o6_c1[0] + 10**_o6_c2[0]), 
+sigma_o6_uv = 1./ (10**_o6_c1[0] + 10**_o6_c2[0]) *\
+              np.sqrt(10**(2. * _o6_c1[0]) * _o6_c1[1]**2 +\
+                      10**(2. * _o6_c2[0]) * _o6_c2[1]**2)
+#o6_uv = 13.76
+#sigma_o6_uv = 0.08
 
 # CIE model (X-ray, X-ray redshift)
 o6_cie_zx = 13.9
@@ -95,7 +105,8 @@ o8_slab_zx = 15.7
 sigma_o8_slab_zx = (1.5, 0.4)
 #
 ## redshifts: comparison to z=0.0 or z=0.1 snapshots are both fine
-zuv = 0.04582
+#zuv = 0.04582 
+zuv = 0.04579
 zx  = 0.0455
 
 ## data dictionary: 
@@ -378,7 +389,7 @@ def create_test_sets(testnum=1):
 def create_sl_cat():
     '''
     switch from using maps of all sightlines to location, value catalogues
-    even the least limitng selections (UV O VI minus 1 sigma) use less than
+    even the least limiting selections (UV O VI minus 1 sigma) use less than
     1 % of all sightlines, so this should reduce processing time
     
     catalogue includes anything that meets at least one ion's 
@@ -1310,7 +1321,7 @@ def save_absenv_hists(nncat, outname=None,\
 
 def combine_absenv_hists(examplename, matchnum=0):
     '''
-    combine the 'x-of-y' absorer subset histograms into one file
+    combine the 'x-of-y' absorber subset histograms into one file
     matchnum is assumed to be the same in all files, unless a list is provided
     '''
     
