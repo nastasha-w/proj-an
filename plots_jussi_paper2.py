@@ -1312,7 +1312,8 @@ def plot_coldenscorr_Tion_v5(ionT='o6', ion1='o6', ion2='o7', Tlim=6.1,\
     color_lowerT = cset.blue
     color_upperT = cset.orange
     
-    with np.load(histf, allow_pickle=True) as fi:
+    # files are created with python2
+    with np.load(histf, allow_pickle=True, encoding='bytes') as fi:
         #print(fi.keys())
         #print(fi['dimension'])
         #print(fi['edges'])
