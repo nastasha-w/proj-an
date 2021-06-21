@@ -1746,6 +1746,7 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
     
     nngb = len(galdata_obs)
     #colors_nn = {i: 'C{i}'.format(i=i%10) for i in range(nngb)}
+    _colors = [cset.blue, cset.orange, cset.teal, cset.red, cset.magenta]
     colors_nn = {i: cset[i] for i in range(nngb)}
     
     ## set up figure
@@ -1881,15 +1882,15 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
     
     if prop == 'neighbor_dist_pmpc':
         if cumulative:
-            legendloc = 'lower right'
-            legendanchor = (1., 0.4 + 0.07 * len(ionsels))
+            legendloc = 'upper right' #'lower right'
+            legendanchor = (1., 1.) #(1., 0.4 + 0.07 * len(ionsels))
             legendncol = 1 #if handles1 == [] else 2
             legendframe = True
             
-            infov = 'bottom'
+            infov = 'top' #'bottom'
             infoh = 'right'
             infox = 0.98
-            infoy = 0.02
+            infoy = 0.15
             infobbox = None
         else:
             legendloc = 'upper right'
