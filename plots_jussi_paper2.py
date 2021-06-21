@@ -1479,7 +1479,8 @@ def plot_coldenscorr_Tion_v5(ionT='o6', ion1='o6', ion2='o7', Tlim=6.1,\
     lax = ax
     leg1 = lax.legend(typelines, labels, handler_map={type(lc): HandlerDashedLines()}, 
                       fontsize=fontsize, ncol=1, loc='lower right', 
-                      bbox_to_anchor=(1.0, 0.0), frameon=False)
+                      bbox_to_anchor=(1.0, 0.0), frameon=False,
+                      handlelength=1.5)
     leg2 = lax.legend(lcs, perclabels, handler_map={type(lc): HandlerDashedLines()}, 
                       fontsize=fontsize, ncol=1, loc='lower right', 
                       bbox_to_anchor=(1.0, 0.15), frameon=False)
