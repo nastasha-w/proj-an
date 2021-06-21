@@ -1456,7 +1456,7 @@ def plot_coldenscorr_Tion_v5(ionT='o6', ion1='o6', ion2='o7', Tlim=6.1,\
         subcols = np.array(subcols)
         #print(subcols)
         lc = mcol.LineCollection(line * len(subcols), linestyle=linestyles[pind], 
-                                 linewidth=2, colors=subcols)
+                                 linewidth=2, colors=np.array(subcols))
         lcs.append(lc)
     perclabels = ['%.0f %%'%(2. * (0.5 - perc) * 100.) if perc != 0.5 else \
                   'median' for perc in perc_toplot]
