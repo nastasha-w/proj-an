@@ -1293,13 +1293,17 @@ def plot_coldenscorr_Tion_v5(ionT='o6', ion1='o6', ion2='o7', Tlim=6.1,\
     if {ion1, ion2} == {'o6', 'o7'}:
         histf = '/net/luttero/data2/proc/hist_coldens_o6-o7_L0100N1504_27_test3.x_PtAb_C2Sm_32000pix_6.25slice_zcen-all_z-projection_T4EOS_and_weighted_Temperature.npz'
     
-    imgname = '/home/wijers/Documents/papers/jussi_paper2_Ton180/hist_coldens_%s-%s'+\
+    imgname = '/home/wijers/Documents/papers/jussi_paper2_Ton180/hist_coldens_'+\
+              '{ion1}-{ion2}'+\
               '_L0100N1504_27_test3.x_PtAb_C2Sm_32000pix_6.25slice_zcen-all_'+\
-              'z-projection_T4EOS_splitby_T-%s-%.2f_v5.eps'%(ion1, ion2, ionT, Tlim)
+              'z-projection_T4EOS_splitby_T-{ionT}-{Tlim:.2f}_v5.eps'
+    imgname=imgname.format(ion1=ion1, ion2=ion2, ionT=ionT, Tlim=Tlim)
     
     fontsize = 12
-    xlabel = r'$\log \, \mathrm{N(%s)} \; [\mathrm{cm}^{-2}]$'%(ild.getnicename(ion1, mathmode=True))
-    ylabel = r'$\log \, \mathrm{N(%s)} \; [\mathrm{cm}^{-2}]$'%(ild.getnicename(ion2, mathmode=True))
+    xlabel = r'$\log \, \mathrm{N(%s)} \; [\mathrm{cm}^{-2}]$'%(ild.getnicename(ion1, 
+                                                                mathmode=True))
+    ylabel = r'$\log \, \mathrm{N(%s)} \; [\mathrm{cm}^{-2}]$'%(ild.getnicename(ion2, 
+                                                                mathmode=True))
     clabel = r'$\log$ relative fraction of absorbers'
     cmap = truncate_colormap(mpl.cm.get_cmap('gist_yarg'), minval=0.0, maxval=0.7)
     
