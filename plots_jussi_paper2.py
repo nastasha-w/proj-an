@@ -93,7 +93,7 @@ class HandlerDashedLines(mlh.HandlerLineCollection):
         leglines = []
         # divide the vertical space where the lines will go
         # into equal parts based on the number of lines
-        ydata = ((height) / (numlines + 1)) * np.ones(xdata.shape, float)
+        ydata = ((height) / (numlines + 1)) * np.ones(np.array(xdata).shape, float)
         # for each line, create the line at the proper location
         # and set the dash pattern
         for i in range(numlines):
