@@ -1317,7 +1317,7 @@ def plot_coldenscorr_Tion_v5(ionT='o6', ion1='o6', ion2='o7', Tlim=6.1,\
         #print(fi['dimension'])
         #print(fi['edges'])
         
-        dimension = fi['dimension']
+        dimension = np.array([_.decode() for _ in fi['dimension']])
         ax_no6 = np.where(dimension == 'N%s'%(string.capwords(ion1)))[0][0]
         ax_no8 = np.where(dimension == 'N%s'%(string.capwords(ion2)))[0][0]
         ax_T = np.where(dimension == 'Temperature_w_N%s'%(string.capwords(ionT)))[0][0]
