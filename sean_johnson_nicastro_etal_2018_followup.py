@@ -1215,7 +1215,7 @@ def plot_o7cddfsplits_isolated_thesisversion(incl=True):
                 ax2.plot(plotx, hists[fk][mask] / hists[fk]['nomask'], color=colors[mask], 
                          linestyle=linestyles[mask], linewidth=linewidths[mask])
                 ax2.axhline(fcovs[fk][mask], color=colors[mask], 
-                            linestyle=linestyles[mask], linewidth=0.5)
+                            linestyle=linestyles[mask], linewidth=0.7)
             else:
                 ax1.plot(plotx, np.log10((hists[fk]['nomask'] - hists[fk][mask]) / dXtotdlogN[fk]), 
                          color=colors[mask], linestyle=linestyles[mask], 
@@ -1224,7 +1224,7 @@ def plot_o7cddfsplits_isolated_thesisversion(incl=True):
                                  color=colors[mask], linestyle=linestyles[mask], 
                                  linewidth=linewidths[mask])
                 ax2.axhline(1. - fcovs[fk][mask], color=colors[mask], 
-                            linestyle=linestyles[mask], linewidth=0.5)
+                            linestyle=linestyles[mask], linewidth=0.7)
     
     ### document fractions at logN = 15.575fk
     Nval = 15.575
@@ -1309,7 +1309,7 @@ def plot_o7cddfsplits_isolated_thesisversion(incl=True):
     leg1 = lax.legend(handles=legend_handles, fontsize=fontsize-1, loc='lower left', 
                       bbox_to_anchor=(0.01, 0.01), frameon=False)
     leg2 = lax.legend(handles=legend_handles_ls,fontsize=fontsize-1, loc='upper right', 
-                      bbox_to_anchor=(0.99, 0.99), frameon=False)
+                      bbox_to_anchor=(1., 1.), frameon=False)
     lax.add_artist(leg1)
     lax.add_artist(leg2)
     #ax1.text(0.02, 0.05, r'absorbers close to galaxies at $z=0.37$', horizontalalignment='left', verticalalignment='bottom', transform=ax1.transAxes, fontsize=fontsize)
