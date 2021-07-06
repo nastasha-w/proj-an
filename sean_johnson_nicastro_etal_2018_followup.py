@@ -1188,7 +1188,7 @@ def plot_o7cddfsplits_isolated_thesisversion(incl=True):
         ax1.set_xlim(12.5, 23.5)
         ax1.set_ylim(-6., 1.65)
     else:
-        ax1.set_xlim(14., 17.5)
+        ax1.set_xlim(14.1, 17.5)
         ax1.set_ylim(-6.5, 1.6)
     ax2.set_xlim(ax1.get_xlim())
     ax2.set_ylim(0., 1.05) 
@@ -1198,6 +1198,8 @@ def plot_o7cddfsplits_isolated_thesisversion(incl=True):
     ax2.set_ylabel(r'subset CDDF / total', fontsize=fontsize)
     setticks(ax1, fontsize=fontsize, labelbottom=False)
     setticks(ax2, fontsize=fontsize)
+    ax1.grid(b=True)
+    ax2.grid(b=True)
     
     plotx = bins[:-1] + 0.5 * np.diff(bins)
     
