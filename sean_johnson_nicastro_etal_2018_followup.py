@@ -17,6 +17,8 @@ import mpl_toolkits.axes_grid1 as axgrid
 import matplotlib.gridspec as gsp
 import matplotlib.lines as mlines
 
+import tol_colors as tc
+
 import makecddfs as mc
 import eagle_constants_and_units as c
 import cosmo_utils as cu
@@ -159,10 +161,13 @@ def checksubdct_equal(dct):
         return False
     return True
 
-def setticks(ax, fontsize, color='black', labelbottom=True, top=True, labelleft=True, labelright=False, right=True, labeltop=False):
+def setticks(ax, fontsize, color='black', labelbottom=True, top=True, labelleft=True, 
+             labelright=False, right=True, labeltop=False):
     ax.minorticks_on()
-    ax.tick_params(labelsize=fontsize, direction='in', right=right, top=top, axis='both', which='both', color=color,\
-                   labelleft=labelleft, labeltop=labeltop, labelbottom = labelbottom, labelright=labelright)
+    ax.tick_params(labelsize=fontsize, direction='in', right=right, top=top, axis='both',
+                   which='both', color=color,
+                   labelleft=labelleft, labeltop=labeltop, labelbottom = labelbottom, 
+                   labelright=labelright)
 
 def interp_fill_between(binsedges1, binsedges2):
     '''
@@ -971,5 +976,342 @@ def plot_o7_radprof(xlog=False):
     plt.savefig(mdir + imgname, format='pdf', bbox_inches='tight')
     
     
+def plot_o7cddfsplits_isolated_thesisversion(incl=True):
+    '''
+    incl: True -> plot CDDFs and fraction within distances to the halos
+          False -> plot the complements to those: fractions outside halo 
+                   environments
+    '''
+    # Delta v = +- 1000 km/s, matches galaxy search range in the paper
+    numsl=3
+    _cs = tc.tol_cset('vibrant')
+     
+    if numsl == 4:
+        imgname = 'cddf_coldens_o7_L0100N1504_24_test3.31_PtAb_C2Sm_32000pix_25.0slice_zcen-all_z-projection_T4EOS_masks_isolated_from_gals_%s_thesisversion.pdf'
+    elif numsl == 3:
+        imgname = 'cddf_coldens_o7_L0100N1504_24_test3.31_PtAb_C2Sm_32000pix_33.3333333333slice_zcen-all_z-projection_T4EOS_masks_isolated_from_gals_%s_thesisversion.pdf'
+    if incl:
+        imgname = imgname%('incl')
+    else:
+        imgname = imgname%('excl')
     
+    if numsl == 4:
+        h5file1 = 'cddf_coldens_o7_L0100N1504_24_test3.31_PtAb_C2Sm_32000pix_25.0slice_zcen-all_z-projection_T4EOS_masks_Mstar-9.7-11.2_isolation.hdf5'
+        h5file2 = 'cddf_coldens_o7_L0100N1504_24_test3.31_PtAb_C2Sm_32000pix_25.0slice_zcen-all_z-projection_T4EOS_masks_Mstar-9.3-11.0_isolation.hdf5'
+        
+        h5files = {'9.3-11.0': h5file2, '9.7-11.2': h5file1}
+        
+        masknames ={'9.7-11.2': ['nomask',\
+                                 '630pkpc_pos_logMstar-geq-9.7-Msun',\
+                                 '2273pkpc_pos_logMstar-geq-11.2-Msun',\
+                                 '630pkpc_vel_logMstar-geq-9.7-Msun',\
+                                 '2273pkpc_vel_logMstar-geq-11.2-Msun',\
+                                ],\
+                    '9.3-11.0':['nomask',\
+                                 '630pkpc_pos_logMstar-geq-9.3-Msun',\
+                                 '2273pkpc_pos_logMstar-geq-11.0-Msun',\
+                                 '630pkpc_vel_logMstar-geq-9.3-Msun',\
+                                 '2273pkpc_vel_logMstar-geq-11.0-Msun',\
+                                ],\
+                    }
+        #masknames_all = masknames['9.7-11.2'] + masknames['9.3-11.0'][1:]
+        masknames_legendsample = ['nomask', '630pkpc_pos_logMstar-geq-9.3-Msun', '630pkpc_pos_logMstar-geq-9.7-Msun', '2273pkpc_pos_logMstar-geq-11.0-Msun', '2273pkpc_pos_logMstar-geq-11.2-Msun']
+    
+    elif numsl == 3:
+        h5file1 = 'cddf_coldens_o7_L0100N1504_24_test3.31_PtAb_C2Sm_32000pix_33.3333333333slice_zcen-all_z-projection_T4EOS_masks_Mstar-9.2-9.3-11.0-11.2_isolation.hdf5'
+        
+        h5files = {'9.3-9.7-11.0-11.2': h5file1}
+        
+        masknames ={'9.3-9.7-11.0-11.2': ['nomask',\
+                                 '630pkpc_pos_logMstar-geq-9.7-Msun',
+                                 '2273pkpc_pos_logMstar-geq-11.2-Msun',
+                                 '630pkpc_vel_logMstar-geq-9.7-Msun',
+                                 '2273pkpc_vel_logMstar-geq-11.2-Msun',
+                                 #'630pkpc_pos_logMstar-geq-9.3-Msun',
+                                 #'2273pkpc_pos_logMstar-geq-11.0-Msun',
+                                 #'630pkpc_vel_logMstar-geq-9.3-Msun',
+                                 #'2273pkpc_vel_logMstar-geq-11.0-Msun',
+                                 ],
+                    }
+        #masknames_all = masknames['9.7-11.2'] + masknames['9.3-11.0'][1:]
+        masknames_legendsample = ['nomask', 
+                                  #'630pkpc_pos_logMstar-geq-9.3-Msun', 
+                                  '630pkpc_pos_logMstar-geq-9.7-Msun', 
+                                  #'2273pkpc_pos_logMstar-geq-11.0-Msun', 
+                                  '2273pkpc_pos_logMstar-geq-11.2-Msun']
+        
+    else:
+        raise ValueError('Numsl should be 3 or 4')
+    
+    if incl:
+        legendnames = {'nomask': 'total',\
+                 '2273pkpc_pos_logMstar-geq-11.2-Msun': r'$r_{\perp}(\log \, \mathrm{M}_{*} [\mathrm{M}_{\odot}] \geq 11.2) < 2273 \, \mathrm{pkpc}$',\
+                 '630pkpc_pos_logMstar-geq-9.7-Msun':  r'$r_{\perp}(\log \, \mathrm{M}_{*} [\mathrm{M}_{\odot}] \geq 9.7) < 630 \, \mathrm{pkpc}$',\
+                 #'2273pkpc_pos_logMstar-geq-11.0-Msun': r'$r_{\perp}(\log \, \mathrm{M}_{*} [\mathrm{M}_{\odot}] \geq 11.0) < 2273 \, \mathrm{pkpc}$',\
+                 #'630pkpc_pos_logMstar-geq-9.3-Msun':  r'$r_{\perp}(\log \, \mathrm{M}_{*} [\mathrm{M}_{\odot}] \geq 9.3) < 630 \, \mathrm{pkpc}$',\
+                 '2273pkpc_vel_logMstar-geq-11.2-Msun': None,\
+                 '630pkpc_vel_logMstar-geq-9.7-Msun':  None,\
+                 #'2273pkpc_vel_logMstar-geq-11.0-Msun': None,\
+                 #'630pkpc_vel_logMstar-geq-9.3-Msun':  None,\
+                 }
+    else:
+        legendnames = {'nomask': 'total',\
+                 '2273pkpc_pos_logMstar-geq-11.2-Msun': r'$r_{\perp}(\log \, \mathrm{M}_{*} [\mathrm{M}_{\odot}] \geq 11.2) > 2273 \, \mathrm{pkpc}$',\
+                 '630pkpc_pos_logMstar-geq-9.7-Msun':  r'$r_{\perp}(\log \, \mathrm{M}_{*} [\mathrm{M}_{\odot}] \geq 9.7) > 630 \, \mathrm{pkpc}$',\
+                 #'2273pkpc_pos_logMstar-geq-11.0-Msun': r'$r_{\perp}(\log \, \mathrm{M}_{*} [\mathrm{M}_{\odot}] \geq 11.0) > 2273 \, \mathrm{pkpc}$',\
+                 #'630pkpc_pos_logMstar-geq-9.3-Msun':  r'$r_{\perp}(\log \, \mathrm{M}_{*} [\mathrm{M}_{\odot}] \geq 9.3) > 630 \, \mathrm{pkpc}$',\
+                 '2273pkpc_vel_logMstar-geq-11.2-Msun': None,\
+                 '630pkpc_vel_logMstar-geq-9.7-Msun':  None,\
+                 #'2273pkpc_vel_logMstar-geq-11.0-Msun': None,\
+                 #'630pkpc_vel_logMstar-geq-9.3-Msun':  None,\
+                 }
+        
+    colors = {'nomask': 'black',\
+             '2273pkpc_pos_logMstar-geq-11.2-Msun': _cs.orange
+             '2273pkpc_vel_logMstar-geq-11.2-Msun': _cs.orange,
+             '630pkpc_pos_logMstar-geq-9.7-Msun': _cs.blue,
+             '630pkpc_vel_logMstar-geq-9.7-Msun': _cs.blue,
+             #'2273pkpc_pos_logMstar-geq-11.0-Msun': 'C2',\
+             #'2273pkpc_vel_logMstar-geq-11.0-Msun': 'C2',\
+             #'630pkpc_pos_logMstar-geq-9.3-Msun': 'C3',\
+             #'630pkpc_vel_logMstar-geq-9.3-Msun': 'C3',\
+             }      
+    linestyles = {'nomask': 'solid',\
+             '2273pkpc_pos_logMstar-geq-11.2-Msun': 'solid',\
+             '2273pkpc_vel_logMstar-geq-11.2-Msun': 'dashed',\
+             '630pkpc_pos_logMstar-geq-9.7-Msun': 'solid',\
+             '630pkpc_vel_logMstar-geq-9.7-Msun': 'dashed',\
+             #'2273pkpc_pos_logMstar-geq-11.0-Msun': 'solid',\
+             #'2273pkpc_vel_logMstar-geq-11.0-Msun': 'dashed',\
+             #'630pkpc_pos_logMstar-geq-9.3-Msun': 'solid',\
+             #'630pkpc_vel_logMstar-geq-9.3-Msun': 'dashed',\
+             }  
+    linewidths = {'nomask': 2.,\
+             '2273pkpc_pos_logMstar-geq-11.2-Msun': 2.,\
+             '2273pkpc_vel_logMstar-geq-11.2-Msun': 1.5,\
+             '630pkpc_pos_logMstar-geq-9.7-Msun': 2.,\
+             '630pkpc_vel_logMstar-geq-9.7-Msun': 1.5,\
+             #'2273pkpc_pos_logMstar-geq-11.0-Msun': 2.,\
+             #'2273pkpc_vel_logMstar-geq-11.0-Msun': 1.5,\
+             #'630pkpc_pos_logMstar-geq-9.3-Msun': 2.,\
+             #'630pkpc_vel_logMstar-geq-9.3-Msun': 1.5,\
+             }  
+
+    legend_handles = [mlines.Line2D([], [], color=colors[mask], linestyle='solid', 
+                      label=legendnames[mask], linewidth=2.) 
+                      for mask in masknames_legendsample]
+    legend_handles_ls =  [mlines.Line2D([], [], color='gray', linestyle='solid', 
+                          label='los pos.', linewidth=2.),\
+                          mlines.Line2D([], [], color='gray', linestyle='dashed', 
+                          label='los vel.', linewidth=1.5)] 
+    
+    if imgname is not None:
+        if '/' not in imgname:
+            imgname = mdir + imgname
+        if imgname[-4:] != '.pdf':
+            imgname = imgname + '.pdf'
+    
+    hists = {}
+    cosmopars = {}
+    fcovs = {}
+    dXtot = {}
+    dztot = {}
+    dXtotdlogN = {}
+    bins = {}
+    
+    for filekey in h5files.keys():
+        filename = h5files[filekey]
+        with h5py.File(pdir + filename, 'r') as fi:
+            bins[filekey] = np.array(fi['bins/axis_0'])
+            # handle +- infinity edges for plotting; should be outside the plot range anyway
+            if bins[filekey][0] == -np.inf:
+                bins[filekey][0] = -100.
+            if bins[filekey][-1] == np.inf:
+                bins[filekey][-1] = 100.
+            
+            # extract number of pixels from the input filename, using naming system of make_maps
+            inname = np.array(fi['input_filenames'])[0]
+            inname = inname.split('/')[-1] # throw out directory path
+            parts = inname.split('_')
+    
+            numpix_1sl = set(part if 'pix' in part else None for part in parts) # find the part of the name needed: '...pix'
+            numpix_1sl.remove(None)
+            numpix_1sl = int(list(numpix_1sl)[0][:-3])
+            print('Using %i pixels per side for the sample size'%numpix_1sl) # needed for the total path length
+            
+            ionind = 1 + np.where(np.array([part == 'coldens' for part in parts]))[0][0]
+            ion = parts[ionind]
+            
+            masks = masknames[filekey]
+    
+            hists[filekey] = {mask: np.array(fi['%s/hist'%mask]) for mask in masks}
+            fcovs[filekey] = {mask: fi[mask].attrs['covfrac'] for mask in hists[filekey].keys()}
+            
+            if numsl == 4:
+                examplemaskdir = 'masks/12.5/'
+            elif numsl == 3:
+                examplemaskdir = 'masks/50.0/'
+            examplemask = fi[examplemaskdir].keys()[0]
+            fpath = '%s/%s/Header/cosmopars/'%(examplemaskdir, examplemask)
+            cosmopars[filekey] = {key: item for (key, item) in 
+                                  fi[fpath].attrs.items()}
+            dXtot[filekey] = mc.getdX(cosmopars[filekey]['z'], 
+                                      cosmopars[filekey]['boxsize'] / cosmopars[filekey]['h'], 
+                                      cosmopars=cosmopars[filekey]) * float(numpix_1sl**2)
+            dztot[filekey] = mc.getdz(cosmopars[filekey]['z'], 
+                                      cosmopars[filekey]['boxsize'] / cosmopars[filekey]['h'], 
+                                      cosmopars=cosmopars[filekey]) * float(numpix_1sl**2)
+            dXtotdlogN[filekey] = dXtot[filekey] * np.diff(bins[filekey])
+        
+    #legend_handles = legend_handles + [mlines.Line2D([], [], color='brown', linestyle='solid', alpha=alphas[key], label=r'$z=%.2f$'%cosmopars[key]['z'], linewidth=2.) for key in filekeys] 
+    
+    filekeys = h5files.keys()
+    if np.all([np.all(bins[key] == bins[filekeys[0]]) \
+               if len(bins[key]) == len(bins[filekeys[0]]) else False \
+               for key in filekeys]):
+        bins = bins[filekeys[0]]
+    else:
+        raise RuntimeError("bins for different files don't match")
+    
+    if not np.all(np.array([np.all(hists[key]['nomask'] == hists[filekeys[0]]['nomask'])\
+                  for key in filekeys])):
+        raise RuntimeError('total histograms from different files do not match')
+        
+    fig = plt.figure(figsize=(5.5, 5.5))
+    grid = gsp.GridSpec(2, 1, hspace=0.0, wspace=0.0, height_ratios=[4., 4.])
+    ax1 = fig.add_subplot(grid[0, 0])
+    ax2 = fig.add_subplot(grid[1, 0])
+    lax = ax1
+    
+    fontsize = 12
+    if ion[0] == 'h':
+        ax1.set_xlim(12.5, 23.5)
+        ax1.set_ylim(-6., 1.65)
+    else:
+        ax1.set_xlim(14., 17.5)
+        ax1.set_ylim(-6.5, 1.6)
+    ax2.set_xlim(ax1.get_xlim())
+    ax2.set_ylim(0., 1.05) 
+    
+    ax2.set_xlabel(r'$\log_{10}\, \mathrm{N}_{\mathrm{O\,VII}} \; [\mathrm{cm}^{-2}]$', fontsize=fontsize)
+    ax1.set_ylabel(r'$\log_{10} \left(\, \partial^2 n \,/\, \partial \log_{10} \mathrm{N} \, \partial X  \,\right)$', fontsize=fontsize)
+    ax2.set_ylabel(r'subset CDDF / total', fontsize=fontsize)
+    setticks(ax1, fontsize=fontsize, labelbottom=False)
+    setticks(ax2, fontsize=fontsize)
+    
+    plotx = bins[:-1] + 0.5 * np.diff(bins)
+    
+    ax2.axhline(1., color='black', linestyle='solid', linewidth=0.5)
+    for fk in filekeys:
+        for mi in range(len(masknames[fk])):
+            mask = masknames[fk][mi]
+            if incl or mask == 'nomask':
+                #ax.step(bins[:-1], np.log10(hists[mask] / dXtotdlogN), where='post', color=colors[mi], label=labels[mask].expandtabs())
+                ax1.plot(plotx, np.log10(hists[fk][mask] / dXtotdlogN[fk]), 
+                         color=colors[mask], linestyle=linestyles[mask], 
+                         linewidth=linewidths[mask])
+                ax2.plot(plotx, hists[fk][mask] / hists[fk]['nomask'], color=colors[mask], 
+                         linestyle=linestyles[mask], linewidth=linewidths[mask])
+                ax2.axhline(fcovs[fk][mask], color=colors[mask], 
+                            linestyle=linestyles[mask], linewidth=0.5)
+            else:
+                ax1.plot(plotx, np.log10((hists[fk]['nomask'] - hists[fk][mask]) / dXtotdlogN[fk]), 
+                         color=colors[mask], linestyle=linestyles[mask], 
+                         linewidth=linewidths[mask])
+                ax2.plot(plotx, (hists[fk]['nomask'] - hists[fk][mask]) / hists[fk]['nomask'], 
+                                 color=colors[mask], linestyle=linestyles[mask], 
+                                 linewidth=linewidths[mask])
+                ax2.axhline(1. - fcovs[fk][mask], color=colors[mask], 
+                            linestyle=linestyles[mask], linewidth=0.5)
+    
+    ### document fractions at logN = 15.575fk
+    Nval = 15.575
+    if numsl == 4:
+        cddf_tot     = linterpsolve(plotx, np.log10((hists['9.7-11.2']['nomask']) / dXtotdlogN['9.7-11.2']), Nval)
+        cddf_pos_9p7 = linterpsolve(plotx, np.log10((hists['9.7-11.2']['nomask'] - hists['9.7-11.2']['630pkpc_pos_logMstar-geq-9.7-Msun']) / dXtotdlogN['9.7-11.2']), Nval)
+        cddf_vel_9p7 = linterpsolve(plotx, np.log10((hists['9.7-11.2']['nomask'] - hists['9.7-11.2']['630pkpc_vel_logMstar-geq-9.7-Msun']) / dXtotdlogN['9.7-11.2']), Nval)
+        #cddf_pos_9p3 = linterpsolve(plotx, np.log10((hists['9.3-11.0']['nomask'] - hists['9.3-11.0']['630pkpc_pos_logMstar-geq-9.3-Msun']) / dXtotdlogN['9.3-11.0']), Nval)
+        #cddf_vel_9p3 = linterpsolve(plotx, np.log10((hists['9.3-11.0']['nomask'] - hists['9.3-11.0']['630pkpc_vel_logMstar-geq-9.3-Msun']) / dXtotdlogN['9.3-11.0']), Nval)
+        
+        frac_pos_9p7 = linterpsolve(plotx, 1. - hists['9.7-11.2']['630pkpc_pos_logMstar-geq-9.7-Msun'] / hists['9.7-11.2']['nomask'], Nval)
+        frac_vel_9p7 = linterpsolve(plotx, 1. - hists['9.7-11.2']['630pkpc_vel_logMstar-geq-9.7-Msun'] / hists['9.7-11.2']['nomask'], Nval)
+        #frac_pos_9p3 = linterpsolve(plotx, 1. - hists['9.3-11.0']['630pkpc_pos_logMstar-geq-9.3-Msun'] / hists['9.3-11.0']['nomask'], Nval)
+        #frac_vel_9p3 = linterpsolve(plotx, 1. - hists['9.3-11.0']['630pkpc_vel_logMstar-geq-9.3-Msun'] / hists['9.3-11.0']['nomask'], Nval)
+    
+        dXoverdz = dXtot['9.7-11.2'] / dztot['9.7-11.2']
+        
+    elif numsl == 3:
+        cddf_tot     = linterpsolve(plotx, np.log10((hists['9.3-9.7-11.0-11.2']['nomask']) / dXtotdlogN['9.3-9.7-11.0-11.2']), Nval)
+        cddf_pos_9p7 = linterpsolve(plotx, np.log10((hists['9.3-9.7-11.0-11.2']['nomask'] - hists['9.3-9.7-11.0-11.2']['630pkpc_pos_logMstar-geq-9.7-Msun']) / dXtotdlogN['9.3-9.7-11.0-11.2']), Nval)
+        cddf_vel_9p7 = linterpsolve(plotx, np.log10((hists['9.3-9.7-11.0-11.2']['nomask'] - hists['9.3-9.7-11.0-11.2']['630pkpc_vel_logMstar-geq-9.7-Msun']) / dXtotdlogN['9.3-9.7-11.0-11.2']), Nval)
+        #cddf_pos_9p3 = linterpsolve(plotx, np.log10((hists['9.3-9.7-11.0-11.2']['nomask'] - hists['9.3-9.7-11.0-11.2']['630pkpc_pos_logMstar-geq-9.3-Msun']) / dXtotdlogN['9.3-9.7-11.0-11.2']), Nval)
+        #cddf_vel_9p3 = linterpsolve(plotx, np.log10((hists['9.3-9.7-11.0-11.2']['nomask'] - hists['9.3-9.7-11.0-11.2']['630pkpc_vel_logMstar-geq-9.3-Msun']) / dXtotdlogN['9.3-9.7-11.0-11.2']), Nval)
+        
+        frac_pos_9p7 = linterpsolve(plotx, 1. - hists['9.3-9.7-11.0-11.2']['630pkpc_pos_logMstar-geq-9.7-Msun'] / hists['9.3-9.7-11.0-11.2']['nomask'], Nval)
+        frac_vel_9p7 = linterpsolve(plotx, 1. - hists['9.3-9.7-11.0-11.2']['630pkpc_vel_logMstar-geq-9.7-Msun'] / hists['9.3-9.7-11.0-11.2']['nomask'], Nval)
+        #frac_pos_9p3 = linterpsolve(plotx, 1. - hists['9.3-9.7-11.0-11.2']['630pkpc_pos_logMstar-geq-9.3-Msun'] / hists['9.3-9.7-11.0-11.2']['nomask'], Nval)
+        #frac_vel_9p3 = linterpsolve(plotx, 1. - hists['9.3-9.7-11.0-11.2']['630pkpc_vel_logMstar-geq-9.3-Msun'] / hists['9.3-9.7-11.0-11.2']['nomask'], Nval)
+        print(('%s, '*2)%(frac_pos_9p7, frac_vel_9p7,)) #frac_pos_9p3, frac_vel_9p3))
+        
+        dXoverdz = dXtot['9.3-9.7-11.0-11.2'] / dztot['9.3-9.7-11.0-11.2']
+        
+        histc_x = bins[:-1]
+        histc_pos_9p7 = hists['9.3-9.7-11.0-11.2']['nomask'] - hists['9.3-9.7-11.0-11.2']['630pkpc_pos_logMstar-geq-9.7-Msun']
+        histc_vel_9p7 = hists['9.3-9.7-11.0-11.2']['nomask'] - hists['9.3-9.7-11.0-11.2']['630pkpc_vel_logMstar-geq-9.7-Msun']
+        #histc_pos_9p3 = hists['9.3-9.7-11.0-11.2']['nomask'] - hists['9.3-9.7-11.0-11.2']['630pkpc_pos_logMstar-geq-9.3-Msun']
+        #histc_vel_9p3 = hists['9.3-9.7-11.0-11.2']['nomask'] - hists['9.3-9.7-11.0-11.2']['630pkpc_vel_logMstar-geq-9.3-Msun']
+        histc_all = hists['9.3-9.7-11.0-11.2']['nomask']
+        
+        histc_pos_9p7 = np.cumsum(histc_pos_9p7[::-1])[::-1] / dXtotdlogN['9.3-9.7-11.0-11.2'] * dXoverdz
+        histc_vel_9p7 = np.cumsum(histc_vel_9p7[::-1])[::-1] / dXtotdlogN['9.3-9.7-11.0-11.2'] * dXoverdz
+        #histc_pos_9p3 = np.cumsum(histc_pos_9p3[::-1])[::-1] / dXtotdlogN['9.3-9.7-11.0-11.2'] * dXoverdz
+        #histc_vel_9p3 = np.cumsum(histc_vel_9p3[::-1])[::-1] / dXtotdlogN['9.3-9.7-11.0-11.2'] * dXoverdz
+        histc_all =  np.cumsum(histc_all[::-1])[::-1] / dXtotdlogN['9.3-9.7-11.0-11.2'] * dXoverdz
+
+        p_N_iso_pos_9p7 = linterpsolve(histc_x, histc_pos_9p7, Nval)
+        p_N_iso_vel_9p7 = linterpsolve(histc_x, histc_vel_9p7, Nval)
+        #p_N_iso_pos_9p3 = linterpsolve(histc_x, histc_pos_9p3, Nval)
+        #p_N_iso_vel_9p3 = linterpsolve(histc_x, histc_vel_9p3, Nval)
+        
+        Nvals = [15.2, 15.3, 15.4, 15.5, 15.6, 15.7, 15.8, 15.9, 16.0] + [Nval]
+        frac_cumul_pos_9p7 = {Nval: linterpsolve(histc_x, histc_pos_9p7 / histc_all, Nval) for Nval in Nvals}
+        frac_cumul_vel_9p7 = {Nval: linterpsolve(histc_x, histc_vel_9p7 / histc_all, Nval) for Nval in Nvals}
+        #frac_cumul_pos_9p3 = {Nval: linterpsolve(histc_x, histc_pos_9p3 / histc_all, Nval) for Nval in Nvals}
+        #frac_cumul_vel_9p3 = {Nval: linterpsolve(histc_x, histc_vel_9p3 / histc_all, Nval) for Nval in Nvals}
+        
+    print('at log N(O VII) / cm^-2 = %s, contributions from regions isolated from galaxies at log M*/Msun = 9.3, 9.7 by at least 630 pkpc:'%Nval)
+    print('\tlog10 CDDF (total) = %s'%cddf_tot)
+    print('\tlog10 CDDF (pos, ge 9.7) = %s'%cddf_pos_9p7)
+    #print('\tlog10 CDDF (pos, ge 9.3) = %s'%cddf_pos_9p3)
+    print('\tlog10 CDDF (vel, ge 9.7) = %s'%cddf_vel_9p7)
+    #print('\tlog10 CDDF (vel, ge 9.3) = %s'%cddf_vel_9p3)
+    print('\tCDDF (pos, ge 9.7) / total = %s'%frac_pos_9p7)
+    #print('\tCDDF (pos, ge 9.3) / total = %s'%frac_pos_9p3)
+    print('\tCDDF (vel, ge 9.7) / total = %s'%frac_vel_9p7)
+    #print('\tCDDF (vel, ge 9.3) / total = %s'%frac_vel_9p3)
+    print('\tN_expected / dz (pos, ge 9.7) = %s'%p_N_iso_pos_9p7)
+    #print('\tN_expected / dz (pos, ge 9.3) = %s'%p_N_iso_pos_9p3)
+    print('\tN_expected / dz (vel, ge 9.7) = %s'%p_N_iso_vel_9p7)
+    #print('\tN_expected / dz (vel, ge 9.3) = %s'%p_N_iso_vel_9p3)
+    print('\t dX / dz = %s'%dXoverdz)
+    
+    print('\nratios of cumulative CDDF with isolation criteria to cumulative CDDF total above column densities of')
+    fillstr = '\t' + '\t'.join(['%.4f'] * len(Nvals))
+    print('\t\t' + fillstr%tuple(Nvals))
+    print('\tpos 9.7\t' + fillstr%(tuple([frac_cumul_pos_9p7[Nval] for Nval in Nvals])))
+    print('\tvel 9.7\t' + fillstr%(tuple([frac_cumul_vel_9p7[Nval] for Nval in Nvals])))
+    #print('\tpos 9.3\t' + fillstr%(tuple([frac_cumul_pos_9p3[Nval] for Nval in Nvals])))
+    #print('\tvel 9.3\t' + fillstr%(tuple([frac_cumul_vel_9p3[Nval] for Nval in Nvals])))
+    
+    #lax.axis('off')
+    leg1 = lax.legend(handles=legend_handles, fontsize=fontsize-1, loc='lower left', 
+                      bbox_to_anchor=(0.01, 0.01), frameon=False)
+    leg2 = lax.legend(handles=legend_handles_ls,fontsize=fontsize-1, loc='upper right', 
+                      bbox_to_anchor=(0.99, 0.99), frameon=False)
+    lax.add_artist(leg1)
+    lax.add_artist(leg2)
+    #ax1.text(0.02, 0.05, r'absorbers close to galaxies at $z=0.37$', horizontalalignment='left', verticalalignment='bottom', transform=ax1.transAxes, fontsize=fontsize)
+    
+    if imgname is not None:
+        plt.savefig(imgname, format='pdf', bbox_inches='tight')
     
