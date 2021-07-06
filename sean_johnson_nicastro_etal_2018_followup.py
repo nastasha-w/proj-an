@@ -1151,7 +1151,7 @@ def plot_o7cddfsplits_isolated_thesisversion(incl=True):
                 examplemaskdir = 'masks/12.5/'
             elif numsl == 3:
                 examplemaskdir = 'masks/50.0/'
-            examplemask = fi[examplemaskdir].keys().next()
+            examplemask = list(fi[examplemaskdir].keys())[0]
             fpath = '%s/%s/Header/cosmopars/'%(examplemaskdir, examplemask)
             cosmopars[filekey] = {key: item for (key, item) in 
                                   fi[fpath].attrs.items()}
