@@ -1165,7 +1165,7 @@ def plot_o7cddfsplits_isolated_thesisversion(incl=True):
         
     #legend_handles = legend_handles + [mlines.Line2D([], [], color='brown', linestyle='solid', alpha=alphas[key], label=r'$z=%.2f$'%cosmopars[key]['z'], linewidth=2.) for key in filekeys] 
     
-    filekeys = h5files.keys()
+    filekeys = list(h5files.keys())
     if np.all([np.all(bins[key] == bins[filekeys[0]]) \
                if len(bins[key]) == len(bins[filekeys[0]]) else False \
                for key in filekeys]):
