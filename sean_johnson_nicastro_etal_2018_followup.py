@@ -1130,7 +1130,7 @@ def plot_o7cddfsplits_isolated_thesisversion(incl=True):
                 bins[filekey][-1] = 100.
             
             # extract number of pixels from the input filename, using naming system of make_maps
-            inname = np.array(fi['input_filenames'])[0]
+            inname = np.array(fi['input_filenames'])[0].decode()
             inname = inname.split('/')[-1] # throw out directory path
             parts = inname.split('_')
     
