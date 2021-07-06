@@ -1067,7 +1067,7 @@ def plot_o7cddfsplits_isolated_thesisversion(incl=True):
                  }
         
     colors = {'nomask': 'black',\
-             '2273pkpc_pos_logMstar-geq-11.2-Msun': _cs.orange
+             '2273pkpc_pos_logMstar-geq-11.2-Msun': _cs.orange,
              '2273pkpc_vel_logMstar-geq-11.2-Msun': _cs.orange,
              '630pkpc_pos_logMstar-geq-9.7-Msun': _cs.blue,
              '630pkpc_vel_logMstar-geq-9.7-Msun': _cs.blue,
