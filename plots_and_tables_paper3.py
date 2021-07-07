@@ -5350,6 +5350,329 @@ def plot_sample_fbeffect():
     lax.legend(handles=handles, fontsize=fontsize, **leg_kw)
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
+# resolution test, summary plot, paper plot
+def plot_sample_resconv():
+    '''
+    plot mean and median profiles for the different lines in different halo 
+    mass bins, comparing different profile origins
+    summary plot (sample a few lines/masses) for the paper
+    
+    Parameters
+    ----------
+    convtype: str
+        What convergence/effect to test: 'deltat'.
+    line: str
+        Which emission lines to use; 'all' means all the default lines
+    scatter: bool
+        include scatter at fixed halo mass in the plot, and show differences
+        relative to a reference median value (True), or exclude the scatter,
+        and show each statistical measure (mean/median) relative to its 
+        respective value in the reference setup (False)
+    '''
+    
+    print('Values are calculated from 3.125^2 ckpc^2 pixels')
+    print('for means: in annuli of 0-10 pkpc, then 0.25 dex bins up to'+\
+          ' ~3.5 R200c')
+    print('for median of means: annuli of 0.1 dex starting from 10 pkpc')
+    print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb,'+\
+          ' C2 kernel')
+    print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
+    
+    lines_masses = [('o8', 10.5), ('o8', 11.5), ('o8', 12.5)]
+    ylim_t = (-4.5, 1.3)
+    ylim_b = (-1.0, 2.0)
+    fontsize = 12
+    linewidth = 1.5
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),
+               mppe.Stroke(linewidth=linewidth, foreground="w"),
+               mppe.Normal()]
+    xlabel = '$\\mathrm{r}_{\perp} \\; [\\mathrm{pkpc}]$'
+    ylabel = '$\\log_{10} \\, \\mathrm{SB} \\; '+\
+             '[\\mathrm{ph} \\, \\mathrm{cm}^{-2} \\mathrm{s}^{-1} '+\
+             '\\mathrm{sr}^{-1}]$'          
+    ylabel2 = '$\\Delta \\, \\log_{10} \\, \\mathrm{SB}$'
+    
+    # titlepart1 = 'y axis: $\\log_{10} \\, \\mathrm{SB} \\; ' + \
+    #             '[\\mathrm{photons}\\,\\mathrm{cm}^{-2}' + \
+    #             '\\mathrm{s}^{-1}\\mathrm{sr}^{-1}]' + \
+    #             ' \\; \\mathrm{and} \\; \\Delta \\, \\log_{10}$ SB'
+    # titlepart2 = 'bottom left: halo mass range in ' +\
+    #              ' $\\log_{{10}} \\mathrm{{M}}_{{\\mathrm{{200c}}}}' + \
+    #              ' \\,/\\, \\mathrm{{M}}_{{\\odot}}$' + \
+    #              '; top right: number of haloes'
+      
+    ykey_mean = ('mean',)
+    ykey_median = ('perc', 50.)
+    linestyle_ykey = {ykey_mean: 'dotted',
+                      ykey_median: 'solid'}
+    ykeys_perc = [ykey_median]
+    
+
+        
+        filefills_base.update({'nsl': '1', 'npix': '8000'})
+   
+    outname = 'radprof2d_convtest-resolution'+\
+              '_0.1dex-annuli' + \
+             '_L0100N1504_27_test3.x_SmAb_C2Sm_6.25_noEOS_1000_centrals'
+    outname = outname.replace('.', 'p')
+    outname = mdir + outname + '.pdf'
+    
+    rfilebase = 'radprof_stamps_emission_{line}{it}_{box}_27_'+\
+                'test3.{tv}_SmAb_C2Sm_{npix}pix_6.25slice_zcen-all'+\
+                '_z-projection_noEOS{exclfb}_{nsl}slice'+\
+                '_to-min3p5R200c_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
+    rfilebase = ddir + 'radprof/' + rfilebase
+    filefills_base = {'nsl': '1'}
+    
+    binset_mean = 'binset_0'
+    binset_perc = 'binset_1'
+    
+    labels = ['Ref-L100N1504', 'Ref-L025N0376', 'Recal-L025N0752']
+    colors = {'Ref-L100N1504': _c1.blue
+              'Ref-L025N0376': _c1.purple,
+              'Recal-L025N0752': _c1.pink,
+              }
+    
+    nummasses = len(lines_masses)
+    ncols = min(3, nummasses)
+    nrows = (nummasses - 1) // ncols + 1
+    _nrows = nrows * 2
+    figwidth = 11. if ncols > 2 else 5.5 
+
+    panelwidth = figwidth / ncols
+    width_ratios = [panelwidth] * ncols
+    panelheight = 1.3 * panelwidth
+    
+    if nummasses == nrows * ncols:
+        _nrows = nrows + 1
+        laxsel = (nrows, slice(None, None, None))
+        lax_under = True
+        height_ratios = [panelheight] * nrows + [0.35]
+    else:
+        _nrows = nrows
+        laxsel = (nrows - 1, slice(nummasses % ncols, None, None))
+        lax_under = False
+        height_ratios = [panelheight] * nrows 
+    figheight = sum(height_ratios)
+
+    fig = plt.figure(figsize=(figwidth, figheight))
+    grid = gsp.GridSpec(ncols=ncols, nrows=_nrows, hspace=0.3, wspace=0.0,
+                        width_ratios=width_ratios, right=0.97, left=0.07,
+                        height_ratios=height_ratios)
+    axes = [fig.add_subplot(grid[i // ncols, i % ncols])\
+            for i in range(nummasses)]
+    lax = fig.add_subplot(grid[laxsel])
+    lax.axis('off')
+    leg_kw = {'loc': 'upper center' if lax_under else 'upper right',
+              'bbox_to_anchor': (0.5, 0.95) if lax_under else (1., 0.95),
+              'ncol': int(np.floor(ncols * 2.)) if lax_under else 2,
+              'handlelength': 2.,
+              'columnspacing': 1.,
+              }
+    
+    for axi, (line, mmin) in enumerate(lines_masses):
+        siontab_long = '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F' \
+                        if line in all_lines_PS20 else ''
+        siontab_short = '_PS20tab-def_depletion-F' \
+                        if line in all_lines_PS20 else ''  
+        testversion = '7' if line in all_lines_PS20 else '6'
+        filefills_base.update({'line': line.replace(' ', '-'),
+                               'tv': testversion,
+                               'it': siontab})
+    
+        #fbpart = '_exclfb_TSN-7.499_TAGN-8.499_Trng-0.2_{deltat}-Myr'+\
+        #         '_inclSN-nH-lt--2.0' if line in all_lines_SB else \
+        #         '_exclfb_Tmindef_Trng-0.2_{deltat}-Myr_lonH-in'   
+        #filefills_label = {labels[0]: {'exclfb': '', 'it': siontab_long},
+        #                   labels[1]: {'tv': '7', 'it': siontab_short,
+        #                               'exclfb': fbpart.format(deltat=3.)},
+        #                   labels[2]: {'tv': '7', 'it': siontab_short,
+        #                               'exclfb': fbpart.format(deltat=10.)},
+        #                   labels[3]: {'tv': '7', 'it': siontab_short,
+        #                               'exclfb': fbpart.format(deltat=30.)},
+        #                   }
+        filefills_label = {'Recal-L025N0752': {'box': 'L0025N0752RECALIBRATED',
+                                               'npix': 8000, 'tv': '7'},
+                           'Ref-L025N0376': {'box': 'L0025N0376', 'npix': 8000, 
+                                             'tv': '7'},
+                           'Ref-L100N1504': {'box': 'L0100N1504', 'npix': 32000},
+                            }
+        ssel = 'geq{:.1f}_le{:.1f}'
+        seltag_keys = {mmin: ssel.format(mmin, mmin + 0.5)\
+                                   if mmin < 14.0 else
+                                   'geq{:.1f}'.format(mmin)}
+        seltag = seltag_keys[mmin]
+    
+        ax = axes[axi]
+        if mmin < 14.:
+            #mlabel = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}}'+\
+            #         '\\; [\\mathrm{{M}}_{{\\odot}}] = '+\
+            mlabel ='$\\mathrm{{M}}_{{\\mathrm{{200c}}}}: {:.1f} \\emdash {:.1f}$'
+            mlabel = mlabel.format(mmin, mmin + 0.5)
+        else:
+            #mlabel = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\mathrm{{200c}}}}'+\
+            #         '\\; [\\mathrm{{M}}_{{\\odot}}] \\geq {:.1f}$'
+            mlabel = '$\\mathrm{{M}}_{{\\mathrm{{200c}}}}: \\geq {:.1f}$'
+            mlabel = mlabel.format(mmin)
+        seltag = seltag_keys[mmin]
+        
+        ax.axis('off')
+        _l, _b, _w, _h = (ax.get_position()).bounds
+        ftop = 2. / 3.
+        tax = fig.add_axes([_l, _b + (1. - ftop) * _h, _w, ftop * _h])
+        bax = fig.add_axes([_l, _b, _w, (1. - ftop) * _h])
+        
+        left = axi%ncols == 0
+        pu.setticks(bax, fontsize=fontsize, right=True, top=True, 
+                    labelbottom=True, labelleft=left)
+        bax.set_xscale('log')
+        bax.grid(b=True)
+        bax.xaxis.grid(b=True)
+        bax.yaxis.grid(b=True, which='both')
+        pu.setticks(tax, fontsize=fontsize, right=True, top=True,
+                    labelbottom=False, labelleft=left)
+        tax.set_xscale('log')
+        tax.xaxis.grid(b=True)
+        tax.yaxis.grid(b=True)
+        
+        bax.set_xlabel(xlabel, fontsize=fontsize)
+        if left:
+            bax.set_ylabel(ylabel2, fontsize=fontsize)
+            tax.set_ylabel(ylabel, fontsize=fontsize)
+        tax.text(0.02, 0.02, mlabel, color='black', fontsize=fontsize - 1,
+                 transform=tax.transAxes, verticalalignment='bottom',
+                 horizontalalignment='left')
+        tax.text(0.98, 0.95, nicenames_lines[line], color='black', 
+                 fontsize=fontsize - 1,
+                 transform=tax.transAxes, verticalalignment='top',
+                 horizontalalignment='right')
+        
+        for li, label in enumerate(labels):
+            filekw = filefills_base.copy()
+            filekw.update(filefills_label[label])
+            color = colors[label]
+            filen = rfilebase.format(**filekw)
+            
+            try:
+                yvals, bins, numgals = readin_radprof(filen, [seltag], 
+                                                      [ykey_mean],
+                                             runit='pkpc', separate=False,
+                                             binset=binset_mean, retlog=True,
+                                             ofmean=True, retsamplesize=True)
+                _yvals, _bins = readin_radprof(filen, [seltag], ykeys_perc,
+                                               runit='pkpc', separate=False,
+                                               binset=binset_perc, 
+                                               retlog=True, ofmean=True)
+                bins[seltag].update(_bins[seltag])
+                yvals[seltag].update(_yvals[seltag])
+            except RuntimeError as err:
+                print(err)
+                yvals = {}
+                bins = {}
+                numgals = {}
+            
+            if seltag not in yvals:
+                _ng = 0
+                if li == 0:
+                    yref_median = np.NaN 
+                    yref_mean = np.NaN
+            else:
+                _ng = numgals[seltag][ykey_mean]
+                if li == 0:
+                    #ed_ref = bins[seltag][ykey_comp]
+                    #xref = 0.5 * (ed_ref[:-1] + ed_ref[1:])
+                    yref_median = yvals[seltag][ykey_median]
+                    yref_mean = yvals[seltag][ykey_mean]
+                    
+            tax.text(0.98, 0.97 - 0.07 * li, str(_ng), fontsize=fontsize,
+                     color=color, transform=tax.transAxes,
+                     horizontalalignment='right', verticalalignment='top')
+            if seltag not in yvals:
+                continue
+            
+            # might be stuck at a previous value if no haloes for the ref 
+            # volume in a halo mass bin, but present for others
+    
+            ed_median = bins[seltag][ykey_median]
+            cens_median = ed_median[:-1] + 0.5 * np.diff(ed_median)
+            ed_mean = bins[seltag][ykey_mean]
+            cens_mean = ed_mean[:-1] + 0.5 * np.diff(ed_mean)
+            
+            vals = yvals[seltag][ykey_mean]
+            tax.plot(cens_mean, vals, color=color, linewidth=linewidth,
+                     linestyle=linestyle_ykey[ykey_mean],
+                     path_effects=patheff)
+            _ref = yref_mean
+            bax.plot(cens_mean, vals - _ref, color=color, linewidth=linewidth,
+                     linestyle=linestyle_ykey[ykey_mean],
+                     path_effects=patheff)
+            
+            vals = yvals[seltag][ykey_median]
+            tax.plot(cens_median, vals, color=color, linewidth=linewidth,
+                     linestyle=linestyle_ykey[ykey_median],
+                     path_effects=patheff)
+            bax.plot(cens_median, vals - yref_median, color=color, 
+                     linewidth=linewidth, 
+                     linestyle=linestyle_ykey[ykey_median],
+                     path_effects=patheff)
+            
+            # indicate R200c
+            _mmin = 10**mmin
+            if mmin < 14.:
+                _mmax = 10**0.5 * _mmin
+            else:
+                _mmax = 10**14.53 # max mass in the box at z=0.1
+            rs = cu.R200c_pkpc(np.array([_mmin, _mmax]), cosmopars_27)
+            tax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1, color='gray')
+            bax.axvspan(rs[0], rs[1], ymin=0, ymax=1, alpha=0.1, color='gray')
+            tax.axvspan(0.1 * rs[0], 0.1 * rs[1], ymin=0, ymax=1, alpha=0.1, 
+                        color='gray')
+            bax.axvspan(0.1 * rs[0], 0.1 * rs[1], ymin=0, ymax=1, alpha=0.1, 
+                        color='gray')
+            xlim = tax.get_xlim()
+            xp = (0.5 * (np.log10(rs[0]) + np.log10(rs[1])) \
+                  - np.log10(xlim[0])) \
+                 / (np.log10(xlim[1]) - np.log10(xlim[0]))
+            tax.text(xp, 0.98, '$\\mathrm{R}_{\\mathrm{200c}}$', 
+                     fontsize=fontsize - 1, transform=tax.transAxes,
+                     horizontalalignment='center', verticalalignment='top')
+            xp = (0.5 * (np.log10(rs[0]) + np.log10(rs[1])) - 1.\
+                  - np.log10(xlim[0])) \
+                  / (np.log10(xlim[1]) - np.log10(xlim[0]))
+            tax.text(xp, 0.98, '0.1 $\\mathrm{R}_{\\mathrm{200c}}$', 
+                      fontsize=fontsize - 1, transform=tax.transAxes,
+                      horizontalalignment='center', verticalalignment='top')
+            tax.axhline(-2., color='black', linewidth=1., linestyle='dashed',
+                        zorder=0.)
+            
+            bax.set_ylim(ylim_b)
+            tax.set_ylim(ylim_t)
+            
+            # bax.axhline(0., color='black', linewidth=1., linestyle='dotted',
+            #             zorder=0.)
+            # bax.axhline(-0.1, color='black', linewidth=1., linestyle='dotted',
+            #             zorder=0.)
+            # bax.axhline(-0.2, color='gray', linewidth=1., linestyle='dotted',
+            #             zorder=0.)
+            # bax.axhline(-0.5, color='red', linewidth=1., linestyle='dotted',
+            #             zorder=0.)
+            
+            
+    handles = [mpatch.Patch(label=label, color=colors[label], 
+                            edgecolor=colors[label],
+                            linestyle='solid', linewidth=linewidth,
+                            path_effects=patheff)
+                for label in labels]
+    handles = handles + \
+              [mlines.Line2D((), (), label=label, color='gray', 
+                              linewidth=linewidth,
+                              linestyle=linestyle_ykey[ykey]) \
+                for label, ykey in zip(['median', 'mean'], 
+                                      [ykey_median, ykey_mean])]    
+    lax.legend(handles=handles, fontsize=fontsize, **leg_kw)
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
+    
+
 def saveregions_fbeffect(line):
     if line == 'all':
         lines = plot_lines_SB + plot_lines_PS20
