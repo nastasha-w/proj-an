@@ -5424,7 +5424,7 @@ def plot_sample_resconv():
     binset_perc = 'binset_1'
     
     labels = ['Ref-L100N1504', 'Ref-L025N0376', 'Recal-L025N0752']
-    colors = {'Ref-L100N1504': _c1.blue
+    colors = {'Ref-L100N1504': _c1.blue,
               'Ref-L025N0376': _c1.purple,
               'Recal-L025N0752': _c1.pink,
               }
