@@ -5063,8 +5063,8 @@ def plot_sample_fbeffect():
     print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
     
     lines_masses = [('o8', 12.0), ('si13r', 12.0), ('si13r', 13.0)]
-    ylim_t = (-4.5, 1.3)
-    ylim_b = (-1.0, 0.1)
+    ylim_t = (-5.7, 1.8)
+    ylim_b = (-1.8, 1.8)
     fontsize = 12
     linewidth = 1.5
     patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),
@@ -5579,7 +5579,7 @@ def plot_sample_resconv():
                     yref_median = yvals[seltag][ykey_median]
                     yref_mean = yvals[seltag][ykey_mean]
                     
-            tax.text(0.98, 0.97 - 0.07 * li, str(_ng), fontsize=fontsize,
+            tax.text(0.98, 0.87 - 0.07 * li, str(_ng), fontsize=fontsize,
                      color=color, transform=tax.transAxes,
                      horizontalalignment='right', verticalalignment='top')
             if seltag not in yvals:
