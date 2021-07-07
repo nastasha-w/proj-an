@@ -5488,7 +5488,7 @@ def plot_sample_resconv():
         #                               'exclfb': fbpart.format(deltat=30.)},
         #                   }
         filefills_label = {'Recal-L025N0752': {'box': 'L0025N0752RECALIBRATED',
-                                               'npix': 8000, 'tv': '7'},
+                                               'npix': 8000},
                            'Ref-L025N0376': {'box': 'L0025N0376', 'npix': 8000},
                            'Ref-L100N1504': {'box': 'L0100N1504', 'npix': 32000},
                             }
