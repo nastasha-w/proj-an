@@ -5474,7 +5474,7 @@ def plot_sample_resconv():
         testversion = '7' if line in all_lines_PS20 else '6'
         filefills_base.update({'line': line.replace(' ', '-'),
                                'tv': testversion,
-                               'it': siontab})
+                               'it': siontab_long})
     
         #fbpart = '_exclfb_TSN-7.499_TAGN-8.499_Trng-0.2_{deltat}-Myr'+\
         #         '_inclSN-nH-lt--2.0' if line in all_lines_SB else \
