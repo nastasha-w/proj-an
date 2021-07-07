@@ -5523,7 +5523,7 @@ def plot_sample_resconv():
         bax.set_xscale('log')
         bax.grid(b=True)
         bax.xaxis.grid(b=True)
-        bax.yaxis.grid(b=True, which='both')
+        bax.yaxis.grid(b=True, which='major')
         pu.setticks(tax, fontsize=fontsize, right=True, top=True,
                     labelbottom=False, labelleft=left)
         tax.set_xscale('log')
