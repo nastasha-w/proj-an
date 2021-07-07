@@ -5406,10 +5406,6 @@ def plot_sample_resconv():
     linestyle_ykey = {ykey_mean: 'dotted',
                       ykey_median: 'solid'}
     ykeys_perc = [ykey_median]
-    
-
-        
-        filefills_base.update({'nsl': '1', 'npix': '8000'})
    
     outname = 'radprof2d_convtest-resolution'+\
               '_0.1dex-annuli' + \
@@ -5422,7 +5418,7 @@ def plot_sample_resconv():
                 '_z-projection_noEOS{exclfb}_{nsl}slice'+\
                 '_to-min3p5R200c_Mh0p5dex_1000_centrals_M-ge-10p5.hdf5'
     rfilebase = ddir + 'radprof/' + rfilebase
-    filefills_base = {'nsl': '1'}
+    filefills_base = {'nsl': '1', 'exclfb': ''}
     
     binset_mean = 'binset_0'
     binset_perc = 'binset_1'
