@@ -1593,8 +1593,8 @@ def plot_barchart_Ls(simple=False):
     simple: total luminosity fractions for different halo masses (True) or 
             fractions broken down by SF/nSF and subhalo membership category
     '''
-    outname = mdir + 'luminosity_total_fractions_z0p1{}.pdf'
-    outname = outname.format('_simple' if simple else '')
+    outname = mdir + 'luminosity_total_fractions_z0p1{}_mmin-{mmin}.pdf'
+    outname = outname.format('_simple' if simple else '', mmin=mmin_default)
     _ddir = ddir + 'lumfracs/'
     msg = 'Numbers in annotations: log10 L density [erg/s/cMpc**3] rest-frame'
     print(msg)
@@ -1640,7 +1640,7 @@ def plot_barchart_Ls(simple=False):
     sflabels = {0: 'nSF', 1: 'SF'}
     shlabels = {0: 'central', 1: 'subhalo', 2: 'unbound'}
     
-    edges_target = np.arange(11., 15.1, 0.5)
+    edges_target = np.arange(mmin_default, 15.1, 0.5)
     mmax_igm = c.solar_mass
     
     filenames = {line: _ddir + fn_base_SB.format(line=line) \
