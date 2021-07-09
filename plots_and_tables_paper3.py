@@ -817,13 +817,15 @@ def plotstampzooms_overview():
     groups = {line: [grn_zsmall] for line in lines}
     groups[line_focus] = groups_all
         
+    minhalomass = mmin_default
+    halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
+    
     outname = mdir + 'emission_overview_SB-PS20_L0100N1504_27_test3.x_SmAb' +\
-              '_C2Sm_32000pix_6.25slice_zcen21.875_z-projection_noEOS_stamps' 
+              '_C2Sm_32000pix_6.25slice_zcen21.875_z-projection_noEOS'+\
+              '_stamps_mmin-{mmin}'.format(mmin=minhalomass) 
     outname = outname.replace('.', 'p')
     outname = outname + '.pdf'
     
-    minhalomass = mmin_default
-    halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
     
     marklength_slice = 10. #cMpc
     marklength_z = 2. # cMpc
