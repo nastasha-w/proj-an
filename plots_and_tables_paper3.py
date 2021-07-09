@@ -1867,9 +1867,9 @@ def plot_barchart_Ls(simple=False):
 def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
     '''
     '''
-    
-    outname = 'luminosities_nice_{mi}-{ma}-R200c'.format(\
-                            mi=addedges[0], ma=addedges[1])
+    minhalomass = mmin_default
+    outname = 'luminosities_nice_{mi}-{ma}-R200c_mmin-{mmin}'.format(\
+                            mi=addedges[0], ma=addedges[1], mmin=minhalomass)
     if talkversion:
         outdir = tmdir
         outname = outname + 'talkversion_{}'.format(slidenum)
@@ -1987,7 +1987,7 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
     masses_SB = np.array(galdata_all['M200c_Msun'][galids_SB_l])
     masses_PS20 = np.array(galdata_all['M200c_Msun'][galids_PS20_l])
     
-    mbins = np.array(list(np.arange(11., 13.05, 0.1)) +\
+    mbins = np.array(list(np.arange(minhalomass, 13.05, 0.1)) +\
                      [13.25, 13.5, 13.75, 14.0, 14.6])
     bincen = mbins[:-1] + 0.5 * np.diff(mbins)
     
