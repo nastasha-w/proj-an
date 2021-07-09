@@ -2128,9 +2128,9 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
                 l2 = ax.legend(handles=h2, fontsize=fontsize, 
                                bbox_to_anchor=(1.0, 0.0), loc='lower right', 
                                ncol=1, title=linesetlabel, facecolor=fc,
-                               handlelength=1.)
+                               handlelength=2.)
                 l1 = ax.legend(handles=h1, fontsize=fontsize, 
-                               bbox_to_anchor=(0.72, 0.0), loc='lower right',
+                               bbox_to_anchor=(0.0, 1.0), loc='upper left',
                                ncol=1, facecolor=fc, handlelength=1.)
                 l2.get_title().set_fontsize(fontsize)
                 ax.add_artist(l2)
