@@ -2746,14 +2746,19 @@ def plot_radprof3d(weightset=1, M200cslice=None):
     '''
     
     inclSF = True #False is not implemented in the histogram extraction
-    outname = mdir + 'prof3d_L0100N1504_27_Mh0p5dex_1000_{}_set{ws}.pdf'
-    outname = outname.format('wSF' if inclSF else 'nSF', ws=weightset)
+    outname = mdir + 'prof3d_L0100N1504_27_Mh0p5dex_1000_{}_set{ws}'+\
+                     '_mmin-{mmin}'
     # for halo mass selections
+    minhalomass = mmin_default
     if M200cslice is None:
         massslice = slice(None, None, 2)
     else:
         massslice = M200cslice
     minrshow = np.log10(0.1) # log10 R200c
+    
+    outname = outname.format('wSF' if inclSF else 'nSF', ws=weightset, 
+                             mmin=minhalomass)
+    outname = outname.replace('.', 'p') + '.pdf'
     
     # 'n6r', 'o7ix', 
     weightsets = {1: ['c5r', 'c6'],
@@ -2869,7 +2874,7 @@ def plot_radprof3d(weightset=1, M200cslice=None):
     cax  = fig.add_subplot(grid[:, len(axweights)])
     
 
-    massedges = np.array([11., 11.5, 12., 12.5, 13., 13.5, 14.])
+    massedges = np.arange(minhalomass, 14.1, 0.5)
     massedges.sort()
     _list = tc.tol_cmap('rainbow_discrete', lut=len(massedges))
     clist = _list(np.linspace(0.,  1., len(massedges)))
