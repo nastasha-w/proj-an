@@ -2283,9 +2283,19 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
     ls_mean = 'dotted'
     ls_median = 'solid'
     
+    
+    if talkversion:
+        if talkvnum == 0:
+            mmin = 11.
+        elif talkvnum in [1, 2, 3]:
+            mmin = 11.5
+    else:
+        mmin = mmin_default # 11. or 11.5
+        
     outname = 'radprof2d_0.1-0.25dex-annuli_L0100N1504_27_test3.x'+\
               '_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
-              'halomasscomp_mean-median'
+              'halomasscomp_mean-median_mmin-{mmin}'
+    outname = outname.format(mmin=mmin)
     outname = outname.replace('.', 'p')
     if talkversion:
         if talkvnum == 0:
@@ -2296,14 +2306,6 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
     else:
         outname = mdir + outname
     outname = outname + '.pdf'
-    
-    if talkversion:
-        if talkvnum == 0:
-            mmin = 11.
-        elif talkvnum in [1, 2, 3]:
-            mmin = 11.5
-    else:
-        mmin = 11.
 
     medges = np.arange(mmin, 14.1, 0.5)
     s1 = 'geq{:.1f}_le{:.1f}'
