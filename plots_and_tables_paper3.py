@@ -817,7 +817,7 @@ def plotstampzooms_overview():
     groups = {line: [grn_zsmall] for line in lines}
     groups[line_focus] = groups_all
         
-    minhalomass = mmin_default
+    minhalomass = 11.0 #mmin_default
     halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
     
     outname = mdir + 'emission_overview_SB-PS20_L0100N1504_27_test3.x_SmAb' +\
