@@ -306,7 +306,9 @@ line_Trange = {'c5r':   (5.7, 6.3),
                 }
 
 ### galaxies 
-mass_edges_standard = (11., 11.5, 12.0, 12.5, 13.0, 13.5, 14.0)
+mmin_default = 11.5
+mass_edges_standard = tuple(np.arange(mmin_default, 14.1, 0.5))
+#(11., 11.5, 12.0, 12.5, 13.0, 13.5, 14.0)
 
 
 def getsamplemedianmass():
@@ -820,7 +822,7 @@ def plotstampzooms_overview():
     outname = outname.replace('.', 'p')
     outname = outname + '.pdf'
     
-    minhalomass = 11.
+    minhalomass = mmin_default
     halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
     
     marklength_slice = 10. #cMpc
