@@ -3518,11 +3518,13 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
     inclSF: bool   
         include SF gas in the average weighting (M/V/L)
     '''
-    
+    minhalomass = mmin_default
     outdir = mdir
     outname = outdir + 'totLw-halos_L0100N1504_27_Mh0p5dex_1000_0-1-R200c'+\
-              '_{}_set{ws}.pdf'
-    outname = outname.format('wSF' if inclSF else 'nSF',ws=weightset)
+              '_{}_set{ws}_mmin-{mmin}'
+    outname = outname.format('wSF' if inclSF else 'nSF', ws=weightset,
+                             mmin=minhalomass)
+    outname = outname.replace('.', 'p') + '.pdf'
     #addedges = (0., 1.)
     # for halo mass selections
     
@@ -3605,7 +3607,7 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
                       for xi in range(len(axweights))]\
                       for yi in range(nprof)])
     
-    mbins = np.array(list(np.arange(11., 13.05, 0.1)) +\
+    mbins = np.array(list(np.arange(minhalomass, 13.05, 0.1)) +\
                      [13.25, 13.5, 13.75, 14.0, 14.6])
     #massexcl = np.array([ed not in massincl for ed in massedges])
 
@@ -6404,6 +6406,15 @@ if __name__ == '__main__':
          for line in plot_lines_SB: # not run for PS20 lines
              plot_radprof_conv(convtype='slicedepth', line=line)
     if not '--nomain' in args:  
+        if np.any([arg.startswith('--mmin') for arg in args]):
+            ai = np.where([arg.startswith('--mmin') for arg in args])[0][0]
+            minarg = args[ai]
+            minval = float(minarg.split('='))
+            if minval not in [11.0, 11.5]:
+                msg = 'mmin options are 11.0, 11.5, not {}'.format(minval)
+                print(msg)
+                raise ValueError(msg)               
+            mmin_default = minval
         plot_emcurves()
         plot_Aeff_galabs()
         plot_minSB()
@@ -6415,3 +6426,5 @@ if __name__ == '__main__':
         for i in range(1, 17):
             plot_radprof3d(weightset=i, M200cslice=slice(None, None, 2)) 
             plot_r200Lw_halodist(weightset=i, inclSF=False) 
+        plot_sample_fbeffect()
+        plot_sample_resconv()
