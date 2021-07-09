@@ -2120,7 +2120,7 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
                                ncol=1, facecolor=fc)
                 l2.get_title().set_fontsize(fontsize)
                 ax.add_artist(l2)
-            if axi == 3:
+            elif axi == 3:
                 # _nc1 = 1 if axi == 0 else 2
                 isplit = len(handles) // 2
                 h1 = handles[:isplit]
@@ -2130,12 +2130,12 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
                                bbox_to_anchor=(1.0, 0.0), loc='lower right', 
                                ncol=1, title=linesetlabel, facecolor=fc)
                 l1 = ax.legend(handles=h1, fontsize=fontsize, 
-                               bbox_to_anchor=(0.75, 0.0), loc='upper left',
+                               bbox_to_anchor=(0.75, 0.0), loc='lower right',
                                ncol=1, facecolor=fc)
                 l2.get_title().set_fontsize(fontsize)
                 ax.add_artist(l2)
             else:
-                l1 = ax.legend(handles=h2, fontsize=fontsize, 
+                l1 = ax.legend(handles=handles, fontsize=fontsize, 
                                bbox_to_anchor=(1.0, 0.), loc='lower right', 
                                ncol=1, facecolor=fc)
                 #l2 = ax.legend(handles=h1, fontsize=fontsize, 
