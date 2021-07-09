@@ -817,7 +817,9 @@ def plotstampzooms_overview():
     
     groups = {line: [grn_zsmall] for line in lines}
     groups[line_focus] = groups_all
-        
+    
+    # small points of potentially detectable emission 
+    # fall outside >11.5 haloes
     minhalomass = 11.0 #mmin_default
     halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
     
@@ -1044,7 +1046,8 @@ def plotstampzooms_overview():
         _cl = None
     else:
         _cl = clabel_hmass
-    cbar, colordct = add_cbar_mass(cax2, massedges=mass_edges_standard,
+    _massedges = np.arange(minhalomass, 14.1, 0.5)
+    cbar, colordct = add_cbar_mass(cax2, massedges=_massedges,
              orientation='horizontal', clabel=_cl, fontsize=fontsize,
              aspect=c_aspect)
     if clabel_over_bar:
