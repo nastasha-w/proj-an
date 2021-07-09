@@ -2105,29 +2105,44 @@ def plot_luminosities_nice(addedges=(0., 1.), talkversion=False, slidenum=0):
                 l2.get_title().set_fontsize(fontsize)
                 ax.add_artist(l1)
         if minhalomass == 11.5:
-            isplit = len(handles) // 2
-            h1 = handles[:isplit]
-            h2 = handles[isplit:]
-            fc = (1., 1., 1., 0.)
-            if axi in [0, 3]:
-                _nc1 = 1 if axi == 0 else 2
+
+            if axi == 0:
+                # _nc1 = 1 if axi == 0 else 2
+                isplit = len(handles) // 2
+                h1 = handles[:isplit]
+                h2 = handles[isplit:]
+                fc = (1., 1., 1., 0.)
                 l2 = ax.legend(handles=h2, fontsize=fontsize, 
                                bbox_to_anchor=(1.0, 0.), loc='lower right', 
                                ncol=1, title=linesetlabel, facecolor=fc)
                 l1 = ax.legend(handles=h1, fontsize=fontsize, 
                                bbox_to_anchor=(0.0, 1.0), loc='upper left',
-                               ncol=_nc1, facecolor=fc)
+                               ncol=1, facecolor=fc)
+                l2.get_title().set_fontsize(fontsize)
+                ax.add_artist(l2)
+            if axi == 3:
+                # _nc1 = 1 if axi == 0 else 2
+                isplit = len(handles) // 2
+                h1 = handles[:isplit]
+                h2 = handles[isplit:]
+                fc = (1., 1., 1., 0.)
+                l2 = ax.legend(handles=h2, fontsize=fontsize, 
+                               bbox_to_anchor=(1.0, 0.0), loc='lower right', 
+                               ncol=1, title=linesetlabel, facecolor=fc)
+                l1 = ax.legend(handles=h1, fontsize=fontsize, 
+                               bbox_to_anchor=(0.75, 0.0), loc='upper left',
+                               ncol=1, facecolor=fc)
                 l2.get_title().set_fontsize(fontsize)
                 ax.add_artist(l2)
             else:
                 l1 = ax.legend(handles=h2, fontsize=fontsize, 
                                bbox_to_anchor=(1.0, 0.), loc='lower right', 
                                ncol=1, facecolor=fc)
-                l2 = ax.legend(handles=h1, fontsize=fontsize, 
-                               bbox_to_anchor=(0.0, 1.0), loc='upper left', 
-                               ncol=1, title=linesetlabel, facecolor=fc)
-                l2.get_title().set_fontsize(fontsize)
-                ax.add_artist(l1)
+                #l2 = ax.legend(handles=h1, fontsize=fontsize, 
+                #               bbox_to_anchor=(0.0, 1.0), loc='upper left', 
+                #               ncol=1, title=linesetlabel, facecolor=fc)
+                l1.get_title().set_fontsize(fontsize)
+                #ax.add_artist(l1)
         
         #ax.add_artist(l2) # otherwise, it's plotted twice -> less transparent
         #ax.text(0.02, 0.98, linesetlabel, fontsize=fontsize,
