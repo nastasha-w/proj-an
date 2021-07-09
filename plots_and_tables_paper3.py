@@ -1593,8 +1593,9 @@ def plot_barchart_Ls(simple=False):
     simple: total luminosity fractions for different halo masses (True) or 
             fractions broken down by SF/nSF and subhalo membership category
     '''
+    minhalomass = mmin_default
     outname = mdir + 'luminosity_total_fractions_z0p1{}_mmin-{mmin}.pdf'
-    outname = outname.format('_simple' if simple else '', mmin=mmin_default)
+    outname = outname.format('_simple' if simple else '', mmin=minhalomass)
     _ddir = ddir + 'lumfracs/'
     msg = 'Numbers in annotations: log10 L density [erg/s/cMpc**3] rest-frame'
     print(msg)
@@ -1640,7 +1641,7 @@ def plot_barchart_Ls(simple=False):
     sflabels = {0: 'nSF', 1: 'SF'}
     shlabels = {0: 'central', 1: 'subhalo', 2: 'unbound'}
     
-    edges_target = np.arange(mmin_default, 15.1, 0.5)
+    edges_target = np.arange(minhalomass, 15.1, 0.5)
     mmax_igm = c.solar_mass
     
     filenames = {line: _ddir + fn_base_SB.format(line=line) \
@@ -1691,10 +1692,12 @@ def plot_barchart_Ls(simple=False):
              ' \\; [\\mathrm{M}_{\\odot}]$'
     massedges = np.array(edges_target)
     
-    _list = tc.tol_cmap('rainbow_discrete', lut=len(massedges))
-    clist = _list(np.linspace(0.,  1., len(massedges)))
+    # fix to get matching color bars
+    numbins = 9 #len(massedges)
+    _list = tc.tol_cmap('rainbow_discrete', lut=numbins)
+    clist = _list(np.linspace(0.,  1., numbins))
     c_under = clist[-1]
-    clist = clist[:-1]
+    clist = clist[numbins - len(massedges): -1]
     c_igm = 'gray'
     _keys = sorted(massedges)
     colors = {_keys[i]: clist[i] for i in range(len(_keys) - 1)}
