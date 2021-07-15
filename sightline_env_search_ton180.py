@@ -1919,7 +1919,7 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
                             boxstyle='round')
         else:
             legendloc = 'lower left'
-            legendanchor = (0.5, 0.02)
+            legendanchor = (0.45, 0.0)
             legendncol = 1 if handles1 == [] else 2
             legendframe = True
             
@@ -1927,11 +1927,11 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
             infoh = 'left'
             infox = 0.02
             infoy = 0.02
-            infobbox = dict(facecolor=(1., 1., 1., 0.5), edgecolor='gray',\
+            infobbox = dict(facecolor=(1., 1., 1., 0.7), edgecolor='gray',\
                             boxstyle='round')
     ax.legend(handles=handles1 + handles2, fontsize=fontsize - 1.,\
               loc=legendloc, bbox_to_anchor=legendanchor, ncol=legendncol,\
-              frameon=legendframe)
+              frameon=legendframe, bbox=infobox)
     ax.text(infox, infoy, info, fontsize=fontsize - 1.,\
             verticalalignment=infov, horizontalalignment=infoh,\
             transform=ax.transAxes, bbox=infobbox)
