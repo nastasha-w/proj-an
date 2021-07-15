@@ -1880,6 +1880,7 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
                                   label='nb. {nn}'.format(nn=nn + 1)) 
                     for nn in range(nngb)]
     
+    legendset = False
     if prop == 'neighbor_dist_pmpc':
         if cumulative:
             legendloc = 'upper right' #'lower right'
@@ -1915,11 +1916,11 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
             infoh = 'right'
             infox = 0.98
             infoy = 0.02
-            infobbox = dict(facecolor=(1., 1., 1., 0.5), edgecolor='gray',\
+            infobbox = dict(facecolor=(1., 1., 1., 0.5), edgecolor='gray',
                             boxstyle='round')
         else:
             legendloc = 'lower left'
-            legendanchor = (0.45, 0.0)
+            legendanchor = (0.45, -0.01)
             legendncol = 1 if handles1 == [] else 2
             legendframe = True
             
@@ -1927,15 +1928,21 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
             infoh = 'left'
             infox = 0.02
             infoy = 0.02
-            infobbox = dict(facecolor=(1., 1., 1., 0.8), edgecolor='gray',\
+            infobbox = dict(facecolor=(1., 1., 1., 0.8), edgecolor='gray',
                             boxstyle='round')
-    ax.legend(handles=handles1 + handles2, fontsize=fontsize - 1.,\
-              loc=legendloc, bbox_to_anchor=legendanchor, ncol=legendncol,\
-              frameon=legendframe, facecolor=infobbox['facecolor'], 
-              edgecolor=infobbox['edgecolor'], fancybox=infobbox['boxstyle'] == 'round',
-              framealpha=infobbox['facecolor'][3])
-    ax.text(infox, infoy, info, fontsize=fontsize - 1.,\
-            verticalalignment=infov, horizontalalignment=infoh,\
+            ax.legend(handles=handles1 + handles2, fontsize=fontsize - 1.,
+                      loc=legendloc, bbox_to_anchor=legendanchor, ncol=legendncol,
+                      frameon=legendframe, facecolor=infobbox['facecolor'], 
+                      edgecolor=infobbox['edgecolor'], 
+                      fancybox=infobbox['boxstyle'] == 'round', 
+                      framealpha=infobbox['facecolor'][3])
+            legendset = True
+    if not legendset:
+        ax.legend(handles=handles1 + handles2, fontsize=fontsize - 1.,
+                  loc=legendloc, bbox_to_anchor=legendanchor, ncol=legendncol,
+                  frameon=legendframe)
+    ax.text(infox, infoy, info, fontsize=fontsize - 1.,
+            verticalalignment=infov, horizontalalignment=infoh,
             transform=ax.transAxes, bbox=infobbox)
     
     plt.savefig(outname, format=imgformat, bbox_inches='tight')
