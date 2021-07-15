@@ -1956,7 +1956,7 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,
 def plot_absenv_hists(imgformat='pdf', ionsel_meas='all'):
     toplot = ['dist2d', 'mstar']
     ionsel = 'o6-o7-o8'
-    histfile = 'auto'
+    histfile = '2dmatch_sameslice_meas3'
     cumulative = [True, False]
     showlegend = [True, False]
     
@@ -1970,4 +1970,20 @@ def plot_absenv_hists(imgformat='pdf', ionsel_meas='all'):
                          ionsel_meas=ionsel_meas, histfile=histfile, cumulative=_cumul,
                          printcumul=False, imgformat=imgformat, ax=_ax,
                          showlegend=_sl)
+                         
+    if ionsel_meas == ['suv']:
+        ionstr = 'o6uvp-o7suv-o8suv'
+    elif ionsel_meas == ['sxr']:
+        ionstr = 'o6uvp-o7sxr-o8sxr'
+    else:
+        raise ValueError('only the suv and sxr options are allowed here')
+    cumulstrs = ['-cumul' if cml  else '' for cml in cumulative]
+    prop = [p + c for p, c in zip(toplot, cumulative)]
+    prop = '_'.join(prop)
+    outname = mdir + 'nnhist_{prop}_{ionsel}_{histfile}.{ft}'.format(\
+                             prop=prop, ionsel=ionstr,
+                             histfile=histfile, ft=imgformat)  
+    plt.savefig(outname, format=imgformat, bbox_inches='tight')                             
+                             
+
     
