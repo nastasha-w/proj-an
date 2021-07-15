@@ -1918,8 +1918,8 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
             infobbox = dict(facecolor=(1., 1., 1., 0.5), edgecolor='gray',\
                             boxstyle='round')
         else:
-            legendloc = 'upper right'
-            legendanchor = (0.98, 0.98)
+            legendloc = 'lower left'
+            legendanchor = (0.5, 0.02)
             legendncol = 1 if handles1 == [] else 2
             legendframe = True
             
