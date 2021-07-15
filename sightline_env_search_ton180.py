@@ -1951,7 +1951,7 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,
     if save:
         plt.savefig(outname, format=imgformat, bbox_inches='tight')
 
-def plot_absenv_hists(imgformat='pdf', ionsel_meas='all')
+def plot_absenv_hists(imgformat='pdf', ionsel_meas='all'):
     toplot = ['dist2d', 'mstar']
     ionsel = 'o6-o7-o8'
     histfile = 'auto'
