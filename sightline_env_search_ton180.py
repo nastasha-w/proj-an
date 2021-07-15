@@ -1959,7 +1959,7 @@ def plot_absenv_hists(imgformat='pdf', ionsel_meas='all'):
     cumulative = [True, False]
     
     fig = plt.figure(figsize=(11., 5.))
-    grid = gsp.GridSpec(ncols=2, nrows=1, hspace=0.3, wspace=0.0,
+    grid = gsp.GridSpec(ncols=2, nrows=1, hspace=0.0, wspace=0.3,
                         width_ratios=[1, 1])
     axes = [fig.add_subplot(grid[0, i]) for i in range(2)]
     
