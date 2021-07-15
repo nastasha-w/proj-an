@@ -1931,7 +1931,8 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
                             boxstyle='round')
     ax.legend(handles=handles1 + handles2, fontsize=fontsize - 1.,\
               loc=legendloc, bbox_to_anchor=legendanchor, ncol=legendncol,\
-              frameon=legendframe, bbox=infobbox)
+              frameon=legendframe, facecolor=infobbox['facecolor'], 
+              edgecolor=infobbox['edgebbox'], fancybox=infobbox['boxstyle'] == 'round')
     ax.text(infox, infoy, info, fontsize=fontsize - 1.,\
             verticalalignment=infov, horizontalalignment=infoh,\
             transform=ax.transAxes, bbox=infobbox)
