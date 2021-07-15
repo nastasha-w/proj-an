@@ -15,6 +15,7 @@ from sklearn.neighbors import NearestNeighbors
 
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
+import matplotlib.gridspec as gsp
 
 import make_maps_opts_locs as ol
 import eagle_constants_and_units as c
