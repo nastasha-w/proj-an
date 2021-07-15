@@ -1584,12 +1584,12 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
     elif toplot == 'dist3d':
         prop = 'neighbor_dist_pmpc'
         xlabel = '$\\mathrm{{r}}_{{\\mathrm{{3D}}}} \\; [\\mathrm{pMpc}]$'
-        hkey = '3dmatch'
+        hkey = '3dmatch' # selections will be outdated?
     elif toplot == 'mstar':
         prop = 'Mstar_Msun' 
         xlabel = '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\star}} \\; [\\mathrm{{M}}_{{\\odot}}]$' 
         if histfile == 'auto':
-            hkey = '2dmatch_sameslice'
+            hkey = '2dmatch_sameslice_meas3' #'2dmatch_sameslice'
         else:
             hkey = histfile
     else:
