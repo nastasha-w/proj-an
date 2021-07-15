@@ -1596,8 +1596,9 @@ def plot_barchart_Ls(simple=False):
             fractions broken down by SF/nSF and subhalo membership category
     '''
     minhalomass = mmin_default
-    outname = mdir + 'luminosity_total_fractions_z0p1{}_mmin-{mmin}.pdf'
+    outname = mdir + 'luminosity_total_fractions_z0p1{}_mmin-{mmin}'
     outname = outname.format('_simple' if simple else '', mmin=minhalomass)
+    outname = outname.replace('.', 'p') + '.pdf'
     _ddir = ddir + 'lumfracs/'
     msg = 'Numbers in annotations: log10 L density [erg/s/cMpc**3] rest-frame'
     print(msg)

@@ -1534,7 +1534,7 @@ def est3ddist(galaxy, zcomp=zuv, cosmopars=None):
     
 def plot_absenv_hist(toplot='dist2d', ionsel=None,\
                      ionsel_meas='all', histfile='auto', cumulative=True,\
-                     printcumul=False):
+                     printcumul=False, imgformat='eps'):
     '''
     toplot:      'dist2d', 'dist3d', or 'mstar' -- what to plot
     ionsel:      which ion column selections to apply
@@ -1688,9 +1688,9 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
               'Mstar_Msun': '$\\log_{{10}} \\, \\mathrm{{M}}_{{\\star}} \\; [\\mathrm{{M}}_{{\\odot}}]$',\
               }
     cumulstr = '_cumul' if cumulative else ''
-    outname = mdir + 'nnhist_{prop}_{ionsel}_{histfile}{cstr}.eps'.format(\
-                             prop=prop, ionsel='_'.join(ionsels),\
-                             histfile=hkey, cstr=cumulstr)   
+    outname = mdir + 'nnhist_{prop}_{ionsel}_{histfile}{cstr}.{ft}'.format(\
+                             prop=prop, ionsel='_'.join(ionsels),
+                             histfile=hkey, cstr=cumulstr, ft=imgformat)   
 
     galselstrs = []
     for gsel in galsels:
@@ -1936,4 +1936,4 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
             verticalalignment=infov, horizontalalignment=infoh,\
             transform=ax.transAxes, bbox=infobbox)
     
-    plt.savefig(outname, format='eps', bbox_inches='tight')
+    plt.savefig(outname, format=imgformat, bbox_inches='tight')
