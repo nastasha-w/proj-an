@@ -1535,7 +1535,8 @@ def est3ddist(galaxy, zcomp=zuv, cosmopars=None):
     
 def plot_absenv_hist(toplot='dist2d', ionsel=None,
                      ionsel_meas='all', histfile='auto', cumulative=True,
-                     printcumul=False, imgformat='eps', ax=None):
+                     printcumul=False, imgformat='eps', ax=None,
+                     showlegend=True):
     '''
     toplot:      'dist2d', 'dist3d', or 'mstar' -- what to plot
     ionsel:      which ion column selections to apply
@@ -1884,71 +1885,71 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,
                                   linestyle='solid',
                                   label='nb. {nn}'.format(nn=nn + 1)) 
                     for nn in range(nngb)]
-    
-    legendset = False
-    if prop == 'neighbor_dist_pmpc':
-        if cumulative:
-            legendloc = 'upper right' #'lower right'
-            legendanchor = (0.98, 0.98) #(1., 0.4 + 0.07 * len(ionsels))
-            legendncol = 1 #if handles1 == [] else 2
-            legendframe = True
+    if showlegend:
+        legendset = False
+        if prop == 'neighbor_dist_pmpc':
+            if cumulative:
+                legendloc = 'upper right' #'lower right'
+                legendanchor = (0.98, 0.98) #(1., 0.4 + 0.07 * len(ionsels))
+                legendncol = 1 #if handles1 == [] else 2
+                legendframe = True
+                
+                infov = 'top' #'bottom'
+                infoh = 'right'
+                infox = 0.96
+                infoy = 0.72
+                infobbox = None
+            else:
+                legendloc = 'upper right'
+                legendanchor = (1., 0.62 - 0.07 * len(ionsels))
+                legendncol = 1 #if handles1 == [] else 2
+                legendframe = True
+                
+                infov = 'top'
+                infoh = 'right'
+                infox = 0.98
+                infoy = 0.98
+                infobbox = None
             
-            infov = 'top' #'bottom'
-            infoh = 'right'
-            infox = 0.96
-            infoy = 0.72
-            infobbox = None
-        else:
-            legendloc = 'upper right'
-            legendanchor = (1., 0.62 - 0.07 * len(ionsels))
-            legendncol = 1 #if handles1 == [] else 2
-            legendframe = True
+        elif prop == 'Mstar_Msun':
+            if cumulative:
+                legendloc = 'upper left'
+                legendanchor = (0.02, 0.98)
+                legendncol = 1 if handles1 == [] else 2
+                legendframe = True
+                
+                infov = 'bottom'
+                infoh = 'right'
+                infox = 0.98
+                infoy = 0.02
+                infobbox = dict(facecolor=(1., 1., 1., 0.5), edgecolor='gray',
+                                boxstyle='round')
+            else:
+                legendloc = 'lower left'
+                legendanchor = (0.45, -0.01)
+                legendncol = 1 if handles1 == [] else 2
+                legendframe = True
             
-            infov = 'top'
-            infoh = 'right'
-            infox = 0.98
-            infoy = 0.98
-            infobbox = None
-        
-    elif prop == 'Mstar_Msun':
-        if cumulative:
-            legendloc = 'upper left'
-            legendanchor = (0.02, 0.98)
-            legendncol = 1 if handles1 == [] else 2
-            legendframe = True
-            
-            infov = 'bottom'
-            infoh = 'right'
-            infox = 0.98
-            infoy = 0.02
-            infobbox = dict(facecolor=(1., 1., 1., 0.5), edgecolor='gray',
-                            boxstyle='round')
-        else:
-            legendloc = 'lower left'
-            legendanchor = (0.45, -0.01)
-            legendncol = 1 if handles1 == [] else 2
-            legendframe = True
-            
-            infov = 'bottom'
-            infoh = 'left'
-            infox = 0.02
-            infoy = 0.02
-            infobbox = dict(facecolor=(1., 1., 1., 0.8), edgecolor='gray',
-                            boxstyle='round')
+                infov = 'bottom'
+                infoh = 'left'
+                infox = 0.02
+                infoy = 0.02
+                infobbox = dict(facecolor=(1., 1., 1., 0.8), edgecolor='gray',
+                                boxstyle='round')
+                ax.legend(handles=handles1 + handles2, fontsize=fontsize - 1.,
+                          loc=legendloc, bbox_to_anchor=legendanchor, ncol=legendncol,
+                          frameon=legendframe, facecolor=infobbox['facecolor'], 
+                          edgecolor=infobbox['edgecolor'], 
+                          fancybox=infobbox['boxstyle'] == 'round', 
+                          framealpha=infobbox['facecolor'][3])
+                legendset = True
+        if not legendset:
             ax.legend(handles=handles1 + handles2, fontsize=fontsize - 1.,
                       loc=legendloc, bbox_to_anchor=legendanchor, ncol=legendncol,
-                      frameon=legendframe, facecolor=infobbox['facecolor'], 
-                      edgecolor=infobbox['edgecolor'], 
-                      fancybox=infobbox['boxstyle'] == 'round', 
-                      framealpha=infobbox['facecolor'][3])
-            legendset = True
-    if not legendset:
-        ax.legend(handles=handles1 + handles2, fontsize=fontsize - 1.,
-                  loc=legendloc, bbox_to_anchor=legendanchor, ncol=legendncol,
-                  frameon=legendframe)
-    ax.text(infox, infoy, info, fontsize=fontsize - 1.,
-            verticalalignment=infov, horizontalalignment=infoh,
-            transform=ax.transAxes, bbox=infobbox)
+                      frameon=legendframe)
+        ax.text(infox, infoy, info, fontsize=fontsize - 1.,
+                verticalalignment=infov, horizontalalignment=infoh,
+                transform=ax.transAxes, bbox=infobbox)
     if save:
         plt.savefig(outname, format=imgformat, bbox_inches='tight')
 
@@ -1957,14 +1958,16 @@ def plot_absenv_hists(imgformat='pdf', ionsel_meas='all'):
     ionsel = 'o6-o7-o8'
     histfile = 'auto'
     cumulative = [True, False]
+    showlegend = [True, False]
     
     fig = plt.figure(figsize=(11., 5.))
     grid = gsp.GridSpec(ncols=2, nrows=1, hspace=0.0, wspace=0.3,
                         width_ratios=[1, 1])
     axes = [fig.add_subplot(grid[0, i]) for i in range(2)]
     
-    for _tp, _cumul, _ax in zip(toplot, cumulative, axes):
+    for _tp, _cumul, _ax, _sl in zip(toplot, cumulative, axes, showlegend):
         plot_absenv_hist(toplot=_tp, ionsel=ionsel,
                          ionsel_meas=ionsel_meas, histfile=histfile, cumulative=_cumul,
-                         printcumul=False, imgformat=imgformat, ax=_ax)
+                         printcumul=False, imgformat=imgformat, ax=_ax,
+                         showlegend=_sl)
     
