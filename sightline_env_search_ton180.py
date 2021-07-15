@@ -1532,9 +1532,9 @@ def est3ddist(galaxy, zcomp=zuv, cosmopars=None):
     return np.sqrt(rlos**2 + galaxy['r']**2)
     
     
-def plot_absenv_hist(toplot='dist2d', ionsel=None,\
-                     ionsel_meas='all', histfile='auto', cumulative=True,\
-                     printcumul=False, imgformat='eps'):
+def plot_absenv_hist(toplot='dist2d', ionsel=None,
+                     ionsel_meas='all', histfile='auto', cumulative=True,
+                     printcumul=False, imgformat='eps', ax=None):
     '''
     toplot:      'dist2d', 'dist3d', or 'mstar' -- what to plot
     ionsel:      which ion column selections to apply
@@ -1750,8 +1750,12 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
     colors_nn = {i: cset[i] for i in range(nngb)}
     
     ## set up figure
-    fig = plt.figure(figsize=(5.5, 5.))
-    ax = fig.add_subplot(1, 1, 1)
+    if ax is None:
+        fig = plt.figure(figsize=(5.5, 5.))
+        ax = fig.add_subplot(1, 1, 1)
+        save = False
+    else:
+        save = True
     fontsize = 12
     lw = 2
     alpha_data = 0.8
@@ -1944,5 +1948,22 @@ def plot_absenv_hist(toplot='dist2d', ionsel=None,\
     ax.text(infox, infoy, info, fontsize=fontsize - 1.,
             verticalalignment=infov, horizontalalignment=infoh,
             transform=ax.transAxes, bbox=infobbox)
+    if save:
+        plt.savefig(outname, format=imgformat, bbox_inches='tight')
+
+def plot_absenv_hists(imgformat='pdf', ionsel_meas='all')
+    toplot = ['dist2d', 'mstar']
+    ionsel = 'o6-o7-o8'
+    histfile = 'auto'
+    cumulative = [True, False]
     
-    plt.savefig(outname, format=imgformat, bbox_inches='tight')
+    fig = plt.figure(figsize=(11., 5.))
+    gsp.GridSpec(ncols=2, nrows=1, hspace=0.3, wspace=0.0,
+                 width_ratios=[1, 1])
+    axes = [fig.add_subplot(grid[0, i]) for i in range(2)]
+    
+    for _tp, _cumul, _ax in zip(toplot, cumulative, axes):
+        plot_absenv_hist(toplot=_tp, ionsel=ionsel,
+                         ionsel_meas=ionsel_meas, histfile=histfile, cumulative=_cumul,
+                         printcumul=False, imgformat=imgformat, ax=_ax)
+    
