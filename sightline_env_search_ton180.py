@@ -1978,7 +1978,7 @@ def plot_absenv_hists(imgformat='pdf', ionsel_meas='all'):
     else:
         raise ValueError('only the suv and sxr options are allowed here')
     cumulstrs = ['-cumul' if cml  else '' for cml in cumulative]
-    prop = [p + c for p, c in zip(toplot, cumulative)]
+    prop = [p + c for p, c in zip(toplot, cumulstrs)]
     prop = '_'.join(prop)
     outname = mdir + 'nnhist_{prop}_{ionsel}_{histfile}.{ft}'.format(\
                              prop=prop, ionsel=ionstr,
