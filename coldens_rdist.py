@@ -1529,7 +1529,7 @@ def stamps_sl_hdf5(base, szcens, rmax, centres, rscales=1.,\
 
 
 
-def gethalomask_basic(xpix, size, pixsize, indct,\
+def gethalomask_basic(xpix, size, pixsize, indct,
                       ypix=None, exdct=None, closest_normradius=True, axis='z',
                       periodic=True):
     '''
