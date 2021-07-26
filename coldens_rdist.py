@@ -1533,16 +1533,55 @@ def gethalomask_basic(xpix, size, pixsize, indct,\
                       ypix=None, exdct=None, closest_normradius=True, axis='z',
                       periodic=True):
     '''
-    size, pixsize, radii, positions: should have same units, which ones is\
-                  arbitrary
-    indct, exdct: entries are 'pos': 
-                   positions [[X1, Y1, Z1],  ... [Xn, Yn, Zn]]
-                  'rad': radii
-    exdct:        None -> don't exclude anything
-    closest_normradius: if excluding halos, exclude based on closest halo
-                  center normalised by radius (otherwise, base on which halo is
-                  closest)
+    parameters:
+    -----------
+    xpix: int
+        number of pixels in the output map (x direction)
+    size: float
+        size of the simulation volume [length units]; used to account
+        for periodicity of the volume, even if periodic is False
+    pixsize: float
+        size of the pixels in the output map [length units]; the pixels 
+        are assumed to be square
+    indct: dict
+        the data for the galaxies to include.  
+        entries are
+            'pos': positions [[X1, Y1, Z1],  ... [Xn, Yn, Zn]]
+            'rad': radii
+        both are in [length units],  
+    ypix: int or None
+        number of pixels along the y axis of the output map. If None, 
+        assumed to be the same as xpix
+    exdct: dict or None
+        entries are the same as for indct. If a pixel in the output
+        map is within the selected radius of an indct galaxy, but attributed
+        to an addict galaxy, the map value is set to False 
+        if None, no pixels are excluded
+    closest_normradius: bool
+        if excluding halos, exclude based on closest halo center normalised
+        by radius (otherwise, base on which halo is closest)
+    axis: str: ‘x’, ‘y’, or ‘z’
+        which is the line of sight axis for the map? Matches the projection
+        axis in column density maps.
+    periodic: bool
+        is the output map periodic along the x and y directions? Equivalent 
+        to: does the map cover the entire simulation volume range along 
+        those directions (True), or a small part of those ranges (False)
     
+    returns:
+    --------
+    outmap: bool array
+        a map of the size specified by xpix, ypix, and pixsize, starting at
+        coordinates (0, 0) in the coordinate system of the specified galaxy
+        positions. A pixel value is True if it is within the specified radius
+        of one of the indct galaxies, and not closer to any of the exdct
+        galaxies, if those were given. Otherwise, it is False.
+
+    notes:
+    ------
+    size, pixsize, radii, positions should have same units; which ones is
+    arbitrary
+     
     when excluding halos, if distances are equal by the chosen measure, the 
     other is used as a tiebreaker
     
@@ -1705,7 +1744,7 @@ def gethalomask_fromhalocat(halocat, xpix, ypix=None,\
                                     'X', 'Y', 'Z', : position space edges 
                                     select on position [1, 2] range, using [3] 
                                     times R200c as a margin (units cMpc)
-                                    'VX', 'VY', VZ': velocity space edgesstderr.runhistograms_30033-30038-1725153.33
+                                    'VX', 'VY', VZ': velocity space edges
                                     select on position [1, 2] range
                                     (units rest-frame km/s)
     '''                             
