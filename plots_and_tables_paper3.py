@@ -5126,7 +5126,7 @@ def plot_sample_fbeffect():
     
     lines_masses = [('o8', 12.0), ('o8', 13.0), ('si13r', 12.0), ('si13r', 13.0)]
     ylim_t = (-4.5, 1.6)
-    ylim_b = (-1.0, 0.1)
+    ylim_b = (-1.05, 0.1)
     fontsize = 12
     linewidth = 1.5
     patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),
@@ -5373,7 +5373,7 @@ def plot_sample_fbeffect():
             xp = (0.5 * (np.log10(rs[0]) + np.log10(rs[1])) \
                   - np.log10(xlim[0])) \
                  / (np.log10(xlim[1]) - np.log10(xlim[0]))
-            tax.text(xp, 0.93, '$\\mathrm{R}_{\\mathrm{200c}}$', 
+            tax.text(xp, 0.91, '$\\mathrm{R}_{\\mathrm{200c}}$', 
                      fontsize=fontsize - 1, transform=tax.transAxes,
                      horizontalalignment='center', verticalalignment='top')
             xp = (0.5 * (np.log10(rs[0]) + np.log10(rs[1])) - 1.\
