@@ -5279,10 +5279,10 @@ def plot_sample_fbeffect():
         if left:
             bax.set_ylabel(ylabel2, fontsize=fontsize)
             tax.set_ylabel(ylabel, fontsize=fontsize)
-        tax.text(0.02, 0.02, mlabel, color='black', fontsize=fontsize - 1,
+        tax.text(0.03, 0.03, mlabel, color='black', fontsize=fontsize - 1,
                  transform=tax.transAxes, verticalalignment='bottom',
                  horizontalalignment='left')
-        tax.text(0.95, 0.95, nicenames_lines[line], color='black', 
+        tax.text(0.95, 0.97, nicenames_lines[line], color='black', 
                  fontsize=fontsize - 1,
                  transform=tax.transAxes, verticalalignment='top',
                  horizontalalignment='right')
@@ -5373,7 +5373,7 @@ def plot_sample_fbeffect():
             xp = (0.5 * (np.log10(rs[0]) + np.log10(rs[1])) \
                   - np.log10(xlim[0])) \
                  / (np.log10(xlim[1]) - np.log10(xlim[0]))
-            tax.text(xp, 0.87, '$\\mathrm{R}_{\\mathrm{200c}}$', 
+            tax.text(xp, 0.89, '$\\mathrm{R}_{\\mathrm{200c}}$', 
                      fontsize=fontsize - 1, transform=tax.transAxes,
                      horizontalalignment='center', verticalalignment='top')
             xp = (0.5 * (np.log10(rs[0]) + np.log10(rs[1])) - 1.\
