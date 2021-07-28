@@ -5179,7 +5179,7 @@ def plot_sample_fbeffect():
               }
     
     nummasses = len(lines_masses)
-    ncols = min(3, nummasses)
+    ncols = min(4, nummasses)
     nrows = (nummasses - 1) // ncols + 1
     _nrows = nrows * 2
     figwidth = 11. if ncols > 2 else 5.5 
