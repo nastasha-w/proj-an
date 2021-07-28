@@ -5125,8 +5125,8 @@ def plot_sample_fbeffect():
     print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
     
     lines_masses = [('o8', 12.0), ('o8', 13.0), ('si13r', 12.0), ('si13r', 13.0)]
-    ylim_t = (-4.5, 1.3)
-    ylim_b = (-1.0, 2.0)
+    ylim_t = (-4.5, 1.6)
+    ylim_b = (-1.2, 0.1)
     fontsize = 12
     linewidth = 1.5
     patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="b"),
@@ -5186,7 +5186,7 @@ def plot_sample_fbeffect():
 
     panelwidth = figwidth / ncols
     width_ratios = [panelwidth] * ncols
-    panelheight = 1.3 * panelwidth
+    panelheight = 1.6 * panelwidth
     
     if nummasses == nrows * ncols:
         _nrows = nrows + 1
@@ -5282,7 +5282,7 @@ def plot_sample_fbeffect():
         tax.text(0.02, 0.02, mlabel, color='black', fontsize=fontsize - 1,
                  transform=tax.transAxes, verticalalignment='bottom',
                  horizontalalignment='left')
-        tax.text(0.98, 0.95, nicenames_lines[line], color='black', 
+        tax.text(0.98, 0.90, nicenames_lines[line], color='black', 
                  fontsize=fontsize - 1,
                  transform=tax.transAxes, verticalalignment='top',
                  horizontalalignment='right')
