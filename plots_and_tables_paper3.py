@@ -5124,7 +5124,7 @@ def plot_sample_fbeffect():
           ' C2 kernel')
     print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
     
-    lines_masses = [('o8', 12.0), ('si13r', 12.0), ('si13r', 13.0)]
+    lines_masses = [('o8', 12.0), ('o8', 13.0), ('si13r', 12.0), ('si13r', 13.0)]
     ylim_t = (-4.5, 1.3)
     ylim_b = (-1.0, 2.0)
     fontsize = 12
@@ -5155,7 +5155,7 @@ def plot_sample_fbeffect():
     
     outname = 'radprof2d_convtest-directfb-deltat'+\
               '_0.1dex-annuli' + \
-             '_L0100N1504_27_test3.x_SmAb_C2Sm_6.25_noEOS_1000_centrals'
+             '_L0100N1504_27_test3.x_SmAb_C2Sm_6.25_noEOS_1000_centrals_4panel'
     outname = outname.replace('.', 'p')
     outname = mdir + outname + '.pdf'
     
