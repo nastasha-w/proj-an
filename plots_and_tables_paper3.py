@@ -5282,7 +5282,7 @@ def plot_sample_fbeffect():
         tax.text(0.03, 0.03, mlabel, color='black', fontsize=fontsize - 1,
                  transform=tax.transAxes, verticalalignment='bottom',
                  horizontalalignment='left')
-        tax.text(0.95, 0.97, nicenames_lines[line], color='black', 
+        tax.text(0.97, 0.95, nicenames_lines[line], color='black', 
                  fontsize=fontsize - 1,
                  transform=tax.transAxes, verticalalignment='top',
                  horizontalalignment='right')
