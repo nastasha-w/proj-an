@@ -5471,7 +5471,7 @@ def plot_sample_resconv():
    
     outname = 'radprof2d_convtest-resolution'+\
               '_0.1dex-annuli' + \
-             '_L0100N1504_27_test3.x_SmAb_C2Sm_6.25_noEOS_1000_centrals'
+             '_L0100N1504_27_test3.x_SmAb_C2Sm_6.25_noEOS_1000_centrals_no-Ref-L100'
     outname = outname.replace('.', 'p')
     outname = mdir + outname + '.pdf'
     
@@ -5485,7 +5485,7 @@ def plot_sample_resconv():
     binset_mean = 'binset_0'
     binset_perc = 'binset_1'
     
-    labels = ['Ref-L100N1504', 'Ref-L025N0376', 'Recal-L025N0752']
+    labels = ['Ref-L025N0376', 'Recal-L025N0752'] # 'Ref-L100N1504', 
     colors = {'Ref-L100N1504': _c1.blue,
               'Ref-L025N0376': _c1.purple,
               'Recal-L025N0752': _c1.red,
