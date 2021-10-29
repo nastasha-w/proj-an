@@ -4841,6 +4841,20 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
             recommended to use with the hdf5 saving option, which will 
             save the exact selection used. Otherwise, the exact parameter 
             documentation relies on external files/notes.
+    select: list of tuples (quantity_dct, min [float, CGS], max [float, CGS])
+        only project particles matching the selection. The quantity used in 
+        the selection follows what is used in gethistograms_perparticle's' 
+        axesdct, except that the defaults follow the projected quantity/weight.
+        If the min/max are set to None, no upper/lower limit is set. Min/max
+        should be CGS unit values.
+        Multiple list entries for the same quantity will lead to only the 
+        overlap region between the two selections being selected. 
+        Non-contiguous selections are not implemented. 
+        Note that read-in/calculation-saving measures are not implemented for
+        the select quantities.
+        Note that selection on halo mass might fail here; it is implemented 
+        separately for projections, and options are not tested or propagted 
+        for e.g., halo mass definitions.
                 
     The chosen region is assumed to be a continuous block. 
 
@@ -5104,6 +5118,39 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
          excludedirectfb, deltalogT_directfb, deltatMyr_directfb,\
          inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,\
          hdf5, override_simdatapath = res[1:]
+         
+    if select is not None:
+        print('Checking particle selection')
+        axesdct = [val[0] for val in select]
+        axbins = 10 # dummy value for check
+        res = inputcheck_particlehist(ptypeW, simnum, snapnum, var, simulation,
+                                      L_x, L_y, L_z, centre, LsinMpc,
+                                      excludeSFRW, abundsW, ionW, parttype, 
+                                      quantityW,
+                                      axesdct, axbins, True, '200c',
+                                      sylviasshtables, bensgadget2tables,
+                                      ps20tables, ps20depletion, misc)
+        for cut in select:
+            if cut[1] is not None and cut[2] is not None:
+                if cut[2] <= cut[1]:
+                    raise ValueError('selection  {} failed: min >= max'.format(cut))
+        if isinstance(res, int):
+            print('Input error %i (inputcheck_particlehist for select)'%res)
+            msg = 'inputcheck_particlehist for select returned code %i'%res
+            raise ValueError(msg)
+
+        d_pytpe, d_simnum, d_snapnum, d_var, d_simulation,\
+        d_L_x, d_L_y, d_L_z, d_centre, d_LsinMpc,\
+        d_exlcudeSFR, d_abunds, d_ion, d_parttype, d_quantity,\
+        axesdct, d_axbins, d_allinR200c, d_mdef,\
+        d_sylviasshtables, d_bensgadget2tables,\
+        d_ps20tables, d_ps20depletion,\
+        d_misc = res[1:]
+        
+        select = [(axesdct[i], select[i][1], select[i][2]) \
+                  for i in range(len(select))]
+        
+            
 
     print('Processed input:')
     print((':\t%s\t'.join(['simnum', 'snapnum', 'simulation', 'var', 'parttype', '']))\
@@ -5127,6 +5174,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
     print((':\t%s\t'.join(['override_simdatapath', '']))\
                           %(override_simdatapath))
     print('misc:\t%s'%misc)
+    print('select:\t%s'%select)
     print('\n')
 
 
@@ -5424,7 +5472,83 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
         # vardict_WQ.delif('Temperature')
         # vardict_WQ.delif('Density')
         # return None
-        
+    
+    if select is not None:
+        for cut in select: #loop: large memory use, most likely, in each part
+            dct_t = cut[0]
+            if cut[1] is None and cut[2] is None: #min and max are None
+                continue
+            ptype_t = dct_t['ptype']
+            excludeSFR_t = dct_t['excludeSFR']
+            if 'ion' in dct_t.keys():
+                ion_t = dct_t['ion']
+            else:
+                ion_t = None
+            if 'abunds' in dct_t.keys():
+                abunds_t = dct_t['abunds']
+            else:
+                abunds_t = None
+            if 'quantity' in dct_t.keys():
+                quantity_t = dct_t['quantity']
+            else:
+                quantity_t = None
+            if 'misc' in dct_t.keys():
+                misc_t = dct_t['misc']
+            else:
+                misc_t = None
+            if 'mdef' in dct_t.keys():
+                mdef_t = dct_t['mdef']
+            else:
+                mdef_t = None
+            if 'allinR200c' in dct_t.keys():
+                allinR200c_t = dct_t['allinR200c']
+            else:
+                allinR200c_t = None
+            if 'sylviasshtables' in dct_t.keys():
+                sylviasshtables_t = dct_t['sylviasshtables']
+            else:
+                sylviasshtables_t = None
+            if 'bensgadget2tables' in dct_t.keys():
+                bensgadget2tables_t = dct_t['bensgadget2tables']
+            else:
+                bensgadget2tables_t = None
+            if 'ps20tables' in dct_t.keys():
+                ps20tables_t = dct_t['ps20tables']
+            else:
+                ps20tables_t = None
+            if 'ps20depletion' in dct_t.keys():
+                ps20depletion_t = dct_t['ps20depletion']
+            else:
+                ps20depletion_t = None
+
+            axdata_t, multipafter_t = getparticledata(vardict_WQ, ptype_t, 
+                                                      excludeSFR_t, abunds_t,
+                                                      ion_t, quantity_t,
+                                                      sylviasshtables=sylviasshtables_t,
+                                                      bensgadget2tables=bensgadget2tables_t,
+                                                      ps20tables=ps20tables_t, 
+                                                      ps20depletion=ps20depletion_t,
+                                                      last=False,
+                                                      updatesel=False, misc=misc_t, mdef=mdef_t,
+                                                      allinR200c=allinR200c_t)
+            sel = pc.Sel()
+            if cut[1] is not None:            
+                _min_t = cut[1] / multipafter_t
+                sel.comb(axdata_t >= _min_t)
+            if cut[2] is not None:            
+                _max_t = cut[2] / multipafter_t
+                sel.comb(axdata_t < _max_t)
+            vardict_WQ.update(sel)
+            # debug
+            import matplotlib.pyplot as plt
+            plt.histogram(np.log10(axdata_t), bins=100)
+            plt.yscale('log')
+            plt.xlabel('axdata_t')
+            plt.axvline(np.log10(_min_t))
+            plt.axvline(np.log10(_max_t))  
+            plt.show()
+            
+            del axdata_t
 
     # calculate the quantities to project: save outside vardict (and no links in it) to prevent modification by the next calculation
     if ptypeQ is None:
