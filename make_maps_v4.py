@@ -50,6 +50,9 @@ tcool           : cooling time (internal energy/cooling rate) [s]
 logZ            : log10 Z mass fraction
 """
 
+import sys
+import os
+
 import numpy as np
 import numbers
 import string
@@ -58,6 +61,25 @@ import iondata as iond
 import ion_header as ionh
 import eagle_constants_and_units as cu
 import make_maps_opts_locs as ol
+
+
+
+version = (0, 0, 0)
+####################
+# simple utilities #
+####################
+
+if sys.version.split('.')[0] == '3':
+    def isstr(x):
+        return isinstance(x, str)
+elif sys.version.split('.')[0] == '2':
+    def isstr(x):
+        return isinstance(x, basestring)
+
+def isnumber(x): # apparently, bools in python are an int subclass
+    return isinstance(x, numbers.Number) and not isinstance(x, bool)
+
+
 
 settings_options = {\
     'includeSF': {'all', 'no', 'only'},\
@@ -335,3 +357,182 @@ def getParticleQuantity(name, settings):
     '''
     
     return ParticleQuantity(name, derived, settings)
+
+
+
+class SimulationBox:
+    '''
+    lightweight class holding parameters for a box region within a simulation
+    checks parameters and rotates vectors
+    
+    TODO: add enclosing box calculation for e.g., readregion
+    
+    UNTESTED!!!
+    '''
+    
+    def __init__(self, center, diameter, boxsize, rotmatrix=None, 
+                 periodic=False, subslices=1, axis=2, useLOSredshift=False):
+        '''
+        
+
+        Parameters
+        ----------
+        center : array-like of floats
+            center of the selected volume, in non-rotated coordinates. 
+        diameter : float or array-like of floats
+            total size of the selected volume along each *rotated* axis.
+        boxsize : float
+            size of the periodic simulation volume. Set to a very large value 
+            if the simulation is not periodic (incl. e.g., outflow boundaries)
+        rotmatrix : array-like of floats or None, optional
+            orthonormal matrix containing the rotated coordinate axes in the
+            simulation coordinate frame. Each new axis has fixed index 1,
+            varying index 0 in the array.
+            The default is None, meaning no rotation is desired.
+        periodic : bool, optional
+            does the selected volume span the periodic volume orthogonal to 
+            the projection axis? Note that all simulations are assumed to be 
+            periodic on large scales. This just affects edge wrapping in 
+            projections. The default is False.
+        subslices : int, optional
+            During the projection, should the volume be sub-divided into 
+            orthogonal to the projection axis? 1 measn no, larger values set 
+            the number of sub-slices. The default is 1.
+        axis : int, optional
+            the index of the rotated axis to project along. The default is 2.
+        useLOSredshift : bool, optional
+            along the line of sight axis, use . The default is False.
+        
+        units for center diameter, and boxsize must match.
+        
+        Returns
+        -------
+        SimulationBox object
+
+        '''
+        # pre-sets
+        self.dimension = 3
+        self.coordinate_type = float
+        
+        # parameters
+        self.center =center
+        self.diameter = diameter
+        self.boxsize = boxsize
+        self.rotmatrix = rotmatrix
+        self.periodic = periodic
+        self.subslices = subslices
+        self.axis = axis
+        self.useLOSredshift = useLOSredshift
+        
+    def checkparams(self)
+        errmsg_boxsize = 'SimulationBox: boxsize should be a float > 0. Was {}'
+        if not isnumber(self.boxsize):
+            raise ValueError(errmsg_boxsize.format(self.boxsize))
+        elif self.boxsize <= 0:
+            raise ValueError(errmsg_boxsize.format(self.boxsize))
+
+        errmsg_center = 'SimulationBox: center should be a'+\
+                        ' list of ' + str(self.dimension) + ' floats. Was {}'
+        if not hasttr(self.center, '__len__'):
+            raise ValueError(errmsg_center.format(self.center))
+        elif len(self.center) != self.dimension:
+            raise ValueError(errmsg_center.format(self.center))
+        elif not np.all([isnumber(x) for x in self.center]):
+            raise ValueError(errmsg_center.format(self.center))
+        else:
+            self.center = np.asarray(self.center) % self.boxsize
+            if len(self.center.shape) != 1:
+                raise ValueError(errmsg_center.format(self.center))
+        
+        errmsg_diameter = 'SimulationBox: diameter should be a single float'+\
+                          ' > 0 or list of ' + str(self.dimension) + \
+                          ' floats. Was {}'
+        if isnumber(self.diameter):
+            if self.diameter < 0:
+                raise ValueError(errmsg_diameter.format(self.diameter))
+            self.diameter = self.diameter * \
+                            np.ones((self.dimension,), 
+                                    dtype=self.coordinate_type)          
+        elif not hasttr(self.diameter, '__len__'):
+            raise ValueError(errmsg_diameter.format(self.diameter))
+        elif len(self.diameter) != self.dimension:
+            raise ValueError(errmsg_diameter.format(self.diameter))
+        elif not np.all([isnumber(l) for l in self.diameter]):
+            raise ValueError(errmsg_diameter.format(self.diameter))
+        elif not np.all([l > 0 l in self.diameter]):
+            raise ValueError(errmsg_diameter.format(self.diameter))
+        elif np.any([l > self.boxsize for l in self.diameter]):
+            msg = 'SimulationBox: input diameter {} is larger than the box {}'
+            raise ValueError(msg.format(self.diameter, self.boxsize))
+        else:
+            self.diameter = np.asarray(self.diameter)
+        
+        errmsg_rotmatrix = 'SimulationBox: rotmatrix should be None or a ' +\
+                           + str(self.dimension) + 'x' + str(self.dimension)+\
+                           'orthonormal matrix of floats'
+        if rotmatrix is not None:
+            if not hasattr(self.rotmatrix, 'shape'):
+                self.rotmatrix = np.asarray(self.rotmatrix, 
+                                            dtype=self.coordinate_type)
+                
+            if not np.allclose(np.matmul(self.rotmatrix, self.rotmatrix.T),
+                               np.diag((1,) * self.dimension)):
+                raise ValueError(errmsg_rotmatrix)
+        
+        errmsg_axis = 'SimulationBox: axis should be an integer between' + \
+                      ' 0 and ' + str(self.dimension) + '. Was {}'
+        if not isinstance(self.axis, int):
+            raise ValueError(errmsg_axis.format(self.axis))
+        elif not (self.axis >= 0 and self.axis < self.dimension):
+            raise ValueError(errmsg_axis.format(self.axis))
+        
+        if not isinstance(self.periodic, bool):
+            raise ValueError('SimulationBox: periodic should be True or False')
+        self.nonprojaxes = set(range(self.dimension)) - {self.axis}
+        if np.any([self.boxsize <= self.diameter[i] for i in nonprojaxes]):
+            if not periodic:
+                msg = 'For diameter {} and box size {}, projection should' +\ 
+                      'be periodic.'
+                raise ValueError(msg)
+            if self.periodic and self.rotmatrix is not None:
+                if not np.allclose(self.rotmatrix, 
+                                   np.diag(1.,) * self.dimension):
+                    msg = 'Boundary wrapping for projections will fail' + \
+                          ' with rotations'
+                    raise ValueError(msg)
+                    
+        if not isinstance(self.useLOSredshift, bool):
+            msg = 'SimulationBox: useLOSredshift should be True or False'
+            raise ValueError(msg)    
+    
+    def rotatecoords(self, coords, key=None, coordaxis=1):
+        _coords = coords if key is None else coords[key]
+        if _coords.shape[coordaxis] != self.dimension:
+            'Dimension {} of rotation matrix is incompatible with '
+            'coordinates shape {}, axis {}'
+            raise ValueError(msg.format(self.dimension, _coords.shape, 
+                                        coordaxis))
+        if key is not None:
+            coords[key] = np.tensordot(self.rotmatrix, _coords, 
+                                axes=([1], [coordaxis]))
+        else:
+            return np.tensordot(self.rotmatrix, _coords, 
+                                axes=([1], [coordaxis]))
+    
+    def getlosval(self, coords, key=None, coordaxis=1):
+        _coords = coords if key is None else coords[key]
+        if _coords.shape[coordaxis] != self.dimension:
+            'Dimension {} of rotation matrix is incompatible with '
+            'coordinates shape {}, axis {}'
+            raise ValueError(msg.format(self.dimension, _coords.shape, 
+                                        coordaxis))
+        if key is not None:
+            coords[key] = np.tensordot(self.rotmatrix[:, axis], _coords, 
+                                axes=([0], [coordaxis]))
+        else:
+            return np.tensordot(self.rotmatrix[:, axis], _coords, 
+                                axes=([0], [coordaxis]))
+
+
+
+
