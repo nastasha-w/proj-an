@@ -423,6 +423,7 @@ class SimulationBox:
         self.subslices = subslices
         self.axis = axis
         self.useLOSredshift = useLOSredshift
+        self.checkparams()
         
     def checkparams(self)
         errmsg_boxsize = 'SimulationBox: boxsize should be a float > 0. Was {}'
