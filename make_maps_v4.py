@@ -61,9 +61,9 @@ import make_maps_opts_locs as ol
 
 settings_options = {\
     'includeSF': {'all', 'no', 'only'},\
-    'T4'       : {True, False},\
-    'ibmethod' : {'sbtables', 'sptables', 'bdofromsim', 'rahmati2013', 'fromSFR'},\
-    'emmethod' : {'sbtables', 'fromSFR'},\
+    'T4SF'     : {True, False},\
+    'ibmethod' : {'sbtables', 'ps20tables', 'bdofromsim', 'rahmati2013', 'fromSFR'},\
+    'emmethod' : {'sbtables', 'fromSFR', 'ps20tables'},\
     'H2method' : {'BR06'},\
     'coolmethod': {'per_element', 'total_metals'},\
     }
@@ -142,21 +142,22 @@ class ParticleQuantity:
     read and delete functions are input into reading quantities to allow 
     coupling to e.g. Vardict, or Simfile directly 
     '''
-    def init(self, name, derived, **settings):
-        self.name = name
+    def init(self, ptype, subtype, derived, **settings):
+        self.ptype
+        self.subtype
         self.settings = settings
         self.derived = derived
         self.get_reqprops()
         self.get_reqsettings()
         if not np.all(setting in self.settings.keys() for setting in self.reqsettings):
-            raise ValueError('settings %s do not contain all required settings for %s'%(self.name, self.settings))
+            raise ValueError('settings %s do not contain all required settings for %s'%(self.ptype, self.settings))
         self.zerodiag = None # if this is zero, then the particle quantity will be: useful for preselection by Vardict
         
     def __repr__(self):
-        return 'ParticleQuantity %s; derived: %s,\nsettings: %s'%(self.name, self.derived, self.settings)
+        return 'ParticleQuantity %s -- %s,\nsettings: %s'%(self.ptype, self.subtype, self.settings)
     
     def __str__(self):
-        return 'ParticleQuantity %s'%(self.name)
+        return 'ParticleQuantity %s: %s'%(self.ptype, self.subtype)
     
     def get_reqprops(self):
         self.get_reqprops_names()
@@ -173,7 +174,7 @@ class ParticleQuantity:
     
     def issame(self, pq):
         try:
-            if self.name == pq.name:
+            if self.ptype == pq.ptype and self.subtype == pq.subtype:
                 if self.reqsettings == pq.reqsettings:
                     return np.all([np.all(np.array(self.settings[key]) == np.array(pq.settings[key])) for key in self.reqsettings])
                 else:

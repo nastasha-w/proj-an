@@ -2229,7 +2229,10 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
                quantityW, quantityQ,
                excludedirectfb, deltalogT_directfb, deltatMyr_directfb, 
                inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,
-               simulation, LsinMpc, halosel, kwargs_halosel, misc, hdf5):
+               simulation, LsinMpc, select, filelabel_select, 
+               halosel, kwargs_halosel, 
+               misc, hdf5):
+
     # some messiness is hard to avoid, but it's contained
     # Ls and centre have not been converted to Mpc when this function is called
 
@@ -2427,6 +2430,21 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
             sfb = sfb + '_inclSN-nH-lt-{}'.format(inclhotgas_maxlognH_snfb)
     else:
         sfb = ''
+    
+    sellabel = ''
+    if select is not None:
+        if filelabel_select is None:
+            sellabel = filelabel_select
+        else:
+            sellabel = 'partsel_{}_endpartsel'
+            parts = []
+            for cut in select:
+                _part = namehistogram_perparticle_axis(cut[0])
+                _part = _part + '_min-{}_max-{}'.format(cut[1], cut[2])
+                parts.append(_part)
+            sellabel = sellabel.format('_'.join(parts))
+        if not sellabel.startswith('_'):
+            sellabel = '_' + sellabel
         
     # putting it together: ptypeQ = None is set to get resfile for W
     if ptypeQ is None: #output outputW name
@@ -2439,7 +2457,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
                                abunds=sabundsW, kernel=kernel, npix=npix_x,
                                depth=sLp)
             resfile = ol.ndir + base + zcen + xypos + axind + SFRindW +\
-                      halostr + vind + sfb
+                      halostr + vind + sellabel + sfb
 
         elif ptypeW == 'basic':
             base = '{qW}{parttype}_{sim}_{snap}_test{ver}' + \
@@ -2448,7 +2466,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
                                snap=snapnum, ver=str(version), kernel=kernel, 
                                npix=npix_x, depth=sLp)
             resfile = ol.ndir + base + zcen + xypos + axind + SFRindW +\
-                      halostr + vind + sfb
+                      halostr + vind + sellabel + sfb
 
     if ptypeQ is not None: # naming for quantityQ output
         qty_base = '{ptype}_{ion}_{abunds}{iontab}{sfgas}'
@@ -2471,7 +2489,8 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
         base = base.format(qQ=squantityQ, qW=squantityW, parttype=sparttype,
                             sim=ssimnum, snap=snapnum, ver=str(version),
                             kernel=kernel, npix=npix_x, depth=sLp)
-        resfile = ol.ndir + base + zcen + xypos + axind + halostr + vind + sfb
+        resfile = ol.ndir + base + zcen + xypos + axind + halostr + vind + \
+                  sellabel + sfb
 
 
     #if misc is not None:
@@ -2508,7 +2527,8 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
          var, axis, log, velcut,
          periodic, kernel, saveres,
          simulation, LsinMpc,
-         select, misc, ompproj, numslices, halosel, kwargs_halosel,
+         select, filelabel_select, misc, ompproj, numslices, 
+         halosel, kwargs_halosel,
          excludedirectfb, deltalogT_directfb, deltatMyr_directfb, 
          inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,
          hdf5, override_simdatapath):
@@ -2518,7 +2538,7 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
     This is not an exhaustive check; it does handle the default/auto options
     return numbers are not ordered; just search <return ##>
     '''
-    # max used number: 62
+    # max used number: 63
 
     # basic type and valid option checks
     if not isinstance(var, str):
@@ -2730,6 +2750,10 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
             var = 'RECALIBRATED'
         else:
             var = 'REFERENCE'
+    
+    if select is not None and filelabel_select is not None:
+        if not isstr(filelabel_select):
+            return 63
 
     if misc is not None: # if if if : if we want to use chemical abundances from Ben' Oppenheimer's recal variations
         if 'usechemabundtables' in misc:
@@ -2958,7 +2982,8 @@ def inputcheck(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
          ps20tables, ps20depletion,\
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
-         simulation, LsinMpc, misc, ompproj, numslices,\
+         simulation, LsinMpc, select, filelabel_select, misc, ompproj, \
+         numslices,\
          halosel, kwargs_halosel,\
          excludedirectfb, deltalogT_directfb, deltatMyr_directfb,\
          inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,\
@@ -4599,7 +4624,8 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,
          ps20tables, ps20depletion,
          var, axis, log, velcut,
          periodic, kernel, saveres,
-         simulation, LsinMpc, misc, ompproj, numslices,
+         simulation, LsinMpc, select, filelabel_select, 
+         misc, ompproj, numslices,
          halosel, kwargs_halosel, 
          excludedirectfb, deltalogT_directfb, 
          deltatMyr_directfb, inclhotgas_maxlognH_snfb,
@@ -4656,6 +4682,7 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,
         saveattr(hed, 'phi', phi)
         saveattr(hed, 'psi', psi)
         saveattr(hed, 'override_simdatapath', override_simdatapath)
+        saveattr(hed, 'filelabel_select', filelabel_select)
         
         saveattr(hed, 'excludedirectfb', excludedirectfb)
         saveattr(hed, 'deltalogT_directfb', deltalogT_directfb)
@@ -4690,6 +4717,20 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,
                 selection_element_counter += 1
             hsel.create_dataset('groupnums', data=groupnums)
         
+        gensel = hed.create_group('select')
+        if halosel is None:
+            saveattr(gensel, 'any_selection', False)
+        else:
+            saveattr(gensel, 'any_selection', True)
+            selection_element_counter = 0
+            for cut in select:
+                sgrp = gensel.create_group('property_%i'%selection_element_counter)
+                for key in cut[0]:
+                    saveattr(sgrp, key, cut[0][key])
+                saveattr(sgrp, 'min_CGS', cut[1])
+                saveattr(sgrp, 'max_CGS', cut[2])
+                selection_element_counter += 1
+        
         mgrp = hed.create_group('misc')
         if misc is None:
             saveattr(mgrp, 'any_values', False)
@@ -4717,7 +4758,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
          var='auto', axis='z',log=True, velcut=False,
          periodic=True, kernel='C2', saveres=False,
          simulation='eagle', LsinMpc=None,
-         select=None, misc=None, halosel=None, kwargs_halosel=None,
+         select=None, filelabel_select=None,
+         misc=None, halosel=None, kwargs_halosel=None,
          excludedirectfb=False, deltalogT_directfb=0.2, 
          deltatMyr_directfb=10., inclhotgas_maxlognH_snfb=-2.,
          logTK_agnfb=8.499, logTK_snfb=7.499,
@@ -5036,6 +5078,10 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
         instead of calculating the full maps, just return the names of the 
         files you would get if saveres=True, with the same parameters. The
         default is False.
+    filelabel_select: str
+        if the select option is used, replace the automatic name for the 
+        selection in the output file with this string. Advisable for longer or
+        more complicated selections, since file names can get long fast.
     saveres: bool 
         save the output maps to .npz or .hdf5 files. The default is False. 
     log: bool      
@@ -5096,7 +5142,7 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
          var, axis, log, velcut,
          periodic, kernel, saveres,
          simulation, LsinMpc,
-         select, misc, ompproj, numslices, halosel, kwargs_halosel,
+         select, filelabel_select, misc, ompproj, numslices, halosel, kwargs_halosel,
          excludedirectfb, deltalogT_directfb, deltatMyr_directfb,
          inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,
          hdf5, override_simdatapath)
@@ -5113,7 +5159,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
          ps20tables, ps20depletion,\
          var, axis, log, velcut,\
          periodic, kernel, saveres,\
-         simulation, LsinMpc, misc, ompproj, numslices,\
+         simulation, LsinMpc, select, filelabel_select,\
+         misc, ompproj, numslices,\
          halosel, kwargs_halosel,\
          excludedirectfb, deltalogT_directfb, deltatMyr_directfb,\
          inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,\
@@ -5281,7 +5328,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                          excludedirectfb, deltalogT_directfb, 
                          deltatMyr_directfb, inclhotgas_maxlognH_snfb, 
                          logTK_agnfb, logTK_snfb,
-                         simulation, LsinMpc, halosel, kwargs_halosel, 
+                         simulation, LsinMpc, select, filelabel_select,
+                         halosel, kwargs_halosel, 
                          misc, hdf5)
     if ptypeQ !=None:
         resfile2 = nameoutput(vardict_temp, ptypeW, simnum, snapnum, version, 
@@ -5295,7 +5343,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                               excludedirectfb, deltalogT_directfb, 
                               deltatMyr_directfb, inclhotgas_maxlognH_snfb, 
                               logTK_agnfb, logTK_snfb,
-                              simulation, LsinMpc, halosel, kwargs_halosel,
+                              simulation, LsinMpc, select, filelabel_select,
+                              halosel, kwargs_halosel,
                               misc, hdf5)
     del vardict_temp
     # just get the file name for a set of parameters
@@ -5748,7 +5797,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                                  ps20tables, ps20depletion,
                                  var, axis, log, velcut,
                                  periodic, kernel, saveres,
-                                 simulation, LsinMpc, misc, ompproj, numslices,
+                                 simulation, LsinMpc, select, filelabel_select,
+                                 misc, ompproj, numslices,
                                  halosel, kwargs_halosel, 
                                  excludedirectfb, deltalogT_directfb, 
                                  deltatMyr_directfb, inclhotgas_maxlognH_snfb,
@@ -5772,7 +5822,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                                  ps20tables, ps20depletion,
                                  var, axis, log, velcut,
                                  periodic, kernel, saveres,
-                                 simulation, LsinMpc, misc, ompproj, numslices,
+                                 simulation, LsinMpc, select, filelabel_select,
+                                 misc, ompproj, numslices,
                                  halosel, kwargs_halosel, 
                                  excludedirectfb, deltalogT_directfb, 
                                  deltatMyr_directfb, inclhotgas_maxlognH_snfb,
@@ -5804,7 +5855,9 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                                      ps20tables, ps20depletion,
                                      var, axis, log, velcut,
                                      periodic, kernel, saveres,
-                                     simulation, LsinMpc, misc, ompproj, 
+                                     simulation, LsinMpc, 
+                                     select, filelabel_select,
+                                     misc, ompproj, 
                                      numslices,
                                      halosel, kwargs_halosel, 
                                      excludedirectfb, deltalogT_directfb, 
@@ -5829,7 +5882,9 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                                      ps20tables, ps20depletion,
                                      var, axis, log, velcut,
                                      periodic, kernel, saveres,
-                                     simulation, LsinMpc, misc, ompproj, numslices,
+                                     simulation, LsinMpc, 
+                                     select, filelabel_select,
+                                     misc, ompproj, numslices,
                                      halosel, kwargs_halosel, 
                                      excludedirectfb, deltalogT_directfb, 
                                      deltatMyr_directfb, 
@@ -5896,8 +5951,12 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                                         quantityQ,
                                         excludedirectfb, deltalogT_directfb, 
                                         deltatMyr_directfb, 
-                                        inclhotgas_maxlognH_snfb, logTK_agnfb, logTK_snfb,
-                                        simulation, LsinMpc, misc)
+                                        inclhotgas_maxlognH_snfb, logTK_agnfb, 
+                                        logTK_snfb,
+                                        simulation, LsinMpc, select, 
+                                        filelabel_select, halosel, 
+                                        kwargs_halosel,
+                                        misc)
                 print('Saving W result to %s'%subresfile)
                 if ptypeQ !=None:
                     subresfile2 = nameoutput(ptypeW, simnum, snapnum, version, 
@@ -5917,7 +5976,10 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                                              deltatMyr_directfb, 
                                              inclhotgas_maxlognH_snfb, 
                                              logTK_agnfb, logTK_snfb,
-                                             simulation, LsinMpc, misc)
+                                             simulation, LsinMpc, 
+                                             select, filelabel_select,
+                                             halosel, kwargs_halosel,
+                                             misc)
                     print('Saving Q result to %s'%subresfile2)
 
             projdict = {'lsmooth': lsmooth, 
@@ -5961,7 +6023,9 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                                      ps20tables, ps20depletion,
                                      var, axis, log, velcut,
                                      periodic, kernel, saveres,
-                                     simulation, LsinMpc, misc, ompproj, 
+                                     simulation, LsinMpc, 
+                                     select, filelabel_select,
+                                     misc, ompproj, 
                                      numslices,
                                      halosel, kwargs_halosel, 
                                      excludedirectfb, deltalogT_directfb, 
@@ -5987,7 +6051,9 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                                      ps20tables, ps20depletion,
                                      var, axis, log, velcut,
                                      periodic, kernel, saveres,
-                                     simulation, LsinMpc, misc, ompproj, 
+                                     simulation, LsinMpc, 
+                                     select, filelabel_select,
+                                     misc, ompproj, 
                                      numslices,
                                      halosel, kwargs_halosel, 
                                      excludedirectfb, deltalogT_directfb, 
@@ -6022,7 +6088,9 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                                          ps20tables, ps20depletion,
                                          var, axis, log, velcut,
                                          periodic, kernel, saveres,
-                                         simulation, LsinMpc, misc, ompproj, 
+                                         simulation, LsinMpc, 
+                                         select, filelabel_select,
+                                         misc, ompproj, 
                                          numslices,
                                          halosel, kwargs_halosel, 
                                          excludedirectfb, deltalogT_directfb, 
@@ -6049,7 +6117,9 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                                          ps20tables, ps20depletion,
                                          var, axis, log, velcut,
                                          periodic, kernel, saveres,
-                                         simulation, LsinMpc, misc, ompproj, 
+                                         simulation, LsinMpc, 
+                                         select, filelabel_select,
+                                         misc, ompproj, 
                                          numslices,
                                          halosel, kwargs_halosel, 
                                          excludedirectfb, deltalogT_directfb, 
