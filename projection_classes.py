@@ -465,7 +465,7 @@ class Vardict:
         '''
         #self.reportmemuse()
         if not isinstance(selname, Sel) and not isinstance(selname, dict):
-            selname = Sel({'arr': selname},'arr') # if input is a numpy array, don't do a second copy for comb/refine calls
+            selname = Sel({'arr': selname}, 'arr') # if input is a numpy array, don't do a second copy for comb/refine calls
         if selname.seldef and self.readsel.seldef:
             if selname.val.shape == self.readsel.val.shape:
                 self.tempsel = selname.val[self.readsel.val]
@@ -473,7 +473,7 @@ class Vardict:
                     self.particle[name] = (self.particle[name])[self.tempsel,...]
                 del self.tempsel
                 self.readsel.comb(selname)
-            elif selname.val.shape[0] == self.particle[list(self.particle.keys())[0]].shape[0]: # if keys()[0] happens to be coordinates or something, we just want to match the zero index
+            elif selname.val.shape[0] == self.readsel.val.shape[0]: # if keys()[0] happens to be coordinates or something, we just want to match the zero index
                 for name in self.particle.keys():
                     self.particle[name] = (self.particle[name])[selname.val,...]
                 self.readsel.refine(selname)

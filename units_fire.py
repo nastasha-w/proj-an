@@ -77,8 +77,11 @@ class Units:
     
     def _read_snapshot_data(self, snapn):
         with h5py.File(snapn) as _f:
+            self.cosmoexp = bool(_f['Header'].attrs['ComovingIntegrationOn'])
             self.HubbleParam = _f['Header'].attrs['HubbleParam']
             self.a = _f['Header'].attrs['Time']
+            if not self.cosmoexp:
+                self.a = 1.
             
             # need to get the magnetic field data from the parameter file
             if 'UnitMass_In_CGS' in _f['Header'].attrs:
@@ -144,7 +147,7 @@ class Units:
         get the units for a FIRE simulation output field: 
         multiply the field by that factor to get the field quantity in CGS
         '''
-        if 'PartType' in field:
+        if field.startswith('PartType'):
             field = '/'.join(field.split('/')[1:])
         
         if 'Metallicity' in field or 'SmoothedMetallicity' in field or\
@@ -191,10 +194,16 @@ class Units:
             return self.codevelocity_cm_per_s
         elif field == 'StellarFormationTime':
             # cosmo: a; non-cosmological runs: time (in h**−1 Gyr)
-            return 1. 
+            if self.cosmoexp:
+                return 1. 
+            else:
+                return 1e3 * c.seconds_per_Myr / self.HubbleParam
         elif field == 'Velocities':
             return self.codevelocity_cm_per_s
         elif field in ['CosmicRayEnergy', 'DivBcleaningFunctionGradPhi',
                        'DivBcleaningFunctionPhi']:
             msg = 'Look up units for {} and add to units_fire.py'
             raise NotImplementedError(msg.format(field))
+        else:
+            msg = '{} is not a (known) FIRE simulation output field'
+            raise ValueError(msg.format(field))

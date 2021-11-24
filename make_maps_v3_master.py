@@ -2433,7 +2433,7 @@ def nameoutput(vardict, ptypeW, simnum, snapnum, version, kernel,
     
     sellabel = ''
     if select is not None:
-        if filelabel_select is None:
+        if filelabel_select is not None:
             sellabel = filelabel_select
         else:
             sellabel = 'partsel_{}_endpartsel'
@@ -5170,7 +5170,11 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
         print('Checking particle selection')
         axesdct = [val[0] for val in select]
         axbins = 10 # dummy value for check
-        res = inputcheck_particlehist(ptypeW, simnum, snapnum, var, simulation,
+        # substitutions with same options for particlehist check
+        _ptype = 'Niondens' if ptypeW == 'coldens' else \
+                 'Lumdens' if ptypeW == 'emission' else \
+                 ptypeW
+        res = inputcheck_particlehist(_ptype, simnum, snapnum, var, simulation,
                                       L_x, L_y, L_z, centre, LsinMpc,
                                       excludeSFRW, abundsW, ionW, parttype, 
                                       quantityW,
@@ -5587,14 +5591,18 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
             if cut[2] is not None:            
                 _max_t = cut[2] / multipafter_t
                 sel.comb(axdata_t < _max_t)
+            print(sel.val.shape)
             vardict_WQ.update(sel)
             # debug
             import matplotlib.pyplot as plt
-            plt.histogram(np.log10(axdata_t), bins=100)
+            plt.hist(np.log10(axdata_t), bins=100, alpha=0.5)
+            plt.hist(np.log10(axdata_t[sel.val]), bins=100, alpha=0.5)
             plt.yscale('log')
             plt.xlabel('axdata_t')
-            plt.axvline(np.log10(_min_t))
-            plt.axvline(np.log10(_max_t))  
+            if cut[1] is not None:
+                plt.axvline(np.log10(_min_t), color='black')
+            if cut[2] is not None:
+                plt.axvline(np.log10(_max_t), color='black')  
             plt.show()
             
             del axdata_t
