@@ -5,6 +5,7 @@ import h5py
 import os
 
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
 import make_maps_v3_master as m3
 
@@ -13,17 +14,20 @@ ndir_newbranch = basepath + 'maps_select_branch/'
 ndir_master = basepath + 'maps_old_master/'
 mdir = basepath + 'imgs/'
 
+label_no6 = '$\\log_{10} \\, \\mathrm{N}(\\mathrm{O\\,VI}) \\; [\\mathrm{cm}^{-2}]$'
+label_emo8 = '$\\log_{10} \\, \\mathrm{SB}(\\mathrm{O\\,VIII}) \\;'+ \
+             '[\\mathrm{ph}\\,\\mathrm{s}^{-1}\\mathrm{sr}^{-1}\\mathrm{cm}^{-2}]$'
 def printinfo(pathobj):
      if not isinstance(pathobj, h5py._hl.dataset.Dataset):
          print('keys and datasets:')
          for key in pathobj:
-             print(f'{key}:\t {pathobj[key]}')
+             print('{key}:\t {val}'.format(key=key, val=pathobj[key]))
      else:
          print(pathobj)
          print(pathobj[(slice(None, 2, None),) * len(pathobj.shape)])
      print('\nattributes:')
      for key, val in pathobj.attrs.items():
-         print(f'{key}:\t {val}')
+         print('{key}:\t {val}'.format(key=key, val=val))
 
 def runmaps_selcheck(mode='new'):
     simnum = 'L0012N0188'
@@ -67,8 +71,8 @@ def runmaps_selcheck(mode='new'):
                    ]
     # qualitative: does a Lumdens selection work?
     # o8 K-alpha: volume average is 10**37.5 erg/s/cMpc**3 -> ~10**-36 erg/s/cm**3
-    selects_Lo8 = [[({'ptype': 'Lumdens', 'ion': 'o8', 'abunds': 'Pt'}, None, 1e-33)],
-                   [({'ptype': 'Lumdens', 'ion': 'o8', 'abunds': 'Pt'}, 1e-33, None)]]
+    selects_Lo8 = [[({'ptype': 'Lumdens', 'ion': 'o8', 'abunds': 'Pt'}, None, 1e-37)],
+                   [({'ptype': 'Lumdens', 'ion': 'o8', 'abunds': 'Pt'}, 1e-37, None)]]
     # qualitative: does an Niondens selection work?
     # for O VI: nH ~ 1e-4 cm**-3, nO/nH ~ 1e-5, O6/O ~ 0.01
     selects_no6 = [[({'ptype': 'Niondens', 'ion': 'o6', 'excludeSFR': 'T4'}, None, 1e-11)],
@@ -126,7 +130,7 @@ def readmapdata(filen):
 
 def comparemaps(file1, file2, vmin=None, diffmax=None, 
                 outname=mdir + 'comp.pdf',
-                fontsize=12, clabel=''):
+                fontsize=12, clabel='', nbins=50):
     '''
     compare 2 maps that should be the same or very similar
     '''
@@ -188,23 +192,28 @@ def comparemaps(file1, file2, vmin=None, diffmax=None,
         maxdiff = diffmax
     else:    
         maxdiff = np.max(np.abs(diff)[np.isfinite(np.abs(diff))])
+        maxdiff = max(maxdiff, 1e-7)
     
     fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(nrows=2, ncols=3, 
                                                            sharex=False, 
-                                                           sharey=False)
-    fig.subplots_adjust(left=None, bottom=None, right=None, top=None, 
+                                                           sharey=False,
+                                                           figsize=(11., 7.))
+    fig.subplots_adjust(left=None, bottom=None, right=None, top=0.92, 
                         wspace=None, hspace=None)
-
+    title = 'test: \t{}\ncheck: \t{}'
+    fig.suptitle(title.format(file1, file2), fontsize=fontsize - 2)
+    
     ax1.tick_params(labelsize=fontsize)
     ax1.patch.set_facecolor(cm.get_cmap('viridis')(0.))
     img = ax1.imshow(arr1.T,origin='lower', cmap=cm.get_cmap('viridis'), 
-                     vmin=Vmin, vmax=Vmax, interpolation='nearest') 
+                     vmin=Vmin, vmax=Vmax, interpolation='nearest',
+                     extent=extent1) 
     ax1.set_title('test run', fontsize=fontsize)
     ax1.set_xlabel(xname1, fontsize=fontsize)
     ax1.set_ylabel(yname1, fontsize=fontsize)
-    div = axgrid.make_axes_locatable(ax1)
-    cax1 = div.append_axes("right", size="5%", pad=0.1)
-    cbar1 = plt.colorbar(img, cax=cax1)
+    #div = axgrid.make_axes_locatable(ax1)
+    #cax1 = div.append_axes("right", size="5%", pad=0.1)
+    cbar1 = plt.colorbar(img, ax=ax1, fraction=0.05, pad=0.05, shrink=0.6)
     cbar1.solids.set_edgecolor("face")
     cbar1.ax.set_ylabel(clabel, fontsize=fontsize)
     cbar1.ax.tick_params(labelsize=fontsize)
@@ -212,13 +221,14 @@ def comparemaps(file1, file2, vmin=None, diffmax=None,
     ax2.tick_params(labelsize=fontsize)
     ax2.patch.set_facecolor(cm.get_cmap('viridis')(0.))
     img = ax2.imshow(arr2.T,origin='lower', cmap=cm.get_cmap('viridis'), 
-                     vmin=Vmin, vmax=Vmax, interpolation='nearest') 
+                     vmin=Vmin, vmax=Vmax, interpolation='nearest',
+                     extent=extent1) 
     ax2.set_title('check run',fontsize=fontsize)
     ax2.set_xlabel(xname2, fontsize=fontsize)
     ax2.set_ylabel(yname2, fontsize=fontsize)
-    div = axgrid.make_axes_locatable(ax2)
-    cax2 = div.append_axes("right",size="5%",pad=0.1)
-    cbar2 = plt.colorbar(img, cax=cax2)
+    #div = axgrid.make_axes_locatable(ax2)
+    #cax2 = div.append_axes("right",size="5%",pad=0.1)
+    cbar2 = plt.colorbar(img, ax=ax2, fraction=0.05, pad=0.05, shrink=0.6)
     cbar2.solids.set_edgecolor("face")
     cbar2.ax.set_ylabel(clabel, fontsize=fontsize)
     cbar2.ax.tick_params(labelsize=fontsize)
@@ -226,11 +236,12 @@ def comparemaps(file1, file2, vmin=None, diffmax=None,
     ax3.tick_params(labelsize=fontsize)
     ax3.patch.set_facecolor('black')
     img = ax3.imshow((diff).T,origin='lower', cmap=cm.get_cmap('RdBu'), 
-                     vmin = -maxdiff, vmax=maxdiff, interpolation='nearest') 
+                     vmin = -maxdiff, vmax=maxdiff, interpolation='nearest',
+                     extent=extent1) 
     ax3.set_title('test - check', fontsize=fontsize)
-    div = axgrid.make_axes_locatable(ax3)
-    cax3 = div.append_axes("right", size="5%", pad=0.1)
-    cbar3 = plt.colorbar(img, cax=cax3)
+    #div = axgrid.make_axes_locatable(ax3)
+    #cax3 = div.append_axes("right", size="5%", pad=0.1)
+    cbar3 = plt.colorbar(img, ax=ax3, fraction=0.05, pad=0.05, shrink=0.6)
     cbar3.solids.set_edgecolor("face")
     cbar3.ax.set_ylabel(r'$\Delta$' + clabel, fontsize=fontsize)
     cbar3.ax.tick_params(labelsize=fontsize)
@@ -259,7 +270,7 @@ def comparemaps(file1, file2, vmin=None, diffmax=None,
     ax5.set_ylabel('columns',fontsize=fontsize)
     
     fig.tight_layout()
-    plt.savefig(name, format='pdf')
+    plt.savefig(outname, format='pdf')
     
     
 def comparepartmaps(partfiles, totfile, vmin=None, diffmax=None, 
@@ -293,7 +304,9 @@ def comparepartmaps(partfiles, totfile, vmin=None, diffmax=None,
                                                            sharey=False)
     fig.subplots_adjust(left=None, bottom=None, right=None, top=None, 
                         wspace=None, hspace=None)
-
+    title = 'test: \t{}\ncheck: \t{}'
+    fig.suptitle(title.format(fn1, fn2), fontsize=fontsize)
+    
     ax1.tick_params(labelsize=fontsize)
     ax1.patch.set_facecolor(cm.get_cmap('viridis')(0.))
     img = ax1.imshow(arr1.T,origin='lower', cmap=cm.get_cmap('viridis'), 
@@ -358,4 +371,39 @@ def comparepartmaps(partfiles, totfile, vmin=None, diffmax=None,
     ax5.set_ylabel('columns',fontsize=fontsize)
     
     fig.tight_layout()
-    plt.savefig(name, format='pdf')
+    plt.savefig(outname, format='pdf')
+    
+def comparemapsets():
+    colo6 = 'coldens_o6_L0012N0188_27_test3.7_PtAb_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS.hdf5'
+    rho_by_o8 = 'Density_T4EOS_emission_o8_SmAb_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection.hdf5'
+    rho_by_o8_nosel = 'Density_T4EOS_emission_o8_SmAb_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Density_T4EOS_min-None_max-None_endpartsel.hdf5'
+    rho_by_mass = 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection.hdf5'
+    emo8 = 'emission_o8_L0012N0188_27_test3.7_SmAb_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS.hdf5'
+    emo8_nosel = 'emission_o8_L0012N0188_27_test3.7_SmAb_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS_partsel_Density_T4EOS_min-None_max-None_endpartsel.hdf5'
+    mass = 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS.hdf5'
+    t_by_mass = 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection.hdf5'
+    
+    comparemaps(ndir_newbranch + colo6, ndir_master + colo6, 
+                outname=mdir + 'samecheck_oldversion_coldens_o6.pdf', 
+                clabel=label_no6)
+    comparemaps(ndir_newbranch + emo8, ndir_master + emo8,
+                outname=mdir + 'samecheck_oldversion_emission_o8.pdf', 
+                clabel=label_emo8)
+    comparemaps(ndir_newbranch + mass, ndir_master + mass,
+                outname=mdir + 'samecheck_oldversion_mass.pdf', 
+                clabel='$\\log_{10} \\, \\Sigma \\; [\\mathrm{g} \\, \\mathrm{cm}^{-2}]$')
+    comparemaps(ndir_newbranch + t_by_mass, ndir_master + t_by_mass, 
+                outname=mdir + 'samecheck_oldversion_mass_weighted_temperature.pdf', 
+                clabel='$\\log_{10} \\, \\langle\\mathrm{T}\\rangle_{\\mathrm{M}} \\; [\\mathrm{K}]$')
+    comparemaps(ndir_newbranch + rho_by_mass, ndir_master + rho_by_mass, 
+                outname=mdir + 'samecheck_oldversion_mass_weighted_density.pdf', 
+                clabel='$\\log_{10} \\, \\langle\\rho\\rangle_{\\mathrm{M}} \\; [\\mathrm{g} \\, \\mathrm{cm}^{-3}]$')
+    comparemaps(ndir_newbranch + rho_by_o8, ndir_master + rho_by_o8, 
+                outname=mdir + 'samecheck_oldversion_emission_o8_weighted_density.pdf', 
+                clabel='$\\log_{10} \\, \\langle\\rho\\rangle_{\\mathrm{L}(\\mathrm{O\\,VIII})} \\; [\\mathrm{g} \\, \\mathrm{cm}^{-3}]$')
+    comparemaps(ndir_newbranch + rho_by_o8, ndir_newbranch + rho_by_o8_nosel, 
+                outname=mdir + 'samecheck_emptysel_emission_o8_weighted_density.pdf', 
+                clabel='$\\log_{10} \\, \\langle\\rho\\rangle_{\\mathrm{L}(\\mathrm{O\\,VIII})} \\; [\\mathrm{g} \\, \\mathrm{cm}^{-3}]$')
+    comparemaps(ndir_newbranch + emo8, ndir_newbranch + emo8_nosel, 
+                outname=mdir + 'samecheck_emptysel_emission_o8.pdf', 
+                clabel=label_emo8)
