@@ -482,7 +482,7 @@ class Vardict:
                 self.particle[name] = (self.particle[name])[selname.val,...]
             self.readsel.comb(selname)
         else:
-            pass # selname id undefines; no update necessary
+            pass # selname is undefined; no update necessary
 
     def overwrite_part(self, name, var):
         #self.reportmemuse()
@@ -520,7 +520,7 @@ class Vardict:
 
     def getlogT(self,last=True,**kwargs):
         #self.reportmemuse()
-        if kwargs['logT']:
+        if kwargs['T4']:
             self.readif('OnEquationOfState',rawunits=True)
             self.add_part('eos',self.particle['OnEquationOfState'] > 0.)
             self.delif('OnEquationOfState',last=last)

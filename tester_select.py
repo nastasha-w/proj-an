@@ -2,14 +2,28 @@
 import numpy as np
 import string
 import h5py
+import os
 
 import matplotlib.pyplot as plt
 
 import make_maps_v3_master as m3
 
-ndir_newbranch = ''
-ndir_master = ''
-mdir = ''
+basepath = '/Users/Nastasha/ciera/tests/make_maps_select/'
+ndir_newbranch = basepath + 'maps_select_branch/'
+ndir_master = basepath + 'maps_old_master/'
+mdir = basepath + 'imgs/'
+
+def printinfo(pathobj):
+     if not isinstance(pathobj, h5py._hl.dataset.Dataset):
+         print('keys and datasets:')
+         for key in pathobj:
+             print(f'{key}:\t {pathobj[key]}')
+     else:
+         print(pathobj)
+         print(pathobj[(slice(None, 2, None),) * len(pathobj.shape)])
+     print('\nattributes:')
+     for key, val in pathobj.attrs.items():
+         print(f'{key}:\t {val}')
 
 def runmaps_selcheck(mode='new'):
     simnum = 'L0012N0188'
@@ -29,9 +43,9 @@ def runmaps_selcheck(mode='new'):
     kwargs_grid = [{'quantityW': 'Mass', 'ptypeQ': 'basic', 
                     'quantityQ': 'Temperature'},
                    {'quantityW': 'Mass', 'ptypeQ': 'basic', 
-                    'quantityQ': 'density'},
+                    'quantityQ': 'Density'},
                    {'ionW': 'o8', 'ptypeQ': 'basic',
-                    'quantityQ': 'density'},
+                    'quantityQ': 'Density'},
                    {'ionW': 'o8', 'abundsW': 'Sm'},
                    {'ionW': 'o6', 'abundsW': 'Pt'},
                    ]
@@ -46,15 +60,15 @@ def runmaps_selcheck(mode='new'):
                     [({'ptype': 'basic', 'quantity': 'Temperature'}, 1e5, None),
                      ({'ptype': 'basic', 'quantity': 'Density'}, 1e-29, None)]]
     # Do all None/value combinations work right?
-    selects_rho = [[({'ptype': 'basic': 'quantity': 'Density'}, None, 1e-29)],
-                   [({'ptype': 'basic': 'quantity': 'Density'}, 1e-29, 1e-27)],
-                   [({'ptype': 'basic': 'quantity': 'Density'}, 1e-27, None)],
-                   [({'ptype': 'basic': 'quantity': 'Density'}, None, None)]
+    selects_rho = [[({'ptype': 'basic', 'quantity': 'Density'}, None, 1e-29)],
+                   [({'ptype': 'basic', 'quantity': 'Density'}, 1e-29, 1e-27)],
+                   [({'ptype': 'basic', 'quantity': 'Density'}, 1e-27, None)],
+                   [({'ptype': 'basic', 'quantity': 'Density'}, None, None)]
                    ]
     # qualitative: does a Lumdens selection work?
     # o8 K-alpha: volume average is 10**37.5 erg/s/cMpc**3 -> ~10**-36 erg/s/cm**3
-    selects_Lo8 = [[({'ptype': 'Lumdens', 'ion': 'o8', 'abunds': 'Pt'}, None, 1e-28)],
-                   [({'ptype': 'Lumdens', 'ion': 'o8', 'abunds': 'Pt'}, 1e-28, None)]]
+    selects_Lo8 = [[({'ptype': 'Lumdens', 'ion': 'o8', 'abunds': 'Pt'}, None, 1e-33)],
+                   [({'ptype': 'Lumdens', 'ion': 'o8', 'abunds': 'Pt'}, 1e-33, None)]]
     # qualitative: does an Niondens selection work?
     # for O VI: nH ~ 1e-4 cm**-3, nO/nH ~ 1e-5, O6/O ~ 0.01
     selects_no6 = [[({'ptype': 'Niondens', 'ion': 'o6', 'excludeSFR': 'T4'}, None, 1e-11)],
@@ -74,8 +88,16 @@ def runmaps_selcheck(mode='new'):
         elif mode == 'new':
             m3.ol.ndir = ndir_newbranch
             for _select in _sels + [None]:
-                m3.make_map(*args, nameonly=False, select=_select, **kwargs)
-
+                fns = m3.make_map(*args, nameonly=True, select=_select, 
+                                  **kwargs)
+                if fns[1] is None:
+                    run = not os.path.isfile(fns[0])
+                else:
+                    run = not (os.path.isfile(fns[0]) and \
+                               os.path.isfile(fns[1]))
+                if run:
+                     m3.make_map(*args, nameonly=False, select=_select, 
+                                 **kwargs)
 
 
 

@@ -4718,7 +4718,7 @@ def savemap_hdf5(hdf5name, projmap, minval, maxval,
             hsel.create_dataset('groupnums', data=groupnums)
         
         gensel = hed.create_group('select')
-        if halosel is None:
+        if select is None:
             saveattr(gensel, 'any_selection', False)
         else:
             saveattr(gensel, 'any_selection', True)
@@ -5591,19 +5591,19 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
             if cut[2] is not None:            
                 _max_t = cut[2] / multipafter_t
                 sel.comb(axdata_t < _max_t)
-            print(sel.val.shape)
+            #print(sel.val.shape)
             vardict_WQ.update(sel)
-            # debug
-            import matplotlib.pyplot as plt
-            plt.hist(np.log10(axdata_t), bins=100, alpha=0.5)
-            plt.hist(np.log10(axdata_t[sel.val]), bins=100, alpha=0.5)
-            plt.yscale('log')
-            plt.xlabel('axdata_t')
-            if cut[1] is not None:
-                plt.axvline(np.log10(_min_t), color='black')
-            if cut[2] is not None:
-                plt.axvline(np.log10(_max_t), color='black')  
-            plt.show()
+            ## debug
+            #import matplotlib.pyplot as plt
+            #plt.hist(np.log10(axdata_t), bins=100, alpha=0.5)
+            #plt.hist(np.log10(axdata_t[sel.val]), bins=100, alpha=0.5)
+            #plt.yscale('log')
+            #plt.xlabel('axdata_t')
+            #if cut[1] is not None:
+            #    plt.axvline(np.log10(_min_t), color='black')
+            #if cut[2] is not None:
+            #    plt.axvline(np.log10(_max_t), color='black')  
+            #plt.show()
             
             del axdata_t
 
