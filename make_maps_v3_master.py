@@ -5747,16 +5747,22 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
         maxlogW = np.log10(np.max(qW))
     except ValueError: # qW has length zero
         maxlogW = 0.
-    overfW = (int(np.ceil(maxlogW))+4) // 38
-    qW = qW*10**(-overfW*38)
-    multipafterW *= 10**(overfW*38)
+    #overfW = (int(np.ceil(maxlogW))+4) // 38
+    #qW = qW*10**(-overfW*38)
+    #multipafterW *= 10**(overfW*38)
+    overfW = maxlogW + 8 - 38 # keep well clear of 1e38 in output map: would take 1e8 particles
+    qW *= 10**(-overfW)
+    multipafterW *= 10**(overfW)
     if ptypeQ is not None:
         try:
-            overfQ = int(np.ceil(np.log10(np.max(qQ)) + maxlogW)+4) // 38 - overfW
+            #overfQ = int(np.ceil(np.log10(np.max(qQ)) + maxlogW)+4) // 38 - overfW
+            overfQ = np.log10(np.max(qQ)) # needs to stay finite when summed with W -> <1
         except ValueError:
             overfQ = 0
-        qQ = qQ*10**(-overfQ*38)
-        multipafterQ *= 10**(overfQ*38)
+        #qQ = qQ*10**(-overfQ*38)
+        #multipafterQ *= 10**(overfQ*38)
+        qQ *= 10**(-overfQ)
+        multipafterQ *= 10**(overfQ)
     else:
         qQ = np.zeros(qW.shape,dtype=np.float32)
 
