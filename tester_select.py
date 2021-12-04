@@ -75,8 +75,8 @@ def runmaps_selcheck(mode='new'):
     # the selection looks ok, but the largest bin is empty. Some weirdness
     # in the weighted densities.
     selects_rho = [[({'ptype': 'basic', 'quantity': 'Density'}, None, 1e-29)],
-                   [({'ptype': 'basic', 'quantity': 'Density'}, 1e-29, 1e-27)],
-                   [({'ptype': 'basic', 'quantity': 'Density'}, 1e-27, None)],
+                   [({'ptype': 'basic', 'quantity': 'Density'}, 1e-29, 1e-28)],
+                   [({'ptype': 'basic', 'quantity': 'Density'}, 1e-28, None)],
                    [({'ptype': 'basic', 'quantity': 'Density'}, None, None)]
                    ]
     # qualitative: does a Lumdens selection work? -> seems to
@@ -496,47 +496,47 @@ def comparemapsets():
     labels_colo6 = ['$n(\\mathrm{O\\,VI}) <  1e-11 \\; \mathrm{cm}^{-3}$',
                     '$n(\\mathrm{O\\,VI}) >  1e-11 \\; \mathrm{cm}^{-3}$']
     
-    #comparepartmaps(partfiles_colo6, ndir_newbranch + colo6, labels_colo6,
-    #                partweights=None,
-    #                vmin=None, diffmax=None, 
-    #                outname=mdir + 'sumcheck_coldens_o6.pdf',
-    #                fontsize=12, clabel=label_no6)
+    comparepartmaps(partfiles_colo6, ndir_newbranch + colo6, labels_colo6,
+                    partweights=None,
+                    vmin=None, diffmax=None, 
+                    outname=mdir + 'sumcheck_coldens_o6.pdf',
+                    fontsize=12, clabel=label_no6)
                     
     partfiles_emo8_o8 = [ndir_newbranch + 'emission_o8_L0012N0188_27_test3.7_SmAb_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS_partsel_Lumdens_o8_PtAb_T4EOS_min-None_max-1e-37_endpartsel.hdf5',
                          ndir_newbranch + 'emission_o8_L0012N0188_27_test3.7_SmAb_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS_partsel_Lumdens_o8_PtAb_T4EOS_min-1e-37_max-None_endpartsel.hdf5']
     labels_emo8_o8 = ['$L(\\mathrm{O\\,VIII})/\\mathrm{V} <  1e-37 \\; \\mathrm{erg}\\,\\mathrm{s}^{-1}\\mathrm{cm}^{-3}$',
                       '$L(\\mathrm{O\\,VIII})/\\mathrm{V} >  1e-37 \\; \\mathrm{erg}\\,\\mathrm{s}^{-1}\\mathrm{cm}^{-3}$']
     
-    #comparepartmaps(partfiles_emo8_o8, ndir_newbranch + emo8, labels_emo8_o8,
-    #                partweights=None,
-    #                vmin=None, diffmax=None, 
-    #                outname=mdir + 'sumcheck_emission_o8_splitby_lumdens_o8.pdf',
-    #                fontsize=12, clabel=label_emo8)  
+    comparepartmaps(partfiles_emo8_o8, ndir_newbranch + emo8, labels_emo8_o8,
+                    partweights=None,
+                    vmin=None, diffmax=None, 
+                    outname=mdir + 'sumcheck_emission_o8_splitby_lumdens_o8.pdf',
+                    fontsize=12, clabel=label_emo8)  
                     
     partfiles_emo8_rho =  [ndir_newbranch + 'emission_o8_L0012N0188_27_test3.7_SmAb_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS_partsel_Density_T4EOS_min-None_max-1e-29_endpartsel.hdf5',
-                           ndir_newbranch + 'emission_o8_L0012N0188_27_test3.7_SmAb_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS_partsel_Density_T4EOS_min-1e-29_max-1e-27_endpartsel.hdf5',
-                           ndir_newbranch + 'emission_o8_L0012N0188_27_test3.7_SmAb_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS_partsel_Density_T4EOS_min-1e-27_max-None_endpartsel.hdf5',
+                           ndir_newbranch + 'emission_o8_L0012N0188_27_test3.7_SmAb_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS_partsel_Density_T4EOS_min-1e-29_max-1e-28_endpartsel.hdf5',
+                           ndir_newbranch + 'emission_o8_L0012N0188_27_test3.7_SmAb_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS_partsel_Density_T4EOS_min-1e-28_max-None_endpartsel.hdf5',
                            ]
     labels_emo8_rho = ['$\\rho  < 1e-29 \\mathrm{g}\\,\\mathrm{cm}^{-3}$',
-                       '$1e-29 < \\rho \\; [\\mathrm{g}\\,\\mathrm{cm}^{-3}]$ < 1e-27',
-                       '$\\rho  > 1e-27 \\mathrm{g}\\,\\mathrm{cm}^{-3}$'
+                       '$1e-29 < \\rho \\; [\\mathrm{g}\\,\\mathrm{cm}^{-3}]$ < 1e-28',
+                       '$\\rho  > 1e-28 \\mathrm{g}\\,\\mathrm{cm}^{-3}$'
                        ]              
-    #comparepartmaps(partfiles_emo8_rho, ndir_newbranch + emo8, labels_emo8_rho,
-    #                partweights=None,
-    #                vmin=None, diffmax=None, 
-    #                outname=mdir + 'sumcheck_emission_o8_splitby_density.pdf',
-    #                fontsize=12, clabel=label_emo8)  
+    comparepartmaps(partfiles_emo8_rho, ndir_newbranch + emo8, labels_emo8_rho,
+                    partweights=None,
+                    vmin=None, diffmax=None, 
+                    outname=mdir + 'sumcheck_emission_o8_splitby_density.pdf',
+                    fontsize=12, clabel=label_emo8)  
     
     partfiles_rho_by_emo8 = [ndir_newbranch + 'Density_T4EOS_emission_o8_SmAb_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Density_T4EOS_min-None_max-1e-29_endpartsel.hdf5',
                              ndir_newbranch + 'Density_T4EOS_emission_o8_SmAb_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Density_T4EOS_min-1e-29_max-1e-27_endpartsel.hdf5',
                              ndir_newbranch + 'Density_T4EOS_emission_o8_SmAb_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Density_T4EOS_min-1e-27_max-None_endpartsel.hdf5',
                              ]
     
-    #comparepartmaps(partfiles_rho_by_emo8, ndir_newbranch + rho_by_o8, labels_emo8_rho,
-    #                partweights=partfiles_emo8_rho,
-    #                vmin=None, diffmax=None, 
-    #                outname=mdir + 'sumcheck_emission_o8_weighted_density_splitby_density.pdf',
-    #                fontsize=12, clabel=label_rho_by_o8)                 
+    comparepartmaps(partfiles_rho_by_emo8, ndir_newbranch + rho_by_o8, labels_emo8_rho,
+                    partweights=partfiles_emo8_rho,
+                    vmin=None, diffmax=None, 
+                    outname=mdir + 'sumcheck_emission_o8_weighted_density_splitby_density.pdf',
+                    fontsize=12, clabel=label_rho_by_o8)                 
     
     partfiles_mass = [ndir_newbranch + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS_partsel_Temperature_T4EOS_min-None_max-100000.0_Density_T4EOS_min-None_max-1e-29_endpartsel.hdf5',
                       ndir_newbranch + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS_partsel_Temperature_T4EOS_min-100000.0_max-None_Density_T4EOS_min-None_max-1e-29_endpartsel.hdf5',
@@ -550,11 +550,11 @@ def comparemapsets():
                    '$\\mathrm{T} > 1e5 \\;\\mathrm{K}, \\mathrm{rho} > 1e-29 \\;\\mathrm{g}\\,\\mathrm{cm}^{-3}$'
                    ]
     
-    #comparepartmaps(partfiles_mass, ndir_newbranch + mass, labels_mass,
-    #                partweights=None,
-    #                vmin=None, diffmax=None, 
-    #                outname=mdir + 'sumcheck_mass_splitby_density_temperature.pdf',
-    #                fontsize=12, clabel=label_mass)  
+    comparepartmaps(partfiles_mass, ndir_newbranch + mass, labels_mass,
+                    partweights=None,
+                    vmin=None, diffmax=None, 
+                    outname=mdir + 'sumcheck_mass_splitby_density_temperature.pdf',
+                    fontsize=12, clabel=label_mass)  
                     
     partfiles_t_by_mass = [ndir_newbranch + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Temperature_T4EOS_min-None_max-100000.0_Density_T4EOS_min-None_max-1e-29_endpartsel.hdf5',
                            ndir_newbranch + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Temperature_T4EOS_min-100000.0_max-None_Density_T4EOS_min-None_max-1e-29_endpartsel.hdf5',
