@@ -5593,9 +5593,9 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                 sel.comb(axdata_t < _max_t)
             #print(sel.val.shape)
             vardict_WQ.update(sel)
-            print('Tried to update vardict_WQ')
+            #print('Tried to update vardict_WQ')
             ## debug
-            import matplotlib.pyplot as plt
+            #import matplotlib.pyplot as plt
             #plt.hist(np.log10(axdata_t), bins=100, alpha=0.5)
             #plt.hist(np.log10(axdata_t[sel.val]), bins=100, alpha=0.5)
             #plt.yscale('log')
@@ -5605,16 +5605,16 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
             #if cut[2] is not None:
             #    plt.axvline(np.log10(_max_t), color='black')  
             #plt.show()
-            vardict_WQ.readif('Temperature')
-            vardict_WQ.readif('Density')
-            plt.hist(np.log10(vardict_WQ.particle['Temperature']), bins=100, alpha=0.5)
-            plt.yscale('log')
-            plt.show()
-            plt.hist(np.log10(vardict_WQ.particle['Density']), bins=100, alpha=0.5)
-            plt.yscale('log')
-            plt.show()
-            print('Tried to select {} / {} particles'.format(np.sum(sel.val),
-                                                             len(sel.val)))
+            #vardict_WQ.readif('Temperature')
+            #vardict_WQ.readif('Density')
+            #plt.hist(np.log10(vardict_WQ.particle['Temperature']), bins=100, alpha=0.5)
+            #plt.yscale('log')
+            #plt.show()
+            #plt.hist(np.log10(vardict_WQ.particle['Density']), bins=100, alpha=0.5)
+            #plt.yscale('log')
+            #plt.show()
+            #print('Tried to select {} / {} particles'.format(np.sum(sel.val),
+            #                                                 len(sel.val)))
             
             del axdata_t
 
