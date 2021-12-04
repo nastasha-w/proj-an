@@ -310,7 +310,7 @@ class Sel:
     #               self.val = arr
     #            self.seldef = True
 
-        if isinstance(arr,Sel):
+        if isinstance(arr, Sel):
             if arr.seldef and self.seldef: # if arr is a non-default Sel instance, just use the array value
                 self.val[self.val] = arr.val
             elif not self.seldef:
@@ -473,14 +473,14 @@ class Vardict:
                     self.particle[name] = (self.particle[name])[self.tempsel,...]
                 del self.tempsel
                 self.readsel.comb(selname)
-            elif selname.val.shape[0] == self.readsel.val.shape[0]: # if keys()[0] happens to be coordinates or something, we just want to match the zero index
-                for name in self.particle.keys():
-                    self.particle[name] = (self.particle[name])[selname.val,...]
-                self.readsel.refine(selname)
+            #elif selname.val.shape[0] == self.readsel.val.shape[0]: # if keys()[0] happens to be coordinates or something, we just want to match the zero index
+            #    for name in self.particle.keys():
+            #        self.particle[name] = (self.particle[name])[selname.val,...]
+            #    self.readsel.refine(selname)
         elif selname.seldef:
             for name in self.particle.keys():
                 self.particle[name] = (self.particle[name])[selname.val,...]
-            self.readsel.comb(selname)
+            self.readsel.refine(selname)
         else:
             pass # selname is undefined; no update necessary
 

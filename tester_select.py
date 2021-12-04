@@ -19,7 +19,7 @@ label_emo8 = '$\\log_{10} \\, \\mathrm{SB}(\\mathrm{O\\,VIII}) \\;'+ \
              '[\\mathrm{ph}\\,\\mathrm{s}^{-1}\\mathrm{sr}^{-1}\\mathrm{cm}^{-2}]$'
 label_rho_by_o8 = '$\\log_{10} \\, \\langle\\rho\\rangle_{\\mathrm{L}(\\mathrm{O\\,VIII})} \\; [\\mathrm{g} \\, \\mathrm{cm}^{-3}]$'
 label_mass = '$\\log_{10} \\, \\Sigma \\; [\\mathrm{g} \\, \\mathrm{cm}^{-2}]$'
-label_T_by_mass = '$\\log_{10} \\, \\langle\\mathrm{T}\\rangle_{\\mathrm{M}} \\; [\\mathrm{K}]$'
+label_t_by_mass = '$\\log_{10} \\, \\langle\\mathrm{T}\\rangle_{\\mathrm{M}} \\; [\\mathrm{K}]$'
 label_rho_by_mass = '$\\log_{10} \\, \\langle\\rho\\rangle_{\\mathrm{M}} \\; [\\mathrm{g} \\, \\mathrm{cm}^{-3}]$'
 
 
@@ -62,6 +62,7 @@ def runmaps_selcheck(mode='new'):
                    ]
     
     # do multiple selections work together correctly? Also: SFR settings passed through?
+    # multiple selections: NO
     selects_rhoT = [[({'ptype': 'basic', 'quantity': 'Temperature'}, None, 1e5),
                      ({'ptype': 'basic', 'quantity': 'Density'}, None, 1e-29)],
                     [({'ptype': 'basic', 'quantity': 'Temperature'}, None, 1e5),
@@ -341,8 +342,8 @@ def comparepartmaps(partfiles, totfile, partlabels,
        
     
     nparts = len(part_map_ext_xname_yname)
-    _ncols = 3
-    _nrows = (nparts  - 1) // 3 + 2
+    _ncols = min(max(3, nparts), 5)
+    _nrows = (nparts  - 1) // _ncols + 2
     fig, axes = plt.subplots(nrows=2 * _nrows, ncols=_ncols, 
                             sharex=False, sharey=False,
                             figsize=(11., 11.))
@@ -531,10 +532,50 @@ def comparemapsets():
                              ndir_newbranch + 'Density_T4EOS_emission_o8_SmAb_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Density_T4EOS_min-1e-27_max-None_endpartsel.hdf5',
                              ]
     
-    comparepartmaps(partfiles_rho_by_emo8, ndir_newbranch + rho_by_o8, labels_emo8_rho,
-                    partweights=partfiles_emo8_rho,
-                    vmin=None, diffmax=None, 
-                    outname=mdir + 'sumcheck_emission_o8_weighted_density_splitby_density.pdf',
-                    fontsize=12, clabel=label_rho_by_o8)                 
+    #comparepartmaps(partfiles_rho_by_emo8, ndir_newbranch + rho_by_o8, labels_emo8_rho,
+    #                partweights=partfiles_emo8_rho,
+    #                vmin=None, diffmax=None, 
+    #                outname=mdir + 'sumcheck_emission_o8_weighted_density_splitby_density.pdf',
+    #                fontsize=12, clabel=label_rho_by_o8)                 
     
+    partfiles_mass = [ndir_newbranch + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS_partsel_Temperature_T4EOS_min-None_max-100000.0_Density_T4EOS_min-None_max-1e-29_endpartsel.hdf5',
+                      ndir_newbranch + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS_partsel_Temperature_T4EOS_min-100000.0_max-None_Density_T4EOS_min-None_max-1e-29_endpartsel.hdf5',
+                      ndir_newbranch + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS_partsel_Temperature_T4EOS_min-None_max-100000.0_Density_T4EOS_min-1e-29_max-None_endpartsel.hdf5',
+                      ndir_newbranch + 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS_partsel_Temperature_T4EOS_min-100000.0_max-None_Density_T4EOS_min-1e-29_max-None_endpartsel.hdf5',
+                      ]
 
+    labels_mass = ['$\\mathrm{T} < 1e5 \\;\\mathrm{K}, \\mathrm{rho} < 1e-29 \\;\\mathrm{g}\\,\\mathrm{cm}^{-3}$',
+                   '$\\mathrm{T} > 1e5 \\;\\mathrm{K}, \\mathrm{rho} < 1e-29 \\;\\mathrm{g}\\,\\mathrm{cm}^{-3}$',
+                   '$\\mathrm{T} < 1e5 \\;\\mathrm{K}, \\mathrm{rho} > 1e-29 \\;\\mathrm{g}\\,\\mathrm{cm}^{-3}$',
+                   '$\\mathrm{T} > 1e5 \\;\\mathrm{K}, \\mathrm{rho} > 1e-29 \\;\\mathrm{g}\\,\\mathrm{cm}^{-3}$'
+                   ]
+    
+    #comparepartmaps(partfiles_mass, ndir_newbranch + mass, labels_mass,
+    #                partweights=None,
+    #                vmin=None, diffmax=None, 
+    #                outname=mdir + 'sumcheck_mass_splitby_density_temperature.pdf',
+    #                fontsize=12, clabel=label_mass)  
+                    
+    partfiles_t_by_mass = [ndir_newbranch + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Temperature_T4EOS_min-None_max-100000.0_Density_T4EOS_min-None_max-1e-29_endpartsel.hdf5',
+                           ndir_newbranch + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Temperature_T4EOS_min-100000.0_max-None_Density_T4EOS_min-None_max-1e-29_endpartsel.hdf5',
+                           ndir_newbranch + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Temperature_T4EOS_min-None_max-100000.0_Density_T4EOS_min-1e-29_max-None_endpartsel.hdf5',
+                           ndir_newbranch + 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Temperature_T4EOS_min-100000.0_max-None_Density_T4EOS_min-1e-29_max-None_endpartsel.hdf5',
+                           ]
+        
+    comparepartmaps(partfiles_t_by_mass, ndir_newbranch + t_by_mass, labels_mass,
+                    partweights=partfiles_mass,
+                    vmin=None, diffmax=None, 
+                    outname=mdir + 'sumcheck_mass_weighted_temperature_splitby_density_temperature.pdf',
+                    fontsize=12, clabel=label_t_by_mass)
+                    
+    partfiles_rho_by_mass = [ndir_newbranch + 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Temperature_T4EOS_min-None_max-100000.0_Density_T4EOS_min-None_max-1e-29_endpartsel.hdf5',
+                             ndir_newbranch + 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Temperature_T4EOS_min-100000.0_max-None_Density_T4EOS_min-None_max-1e-29_endpartsel.hdf5',
+                             ndir_newbranch + 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Temperature_T4EOS_min-None_max-100000.0_Density_T4EOS_min-1e-29_max-None_endpartsel.hdf5',
+                             ndir_newbranch + 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Temperature_T4EOS_min-100000.0_max-None_Density_T4EOS_min-1e-29_max-None_endpartsel.hdf5',
+                             ]
+        
+    comparepartmaps(partfiles_rho_by_mass, ndir_newbranch + rho_by_mass, labels_mass,
+                    partweights=partfiles_mass,
+                    vmin=None, diffmax=None, 
+                    outname=mdir + 'sumcheck_mass_weighted_density_splitby_density_temperature.pdf',
+                    fontsize=12, clabel=label_rho_by_mass)  
