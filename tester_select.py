@@ -481,16 +481,6 @@ def comparemapsets():
                 outname=mdir + 'samecheck_emptysel_emission_o8.pdf', 
                 clabel=label_emo8)
                 
-def comparemapsets():
-    colo6 = 'coldens_o6_L0012N0188_27_test3.7_PtAb_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS.hdf5'
-    rho_by_o8 = 'Density_T4EOS_emission_o8_SmAb_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection.hdf5'
-    rho_by_o8_nosel = 'Density_T4EOS_emission_o8_SmAb_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Density_T4EOS_min-None_max-None_endpartsel.hdf5'
-    rho_by_mass = 'Density_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection.hdf5'
-    emo8 = 'emission_o8_L0012N0188_27_test3.7_SmAb_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS.hdf5'
-    emo8_nosel = 'emission_o8_L0012N0188_27_test3.7_SmAb_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS_partsel_Density_T4EOS_min-None_max-None_endpartsel.hdf5'
-    mass = 'Mass_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS.hdf5'
-    t_by_mass = 'Temperature_T4EOS_Mass_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection.hdf5'
-    
     partfiles_colo6 = [ndir_newbranch + 'coldens_o6_L0012N0188_27_test3.7_PtAb_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS_partsel_Niondens_o6_PtAb_T4EOS_min-None_max-1e-11_endpartsel.hdf5',
                        ndir_newbranch + 'coldens_o6_L0012N0188_27_test3.7_PtAb_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_T4EOS_partsel_Niondens_o6_PtAb_T4EOS_min-1e-11_max-None_endpartsel.hdf5']
     labels_colo6 = ['$n(\\mathrm{O\\,VI}) <  1e-11 \\; \mathrm{cm}^{-3}$',
@@ -528,8 +518,8 @@ def comparemapsets():
                     fontsize=12, clabel=label_emo8)  
     
     partfiles_rho_by_emo8 = [ndir_newbranch + 'Density_T4EOS_emission_o8_SmAb_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Density_T4EOS_min-None_max-1e-29_endpartsel.hdf5',
-                             ndir_newbranch + 'Density_T4EOS_emission_o8_SmAb_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Density_T4EOS_min-1e-29_max-1e-27_endpartsel.hdf5',
-                             ndir_newbranch + 'Density_T4EOS_emission_o8_SmAb_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Density_T4EOS_min-1e-27_max-None_endpartsel.hdf5',
+                             ndir_newbranch + 'Density_T4EOS_emission_o8_SmAb_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Density_T4EOS_min-1e-29_max-1e-28_endpartsel.hdf5',
+                             ndir_newbranch + 'Density_T4EOS_emission_o8_SmAb_T4EOS_L0012N0188_27_test3.7_C2Sm_400pix_6.25slice_zcen3.125_x3.125-pm6.25_y3.125-pm6.25_z-projection_partsel_Density_T4EOS_min-1e-28_max-None_endpartsel.hdf5',
                              ]
     
     comparepartmaps(partfiles_rho_by_emo8, ndir_newbranch + rho_by_o8, labels_emo8_rho,

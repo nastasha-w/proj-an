@@ -473,17 +473,27 @@ class Vardict:
                     self.particle[name] = (self.particle[name])[self.tempsel,...]
                 del self.tempsel
                 self.readsel.comb(selname)
+                print('\nCalled Vardict.readsel.comb\n')
             #elif selname.val.shape[0] == self.readsel.val.shape[0]: # if keys()[0] happens to be coordinates or something, we just want to match the zero index
             #    for name in self.particle.keys():
             #        self.particle[name] = (self.particle[name])[selname.val,...]
             #    self.readsel.refine(selname)
+            
+            else: # assume selname is a selection of the readsel True entries
+                for name in self.particle.keys():
+                    self.particle[name] = (self.particle[name])[selname.val,...]
+                self.readsel.refine(selname)
+                print('\nCalled Vardict.readsel.refine\n')
+                
         elif selname.seldef:
             for name in self.particle.keys():
                 self.particle[name] = (self.particle[name])[selname.val,...]
             self.readsel.refine(selname)
+            print('\nCalled Vardict.readsel.refine\n')
         else:
             pass # selname is undefined; no update necessary
-
+            print('\nNo readsel update necessary\n')
+            
     def overwrite_part(self, name, var):
         #self.reportmemuse()
         self.particle[name] = var
