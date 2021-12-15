@@ -210,13 +210,13 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     stfile = files[5][0]
     dynrange = 7.
     
-    cdmap, cd_min, cd_max, cdext = readmap(cdfile, dynrange=dyrange)
-    emmap, em_min, em_max, emext = readmap(emfile, dynrange=dyrange)
-    mcmap, mc_min, mc_max, mcext = readmap(mtfiles_cool[0], dynrange=dyrange)
-    tcmap, tc_min, tc_max, tcext = readmap(mtfiles_cool[1], dynrange=dyrange)
-    mhmap, mh_min, mh_max, mhext = readmap(mtfiles_hot[0], dynrange=dyrange)
-    thmap, th_min, th_max, thext = readmap(mtfiles_hot[1], dynrange=dyrange)
-    stmap, st_min, st_max, stext = readmap(mtfiles_hot[1], dynrange=dyrange)
+    cdmap, cd_min, cd_max, cdext = readmap(cdfile, dynrange=dynrange)
+    emmap, em_min, em_max, emext = readmap(emfile, dynrange=dynrange)
+    mcmap, mc_min, mc_max, mcext = readmap(mtfiles_cool[0], dynrange=dynrange)
+    tcmap, tc_min, tc_max, tcext = readmap(mtfiles_cool[1], dynrange=dynrange)
+    mhmap, mh_min, mh_max, mhext = readmap(mtfiles_hot[0], dynrange=dynrange)
+    thmap, th_min, th_max, thext = readmap(mtfiles_hot[1], dynrange=dynrange)
+    stmap, st_min, st_max, stext = readmap(mtfiles_hot[1], dynrange=dynrange)
     
     xovery = (cdext[1] - cdext[0]) / (cdext[3] - cdext[2])
     obsfig, obsax = plt.subplots(1, 1, 1, figsize=(5.5, 5.5 / xovery))
