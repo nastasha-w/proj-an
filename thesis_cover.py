@@ -69,7 +69,7 @@ def getmaps(ion, line, region_cMpc, axis, pixsize_regionunits, nameonly=False):
         raise ValueError(msg)
     
     args_all = (simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y)
-    args_var = [('coldens',), ('emission',), ('basic',), ('basic'), ('basic')]
+    args_var = [('coldens',), ('emission',), ('basic',), ('basic',), ('basic',)]
     
     kwargs_all = {'excludeSFRW': 'T4', 'excludeSFRQ': 'T4', 'parttype': 0,
                   'axis': axis, 'var': 'REFERENCE', 'periodic': False,
