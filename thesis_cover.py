@@ -99,8 +99,11 @@ def getmaps(ion, line, region_cMpc, axis, pixsize_regionunits, nameonly=False):
         
         outname = m3.make_map(*args, nameonly=True, **kwargs)   
         outnames.append(outname)             
-        if os.path.isfile(outname):
-            continue # already have it -> done
+        if os.path.isfile(outname[0]):
+            if outname[1] is None:
+                continue # already have it -> done
+            elif os.path.isfile(outname[1]):
+                continue
         if not nameonly:
             m3.make_map(*args, nameonly=False, **kwargs)
     return outnames
