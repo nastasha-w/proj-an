@@ -128,7 +128,7 @@ def getmaps(ion, line, region_cMpc, axis, pixsize_regionunits, nameonly=False):
 #          override_simdatapath=None)
 
 def readmap(filen, dynrange=7.):
-    with filen as f:
+    with h5py.File(filen, 'r') as f:
         _map = f['map'][:]
         map_max = f['map'].attrs['max']
         map_min = max(f['map'].attrs['minfinite'], cdmap_max - dynrange)
