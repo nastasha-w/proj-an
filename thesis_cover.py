@@ -10,6 +10,7 @@ create and plot the maps for my thesis cover
 """
 
 import os
+import sys
 import numpy as np
 import h5py
 
@@ -18,13 +19,18 @@ import matplotlib.pyplot as plt
 import plot_utils as pu
 import make_maps_v3_master as m3
 
-mdir = '/path/to/save/imgs/'
-m3.ol.ndir = '/path/to/save/maps/' # save map files
+mdir = '/net/luttero/data2/imgs/pretty/thesis_cover/imgs/'
+m3.ol.ndir = '/net/luttero/data2/imgs/pretty/thesis_cover/maps/' # save map files
 
-# check!
-minvals_em = {'o7r': -1.8,
-              'o8':  -1.8}
-minvals_abs = {'o7': 15.5,
+# abs: Athena X_IFU EW_min = 0.18 eV
+# em: Athena X-IFU 5 sigma for Delta Omega * Delta t = 1e7 arcmin**2 * s
+#     (extreme exposure/binning)
+# using 1e6 arcmin**2 * s: 
+minvals_em = {'o7r': -0.9, 'o8': -0.9}
+# using 1e7 arcmin**2 * s:
+#minvals_em = {'o7r': -1.6,
+#              'o8':  -1.5}
+minvals_abs = {'o7': 15.4,
                'o8': 15.6}
 
 region1 = [62.5, 72., 73., 90., 87.5, 93.75]
@@ -255,3 +261,25 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     obsfig.savefig(mdir + 'emission_absorption_map.pdf')
     gasfig.savefig(mdir + 'gas_phase_map.pdf')
     
+def plotdefaults(settings=1):
+    region_default = None 
+    _ion = ion_default
+    _line = line_default
+    _axis = axis 
+    _pixsize = pixsize_regionunits
+    if settings == 1:
+        _region = region1
+        _subregion = None
+    plotmaps(_ion, _line, _region, _axis, _pixsize, 
+             subregion=_subregion)
+
+if __name__ == '__main__':
+    args = sys.argv[1:]
+    if len(args) >= 1:
+        if args[0].startswith('--settings'):
+            settings = int(args[0].split['='][-1])
+        else:
+            settings = int(args[0])
+    else:
+        settings=1
+    plotdefaults(settings=settings)
