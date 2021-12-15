@@ -220,8 +220,8 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     stmap, st_min, st_max, stext = readmap(mtfiles_hot[1], dynrange=dynrange)
     
     xovery = (cdext[1] - cdext[0]) / (cdext[3] - cdext[2])
-    obsfig, obsax = plt.subplots(1, 1, 1, figsize=(5.5, 5.5 / xovery))
-    gasfig, gasax = plt.subplots(1, 1, 1, figsize=(5.5, 5.5 / xovery))
+    obsfig, obsax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 / xovery))
+    gasfig, gasax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 / xovery))
     
     cd_cmap = pu.paste_cmaps(['gist_yarg', 'inferno'], 
                              [cd_min, minvals_abs[ion], cd_max],
