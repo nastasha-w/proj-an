@@ -144,11 +144,11 @@ def readmap(filen, dynrange=7.):
             axis1 = 1
         axn0 = ['x', 'y', 'z'][axis0]
         axn1 = ['x', 'y', 'z'][axis0]
-        center = ['Header/inputpars'].attrs['centre']
+        center = f['Header/inputpars'].attrs['centre']
         cen0 = center[axis0]
         cen1 = center[axis1]
-        L0 = ['Header/inputpars'].attrs['L_{}'.format(axn0)]
-        L1 = ['Header/inputpars'].attrs['L_{}'.format(axn1)]
+        L0 = f['Header/inputpars'].attrs['L_{}'.format(axn0)]
+        L1 = f['Header/inputpars'].attrs['L_{}'.format(axn1)]
         extent = (cen0 - 0.5 * L0, cen0 + 0.5 * L0,
                   cen1 - 0.5 * L1, cen1 + 0.5 * L1)
     return _map, map_min, map_max, extent
