@@ -39,7 +39,7 @@ region_default = region1
 ion_default = 'o8'
 line_default = 'o8'
 axis = 'z'
-pixsize_regionunits = 0.025 # 400 pixels for a 10 cMpc 
+pixsize_regionunits = 0.0125 # 800 pixels for a 10 cMpc 
 
 def getmaps(ion, line, region_cMpc, axis, pixsize_regionunits, nameonly=False):
     
