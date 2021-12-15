@@ -128,28 +128,29 @@ def getmaps(ion, line, region_cMpc, axis, pixsize_regionunits, nameonly=False):
 #          override_simdatapath=None)
 
 def readmap(filen, dynrange=7.):
-    _map = f['map'][:]
-    map_max = f['map'].attrs['max']
-    map_min = max(f['map'].attrs['minfinite'], cdmap_max - dynrange)
-    axis = f['Header/inputpars'].attrs['axis'].decode()
-    if axis == 'x':
-        axis0 = 1
-        axis1 = 2
-    elif axis == 'y':
-        axis0 = 2
-        axis1 = 0
-    elif axis == 'z':
-        axis0 = 0
-        axis1 = 1
-    axn0 = ['x', 'y', 'z'][axis0]
-    axn1 = ['x', 'y', 'z'][axis0]
-    center = ['Header/inputpars'].attrs['centre']
-    cen0 = center[axis0]
-    cen1 = center[axis1]
-    L0 = ['Header/inputpars'].attrs['L_{}'.format(axn0)]
-    L1 = ['Header/inputpars'].attrs['L_{}'.format(axn1)]
-    extent = (cen0 - 0.5 * L0, cen0 + 0.5 * L0,
-              cen1 - 0.5 * L1, cen1 + 0.5 * L1)
+    with filen as f:
+        _map = f['map'][:]
+        map_max = f['map'].attrs['max']
+        map_min = max(f['map'].attrs['minfinite'], cdmap_max - dynrange)
+        axis = f['Header/inputpars'].attrs['axis'].decode()
+        if axis == 'x':
+            axis0 = 1
+            axis1 = 2
+        elif axis == 'y':
+            axis0 = 2
+            axis1 = 0
+        elif axis == 'z':
+            axis0 = 0
+            axis1 = 1
+        axn0 = ['x', 'y', 'z'][axis0]
+        axn1 = ['x', 'y', 'z'][axis0]
+        center = ['Header/inputpars'].attrs['centre']
+        cen0 = center[axis0]
+        cen1 = center[axis1]
+        L0 = ['Header/inputpars'].attrs['L_{}'.format(axn0)]
+        L1 = ['Header/inputpars'].attrs['L_{}'.format(axn1)]
+        extent = (cen0 - 0.5 * L0, cen0 + 0.5 * L0,
+                  cen1 - 0.5 * L1, cen1 + 0.5 * L1)
     return _map, map_min, map_max, extent
     
 def plotstrips(ax, map, extent, locations, axis='y',
