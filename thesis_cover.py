@@ -131,7 +131,7 @@ def readmap(filen, dynrange=7.):
     with h5py.File(filen, 'r') as f:
         _map = f['map'][:]
         map_max = f['map'].attrs['max']
-        map_min = max(f['map'].attrs['minfinite'], cdmap_max - dynrange)
+        map_min = max(f['map'].attrs['minfinite'], map_max - dynrange)
         axis = f['Header/inputpars'].attrs['axis'].decode()
         if axis == 'x':
             axis0 = 1
