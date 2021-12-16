@@ -300,7 +300,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     
     st_cmap = pu.paste_cmaps(['gray'], 
                              [max(st_min, st_max - dynrange), st_max],
-                             trunclist=[0.5, 1.])
+                             trunclist=[[0.5, 1.]])
     st_cmap.set_under(st_cmap(0.))
     st_cmap.set_bad(st_cmap(0.))
     gasax.set_facecolor(st_cmap(0.))
