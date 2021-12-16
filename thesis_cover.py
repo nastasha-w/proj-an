@@ -263,7 +263,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     
     coolvals = np.zeros(mcmap.shape + (4,), dtype=np.float32)
     m_max = max(mc_max, mh_max)
-    m_min = m_max - dyrange
+    m_min = m_max - dynrange
     coolvals[:, :, 2] = np.maximum(mcmap, m_min) / (m_max - m_min)
     coolvals[:, :, 3] = 0.7 * np.maximum(mcmap, m_min) / (m_max - m_min)
     
