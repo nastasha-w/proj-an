@@ -253,7 +253,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     hotvals[:, :, 3] = 0.7 * np.maximum(mhmap, mh_min) / (mh_max - mh_min)
     
     gasax.set_facecolor('black')
-    gasax.imshow(stmap.transpose(1, 0, 2), interpolation='nearest', 
+    gasax.imshow(stmap.transpose(1, 0), interpolation='nearest', 
                  origin='lower', extent=stext, cmap='gray')
     gasax.imshow(coolvals.transpose(1, 0, 2), interpolation='nearest', 
                  origin='lower', extent=mcext)
