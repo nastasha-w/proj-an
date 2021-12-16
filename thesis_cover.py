@@ -283,11 +283,11 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     msub_min = msub_max - dynrange
     mcw = (mcmap - msub_min) / (msub_max - msub_min)
     mhw = (mhmap - msub_min) / (msub_max - msub_min)
-    print(mcw)
-    print(mhw)
+    #print(mcw)
+    #print(mhw)
     stretch = 2.
     wc = 0.5 * (np.tanh(stretch * (mcw - mhw)) + 1.)
-    print(wc)
+    #print(wc)
     gas_map[:, :, :3] = wc[:, :, np.newaxis] * \
                           color_c[np.newaxis, np.newaxis, :] \
                         + (1. - wc[:, :, np.newaxis]) *\
@@ -296,9 +296,13 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     tonorm = np.sum(gas_map[:, :, :3], axis=-1)
     gas_map[:, :, :3] *= totw[:, :, np.newaxis] / tonorm[:, :, np.newaxis]
     gas_map[:, :, 3] = 0.7 * totw 
-    print(gas_map)
+    #print(gas_map)
     
     gasax.set_facecolor('black')
+    st_cmap = pu.paste_cmaps(['gray'], 
+                             [max(st_min, st_max - dynrange), st_max])
+    st_cmap.set_under(st_cmap(0.))
+    st_cmap.set_bad(st_cmap(0.))
     gasax.imshow(stmap.transpose(1, 0), interpolation='nearest', 
                  origin='lower', extent=stext, cmap='gray')
     #gasax.imshow(coolvals.transpose(1, 0, 2), interpolation='nearest', 
