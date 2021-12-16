@@ -201,8 +201,8 @@ def rescale_RGB_tobrightness(rgb, score):
     GoverR = rgb[s1] / rgb[s0]
     BoverR = rgb[s2] / rgb[s0] 
     _rgb[s0] = score / np.sqrt(wR + BoverR * wB + GoverR * wG)
-    _rgb[s1] = rgb[s0] * GoverR
-    _rgb[s2] = rgb[s0] * BoverR 
+    _rgb[s1] = _rgb[s0] * GoverR
+    _rgb[s2] = _rgb[s0] * BoverR 
     
     R0 = np.where(rgb[s0] == 0.)
     if len(R0[0]) > 0: 
@@ -214,11 +214,11 @@ def rescale_RGB_tobrightness(rgb, score):
         if subsel:  # single rgb value -> any R0 == all R0
             _rgb[s0][R0] = 0.
             _rgb[s1][R0] = score[R0] / np.sqrt(wB + BoverG[R0] * wG)
-            _rgb[s2][R0] = rgb[s1][R0] * BoverG[R0]       
+            _rgb[s2][R0] = _rgb[s1][R0] * BoverG[R0]       
         else:
             _rgb[s0] = 0.
             _rgb[s1] = score / np.sqrt(wB + BoverG * wG)
-            _rgb[s2] = rgb[s1] * BoverG     
+            _rgb[s2] = _rgb[s1] * BoverG     
          
     RG0 = np.where(np.logical_and(rgb[s0] == 0.,
                                   rgb[s1] == 0.))
