@@ -201,7 +201,6 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     xsize = 5.5   
     pixwidth_strips = 3    
     striplocs = [71., 65.]  
-             
     
     # some issues with system- or python-version-dependent precision of select cut-off values
     if np.all(region_cMpc == region1) and ion == ion_default and \
@@ -232,7 +231,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     tcmap, tc_min, tc_max, tcext = readmap(mtfiles_cool[1], dynrange=dynrange)
     mhmap, mh_min, mh_max, mhext = readmap(mtfiles_hot[0], dynrange=dynrange)
     thmap, th_min, th_max, thext = readmap(mtfiles_hot[1], dynrange=dynrange)
-    stmap, st_min, st_max, stext = readmap(mtfiles_hot[1], dynrange=dynrange)
+    stmap, st_min, st_max, stext = readmap(stfile, dynrange=dynrange)
     
     xovery = (cdext[1] - cdext[0]) / (cdext[3] - cdext[2])
     obsfig, obsax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 / xovery))
@@ -263,12 +262,12 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     gasax.axis('off')
     
     obsax.set_facecolor('black')
-    #obsax.imshow(cdmap.T, interpolation='nearest', origin='lower',
-    #             cmap=cd_cmap, extent=cdext)
+    obsax.imshow(cdmap.T, interpolation='nearest', origin='lower',
+                 cmap=cd_cmap, extent=cdext)
     obsax.imshow(emmap.T, interpolation='nearest', origin='lower', 
                  cmap=em_cmap, extent=emext)                 
     plotstrips(obsax, cdmap.T, cdext, striplocs, axis='y',
-               pixwidth=3, interpolation='nearest', origin='lower',
+               pixwidth=5, interpolation='nearest', origin='lower',
                cmap=cd_cmap)
     obsax.axis('off')
     
