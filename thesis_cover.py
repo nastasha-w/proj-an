@@ -254,6 +254,8 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     cd_cmap.set_bad((0., 0., 0., 0.)) # transparent outside plotted strips
     #cd_cmap.set_under(cd_cmap(0.))
     print(em_min, minvals_em[line], em_max)
+    print(max(em_min, minvals_em[line] - nonobsrange), 
+                              minvals_em[line], em_max])
     em_cmap = pu.paste_cmaps(['bone', 'plasma'], 
                              [max(em_min, minvals_em[line] - nonobsrange), 
                               minvals_em[line], em_max],
@@ -289,6 +291,8 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
                cmap=cd_cmap)
     obsax.axis('off')
     
+    print(coolvals)
+    print(hotvals)
     return coolvals, hotvals
     
     if subregion is not None:
