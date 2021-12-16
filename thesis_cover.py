@@ -244,8 +244,6 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
                                      4))
     
     xovery = (cdext[1] - cdext[0]) / (cdext[3] - cdext[2])
-    print(xovery)
-    #xovery = 3
     obsfig, obsax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 / xovery))
     gasfig, gasax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 / xovery))
     
@@ -255,9 +253,9 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
                              trunclist=[[0., 0.5], [0.5, 0.9]])
     cd_cmap.set_bad((0., 0., 0., 0.)) # transparent outside plotted strips
     #cd_cmap.set_under(cd_cmap(0.))
-    em_cmap = pu.paste_cmaps(['bone_r', 'plasma'], 
-                             [max(em_min, minvals_em[ion] - nonobsrange), 
-                             minvals_abs[ion], cd_max],
+    em_cmap = pu.paste_cmaps(['bone', 'plasma'], 
+                             [max(em_min, minvals_em[line] - nonobsrange), 
+                              minvals_em[line], em_max],
                              trunclist=[[0., 0.7], [0.5, 1.]])
     #em_cmap.set_under(em_cmap(0.))
     
@@ -289,6 +287,8 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
                pixwidth=5, interpolation='nearest', origin='lower',
                cmap=cd_cmap)
     obsax.axis('off')
+    
+    return coolvals, hotvals
     
     if subregion is not None:
         obsax.set_xlim((subregion[0], subregion[1]))
