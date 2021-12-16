@@ -281,18 +281,19 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
                  origin='lower', extent=mhext)
     gasax.axis('off')
     
+    plt.hist(emmap.flatten(), bins=100)
+    plt.show()
+    return
+    
     obsax.set_facecolor('black')
-    #obsax.imshow(cdmap.T, interpolation='nearest', origin='lower',
-    #             cmap=cd_cmap, extent=cdext)
+    obsax.imshow(cdmap.T, interpolation='nearest', origin='lower',
+                 cmap=cd_cmap, extent=cdext)
     obsax.imshow(emmap.T, interpolation='nearest', origin='lower', 
                  cmap=em_cmap, extent=emext)                 
     plotstrips(obsax, cdmap, cdext, striplocs, axis='x',
                pixwidth=5, interpolation='nearest', origin='lower',
                cmap=cd_cmap)
     obsax.axis('off')
-    
-    print(coolvals)
-    print(hotvals)
     
     if subregion is not None:
         obsax.set_xlim((subregion[0], subregion[1]))
