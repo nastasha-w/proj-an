@@ -169,13 +169,14 @@ def plotstrips(ax, map, extent, locations, axis='y',
         sel[selax] = slice(pixmin, pixmax, None)
         sel = tuple(sel)
         if axis == 'y':
-            subext = extent
+            subext = list(extent)
             subext[0] = extent[0] + pixmin * (extent[1] - extent[0]) / float(xpix)
             subext[1] = extent[0] + pixmax * (extent[1] - extent[0]) / float(xpix)
         elif axis == 'x':
-            subext = extent
+            subext = list(extent)
             subext[2] = extent[2] + pixmin * (extent[3] - extent[2]) / float(ypix)
             subext[3] = extent[2] + pixmax * (extent[3] - extent[2]) / float(ypix)
+        subext = tuple(subext)
         ax.imshow(map[sel].T, extent=subext, **kwargs_imshow)
 
 def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
