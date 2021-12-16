@@ -187,28 +187,28 @@ rgb_brightness_weights = np.array([0.299, 0.587, 0.144])
 def brightness_score(RGB):
     return np.sqrt(weights[..., :] * RGB**2)
     
-def rescale_RGB_tobrightness(RGB, score):
-    _RGB = np.zeros(RGB.shape, dtype=RGB.dtype)
+def rescale_RGB_tobrightness(rgb, score):
+    _rgb = np.zeros(rgb.shape, dtype=rgb.dtype)
     wR = rgb_brightness_weights[0]
     wG = rgb_brightness_weights[1]
     wB = rgb_brightness_weights[2]
     
-    BoverR = RBG[:, :, 1] / RBG[:, :, 0]
-    GoverR = RBG[:, :, 2] / RBG[:, :, 0] 
-    _rgb[:, :, 0] = score / np.sqrt(wR + BoverR * wB + GoverR * wG)
-    _rgb[:, :, 1] = rgb[:, :, 0] * GoverR
-    _rgb[:, :, 2] = rgb[:, :, 0] * BoverR 
+    BoverR = rgb[..., 1] / rgb[..., 0]
+    GoverR = rgb[..., 2] / rgb[..., 0] 
+    _rgb[..., 0] = score / np.sqrt(wR + BoverR * wB + GoverR * wG)
+    _rgb[..., 1] = rgb[..., 0] * GoverR
+    _rgb[..., 2] = rgb[..., 0] * BoverR 
     
     R0 = np.where(_gas_map[:, :, 0] == 0.)
-    BoverG = RGB[:, :, 2] / rgb[:, :, 1]
-    _rgb[:, :, 0][R0] = 0.
-    _rgb[:, :, 1][R0] = score[R0] / np.sqrt(wB + BoverG[R0] * wG)
-    _rgb[:, :, 2][R0] = rgb[:, :, 1][R0] * BoverG[R0]
+    BoverG = rgb[:, :, 2] / rgb[:, :, 1]
+    _rgb[..., 0][R0] = 0.
+    _rgb[..., 1][R0] = score[R0] / np.sqrt(wB + BoverG[R0] * wG)
+    _rgb[..., 2][R0] = rgb[..., 1][R0] * BoverG[R0]
     
-    RG0 = np.where(np.logical_and(rgb[:, :, 0] == 0.,
-                                  rgb[:, :, 1] == 0.))
-    _rgb[:, :, 1] = 0. 
-    _rgb[:, :, 2][RG0] = score[RG0] / np.sqrt(wB) 
+    RG0 = np.where(np.logical_and(rgb[..., 0] == 0.,
+                                  rgb[..., 1] == 0.))
+    _rgb[..., 1][RG0] = 0. 
+    _rgb[..., 2][RG0] = score[RG0] / np.sqrt(wB) 
     return _rgb
     
 def equalize_brightness(rgb1, rgb2, step=0.95):
