@@ -253,9 +253,6 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
                              trunclist=[[0., 0.5], [0.5, 0.9]])
     cd_cmap.set_bad((0., 0., 0., 0.)) # transparent outside plotted strips
     #cd_cmap.set_under(cd_cmap(0.))
-    print(em_min, minvals_em[line], em_max)
-    print([max(em_min, minvals_em[line] - nonobsrange), 
-                              minvals_em[line], em_max])
     em_cmap = pu.paste_cmaps(['bone', 'plasma'], 
                              [max(em_min, minvals_em[line] - nonobsrange), 
                               minvals_em[line], em_max],
@@ -280,7 +277,8 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     gas_map = np.zeros(mcmap.shape + (4,), dtype=np.float32)
     totvals = np.log10(10**mcmap + 10**mhmap)
     m_max = np.max(totvals)
-    m_min = np.maximum(np.min(totvals[np.isfinite(totvals)]), m_max - dynrange)
+    m_min = np.maximum(np.min(totvals[np.isfinite(totvals)]), 
+                       m_max - dynrange)
     msub_max = max(mc_max, mh_max)
     msub_min = msub_max - dynrange
     mcw = (mcmap - msub_min) / (msub_max - msub_min)
@@ -294,7 +292,8 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
                           color_c[np.newaxis, np.newaxis, :] \
                         + (1. - wc[:, :, np.newaxis]) *\
                           color_h[np.newaxis, np.newaxis, :]
-    gas_map[:, :, 3] = 0.7 * totvals 
+    gas_map[:, :, 3] = 0.7 * (np.maxmimum(totvals, m_min) - m_min) / \
+                             (m_max - m_min) 
     print(gas_map)
     
     gasax.set_facecolor('black')
