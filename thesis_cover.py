@@ -201,10 +201,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
         plot only a subregion along the *map* x and y axes
         [xmin, xmax, ymin, ymax] 
              
-    '''
-    xsize = 5.5   
-    pixwidth_strips = 3    
-    striplocs = [82., 83.]  
+    ''' 
     
     # some issues with system- or python-version-dependent precision of select cut-off values
     if np.all(region_cMpc == region1) and ion == ion_default and \
@@ -219,6 +216,8 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
         mtfiles_hot = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection_T4EOS_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5',
                        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5')
         stfile = m3.ol.ndir + 'Mass_PartType4_L0100N1504_27_test3.7_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection_wiEOS.hdf5'
+        striplocs = [75., 82., 83.] 
+
     else:
         files = getmaps(ion, line, region_cMpc, axis, pixsize_regionunits)
         cdfile = files[0][0]
@@ -227,6 +226,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
         mtfiles_cool = files[3]
         mtfiles_hot  = files[4]
         stfile = files[5][0]
+        striplocs = None
     dynrange = 5.
     
     cdmap, cd_min, cd_max, cdext = readmap(cdfile, dynrange=dynrange)
@@ -236,6 +236,11 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     mhmap, mh_min, mh_max, mhext = readmap(mtfiles_hot[0], dynrange=dynrange)
     thmap, th_min, th_max, thext = readmap(mtfiles_hot[1], dynrange=dynrange)
     stmap, st_min, st_max, stext = readmap(stfile, dynrange=dynrange)
+    if striplocs is None:
+        yrange = stext[3] - stext[2]
+        striplocs = list(np.linspace(stext[2] + 0.1 * yrange, 
+                                     stext[3] - 0.1 * yrange,
+                                     4))
     
     xovery = (cdext[1] - cdext[0]) / (cdext[3] - cdext[2])
     print(xovery)
