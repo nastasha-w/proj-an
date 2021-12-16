@@ -214,10 +214,7 @@ def rescale_RGB_tobrightness(rgb, score):
 def equalize_brightness(rgb1, rgb2, step=0.95):
     bs1 = brightness_score(rgb1)
     bs2 = brightness_score(rgb2)
-    if len(rgb2.shape) > 1:
-        bstarget = bs2
-    else:
-        bstarget = max(bs1, bs2)
+    bstarget = bs2
     while (not np.isclose(bs1, bs2)) or np.max(bs1) > 1. or np.max(bs2):
        rgb1 = rescale_RGB_tobrightness(rgb1, bstarget)
        rgb2 = rescale_RGB_tobrightness(rgb2, bstarget)   
@@ -315,7 +312,14 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     ## equal footing hot/cool mixing
     color_h = np.array([1., 0., 0.])
     color_c = np.array([0., 0., 1.])
-    color_h, color_c = equalize_brightness(color_h, color_c, step=0.95)
+    color_h1, color_c1 = equalize_brightness(color_h, color_c, step=0.95)
+    color_c2, color_h2 = equalize_brightness(color_c, color_h, step=0.95)
+    if brightness_score(color_h1) > brightness_score(color_h2):
+        color_h = color_h1
+        color_c = color_c1
+    else:
+        color_h = color_h2
+        color_c = color_c2
     
     gas_map = np.zeros(mcmap.shape + (4,), dtype=np.float32)
     totvals = np.log10(10**mcmap + 10**mhmap)
