@@ -281,7 +281,8 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
                  origin='lower', extent=mhext)
     gasax.axis('off')
     
-    plt.hist(emmap.flatten(), bins=100)
+    bins = np.linspace(em_min, em_max, 200)
+    plt.hist(emmap.flatten(), bins=bins)
     plt.show()
     return
     
