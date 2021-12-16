@@ -412,7 +412,8 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     
     ## try to 'equalize' colors:
     # gas_map sets channel ratios
-    gas_map, _ = equalize_brightness(_gas_map, totw, step=0.95)
+    totv = totw[:, :, np.newaxis] * np.array([1., 1., 1.])
+    gas_map, _ = equalize_brightness(_gas_map, totv, step=0.95)
     gas_map[:, :, 3] = 1. #0.7 * totw 
     #print(gas_map)
     
