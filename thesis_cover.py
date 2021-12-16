@@ -291,14 +291,16 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
                           color_c[np.newaxis, np.newaxis, :] \
                         + (1. - wc[:, :, np.newaxis]) *\
                           color_h[np.newaxis, np.newaxis, :]
-    gas_map[:, :, 3] = totvals 
+    gas_map[:, :, 3] = 0.7 * totvals 
     
     gasax.set_facecolor('black')
     gasax.imshow(stmap.transpose(1, 0), interpolation='nearest', 
                  origin='lower', extent=stext, cmap='gray')
-    gasax.imshow(coolvals.transpose(1, 0, 2), interpolation='nearest', 
-                 origin='lower', extent=mcext)
-    gasax.imshow(hotvals.transpose(1, 0, 2), interpolation='nearest', 
+    #gasax.imshow(coolvals.transpose(1, 0, 2), interpolation='nearest', 
+    #             origin='lower', extent=mcext)
+    #gasax.imshow(hotvals.transpose(1, 0, 2), interpolation='nearest', 
+    #             origin='lower', extent=mhext)
+    gasax.imshow(gas_map.transpose(1, 0, 2), interpolation='nearest', 
                  origin='lower', extent=mhext)
     gasax.axis('off')
     
