@@ -198,8 +198,8 @@ def rescale_RGB_tobrightness(rgb, score):
     s1 = _s + (1,) 
     s2 = _s + (2,)
      
-    BoverR = rgb[s1] / rgb[s0]
-    GoverR = rgb[s2] / rgb[s0] 
+    GoverR = rgb[s1] / rgb[s0]
+    BoverR = rgb[s2] / rgb[s0] 
     _rgb[s0] = score / np.sqrt(wR + BoverR * wB + GoverR * wG)
     _rgb[s1] = rgb[s0] * GoverR
     _rgb[s2] = rgb[s0] * BoverR 
