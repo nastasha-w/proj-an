@@ -238,8 +238,8 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     stmap, st_min, st_max, stext = readmap(stfile, dynrange=dynrange)
     
     xovery = (cdext[1] - cdext[0]) / (cdext[3] - cdext[2])
-    obsfig, obsax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 / xovery))
-    gasfig, gasax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 / xovery))
+    obsfig, obsax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 * xovery))
+    gasfig, gasax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 * xovery))
     
     cd_cmap = pu.paste_cmaps(['gist_yarg', 'inferno'], 
                              [cd_min, minvals_abs[ion], cd_max],
@@ -260,8 +260,8 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     hotvals[:, :, 3] = 0.7 * np.maximum(mhmap, mh_min) / (mh_max - mh_min)
     
     gasax.set_facecolor('black')
-    #gasax.imshow(stmap.transpose(1, 0), interpolation='nearest', 
-    #             origin='lower', extent=stext, cmap='gray')
+    gasax.imshow(stmap.transpose(1, 0), interpolation='nearest', 
+                 origin='lower', extent=stext, cmap='gray')
     gasax.imshow(coolvals.transpose(1, 0, 2), interpolation='nearest', 
                  origin='lower', extent=mcext)
     gasax.imshow(hotvals.transpose(1, 0, 2), interpolation='nearest', 
@@ -269,8 +269,8 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     gasax.axis('off')
     
     obsax.set_facecolor('black')
-    obsax.imshow(cdmap.T, interpolation='nearest', origin='lower',
-                 cmap=cd_cmap, extent=cdext)
+    #obsax.imshow(cdmap.T, interpolation='nearest', origin='lower',
+    #             cmap=cd_cmap, extent=cdext)
     obsax.imshow(emmap.T, interpolation='nearest', origin='lower', 
                  cmap=em_cmap, extent=emext)                 
     plotstrips(obsax, cdmap, cdext, striplocs, axis='y',
