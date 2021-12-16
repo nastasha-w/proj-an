@@ -203,7 +203,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
              
     
     # some issues with system- or python-version-dependent precision of select cut-off values
-    if np.all(region == region1) and ion == ion_default and \
+    if np.all(region_cMpc == region1) and ion == ion_default and \
         line == line_default and axis == axis_default and \
         pixsize_regionunits == pixsize_regionunits_default:
         cdfile = m3.ol.ndir + 'coldens_o8_L0100N1504_27_test3.7_PtAb_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection_T4EOS.hdf5'
