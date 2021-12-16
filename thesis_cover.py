@@ -228,7 +228,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
         stfile = files[5][0]
         striplocs = None
     dynrange = 7.
-    nonobsrange = 5.
+    nonobsrange = 7.
     
     cdmap, cd_min, cd_max, cdext = readmap(cdfile)
     emmap, em_min, em_max, emext = readmap(emfile)
@@ -285,13 +285,17 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     msub_min = msub_max - dynrange
     mcw = (mcmap - msub_min) / (msub_max - msub_min)
     mhw = (mhmap - msub_min) / (msub_max - msub_min)
+    print(mcw)
+    print(mhw)
     stretch = 2.
     wc = 0.5 * (np.tanh(stretch * (mcw - mhw)) + 1.)
+    print(wc)
     gas_map[:, :, :3] = wc[:, :, np.newaxis] * \
                           color_c[np.newaxis, np.newaxis, :] \
                         + (1. - wc[:, :, np.newaxis]) *\
                           color_h[np.newaxis, np.newaxis, :]
     gas_map[:, :, 3] = 0.7 * totvals 
+    print(gas_map)
     
     gasax.set_facecolor('black')
     gasax.imshow(stmap.transpose(1, 0), interpolation='nearest', 
