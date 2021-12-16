@@ -241,9 +241,9 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     cd_cmap = pu.paste_cmaps(['gist_yarg', 'inferno'], 
                              [cd_min, minvals_abs[ion], cd_max],
                              trunclist=[[0., 0.7], [0., 0.95]])
-    em_cmap = pu.paste_cmaps(['bone_r', 'plasma'], 
+    em_cmap = pu.paste_cmaps(['bone', 'plasma'], 
                              [cd_min, minvals_abs[ion], cd_max],
-                             trunclist=[[0., 0.7], [0., 1.]])
+                             trunclist=[[0., 0.5], [0.5, 1.]])
     
     coolvals = np.zeros(mcmap.shape + (4,), dtype=np.float32)
     coolvals[:, :, 2] = np.maximum(mcmap, mc_min) / (mc_max - mc_min)
@@ -254,8 +254,8 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     hotvals[:, :, 3] = 0.7 * np.maximum(mhmap, mh_min) / (mh_max - mh_min)
     
     gasax.set_facecolor('black')
-    gasax.imshow(stmap.transpose(1, 0), interpolation='nearest', 
-                 origin='lower', extent=stext, cmap='gray')
+    #gasax.imshow(stmap.transpose(1, 0), interpolation='nearest', 
+    #             origin='lower', extent=stext, cmap='gray')
     gasax.imshow(coolvals.transpose(1, 0, 2), interpolation='nearest', 
                  origin='lower', extent=mcext)
     gasax.imshow(hotvals.transpose(1, 0, 2), interpolation='nearest', 
