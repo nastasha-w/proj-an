@@ -247,6 +247,9 @@ def equalize_brightness(rgb1, rgb2, step=0.95):
        bstarget *= step  
        print('equalize_brightness loop {}; target {}'.format(loopcount, 
                                                              bstarget))
+       print(rbg1, rgb2)
+       if loopcount > 100:
+           raise RuntimeError('equalize_brightness not converging')
        loopcount += 1
     return rgb1, rgb2
 
