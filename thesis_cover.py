@@ -231,11 +231,11 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
                              trunclist=[[0., 0.7], [0., 1.]])
     
     coolvals = np.zeros(mcmap.shape + (4,), dtype=np.float32)
-    coolvals[:, :, 2] = np.max(mcmap, mc_min) / (mc_max - mc_min)
+    coolvals[:, :, 2] = np.maximum(mcmap, mc_min) / (mc_max - mc_min)
     coolvals[:, :, 3] = 0.7 * np.max(mcmap, mc_min) / (mc_max - mc_min)
     
     hotvals = np.zeros(mcmap.shape + (4,), dtype=np.float32)
-    hotvals[:, :, 0] = np.max(mhmap, mh_min) / (mh_max - mh_min)
+    hotvals[:, :, 0] = np.maximum(mhmap, mh_min) / (mh_max - mh_min)
     hotvals[:, :, 3] = 0.7 * np.max(mhmap, mh_min) / (mh_max - mh_min)
     
     gasax.set_facecolor('black')
