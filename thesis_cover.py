@@ -210,15 +210,24 @@ def rescale_RGB_tobrightness(rgb, score):
         print(_rgb)
         print(_rgb[s0])
         print(_rgb[s0][R0])
-        _rgb[s0][R0] = 0.
-        _rgb[s1][R0] = score[R0] / np.sqrt(wB + BoverG[R0] * wG)
-        _rgb[s2][R0] = rgb[s1][R0] * BoverG[R0]
-    
+        if hasattr(_rgb[s0], 'shape'):
+            _rgb[s0][R0] = 0.
+            _rgb[s1][R0] = score[R0] / np.sqrt(wB + BoverG[R0] * wG)
+            _rgb[s2][R0] = rgb[s1][R0] * BoverG[R0]
+        else: # single rgb value -> any R0 == all R0
+            _rgb[s0] = 0.
+            _rgb[s1] = score / np.sqrt(wB + BoverG * wG)
+            _rgb[s2] = rgb[s1] * BoverG
+         
     RG0 = np.where(np.logical_and(rgb[s0] == 0.,
                                   rgb[s1] == 0.))
     if len(RG0[0]) > 0: 
-        _rgb[s1][RG0] = 0. 
-        _rgb[s2][RG0] = score[RG0] / np.sqrt(wB) 
+        if hasattr(_rgb[s0], 'shape'):
+            _rgb[s1][RG0] = 0. 
+            _rgb[s2][RG0] = score[RG0] / np.sqrt(wB) 
+        else:
+            _rgb[s1] = 0. 
+            _rgb[s2] = score / np.sqrt(wB) 
     return _rgb
     
 def equalize_brightness(rgb1, rgb2, step=0.95):
