@@ -185,8 +185,8 @@ def plotstrips(ax, map, extent, locations, axis='y',
 
 rgb_brightness_weights = np.array([0.299, 0.587, 0.144])
 def brightness_score(RGB):
-    return np.sqrt(np.sum(rgb_brightness_weights[..., :] \
-                          * RGB[..., np.newaxis]**2, axis=-1))
+    return np.sqrt(np.sum(rgb_brightness_weights[..., np.newaxis] \
+                          * RGB**2, axis=-1))
     
 def rescale_RGB_tobrightness(rgb, score):
     _rgb = np.zeros(rgb.shape, dtype=rgb.dtype)
