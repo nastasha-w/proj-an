@@ -127,11 +127,11 @@ def getmaps(ion, line, region_cMpc, axis, pixsize_regionunits, nameonly=False):
 #          ompproj=False, nameonly=False, numslices=None, hdf5=False,
 #          override_simdatapath=None)
 
-def readmap(filen, dynrange=7.):
+def readmap(filen):
     with h5py.File(filen, 'r') as f:
         _map = f['map'][:]
         map_max = f['map'].attrs['max']
-        map_min = max(f['map'].attrs['minfinite'], map_max - dynrange)
+        map_min = max(f['map'].attrs['minfinite'])
         axis = f['Header/inputpars'].attrs['axis'].decode()
         if axis == 'x':
             axis0 = 1
@@ -227,15 +227,16 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
         mtfiles_hot  = files[4]
         stfile = files[5][0]
         striplocs = None
-    dynrange = 5.
+    dynrange = 7.
+    nonobsrange = 5.
     
-    cdmap, cd_min, cd_max, cdext = readmap(cdfile, dynrange=dynrange)
-    emmap, em_min, em_max, emext = readmap(emfile, dynrange=dynrange)
-    mcmap, mc_min, mc_max, mcext = readmap(mtfiles_cool[0], dynrange=dynrange)
-    tcmap, tc_min, tc_max, tcext = readmap(mtfiles_cool[1], dynrange=dynrange)
-    mhmap, mh_min, mh_max, mhext = readmap(mtfiles_hot[0], dynrange=dynrange)
-    thmap, th_min, th_max, thext = readmap(mtfiles_hot[1], dynrange=dynrange)
-    stmap, st_min, st_max, stext = readmap(stfile, dynrange=dynrange)
+    cdmap, cd_min, cd_max, cdext = readmap(cdfile)
+    emmap, em_min, em_max, emext = readmap(emfile)
+    mcmap, mc_min, mc_max, mcext = readmap(mtfiles_cool[0])
+    tcmap, tc_min, tc_max, tcext = readmap(mtfiles_cool[1])
+    mhmap, mh_min, mh_max, mhext = readmap(mtfiles_hot[0])
+    thmap, th_min, th_max, thext = readmap(mtfiles_hot[1])
+    stmap, st_min, st_max, stext = readmap(stfile)
     if striplocs is None:
         yrange = stext[3] - stext[2]
         striplocs = list(np.linspace(stext[2] + 0.1 * yrange, 
@@ -249,26 +250,30 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     gasfig, gasax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 / xovery))
     
     cd_cmap = pu.paste_cmaps(['gist_gray', 'inferno'], 
-                             [cd_min, minvals_abs[ion], cd_max],
+                             [max(cd_min, minvals_abs[ion] - nonobsrange), 
+                             minvals_abs[ion], cd_max],
                              trunclist=[[0., 0.5], [0.5, 0.9]])
     cd_cmap.set_bad((0., 0., 0., 0.)) # transparent outside plotted strips
-    cd_cmap.set_under(cd_cmap(0.))
-    em_cmap = pu.paste_cmaps(['bone', 'plasma'], 
-                             [cd_min, minvals_abs[ion], cd_max],
+    #cd_cmap.set_under(cd_cmap(0.))
+    em_cmap = pu.paste_cmaps(['bone_r', 'plasma'], 
+                             [max(em_min, minvals_em[ion] - nonobsrange), 
+                             minvals_abs[ion], cd_max],
                              trunclist=[[0., 0.7], [0.5, 1.]])
-    em_cmap.set_under(em_cmap(0.))
+    #em_cmap.set_under(em_cmap(0.))
     
     coolvals = np.zeros(mcmap.shape + (4,), dtype=np.float32)
-    coolvals[:, :, 2] = np.maximum(mcmap, mc_min) / (mc_max - mc_min)
-    coolvals[:, :, 3] = 0.7 * np.maximum(mcmap, mc_min) / (mc_max - mc_min)
+    m_max = max(mc_max, mh_max)
+    m_min = m_max - dyrange
+    coolvals[:, :, 2] = np.maximum(mcmap, m_min) / (m_max - m_min)
+    coolvals[:, :, 3] = 0.7 * np.maximum(mcmap, m_min) / (m_max - m_min)
     
     hotvals = np.zeros(mcmap.shape + (4,), dtype=np.float32)
-    hotvals[:, :, 0] = np.maximum(mhmap, mh_min) / (mh_max - mh_min)
-    hotvals[:, :, 3] = 0.7 * np.maximum(mhmap, mh_min) / (mh_max - mh_min)
+    hotvals[:, :, 0] = np.maximum(mhmap, m_min) / (m_max - m_min)
+    hotvals[:, :, 3] = 0.7 * np.maximum(mhmap, m_min) / (m_max - m_min)
     
     gasax.set_facecolor('black')
-    gasax.imshow(stmap.transpose(1, 0), interpolation='nearest', 
-                 origin='lower', extent=stext, cmap='gray')
+    #gasax.imshow(stmap.transpose(1, 0), interpolation='nearest', 
+    #             origin='lower', extent=stext, cmap='gray')
     gasax.imshow(coolvals.transpose(1, 0, 2), interpolation='nearest', 
                  origin='lower', extent=mcext)
     gasax.imshow(hotvals.transpose(1, 0, 2), interpolation='nearest', 
