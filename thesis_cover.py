@@ -259,18 +259,36 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     em_cmap = pu.paste_cmaps(['bone', 'plasma'], 
                              [max(em_min, minvals_em[line] - nonobsrange), 
                               minvals_em[line], em_max],
-                             trunclist=[[0., 0.7], [0.5, 1.]])
-    #em_cmap.set_under(em_cmap(0.))
+                             trunclist=[[0., 0.5], [0.5, 1.]])
+    em_cmap.set_bad((0., 0., 0., 1.))
+    em_cmap.set_under(em_cmap(0.))
     
-    coolvals = np.zeros(mcmap.shape + (4,), dtype=np.float32)
-    m_max = max(mc_max, mh_max)
-    m_min = m_max - dynrange
-    coolvals[:, :, 2] = (np.maximum(mcmap, m_min) - m_min) / (m_max - m_min)
-    coolvals[:, :, 3] = 0.7 * (np.maximum(mcmap, m_min) - m_min) / (m_max - m_min)
+    ## alpha layer mixing
+    #coolvals = np.zeros(mcmap.shape + (4,), dtype=np.float32)
+    #m_max = max(mc_max, mh_max)
+    #m_min = m_max - dynrange
+    #coolvals[:, :, 2] = (np.maximum(mcmap, m_min) - m_min) / (m_max - m_min)
+    #coolvals[:, :, 3] = 0.7 * (np.maximum(mcmap, m_min) - m_min) / (m_max - m_min)
+    #
+    #hotvals = np.zeros(mcmap.shape + (4,), dtype=np.float32)
+    #hotvals[:, :, 0] = (np.maximum(mhmap, m_min) - m_min) / (m_max - m_min)
+    #hotvals[:, :, 3] = 0.7 * (np.maximum(mhmap, m_min) - m_min) / (m_max - m_min)
     
-    hotvals = np.zeros(mcmap.shape + (4,), dtype=np.float32)
-    hotvals[:, :, 0] = (np.maximum(mhmap, m_min) - m_min) / (m_max - m_min)
-    hotvals[:, :, 3] = 0.7 * (np.maximum(mhmap, m_min) - m_min) / (m_max - m_min)
+    ## equal footing hot/cool mixing
+    color_h = np.array([1., 0., 0.])
+    color_c = np.array([1., 0., 0.])
+    gas_map = np.zeros(mcmap.shape + (4,), dtype=np.float32)
+    totvals = np.log10(10**mcmap + 10**mhmap)
+    m_max = np.max(totvals)
+    m_min = np.maximum(np.min(totvals[np.isfinite[totvals]]), m_max - dynrange)
+    msub_max = max(mc_max, mh_max)
+    msub_min = msub_max - dynrange
+    mcw = (mcmap - msub_min) / (msub_max - msub_min)
+    mhw = (mhmap - msub_min) / (msub_max - msub_min)
+    stretch = 2.
+    wc = 0.5 * (np.tanh(stretch * (mcw - mch)) + 1.)
+    gas_map[:, :, :3] = wc * color_c + (1. - wc) * color_h
+    gas_map[:, :, 3] = totvals 
     
     gasax.set_facecolor('black')
     gasax.imshow(stmap.transpose(1, 0), interpolation='nearest', 
