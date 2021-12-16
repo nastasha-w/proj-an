@@ -26,10 +26,10 @@ m3.ol.ndir = '/net/luttero/data2/imgs/pretty/thesis_cover/maps/' # save map file
 # em: Athena X-IFU 5 sigma for Delta Omega * Delta t = 1e7 arcmin**2 * s
 #     (extreme exposure/binning)
 # using 1e6 arcmin**2 * s: 
-minvals_em = {'o7r': -0.9, 'o8': -0.9}
+#minvals_em = {'o7r': -0.9, 'o8': -0.9}
 # using 1e7 arcmin**2 * s:
-#minvals_em = {'o7r': -1.6,
-#              'o8':  -1.5}
+minvals_em = {'o7r': -1.6,
+              'o8':  -1.5}
 minvals_abs = {'o7': 15.4,
                'o8': 15.6}
 
@@ -171,6 +171,7 @@ def plotstrips(ax, map, extent, locations, axis='y',
         # NaN values outside selected region
         basemap = np.zeros(map.shape, dtype=map.dtype) / 0.
         basemap[sel] = map[sel]
+        basemap[sel][np.isnan(basemap[sel])] = -np.inf
         #if axis == 'y':
         #    subext = list(extent)
         #    subext[0] = extent[0] + pixmin * (extent[1] - extent[0]) / float(xpix)
@@ -242,11 +243,13 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     
     cd_cmap = pu.paste_cmaps(['gist_yarg', 'inferno'], 
                              [cd_min, minvals_abs[ion], cd_max],
-                             trunclist=[[0., 0.7], [0., 0.95]])
+                             trunclist=[[0., 0.5], [0.5, 1.]])
     cd_cmap.set_bad((0., 0., 0., 0.)) # transparent outside plotted strips
+    cd_cmap.set_under(cd_cmap(0.))
     em_cmap = pu.paste_cmaps(['bone', 'plasma'], 
                              [cd_min, minvals_abs[ion], cd_max],
                              trunclist=[[0., 0.5], [0.5, 1.]])
+    em_cmap.set_under(em_cmap(0.))
     
     coolvals = np.zeros(mcmap.shape + (4,), dtype=np.float32)
     coolvals[:, :, 2] = np.maximum(mcmap, mc_min) / (mc_max - mc_min)
