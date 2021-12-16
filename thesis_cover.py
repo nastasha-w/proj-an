@@ -276,7 +276,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     
     ## equal footing hot/cool mixing
     color_h = np.array([1., 0., 0.])
-    color_c = np.array([1., 0., 0.])
+    color_c = np.array([0., 0., 1.])
     gas_map = np.zeros(mcmap.shape + (4,), dtype=np.float32)
     totvals = np.log10(10**mcmap + 10**mhmap)
     m_max = np.max(totvals)
@@ -286,7 +286,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     mcw = (mcmap - msub_min) / (msub_max - msub_min)
     mhw = (mhmap - msub_min) / (msub_max - msub_min)
     stretch = 2.
-    wc = 0.5 * (np.tanh(stretch * (mcw - mch)) + 1.)
+    wc = 0.5 * (np.tanh(stretch * (mcw - mhw)) + 1.)
     gas_map[:, :, :3] = wc * color_c + (1. - wc) * color_h
     gas_map[:, :, 3] = totvals 
     
