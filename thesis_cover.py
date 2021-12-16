@@ -227,7 +227,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
         mtfiles_cool = files[3]
         mtfiles_hot  = files[4]
         stfile = files[5][0]
-    dynrange = 7.
+    dynrange = 5.
     
     cdmap, cd_min, cd_max, cdext = readmap(cdfile, dynrange=dynrange)
     emmap, em_min, em_max, emext = readmap(emfile, dynrange=dynrange)
@@ -243,14 +243,14 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     obsfig, obsax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 / xovery))
     gasfig, gasax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 / xovery))
     
-    cd_cmap = pu.paste_cmaps(['gist_yarg', 'inferno'], 
+    cd_cmap = pu.paste_cmaps(['gist_gray', 'inferno'], 
                              [cd_min, minvals_abs[ion], cd_max],
-                             trunclist=[[0., 0.5], [0.5, 1.]])
+                             trunclist=[[0., 0.5], [0.5, 0.9]])
     cd_cmap.set_bad((0., 0., 0., 0.)) # transparent outside plotted strips
     cd_cmap.set_under(cd_cmap(0.))
     em_cmap = pu.paste_cmaps(['bone', 'plasma'], 
                              [cd_min, minvals_abs[ion], cd_max],
-                             trunclist=[[0., 0.5], [0.5, 1.]])
+                             trunclist=[[0., 0.7], [0.5, 1.]])
     em_cmap.set_under(em_cmap(0.))
     
     coolvals = np.zeros(mcmap.shape + (4,), dtype=np.float32)
