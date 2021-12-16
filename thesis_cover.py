@@ -425,12 +425,12 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     #gasax.set_facecolor(st_cmap(0.))
     
     gasax.set_facecolor('black')
-    _st_min = max(st_min, st_max - dynrange)
+    _st_min = max(st_min, st_max - dynrange_gas)
     stv = (np.maximum(stmap, _st_min) - _st_min) / (st_max - _st_min)
     st_color = np.array([1., 1., 1.])
     star_map = np.zeros(stmap.shape + (4,), dtype=np.float32)
     star_map[:, :, :3] = st_color[np.newaxis, np.newaxis, :] # * stv[:, :, np.newaxis]
-    star_map[:, :, 3] = 0.3 * stv
+    star_map[:, :, 3] = 0.4 * stv
     
     gasax.imshow(gas_map.transpose(1, 0, 2), interpolation='nearest', 
                  origin='lower', extent=mhext)
