@@ -265,12 +265,12 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     coolvals = np.zeros(mcmap.shape + (4,), dtype=np.float32)
     m_max = max(mc_max, mh_max)
     m_min = m_max - dynrange
-    coolvals[:, :, 2] = np.maximum(mcmap, m_min) / (m_max - m_min)
-    coolvals[:, :, 3] = 0.7 * np.maximum(mcmap, m_min) / (m_max - m_min)
+    coolvals[:, :, 2] = (np.maximum(mcmap, m_min) - m_min) / (m_max - m_min)
+    coolvals[:, :, 3] = 0.7 * (np.maximum(mcmap, m_min) - m_min) / (m_max - m_min)
     
     hotvals = np.zeros(mcmap.shape + (4,), dtype=np.float32)
-    hotvals[:, :, 0] = np.maximum(mhmap, m_min) / (m_max - m_min)
-    hotvals[:, :, 3] = 0.7 * np.maximum(mhmap, m_min) / (m_max - m_min)
+    hotvals[:, :, 0] = (np.maximum(mhmap, m_min) - m_min) / (m_max - m_min)
+    hotvals[:, :, 3] = 0.7 * (np.maximum(mhmap, m_min) - m_min) / (m_max - m_min)
     
     gasax.set_facecolor('black')
     #gasax.imshow(stmap.transpose(1, 0), interpolation='nearest', 
@@ -293,7 +293,6 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     
     print(coolvals)
     print(hotvals)
-    return coolvals, hotvals
     
     if subregion is not None:
         obsax.set_xlim((subregion[0], subregion[1]))
