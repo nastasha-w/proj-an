@@ -183,6 +183,44 @@ def plotstrips(ax, map, extent, locations, axis='y',
         #subext = tuple(subext)
         ax.imshow(basemap.T, extent=extent, **kwargs_imshow)
 
+rgb_brightness_weights = np.array([0.299, 0.587, 0.144])
+def brightness_score(RGB):
+    return np.sqrt(weights[..., :] * RGB**2)
+    
+def rescale_RGB_tobrightness(RGB, score):
+    _RGB = np.zeros(RGB.shape, dtype=RGB.dtype)
+    wR = rgb_brightness_weights[0]
+    wG = rgb_brightness_weights[1]
+    wB = rgb_brightness_weights[2]
+    
+    BoverR = RBG[:, :, 1] / RBG[:, :, 0]
+    GoverR = RBG[:, :, 2] / RBG[:, :, 0] 
+    _rgb[:, :, 0] = score / np.sqrt(wR + BoverR * wB + GoverR * wG)
+    _rgb[:, :, 1] = rgb[:, :, 0] * GoverR
+    _rgb[:, :, 2] = rgb[:, :, 0] * BoverR 
+    
+    R0 = np.where(_gas_map[:, :, 0] == 0.)
+    BoverG = RGB[:, :, 2] / rgb[:, :, 1]
+    _rgb[:, :, 0][R0] = 0.
+    _rgb[:, :, 1][R0] = score[R0] / np.sqrt(wB + BoverG[R0] * wG)
+    _rgb[:, :, 2][R0] = rgb[:, :, 1][R0] * BoverG[R0]
+    
+    RG0 = np.where(np.logical_and(rgb[:, :, 0] == 0.,
+                                  rgb[:, :, 1] == 0.))
+    _rgb[:, :, 1] = 0. 
+    _rgb[:, :, 2][RG0] = score[RG0] / np.sqrt(wB) 
+    return _rgb
+    
+def equalize_brightness(rgb1, rgb2, step=0.95):
+    bs1 = brightness_score(rgb1)
+    bs2 = brightness_score(rgb2)
+    bstarget = max(bs1, bs2)
+    while (not np.isclose(bs1, bs2)) or np.max(bs1) > 1. or np.max(bs2):
+       rgb1 = rescale_RGB_tobrightness(rgb1, bstarget)
+       rgb2 = rescale_RGB_tobrightness(rgb2, bstarget)   
+       bstarget *= step  
+    return rgb1, rgb2
+
 def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
              subregion=None):
     '''
@@ -274,6 +312,8 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     ## equal footing hot/cool mixing
     color_h = np.array([1., 0., 0.])
     color_c = np.array([0., 0., 1.])
+    color_h, color_c = equalize_brightness(color_h, color_c, step=0.95)
+    
     gas_map = np.zeros(mcmap.shape + (4,), dtype=np.float32)
     totvals = np.log10(10**mcmap + 10**mhmap)
     m_max = np.max(totvals)
@@ -296,32 +336,38 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     #tonorm = np.sum(gas_map[:, :, :3], axis=-1)
     #gas_map[:, :, :3] *= totw[:, :, np.newaxis] / tonorm[:, :, np.newaxis]
     
-    ## formula off stackexchange: 
-    # brightness = sqrt(0.299 * R^2 + 0.587 * G^2 + 0.114 * B^2)
-    # likely to 'scramble' input colors other than R, G, and B
-    BoverR = _gas_map[:, :, 1] / _gas_map[:, :, 0]
-    GoverR = _gas_map[:, :, 2] / _gas_map[:, :, 0]
-    wR = 0.299
-    wG = 0.587
-    wB = 0.114
-    gas_map[:, :, 0] = totw / np.sqrt(wR + BoverR * wB + GoverR * wG)
-    gas_map[:, :, 1] = gas_map[:, :, 0] * GoverR
-    gas_map[:, :, 2] = gas_map[:, :, 0] * BoverR 
+    ### formula off stackexchange: 
+    ## brightness = sqrt(0.299 * R^2 + 0.587 * G^2 + 0.114 * B^2)
+    ## likely to 'scramble' input colors other than R, G, and B
+    ## creates very binary color look; might be implementation error
+    #BoverR = _gas_map[:, :, 1] / _gas_map[:, :, 0]
+    #GoverR = _gas_map[:, :, 2] / _gas_map[:, :, 0]
+    #wR = 0.299
+    #wG = 0.587
+    #wB = 0.114
+    #gas_map[:, :, 0] = totw / np.sqrt(wR + BoverR * wB + GoverR * wG)
+    #gas_map[:, :, 1] = gas_map[:, :, 0] * GoverR
+    #gas_map[:, :, 2] = gas_map[:, :, 0] * BoverR 
+    #
+    #R0 = np.where(_gas_map[:, :, 0] == 0.)
+    #BoverG = _gas_map[:, :, 2] / _gas_map[:, :, 1]
+    #gas_map[:, :, 0][R0] = 0.
+    #gas_map[:, :, 1][R0] = totw[R0] / np.sqrt(wB + BoverG[R0] * wG)
+    #gas_map[:, :, 2][R0] = gas_map[:, :, 1][R0] * BoverG[R0]
+    #
+    #RG0 = np.where(np.logical_and(_gas_map[:, :, 0] == 0.,
+    #                              _gas_map[:, :, 1] == 0.))
+    #gas_map[:, :, 1] = 0. 
+    #gas_map[:, :, 2][RG0] = totw[RG0] / np.sqrt(wB) 
+    #
+    #tonorm = np.sqrt(0.299 * gas_map[:, :, 0]**2 +\
+    #                 0.587 * gas_map[:, :, 1]**2 +\
+    #                 0.114 * gas_map[:, :, 2]**2)
     
-    R0 = np.where(_gas_map[:, :, 0] == 0.)
-    BoverG = _gas_map[:, :, 2] / _gas_map[:, :, 1]
-    gas_map[:, :, 0][R0] = 0.
-    gas_map[:, :, 1][R0] = totw[R0] / np.sqrt(wB + BoverG[R0] * wG)
-    gas_map[:, :, 2][R0] = gas_map[:, :, 1][R0] * BoverG[R0]
+    ## try to 'equalize' colors:
+    # gas_map sets channel ratios
+    gas_map, _ = equalize_brightness(_gas_map, totw, step=0.95)
     
-    RG0 = np.where(np.logical_and(_gas_map[:, :, 0] == 0.,
-                                  _gas_map[:, :, 1] == 0.))
-    gas_map[:, :, 1] = 0. 
-    gas_map[:, :, 2][RG0] = totw[RG0] / np.sqrt(wB) 
-    
-    tonorm = np.sqrt(0.299 * gas_map[:, :, 0]**2 +\
-                     0.587 * gas_map[:, :, 1]**2 +\
-                     0.114 * gas_map[:, :, 2]**2)
     gas_map *= 1. / np.max(gas_map[:3])
     gas_map[:, :, 3] = 1. #0.7 * totw 
     #print(gas_map)
