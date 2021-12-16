@@ -273,25 +273,20 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     hotvals[:, :, 3] = 0.7 * (np.maximum(mhmap, m_min) - m_min) / (m_max - m_min)
     
     gasax.set_facecolor('black')
-    #gasax.imshow(stmap.transpose(1, 0), interpolation='nearest', 
-    #             origin='lower', extent=stext, cmap='gray')
+    gasax.imshow(stmap.transpose(1, 0), interpolation='nearest', 
+                 origin='lower', extent=stext, cmap='gray')
     gasax.imshow(coolvals.transpose(1, 0, 2), interpolation='nearest', 
                  origin='lower', extent=mcext)
     gasax.imshow(hotvals.transpose(1, 0, 2), interpolation='nearest', 
                  origin='lower', extent=mhext)
     gasax.axis('off')
     
-    bins = np.linspace(em_min, em_max, 200)
-    plt.subplots()
-    plt.hist(emmap.flatten(), bins=bins)
-    plt.show()
-    return
-    
     obsax.set_facecolor('black')
-    obsax.imshow(cdmap.T, interpolation='nearest', origin='lower',
-                 cmap=cd_cmap, extent=cdext)
+    #obsax.imshow(cdmap.T, interpolation='nearest', origin='lower',
+    #             cmap=cd_cmap, extent=cdext)
     obsax.imshow(emmap.T, interpolation='nearest', origin='lower', 
-                 cmap=em_cmap, extent=emext)                 
+                 cmap=em_cmap, extent=emext, 
+                 vmin=minvals_em[line] - nonobsrange, vmax=em_max)                 
     plotstrips(obsax, cdmap, cdext, striplocs, axis='x',
                pixwidth=5, interpolation='nearest', origin='lower',
                cmap=cd_cmap)
