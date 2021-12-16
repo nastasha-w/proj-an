@@ -267,9 +267,9 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     #             cmap=cd_cmap, extent=cdext)
     obsax.imshow(emmap.T, interpolation='nearest', origin='lower', 
                  cmap=em_cmap, extent=emext)                 
-    plotstrips(obsax, cdmap, cdext, striplocs, axis='y',
+    plotstrips(obsax, cdmap.T, cdext, striplocs, axis='y',
                pixwidth=3, interpolation='nearest', origin='lower',
-                cmap=cd_cmap)
+               cmap=cd_cmap)
     obsax.axis('off')
     
     if subregion is not None:
