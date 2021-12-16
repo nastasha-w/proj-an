@@ -317,7 +317,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     RG0 = np.where(np.logical_and(_gas_map[:, :, 0] == 0.,
                                   _gas_map[:, :, 1] == 0.))
     gas_map[:, :, 1] = 0. 
-    gas_map[:, :, 2][RG0] = totw / np.sqrt(wB[RG0]) 
+    gas_map[:, :, 2][RG0] = totw[RG0] / np.sqrt(wB) 
     
     tonorm = np.sqrt(0.299 * gas_map[:, :, 0]**2 +\
                      0.587 * gas_map[:, :, 1]**2 +\
