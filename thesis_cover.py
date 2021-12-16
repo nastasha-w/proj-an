@@ -205,15 +205,17 @@ def rescale_RGB_tobrightness(rgb, score):
     _rgb[s2] = rgb[s0] * BoverR 
     
     R0 = np.where(rgb[s0] == 0.)
-    BoverG = rgb[s2] / rgb[s1]
-    _rgb[s0][R0] = 0.
-    _rgb[s1][R0] = score[R0] / np.sqrt(wB + BoverG[R0] * wG)
-    _rgb[s2][R0] = rgb[s1][R0] * BoverG[R0]
+    if len(R0[0]) > 0: 
+        BoverG = rgb[s2] / rgb[s1]
+        _rgb[s0][R0] = 0.
+        _rgb[s1][R0] = score[R0] / np.sqrt(wB + BoverG[R0] * wG)
+        _rgb[s2][R0] = rgb[s1][R0] * BoverG[R0]
     
     RG0 = np.where(np.logical_and(rgb[s0] == 0.,
                                   rgb[s1] == 0.))
-    _rgb[s1][RG0] = 0. 
-    _rgb[s2][RG0] = score[RG0] / np.sqrt(wB) 
+    if len(RG0[0]) > 0: 
+        _rgb[s1][RG0] = 0. 
+        _rgb[s2][RG0] = score[RG0] / np.sqrt(wB) 
     return _rgb
     
 def equalize_brightness(rgb1, rgb2, step=0.95):
