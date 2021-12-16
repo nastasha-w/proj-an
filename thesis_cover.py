@@ -185,7 +185,7 @@ def plotstrips(ax, map, extent, locations, axis='y',
 
 rgb_brightness_weights = np.array([0.299, 0.587, 0.144])
 def brightness_score(RGB):
-    sw = (np.newaxis,) * len(RGB.shape) + (slice(None, None, None),)
+    sw = (np.newaxis,) * (len(RGB.shape) - 1) + (slice(None, None, None),)
     return np.sqrt(np.sum(rgb_brightness_weights[sw] \
                           * RGB**2, axis=-1))
     
@@ -243,7 +243,7 @@ def equalize_brightness(rgb1, rgb2, step=0.95):
     bstarget = bs2
     loopcount = 0
     while (not np.allclose(bs1, bs2, rtol=1e-2, atol=1e-3)) \
-           or np.max(bs1) > 1. or np.max(bs2) > 1.:
+           or np.max(rgb1) > 1. or np.max(rgb2) > 1.:
        rgb1 = rescale_RGB_tobrightness(rgb1, bstarget)
        rgb2 = rescale_RGB_tobrightness(rgb2, bstarget)   
        bs1 = brightness_score(rgb1)
