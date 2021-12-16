@@ -295,23 +295,33 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     totw = (np.maximum(totvals, m_min) - m_min) / (m_max - m_min)
     tonorm = np.sum(gas_map[:, :, :3], axis=-1)
     gas_map[:, :, :3] *= totw[:, :, np.newaxis] / tonorm[:, :, np.newaxis]
-    gas_map[:, :, 3] = 0.7 * totw 
+    gas_map[:, :, 3] = 1. #0.7 * totw 
     #print(gas_map)
     
-    st_cmap = pu.paste_cmaps(['gray'], 
-                             [max(st_min, st_max - dynrange), st_max],
-                             trunclist=[[0.5, 1.]])
-    st_cmap.set_under(st_cmap(0.))
-    st_cmap.set_bad(st_cmap(0.))
-    gasax.set_facecolor(st_cmap(0.))
-    gasax.imshow(stmap.transpose(1, 0), interpolation='nearest', 
+    #st_cmap = pu.paste_cmaps(['gray'], 
+    #                         [max(st_min, st_max - dynrange), st_max],
+    #                         trunclist=[[0.5, 1.]])
+    #st_cmap.set_under(st_cmap(0.))
+    #st_cmap.set_bad(st_cmap(0.))
+    #gasax.set_facecolor(st_cmap(0.))
+    
+    gasax.set_facecolor('black')
+    _st_min = [max(st_min, st_max - dynrange)
+    stv = (np.maximun(stmap, _st_min) - _st_min) / (st_max - _st_min)
+    st_color = np.array([1., 1., 1.])
+    star_map = np.zeros(stmap.shape + (4,), dtype=np.float32)
+    star_map[:, :, :3] = st_color[np.newaxis, np.newaxis, :] *\
+                         stv[:, :, np.newaxis]
+    star_map[:, :, 3] = 0.2
+    
+    gasax.imshow(gas_map.transpose(1, 0, 2), interpolation='nearest', 
+                 origin='lower', extent=mhext)
+    gasax.imshow(star_map.transpose(1, 0), interpolation='nearest', 
                  origin='lower', extent=stext, cmap=st_cmap)
     #gasax.imshow(coolvals.transpose(1, 0, 2), interpolation='nearest', 
     #             origin='lower', extent=mcext)
     #gasax.imshow(hotvals.transpose(1, 0, 2), interpolation='nearest', 
     #             origin='lower', extent=mhext)
-    gasax.imshow(gas_map.transpose(1, 0, 2), interpolation='nearest', 
-                 origin='lower', extent=mhext)
     gasax.axis('off')
     
     obsax.set_facecolor('black')
