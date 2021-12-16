@@ -238,10 +238,10 @@ def rescale_RGB_tobrightness(rgb, score):
     return _rgb
     
 def equalize_brightness(rgb1, rgb2, step=0.95):
-    print(rgb1.shape, rgb2.shape)
+    #print(rgb1.shape, rgb2.shape)
     bs1 = brightness_score(rgb1)
     bs2 = brightness_score(rgb2)
-    print(bs1.shape, bs2.shape)
+    #print(bs1.shape, bs2.shape)
     bstarget = bs2
     loopcount = 0
     while (not np.allclose(bs1, bs2, rtol=1e-2, atol=1e-3)) \
@@ -250,11 +250,11 @@ def equalize_brightness(rgb1, rgb2, step=0.95):
         rgb2 = rescale_RGB_tobrightness(rgb2, bstarget)   
         bs1 = brightness_score(rgb1)
         bs2 = brightness_score(rgb2)
-        print(bs1.shape, bs2.shape)
+        #print(bs1.shape, bs2.shape)
         bstarget *= step  
-        print('equalize_brightness loop {}; target {}'.format(loopcount, 
-                                                              bstarget))
-        print(rgb1, rgb2)
+        #print('equalize_brightness loop {}; target {}'.format(loopcount, 
+        #                                                      bstarget))
+        #print(rgb1, rgb2)
         if loopcount > 100:
             raise RuntimeError('equalize_brightness not converging')
         loopcount += 1
@@ -413,7 +413,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     ## try to 'equalize' colors:
     # gas_map sets channel ratios
     totv = totw[:, :, np.newaxis] * np.array([1., 1., 1.])
-    gas_map, _ = equalize_brightness(_gas_map, totv, step=0.95)
+    gas_map[:, :, :3], _ = equalize_brightness(_gas_map, totv, step=0.95)
     gas_map[:, :, 3] = 1. #0.7 * totw 
     #print(gas_map)
     
