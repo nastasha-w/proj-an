@@ -204,7 +204,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     '''
     xsize = 5.5   
     pixwidth_strips = 3    
-    striplocs = [71., 65.]  
+    striplocs = [82., 83.]  
     
     # some issues with system- or python-version-dependent precision of select cut-off values
     if np.all(region_cMpc == region1) and ion == ion_default and \
@@ -240,8 +240,8 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     xovery = (cdext[1] - cdext[0]) / (cdext[3] - cdext[2])
     print(xovery)
     #xovery = 3
-    obsfig, obsax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 * xovery))
-    gasfig, gasax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 * xovery))
+    obsfig, obsax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 / xovery))
+    gasfig, gasax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 / xovery))
     
     cd_cmap = pu.paste_cmaps(['gist_yarg', 'inferno'], 
                              [cd_min, minvals_abs[ion], cd_max],
@@ -275,7 +275,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     #             cmap=cd_cmap, extent=cdext)
     obsax.imshow(emmap.T, interpolation='nearest', origin='lower', 
                  cmap=em_cmap, extent=emext)                 
-    plotstrips(obsax, cdmap, cdext, striplocs, axis='y',
+    plotstrips(obsax, cdmap, cdext, striplocs, axis='x',
                pixwidth=5, interpolation='nearest', origin='lower',
                cmap=cd_cmap)
     obsax.axis('off')
