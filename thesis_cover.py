@@ -299,8 +299,8 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     ## formula off stackexchange: 
     # brightness = sqrt(0.299 * R^2 + 0.587 * G^2 + 0.114 * B^2)
     # likely to 'scramble' input colors other than R, G, and B
-    BoverR = _gas_map[:, :, :1] / _gas_map[:, :, :0]
-    GoverR = _gas_map[:, :, :2] / _gas_map[:, :, :0]
+    BoverR = _gas_map[:, :, 1] / _gas_map[:, :, 0]
+    GoverR = _gas_map[:, :, 2] / _gas_map[:, :, 0]
     wR = 0.299
     wG = 0.587
     wB = 0.114
