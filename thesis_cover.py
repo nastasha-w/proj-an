@@ -38,8 +38,8 @@ region1 = [62.5, 72., 73., 90., 87.5, 93.75]
 region_default = region1
 ion_default = 'o8'
 line_default = 'o8'
-axis = 'z'
-pixsize_regionunits = 0.0125 # 800 pixels for a 10 cMpc 
+axis_default = 'z'
+pixsize_regionunits_default = 0.0125 # 800 pixels for a 10 cMpc 
 
 def getmaps(ion, line, region_cMpc, axis, pixsize_regionunits, nameonly=False):
     
@@ -201,14 +201,28 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     pixwidth_strips = 3    
     striplocs = [71., 65.]  
              
-    files = getmaps(ion, line, region_cMpc, axis, pixsize_regionunits)
     
-    cdfile = files[0][0]
-    emfile = files[1][0]
-    mtfiles = files[2]
-    mtfiles_cool = files[3]
-    mtfiles_hot  = files[4]
-    stfile = files[5][0]
+    # some issues with system- or python-version-dependent precision of select cut-off values
+    if np.all(region == region1) and ion == ion_default and \
+        line == line_default and axis == axis_default and \
+        pixsize_regionunits == pixsize_regionunits_default:
+        cdfile = m3.ol.ndir + 'coldens_o8_L0100N1504_27_test3.7_PtAb_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection_T4EOS.hdf5'
+        emfile = m3.ol.ndir + 'emission_o8_L0100N1504_27_test3.7_SmAb_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection_T4EOS.hdf5'
+        mtfiles = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection_T4EOS.hdf5',
+                   m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection.hdf5')
+        mtfiles_cool = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection_T4EOS_partsel_Temperature_T4EOS_min-None_max-316227.766017_endpartsel.hdf5',
+                        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection_partsel_Temperature_T4EOS_min-None_max-316227.766017_endpartsel.hdf5')
+        mtfiles_hot = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection_T4EOS_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5',
+                       m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5')
+        stfile = m3.ol.ndir + 'Mass_PartType4_L0100N1504_27_test3.7_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection_wiEOS.hdf5'
+    else:
+        files = getmaps(ion, line, region_cMpc, axis, pixsize_regionunits)
+        cdfile = files[0][0]
+        emfile = files[1][0]
+        mtfiles = files[2]
+        mtfiles_cool = files[3]
+        mtfiles_hot  = files[4]
+        stfile = files[5][0]
     dynrange = 7.
     
     cdmap, cd_min, cd_max, cdext = readmap(cdfile, dynrange=dynrange)
@@ -270,8 +284,8 @@ def plotdefaults(settings=1):
     region_default = None 
     _ion = ion_default
     _line = line_default
-    _axis = axis 
-    _pixsize = pixsize_regionunits
+    _axis = axis_default 
+    _pixsize = pixsize_regionunits_default
     if settings == 1:
         _region = region1
         _subregion = None
