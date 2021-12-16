@@ -285,14 +285,14 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     mhw = (mhmap - msub_min) / (msub_max - msub_min)
     #print(mcw)
     #print(mhw)
-    stretch = 2.
+    stretch = 1.
     wc = 0.5 * (np.tanh(stretch * (mcw - mhw)) + 1.)
     #print(wc)
     gas_map[:, :, :3] = wc[:, :, np.newaxis] * \
                           color_c[np.newaxis, np.newaxis, :] \
                         + (1. - wc[:, :, np.newaxis]) *\
                           color_h[np.newaxis, np.newaxis, :]
-    totw = (np.maximum(totvals, m_min) - m_min) / (m_max - m_min)
+    totw = (np.maximum(totvals, m_min) - msub_min) / (m_max - msub_min)
     tonorm = np.sum(gas_map[:, :, :3], axis=-1)
     gas_map[:, :, :3] *= totw[:, :, np.newaxis] / tonorm[:, :, np.newaxis]
     gas_map[:, :, 3] = 1. #0.7 * totw 
