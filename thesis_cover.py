@@ -280,7 +280,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     gas_map = np.zeros(mcmap.shape + (4,), dtype=np.float32)
     totvals = np.log10(10**mcmap + 10**mhmap)
     m_max = np.max(totvals)
-    m_min = np.maximum(np.min(totvals[np.isfinite[totvals]]), m_max - dynrange)
+    m_min = np.maximum(np.min(totvals[np.isfinite(totvals)]), m_max - dynrange)
     msub_max = max(mc_max, mh_max)
     msub_min = msub_max - dynrange
     mcw = (mcmap - msub_min) / (msub_max - msub_min)
