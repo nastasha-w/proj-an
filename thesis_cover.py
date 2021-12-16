@@ -214,7 +214,10 @@ def rescale_RGB_tobrightness(rgb, score):
 def equalize_brightness(rgb1, rgb2, step=0.95):
     bs1 = brightness_score(rgb1)
     bs2 = brightness_score(rgb2)
-    bstarget = max(bs1, bs2)
+    if len(rgb2.shape) > 1:
+        bstarget = bs2
+    else:
+        bstarget = max(bs1, bs2)
     while (not np.isclose(bs1, bs2)) or np.max(bs1) > 1. or np.max(bs2):
        rgb1 = rescale_RGB_tobrightness(rgb1, bstarget)
        rgb2 = rescale_RGB_tobrightness(rgb2, bstarget)   
