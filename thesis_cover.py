@@ -304,7 +304,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
         mtfiles_hot  = files[4]
         stfile = files[5][0]
         striplocs = None
-    dynrange = 7.
+    dynrange_gas = 4.
     nonobsrange = 6.
     
     cdmap, cd_min, cd_max, cdext = readmap(cdfile)
@@ -364,9 +364,9 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     totvals = np.log10(10**mcmap + 10**mhmap)
     m_max = np.max(totvals)
     m_min = np.maximum(np.min(totvals[np.isfinite(totvals)]), 
-                       m_max - dynrange)
+                       m_max - dynrange_gas)
     msub_max = max(mc_max, mh_max)
-    msub_min = msub_max - dynrange
+    msub_min = msub_max - dynrange_gas
     mcw = (mcmap - msub_min) / (msub_max - msub_min)
     mhw = (mhmap - msub_min) / (msub_max - msub_min)
     #print(mcw)
