@@ -287,7 +287,10 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     mhw = (mhmap - msub_min) / (msub_max - msub_min)
     stretch = 2.
     wc = 0.5 * (np.tanh(stretch * (mcw - mhw)) + 1.)
-    gas_map[:, :, :3] = wc * color_c + (1. - wc) * color_h
+    gas_map[:, :, :3] = wc[:, :, np.newaxis] * \
+                          color_c[np.newaxis, np.newaxis, :] \
+                        + (1. - wc[:, :, np.newaxis]) *\
+                          color_h[np.newaxis, np.newaxis, :]
     gas_map[:, :, 3] = totvals 
     
     gasax.set_facecolor('black')
