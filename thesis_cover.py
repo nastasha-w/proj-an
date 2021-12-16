@@ -306,7 +306,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     #gasax.set_facecolor(st_cmap(0.))
     
     gasax.set_facecolor('black')
-    _st_min = [max(st_min, st_max - dynrange)
+    _st_min = max(st_min, st_max - dynrange)
     stv = (np.maximun(stmap, _st_min) - _st_min) / (st_max - _st_min)
     st_color = np.array([1., 1., 1.])
     star_map = np.zeros(stmap.shape + (4,), dtype=np.float32)
