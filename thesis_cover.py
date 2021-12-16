@@ -168,16 +168,19 @@ def plotstrips(ax, map, extent, locations, axis='y',
         sel = [slice(None, None, None)] * 2
         sel[selax] = slice(pixmin, pixmax, None)
         sel = tuple(sel)
-        if axis == 'y':
-            subext = list(extent)
-            subext[0] = extent[0] + pixmin * (extent[1] - extent[0]) / float(xpix)
-            subext[1] = extent[0] + pixmax * (extent[1] - extent[0]) / float(xpix)
-        elif axis == 'x':
-            subext = list(extent)
-            subext[2] = extent[2] + pixmin * (extent[3] - extent[2]) / float(ypix)
-            subext[3] = extent[2] + pixmax * (extent[3] - extent[2]) / float(ypix)
-        subext = tuple(subext)
-        ax.imshow(map[sel].T, extent=subext, **kwargs_imshow)
+        # NaN values outside selected region
+        basemap = np.zeros(map.shape, dtype=map.dtype) / 0.
+        basemap[sel] = map[sel]
+        #if axis == 'y':
+        #    subext = list(extent)
+        #    subext[0] = extent[0] + pixmin * (extent[1] - extent[0]) / float(xpix)
+        #    subext[1] = extent[0] + pixmax * (extent[1] - extent[0]) / float(xpix)
+        #elif axis == 'x':
+        #    subext = list(extent)
+        #    subext[2] = extent[2] + pixmin * (extent[3] - extent[2]) / float(ypix)
+        #    subext[3] = extent[2] + pixmax * (extent[3] - extent[2]) / float(ypix)
+        #subext = tuple(subext)
+        ax.imshow(basemap.T, extent=extent, **kwargs_imshow)
 
 def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
              subregion=None):
@@ -240,6 +243,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     cd_cmap = pu.paste_cmaps(['gist_yarg', 'inferno'], 
                              [cd_min, minvals_abs[ion], cd_max],
                              trunclist=[[0., 0.7], [0., 0.95]])
+    cd_cmap.set_bad((0., 0., 0., 0.)) # transparent outside plotted strips
     em_cmap = pu.paste_cmaps(['bone', 'plasma'], 
                              [cd_min, minvals_abs[ion], cd_max],
                              trunclist=[[0., 0.5], [0.5, 1.]])
