@@ -282,6 +282,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     gasax.axis('off')
     
     bins = np.linspace(em_min, em_max, 200)
+    plt.subplots()
     plt.hist(emmap.flatten(), bins=bins)
     plt.show()
     return
