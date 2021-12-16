@@ -316,7 +316,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     
     gasax.imshow(gas_map.transpose(1, 0, 2), interpolation='nearest', 
                  origin='lower', extent=mhext)
-    gasax.imshow(star_map.transpose(1, 0), interpolation='nearest', 
+    gasax.imshow(star_map.transpose(1, 0, 2), interpolation='nearest', 
                  origin='lower', extent=stext, cmap=st_cmap)
     #gasax.imshow(coolvals.transpose(1, 0, 2), interpolation='nearest', 
     #             origin='lower', extent=mcext)
