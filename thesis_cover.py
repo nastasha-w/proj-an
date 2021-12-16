@@ -207,9 +207,6 @@ def rescale_RGB_tobrightness(rgb, score):
     R0 = np.where(rgb[s0] == 0.)
     if len(R0[0]) > 0: 
         BoverG = rgb[s2] / rgb[s1]
-        print(_rgb)
-        print(_rgb[s0])
-        print(_rgb[s0][R0])
         if hasattr(_rgb[s0], 'shape'):
             _rgb[s0][R0] = 0.
             _rgb[s1][R0] = score[R0] / np.sqrt(wB + BoverG[R0] * wG)
