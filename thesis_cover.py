@@ -288,13 +288,41 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     stretch = 1.
     wc = 0.5 * (np.tanh(stretch * (mcw - mhw)) + 1.)
     #print(wc)
-    gas_map[:, :, :3] = wc[:, :, np.newaxis] * \
-                          color_c[np.newaxis, np.newaxis, :] \
-                        + (1. - wc[:, :, np.newaxis]) *\
-                          color_h[np.newaxis, np.newaxis, :]
+    _gas_map = wc[:, :, np.newaxis] * \
+                 color_c[np.newaxis, np.newaxis, :] \
+               + (1. - wc[:, :, np.newaxis]) *\
+                 color_h[np.newaxis, np.newaxis, :]
     totw = (np.maximum(totvals, m_min) - msub_min) / (m_max - msub_min)
-    tonorm = np.sum(gas_map[:, :, :3], axis=-1)
-    gas_map[:, :, :3] *= totw[:, :, np.newaxis] / tonorm[:, :, np.newaxis]
+    #tonorm = np.sum(gas_map[:, :, :3], axis=-1)
+    #gas_map[:, :, :3] *= totw[:, :, np.newaxis] / tonorm[:, :, np.newaxis]
+    
+    ## formula off stackexchange: 
+    # brightness = sqrt(0.299 * R^2 + 0.587 * G^2 + 0.114 * B^2)
+    # likely to 'scramble' input colors other than R, G, and B
+    BoverR = _gas_map[:, :, :1] / _gas_map[:, :, :0]
+    GoverR = _gas_map[:, :, :2] / _gas_map[:, :, :0]
+    wR = 0.299
+    wG = 0.587
+    wB = 0.114
+    gas_map[:, :, 0] = totw / np.sqrt(wR + BoverR * wB + GoverR * wG)
+    gas_map[:, :, 1] = gas_map[:, :, 0] * GoverR
+    gas_map[:, :, 2] = gas_map[:, :, 0] * BoverR 
+    
+    R0 = np.where(_gas_map[:, :, 0] == 0.)
+    BoverG = _gas_map[:, :, 2] / _gas_map[:, :, :1]
+    gas_map[:, :, 0][R0] = 0.
+    gas_map[:, :, 1][R0] = totw[R0] / np.sqrt(wB + BoverG * wG)
+    gas_map[:, :, 2][R0] = gas_map[:, :, 1][R0] * BoverG[R0]
+    
+    RG0 = np.where(np.logical_and(_gas_map[:, :, 0] == 0.,
+                                  _gas_map[:, :, 1] == 0.))
+    gas_map[:, :, 1] = 0. 
+    gas_map[:, :, 2] = totw / np.sqrt(wB)
+    
+    tonorm = np.sqrt(0.299 * gas_map[:, :, 0]**2 +\
+                     0.587 * gas_map[:, :, 1]**2 +\
+                     0.114 * gas_map[:, :, 2]**2)
+    gas_map *= 1. / np.max(gas_map[:3])
     gas_map[:, :, 3] = 1. #0.7 * totw 
     #print(gas_map)
     
