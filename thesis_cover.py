@@ -244,17 +244,17 @@ def equalize_brightness(rgb1, rgb2, step=0.95):
     loopcount = 0
     while (not np.allclose(bs1, bs2, rtol=1e-2, atol=1e-3)) \
            or np.max(rgb1) > 1. or np.max(rgb2) > 1.:
-       rgb1 = rescale_RGB_tobrightness(rgb1, bstarget)
-       rgb2 = rescale_RGB_tobrightness(rgb2, bstarget)   
-       bs1 = brightness_score(rgb1)
-       bs2 = brightness_score(rgb2)
-       bstarget *= step  
-       print('equalize_brightness loop {}; target {}'.format(loopcount, 
-                                                             bstarget))
-       print(rgb1, rgb2)
-       if loopcount > 100:
-           raise RuntimeError('equalize_brightness not converging')
-       loopcount += 1
+        rgb1 = rescale_RGB_tobrightness(rgb1, bstarget)
+        rgb2 = rescale_RGB_tobrightness(rgb2, bstarget)   
+        bs1 = brightness_score(rgb1)
+        bs2 = brightness_score(rgb2)
+        bstarget *= step  
+        print('equalize_brightness loop {}; target {}'.format(loopcount, 
+                                                              bstarget))
+        print(rgb1, rgb2)
+        if loopcount > 100:
+            raise RuntimeError('equalize_brightness not converging')
+        loopcount += 1
     return rgb1, rgb2
 
 def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
