@@ -143,7 +143,7 @@ def readmap(filen, dynrange=7.):
             axis0 = 0
             axis1 = 1
         axn0 = ['x', 'y', 'z'][axis0]
-        axn1 = ['x', 'y', 'z'][axis0]
+        axn1 = ['x', 'y', 'z'][axis1]
         center = f['Header/inputpars'].attrs['centre']
         cen0 = center[axis0]
         cen1 = center[axis1]
@@ -239,7 +239,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     
     xovery = (cdext[1] - cdext[0]) / (cdext[3] - cdext[2])
     print(xovery)
-    xovery = 3
+    #xovery = 3
     obsfig, obsax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 * xovery))
     gasfig, gasax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 * xovery))
     
