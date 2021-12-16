@@ -238,6 +238,8 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     stmap, st_min, st_max, stext = readmap(stfile, dynrange=dynrange)
     
     xovery = (cdext[1] - cdext[0]) / (cdext[3] - cdext[2])
+    print(xovery)
+    xovery = 3
     obsfig, obsax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 * xovery))
     gasfig, gasax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 * xovery))
     
