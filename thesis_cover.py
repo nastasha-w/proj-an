@@ -216,7 +216,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
         mtfiles_hot = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection_T4EOS_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5',
                        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5')
         stfile = m3.ol.ndir + 'Mass_PartType4_L0100N1504_27_test3.7_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection_wiEOS.hdf5'
-        striplocs = [75., 82., 83.] 
+        striplocs = [75., 82.3, 83.] 
 
     else:
         files = getmaps(ion, line, region_cMpc, axis, pixsize_regionunits)
