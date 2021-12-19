@@ -309,6 +309,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     ''' 
     
     # some issues with system- or python-version-dependent precision of select cut-off values
+    striplocs = None
     if np.all(region_cMpc == region1) and ion == ion_default and \
         line == line_default and axis == axis_default and \
         pixsize_regionunits == pixsize_regionunits_default:
@@ -361,7 +362,59 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
         mtfiles_hot = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_1440pix_6.25slice_zcen9.375_x31.0-pm18.0_y66.0-pm12.0_z-projection_T4EOS_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5',
         m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_1440pix_6.25slice_zcen9.375_x31.0-pm18.0_y66.0-pm12.0_z-projection_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5')
         stfile = m3.ol.ndir + 'Mass_PartType4_L0100N1504_27_test3.7_C2Sm_1440pix_6.25slice_zcen9.375_x31.0-pm18.0_y66.0-pm12.0_z-projection_wiEOS.hdf5'
-   
+    
+    elif np.all(region_cMpc == region5) and ion == ion_default and \
+        line == line_default and axis == axis_default and \
+        pixsize_regionunits == pixsize_regionunits_default:
+        cdfile = m3.ol.ndir + 'coldens_o8_L0100N1504_27_test3.7_PtAb_C2Sm_2640pix_6.25slice_zcen15.625_x56.5-pm33.0_y15.0-pm40.0_z-projection_T4EOS.hdf5'
+        emfile = m3.ol.ndir + 'emission_o8_L0100N1504_27_test3.7_SmAb_C2Sm_2640pix_6.25slice_zcen15.625_x56.5-pm33.0_y15.0-pm40.0_z-projection_T4EOS.hdf5'
+        mtfiles = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_2640pix_6.25slice_zcen15.625_x56.5-pm33.0_y15.0-pm40.0_z-projection_T4EOS.hdf5',
+        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_2640pix_6.25slice_zcen15.625_x56.5-pm33.0_y15.0-pm40.0_z-projection.hdf5')
+        mtfiles_cool = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_2640pix_6.25slice_zcen15.625_x56.5-pm33.0_y15.0-pm40.0_z-projection_T4EOS_partsel_Temperature_T4EOS_min-None_max-316227.766017_endpartsel.hdf5',
+        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_2640pix_6.25slice_zcen15.625_x56.5-pm33.0_y15.0-pm40.0_z-projection_partsel_Temperature_T4EOS_min-None_max-316227.766017_endpartsel.hdf5')
+        mtfiles_hot = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_2640pix_6.25slice_zcen15.625_x56.5-pm33.0_y15.0-pm40.0_z-projection_T4EOS_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5',
+        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_2640pix_6.25slice_zcen15.625_x56.5-pm33.0_y15.0-pm40.0_z-projection_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5')
+        stfile = m3.ol.ndir + 'Mass_PartType4_L0100N1504_27_test3.7_C2Sm_2640pix_6.25slice_zcen15.625_x56.5-pm33.0_y15.0-pm40.0_z-projection_wiEOS.hdf5'        
+
+    elif np.all(region_cMpc == region6) and ion == ion_default and \
+        line == line_default and axis == axis_default and \
+        pixsize_regionunits == pixsize_regionunits_default:
+        cdfile = m3.ol.ndir + 'coldens_o8_L0100N1504_27_test3.7_PtAb_C2Sm_1280pix_6.25slice_zcen40.625_x78.0-pm16.0_y96.0-pm20.0_z-projection_T4EOS.hdf5'
+        emfile = m3.ol.ndir + 'emission_o8_L0100N1504_27_test3.7_SmAb_C2Sm_1280pix_6.25slice_zcen40.625_x78.0-pm16.0_y96.0-pm20.0_z-projection_T4EOS.hdf5'
+        mtfiles = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_1280pix_6.25slice_zcen40.625_x78.0-pm16.0_y96.0-pm20.0_z-projection_T4EOS.hdf5',
+        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_1280pix_6.25slice_zcen40.625_x78.0-pm16.0_y96.0-pm20.0_z-projection.hdf5')
+        mtfiles_cool = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_1280pix_6.25slice_zcen40.625_x78.0-pm16.0_y96.0-pm20.0_z-projection_T4EOS_partsel_Temperature_T4EOS_min-None_max-316227.766017_endpartsel.hdf5',
+        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_1280pix_6.25slice_zcen40.625_x78.0-pm16.0_y96.0-pm20.0_z-projection_partsel_Temperature_T4EOS_min-None_max-316227.766017_endpartsel.hdf5')
+        mtfiles_hot = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_1280pix_6.25slice_zcen40.625_x78.0-pm16.0_y96.0-pm20.0_z-projection_T4EOS_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5',
+        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_1280pix_6.25slice_zcen40.625_x78.0-pm16.0_y96.0-pm20.0_z-projection_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5')
+        stfile = m3.ol.ndir + 'Mass_PartType4_L0100N1504_27_test3.7_C2Sm_1280pix_6.25slice_zcen40.625_x78.0-pm16.0_y96.0-pm20.0_z-projection_wiEOS.hdf5'
+
+    elif np.all(region_cMpc == region7) and ion == ion_default and \
+        line == line_default and axis == axis_default and \
+        pixsize_regionunits == pixsize_regionunits_default:        
+        cdfile = m3.ol.ndir + 'coldens_o8_L0100N1504_27_test3.7_PtAb_C2Sm_4560pix_6.25slice_zcen46.875_x10.5-pm57.0_y88.0-pm8.0_z-projection_T4EOS.hdf5'
+        emfile = m3.ol.ndir + 'emission_o8_L0100N1504_27_test3.7_SmAb_C2Sm_4560pix_6.25slice_zcen46.875_x10.5-pm57.0_y88.0-pm8.0_z-projection_T4EOS.hdf5'
+        mtfiles = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_4560pix_6.25slice_zcen46.875_x10.5-pm57.0_y88.0-pm8.0_z-projection_T4EOS.hdf5',
+        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_4560pix_6.25slice_zcen46.875_x10.5-pm57.0_y88.0-pm8.0_z-projection.hdf5')
+        mtfiles_cool = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_4560pix_6.25slice_zcen46.875_x10.5-pm57.0_y88.0-pm8.0_z-projection_T4EOS_partsel_Temperature_T4EOS_min-None_max-316227.766017_endpartsel.hdf5',
+        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_4560pix_6.25slice_zcen46.875_x10.5-pm57.0_y88.0-pm8.0_z-projection_partsel_Temperature_T4EOS_min-None_max-316227.766017_endpartsel.hdf5')
+        mtfiles_hot = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_4560pix_6.25slice_zcen46.875_x10.5-pm57.0_y88.0-pm8.0_z-projection_T4EOS_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5',
+        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_4560pix_6.25slice_zcen46.875_x10.5-pm57.0_y88.0-pm8.0_z-projection_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5')
+        stfile = m3.ol.ndir + 'Mass_PartType4_L0100N1504_27_test3.7_C2Sm_4560pix_6.25slice_zcen46.875_x10.5-pm57.0_y88.0-pm8.0_z-projection_wiEOS.hdf5'
+
+    elif np.all(region_cMpc == region8) and ion == ion_default and \
+        line == line_default and axis == axis_default and \
+        pixsize_regionunits == pixsize_regionunits_default:   
+        cdfile = m3.ol.ndir + 'coldens_o8_L0100N1504_27_test3.7_PtAb_C2Sm_1760pix_6.25slice_zcen53.125_x4.0-pm22.0_y58.5-pm17.0_z-projection_T4EOS.hdf5'
+        emfile = m3.ol.ndir + 'emission_o8_L0100N1504_27_test3.7_SmAb_C2Sm_1760pix_6.25slice_zcen53.125_x4.0-pm22.0_y58.5-pm17.0_z-projection_T4EOS.hdf5'
+        mtfiles = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_1760pix_6.25slice_zcen53.125_x4.0-pm22.0_y58.5-pm17.0_z-projection_T4EOS.hdf5',
+        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_1760pix_6.25slice_zcen53.125_x4.0-pm22.0_y58.5-pm17.0_z-projection.hdf5')
+        mtfiles_cool = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_1760pix_6.25slice_zcen53.125_x4.0-pm22.0_y58.5-pm17.0_z-projection_T4EOS_partsel_Temperature_T4EOS_min-None_max-316227.766017_endpartsel.hdf5',
+        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_1760pix_6.25slice_zcen53.125_x4.0-pm22.0_y58.5-pm17.0_z-projection_partsel_Temperature_T4EOS_min-None_max-316227.766017_endpartsel.hdf5')
+        mtfiles_hot = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_1760pix_6.25slice_zcen53.125_x4.0-pm22.0_y58.5-pm17.0_z-projection_T4EOS_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5',
+        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_1760pix_6.25slice_zcen53.125_x4.0-pm22.0_y58.5-pm17.0_z-projection_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5')
+        stfile = m3.ol.ndir + 'Mass_PartType4_L0100N1504_27_test3.7_C2Sm_1760pix_6.25slice_zcen53.125_x4.0-pm22.0_y58.5-pm17.0_z-projection_wiEOS.hdf5'
+
     else:
         files = getmaps(ion, line, region_cMpc, axis, pixsize_regionunits)
         cdfile = files[0][0]
