@@ -411,6 +411,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
     brightness_hi = pu.truncate_colormap(brightness_map, minval=midpoint,
                                          maxval=1.)
     brightness_rescale(map_hi, brightness_map)
+    print([minshow, minvals_em[line], em_max])
     em_cmap = pu.paste_cmaps([map_lo, map_hi], 
                              [minshow, minvals_em[line], em_max],
                              trunclist=[sub_lo, sub_hi],
