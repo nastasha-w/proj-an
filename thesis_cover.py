@@ -289,7 +289,7 @@ def brightness_rescale(cmap, cmap_brightness, n=-1):
     return new_cmap    
 
 def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
-             subregion=None):
+             subregion=None, outnames=None):
     '''
     ion:  str
         ion for the column density map
@@ -322,6 +322,19 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
                        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5')
         stfile = m3.ol.ndir + 'Mass_PartType4_L0100N1504_27_test3.7_C2Sm_760pix_6.25slice_zcen90.625_x67.25-pm9.5_y81.5-pm17.0_z-projection_wiEOS.hdf5'
         striplocs = [75., 82.3, 83.] 
+    
+    elif np.all(region_cMpc == region2) and ion == ion_default and \
+        line == line_default and axis == axis_default and \
+        pixsize_regionunits == pixsize_regionunits_default:
+        cdfile = m3.ol.ndir + 'coldens_o8_L0100N1504_27_test3.7_PtAb_C2Sm_1560pix_6.25slice_zcen90.625_x62.25-pm19.5_y81.5-pm17.0_z-projection_T4EOS.hdf5'
+        emfile = m3.ol.ndir + 'emission_o8_L0100N1504_27_test3.7_SmAb_C2Sm_1560pix_6.25slice_zcen90.625_x62.25-pm19.5_y81.5-pm17.0_z-projection_T4EOS.hdf5'
+        mtfiles = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_1560pix_6.25slice_zcen90.625_x62.25-pm19.5_y81.5-pm17.0_z-projection_T4EOS.hdf5',
+        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_1560pix_6.25slice_zcen90.625_x62.25-pm19.5_y81.5-pm17.0_z-projection.hdf5')
+        mtfiles_cool = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_1560pix_6.25slice_zcen90.625_x62.25-pm19.5_y81.5-pm17.0_z-projection_T4EOS_partsel_Temperature_T4EOS_min-None_max-316227.766017_endpartsel.hdf5',
+        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_1560pix_6.25slice_zcen90.625_x62.25-pm19.5_y81.5-pm17.0_z-projection_partsel_Temperature_T4EOS_min-None_max-316227.766017_endpartsel.hdf5')
+        mtfiles_hot = (m3.ol.ndir + 'Mass_L0100N1504_27_test3.7_C2Sm_1560pix_6.25slice_zcen90.625_x62.25-pm19.5_y81.5-pm17.0_z-projection_T4EOS_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5',
+        m3.ol.ndir + 'Temperature_T4EOS_Mass_T4EOS_L0100N1504_27_test3.7_C2Sm_1560pix_6.25slice_zcen90.625_x62.25-pm19.5_y81.5-pm17.0_z-projection_partsel_Temperature_T4EOS_min-316227.766017_max-None_endpartsel.hdf5')
+        stfile = m3.ol.ndir + 'Mass_PartType4_L0100N1504_27_test3.7_C2Sm_1560pix_6.25slice_zcen90.625_x62.25-pm19.5_y81.5-pm17.0_z-projection_wiEOS.hdf5'
 
     else:
         files = getmaps(ion, line, region_cMpc, axis, pixsize_regionunits)
@@ -527,9 +540,15 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
         gasax.set_xlim((subregion[0], subregion[1]))
         obsax.set_xlim((subregion[2], subregion[3]))
         gasax.set_xlim((subregion[2], subregion[3]))
-        
-    obsfig.savefig(mdir + 'emission_absorption_map.pdf')
-    gasfig.savefig(mdir + 'gas_phase_map.pdf')
+    
+    if outnames is None:
+        obsname = 'emission_absorption_map.pdf'
+        gasname = 'gas_phase_map.pdf'
+    else:
+        obsname = outnames[0]
+        gasname = outnames[1]
+    obsfig.savefig(mdir + obsname)
+    gasfig.savefig(mdir + gasname)
     
 def plotdefaults(settings=1):
     region_default = None 
@@ -561,8 +580,10 @@ def plotdefaults(settings=1):
     elif settings == 8:
         _region = region8
         _subregion = None
+    obsname = 'emission_absorption_map_region{}.pdf'.format(settings)
+    gasname = 'gas_phase_map_region{}.pdf'.format(settings)
     plotmaps(_ion, _line, _region, _axis, _pixsize, 
-             subregion=_subregion)
+             subregion=_subregion, outnames=(obsname, gasname))
 
 if __name__ == '__main__':
     args = sys.argv[1:]
