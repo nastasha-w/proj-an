@@ -21,11 +21,11 @@ import plot_utils as pu
 import make_maps_v3_master as m3
 
 # luttero:
-#mdir = '/net/luttero/data2/imgs/pretty/thesis_cover/imgs/'
-#m3.ol.ndir = '/net/luttero/data2/imgs/pretty/thesis_cover/maps/' # save map files
+mdir = '/net/luttero/data2/imgs/pretty/thesis_cover/imgs/'
+m3.ol.ndir = '/net/luttero/data2/imgs/pretty/thesis_cover/maps/' # save map files
 # laptop
-mdir = '/Users/Nastasha/phd/imgs/thesis_cover/'
-m3.ol.ndir = '/Users/Nastasha//phd/sim_maps/thesis_cover/'
+#mdir = '/Users/Nastasha/phd/imgs/thesis_cover/'
+#m3.ol.ndir = '/Users/Nastasha//phd/sim_maps/thesis_cover/'
 
 
 # abs: Athena X_IFU EW_min = 0.18 eV
