@@ -488,12 +488,15 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=-1):
          cmap(np.linspace(minval, maxval, n)))
     return new_cmap    
 
-def paste_cmaps(cmaplist, edges, trunclist=None):
+def paste_cmaps(cmaplist, edges, trunclist=None, transwidths=None):
     if trunclist is None:
         trunclist = [(0., 1.)] * len(cmaplist)
+    if transwidths is None:
+        transwidths = [0.] * (len(cmaplist) - 1)
     # cobble together a color map
     nsample = 256
-    cmaps = [mpl.cm.get_cmap(cmap) for cmap in cmaplist]
+    cmaps = [mpl.cm.get_cmap(cmap) if isinstance(cmap, type('')) else cmap \
+             for cmap in cmaplist]
     # the parts of each color bar to use
     cmaps = [truncate_colormap(cmaps[i], minval=trunclist[i][0], maxval=trunclist[i][1]) \
                                for i in range(len(cmaplist))]
@@ -501,11 +504,22 @@ def paste_cmaps(cmaplist, edges, trunclist=None):
     vmin = edges[0]
     vmax = edges[-1]
     ivran = 1. / (vmax - vmin)
-    ranges_mapto = [np.linspace((edges[i] - vmin) * ivran,\
-                                (edges[i + 1] - vmin) * ivran,\
+    edges_split = [[edges[i], 
+                    edges[i + 1] - 0.5 * transwidths[i]] if i == 0 else \
+                   [edges[i] + 0.5 * transwidths[i - 1], 
+                    edges[i + 1]] if i == len(cmaplist) - 1 else \
+                   [edges[i] + 0.5 * transwidths[i - 1], 
+                    edges[i + 1] - 0.5 * transwidths[i]] \
+                   for i in range(len(cmaplist))]
+    #print(edges_split)
+    
+    ranges_mapto = [np.linspace((edges_split[i][0] - vmin) * ivran,\
+                                (edges_split[i][1] - vmin) * ivran,\
                                 nsample) for i in range(len(cmaplist))] 
+    #print(ranges_mapto)
     range_mapfrom = np.linspace(0., 1., nsample)
-    maplist = [(ranges_mapto[ci][i], cmaps[ci](range_mapfrom[i])) for ci in range(len(cmaplist)) for i in range(nsample)]
+    maplist = [(ranges_mapto[ci][i], cmaps[ci](range_mapfrom[i])) \
+               for ci in range(len(cmaplist)) for i in range(nsample)]
     cmap = mpl.colors.LinearSegmentedColormap.from_list(
          'custom', maplist)
     cmap.set_under(cmap(0.))

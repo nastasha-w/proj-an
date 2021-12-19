@@ -15,12 +15,18 @@ import numpy as np
 import h5py
 
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 import plot_utils as pu
 import make_maps_v3_master as m3
 
-mdir = '/net/luttero/data2/imgs/pretty/thesis_cover/imgs/'
-m3.ol.ndir = '/net/luttero/data2/imgs/pretty/thesis_cover/maps/' # save map files
+# luttero:
+#mdir = '/net/luttero/data2/imgs/pretty/thesis_cover/imgs/'
+#m3.ol.ndir = '/net/luttero/data2/imgs/pretty/thesis_cover/maps/' # save map files
+# laptop
+mdir = '/Users/Nastasha/phd/imgs/thesis_cover/'
+m3.ol.ndir = '/Users/Nastasha//phd/sim_maps/thesis_cover/'
+
 
 # abs: Athena X_IFU EW_min = 0.18 eV
 # em: Athena X-IFU 5 sigma for Delta Omega * Delta t = 1e7 arcmin**2 * s
@@ -33,7 +39,15 @@ minvals_em = {'o7r': -1.6,
 minvals_abs = {'o7': 15.4,
                'o8': 15.6}
 
-region1 = [62.5, 72., 73., 90., 87.5, 93.75]
+region1 = [ 62.5, 72.0, 73.0,  90.0, 87.5,  93.75]
+region2 = [ 52.5, 72.0, 73.0,  90.0, 87.5,  93.75]
+region3 = [ 86.0, 96.0, 48.5,  59.0,  0.0,  6.25 ]
+region4 = [ 22.0, 40.0, 60.0,  72.0,  6.25, 12.5 ]
+region5 = [ 40.0, 73.0, -5.0,  35.0, 12.5,  18.75]
+region6 = [ 70.0, 86.0, 86.0, 106.0, 37.5,  43.75]
+region7 = [-18.0, 39.0, 84.0,  92.0, 43.75, 50.0 ]
+region8 = [ -7.0, 15.0, 50.0,  67.0, 50.0,  56.25]
+
 
 region_default = region1
 ion_default = 'o8'
@@ -183,6 +197,7 @@ def plotstrips(ax, map, extent, locations, axis='y',
         #subext = tuple(subext)
         ax.imshow(basemap.T, extent=extent, **kwargs_imshow)
 
+## from https://stackoverflow.com/questions/596216/formula-to-determine-perceived-brightness-of-rgb-color
 rgb_brightness_weights = np.array([0.299, 0.587, 0.144])
 def brightness_score(RGB):
     sw = (np.newaxis,) * (len(RGB.shape) - 1) + (slice(None, None, None),)
@@ -260,6 +275,19 @@ def equalize_brightness(rgb1, rgb2, step=0.95):
         loopcount += 1
     return rgb1, rgb2
 
+def brightness_rescale(cmap, cmap_brightness, n=-1):
+    if n == -1:
+        n = cmap.N
+    out_colorlist = cmap(np.linspace(0., 1., n))[..., :3] 
+    target_colorlist = cmap_brightness(np.linspace(0., 1., n))[..., :3] 
+    out_colorlist, _ = equalize_brightness(out_colorlist, target_colorlist, 
+                                           step=0.95)
+    new_cmap = mpl.colors.LinearSegmentedColormap.from_list(
+         'rescale({name},{target})'.format(name=cmap.name, 
+                                           target=cmap_brightness.name),
+         out_colorlist)
+    return new_cmap    
+
 def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
              subregion=None):
     '''
@@ -304,6 +332,22 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
         mtfiles_hot  = files[4]
         stfile = files[5][0]
         striplocs = None
+        
+        ## copy for future use:
+        sp = ' ' * 8
+        print(sp + "cdfile = m3.ol.ndir + '{}'".format(cdfile.split('/')[-1]))
+        print(sp + "emfile = m3.ol.ndir + '{}'".format(emfile.split('/')[-1]))
+        _st = "mtfiles = (m3.ol.ndir + '{}',\n{sp}m3.ol.ndir + '{}')"
+        print(sp + _st.format(mtfiles[0].split('/')[-1], 
+                              mtfiles[1].split('/')[-1], sp=sp))
+        _st = "mtfiles_cool = (m3.ol.ndir + '{}',\n{sp}m3.ol.ndir + '{}')"
+        print(sp + _st.format(mtfiles_cool[0].split('/')[-1], 
+                              mtfiles_cool[1].split('/')[-1], sp=sp))
+        _st = "mtfiles_hot = (m3.ol.ndir + '{}',\n{sp}m3.ol.ndir + '{}')"
+        print(sp + _st.format(mtfiles_hot[0].split('/')[-1], 
+                              mtfiles_hot[1].split('/')[-1], sp=sp))
+        print(sp + "stfile = m3.ol.ndir + '{}'".format(stfile.split('/')[-1]))
+        
     dynrange_gas = 4.
     nonobsrange = 6.
     
@@ -321,19 +365,44 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
                                      4))
     
     xovery = (cdext[1] - cdext[0]) / (cdext[3] - cdext[2])
-    obsfig, obsax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 / xovery))
-    gasfig, gasax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 / xovery))
+    gridspec_kw = {'top': 1., 'bottom': 0., 'left': 0., 'right': 1.}
+    obsfig, obsax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 / xovery),
+                                 gridspec_kw=gridspec_kw)
+    gasfig, gasax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.5 / xovery),
+                                 gridspec_kw=gridspec_kw)
     
     cd_cmap = pu.paste_cmaps(['gist_gray', 'inferno'], 
                              [max(cd_min, minvals_abs[ion] - nonobsrange), 
                              minvals_abs[ion], cd_max],
-                             trunclist=[[0., 0.5], [0.5, 0.9]])
+                             trunclist=[[0., 0.5], [0.2, 0.85]],
+                             transwidths=[0.15])
     cd_cmap.set_bad((0., 0., 0., 0.)) # transparent outside plotted strips
     #cd_cmap.set_under(cd_cmap(0.))
-    em_cmap = pu.paste_cmaps(['bone', 'plasma'], 
-                             [max(em_min, minvals_em[line] - nonobsrange), 
-                              minvals_em[line], em_max],
-                             trunclist=[[0., 0.5], [0.5, 1.]])
+    name_lo = 'bone'
+    name_hi = 'plasma' #'plasma'
+    sub_lo = [0., 0.5]
+    sub_hi = [0.1, 1.]
+    #map_lo = mpl.cm.get_cmap(name_lo)
+    #map_hi = mpl.cm.get_cmap(name_hi)
+    #em_cmap = pu.paste_cmaps([name_lo, name_hi], 
+    #                         [max(em_min, minvals_em[line] - nonobsrange), 
+    #                          minvals_em[line], em_max],
+    #                         trunclist=[sub_lo, sub_hi],
+    #                         transwidths=[0.3])
+    #em_cmap = brightness_rescale(em_cmap, map_lo, n=-1)
+    brightness_map = mpl.cm.get_cmap('bone')
+    map_lo = mpl.cm.get_cmap(name_lo)
+    map_hi = mpl.cm.get_cmap(name_hi)
+    minshow = max(em_min, minvals_em[line] - nonobsrange)
+    midpoint = (em_max - minvals_em[line]) / (em_max - minshow)
+    brightness_hi = pu.truncate_colormap(brightness_map, minval=midpoint,
+                                         maxval=1.)
+    brightness_rescale(map_hi, brightness_map)
+    em_cmap = pu.paste_cmaps([map_lo, map_hi], 
+                             [minshow, minvals_em[line], em_max],
+                             trunclist=[sub_lo, sub_hi],
+                             transwidths=[0.5])
+    #em_cmap = brightness_rescale(em_cmap, map_lo, n=-1)
     em_cmap.set_bad((0., 0., 0., 1.))
     em_cmap.set_under(em_cmap(0.))
     
@@ -449,7 +518,7 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
                  cmap=em_cmap, extent=emext, 
                  vmin=minvals_em[line] - nonobsrange, vmax=em_max)                 
     plotstrips(obsax, cdmap, cdext, striplocs, axis='x',
-               pixwidth=5, interpolation='nearest', origin='lower',
+               pixwidth=7, interpolation='nearest', origin='lower',
                cmap=cd_cmap)
     obsax.axis('off')
     
@@ -470,6 +539,27 @@ def plotdefaults(settings=1):
     _pixsize = pixsize_regionunits_default
     if settings == 1:
         _region = region1
+        _subregion = None
+    elif settings == 2:
+        _region = region2
+        _subregion = None
+    elif settings == 3:
+        _region = region3
+        _subregion = None
+    elif settings == 4:
+        _region = region4
+        _subregion = None
+    elif settings == 5:
+        _region = region5
+        _subregion = None
+    elif settings == 6:
+        _region = region6
+        _subregion = None
+    elif settings == 7:
+        _region = region7
+        _subregion = None
+    elif settings == 8:
+        _region = region8
         _subregion = None
     plotmaps(_ion, _line, _region, _axis, _pixsize, 
              subregion=_subregion)
