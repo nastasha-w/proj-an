@@ -1123,7 +1123,8 @@ def plotstamps(filebase=None, halocat=None,\
         plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 
-def explore_halopos(halocat=None, minhalomass=11., simslice=(0, 16)):
+def explore_halopos(halocat=None, minhalomass=11., simslice=(0, 16),
+                    xlim=None, ylim=None):
     '''
     plot the stamps stored in files filebase, overplotting the halos from 
         
@@ -1223,11 +1224,15 @@ def explore_halopos(halocat=None, minhalomass=11., simslice=(0, 16)):
     collection = mcol.PatchCollection(patches)
     collection.set(edgecolor=colors, facecolor='none', linewidth=0.7,\
                    path_effects=patheff)
-    ylim = ax.get_ylim()
-    xlim = ax.get_xlim()
+    _ylim = ax.get_ylim()
+    _xlim = ax.get_xlim()
     ax.add_collection(collection)
-    ax.set_xlim(*xlim)
-    ax.set_ylim(*ylim)
+    ax.set_xlim(*_xlim)
+    ax.set_ylim(*_ylim)
+    if xlim is not None:
+        ax.set_xlim(*xlim)
+    if ylim is not None:
+        ax.set_ylim(*ylim)
     
     print('Halos indicated at {rs} x R200c'.format(rs=scaler200))
 
