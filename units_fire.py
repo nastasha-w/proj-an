@@ -33,7 +33,7 @@ class Units:
              in the files.
     '''
         if len(args) > 0:
-            self._get_kwargs_ha(required=False)
+            self._get_kwargs_ha(required=False, **kwargs)
             snapn = args[0]
             gotunits = self._read_snapshot_data(snapn)
             if gotunits:
