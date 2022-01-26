@@ -6,6 +6,7 @@ simulation defaults.
 '''
 
 import numpy as np
+import h5py
 
 import eagle_constants_and_units as c 
 
@@ -32,9 +33,6 @@ class Units:
              hubble parameter to use [in 100 km/s/Mpc]. Overridden by anything
              in the files.
         '''
-        print(args[0])
-        print(kwargs)
-        
         if len(args) > 0:
             self._get_kwargs_ha(required=False, **kwargs)
             snapn = args[0]
