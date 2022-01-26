@@ -31,9 +31,11 @@ class Units:
         h [keyword]: float
              hubble parameter to use [in 100 km/s/Mpc]. Overridden by anything
              in the files.
-    '''
+        '''
+        print(args)
+        print(kwargs)
+        
         if len(args) > 0:
-            print(kwargs)
             self._get_kwargs_ha(required=False, **kwargs)
             snapn = args[0]
             gotunits = self._read_snapshot_data(snapn)
@@ -141,7 +143,7 @@ class Units:
             print('Using kwarg a value')
             self.a = kwargs['a'] 
         elif required:
-            msg = 'If no snapshot is given, a must be specified as a keyword'
+            msg = 'If no snapshot is given, "a" must be specified as a keyword'
             raise ValueError(msg) 
     
     def getunits(self, field):
