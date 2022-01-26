@@ -73,7 +73,7 @@ class Units:
     def _get_derived_units_and_acorr(self):
          self.codetime_s = self.codelength_cm / self.codevelocity_cm_per_s
          self.codedensity_g_per_cm3 = self.codemass_g / self.codelength_cm**3
-         self.codeinternalenergy_cm2_per_s2 = self.codevelocity**2
+         self.codeinternalenergy_cm2_per_s2 = self.codevelocity_cm_per_s**2
          self.codedivergencedampingfield = self.codemageneticfield_gauss * \
                                            self.codevelocity_cm_per_s
          
