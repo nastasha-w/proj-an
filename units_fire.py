@@ -11,7 +11,7 @@ import h5py
 import eagle_constants_and_units as c 
 
 class Units:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, assume_cosmological=True, **kwargs):
         '''         
         Get the base unit values. Manual a and h values should only be used for
         testing purposes.
@@ -26,6 +26,9 @@ class Units:
              name of the parameter file used for the simulation run. Used to
              find the unit values if not found in the snapshot file, otherwise 
              ignored and not required
+        assume_cosmological [keyword]: bool
+             assume the simulation includes cosmological expansion, and that 
+             the time parameter therefore represents the expansion factor a
         a [keyword]: float
              expansion factor to use. Overridden by anything in the files. 
              Required if using the FIRE default units.
@@ -36,7 +39,8 @@ class Units:
         if len(args) > 0:
             self._get_kwargs_ha(required=False, **kwargs)
             snapn = args[0]
-            gotunits = self._read_snapshot_data(snapn)
+            gotunits = self._read_snapshot_data(snapn, 
+                             assume_cosmological=assume_cosmological)
             if gotunits:
                 print('Got units from snapshot file.')
             elif len(args) > 1:
@@ -77,9 +81,15 @@ class Units:
          self.codevelocity_cm_per_s *= np.sqrt(self.a)
          self.codedensity_g_per_cm3 *= self.a**-3
     
-    def _read_snapshot_data(self, snapn):
+    def _read_snapshot_data(self, snapn, assume_cosmological=False):
         with h5py.File(snapn) as _f:
-            self.cosmoexp = bool(_f['Header'].attrs['ComovingIntegrationOn'])
+            # 
+            if 'ComovingIntegrationOn' in _f['Header'].attrs:
+                self.cosmoexp = bool(_f['Header'].attrs['ComovingIntegrationOn'])
+            elif assume_cosmological:
+                self.cosmoexp = True
+            else:
+                return False
             self.HubbleParam = _f['Header'].attrs['HubbleParam']
             self.a = _f['Header'].attrs['Time']
             if not self.cosmoexp:
@@ -109,6 +119,7 @@ class Units:
         setm = False
         setv = False
         setb = False
+        setc = False
         with open(filen, 'r') as _f:
             for line in _f:
                 if line.startswith('UnitLength_in_cm'):
@@ -125,9 +136,12 @@ class Units:
                 elif line.startswith('UnitMagneticField_in_gauss'):
                     self.codemageneticfield_gauss = float(line.split()[1])
                     setb = True  
-                if setl and setm and setv and setb:
+                elif line.startswith('ComovingIntegrationOn'):
+                    self.cosmoexp = bool(int(line.split()[1]))
+                    setc = True
+                if setl and setm and setv and setb and setc:
                     break
-        if not (setl and setm and setv and setb):
+        if not (setl and setm and setv and setb and setc):
             raise RumtimeError('Could not find all units in the parameterfile')
             
     def _get_kwargs_ha(self, required=False, **kwargs):
