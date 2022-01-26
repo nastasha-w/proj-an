@@ -32,7 +32,7 @@ class Units:
              hubble parameter to use [in 100 km/s/Mpc]. Overridden by anything
              in the files.
         '''
-        print(args)
+        print(args[0])
         print(kwargs)
         
         if len(args) > 0:
