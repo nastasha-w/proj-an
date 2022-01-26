@@ -46,7 +46,7 @@ class Units:
                 print('Falling back to FIRE default units')
                 self._use_fire_defaults()
         else:
-            self.get_kwargs_ha(required=True)
+            self.get_kwargs_ha(required=True, **kwargs)
             print('Using FIRE default units')
             self._use_fire_defaults()
         
@@ -129,7 +129,7 @@ class Units:
         if not (setl and setm and setv and setb):
             raise RumtimeError('Could not find all units in the parameterfile')
             
-    def _get_kwargs_ha(self, required=False):
+    def _get_kwargs_ha(self, required=False, **kwargs):
         if 'h' in kwargs: 
             print('Using kwarg h value')
             self.HubbleParam = kwargs['h']
