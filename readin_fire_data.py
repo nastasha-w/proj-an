@@ -23,7 +23,7 @@ def isstr(object): # should be python 2/3 robust
 def isbstr(object):
     return isinstance(object, bytes) 
     
-class FieldNotFoundError(Error)
+class FieldNotFoundError(Exception)
 
 atomnumber_to_name = {1:  'Hydrogen',
                       2:  'Helium',
@@ -363,11 +363,15 @@ class Firesnap:
                     temperature = self.readarray('PartType0/InternalEnergy',
                                                  subsample=subsample, 
                                                  errorflag=errorflag)
-                    temperature *= (gamma_gas - 1.) / c.boltzmann \
-                                   / mean_molecular_weight 
-                    self.toCGS = self.units.getunits('PartType0/InternalEnergy')
-                    field + 'es'
+                    uconv = self.units.getunits('PartType0/InternalEnergy')
+                    scalar = uconv * (gamma_gas - 1.) / c.boltzmann 
+                    temperature *= scalar / mean_molecular_weight 
+                    self.toCGS = 1. 
+                    # do the conversion: matches expected units from EAGLE
+                    # and an extra scalar multiplication doesn't cost much
                     return temperature
+                else:
+                    raise ValueError('Field {} not found'.format(field))
                   
  
 
