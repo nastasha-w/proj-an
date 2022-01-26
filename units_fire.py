@@ -104,28 +104,28 @@ class Units:
             return alldone
             
     def _read_parameterfile_units(self, filen):
-        with open(filen, 'r') as _f:
         setl = False
         setm = False
         setv = False
         setb = False
-        for line in _f:
-            if line.startswith('UnitLength_in_cm'):
-                self.codelength_cm = float(line.split()[1])
-                self.codelength_cm /= self.HubbleParam
-                setl = True
-            elif line.startswith('UnitMass_in_g'):
-                self.codemass_g = float(line.split()[1])
-                self.codemass_g /= self.HubbleParam
-                setm = True
-            elif line.startswith('UnitVelocity_in_cm_per_s'):
-                self.codevelocity_cm_per_s = float(line.split()[1])
-                setv = True  
-            elif line.startswith('UnitMagneticField_in_gauss'):
-                self.codemageneticfield_gauss = float(line.split()[1])
-                setb = True  
-            if setl and setm and setv and setb:
-                break
+        with open(filen, 'r') as _f:
+            for line in _f:
+                if line.startswith('UnitLength_in_cm'):
+                    self.codelength_cm = float(line.split()[1])
+                    self.codelength_cm /= self.HubbleParam
+                    setl = True
+                elif line.startswith('UnitMass_in_g'):
+                    self.codemass_g = float(line.split()[1])
+                    self.codemass_g /= self.HubbleParam
+                    setm = True
+                elif line.startswith('UnitVelocity_in_cm_per_s'):
+                    self.codevelocity_cm_per_s = float(line.split()[1])
+                    setv = True  
+                elif line.startswith('UnitMagneticField_in_gauss'):
+                    self.codemageneticfield_gauss = float(line.split()[1])
+                    setb = True  
+                if setl and setm and setv and setb:
+                    break
         if not (setl and setm and setv and setb):
             raise RumtimeError('Could not find all units in the parameterfile')
             
