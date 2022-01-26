@@ -31,7 +31,6 @@ class Units:
     h [keyword]: float
          hubble parameter to use [in 100 km/s/Mpc]. Overridden by anything in 
          the files.
-    
     '''
         if len(args) > 0:
             self._get_kwargs_ha(required=False)
