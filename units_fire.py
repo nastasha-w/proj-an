@@ -11,26 +11,26 @@ import eagle_constants_and_units as c
 
 class Units:
     def __init__(self, *args, **kwargs):
-    '''         
-    Get the base unit values. Manual a and h values should only be used for
-    testing purposes.
+        '''         
+        Get the base unit values. Manual a and h values should only be used for
+        testing purposes.
     
-    Parameters:
-    -----------
-    snapfile: str (optional)
-         name of the (a) snapshot file. Used to find the hubble parameter and 
-         expansion factor, and units is possible. This should be an hdf5 file,
-         including  the directory path.
-    parameterfile: str (optional)
-         name of the parameter file used for the simulation run. Used to find
-         the unit values if not found in the snapshot file, otherwise ignored
-         and not required
-    a [keyword]: float
-         expansion factor to use. Overridden by anything in the files. Required
-         if using the FIRE default units.
-    h [keyword]: float
-         hubble parameter to use [in 100 km/s/Mpc]. Overridden by anything in 
-         the files.
+        Parameters:
+        -----------
+        snapfile: str (optional)
+             name of the (a) snapshot file. Used to find the hubble parameter 
+             and expansion factor, and units is possible. This should be an 
+             hdf5 file, including  the directory path.
+        parameterfile: str (optional)
+             name of the parameter file used for the simulation run. Used to
+             find the unit values if not found in the snapshot file, otherwise 
+             ignored and not required
+        a [keyword]: float
+             expansion factor to use. Overridden by anything in the files. 
+             Required if using the FIRE default units.
+        h [keyword]: float
+             hubble parameter to use [in 100 km/s/Mpc]. Overridden by anything
+             in the files.
     '''
         if len(args) > 0:
             self._get_kwargs_ha(required=False)
