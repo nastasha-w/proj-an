@@ -183,19 +183,19 @@ class Firesnap:
         partdict = {}
         targetnum = 5
         with open(self.parfile, 'r') as _f:
-        for line in _f:
-            if line.startswith('Omega0'):
-                partdict['omegam'] = float(line.split()[1])
-            elif line.startswith('OmegaLambda'):
-                partdict['omegalambda'] = float(line.split()[1])
-            elif line.startswith('OmegaBaryon'):
-                partdict['omegab'] = float(line.split()[1])  
-            elif line.startswith('HubbleParam'):
-                partdict['h'] = float(line.split()[1])
-            elif line.startswith('BoxSize'):
-                partdict['boxsize'] = float(line.split()[1])
-            if len(partdict) == targetnum:
-                break
+            for line in _f:
+                if line.startswith('Omega0'):
+                    partdict['omegam'] = float(line.split()[1])
+                elif line.startswith('OmegaLambda'):
+                    partdict['omegalambda'] = float(line.split()[1])
+                elif line.startswith('OmegaBaryon'):
+                    partdict['omegab'] = float(line.split()[1])  
+                elif line.startswith('HubbleParam'):
+                    partdict['h'] = float(line.split()[1])
+                elif line.startswith('BoxSize'):
+                    partdict['boxsize'] = float(line.split()[1])
+                if len(partdict) == targetnum:
+                    break
         if not len(partdict) == targetnum:
             msg = 'Could not find all time-independent cosmopars in the' + \
                   ' parameterfile'
