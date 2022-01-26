@@ -359,7 +359,7 @@ class Firesnap:
                                           errorflag=errorflag)
                     self.toCGS = self.units.getunits(_field)
                 # temperature: need to calculate instead of read in
-                elif field = 'PartType0/Temperature':
+                elif field == 'PartType0/Temperature':
                     hekey = 'PartType0/ElementAbundance/Helium'
                     hefrac = self.readarray_emulateEAGLE(hekey, 
                                                          subsample=subsample,
