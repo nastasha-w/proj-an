@@ -41,12 +41,23 @@ class Units:
             snapn = args[0]
             gotunits = self._read_snapshot_data(snapn, 
                              assume_cosmological=assume_cosmological)
+            if not hasattr(self, 'a'):
+                msg = 'Expansion factor was not supplied or in the snapshot data'
+                raise RuntimeError(msg) 
             if gotunits:
                 print('Got units from snapshot file.')
             elif len(args) > 1:
                 parfile = args[1]
                 print('Getting units from parameter file.')
                 self._read_parameterfile_units(parfile)
+                if not hasattr(self, 'HubbleParam'):
+                    msg = 'Hubble Parameter factor was not supplied, ' +\
+                          'in the snapshot data, or in the parameter file'
+                    raise RuntimeError(msg) 
+            elif not hasattr(self, 'HubbleParam'):
+                msg = 'Hubble Parameter factor was not supplied or ' +\
+                      'in the snapshot data'
+                raise RuntimeError(msg) 
             else:
                 print('Falling back to FIRE default units')
                 self._use_fire_defaults()
@@ -139,6 +150,9 @@ class Units:
                 elif line.startswith('ComovingIntegrationOn'):
                     self.cosmoexp = bool(int(line.split()[1]))
                     setc = True
+                elif line.startswith('HubbleParam'):
+                     self.HubbleParam = float(line.split()[1])
+                    
                 if setl and setm and setv and setb and setc:
                     break
         if not (setl and setm and setv and setb and setc):
