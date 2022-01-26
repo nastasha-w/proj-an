@@ -53,17 +53,17 @@ class Units:
         self._get_derived_units_and_acorr()
       
      
-     def _use_fire_defaults(self):
-         if not hasattr(self, 'HubbleParam'):
-             self.HubbleParam = 0.7
-         if not hasattr(self, 'codemass_g'):
-             self.codemass_g = 1e10 / self.HubbleParam
-         if not hasattr(self, 'codelength_cm'):
-             self.codelength_cm = c.cm_per_Mpc * 1e-3 / self.HubbleParam
-         if not hasattr(self, 'codevelocity_cm_per_s'):
-             self.codevelocity_cm_per_s = 1e5
-         if not hasattr(self, 'codemageneticfield_gauss'):
-             self.codemageneticfield_gauss =  1.
+    def _use_fire_defaults(self):
+        if not hasattr(self, 'HubbleParam'):
+            self.HubbleParam = 0.7
+        if not hasattr(self, 'codemass_g'):
+            self.codemass_g = 1e10 / self.HubbleParam
+        if not hasattr(self, 'codelength_cm'):
+            self.codelength_cm = c.cm_per_Mpc * 1e-3 / self.HubbleParam
+        if not hasattr(self, 'codevelocity_cm_per_s'):
+            self.codevelocity_cm_per_s = 1e5
+        if not hasattr(self, 'codemageneticfield_gauss'):
+            self.codemageneticfield_gauss =  1.
     
     def _get_derived_units_and_acorr(self):
          self.codetime_s = self.codelength_cm / self.codevelocity_cm_per_s
