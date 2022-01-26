@@ -161,7 +161,7 @@ class Firesnap:
             cdct['a'] = a_z
         del a_z
         
-        if self.parfile is None:
+        if self.parfilen is None:
             cdct['omegam'] = self.ff['Header'].attrs['Omega0']
             cdct['omegalambda'] = self.ff['Header'].attrs['OmegaLambda']
             cdct['h'] = self.ff['Header'].attrs['HubbleParam'] 
@@ -182,7 +182,7 @@ class Firesnap:
     def _cosmopars_from_parameterfile(self):
         partdict = {}
         targetnum = 5
-        with open(self.parfile, 'r') as _f:
+        with open(self.parfilen, 'r') as _f:
             for line in _f:
                 if line.startswith('Omega0'):
                     partdict['omegam'] = float(line.split()[1])
