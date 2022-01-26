@@ -46,7 +46,7 @@ class Units:
                 print('Falling back to FIRE default units')
                 self._use_fire_defaults()
         else:
-            self.get_kwargs_ha(required=True, **kwargs)
+            self._get_kwargs_ha(required=True, **kwargs)
             print('Using FIRE default units')
             self._use_fire_defaults()
         
