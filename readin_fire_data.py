@@ -292,7 +292,7 @@ class Firesnap:
         self.toCGS = self.units.getunits(path)
         return arr
     
-    def readarray_emulateEAGLE(self, field, subsample=1, errorflag=np.nan)
+    def readarray_emulateEAGLE(self, field, subsample=1, errorflag=np.nan):
         self.toCGS = np.NaN # overwrite and old values to avoid undetected errors
         # Metals: field names match, but structure is different
         if 'Metallicity' in field:
