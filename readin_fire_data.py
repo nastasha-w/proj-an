@@ -22,8 +22,19 @@ def isstr(object): # should be python 2/3 robust
     return isinstance(object, type(''))
 def isbstr(object):
     return isinstance(object, bytes) 
-    
-class FieldNotFoundError(Exception)
+
+# setup from the internets
+class FieldNotFoundError(Exception):
+    def __init__(self, *args):
+        if len(args) > 0:
+            self.message = args[0]
+        else:
+            self.message = None
+    def __str__(self):
+        if self.message is not None:
+            return 'FieldNotFoundError: {0} '.format(self.message)
+        else:
+            return 'FieldNotFoundError'
 
 atomnumber_to_name = {1:  'Hydrogen',
                       2:  'Helium',
