@@ -1,13 +1,15 @@
+
+'''
+Retrieve the units for different quantities in FIRE simulation outputs
+based on the snapshot and/or parameter files, or otherwise, the FIRE
+simulation defaults. 
+'''
+
 import numpy as np
 
 import eagle_constants_and_units as c 
 
 class Units:
-    '''
-    Retrieve the units for different quantities in FIRE simulation outputs
-    based on the snapshot and/or parameter files, or otherwise, the FIRE
-    simulation defaults. 
-    '''
     def __init__(self, *args, **kwargs):
     '''         
     Get the base unit values. Manual a and h values should only be used for
