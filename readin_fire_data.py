@@ -6,6 +6,11 @@
 # - find out where to get omega_baryon
 # - find out box size units
 
+# quest location FIRE data: /projects/b1026/snapshots
+# typical tests: /projects/b1026/snapshots/metal_diffusion/m12i_res57000
+# but that seems to be empty now
+# try one of the m12s for these tests
+
 import h5py
 import os
 import numpy as np
@@ -77,6 +82,9 @@ class Firesnap:
             name of the snapshot file (including the full directory path). 
             For multiple/split-output files, excluding the '.##.hdf5' end of 
             the file is ok.
+        parameterfile: str
+            name of the parameter file (including the full directory path) used
+            for the simulation we're using the snapshot of.
         
         Returns:
         --------
@@ -107,14 +115,18 @@ class Firesnap:
                 self.numfiles = f['Header'].attrs['NumFilesPerSnapshot']
             self.filens = [basename + '.{num}.hdf5'.format(num=i) \
                            for i in range(self.numfiles)]
+        
+        self.parfilen = parameterfile
+        if self.parfilen is not None:
+            self.units = uf.Units(self.firstfilen, self.parfilen)
+        else:
+            self.units = uf.Units(self.firstfilen)
+            
         # for quick attributes access
         self.ff = h5py.File(self.firstfilen, 'r')   
         self.find_cosmopars()
         
-        if parameterfile is not None:
-            self.unit_finder = uf.Units(self.firstfilen, parameterfile)
-        else:
-            self.unit_finder = uf.Units(self.firstfilen)
+        
         
          
     def readattr(self, path, attribute):
@@ -137,16 +149,47 @@ class Firesnap:
             print('Using 1 / (1 + z)')
             cdct['a'] = a_z
         del a_z
-        cdct['omegam'] = self.ff['Header'].attrs['Omega0']
-        cdct['omegalambda'] = self.ff['Header'].attrs['OmegaLambda']
-        cdct['h'] = self.ff['Header'].attrs['HubbleParam'] 
-        cdct['boxsize'] = self.ff['Header'].attrs['BoxSize'] 
-        try:
-            cdct['omegab'] = self.ff['Header'].attrs['OmegaBaryon']
-        except AttributeError:
-            print('Warning: did not find a value for Omega_b, using NaN')
-            cdct['omegab'] = np.NaN
+        
+        if self.parfile is None:
+            cdct['omegam'] = self.ff['Header'].attrs['Omega0']
+            cdct['omegalambda'] = self.ff['Header'].attrs['OmegaLambda']
+            cdct['h'] = self.ff['Header'].attrs['HubbleParam'] 
+            cdct['boxsize'] = self.ff['Header'].attrs['BoxSize'] 
+            try:
+                cdct['omegab'] = self.ff['Header'].attrs['OmegaBaryon']
+            except AttributeError:
+                print('Warning: did not find a value for Omega_b, using NaN')
+                cdct['omegab'] = np.NaN
+        else:
+            pardict = self._cosmopars_from_parameterfile()
+            cdct.update(pardict)
+        # for compatibility
+        boxunit_eagle = c.cm_per_mpc / self.units.a * self.units.HubbleParam
+        cdct['boxsize'] *= self.units.codelength_cm / boxunit_eagle
         self.cosmopars = Cosmopars(cdct)
+    
+    def _cosmopars_from_parameterfile(self):
+        partdict = {}
+        targetnum = 5
+        with open(self.parfile, 'r') as _f:
+        for line in _f:
+            if line.startswith('Omega0'):
+                partdict['omegam'] = float(line.split()[1])
+            elif line.startswith('OmegaLambda'):
+                partdict['omegalambda'] = float(line.split()[1])
+            elif line.startswith('OmegaBaryon'):
+                partdict['omegab'] = float(line.split()[1])  
+            elif line.startswith('HubbleParam'):
+                partdict['h'] = float(line.split()[1])
+            elif line.startswith('BoxSize'):
+                partdict['boxsize'] = float(line.split()[1])
+            if len(partdict) == targetnum:
+                break
+        if not len(partdict) == targetnum:
+            msg = 'Could not find all time-independent cosmopars in the' + \
+                  ' parameterfile'
+            raise RumtimeError(msg)
+        return partdict
     
     # read-in and subsampling tested
     def readarray(self, path, subsample=1, errorflag=np.nan, subindex=None):
@@ -171,7 +214,7 @@ class Firesnap:
         --------
         the desired array 
         '''
-        
+        self.toCGS = np.NaN # overwrite and old values to avoid undetected errors
         # just let h5py handle it
         if self.numfiles == 1:
             sel = slice(None, None, subsample)
@@ -235,9 +278,11 @@ class Firesnap:
                     
                     start += sublen_tot
                     combindex += numsel
+        self.toCGS = self.units.getunits(path)
         return arr
     
     def readarray_emulateEAGLE(self, field, subsample=1, errorflag=np.nan)
+        self.toCGS = np.NaN # overwrite and old values to avoid undetected errors
         # Metals: field names match, but structure is different
         if 'Metallicity' in field:
             if 'Smoothed' in field:
@@ -254,6 +299,7 @@ class Firesnap:
                                   in standard_atomno_indices])[0][0]
             self.readarray(field, subsample=subsample, errorflag=errorflag,
                            subindex=index)
+            self.toCGS = self.units.getunits(field)
         elif 'ElementAbundance' in field:
             if 'Smoothed' in field:
                 msg = 'Warning: smoothed abundances are unavailable in FIRE' +\
@@ -284,18 +330,23 @@ class Firesnap:
                 index = np.where([_atomno == atomno for _atomno \
                                   in standard_atomno_indices])[0][0]
             parttypestr = field.split('/')[0]
-            self.readarray(parttypestr + '/Metallicity', subsample=subsample, 
+            field = parttypestr + '/Metallicity'
+            self.readarray(field, subsample=subsample, 
                            errorflag=errorflag, subindex=index)
+            self.toCGS = self.units.getunits(field)
         # lots of fields are just the same
         else:
             try:
                 return self.readarray(field, subsample=subsample, 
-                                      errorflag=errorflag)    
+                                      errorflag=errorflag)   
+                self.toCGS = self.units.getunits(field) 
             except FieldNotFoundError:
                 # same stuff, different name
                 if field.endswith('Mass'): # Mass in EAGLE = Masses in FIRE
-                    return self.readarray(field + 'es', subsample=subsample, 
+                    _field = field + 'es'
+                    return self.readarray(_field, subsample=subsample, 
                                           errorflag=errorflag)
+                    self.toCGS = self.units.getunits(_field)
                 # temperature: need to calculate instead of read in
                 elif field = 'PartType0/Temperature':
                     hekey = 'PartType0/ElementAbundance/Helium'
@@ -314,7 +365,8 @@ class Firesnap:
                                                  errorflag=errorflag)
                     temperature *= (gamma_gas - 1.) / c.boltzmann \
                                    / mean_molecular_weight 
-                    del mean_molecular_weight
+                    self.toCGS = self.units.getunits('PartType0/InternalEnergy')
+                    field + 'es'
                     return temperature
                   
  
