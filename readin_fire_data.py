@@ -85,7 +85,8 @@ class Cosmopars:
         return dct
         
 class Firesnap:
-    def __init__(self, basename, parameterfile=None):
+    def __init__(self, basename, parameterfile=None, 
+                 assume_cosmological=False):
         '''
         Parameters:
         -----------
@@ -96,6 +97,9 @@ class Firesnap:
         parameterfile: str
             name of the parameter file (including the full directory path) used
             for the simulation we're using the snapshot of.
+        assume_cosmological [keyword]: bool
+            assume the simulation time parameter is the expansion factor. This
+            is true is the simulation includes cosmological expansion.
         
         Returns:
         --------
@@ -129,9 +133,11 @@ class Firesnap:
         
         self.parfilen = parameterfile
         if self.parfilen is not None:
-            self.units = uf.Units(self.firstfilen, self.parfilen)
+            self.units = uf.Units(self.firstfilen, self.parfilen, 
+                                  assume_cosmological=assume_cosmological)
         else:
-            self.units = uf.Units(self.firstfilen)
+            self.units = uf.Units(self.firstfilen, 
+                                  assume_cosmological=assume_cosmological)
             
         # for quick attributes access
         self.ff = h5py.File(self.firstfilen, 'r')   

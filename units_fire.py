@@ -11,7 +11,7 @@ import h5py
 import eagle_constants_and_units as c 
 
 class Units:
-    def __init__(self, *args, assume_cosmological=True, **kwargs):
+    def __init__(self, *args, assume_cosmological=False, **kwargs):
         '''         
         Get the base unit values. Manual a and h values should only be used for
         testing purposes.
