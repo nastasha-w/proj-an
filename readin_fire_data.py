@@ -175,7 +175,7 @@ class Firesnap:
             pardict = self._cosmopars_from_parameterfile()
             cdct.update(pardict)
         # for compatibility
-        boxunit_eagle = c.cm_per_mpc / self.units.a * self.units.HubbleParam
+        boxunit_eagle = uf.c.cm_per_mpc / self.units.a * self.units.HubbleParam
         cdct['boxsize'] *= self.units.codelength_cm / boxunit_eagle
         self.cosmopars = Cosmopars(cdct)
     
@@ -370,12 +370,12 @@ class Firesnap:
                     mu = (1. + 4. * hefrac) / ( 1. + hefrac + efrac)
                     del efrac
                     del hefrac
-                    mean_molecular_weight = mu * c.atmow_H * c.u
+                    mean_molecular_weight = mu * uf.c.atmow_H * uf.c.u
                     temperature = self.readarray('PartType0/InternalEnergy',
                                                  subsample=subsample, 
                                                  errorflag=errorflag)
                     uconv = self.units.getunits('PartType0/InternalEnergy')
-                    scalar = uconv * (gamma_gas - 1.) / c.boltzmann 
+                    scalar = uconv * (gamma_gas - 1.) / uf.c.boltzmann 
                     temperature *= scalar / mean_molecular_weight 
                     self.toCGS = 1. 
                     # do the conversion: matches expected units from EAGLE
