@@ -181,8 +181,8 @@ class Firesnap:
             pardict = self._cosmopars_from_parameterfile()
             cdct.update(pardict)
         # for compatibility
-        boxunit_eagle = uf.c.cm_per_mpc / self.units.a * self.units.HubbleParam
-        cdct['boxsize'] *= self.units.codelength_cm / boxunit_eagle
+        boxunit_eagle = 1./ uf.c.cm_per_mpc / self.units.a / self.units.HubbleParam
+        cdct['boxsize'] *= self.units.codelength_cm * boxunit_eagle
         self.cosmopars = Cosmopars(cdct)
     
     def _cosmopars_from_parameterfile(self):
