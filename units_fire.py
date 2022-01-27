@@ -11,7 +11,7 @@ import h5py
 import eagle_constants_and_units as c 
 
 class Units:
-    def __init__(self, *args, assume_cosmological=False, **kwargs):
+    def __init__(self, *args, **kwargs):
         '''         
         Get the base unit values. Manual a and h values should only be used for
         testing purposes.
@@ -36,39 +36,32 @@ class Units:
              hubble parameter to use [in 100 km/s/Mpc]. Overridden by anything
              in the files.
         '''
+        self.units_processed = False
+        self.reqlist = ['a', 'HubbleParam', 'cosmoexp', 
+                        'codevelocity_cm_per_s', 'codemageneticfield_gauss',
+                        'codemass_g', 'codelength_cm']
+        
         if len(args) > 0:
             self._get_kwargs_ha(required=False, **kwargs)
             snapn = args[0]
-            gotunits = self._read_snapshot_data(snapn, 
-                             assume_cosmological=assume_cosmological)
-            if not hasattr(self, 'a'):
-                msg = 'Expansion factor was not supplied or in the snapshot data'
-                raise RuntimeError(msg) 
-            if gotunits:
-                print('Got units from snapshot file.')
+            self._read_snapshot_data(snapn)
+            if self._check_baseunits_present():
+                print('Unit data from snapshot')
             elif len(args) > 1:
                 parfile = args[1]
-                print('Getting units from parameter file.')
+                print('Getting (some) units from parameter file.')
                 self._read_parameterfile_units(parfile)
-                if not hasattr(self, 'HubbleParam'):
-                    msg = 'Hubble Parameter factor was not supplied, ' +\
-                          'in the snapshot data, or in the parameter file'
-                    raise RuntimeError(msg) 
-            elif not hasattr(self, 'HubbleParam'):
-                msg = 'Hubble Parameter factor was not supplied or ' +\
-                      'in the snapshot data'
-                raise RuntimeError(msg) 
-            else:
-                print('Falling back to FIRE default units')
+            if not self._check_baseunits_present():
+                print('Falling back to (some) FIRE default units')
                 self._use_fire_defaults()
         else:
             self._get_kwargs_ha(required=True, **kwargs)
             print('Using FIRE default units')
             self._use_fire_defaults()
-        
+            
+        self._process_code_units()
         self._get_derived_units_and_acorr()
       
-     
     def _use_fire_defaults(self):
         if not hasattr(self, 'HubbleParam'):
             self.HubbleParam = 0.7
@@ -80,6 +73,8 @@ class Units:
             self.codevelocity_cm_per_s = 1e5
         if not hasattr(self, 'codemageneticfield_gauss'):
             self.codemageneticfield_gauss =  1.
+        if not hasattr(self, 'cosmpexp'):
+            self.cosmpexp = True
     
     def _get_derived_units_and_acorr(self):
          self.codetime_s = self.codelength_cm / self.codevelocity_cm_per_s
@@ -91,25 +86,17 @@ class Units:
          self.codelength_cm *= self.a
          self.codevelocity_cm_per_s *= np.sqrt(self.a)
          self.codedensity_g_per_cm3 *= self.a**-3
-    
-    def _read_snapshot_data(self, snapn, assume_cosmological=False):
+        
+    def _read_snapshot_data(self, snapn):
         with h5py.File(snapn) as _f:
-            # 
             if 'ComovingIntegrationOn' in _f['Header'].attrs:
                 self.cosmoexp = bool(_f['Header'].attrs['ComovingIntegrationOn'])
-            elif assume_cosmological:
-                self.cosmoexp = True
-            else:
-                return False
             self.HubbleParam = _f['Header'].attrs['HubbleParam']
             self.a = _f['Header'].attrs['Time']
-            if not self.cosmoexp:
-                self.a = 1.
             
             # need to get the magnetic field data from the parameter file
             if 'UnitMass_In_CGS' in _f['Header'].attrs:
                 self.codemass_g = _f['Header'].attrs['UnitMass_In_CGS']
-                self.codemass_g /= self.HubbleParam
             
             if 'UnitVelocity_In_CGS' in _f['Header'].attrs:
                 self.codevelocity_cm_per_s = \
@@ -117,13 +104,6 @@ class Units:
             
             if 'UnitLength_In_CGS' in _f['Header'].attrs:
                 self.codelength_cm = _f['Header'].attrs['UnitLength_In_CGS']
-                self.codelength_cm /= self.HubbleParam
-            
-            alldone = hasattr(self, 'codemageneticfield_gauss') and \
-                      hasattr(self, 'codemass_g') and \
-                      hasattr(self, 'codevelocity_cm_per_s') and\
-                      hasattr(self, 'codelength_cm')
-            return alldone
             
     def _read_parameterfile_units(self, filen):
         setl = False
@@ -131,15 +111,14 @@ class Units:
         setv = False
         setb = False
         setc = False
+        seth = False
         with open(filen, 'r') as _f:
             for line in _f:
                 if line.startswith('UnitLength_in_cm'):
                     self.codelength_cm = float(line.split()[1])
-                    self.codelength_cm /= self.HubbleParam
                     setl = True
                 elif line.startswith('UnitMass_in_g'):
                     self.codemass_g = float(line.split()[1])
-                    self.codemass_g /= self.HubbleParam
                     setm = True
                 elif line.startswith('UnitVelocity_in_cm_per_s'):
                     self.codevelocity_cm_per_s = float(line.split()[1])
@@ -151,13 +130,40 @@ class Units:
                     self.cosmoexp = bool(int(line.split()[1]))
                     setc = True
                 elif line.startswith('HubbleParam'):
-                     self.HubbleParam = float(line.split()[1])
-                    
-                if setl and setm and setv and setb and setc:
+                    self.HubbleParam = float(line.split()[1])
+                    seth = True
+                if setl and setm and setv and setb and setc and seth:
                     break
-        if not (setl and setm and setv and setb and setc):
-            raise RumtimeError('Could not find all units in the parameterfile')
+        if not (setl and setm and setv and setb and setc and seth):
+            print('Could not find all units in the parameterfile')
             
+    def _check_baseunits_present(self):
+        present = {attr: hasattr(self, attr) for attr in self.reqlist}
+        alldone = np.all([present[attr] for attr in present])
+        return alldone
+        
+    def _process_code_units(self):
+        '''
+        and processing depending on the header or parameterfile data.
+        separated from direct read-in so that neither depends on the other
+        being checked first
+        '''
+        if self.units_processed:
+            raise RuntimeError('units already processed')
+        # check presence
+        alldone = _check_baseunits_present()
+        if not alldone:
+            missing = {attr if not hasattr(self, attr) else None \
+                       for attr in self.reqlist}
+            missing -= {None}
+            msg = 'Could not find required values: {}'.format(missing)
+            raise RuntimeError(msg)
+        self.codemass_g /= self.HubbleParam
+        self.codelength_cm /= self.HubbleParam
+        if not self.cosmoexp:
+            self.a = 1.
+        self.units_processed = True
+        
     def _get_kwargs_ha(self, required=False, **kwargs):
         if 'h' in kwargs: 
             print('Using kwarg h value')
