@@ -151,7 +151,7 @@ class Units:
         if self.units_processed:
             raise RuntimeError('units already processed')
         # check presence
-        alldone = _check_baseunits_present()
+        alldone = self._check_baseunits_present()
         if not alldone:
             missing = {attr if not hasattr(self, attr) else None \
                        for attr in self.reqlist}
