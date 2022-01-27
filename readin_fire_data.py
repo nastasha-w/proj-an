@@ -375,7 +375,9 @@ class Firesnap:
                                                          errorflag=errorflag)
                     efrac = self.readarray('PartType0/ElectronAbundance',
                                            subsample=subsample, 
-                                           errorflag=errorflag)                                     
+                                           errorflag=errorflag)  
+                    print(efrac)
+                    print(hefrac)                                   
                     mu = (1. + 4. * hefrac) / ( 1. + hefrac + efrac)
                     del efrac
                     del hefrac
