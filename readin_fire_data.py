@@ -381,7 +381,7 @@ class Firesnap:
                     mu = (1. + 4. * hefrac) / ( 1. + hefrac + efrac)
                     del efrac
                     del hefrac
-                    mean_molecular_weight = mu * uf.c.atmow_H * uf.c.u
+                    mean_molecular_weight = mu * uf.c.atomw_H * uf.c.u
                     temperature = self.readarray('PartType0/InternalEnergy',
                                                  subsample=subsample, 
                                                  errorflag=errorflag)
