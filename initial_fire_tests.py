@@ -153,12 +153,49 @@ def make_simple_surfdensplot()
         for key in cosmodct:
             grp.attrs.create(key, cosmodct[key])
             
-def plot_simple_phasediagrams(filen):
-    with h5py.File(ddir + filen, 'r') as f:
-        # done for today
+def plot_simple_phasediagrams(type='firesnap'):
+    filen_rho = 'phasediagram_rhoT_firesnap.hdf5'
+    filen_nH = 'phasediagram_nH_firesnap.hdf5'
+    
+    rho_to_nH = 0.752 / (rfd.uf.c.atomw_H * rfd.uf.c.u)
+    
+    with h5py.File(ddir + filen_rho, 'r') as f:
+        hist_rho = f['hist'][:]
+        hist_rho_toCGS = f['hist'].attrs['toCGS']
         
+        rho = f['logdensity'][:] + np.log10(rho_to_nH)
+        temp_rho = f['logtemperature'][:]
 
-
+    with h5py.File(ddir + filen_nH, 'r') as f:
+        hist_nH = f['hist'][:]
+        hist_nH_toCGS = f['hist'].attrs['toCGS']
+        
+        nH = f['logdensity'][:] 
+        temp_nH = f['logtemperature'][:]
+    
+    cmap = 'viridis'
+    fontsize = 12
+    contourlevels = [0.5, 0.9, 0.99, 0.999]
+    contourstyles = ['solid', 'dashed', 'dashdot', 'dotted']
+    fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3)
+    
+    _hist = np.log10(hist_rho / np.diff(rho)[:, np.newaxis] \
+                     / np.diff(temp_rho)[np.newaxis, :])
+    _hist += np.log10(hist_rho_toCGS)
+    ax1.set_title('$\\rho \\rightarrow \\mathrm{n}_{\\mathrm{H}}$ assuming $X=0.752$',
+                  fontsize=fontsize)
+    ax1.set_xlabel('$\\log_{10} \\, \\rho \\; [\\mathrm{H} \\, \\mathrm{cm}^{-3}, X=0.752]$',
+                   fontsize=fontsize)
+    ax1.set_ylabel('$\\log_{10}$ T [K]', fontsize=fontsize)
+    ax1.pcolormesh([rho, temp_rho], _hist.T, cmap=cmap)
+    add_2dhist_contours(ax1, hist_rho, [rho, temp_rho], [0, 1],
+                        mins=None, maxs=None, histlegend=False, 
+                        fraclevels=True, levels=contourlevels, legend=True, 
+                        dimlabels=None, legendlabel=None,
+                        legendlabel_pre=None, shiftx=0., shifty=0., 
+                        dimshifts=None, color='red', linestyles=contourstyles,
+                        linewidth=1.)
+    
     
     
     
