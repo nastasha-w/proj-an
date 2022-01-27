@@ -373,12 +373,13 @@ class Firesnap:
                     hefrac = self.readarray_emulateEAGLE(hekey, 
                                                          subsample=subsample,
                                                          errorflag=errorflag)
-                    efrac = self.readarray('PartType0/ElectronAbundance',
+                    etoh = self.readarray('PartType0/ElectronAbundance',
                                            subsample=subsample, 
                                            errorflag=errorflag)  
                     print(efrac)
-                    print(hefrac)                                   
-                    mu = (1. + 4. * hefrac) / ( 1. + hefrac + efrac)
+                    print(hefrac)                      
+                    yhe = hefrac / (4. * (1. - hefrac))             
+                    mu = (1. + 4. * yhe) / ( 1. + yhe + etoh)
                     print(mu)
                     del efrac
                     del hefrac
@@ -390,7 +391,7 @@ class Firesnap:
                     scalar = uconv * (gamma_gas - 1.) / uf.c.boltzmann 
                     print(scalar)
                     print(mean_molecular_weight)
-                    temperature *= scalar / mean_molecular_weight 
+                    temperature *= scalar * mean_molecular_weight 
                     self.toCGS = 1. 
                     # do the conversion: matches expected units from EAGLE
                     # and an extra scalar multiplication doesn't cost much
