@@ -8,6 +8,7 @@ import h5py
 import matplotlib.pyplot as plt
 
 import readin_fire_data as rfd
+import make_maps_v3_master as m3
 
 # snapshot 50: redshift 0.5; hopefully enough to make a-scaling errors clear
 firedata_test = '/projects/b1026/snapshots/AGN_suite/fiducial_jet/m12i_res57000/output/snapshot_050.hdf5'
@@ -90,10 +91,74 @@ def make_simple_phasediagram():
         f['loghydrogendensity'].attrs.create('units', np.string_('cm**-3'))
         f.create_dataset('logtemperature', data=temperature)
         f['logtemperature'].attrs.create('units', np.string_('K'))
+        
+def make_simple_surfdensplot()
+    snap = rfd.Firesnap(firedata_test, firedata_params)
+    
+    coords = snap.readarray_emulateEAGLE('PartType0/Coordinates')
+    coordconv = snap.toCGS
+    lsmooth = snap.readarray_emulateEAGLE('PartType0/SmoothingLength')
+    lconv = snap.toCGS
+    mass = snap.readarray_emulateEAGLE('PartType0/Mass')
+    massconv = snap.toCGS
+    density = snap.readarray_emulateEAGLE('PartType0/Density')
+    densconv = snap.toCGS
+    # checked lconv == coordconv
 
+    NumPart = len(lsmooth)
+    boxunits = rfd.uf.c.cm_per_mpc * snap.cosmopars.a / snap.cosmopars.h
+    boxsize = snap.cosmopars.boxsize * boxunits / coordconv
+    box3 = [boxsize] * 3
+    periodic = False
+    Axis1 = 0
+    Axis2 = 1
+    Axis3 = 2
+    Ls = [10.e3, 10.e3, 10.e3] # ckpc/h
+    # median particle coordinates (no particle weights)
+    centre = [29576.388948049986, 30730.297831713087, 32117.89832612393] 
+    dct = {'coords': coords, 'lsmooth': lsmooth, 'qW': mass, 'qQ': density}
+    npix_x = 800
+    npix_y = 800
+    tree = False
+    ompproj = False
+    kernel = 'C2'
+    
+    m3.translate(dct, 'coords', centre, boxsize, periodic)
+    massmap, densmap = m3.project(NumPart, Ls, Axis1, Axis2, Axis3, box3, 
+                                  periodic, npix_x, npix_y, kernel, dct, tree,
+                                  ompproj=ompproj, projmin=None, projmax=None)
+    massmap *= (massconv / lconv**2)
+    densmap *= densconv
+    
+    fn = 'mass_density_maps_firesnap.hdf5'
+    with h5py.File(ddir + fn, 'w') as f:
+        f.create_dataset('massmap', data=massmap)
+        f['massmap'].attrs.create('units', np.string_('g * cm**-2'))
+        f.create_dataset('densmap_massweighted', data=densmap)
+        f['densmap_massweighted'].attrs.create('units', np.string_('g * cm**-3'))
+        grp = f.create_group('Header/inputpars')
+        grp.attrs.create('firesnap', np.string_(firedata_test))
+        grp.attrs.create('simparfile', np.string_(firedata_params))
+        grp.attrs.create('codeunits_length_cgs', lconv)
+        grp.attrs.create('centre_codeunits', np.array(centre))
+        grp.attrs.create('Ls_codeunits', np.array(Ls))
+        grp.attrs.create('Axis1', Axis1)
+        grp.attrs.create('Axis2', Axis2)
+        grp.attrs.create('Axis3', Axis3)
+        grp.attrs.create('npix_x', npix_y)
+        grp.attrs.create('npix_y', npix_y)
+        grp.attrs.create('kernel', np.string_(kernel))
+        cosmodct = snap.cosmopars.getdct()
+        grp = f.create_group('Header/cosmopars')
+        for key in cosmodct:
+            grp.attrs.create(key, cosmodct[key])
+            
 def plot_simple_phasediagrams(filen):
     with h5py.File(ddir + filen, 'r') as f:
         # done for today
+        
+
+
     
     
     
