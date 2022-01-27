@@ -345,7 +345,7 @@ class Firesnap:
                 index = np.where([_atomno == atomno for _atomno \
                                   in atomnos])[0][0]
             else:
-                atomnos = self.ff['Header'].attrs['name_to_atomnumber']
+                atomnos = standard_atomno_indices
                 atomno = name_to_atomnumber[element]
                 index = np.where([_atomno == atomno for _atomno \
                                   in standard_atomno_indices])[0][0]
