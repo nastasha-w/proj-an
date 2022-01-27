@@ -70,7 +70,7 @@ class Cosmopars:
         self.z = dct['z']
         self.h = dct['h']
         self.omegam = dct['omegam']
-        self.omegalammbda = dct['omegalambda']      
+        self.omegalambda = dct['omegalambda']      
         self.omegab = dct['omegab']
         self.boxsize = dct['boxsize']
     def getdct(self):
