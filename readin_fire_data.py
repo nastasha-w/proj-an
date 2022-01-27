@@ -314,9 +314,11 @@ class Firesnap:
                 # assume “standard” runs with METAL_SPECIES_COOLING enabled
                 index = np.where([atomno == 0 for atomno \
                                   in standard_atomno_indices])[0][0]
-            self.readarray(field, subsample=subsample, errorflag=errorflag,
-                           subindex=index)
+            out = self.readarray(field, subsample=subsample, 
+                                 errorflag=errorflag, subindex=index)
             self.toCGS = self.units.getunits(field)
+            return out
+            
         elif 'ElementAbundance' in field:
             if 'Smoothed' in field:
                 msg = 'Warning: smoothed abundances are unavailable in FIRE' +\
@@ -348,9 +350,10 @@ class Firesnap:
                                   in standard_atomno_indices])[0][0]
             parttypestr = field.split('/')[0]
             field = parttypestr + '/Metallicity'
-            self.readarray(field, subsample=subsample, 
-                           errorflag=errorflag, subindex=index)
+            out = self.readarray(field, subsample=subsample, 
+                                 errorflag=errorflag, subindex=index)
             self.toCGS = self.units.getunits(field)
+            return out
         # lots of fields are just the same
         else:
             try:
