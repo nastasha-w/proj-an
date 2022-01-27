@@ -233,6 +233,9 @@ class Firesnap:
         '''
         self.toCGS = np.NaN # overwrite and old values to avoid undetected errors
         # just let h5py handle it
+        if path not in self.ff:
+            raise FieldNotFoundError
+            
         if self.numfiles == 1:
             sel = slice(None, None, subsample)
             if subindex is not None:
