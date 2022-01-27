@@ -199,7 +199,7 @@ class Units:
         elif field == 'BH_Mdot':
             return self.codemass_g / self.codetime_s
         elif field == 'Coordinates':
-            return self.codelength_g
+            return self.codelength_cm
         elif field == 'Density':
             return self.codedensity_g_per_cm3
         elif field == 'DivergenceOfMagneticField':
@@ -207,7 +207,7 @@ class Units:
         elif field == 'ElectronAbundance': 
             # res. elt. mass-weighted free electrons / protons
             return 1.
-        elif field == 'InternalEnergy':
+        elif field ==  :
             return self.codeinternalenergy_cm2_per_s2 
         elif field == 'MagneticField':
             return self.codemageneticfield_gauss
