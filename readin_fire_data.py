@@ -266,10 +266,7 @@ class Firesnap:
             for filen in self.filens:
                 print(filen)
                 with h5py.File(filen, 'r') as f:
-                    try:
-                        ds = f[path]
-                    except AttributeError:
-                        raise FieldNotFoundError
+                    ds = f[path]
                     sublen_tot = ds.shape[0]
                     print('size on file: ', sublen_tot)
                     # in combined array indices: 
