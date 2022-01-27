@@ -376,7 +376,7 @@ class Firesnap:
                     etoh = self.readarray('PartType0/ElectronAbundance',
                                            subsample=subsample, 
                                            errorflag=errorflag)  
-                    print(efrac)
+                    print(etoh)
                     print(hefrac)                      
                     yhe = hefrac / (4. * (1. - hefrac))             
                     mu = (1. + 4. * yhe) / ( 1. + yhe + etoh)
