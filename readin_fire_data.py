@@ -379,6 +379,7 @@ class Firesnap:
                     print(efrac)
                     print(hefrac)                                   
                     mu = (1. + 4. * hefrac) / ( 1. + hefrac + efrac)
+                    print(mu)
                     del efrac
                     del hefrac
                     mean_molecular_weight = mu * uf.c.atomw_H * uf.c.u
@@ -387,6 +388,8 @@ class Firesnap:
                                                  errorflag=errorflag)
                     uconv = self.units.getunits('PartType0/InternalEnergy')
                     scalar = uconv * (gamma_gas - 1.) / uf.c.boltzmann 
+                    print(scalar)
+                    print(mean_molecular_weight)
                     temperature *= scalar / mean_molecular_weight 
                     self.toCGS = 1. 
                     # do the conversion: matches expected units from EAGLE
