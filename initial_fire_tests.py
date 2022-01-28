@@ -309,7 +309,8 @@ def plot_simple_surfdensplot(plottype='firesnap'):
     vmin = np.min(_massmap[np.isfinite(_massmap)])
     vmax = np.max(_massmap)
     cmap_mass = pu.paste_cmaps(['gist_gray', 'viridis'], [vmin, 17., vmax], 
-                              trunclist=None, transwidths=None)
+                               trunclist=[[0., 0.7], [0., 1.]], 
+                               transwidths=None)
     img = ax1.imshow(_massmap, 
                      extent=extent, origin='lower', 
                      interpolation='nearest', cmap=cmap_mass)
@@ -324,7 +325,8 @@ def plot_simple_surfdensplot(plottype='firesnap'):
     vmax = np.max(_densmap)
     print(vmin, vmax)
     cmap_dens = pu.paste_cmaps(['gist_gray', 'viridis'], [vmin, -7., vmax], 
-                              trunclist=None, transwidths=None)
+                               trunclist=[[0., 0.7], [0., 1.]], 
+                               transwidths=None)
     img = ax2.imshow(_densmap, 
                      extent=extent, origin='lower', 
                      interpolation='nearest', cmap=cmap_dens)
