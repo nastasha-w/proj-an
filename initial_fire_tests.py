@@ -205,7 +205,7 @@ def plot_simple_phasediagrams(plottype='firesnap'):
     handles = [mlines.Line2D((), (), label='{:.1f}%'.format(level*100), 
                              color='red', linewidth=1., linestyle=ls)\
                for level, ls in zip(contourlevels, contourstyles)]
-    leg = ax1.legend(fontsize=fontsize, legend_loc='top right')
+    leg = ax1.legend(fontsize=fontsize, loc='top right')
     leg.set_title("enclosed mass", fontsize=fontsize) 
     
     ax1.set_title('$\\mathrm{n}_{\\mathrm{H}}$ from FIRE X',
@@ -247,5 +247,5 @@ def plot_simple_phasediagrams(plottype='firesnap'):
                               linewidth=1., linestyle='solid'),
                mlines.Line2D((), (), label='$X=0.752$', color='C0', 
                               linewidth=1., linestyle='solid')]     
-    ax3.legend(handles=handles, fontsize=fontsize, legend_loc='top right')
+    ax3.legend(handles=handles, fontsize=fontsize, loc='top right')
     
