@@ -177,7 +177,7 @@ def plot_simple_phasediagrams(plottype='firesnap'):
     fontsize = 12
     contourlevels = [0.5, 0.9, 0.99, 0.999]
     contourstyles = ['solid', 'dashed', 'dashdot', 'dotted']
-    fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=5.5, 11.)
+    fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(5.5, 11.))
     
     _hist = np.log10(hist_rho / np.diff(rho)[:, np.newaxis] \
                      / np.diff(temp_rho)[np.newaxis, :])
