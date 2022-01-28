@@ -320,14 +320,14 @@ def plot_simple_surfdensplot(plottype='firesnap'):
     #ax1.set_title('Gas surface density ($\\mathrm{N}_{\\mathrm{H}}$ units)', 
     #              fontsize=fontsize)
     #ax1.tick_params(labelsize=fontsize - 1.)
-    #
-    #_densmap = np.log10(dens_mass.T) + np.log10(rho_to_nH)
-    #vmin = np.min(_densmap[np.isfinite(_densmap)])
-    #vmax = np.max(_densmap)
-    #print(vmin, vmax)
-    #cmap_dens = pu.paste_cmaps(['gist_yarg', 'viridis'], [vmin, -7., vmax], 
-    #                           trunclist=[[0.3, 1.], [0., 1.]], 
-    #                           transwidths=None)
+    
+    _densmap = np.log10(dens_mass.T) + np.log10(rho_to_nH)
+    vmin = np.min(_densmap[np.isfinite(_densmap)])
+    vmax = np.max(_densmap)
+    print(vmin, vmax)
+    cmap_dens = pu.paste_cmaps(['gist_yarg', 'viridis'], [vmin, -7., vmax], 
+                               trunclist=[[0.3, 1.], [0., 1.]], 
+                               transwidths=None)
     img = ax2.imshow(_densmap, 
                      extent=extent, origin='lower', 
                      interpolation='nearest', cmap=cmap_dens)
