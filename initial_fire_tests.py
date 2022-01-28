@@ -59,9 +59,9 @@ def make_simple_phasediagram():
         f['hist'].attrs.create('toCGS', massconv) 
         f['hist'].attrs.create('dimension0', np.string_('logdensity'))                                   
         f['hist'].attrs.create('dimension1', np.string_('logtemperature'))
-        f.create_dataset('logdensity', data=density)
+        f.create_dataset('logdensity', data=axbins_d)
         f['logdensity'].attrs.create('units', np.string_('g * cm**-3'))
-        f.create_dataset('logtemperature', data=temperature)
+        f.create_dataset('logtemperature', data=axbins_t)
         f['logtemperature'].attrs.create('units', np.string_('K'))
         
     hfrac = snap.readarray_emulateEAGLE('PartType0/ElementAbundance/Hydrogen')
@@ -87,9 +87,9 @@ def make_simple_phasediagram():
         f['hist'].attrs.create('toCGS', massconv) 
         f['hist'].attrs.create('dimension0', np.string_('loghydrogendensity'))                                   
         f['hist'].attrs.create('dimension1', np.string_('logtemperature'))
-        f.create_dataset('loghydrogendensity', data=hdens)
+        f.create_dataset('loghydrogendensity', data=axbins_nh)
         f['loghydrogendensity'].attrs.create('units', np.string_('cm**-3'))
-        f.create_dataset('logtemperature', data=temperature)
+        f.create_dataset('logtemperature', data=axbins_t)
         f['logtemperature'].attrs.create('units', np.string_('K'))
         
 def make_simple_surfdensplot():
@@ -177,7 +177,7 @@ def plot_simple_phasediagrams(plottype='firesnap'):
     fontsize = 12
     contourlevels = [0.5, 0.9, 0.99, 0.999]
     contourstyles = ['solid', 'dashed', 'dashdot', 'dotted']
-    fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3)
+    fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=5.5, 11.)
     
     _hist = np.log10(hist_rho / np.diff(rho)[:, np.newaxis] \
                      / np.diff(temp_rho)[np.newaxis, :])
