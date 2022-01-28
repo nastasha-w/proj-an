@@ -6,6 +6,7 @@ import numpy as np
 import h5py
 
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 
 import readin_fire_data as rfd
 import make_maps_v3_master as m3
@@ -176,8 +177,8 @@ def plot_simple_phasediagrams(plottype='firesnap'):
     
     cmap = 'viridis'
     fontsize = 12
-    contourlevels = [0.995, 0.99, 0.9, 0.5]
-    contourstyles = ['dotted', 'dashdot', 'dashed', 'solid']
+    contourlevels = [0.99, 0.9, 0.5]
+    contourstyles = ['dotted', 'dashed', 'solid']
     fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(11., 3.5))
     
     _hist_rho = np.log10(hist_rho / np.diff(rho)[:, np.newaxis] \
@@ -197,12 +198,15 @@ def plot_simple_phasediagrams(plottype='firesnap'):
     pu.add_2dhist_contours(ax1, hist_rho, [rho, temp_rho], [0, 1],
                            mins=None, maxs=None, histlegend=False, 
                            fraclevels=True, levels=contourlevels, legend=True, 
-                           dimlabels=None, legendlabel='encl. mass fraction',
+                           dimlabels=None, legendlabel=None,
                            legendlabel_pre=None, shiftx=0., shifty=0., 
                            dimshifts=None, colors=['red'] * len(contourlevels),
                            linestyles=contourstyles, linewidth=1.)
-    ax1.legend()
-    
+    handles = [mlines.Line2D((), (), label='{:.1f}%'.format(level*100), 
+                             color='red', linewidth=1., linestyle=ls)\
+               for level, ls in zip(contourlevels, contourstyles)]
+    leg = ax1.legend(fontsize=fontsize, legend_loc='top right')
+    leg.set_title("enclosed mass", fontsize=fontsize) 
     
     ax1.set_title('$\\mathrm{n}_{\\mathrm{H}}$ from FIRE X',
                   fontsize=fontsize)
