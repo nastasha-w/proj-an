@@ -179,7 +179,9 @@ def plot_simple_phasediagrams(plottype='firesnap'):
     fontsize = 12
     contourlevels = [0.99, 0.9, 0.5]
     contourstyles = ['dotted', 'dashed', 'solid']
-    fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(11., 3.5))
+    fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, 
+                                        figsize=(11., 3.5),
+                                        gridspec_kw={'wspace': 0.4})
     
     _hist_rho = np.log10(hist_rho / np.diff(rho)[:, np.newaxis] \
                      / np.diff(temp_rho)[np.newaxis, :])
@@ -244,7 +246,7 @@ def plot_simple_phasediagrams(plottype='firesnap'):
     pu.setticks(ax3, fontsize - 1.)
     ax3.set_xlabel('$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{-3}$',
                    fontsize=fontsize)
-    ax1.set_ylabel('$\\log_{10}$ T [K]', fontsize=fontsize)
+    ax3.set_ylabel('$\\log_{10}$ T [K]', fontsize=fontsize)
     pu.add_2dhist_contours(ax3, hist_rho, [rho, temp_rho], [0, 1],
                            mins=None, maxs=None, histlegend=False, 
                            fraclevels=True, levels=contourlevels, legend=True, 
@@ -259,10 +261,11 @@ def plot_simple_phasediagrams(plottype='firesnap'):
                            legendlabel_pre=None, shiftx=0., shifty=0., 
                            dimshifts=None, colors=['C1'] * len(contourlevels),
                            linestyles=contourstyles, linewidth=1.)
-    handles = [mlines.Line2D((), (), label='sim. X', color='C1', 
+    handles = [mlines.Line2D((), (), label='$X=0.752$', color='C0', 
                               linewidth=1., linestyle='solid'),
-               mlines.Line2D((), (), label='$X=0.752$', color='C0', 
-                              linewidth=1., linestyle='solid')]     
+               mlines.Line2D((), (), label='sim. X', color='C1', 
+                              linewidth=1., linestyle='solid'),
+               ]     
     ax3.legend(handles=handles, fontsize=fontsize - 1., loc='upper right')
     
     plt.savefig(ddir + 'phasediagram_firesnap.pdf', format='pdf', 
