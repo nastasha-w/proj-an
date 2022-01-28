@@ -445,7 +445,7 @@ def add_2dhist_contours(ax, bins, edges, toplotaxes,
     
     removezerolevelprops = False
     if len(uselevels) > 1:
-        if uselevels[0] ==u selevels[1]:
+        if uselevels[0] == uselevels[1]:
             uselevels = uselevels[1:]
             removezerolevelprops = True
             
