@@ -177,14 +177,15 @@ def plot_simple_phasediagrams(plottype='firesnap'):
     cmap = 'viridis'
     fontsize = 12
     contourlevels = [0.999, 99., 0.9, 0.5]
-    contourstyles = ['dotted', 'dashdot', 'dashed','solid']
-    fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(11., 5.))
+    contourstyles = ['dotted', 'dashdot', 'dashed', 'solid']
+    fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(11., 3.5))
     
     _hist = np.log10(hist_rho / np.diff(rho)[:, np.newaxis] \
                      / np.diff(temp_rho)[np.newaxis, :])
     _hist += np.log10(hist_rho_toCGS)
     ax1.set_title('$\\rho \\rightarrow \\mathrm{n}_{\\mathrm{H}}$ assuming $X=0.752$',
                   fontsize=fontsize)
+    pu.setticks(ax1, fontsize - 1.)
     ax1.set_xlabel('$\\log_{10} \\, \\rho \\; [\\mathrm{H} \\, \\mathrm{cm}^{-3}, X=0.752]$',
                    fontsize=fontsize)
     ax1.set_ylabel('$\\log_{10}$ T [K]', fontsize=fontsize)
@@ -194,7 +195,7 @@ def plot_simple_phasediagrams(plottype='firesnap'):
                            fraclevels=True, levels=contourlevels, legend=True, 
                            dimlabels=None, legendlabel=None,
                            legendlabel_pre=None, shiftx=0., shifty=0., 
-                           dimshifts=None, color='red', 
+                           dimshifts=None, colors=['red'] * len(contourlevels),
                            linestyles=contourstyles, linewidth=1.)
     
     
