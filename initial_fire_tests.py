@@ -270,4 +270,58 @@ def plot_simple_phasediagrams(plottype='firesnap'):
     
     plt.savefig(ddir + 'phasediagram_firesnap.pdf', format='pdf', 
                 bbox_inches='tight')
+                
+def plot_simple_surfdensplot(plottype='firesnap'):
+    fn = 'mass_density_maps_firesnap.hdf5'
+    
+    with h5py.File(ddir + fn, 'r') as f:
+        mass = f['massmap'][:]
+        dens_mass = f['densmap_massweighted'][:]
+        
+        xax = f['Header/inputpars'].attrs['Axis1']
+        yax = f['Header/inputpars'].attrs['Axis2'] 
+        center = f['Header/inputpars'].attrs['centre_codeunits']
+        Ls = f['Header/inputpars'].attrs['Ls_codeunits']
+        codelength_cgs = f['Header/inputpars'].attrs['codeunits_length_cgs']
+        aexp = f['Header/cosmopars'].attrs['a']
+        extent = [center[xax] - 0.5 * Ls[xax], 
+                  center[xax] + 0.5 * Ls[xax],
+                  center[yax] - 0.5 * Ls[yax], 
+                  center[yax] + 0.5 * Ls[yax],
+                  ]
+    extent = [coord * codelength_cgs / rfd.uf.c.cm_per_mpc / aexp]
+    extent = tuple(extent)
+    xlabel = ['X', 'Y', 'Z'][xax] + ' [cMpc]'  
+    ylabel = ['X', 'Y', 'Z'][yax] + ' [cMpc]'
+    cmap = 'viridis'
+    clabel_mass = '$\\log_{10} \\Sigma_{\\mathrm{gas}} \\;' +\
+                  ' [\\mathrm{H} \\, \\mathrm{cm}^{-2}, X=0.752]$'
+    clabel_dens = '$\\log_{10} \\rho_{\\mathrm{gas}} \\;' +\
+                  ' [\\mathrm{H} \\, \\mathrm{cm}^{-3}, X=0.752]$'
+    
+    fig, (ax1, ax2) = plt.subplots(ncols=2, nrows=1, figsize=(11., 5.)
+                                   gridspec_kw={'wspace': 0.4})
+    fontsize = 12
+    rho_to_nH = 0.752 / (rfd.uf.c.atomw_H * rfd.uf.c.u)
+    
+    img = ax1.imshow(np.log10(mass.T) + np.log10(rho_to_nH), 
+                     extent=extent, origin='lower', 
+                     interpolation='nearest', cmap=cmap)
+    plt.colorbar(img, ax=ax1, label=clabel_mass, fontsize=fontsize)
+    ax1.set_xlabel(xlabel, fontsize=fontsize)
+    ax1.set_ylabel(ylabel, fontsize=fontsize)
+    ax1.set_title('Gas surface density ($\\mathrm{N}_{\\mathrm{H}}$ units)', 
+                  fontsize=fontsize)
+    
+    img = ax2.imshow(np.log10(dens_mass.T) + np.log10(rho_to_nH), 
+                     extent=extent, origin='lower', 
+                     interpolation='nearest', cmap=cmap)
+    plt.colorbar(img, ax=ax2, label=clabel_mass, fontsize=fontsize)
+    ax2.set_xlabel(xlabel, fontsize=fontsize)
+    ax2.set_ylabel(ylabel, fontsize=fontsize)
+    ax2.set_title('Mass-weighted gas density ($\\mathrm{n}_{\\mathrm{H}}$ units)', 
+                  fontsize=fontsize)
+    
+    
+                
     
