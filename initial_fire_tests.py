@@ -170,7 +170,7 @@ def plot_simple_phasediagrams(plottype='firesnap'):
         hist_nH = f['hist'][:]
         hist_nH_toCGS = f['hist'].attrs['toCGS']
         
-        nH = f['logdensity'][:] 
+        nH = f['loghydrogendensity'][:] 
         temp_nH = f['logtemperature'][:]
     
     cmap = 'viridis'
