@@ -308,7 +308,7 @@ def plot_simple_surfdensplot(plottype='firesnap'):
     img = ax1.imshow(np.log10(mass.T) + np.log10(rho_to_nH), 
                      extent=extent, origin='lower', 
                      interpolation='nearest', cmap=cmap)
-    plt.colorbar(img, ax=ax1, label=clabel_mass, fontsize=fontsize)
+    plt.colorbar(img, ax=ax1, label=clabel_mass, labelsize=fontsize)
     ax1.set_xlabel(xlabel, fontsize=fontsize)
     ax1.set_ylabel(ylabel, fontsize=fontsize)
     ax1.set_title('Gas surface density ($\\mathrm{N}_{\\mathrm{H}}$ units)', 
@@ -317,7 +317,7 @@ def plot_simple_surfdensplot(plottype='firesnap'):
     img = ax2.imshow(np.log10(dens_mass.T) + np.log10(rho_to_nH), 
                      extent=extent, origin='lower', 
                      interpolation='nearest', cmap=cmap)
-    plt.colorbar(img, ax=ax2, label=clabel_mass, fontsize=fontsize)
+    plt.colorbar(img, ax=ax2, label=clabel_mass, labelsize=fontsize)
     ax2.set_xlabel(xlabel, fontsize=fontsize)
     ax2.set_ylabel(ylabel, fontsize=fontsize)
     ax2.set_title('Mass-weighted gas density ($\\mathrm{n}_{\\mathrm{H}}$ units)', 
