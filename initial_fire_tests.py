@@ -155,7 +155,7 @@ def make_simple_surfdensplot():
             
 def plot_simple_phasediagrams(plottype='firesnap'):
     filen_rho = 'phasediagram_rhoT_firesnap.hdf5'
-    filen_nH = 'phasediagram_nH_firesnap.hdf5'
+    filen_nH = 'phasediagram_nHT_firesnap.hdf5'
     
     rho_to_nH = 0.752 / (rfd.uf.c.atomw_H * rfd.uf.c.u)
     
