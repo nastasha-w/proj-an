@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 import readin_fire_data as rfd
 import make_maps_v3_master as m3
+import plot_utils as pu
 
 # snapshot 50: redshift 0.5; hopefully enough to make a-scaling errors clear
 firedata_test = '/projects/b1026/snapshots/AGN_suite/fiducial_jet/m12i_res57000/output/snapshot_050.hdf5'
@@ -188,13 +189,13 @@ def plot_simple_phasediagrams(plottype='firesnap'):
                    fontsize=fontsize)
     ax1.set_ylabel('$\\log_{10}$ T [K]', fontsize=fontsize)
     ax1.pcolormesh(rho, temp_rho, _hist.T, cmap=cmap)
-    add_2dhist_contours(ax1, hist_rho, [rho, temp_rho], [0, 1],
-                        mins=None, maxs=None, histlegend=False, 
-                        fraclevels=True, levels=contourlevels, legend=True, 
-                        dimlabels=None, legendlabel=None,
-                        legendlabel_pre=None, shiftx=0., shifty=0., 
-                        dimshifts=None, color='red', linestyles=contourstyles,
-                        linewidth=1.)
+    pu.add_2dhist_contours(ax1, hist_rho, [rho, temp_rho], [0, 1],
+                           mins=None, maxs=None, histlegend=False, 
+                           fraclevels=True, levels=contourlevels, legend=True, 
+                           dimlabels=None, legendlabel=None,
+                           legendlabel_pre=None, shiftx=0., shifty=0., 
+                           dimshifts=None, color='red', 
+                           linestyles=contourstyles, linewidth=1.)
     
     
     
