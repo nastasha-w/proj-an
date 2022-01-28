@@ -192,11 +192,11 @@ def plot_simple_phasediagrams(plottype='firesnap'):
                 np.max(_hist_nH[np.isifinite[_hist_rho]])])
     vmax = max([np.max(_hist_rho), np.max(_hist_nH)])
     clabel_rho = '$\\log_{10} \\, \\partial^2\\mathrm{M} \\,/\\,'+\
-                ' \\partial \\log_{10} \\rho \\, ' +\ 
+                ' \\partial \\log_{10} \\rho \\, ' +\
                 ' \\partial \\log_{10} \\mathrm{T} \\;' +\
                 '[\\mathrm{g}]$'
     clabel_nH = '$\\log_{10} \\, \\partial^2\\mathrm{M} \\,/\\,'+\
-                ' \\partial \\log_{10} \\mathrm{n}_{\\mathrm{H}} \\, ' +\ 
+                ' \\partial \\log_{10} \\mathrm{n}_{\\mathrm{H}} \\, ' +\
                 ' \\partial \\log_{10} \\mathrm{T} \\;' +\
                 '[\\mathrm{g}]$'            
                 
