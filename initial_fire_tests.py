@@ -180,17 +180,38 @@ def plot_simple_phasediagrams(plottype='firesnap'):
     contourstyles = ['dotted', 'dashdot', 'dashed', 'solid']
     fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(11., 3.5))
     
-    _hist = np.log10(hist_rho / np.diff(rho)[:, np.newaxis] \
+    _hist_rho = np.log10(hist_rho / np.diff(rho)[:, np.newaxis] \
                      / np.diff(temp_rho)[np.newaxis, :])
-    _hist += np.log10(hist_rho_toCGS)
+    _hist_rho += np.log10(hist_rho_toCGS)
+    _hist_nH = np.log10(hist_nH / np.diff(nH)[:, np.newaxis] \
+                     / np.diff(temp_nH)[np.newaxis, :])
+    _hist_nH += np.log10(hist_nH_toCGS)
+    
     ax1.set_title('$\\rho \\rightarrow \\mathrm{n}_{\\mathrm{H}}$ assuming $X=0.752$',
                   fontsize=fontsize)
     pu.setticks(ax1, fontsize - 1.)
     ax1.set_xlabel('$\\log_{10} \\, \\rho \\; [\\mathrm{H} \\, \\mathrm{cm}^{-3}, X=0.752]$',
                    fontsize=fontsize)
     ax1.set_ylabel('$\\log_{10}$ T [K]', fontsize=fontsize)
-    ax1.pcolormesh(rho, temp_rho, _hist.T, cmap=cmap)
+    ax1.pcolormesh(rho, temp_rho, _hist_rho.T, cmap=cmap)
     pu.add_2dhist_contours(ax1, hist_rho, [rho, temp_rho], [0, 1],
+                           mins=None, maxs=None, histlegend=False, 
+                           fraclevels=True, levels=contourlevels, legend=True, 
+                           dimlabels=None, legendlabel='encl. mass fraction',
+                           legendlabel_pre=None, shiftx=0., shifty=0., 
+                           dimshifts=None, colors=['red'] * len(contourlevels),
+                           linestyles=contourstyles, linewidth=1.)
+    ax1.legend()
+    
+    
+    ax1.set_title('$\\mathrm{n}_{\\mathrm{H}}$ from FIRE X',
+                  fontsize=fontsize)
+    pu.setticks(ax1, fontsize - 1.)
+    ax1.set_xlabel('$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{-3}$',
+                   fontsize=fontsize)
+    ax1.set_ylabel('$\\log_{10}$ T [K]', fontsize=fontsize)
+    ax1.pcolormesh(nH, temp_nH, _hist_nH.T, cmap=cmap)
+    pu.add_2dhist_contours(ax1, hist_nH, [nH, temp_nH], [0, 1],
                            mins=None, maxs=None, histlegend=False, 
                            fraclevels=True, levels=contourlevels, legend=True, 
                            dimlabels=None, legendlabel=None,
@@ -198,6 +219,29 @@ def plot_simple_phasediagrams(plottype='firesnap'):
                            dimshifts=None, colors=['red'] * len(contourlevels),
                            linestyles=contourstyles, linewidth=1.)
     
-    
-    
+    ax3.set_title('comparison',
+                  fontsize=fontsize)
+    pu.setticks(ax3, fontsize - 1.)
+    ax3.set_xlabel('$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{-3}$',
+                   fontsize=fontsize)
+    ax1.set_ylabel('$\\log_{10}$ T [K]', fontsize=fontsize)
+    pu.add_2dhist_contours(ax3, hist_rho, [rho, temp_rho], [0, 1],
+                           mins=None, maxs=None, histlegend=False, 
+                           fraclevels=True, levels=contourlevels, legend=True, 
+                           dimlabels=None, legendlabel='encl. mass fraction',
+                           legendlabel_pre=None, shiftx=0., shifty=0., 
+                           dimshifts=None, colors=['C0'] * len(contourlevels),
+                           linestyles=contourstyles, linewidth=1.5)
+    pu.add_2dhist_contours(ax3, hist_nH, [nH, temp_nH], [0, 1],
+                           mins=None, maxs=None, histlegend=False, 
+                           fraclevels=True, levels=contourlevels, legend=True, 
+                           dimlabels=None, legendlabel=None,
+                           legendlabel_pre=None, shiftx=0., shifty=0., 
+                           dimshifts=None, colors=['C1'] * len(contourlevels),
+                           linestyles=contourstyles, linewidth=1.)
+    handles = [mlines.Line2D((), (), label='sim. X', color='C1', 
+                              linewidth=1., linestyle='solid'),
+               mlines.Line2D((), (), label='$X=0.752$', color='C0', 
+                              linewidth=1., linestyle='solid')]     
+    ax3.legend(handles=handles, fontsize=fontsize, legend_loc='top right')
     
