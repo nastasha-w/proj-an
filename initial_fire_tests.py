@@ -68,7 +68,7 @@ def make_simple_phasediagram():
     hconv = snap.toCGS # 1.0
     hfrac *= hconv # most values ~ 0.7 --0.75
     
-    hdens = density + np.log10(hfrac / (rfd.uf.c.atomw_H * rfd.uf.c.u)
+    hdens = density + np.log10(hfrac / (rfd.uf.c.atomw_H * rfd.uf.c.u))
     hdensmin = np.min(hdens)
     hdensmax = np.max(hdens)
     minnh = np.floor(hdensmin / binsize) * binsize
@@ -153,7 +153,7 @@ def make_simple_surfdensplot()
         for key in cosmodct:
             grp.attrs.create(key, cosmodct[key])
             
-def plot_simple_phasediagrams(type='firesnap'):
+def plot_simple_phasediagrams(plottype='firesnap'):
     filen_rho = 'phasediagram_rhoT_firesnap.hdf5'
     filen_nH = 'phasediagram_nH_firesnap.hdf5'
     
