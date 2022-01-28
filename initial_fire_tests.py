@@ -299,7 +299,7 @@ def plot_simple_surfdensplot(plottype='firesnap'):
     clabel_dens = '$\\log_{10} \\rho_{\\mathrm{gas}} \\;' +\
                   ' [\\mathrm{H} \\, \\mathrm{cm}^{-3}, X=0.752]$'
     
-    fig, (ax1, ax2) = plt.subplots(ncols=2, nrows=1, figsize=(11., 5.)
+    fig, (ax1, ax2) = plt.subplots(ncols=2, nrows=1, figsize=(11., 5.),
                                    gridspec_kw={'wspace': 0.4})
     fontsize = 12
     rho_to_nH = 0.752 / (rfd.uf.c.atomw_H * rfd.uf.c.u)
