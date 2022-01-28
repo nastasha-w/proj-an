@@ -92,7 +92,7 @@ def make_simple_phasediagram():
         f.create_dataset('logtemperature', data=temperature)
         f['logtemperature'].attrs.create('units', np.string_('K'))
         
-def make_simple_surfdensplot()
+def make_simple_surfdensplot():
     snap = rfd.Firesnap(firedata_test, firedata_params)
     
     coords = snap.readarray_emulateEAGLE('PartType0/Coordinates')
