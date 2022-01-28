@@ -188,13 +188,27 @@ def plot_simple_phasediagrams(plottype='firesnap'):
                      / np.diff(temp_nH)[np.newaxis, :])
     _hist_nH += np.log10(hist_nH_toCGS)
     
+    vmin = max([np.max(_hist_rho[np.isfinite[_hist_rho]]), 
+                np.max(_hist_nH[np.isifinite[_hist_rho]])])
+    vmax = max([np.max(_hist_rho), np.max(_hist_nH)])
+    clabel_rho = '$\\log_{10} \\, \\partial^2\\mathrm{M} \\,/\\,'+\
+                ' \\partial \\log_{10} \\rho \\, ' +\ 
+                ' \\partial \\log_{10} \\mathrm{T} \\;' +\
+                '[\\mathrm{g}]$'
+    clabel_nH = '$\\log_{10} \\, \\partial^2\\mathrm{M} \\,/\\,'+\
+                ' \\partial \\log_{10} \\mathrm{n}_{\\mathrm{H}} \\, ' +\ 
+                ' \\partial \\log_{10} \\mathrm{T} \\;' +\
+                '[\\mathrm{g}]$'            
+                
     ax1.set_title('$\\rho \\rightarrow \\mathrm{n}_{\\mathrm{H}}$ assuming $X=0.752$',
                   fontsize=fontsize)
     pu.setticks(ax1, fontsize - 1.)
     ax1.set_xlabel('$\\log_{10} \\, \\rho \\; [\\mathrm{H} \\, \\mathrm{cm}^{-3}, X=0.752]$',
                    fontsize=fontsize)
     ax1.set_ylabel('$\\log_{10}$ T [K]', fontsize=fontsize)
-    ax1.pcolormesh(rho, temp_rho, _hist_rho.T, cmap=cmap)
+    img = ax1.pcolormesh(rho, temp_rho, _hist_rho.T, cmap=cmap, 
+                         vmin=vmin, vmax=vmax)
+    plt.colorbar(img, ax=ax1, label=clabel_rho)
     pu.add_2dhist_contours(ax1, hist_rho, [rho, temp_rho], [0, 1],
                            mins=None, maxs=None, histlegend=False, 
                            fraclevels=True, levels=contourlevels, legend=True, 
@@ -215,7 +229,9 @@ def plot_simple_phasediagrams(plottype='firesnap'):
     ax2.set_xlabel('$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{-3}$',
                    fontsize=fontsize)
     ax2.set_ylabel('$\\log_{10}$ T [K]', fontsize=fontsize)
-    ax2.pcolormesh(nH, temp_nH, _hist_nH.T, cmap=cmap)
+    img = ax2.pcolormesh(nH, temp_nH, _hist_nH.T, cmap=cmap,
+                         vmin=vmin, vmax=vmax)
+    plt.colorbar(img, ax=ax1, label=clabel_nH)
     pu.add_2dhist_contours(ax2, hist_nH, [nH, temp_nH], [0, 1],
                            mins=None, maxs=None, histlegend=False, 
                            fraclevels=True, levels=contourlevels, legend=True, 
@@ -249,6 +265,6 @@ def plot_simple_phasediagrams(plottype='firesnap'):
                               linewidth=1., linestyle='solid')]     
     ax3.legend(handles=handles, fontsize=fontsize - 1., loc='upper right')
     
-    plt.savefig(ddir + 'phasediagram_firesnap.pdf', format=pdf, 
+    plt.savefig(ddir + 'phasediagram_firesnap.pdf', format='pdf', 
                 bbox_inches='tight')
     
