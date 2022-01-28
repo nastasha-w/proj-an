@@ -187,7 +187,7 @@ def plot_simple_phasediagrams(plottype='firesnap'):
     ax1.set_xlabel('$\\log_{10} \\, \\rho \\; [\\mathrm{H} \\, \\mathrm{cm}^{-3}, X=0.752]$',
                    fontsize=fontsize)
     ax1.set_ylabel('$\\log_{10}$ T [K]', fontsize=fontsize)
-    ax1.pcolormesh([rho, temp_rho], _hist.T, cmap=cmap)
+    ax1.pcolormesh(rho, temp_rho, _hist.T, cmap=cmap)
     add_2dhist_contours(ax1, hist_rho, [rho, temp_rho], [0, 1],
                         mins=None, maxs=None, histlegend=False, 
                         fraclevels=True, levels=contourlevels, legend=True, 
