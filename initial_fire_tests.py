@@ -188,8 +188,8 @@ def plot_simple_phasediagrams(plottype='firesnap'):
                      / np.diff(temp_nH)[np.newaxis, :])
     _hist_nH += np.log10(hist_nH_toCGS)
     
-    vmin = max([np.max(_hist_rho[np.isfinite[_hist_rho]]), 
-                np.max(_hist_nH[np.isifinite[_hist_rho]])])
+    vmin = max([np.max(_hist_rho[np.isfinite(_hist_rho)]), 
+                np.max(_hist_nH[np.isfinite(_hist_rho)])])
     vmax = max([np.max(_hist_rho), np.max(_hist_nH)])
     clabel_rho = '$\\log_{10} \\, \\partial^2\\mathrm{M} \\,/\\,'+\
                 ' \\partial \\log_{10} \\rho \\, ' +\
