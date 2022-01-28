@@ -322,11 +322,11 @@ def plot_simple_surfdensplot(plottype='firesnap'):
     _densmap = np.log10(dens_mass.T) + np.log10(rho_to_nH)
     vmin = np.min(_densmap[np.isfinite(_densmap)])
     vmax = np.max(_densmap)
-    cmap_mass = pu.paste_cmaps(['gist_gray', 'viridis'], [vmin, -7., vmax], 
+    cmap_dens = pu.paste_cmaps(['gist_gray', 'viridis'], [vmin, -7., vmax], 
                               trunclist=None, transwidths=None)
     img = ax2.imshow(_densmap, 
                      extent=extent, origin='lower', 
-                     interpolation='nearest', cmap=cmap)
+                     interpolation='nearest', cmap=cmap_dens)
     plt.colorbar(img, ax=ax2, label=clabel_dens)
     ax2.set_xlabel(xlabel, fontsize=fontsize)
     ax2.set_ylabel(ylabel, fontsize=fontsize)
