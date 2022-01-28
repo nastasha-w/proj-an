@@ -303,7 +303,7 @@ def add_2dhist_contours(ax, bins, edges, toplotaxes,
     # get axes to sum over; preserve order of other axes to match limits
     
         
-    summedaxes = range(len(edges))
+    summedaxes = list(range(len(edges)))
     summedaxes.remove(toplotaxes[0])
     summedaxes.remove(toplotaxes[1])
     
