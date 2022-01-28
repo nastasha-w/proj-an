@@ -445,7 +445,7 @@ def add_2dhist_contours(ax, bins, edges, toplotaxes,
     
     removezerolevelprops = False
     if len(uselevels) > 1:
-        if uselevels[0] ==uselevels[1]:
+        if uselevels[0] ==u selevels[1]:
             uselevels = uselevels[1:]
             removezerolevelprops = True
             
@@ -474,6 +474,7 @@ def add_2dhist_contours(ax, bins, edges, toplotaxes,
     
     #ax.tick_params(labelsize=fontsize,axis='both')
     if 'solid' in linestyles:
+        print(linestyles)
         contours.collections[np.where(np.array(linestyles)=='solid')[0][0]].set_label(legendlabel)
     else: # just do the first one
         contours.collections[0].set_label(legendlabel)
