@@ -205,18 +205,18 @@ def plot_simple_phasediagrams(plottype='firesnap'):
     handles = [mlines.Line2D((), (), label='{:.1f}%'.format(level*100), 
                              color='red', linewidth=1., linestyle=ls)\
                for level, ls in zip(contourlevels, contourstyles)]
-    leg = ax1.legend(fontsize=fontsize - 1., handlelength=1.5,
+    leg = ax1.legend(handles=handles, fontsize=fontsize - 1., handlelength=1.5,
                      loc='upper left')
     leg.set_title("enclosed mass", prop = {'size': fontsize - 1.}) 
     
-    ax1.set_title('$\\mathrm{n}_{\\mathrm{H}}$ from FIRE X',
+    ax2.set_title('$\\mathrm{n}_{\\mathrm{H}}$ from FIRE X',
                   fontsize=fontsize)
-    pu.setticks(ax1, fontsize - 1.)
-    ax1.set_xlabel('$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{-3}$',
+    pu.setticks(ax2, fontsize - 1.)
+    ax2.set_xlabel('$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{-3}$',
                    fontsize=fontsize)
-    ax1.set_ylabel('$\\log_{10}$ T [K]', fontsize=fontsize)
-    ax1.pcolormesh(nH, temp_nH, _hist_nH.T, cmap=cmap)
-    pu.add_2dhist_contours(ax1, hist_nH, [nH, temp_nH], [0, 1],
+    ax2.set_ylabel('$\\log_{10}$ T [K]', fontsize=fontsize)
+    ax2.pcolormesh(nH, temp_nH, _hist_nH.T, cmap=cmap)
+    pu.add_2dhist_contours(ax2, hist_nH, [nH, temp_nH], [0, 1],
                            mins=None, maxs=None, histlegend=False, 
                            fraclevels=True, levels=contourlevels, legend=True, 
                            dimlabels=None, legendlabel=None,
@@ -247,5 +247,5 @@ def plot_simple_phasediagrams(plottype='firesnap'):
                               linewidth=1., linestyle='solid'),
                mlines.Line2D((), (), label='$X=0.752$', color='C0', 
                               linewidth=1., linestyle='solid')]     
-    ax3.legend(handles=handles, fontsize=fontsize, loc='upper right')
+    ax3.legend(handles=handles, fontsize=fontsize - 1., loc='upper right')
     
