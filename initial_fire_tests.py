@@ -188,8 +188,8 @@ def plot_simple_phasediagrams(plottype='firesnap'):
                      / np.diff(temp_nH)[np.newaxis, :])
     _hist_nH += np.log10(hist_nH_toCGS)
     
-    vmin = max([np.max(_hist_rho[np.isfinite(_hist_rho)]), 
-                np.max(_hist_nH[np.isfinite(_hist_rho)])])
+    vmin = min([np.min(_hist_rho[np.isfinite(_hist_rho)]), 
+                np.min(_hist_nH[np.isfinite(_hist_nH)])])
     vmax = max([np.max(_hist_rho), np.max(_hist_nH)])
     clabel_rho = '$\\log_{10} \\, \\partial^2\\mathrm{M} \\,/\\,'+\
                 ' \\partial \\log_{10} \\rho \\, ' +\
@@ -231,7 +231,7 @@ def plot_simple_phasediagrams(plottype='firesnap'):
     ax2.set_ylabel('$\\log_{10}$ T [K]', fontsize=fontsize)
     img = ax2.pcolormesh(nH, temp_nH, _hist_nH.T, cmap=cmap,
                          vmin=vmin, vmax=vmax)
-    plt.colorbar(img, ax=ax1, label=clabel_nH)
+    plt.colorbar(img, ax=ax2, label=clabel_nH)
     pu.add_2dhist_contours(ax2, hist_nH, [nH, temp_nH], [0, 1],
                            mins=None, maxs=None, histlegend=False, 
                            fraclevels=True, levels=contourlevels, legend=True, 
