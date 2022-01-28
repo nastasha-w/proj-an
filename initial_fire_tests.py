@@ -305,9 +305,14 @@ def plot_simple_surfdensplot(plottype='firesnap'):
     fontsize = 12
     rho_to_nH = 0.752 / (rfd.uf.c.atomw_H * rfd.uf.c.u)
     
-    img = ax1.imshow(np.log10(mass.T) + np.log10(rho_to_nH), 
+    _massmap = np.log10(mass.T) + np.log10(rho_to_nH)
+    vmin = np.min(_massmap[np.isfinite(_massmap)])
+    vmax = np.max(_massmap)
+    cmap_mod = pu.paste_cmaps(['gist_gray', viridis], [vmin, 12., vmax], 
+                              trunclist=None, transwidths=None)
+    img = ax1.imshow(_massmap, 
                      extent=extent, origin='lower', 
-                     interpolation='nearest', cmap=cmap)
+                     interpolation='nearest', cmap=cmap_mod)
     plt.colorbar(img, ax=ax1, label=clabel_mass)
     ax1.set_xlabel(xlabel, fontsize=fontsize)
     ax1.set_ylabel(ylabel, fontsize=fontsize)
@@ -317,12 +322,13 @@ def plot_simple_surfdensplot(plottype='firesnap'):
     img = ax2.imshow(np.log10(dens_mass.T) + np.log10(rho_to_nH), 
                      extent=extent, origin='lower', 
                      interpolation='nearest', cmap=cmap)
-    plt.colorbar(img, ax=ax2, label=clabel_mass)
+    plt.colorbar(img, ax=ax2, label=clabel_dens)
     ax2.set_xlabel(xlabel, fontsize=fontsize)
     ax2.set_ylabel(ylabel, fontsize=fontsize)
     ax2.set_title('Mass-weighted gas density ($\\mathrm{n}_{\\mathrm{H}}$ units)', 
                   fontsize=fontsize)
     
-    
+    plt.savefig(ddir + 'massmap_firesnap.pdf', format='pdf',
+                bbox_inches='tight')
                 
     
