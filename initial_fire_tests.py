@@ -176,8 +176,8 @@ def plot_simple_phasediagrams(plottype='firesnap'):
     
     cmap = 'viridis'
     fontsize = 12
-    contourlevels = [0.999, 99., 0.9, 0.5]
-    contourstyles = ['dotted', 'dashdot', 'dashed', 'solid']
+    contourlevels = [0.995, 99., 0.9]
+    contourstyles = ['dotted', 'dashed', 'solid']
     fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(11., 3.5))
     
     _hist = np.log10(hist_rho / np.diff(rho)[:, np.newaxis] \
