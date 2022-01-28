@@ -289,7 +289,8 @@ def plot_simple_surfdensplot(plottype='firesnap'):
                   center[yax] - 0.5 * Ls[yax], 
                   center[yax] + 0.5 * Ls[yax],
                   ]
-    extent = [coord * codelength_cgs / rfd.uf.c.cm_per_mpc / aexp]
+    extent = [coord * codelength_cgs / rfd.uf.c.cm_per_mpc / aexp \
+              for coord in extent]
     extent = tuple(extent)
     xlabel = ['X', 'Y', 'Z'][xax] + ' [cMpc]'  
     ylabel = ['X', 'Y', 'Z'][yax] + ' [cMpc]'
