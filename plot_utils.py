@@ -521,8 +521,12 @@ def paste_cmaps(cmaplist, edges, trunclist=None, transwidths=None):
     range_mapfrom = np.linspace(0., 1., nsample)
     maplist = [(ranges_mapto[ci][i], cmaps[ci](range_mapfrom[i])) \
                for ci in range(len(cmaplist)) for i in range(nsample)]
+    name = '_'.join(['{name}-{vmin}-{vmax}'.format(name=cmap.name,
+                                                   vmin=edges_split[i][0],
+                                                   vmax=edges_split[i][1])\
+                     for i, cmap in enumerate(cmaps)])
     cmap = mpl.colors.LinearSegmentedColormap.from_list(
-         'custom', maplist)
+         name, maplist)
     cmap.set_under(cmap(0.))
     cmap.set_over(cmap(1.))
     return cmap
