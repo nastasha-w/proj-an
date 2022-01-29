@@ -502,7 +502,7 @@ def paste_cmaps(cmaplist, edges, trunclist=None, transwidths=None):
     cmaps = [truncate_colormap(cmaps[i], minval=trunclist[i][0], maxval=trunclist[i][1]) \
                                for i in range(len(cmaplist))]
     # the parts of the 0., 1. range to map each color bar to
-    edges = [float(ed) for ed in edges]
+    #edges = [float(ed) for ed in edges]
     vmin = edges[0]
     vmax = edges[-1]
     ivran = 1. / (vmax - vmin)
