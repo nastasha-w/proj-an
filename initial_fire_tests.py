@@ -305,27 +305,27 @@ def plot_simple_surfdensplot(plottype='firesnap'):
     fontsize = 12
     rho_to_nH = 0.752 / (rfd.uf.c.atomw_H * rfd.uf.c.u)
     
-    #_massmap = np.log10(mass.T) + np.log10(rho_to_nH)
-    #vmin = np.min(_massmap[np.isfinite(_massmap)])
-    #vmax = np.max(_massmap)
-    #cmap_mass = pu.paste_cmaps(['gist_gray', 'viridis'], [vmin, 17., vmax], 
-    #                           trunclist=[[0., 0.7], [0., 1.]], 
-    #                           transwidths=None)
-    #img = ax1.imshow(_massmap, 
-    #                 extent=extent, origin='lower', 
-    #                 interpolation='nearest', cmap=cmap_mass)
-    #plt.colorbar(img, ax=ax1, label=clabel_mass)
-    #ax1.set_xlabel(xlabel, fontsize=fontsize)
-    #ax1.set_ylabel(ylabel, fontsize=fontsize)
-    #ax1.set_title('Gas surface density ($\\mathrm{N}_{\\mathrm{H}}$ units)', 
-    #              fontsize=fontsize)
-    #ax1.tick_params(labelsize=fontsize - 1.)
+    _massmap = np.log10(mass.T) + np.log10(rho_to_nH)
+    vmin = np.min(_massmap[np.isfinite(_massmap)])
+    vmax = np.max(_massmap)
+    cmap_mass = pu.paste_cmaps(['gist_gray', 'viridis'], [vmin, 17., vmax], 
+                               trunclist=[[0., 0.7], [0., 1.]], 
+                               transwidths=None)
+    img = ax1.imshow(_massmap, 
+                     extent=extent, origin='lower', 
+                     interpolation='nearest', cmap=cmap_mass)
+    plt.colorbar(img, ax=ax1, label=clabel_mass)
+    ax1.set_xlabel(xlabel, fontsize=fontsize)
+    ax1.set_ylabel(ylabel, fontsize=fontsize)
+    ax1.set_title('Gas surface density ($\\mathrm{N}_{\\mathrm{H}}$ units)', 
+                  fontsize=fontsize)
+    ax1.tick_params(labelsize=fontsize - 1.)
     
     _densmap = np.log10(dens_mass.T) + np.log10(rho_to_nH)
-    vmin = np.min(_densmap[np.isfinite(_densmap)])
-    vmax = np.max(_densmap)
-    print([vmin, -7., vmax])
-    cmap_dens = pu.paste_cmaps(['gist_yarg', 'viridis'], [vmin, -7., vmax], 
+    vmind = np.min(_densmap[np.isfinite(_densmap)])
+    vmaxd = np.max(_densmap)
+    edges = [float(vmind), -7., float(vmaxd)]
+    cmap_dens = pu.paste_cmaps(['gist_yarg', 'viridis'], [vmind, -7., vmaxd], 
                                trunclist=[[0.3, 1.], [0., 1.]], 
                                transwidths=None)
     img = ax2.imshow(_densmap, 
