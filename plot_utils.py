@@ -518,6 +518,8 @@ def paste_cmaps(cmaplist, edges, trunclist=None, transwidths=None):
     ranges_mapto = [np.linspace((edges_split[i][0] - vmin) * ivran,\
                                 (edges_split[i][1] - vmin) * ivran,\
                                 nsample) for i in range(len(cmaplist))] 
+    ranges_mapto[0][0] = 0.
+    ranges_mapto[-1][1] = 1.
     #print(ranges_mapto)
     range_mapfrom = np.linspace(0., 1., nsample)
     maplist = [(ranges_mapto[ci][i], cmaps[ci](range_mapfrom[i])) \
