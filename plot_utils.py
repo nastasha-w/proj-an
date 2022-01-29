@@ -502,6 +502,7 @@ def paste_cmaps(cmaplist, edges, trunclist=None, transwidths=None):
     cmaps = [truncate_colormap(cmaps[i], minval=trunclist[i][0], maxval=trunclist[i][1]) \
                                for i in range(len(cmaplist))]
     # the parts of the 0., 1. range to map each color bar to
+    edges = [np.float32(ed) for ed in edges]
     vmin = edges[0]
     vmax = edges[-1]
     ivran = 1. / (vmax - vmin)
@@ -526,7 +527,7 @@ def paste_cmaps(cmaplist, edges, trunclist=None, transwidths=None):
                                                    vmax=edges_split[i][1])\
                      for i, cmap in enumerate(cmaps)])
     print(name)
-    return maplist
+    #return maplist
     cmap = mpl.colors.LinearSegmentedColormap.from_list(
          name, maplist)
     cmap.set_under(cmap(0.))
