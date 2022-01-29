@@ -525,6 +525,7 @@ def paste_cmaps(cmaplist, edges, trunclist=None, transwidths=None):
                                                    vmin=edges_split[i][0],
                                                    vmax=edges_split[i][1])\
                      for i, cmap in enumerate(cmaps)])
+    print(name)
     return maplist
     cmap = mpl.colors.LinearSegmentedColormap.from_list(
          name, maplist)
