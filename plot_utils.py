@@ -529,7 +529,7 @@ def paste_cmaps(cmaplist, edges, trunclist=None, transwidths=None):
                                                    vmax=edges_split[i][1])\
                      for i, cmap in enumerate(cmaps)])
     print(name)
-    #return maplist
+    return maplist
     cmap = mpl.colors.LinearSegmentedColormap.from_list(
          name, maplist)
     cmap.set_under(cmap(0.))
