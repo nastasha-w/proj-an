@@ -3137,15 +3137,17 @@ def ppp_selselect_coordsadd(vardict, centre, Ls, periodic, Axis1, Axis2, Axis3, 
     vardict.readif('Coordinates', rawunits=True, region=vardict.region)
     coords = vardict.particle['Coordinates']
     vardict.delif('Coordinates', last=True) # units get changed -> delete to avoid issues later on
-    vardict.readif('SmoothingLength',rawunits=True)
+    vardict.readif('SmoothingLength', rawunits=True)
     lmax= np.max(vardict.particle['SmoothingLength'])
     vardict.delif('SmoothingLength')
     hconst = vardict.simfile.h
-    lmax /= hconst
-    coords /= hconst # convert to Mpc from Mpc/h
+    conv = vardict.CGSconv['Coordinates']
+    # convert to cMpc
+    lmax *= conv / c.cm_per_mpc / vardict.simfile.a 
+    coords *= conv / c.cm_per_mpc / vardict.simfile.a  
     box3 = list((BoxSize,)*3)
 
-    vardict.add_part('coords_cMpc-vel',coords)
+    vardict.add_part('coords_cMpc-vel', coords)
     del coords
     translate(vardict.particle, 'coords_cMpc-vel', centre, box3, periodic)
 
@@ -3172,7 +3174,7 @@ def ppp_selselect_coordsadd(vardict, centre, Ls, periodic, Axis1, Axis2, Axis3, 
     vardict.add_box('box3',box3)
     vardict.add_box('centre',centre)
     vardict.add_box('Ls',Ls)
-    vardict.delif('coords_cMpc-vel',last=not keepcoords)
+    vardict.delif('coords_cMpc-vel', last=not keepcoords)
     vardict.update(sel)
 
 
