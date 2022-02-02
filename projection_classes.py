@@ -78,7 +78,7 @@ class Simfile:
     def readarray_fire(self, name, region=None, rawunits=False): #region is useless here
         if region is not None:
             print('Warning (readarray_fire): region selection will not have any effect')
-        arr = self.readfile.readarray_emulateEAGLE(self, name)
+        arr = self.readfile.readarray_emulateEAGLE(name)
         # CGS conversion should be safe to just take from the first file
         self.CGSconvtot = self.readfile.units.getunits(name)
         self.a_scaling = np.NaN
