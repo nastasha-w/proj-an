@@ -25,10 +25,8 @@ class Units:
         parameterfile: str (optional)
              name of the parameter file used for the simulation run. Used to
              find the unit values if not found in the snapshot file, otherwise 
-             ignored and not required
-        assume_cosmological [keyword]: bool
-             assume the simulation includes cosmological expansion, and that 
-             the time parameter therefore represents the expansion factor a
+             ignored and not required. Note that this is typically needed for
+             the magnetic field units.
         a [keyword]: float
              expansion factor to use. Overridden by anything in the files. 
              Required if using the FIRE default units.

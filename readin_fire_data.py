@@ -16,6 +16,7 @@ import os
 import numpy as np
 
 import units_fire as uf
+import make_maps_opts_locs as ol
 
 # can add cases for python 2/3
 def isstr(object): # should be python 2/3 robust
@@ -85,8 +86,7 @@ class Cosmopars:
         return dct
         
 class Firesnap:
-    def __init__(self, basename, parameterfile=None, 
-                 assume_cosmological=False):
+    def __init__(self, basename, parameterfile=None):
         '''
         Parameters:
         -----------
@@ -97,10 +97,6 @@ class Firesnap:
         parameterfile: str
             name of the parameter file (including the full directory path) used
             for the simulation we're using the snapshot of.
-        assume_cosmological [keyword]: bool
-            assume the simulation time parameter is the expansion factor. This
-            is true is the simulation includes cosmological expansion.
-        
         Returns:
         --------
         Firesnap object, for reading in datasets and attributes from FIRE snapshots 
@@ -133,19 +129,14 @@ class Firesnap:
         
         self.parfilen = parameterfile
         if self.parfilen is not None:
-            self.units = uf.Units(self.firstfilen, self.parfilen, 
-                                  assume_cosmological=assume_cosmological)
+            self.units = uf.Units(self.firstfilen, self.parfilen)
         else:
-            self.units = uf.Units(self.firstfilen, 
-                                  assume_cosmological=assume_cosmological)
+            self.units = uf.Units(self.firstfilen)
             
         # for quick attributes access
         self.ff = h5py.File(self.firstfilen, 'r')   
         self.find_cosmopars()
         
-        
-        
-         
     def readattr(self, path, attribute):
         '''
         read in an attribute from the snapshot (first file)
@@ -399,8 +390,75 @@ class Firesnap:
                 else:
                     raise ValueError('Field {} not found'.format(field))
                   
- 
-
+def get_FireSnap(path, snapnum, filetype='snap'):
+    '''
+    return a FireSnap object, with the parameterfile and snapshot file 
+    in the given path.
+    
+    The path should contain the parameter file, and the snapshots directly
+    or a subdirectory called 'output' containing the snapshot file(s). This
+    function tries different file names and subdirectories in order.
+    
+    Parameters:
+    -----------
+    path: str
+        the path containing the parameter file and snapshot(s)
+        the path may be relative to make_maps_opts_locs.simdir_fire 
+    snapnum: int
+        the snapshot number
+    filetype: str, optional
+        stub; for now this only works for snapshots, but it can be
+        adapted to read return a halo file reader.
+        The default is 'snap'.
+    
+    ''' 
+    prefix = ol.simdir_fire
+    if not os.path.isdir(path):
+        if not os.path.isdir(prefix + path):
+            msg = 'Could not find a directory {} or {}'
+            raise ValueError(msg.format(path, prefix + path))
+        else:
+            path = prefix + path
+    if path[-1] != '/':
+        path = path + '/'
+    
+    opts_pardir = ['', 'output/']
+    opts_parfile = ['params.txt-usedvalues',
+                    'parameters-usedvalues',  
+                    'params.txt']
+    parameterfile = ''
+    for subdir in opts_pardir:
+        for opt in opts_parfile:
+            if os.path.isfile(path + subdir + opt):
+                parameterfile = path + subdir + opt
+                break
+    if parameterfile == '':
+        msg = 'Could not find a parameter file {} in {}'
+        dirs = [path + _d for _d in opts_pardir]
+        raise RuntimeError(msg.format(opts_parfile, dir))
+    
+    opts_snapdir = ['', 'output/']
+    opts_snapfile = ['snapshot_{snap:03d}.hdf5',
+                     'snapshot_{snap:03d}.0.hdf5',
+                     'snapdir_{snap:03d}/{snap:03d}.hdf5'
+                     'snapdir_{snap:03d}/{snap:03d}.0.hdf5',
+                     ]
+    opts_snapfile = [filen.format(snap=snapnum) for filen in opts_snapfile]
+    
+    basename = ''
+    for subdir in opts_snapdir:
+        for snapfile in opts_snapfile:
+            opt = path + subdir + snapfile
+            if os.path.isfile(opt):
+                basename = opt
+                break
+    if basename == '':
+        msg = 'Could not find a snapshot file {} in {}'
+        dirs = [path + _d for _d in opts_snapdir]
+        raise RuntimeError(msg.format(opts_snapfile, dirs))
+                
+    firesnap = Firesnap(basename, parameterfile=parameterfile)
+    return firesnap
      
         
         
