@@ -441,10 +441,11 @@ def get_FireSnap(path, snapnum, filetype='snap'):
         raise RuntimeError(msg.format(opts_parfile, dir))
     
     opts_snapdir = ['', 'output/']
+    # parts with the snapshot number in there
     opts_snapfile = ['snapshot_{snap:03d}.hdf5',
                      'snapshot_{snap:03d}.0.hdf5',
-                     'snapdir_{snap:03d}/{snap:03d}.hdf5',
-                     'snapdir_{snap:03d}/{snap:03d}.0.hdf5',
+                     'snapdir_{snap:03d}/snapshot_{snap:03d}.hdf5',
+                     'snapdir_{snap:03d}/snapshot_{snap:03d}.0.hdf5',
                      ]
     opts_snapfile = [filen.format(snap=snapnum) for filen in opts_snapfile]
     
