@@ -47,6 +47,7 @@ class Simfile:
     but have different read-in options (regions or just selections) and libraries
 
     in case of C-EAGLE/Hydrangea: simfile is the halo number (int), var is ignored
+    in case of FIRE: simnum is the directory path to the snapshots, var is ignored
 
     anything beyond raw data passing is handled by Vardict.
     if necessary, e.g. tables or separate files can be used to set e.g., a, h, scalings
@@ -77,23 +78,27 @@ class Simfile:
     def readarray_fire(self, name, region=None, rawunits=False): #region is useless here
         if region is not None:
             print('Warning (readarray_fire): region selection will not have any effect')
-        arr = self.readfile.read_var(name, gadgetunits=rawunits, verbose=True)
+        arr = self.readfile.readarray_emulateEAGLE(self, name)
         # CGS conversion should be safe to just take from the first file
-        self.CGSconvtot = self.readfile.convert_cgs(name, 0, verbose=True)
+        self.CGSconvtot = self.readfile.units.getunits(name)
         self.a_scaling = np.NaN
         self.h_scaling = np.NaN
         self.CGSconversion = np.NaN
+        if not rawunits:
+            arr *= self.CGSconvtot 
         return arr
     
-    def __init__(self,simnum, snapnum, var, file_type=ol.file_type, simulation='eagle', override_filepath=None):
+    def __init__(self, simnum, snapnum, var, file_type=ol.file_type, 
+                 simulation='eagle', override_filepath=None):
         self.simnum = simnum
         self.snapnum = snapnum
         self.var = var
         self.simulation = simulation
         self.filetype = file_type
         
-        if (override_filepath is not None) and (simulation != 'eagle'):
-            raise NotImplementedError('The filepath override option is only implemented for Eagle.\
+        if (override_filepath is not None) and \
+           (simulation not in ['eagle', 'fire']):
+            raise NotImplementedError('The filepath override option is only implemented for Eagle and FIRE.\
                                       To implement for other simulations, check the read_..._files py used for that simulation.\
                                       It may be neceassary to add an option to not add "/data/" to the file path, like in read_eagle_files.py.\
                                       Then, choose this option and set the file path for the simulation depending on these options.\
@@ -212,7 +217,22 @@ class Simfile:
             elif simnum in ol.halos_hydrangea:
                 self.region_supported = False # for now
             self.readarray = self.readarray_bahamas
+        if simulation == 'fire':
+            if override_filepath is not None:
+                rfd.ol.simdir_fire = override_filepath
+            self.readfile = ref.get_FireSnap(simnum, snapnum, filetype='snap')
+            # pass down readfile properties for reference
+            self.boxsize = self.readfile.cosmopars.boxsize
+            self.h = self.cosmopars.readfile.h
+            self.a = self.cosmopars.readfile.a
+            self.z = self.cosmopars.readfile.z
+            self.omegam = self.cosmopars.readfile.omegam
+            self.omegalambda = self.cosmopars.readfile.omegamlambda
+            self.omegab = self.cosmopars.readfile.omegab
+            self.particlemass_DM_g = np.NaN # FIRE outputs just seem to store the mass array 
 
+            self.region_supported = False
+            self.readarray = self.readarray_fire
         else:
             raise ValueError('Simulation %s is not supported.'%simulation)
     
