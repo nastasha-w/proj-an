@@ -30,6 +30,10 @@ try:
     import read_eagle_files_ceh_noregion as rce
 except ImportError:
     print('Warning: failed to import read_eagle_files_ceh_noregion')
+try:
+    import readin_fire_data as rfd
+except ImportError:
+    print('Warning: failed to import readin_fire_data')
     
 #################
 #    classes    #
@@ -70,7 +74,17 @@ class Simfile:
         self.h_scaling = self.readfile.h_scaling
         self.CGSconversion = self.readfile.CGSconversion
         return arr
-
+    def readarray_fire(self, name, region=None, rawunits=False): #region is useless here
+        if region is not None:
+            print('Warning (readarray_fire): region selection will not have any effect')
+        arr = self.readfile.read_var(name, gadgetunits=rawunits, verbose=True)
+        # CGS conversion should be safe to just take from the first file
+        self.CGSconvtot = self.readfile.convert_cgs(name, 0, verbose=True)
+        self.a_scaling = np.NaN
+        self.h_scaling = np.NaN
+        self.CGSconversion = np.NaN
+        return arr
+    
     def __init__(self,simnum, snapnum, var, file_type=ol.file_type, simulation='eagle', override_filepath=None):
         self.simnum = simnum
         self.snapnum = snapnum
@@ -436,7 +450,7 @@ class Vardict:
                 self.particle[name] = self.simfile.readarray('PartType%s/%s' %(self.parttype, name), rawunits=True, region=self.region_temp).astype(np.float32)[sel.val, :]
             else:
                 self.particle[name] = self.simfile.readarray('PartType%s/%s' %(self.parttype, name), rawunits=True, region=self.region_temp)[sel.val] #coordinates are always needed, so these will not be read in this way; other arrays are 1D
-            self.CGSconv[name] = self.simfile.a ** self.simfile.a_scaling * (self.simfile.h ** self.simfile.h_scaling) * self.simfile.CGSconversion
+            self.CGSconv[name] = self.simfile.CGSconvtot
             if not rawunits: # do CGS conversion here since read_eagle_files does not seem to modify the array in place
                 self.particle[name] *= self.CGSconv[name]
                 self.CGSconv[name] = 1.
