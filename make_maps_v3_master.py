@@ -2997,7 +2997,7 @@ def partselect_pos(simfile, centre, Ls, Axis1, Axis2, Axis3, parttype='0'): # th
     Uses the read_eagle hash tables to select a region to be used on read-ins
     '''
     hconst = simfile.h
-    BoxSize = simfile.boxsize
+    BoxSize = simfile.boxsize 
     if Ls[Axis1] >= BoxSize * hconst**-1 and Ls[Axis2] >= BoxSize * hconst**-1:
         if Ls[Axis3] >= BoxSize * hconst**-1:
             region = None
@@ -3010,6 +3010,8 @@ def partselect_pos(simfile, centre, Ls, Axis1, Axis2, Axis3, parttype='0'): # th
         region[[2*Axis3, 2*Axis3+1]] = [(centre[Axis3] - Ls[Axis3] * 0.5) * hconst, (centre[Axis3] + Ls[Axis3] * 0.5) * hconst]
         lsmooth = simfile.readarray('PartType%s/SmoothingLength'%parttype, rawunits=True, region=region)
         margin = np.max(lsmooth)
+        # convert to cMpc / h (raw units in FIRE are ckpc / h, for example)
+        margin *= simfile.CGSconvtot / c.cm_per_mpc / simfile.a * simfile.h
         del lsmooth # read it in again later, if it's needed again
         region[[2*Axis2, 2*Axis2+1]] = [(centre[Axis2] - Ls[Axis2] * 0.5) * hconst - margin ,(centre[Axis2] + Ls[Axis2] * 0.5) * hconst + margin]
         region[[2*Axis1, 2*Axis1+1]] = [(centre[Axis1] - Ls[Axis1] * 0.5) * hconst - margin ,(centre[Axis1] + Ls[Axis1] * 0.5) * hconst + margin]
