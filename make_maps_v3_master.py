@@ -3060,31 +3060,35 @@ def ppv_selselect_coordsgen(centre, Ls, Axis1, Axis2, Axis3, periodic, vardict, 
 
     hconst = vardict.simfile.h
     BoxSize = vardict.simfile.boxsize
-    hf = Hubble(vardict.simfile.z,simfile=vardict.simfile)
+    hf = Hubble(vardict.simfile.z, simfile=vardict.simfile)
 
     # coords are stored in float64, but I don't need that precision here. (As long as particles end up in about the same slice, it should be ok. It's converted to float32 for projection anyway)
-    vardict.readif('Coordinates', rawunits=True) # hubble is also in cgs; ~1e24 cm length coordinates shouldn't overflow
+    vardict.readif('Coordinates', rawunits=True) # hubble is also in cgs; ~1e26 cm length coordinates shouldn't overflow
     coords = vardict.particle['Coordinates']
     conv = vardict.CGSconv['Coordinates']
-    vardict.add_part('coords_cMpc-vel',coords) # position in gagdet units
+    vardict.add_part('coords_cMpc-vel', coords) # position in gagdet units
     del coords
     vardict.delif('Coordinates', last=True)
 
     vardict.readif('Velocity', rawunits=True, region=vardict.region)
     vconv = vardict.CGSconv['Velocity']
     vardict.particle['Velocity'] = vardict.particle['Velocity'][:,Axis3] * vconv # velocity (cgs)
-
-    boxvel = BoxSize*conv*hf
-    vardict.particle['coords_cMpc-vel'][:,Axis3] *= conv*hf # position (gadget) -> position (cgs, proper) -> hubble flow (cgs)
-    vardict.particle['coords_cMpc-vel'][:,Axis3] += vardict.particle['Velocity'] # positive velocity = direction of position increase: both away from observer
-    vardict.delif('Velocity',last=True)
+    
+    # BoxSize is set to cMpc/h for all sims.
+    boxvel = BoxSize * c.cm_per_mpc * vardict.simfile.a / hconst * hf 
+    # position (gadget) -> position (cgs, proper) -> hubble flow (cgs)
+    vardict.particle['coords_cMpc-vel'][:, Axis3] *= conv * hf 
+    # positive velocity = direction of position increase: both away from observer
+    vardict.particle['coords_cMpc-vel'][:, Axis3] += vardict.particle['Velocity'] 
+    vardict.delif('Velocity', last=True)
     vardict.particle['coords_cMpc-vel'][:,Axis3] %= boxvel
 
     # avoid fancy indexing to avoid array copies
-    vardict.particle['coords_cMpc-vel'][:,Axis1] *= hconst**-1
-    vardict.particle['coords_cMpc-vel'][:,Axis2] *= hconst**-1
+    to_cMpc = conv / c.cm_per_mpc / simfile.a
+    vardict.particle['coords_cMpc-vel'][:, Axis1] *= to_cMpc
+    vardict.particle['coords_cMpc-vel'][:, Axis2] *= to_cMpc
+ 
     BoxSize = BoxSize * hconst**-1
-
     Ls[Axis3] = Ls[Axis3] / BoxSize * boxvel
     centre[Axis3] = centre[Axis3] / BoxSize * boxvel
     if userawv:
@@ -3111,8 +3115,8 @@ def ppv_selselect_coordsgen(centre, Ls, Axis1, Axis2, Axis3, periodic, vardict, 
         sel.comb({'arr':   0.5*Ls[Axis3] >  vardict.particle['coords_cMpc-vel'][:,Axis3]})
 
     vardict.add_box('box3', box3)
-    vardict.overwrite_box('centre',centre)
-    vardict.overwrite_box('Ls',Ls)
+    vardict.overwrite_box('centre', centre)
+    vardict.overwrite_box('Ls', Ls)
     vardict.update(sel)
 
 
