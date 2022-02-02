@@ -223,13 +223,13 @@ class Simfile:
             self.readfile = rfd.get_FireSnap(simnum, snapnum, filetype='snap')
             # pass down readfile properties for reference
             self.boxsize = self.readfile.cosmopars.boxsize
-            self.h = self.cosmopars.readfile.h
-            self.a = self.cosmopars.readfile.a
-            self.z = self.cosmopars.readfile.z
-            self.omegam = self.cosmopars.readfile.omegam
-            self.omegalambda = self.cosmopars.readfile.omegamlambda
-            self.omegab = self.cosmopars.readfile.omegab
-            self.particlemass_DM_g = np.NaN # FIRE outputs just seem to store the mass array 
+            self.h = self.readfile.cosmopars.h
+            self.a = self.readfile.cosmopars.a
+            self.z = self.readfile.cosmopars.z
+            self.omegam = self.readfile.cosmopars.omegam
+            self.omegalambda = self.readfile.cosmopars.omegamlambda
+            self.omegab = self.readfile.cosmopars.omegab
+            #self.particlemass_DM_g = np.NaN # FIRE outputs just seem to store the mass array 
 
             self.region_supported = False
             self.readarray = self.readarray_fire
