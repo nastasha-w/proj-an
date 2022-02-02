@@ -220,7 +220,7 @@ class Simfile:
         if simulation == 'fire':
             if override_filepath is not None:
                 rfd.ol.simdir_fire = override_filepath
-            self.readfile = ref.get_FireSnap(simnum, snapnum, filetype='snap')
+            self.readfile = rfd.get_FireSnap(simnum, snapnum, filetype='snap')
             # pass down readfile properties for reference
             self.boxsize = self.readfile.cosmopars.boxsize
             self.h = self.cosmopars.readfile.h
