@@ -2156,7 +2156,8 @@ def getBenOpp1chemabundtables(vardict,excludeSFR,eltab,hab,ion,last=True,updates
         print('ChemicalAbundances tables are not available ')
     # store chemical abundances as ionfrac, to match what is used otherwise
     # chemical abundance arrays may contain NaN values. Set those to zero.
-    vardict.readif('ChemicalAbundances/%s'%(iontranslation[ion]),region = 'auto',rawunits = True,out =False, setsel = None,setval = None)
+    vardict.readif('ChemicalAbundances/%s'%(iontranslation[ion]), region='auto',
+                   rawunits=True, out=False, setsel=None, setval=None)
     if ion != 'h1':
         vardict.readif(eltab, region='auto', rawunits=True, out=False, setsel=None, setval=None)
         vardict.readif(hab, region='auto', rawunits=True, out=False, setsel=None, setval=None)
@@ -3510,9 +3511,9 @@ def luminosity_calc(vardict, excludeSFR, eltab, hab, ion,\
 
     if not vardict.isstored_part('logT'):
         if excludeSFR == 'T4':
-            vardict.readif('OnEquationOfState', rawunits=True)
-            vardict.add_part('eos', vardict.particle['OnEquationOfState'] > 0.)
-            vardict.delif('OnEquationOfState', last=last)
+            vardict.readif('StarFormationRate', rawunits=True)
+            vardict.add_part('eos', vardict.particle['StarFormationRate'] > 0.)
+            vardict.delif('StarFormationRate', last=last)
             vardict.readif('Temperature', rawunits=True,\
                            setsel=vardict.particle['eos'], setval = 1e4)
             vardict.delif('eos', last=last)
@@ -3793,9 +3794,9 @@ def Nion_calc(vardict, excludeSFR, eltab, hab, ion, sylviasshtables=False,
 
         if not vardict.isstored_part('logT'):
             if excludeSFR == 'T4':
-                vardict.readif('OnEquationOfState', rawunits=True)
-                vardict.add_part('eos', vardict.particle['OnEquationOfState'] > 0.)
-                vardict.delif('OnEquationOfState', last=last)
+                vardict.readif('StarFormationRate', rawunits=True)
+                vardict.add_part('eos', vardict.particle['StarFormationRate'] > 0.)
+                vardict.delif('StarFormationRate', last=last)
                 vardict.readif('Temperature', rawunits=True,\
                                setsel=vardict.particle['eos'], setval = 1e4)
                 vardict.delif('eos',last=last)
@@ -3928,7 +3929,7 @@ def Nelt_calc(vardict, excludeSFR, eltab, hab, ion, last=True, updatesel=True,
         if not vardict.isstored_part('lognH'):
             vardict.readif('Density', rawunits=True)
             if isstr(hab):
-                vardict.readif(hab,rawunits = True)
+                vardict.readif(hab, rawunits=True)
                 vardict.add_part('lognH', np.log10(vardict.particle[hab]) + np.log10(vardict.particle['Density']) + np.log10( vardict.CGSconv['Density'] / (c.atomw_H * c.u)) )
                 if eltab != hab:
                     vardict.delif(hab, last=last)
@@ -3944,9 +3945,9 @@ def Nelt_calc(vardict, excludeSFR, eltab, hab, ion, last=True, updatesel=True,
 
         if not vardict.isstored_part('logT'):
             if excludeSFR == 'T4':
-                vardict.readif('OnEquationOfState', rawunits=True)
-                vardict.add_part('eos', vardict.particle['OnEquationOfState'] > 0.)
-                vardict.delif('OnEquationOfState', last=last)
+                vardict.readif('StarFormationRate', rawunits=True)
+                vardict.add_part('eos', vardict.particle['StarFormationRate'] > 0.)
+                vardict.delif('StarFormationRate', last=last)
                 vardict.readif('Temperature', rawunits=True,\
                                setsel=vardict.particle['eos'], setval = 1e4)
                 vardict.delif('eos',last=last)
@@ -4021,7 +4022,7 @@ def Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=True, updatesel=True, misc
         vardict.readif('Density', rawunits=True)
         #print('Number of particles in use: %s'%str(np.sum(vardict.readsel.val)))
         if isstr(hab):
-            vardict.readif(hab,rawunits = True)
+            vardict.readif(hab, rawunits=True)
             vardict.add_part('nH', vardict.particle[hab] * vardict.particle['Density'] * vardict.CGSconv['Density'] / (c.atomw_H * c.u) )
             #print('Min, max, median of particle Density: %.5e %.5e %.5e' \
             #    % (np.min(vardict.particle['Density']), np.max(vardict.particle['Density']), np.median(vardict.particle['Density'])))
@@ -4036,9 +4037,9 @@ def Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=True, updatesel=True, misc
 
     if not vardict.isstored_part('Temperature'):
         if excludeSFR == 'T4':
-            vardict.readif('OnEquationOfState', rawunits=True)
-            vardict.add_part('eos', vardict.particle['OnEquationOfState'] > 0.)
-            vardict.delif('OnEquationOfState',last=last)
+            vardict.readif('StarFormationRate', rawunits=True)
+            vardict.add_part('eos', vardict.particle['StarFormationRate'] > 0.)
+            vardict.delif('StarFormationRate', last=last)
             vardict.readif('Temperature', rawunits=True, setsel=vardict.particle['eos'],setval = 1e4)
             vardict.delif('eos', last=last)
         else:
@@ -4066,10 +4067,10 @@ def Nion_calc_ssh(vardict, excludeSFR, hab, ion, last=True, updatesel=True, misc
         pass
     vardict.delif('Temperature',last=last)
     vardict.delif('nH', last=last)
-    vardict.readif('Mass',rawunits=True)
+    vardict.readif('Mass', rawunits=True)
 
     if isstr(hab):
-        vardict.readif(hab,rawunits = True) # may not be saved if nH was already there
+        vardict.readif(hab, rawunits=True) # may not be saved if nH was already there
         Nion = vardict.particle[hab]*h1hmolfrac*vardict.particle['Mass']
         del h1hmolfrac
         vardict.delif('Mass',last=last)
@@ -4095,16 +4096,17 @@ def Nion_to_coldens(vardict, Ls, Axis1, Axis2, Axis3, npix_x, npix_y):
 
 
 def luminosity_calc_halpha_fromSFR(vardict,excludeSFR,last=True,updatesel=True):
-
+    
     if not vardict.isstored_part('eos'):
-        vardict.readif('OnEquationOfState', rawunits=True)
-        vardict.add_part('eos',vardict.particle['OnEquationOfState']> 0.)
-        vardict.delif('OnEquationOfState',last=last)
+        vardict.readif('StarFormationRate', rawunits=True)
+        vardict.add_part('eos',vardict.particle['StarFormationRate']> 0.)
+        vardict.delif('StarFormationRate',last=last)
     if updatesel:
         vardict.update(vardict.particle['eos'])
         vardict.readif('StarFormationRate', rawunits=True)
     else:
-        vardict.readif('StarFormationRate', rawunits=True,setsel= not vardict.particle['eos'],setval=0.)
+        vardict.readif('StarFormationRate', rawunits=True, 
+                       setsel=(not vardict.particle['eos']), setval=0.)
     vardict.delif('eos',last=last)
     convtolum = 1./(5.37e-42)
     return vardict.particle['StarFormationRate'], convtolum # array, cgsconversion
@@ -4118,16 +4120,17 @@ def readbasic(vardict, quantity, excludeSFR, last=True, **kwargs):
     if quantity == 'Temperature':
         if excludeSFR == 'T4':
             if not vardict.isstored_part('eos'):
-                vardict.readif('OnEquationOfState',rawunits=True)
-                vardict.add_part('eos',vardict.particle['OnEquationOfState'] > 0.)
-                vardict.delif('OnEquationOfState',last=last)
+                vardict.readif('StarFormationRate', rawunits=True)
+                vardict.add_part('eos',vardict.particle['StarFormationRate'] > 0.)
+                vardict.delif('StarFormationRate',last=last)
             vardict.readif('Temperature',rawunits=True,setsel = vardict.particle['eos'],setval = 1e4)
             vardict.delif('eos',last=last)
         else:
             vardict.readif('Temperature',rawunits=True)
 
-    # Mass is not actually stored for DM: just use ones, and DM mass from file
-    elif vardict.parttype == '1' and quantity == 'Mass':
+    # Mass is not actually stored for DM in EAGLE: just use ones, and DM mass from file
+    elif vardict.parttype == '1' and quantity == 'Mass' 
+        and vardict.simfile.simulation == 'eagle':
         vardict.readif('ParticleIDs', rawunits=True)
         vardict.add_part('Mass', np.ones((vardict.particle['ParticleIDs'].shape[0],)))
         vardict.CGSconv['Mass'] = vardict.simfile.particlemass_DM_g
@@ -4153,7 +4156,7 @@ def readbasic(vardict, quantity, excludeSFR, last=True, **kwargs):
         vardict.delif('Mass', last=last)
         vardict.delif('Density', last=last)
     else:
-        vardict.readif(quantity,rawunits=True)
+        vardict.readif(quantity, rawunits=True)
 
 
 
@@ -4508,7 +4511,7 @@ def getwishlist(funcname,**kwargs):
         subs = []
         needed = ['Temperature']
         if kwargs['logT']:
-            needed += ['OnEquationOfState']
+            needed += ['StarFormationRate']
         settings = {'Temperature': kwargs['logT']}
         return (needed, subs, settings)
 
@@ -5437,16 +5440,16 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
     # only remaining checks on excludeSFR are for 'T4' and 'from'
 
     if excludeSFRW in ['from','only']: # only select EOS particles; difference in only in the emission calculation
-        vardict_WQ.readif('OnEquationOfState',rawunits=True)
-        eossel = pc.Sel({'arr': vardict_WQ.particle['OnEquationOfState'] > 0.})
-        vardict_WQ.delif('OnEquationOfState')
+        vardict_WQ.readif('StarFormationRate',rawunits=True)
+        eossel = pc.Sel({'arr': vardict_WQ.particle['StarFormationRate'] > 0.})
+        vardict_WQ.delif('StarFormationRate')
         vardict_WQ.update(eossel) #should significantly reduce memory impact of coordinate storage
         del eossel
 
     elif excludeSFRW == True: # only select non-EOS particles
-        vardict_WQ.readif('OnEquationOfState',rawunits=True)
-        eossel = pc.Sel({'arr': vardict_WQ.particle['OnEquationOfState'] <= 0.})
-        vardict_WQ.delif('OnEquationOfState')
+        vardict_WQ.readif('StarFormationRate',rawunits=True)
+        eossel = pc.Sel({'arr': vardict_WQ.particle['StarFormationRate'] <= 0.})
+        vardict_WQ.delif('StarFormationRate')
         vardict_WQ.update(eossel) #will have less impact on coordinate storage
         del eossel
     # False and T4 require no up-front or general particle selection, just one instance in the temperature read-in
@@ -5731,19 +5734,20 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
                                          ps20tables=ps20tables)
 
     if velcut == False:
-        vardict_WQ.readif('Coordinates',rawunits=True)
+        vardict_WQ.readif('Coordinates', rawunits=True)
+        conv = vardict_WQ.CGSconv['Coordinates'] / c.cm_per_mpc / vardict_WQ.simfile.a
         vardict_WQ.add_part('coords_cMpc-vel', 
-                            vardict_WQ.particle['Coordinates'] * simfile.h**-1)
-        vardict_WQ.delif('Coordinates',last=True) # essentially, force delete
+                            vardict_WQ.particle['Coordinates'] * conv)
+        vardict_WQ.delif('Coordinates', last=True) # essentially, force delete
         translate(vardict_WQ.particle,'coords_cMpc-vel', 
                   vardict_WQ.box['centre'], vardict_WQ.box['box3'], periodic)
 
     NumPart = vardict_WQ.particle['coords_cMpc-vel'].shape[0]
     if parttype == '0':
-        lsmooth = simfile.readarray('PartType%s/SmoothingLength'%parttype, 
-                                    rawunits=True, 
-                                    region=vardict_WQ.region)[vardict_WQ.readsel.val] * \
-                  simfile.h**-1
+        lsmooth = vardict_WQ.readif('SmoothingLength', rawunits=True)
+        conv = vardict_WQ.CGSconv['SmoothingLength'] / c.cm_per_mpc / vardict_WQ.simfile.a
+        vardict_WQ.delif('SmoothingLength', last=True)
+        lsmooth *= conv
         tree = False
     elif parttype == '1': # DM: has a physically reasonable smoothing length, but it is not in the output files
         lsmooth = np.zeros(NumPart)
@@ -6256,8 +6260,9 @@ def get3ddist(vardict, cen, last=True, trustcoords=False):
         vardict.delif('Coordinates', last=True)
     if 'Coordinates' not in vardict.particle:
         vardict.readif('Coordinates', rawunits=True)
-        vardict.particle['Coordinates'] *= (1. / vardict.simfile.h)
-        vardict.CGSconv['Coordinates'] *= vardict.simfile.h
+        conv = vardict.CGSconv['Coordinates'] / c.cm_per_mpc / c.simfile.a
+        vardict.particle['Coordinates'] *= conv
+        vardict.CGSconv['Coordinates'] /= conv
         
     if not np.all(cen == 0.): # translation step will often have been made before in region selection -> no need to repeat
         translate(vardict.particle, 'Coordinates', cen, np.array((vardict.simfile.boxsize / vardict.simfile.h,) *3), False) # non-periodic -> centered on cen
@@ -6957,16 +6962,16 @@ def getparticledata(vardict, ptype, excludeSFR, abunds, ion, quantity,
         eltab, hab = get_eltab_names(abunds, iselt, ion)
 
     if excludeSFR in ['from', 'only']: # only select EOS particles; difference in only in the emission calculation
-        vardict.readif('OnEquationOfState', rawunits=True)
-        eossel = pc.Sel({'arr': vardict.particle['OnEquationOfState'] > 0.})
-        vardict.delif('OnEquationOfState')
+        vardict.readif('StarFormationRate', rawunits=True)
+        eossel = pc.Sel({'arr': vardict.particle['StarFormationRate'] > 0.})
+        vardict.delif('StarFormationRate')
         vardict.update(eossel) #should significantly reduce memory impact of coordinate storage
         del eossel
 
     elif excludeSFR == True: # only select non-EOS particles
-        vardict.readif('OnEquationOfState',rawunits =True)
-        eossel = pc.Sel({'arr': vardict.particle['OnEquationOfState'] <= 0.})
-        vardict.delif('OnEquationOfState')
+        vardict.readif('StarFormationRate',rawunits =True)
+        eossel = pc.Sel({'arr': vardict.particle['StarFormationRate'] <= 0.})
+        vardict.delif('StarFormationRate')
         vardict.update(eossel) #will have less impact on coordinate storage
         del eossel
     # False and T4 require no up-front or general particle selection, just one instance in the temperature read-in
@@ -7264,8 +7269,9 @@ def makehistograms_perparticle(ptype, simnum, snapnum, var, _axesdct,
         
         # coords are stored in float64, but I don't need that precision here. 
         vardict.readif('Coordinates', rawunits=True)
-        vardict.particle['Coordinates'] *= (1. / vardict.simfile.h)
-        vardict.CGSconv['Coordinates'] *= vardict.simfile.h
+        conv = vardict.CGSconv['Coordinates'] / c.cm_per_mpc / vardict.simfile.a
+        vardict.particle['Coordinates'] *= conv
+        vardict.CGSconv['Coordinates'] /= conv
         #print(vardict.particle['Coordinates'])
         #print(vardict.CGSconv['Coordinates'])
         translate(vardict.particle, 'Coordinates', centre, box3, False) # periodic = False -> centre on centre
