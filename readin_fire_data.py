@@ -412,6 +412,9 @@ def get_FireSnap(path, snapnum, filetype='snap'):
         The default is 'snap'.
     
     ''' 
+    opts_filetype = ['snap']
+    if filetype not in opts_filetype:
+        raise ValueError('filetype should be one of {}'.format(opts_filetype))
     prefix = ol.simdir_fire
     if not os.path.isdir(path):
         if not os.path.isdir(prefix + path):
@@ -440,7 +443,7 @@ def get_FireSnap(path, snapnum, filetype='snap'):
     opts_snapdir = ['', 'output/']
     opts_snapfile = ['snapshot_{snap:03d}.hdf5',
                      'snapshot_{snap:03d}.0.hdf5',
-                     'snapdir_{snap:03d}/{snap:03d}.hdf5'
+                     'snapdir_{snap:03d}/{snap:03d}.hdf5',
                      'snapdir_{snap:03d}/{snap:03d}.0.hdf5',
                      ]
     opts_snapfile = [filen.format(snap=snapnum) for filen in opts_snapfile]
@@ -456,8 +459,10 @@ def get_FireSnap(path, snapnum, filetype='snap'):
         msg = 'Could not find a snapshot file {} in {}'
         dirs = [path + _d for _d in opts_snapdir]
         raise RuntimeError(msg.format(opts_snapfile, dirs))
-                
+    
     firesnap = Firesnap(basename, parameterfile=parameterfile)
+    msg = 'Using parameterfile {}, (1st) snapshot {}'
+    print(msg.format(parameterfile, basename))
     return firesnap
      
         
