@@ -227,7 +227,7 @@ class Simfile:
             self.a = self.readfile.cosmopars.a
             self.z = self.readfile.cosmopars.z
             self.omegam = self.readfile.cosmopars.omegam
-            self.omegalambda = self.readfile.cosmopars.omegamlambda
+            self.omegalambda = self.readfile.cosmopars.omegalambda
             self.omegab = self.readfile.cosmopars.omegab
             #self.particlemass_DM_g = np.NaN # FIRE outputs just seem to store the mass array 
 
