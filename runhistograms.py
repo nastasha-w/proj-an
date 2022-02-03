@@ -3705,7 +3705,7 @@ elif jobind in range(20454, 20481):
     wt = allweights[jobind - 20454]
     m3.ol.ndir = '/net/luttero/data2/imgs/paper3/datasets/histograms/'
     
-    simnum = 'L0012N0188' #'L0100N1504'
+    simnum = 'L0100N1504'
     snapnum = 27
     var = 'REFERENCE'
     if wt in weights_other:
@@ -3731,7 +3731,7 @@ elif jobind in range(20454, 20481):
                   excludeSFR='T4', abunds='Sm', parttype='0',
                   axbins=axbins,
                   sylviasshtables=False, bensgadget2tables=False,
-                  ps20tables=False, ps20depletion=True,
+                  ps20tables=False, ps20depletion=False,
                   allinR200c=True, mdef='200c',
                   L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,
                   misc=None,
