@@ -4100,7 +4100,6 @@ def luminosity_calc_halpha_fromSFR(vardict,excludeSFR,last=True,updatesel=True):
     if not vardict.isstored_part('eos'):
         vardict.readif('StarFormationRate', rawunits=True)
         vardict.add_part('eos',vardict.particle['StarFormationRate']> 0.)
-        vardict.delif('StarFormationRate',last=last)
     if updatesel:
         vardict.update(vardict.particle['eos'])
         vardict.readif('StarFormationRate', rawunits=True)
