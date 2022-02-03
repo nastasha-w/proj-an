@@ -3721,7 +3721,7 @@ elif jobind in range(20454, 20481):
     axesdct = []
     axbins = []
     #minval = 2**-149 * c.solar_mass / c.sec_per_year 
-    axesdct = [{'ptype': 'Nion', 'ion': 'hydrogen'},
+    axesdct = [{'ptype': 'Niondens', 'ion': 'hydrogen'},
                {'ptype': 'basic', 'quantity': 'Temperature'}]
     axbins = [0.1, 0.1]
     logax = [True, True]
