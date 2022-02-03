@@ -3691,7 +3691,7 @@ elif jobind in [20452, 20453]:
                   binby=binning,
                   combmethod='add', histtype=axdct)
 
-elif jobind in range(20454, 20481)
+elif jobind in range(20454, 20481):
     lines_PS20 = ['Fe17      17.0510A',
                   'Fe17      15.2620A', 'Fe17      16.7760A',
                   'Fe17      17.0960A', 'Fe18      16.0720A',
