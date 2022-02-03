@@ -3691,7 +3691,66 @@ elif jobind in [20452, 20453]:
                   binby=binning,
                   combmethod='add', histtype=axdct)
 
-
+elif jobind in range(20454, 20481)
+    lines_PS20 = ['Fe17      17.0510A',
+                  'Fe17      15.2620A', 'Fe17      16.7760A',
+                  'Fe17      17.0960A', 'Fe18      16.0720A',
+                  ]
+    lines_SB =  ['c5r', 'c6', 'n6-actualr', 'n7', 'o7r', 'o7iy', 'o7f', 'o8',
+                 'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r']
+    metals = ['iron', 'carbon', 'nitrogen', 'oxygen', 'neon', 'magnesium', 
+              'silicon']
+    weights_other = ['Mass', 'Volume']
+    allweights = lines_PS20 + lines_SB + metals + weights_other
+    wt = allweights[jobind - 20454]
+    m3.ol.ndir = '/net/luttero/data2/imgs/paper3/datasets/histograms/'
+    
+    simnum = 'L0012N0188' #'L0100N1504'
+    snapnum = 27
+    var = 'REFERENCE'
+    if wt in weights_other:
+        ptype = 'basic'
+        kwargs = {'quantity': wt}
+    elif wt in metals:
+        ptype = 'Nion'
+        kwargs = {'ion': wt, 'ps20tables': False}
+    else:
+        ptype = 'Luminosity'
+        kwargs = {'ion': wt, 'ps20tables': (wt in lines_PS20)}
+    
+    axesdct = []
+    axbins = []
+    #minval = 2**-149 * c.solar_mass / c.sec_per_year 
+    axesdct = [{'ptype': 'Nion', 'ion': 'hydrogen'},
+               {'ptype': 'basic', 'quantity': 'Temperature'}]
+    axbins = [0.1, 0.1]
+    logax = [True, True]
+    
+    args = (ptype, simnum, snapnum, var, axesdct)
+    _kwargs = dict(simulation='eagle',
+                  excludeSFR='T4', abunds='Sm', parttype='0',
+                  axbins=axbins,
+                  sylviasshtables=False, bensgadget2tables=False,
+                  ps20tables=False, ps20depletion=True,
+                  allinR200c=True, mdef='200c',
+                  L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,
+                  misc=None,
+                  name_append=None, logax=logax, loghist=False,
+                  )
+    _kwargs.update(kwargs)
+    kwargs = _kwargs
+    filen, grpn = m3.makehistograms_perparticle(*args, nameonly=True, **kwargs)
+    done = False
+    if os.path.isfile(filen):
+        with h5py.File(filen, 'a') as fi:
+            if grpn in fi:
+                if 'histogram' in fi[grpn]:
+                    done = True
+                else:
+                    del fi[grpn]
+                    print('Deleting incomplete data group')
+    if not done:
+        m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
 ### also redo for n6-actualr:
 # x p3g.extracthists_luminosity()
 # x p3g.extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
