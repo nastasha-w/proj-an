@@ -4438,7 +4438,7 @@ def plot_phasediagrams_Lweighted(plotset='all'):
     
     
     contourlevels = [0.999, 0.99, 0.9, 0.5]
-    contourstyles = ['dotted', 'dotdash', 'dashed', 'solid']
+    contourstyles = ['dotted', 'dashdot', 'dashed', 'solid']
     colorlist = [_c1.blue, _c1.green, _c1.red, 
                  _c1.yellow, _c1.purple, _c1.cyan]
     cmap = 'gist_yarg'
