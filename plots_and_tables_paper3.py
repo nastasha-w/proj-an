@@ -4505,7 +4505,7 @@ def plot_phasediagrams_Lweighted(plotset='all'):
         _hist /= np.sum(_hist)
         _hist /= np.diff(xdat)[:, np.newaxis]
         _hist /= np.diff(ydat)[np.newaxis, :]
-        img = ax.pcolormesh(xdat, ydat, np.log10(_hist), cmap=cmap,
+        img = ax.pcolormesh(xdat, ydat, np.log10(_hist.T), cmap=cmap,
                             vmin=vmin, vmax=vmax)
         print(cts)
         for ct, color in zip(cts, colorlist):
