@@ -4449,8 +4449,8 @@ def plot_phasediagrams_Lweighted(plotset='all'):
     panelwidth = 3.
     panelheight = 3.
     cwidth = 1.
-    wspace = 0.2
-    hspace = 0.2
+    wspace = 0.0
+    hspace = 0.0
     numpanels = len(weights)
     if numpanels == 4:
         numrows = 2
@@ -4485,7 +4485,7 @@ def plot_phasediagrams_Lweighted(plotset='all'):
         idx = (numrows * numcols - numpanels)
         idx = -1 * min(idx, 2)
         cax = fig.add_subplot(grid[numrows - 1, idx:])
-        cax.set_aspect(0.1)
+        cax.set_aspect(0.2)
     
     xlabel = '$\\log_{10} \\, \\mathrm{n}_{}\\mathrm{H} \\;' +\
              '[\\mathrm{cm}^{-3}]$' 
@@ -4497,10 +4497,13 @@ def plot_phasediagrams_Lweighted(plotset='all'):
     
     for axi, (wt, cts) in enumerate(zip(weights, contours)):
         ax = axes[axi]
-        pu.setticks(ax, fontsize=fontsize)
-        if axi % numcols == 0:
+        leftlabel = axi % numcols == 0
+        lowerlabel = numpanels - axi >= numcols
+        pu.setticks(ax, fontsize=fontsize, labelbottom=lowerlabel,
+                    labelleft=leftlabel)
+        if leftlabel:
             ax.set_ylabel(ylabel, fontsize=fontsize)
-        if numpanels - axi >= numcols:
+        if lowerlabel:
             ax.set_xlabel(xlabel, fontsize=fontsize)
         img = ax.pcolormesh(data[wt]['logd'], data[wt]['logt'], hdata[wt].T, 
                             cmap=cmap, vmin=vmin, vmax=vmax)
