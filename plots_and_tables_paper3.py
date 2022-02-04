@@ -4411,7 +4411,7 @@ def addtablecontours(ax, line, maxfracs, **kwargs):
     z = cosmopars_27['z']
     basename = ddir + 'emtables/emissiontable_{line}_z-{z:.3f}.hdf5'
     filen = basename.format(line=line.replace(' ', '-'), z=z)
-    with h5py.File(filen, 'r')
+    with h5py.File(filen, 'r'):
         table = f['emissivity'][:]
         logd = f['hydrogennumberdensity'][:]
         dax = f['hydrogennumberdensity'].attrs['table axis']
