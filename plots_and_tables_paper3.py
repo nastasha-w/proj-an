@@ -4545,7 +4545,7 @@ def plot_phasediagrams_Lweighted(plotset='all'):
                                    dimshifts=None, 
                                    colors=[color] * len(contourlevels),
                                    linestyles=contourstyles, linewidth=1.)
-        if wt in lines_PS20 or wt in lines_SB:
+        if wt in all_lines_PS20 or wt in all_lines_SB:
             addtablecontours(ax, wt, [0.1], colors=[_c1.yellow], 
                              linestyles=['dotted'])
         label=namepdpanel(wt)
