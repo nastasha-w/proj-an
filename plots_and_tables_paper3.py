@@ -4390,8 +4390,8 @@ def readpddata(weight):
         tax = f[tpath].attrs['histogram axis']
         if not bool(f[tpath].attrs['log']):
             logt = np.log10(logt)
-        print(dpath)
         dpath = groupname + '/' + dname
+        print(dpath)
         logd = f[dpath + '/bins'][:]
         dax = f[dpath].attrs['histogram axis']
         if not bool(f[dpath].attrs['log']):
