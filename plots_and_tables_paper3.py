@@ -4381,8 +4381,8 @@ def readpddata(weight):
         wfill = 'Nion_' + weight
         smpt = 'SmAb_'
     
+    print(path + filebase.format(wt=wfill, smpt=smpt))
     with h5py.File(path + filebase.format(wt=wfill, smpt=smpt), 'r') as f:
-        print(path + filebase.format(wt=wfill, smpt=smpt))
         hpath = groupname + '/histogram'
         print(hpath)
         hist = f[hpath][:]
