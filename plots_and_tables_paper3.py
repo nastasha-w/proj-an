@@ -4525,7 +4525,16 @@ def plot_phasediagrams_Lweighted(plotset='all'):
                         for ct, color in zip(contours, colorlist)]
             ax.legend(handles=handles, fontsize=fontsize - 1., 
                       loc='lower right')
-                     
+    
+    xlims = [ax.get_xlim() for ax in axes] 
+    xmax = max([xlim[1] for xlim in xlims])
+    xmin = min([xlim[0] for xlim in xlims])
+    [ax.set_xlim(xmin, xmax) for ax in axes]
+    ylims = [ax.get_ylim() for ax in axes] 
+    ymax = max([ylim[1] for ylim in ylims])
+    ymin = min([ylim[0] for ylim in ylims])
+    [ax.set_ylim(ymin, ymax) for ax in axes]
+    
     pu.add_colorbar(cax, img=img, vmin=vmin, vmax=vmin, cmap=cmap, 
                     clabel=clabel, newax=False, extend='min', 
                     fontsize=fontsize, orientation=cbar_orientation)
