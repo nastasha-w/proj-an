@@ -4454,8 +4454,8 @@ def plot_phasediagrams_Lweighted(plotset='all'):
         numcols = 2
     else:
         numcols = min(numpanels, 3)
-        numrows = (numcols - 1) // numcols + 1
-    cbar_right = numrows * numcols > numpanels
+        numrows = (numpanels - 1) // numcols + 1
+    cbar_right = numrows * numcols == numpanels
     if cbar_right:
         _numcols = numcols + 1
         width_ratios = [panelwidth] * numcols + [cwidth]
