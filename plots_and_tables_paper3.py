@@ -4379,7 +4379,7 @@ def readpddata(weight):
         smpt = ''
     else:
         wfill = 'Nion_' + weight
-        smpt = 'SmAb'
+        smpt = 'SmAb_'
     
     with h5py.File(path + filebase.format(wt=wfill, smpt=smpt), 'r') as f:
         print(path + filebase.format(wt=wfill, smpt=smpt))
