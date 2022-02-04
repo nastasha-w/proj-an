@@ -4371,7 +4371,7 @@ def readpddata(weight):
         wfill = 'Luminosity_' + weight.replace(' ', '-') + siontab
         groupname = 'Niondens_hydrogen_SmAb' + siontab + \
                     '_T4EOS_Temperature_T4EOS'
-        dname = dname + siontab         
+        dname = 'Niondens_hydrogen_SmAb' + siontab + '_T4EOS'       
         smpt = 'SmAb_'   
     else:
         wfill = weight
