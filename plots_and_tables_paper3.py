@@ -4346,8 +4346,184 @@ def plot_r200Lw_halodist_convtest(weightset=1, inclSF=True):
         [axes[i, xi].set_xlim(minx, maxx) for i in range(nprof)]
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
+
+def namepdpanel(weight):
+    if weight in all_lines_SB or weight in all_lines_PS20:
+        label = nicenames_lines[weight]
+    elif weight == 'Mass':
+        label = 'mass'
+    elif label == 'propvol':
+        label = 'volume'
+    else:
+        label = weight
+    return label
+
+def readpddata(weight):
+    path = ddir + 'histograms/'
+    filebase = 'particlehist_{wt}_L0100N1504_27_test3.7_T4EOS.hdf5' 
+    groupname = 'Niondens_hydrogen_SmAb_T4EOS_Temperature_T4EOS/'
+    dname = 'Niondens_hydrogen_SmAb_T4EOS'
+    tname = 'Temperature_T4EOS'
+    if weight in all_lines_SB:
+        wfill = 'Luminosity_' + weight
+    elif weight in all_lines_PS20:
+        wfill = 'Luminosity_' + weight + siontab
+        groupname = 'Niondens_hydrogen_SmAb' + siontab + \
+                    '_T4EOS_Temperature_T4EOS'
+        dname = dname + siontab            
+    else:
+        wfill = weight
+    
+    with h5py.File(path + file.format(wfill), 'r') as f:
+        hpath = groupname + 'histogram'
+        hist = f[hpath][:]
+        if bool(f[hpath].attrs['log'])):
+            hist = 10**hist
+        tpath = groupname + tname
+        logt = f[tpath + '/bins'][:]
+        tax = f[tpath].attrs['histogram axis']
+        if not bool(f[tpath].attrs['log'])):
+            logt = np.log10(logt)
+        dpath = groupname + dname
+        logd = f[dpath + '/bins'][:]
+        dax = f[dpath].attrs['histogram axis']
+        if not bool(f[dpath].attrs['log'])):
+            logd = np.log10(logd)
+    if dax > tax:
+        hist = hist.T
+    return {'hist': hist, 'logt': logt, 'logd': logd}
+        
+# pd phase diagram
+def plot_phasediagrams_Lweighted(plotset='all'):
+    '''
+    plot phase diagrams weighted by line luminosity, mass, volume, 
+    metal mass
+    '''
+    metals =  ['carbon', 'nitrogen', 'oxygen', 'neon', 'magnesium', 'silicon',
+               'iron']
+    if plotset == 'all':
+        weights = ['Mass'] + metals + plotlines_SB + plotlines_PS20
+        contours = [[wt] for wt in wts]
+    elif plotset == 'focus':
+        weights = ['Mass', 'oxygen', 'o7r', 'o8', 'Fe17      17.0510A']
+        contours = [['Mass', 'propvol'], ['oxygen', 'iron', 'nitrogen'],
+                    ['o7r'], ['o8'], ['Fe17      17.0510A']]
+    else:
+        raise ValueError('invalid plotset option')
+    
+    datakeys = {wt for st in contours for wt in st}
+    datakeys = datakeys + set(weights)
+    data = {wt: readpddata(wt) for wt in datakeys}
+    
+    dynrange = 6.
+    maxs = [np.log10(np.max(data[wt]['hist'])) for wt in data]
+    mins = [np.log10(np.min(data[wt]['hist'][np.isifinite(data[wt]['hist'])]))\
+            for wt in data]
+    vmax = max(maxs)
+    minmax = min(maxs)
+    vmin = max(min(mins), minmax - dynrange)
     
     
+    contourlevels = [0.999, 0.99, 0.9, 0.5]
+    contourstyles = ['dotted', 'dotdash', 'dashed', 'solid']
+    colorlist = [_c1.blue, _c1.green, _c1.red, 
+                 _c1.yellow, _c1.purple, _c1.cyan]
+    cmap = 'gist_yarg'
+    
+    panelwidth = 3.
+    panelheight = 3.
+    cwidth = 1.
+    wspace = 0.2
+    hspace = 0.2
+    numpanels = len(weights)
+    if numpanels == 4:
+        numrows = 2
+        numcols = 2
+    else:
+        numcols = min(numpanels, 3)
+        numrows = (numcols - 1) // numcols + 1
+    cbar_right = numrows * numcols > numpanels
+    if cbar_right:
+        _numcols = numcols + 1
+        width_ratios = [panelwidth] * numcols + [cwidth]
+        cbar_orientation = 'vertical'
+    else:
+        _numcols = numcols
+        width_ratios = [panelwidth] * numcols
+        cbar_orientation = 'horizontal'
+    height_ratios = [panelheight] * numrows
+    figheight = sum(height_ratios) + (numcols - 1) * hspace
+    figwidth = sum(width_ratios) + (_numrows - 1) * wspace
+    
+    fig = plt.figure(figsize=(figwidth, figheight))
+    grid = gsp.GridSpec(nrows=numrows, ncols=_numcols,
+                        hspace=hspace, wspace=wspace,
+                        width_ratios=width_ratios,
+                        height_ratios=height_ratios)
+    axes = np.array([fig.add_subplot(grid[i // numcols, i % numcols])\
+                     for i in range(numpanels)])
+    if cbar_right:
+        cax = fig.add_subplot(grid[:2, numcols])
+        cax.set_aspect(10.)
+    else:
+        idx = -1 * (numrows * numcols - numpanels)
+        cax = fig.add_subplot(grid[numrows - 1, idx:])
+        cax.set_aspect(0.1)
+    
+    xlabel = '$\\log_{10} \\, \\mathrm{n}_{}\\mathrm{H} \\;' +\
+             '[\\mathrm{cm}^{-3}]$' 
+    ylabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
+    clabel = '$\\log_{10} \\, \\partial^2 \\mathrm{fraction} \\,/\\,$' + \
+             '\\partial \\log_{10}\\mathrm{T} \\,' + \
+             '\\partial \\log_{10} \\, \\mathrm{n}_{}\\mathrm{H}'
+    fontsize = 12
+    
+    for axi, (wt, cts) in enumerate(zip(weights, contours)):
+        ax = axes[axi]
+        pu.setticks(axi, fontsize=fontsize)
+        if axi % numcols == 0:
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+        if numpanels - axi >= numcols:
+            ax.set_xlabel(xlabel, fontsize=fontsize)
+        
+        img = ax.pcolormesh(data[wt]['logd'], data[wt]['logt'], 
+                            np.log10(data[wt]['hist'].T), cmap=cmap,
+                            vmin=vmin, vmax=vmax)
+        for ct, color in zip(contours, colorlist):
+            pu.add_2dhist_contours(ax, data[ct]['hist'], 
+                                   [data[ct]['logd'], data[ct]['logt']], 
+                                   [0, 1],
+                                   mins=None, maxs=None, histlegend=False, 
+                                   fraclevels=True, levels=contourlevels, 
+                                   legend=False, 
+                                   dimlabels=None, legendlabel=None,
+                                   legendlabel_pre=None, shiftx=0., shifty=0.,
+                                   dimshifts=None, 
+                                   colors=[color] * len(contourlevels),
+                                   linestyles=contourstyles, linewidth=1.5)
+        label=namepdpanel(wt)
+        ax.text(0.05, 0.95, label, fontsize=fontsize)
+        if len(cts) > 1 or cts[0] != wt:
+            handles = [mlines.Line2D((), (), label=namepdpanel(ct), 
+                                     color=color, linewidth=1.5, 
+                                     linestyle='solid')
+                        for ct, color in zip(contours, colorlist)]
+            ax.legend(handles=handles, fontsize=fontsize - 1., 
+                      loc='lower right')
+                     
+    pu.add_colorbar(cax, img=img, vmin=vmin, vmax=vmin, cmap=cmap, 
+                    clabel=clabel, newax=False, extend='min', 
+                    fontsize=fontsize, orientation=cbar_orientation)
+    
+    handles = [mlines.Line2D((), (), label='{:.1f}%'.format(level*100), 
+                             color='black', linewidth=1., linestyle=ls) \
+               for level, ls in zip(contourlevels, contourstyles)]     
+    axes[-1].legend(handles=handles, fontsize=fontsize, loc='lower right')
+    
+    outname = mdir + 'phasediagram_L0100N1504_27_{}.pdf'
+    plt.savefig(outname.format(plotset), format='pdf', bbox_inches='tight')
+            
+        
 
 # convergence tests: simulation box size and resolution, slice depth of maps 
 def plot_radprof_conv(convtype='boxsize', line='all', scatter=True):
