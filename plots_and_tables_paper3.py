@@ -4403,7 +4403,30 @@ def readpddata(weight):
     if dax > tax:
         hist = hist.T
     return {'hist': hist, 'logt': logt, 'logd': logd}
+
+def addtablecontours(ax, line, maxfracs, **kwargs):
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    
+    z = cosmopars_27['z']
+    basename = ddir + 'emtables/emissiontable_{line}_z-{z:.3f}.hdf5'
+    filen = basename.format(line=line.replace(' ', '-'), z=z)
+    with h5py.File(filen, 'r')
+        table = f['emissivity'][:]
+        logd = f['hydrogennumberdensity'][:]
+        dax = f['hydrogennumberdensity'].attrs['table axis']
+        logt = f['temperature'][:]
+        tax = f['temperature'].attrs['table axis']
+    if dax > tax:
+        table = table.T
+    ciemax = np.max(table[-1, :])
+    levels = [frac * ciemax for frac in maxfracs]
+    contourset = ax.contour(logd, logt, table.T, levels, **kwargs)
         
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    return contourset
+    
 # pd phase diagram
 def plot_phasediagrams_Lweighted(plotset='all'):
     '''
@@ -4444,8 +4467,8 @@ def plot_phasediagrams_Lweighted(plotset='all'):
     vmin = max(min(mins), minmax - dynrange)
     
     
-    colorlist = [_c1.blue, _c1.green, _c1.red, 
-                 _c1.yellow, _c1.purple, _c1.cyan]
+    colorlist = [_c1.cyan, _c1.green, _c1.red, 
+                 _c1.yellow, _c1.purple, _c1.blue]
     cmap = 'gist_yarg'
     
     panelwidth = 3.
@@ -4522,6 +4545,9 @@ def plot_phasediagrams_Lweighted(plotset='all'):
                                    dimshifts=None, 
                                    colors=[color] * len(contourlevels),
                                    linestyles=contourstyles, linewidth=1.)
+        if wt in lines_PS20 or wt in lines_SB:
+            addtablecontours(ax, wt, [0.1], colors=[_c1.yellow], 
+                             linestyles=['dotted'])
         label=namepdpanel(wt)
         ax.text(0.05, 0.95, label, fontsize=fontsize,
                 transform=ax.transAxes, horizontalalignment='left',
@@ -4548,9 +4574,16 @@ def plot_phasediagrams_Lweighted(plotset='all'):
                     fontsize=fontsize, orientation=cbar_orientation)
     
     handles = [mlines.Line2D((), (), label='{:.1f}%'.format(level*100), 
-                             color='black', linewidth=1., linestyle=ls) \
+                             color=colorlist[0], linewidth=1., linestyle=ls) \
                for level, ls in zip(contourlevels, contourstyles)]     
     axes[-1].legend(handles=handles, fontsize=fontsize, loc='lower right')
+    emtablabel = '$\\Lambda\\, \\mathrm{n}_{\\mathrm{H}}^{-2} \\, ' +\
+                 '\\mathrm{V}^{-1}' + \
+                 ' = 0.1 \\times \\mathrm{CIE}\\,\\mathrm{max}$'
+    handles2 = [mlines.Line2D((), (), label=emtablabel, 
+                             color=_c1.yellow, linewidth=1., 
+                             linestyle='dotted')]
+    axes[-2].legend(handles=handles2, fontsize=fontsize, loc='lower right')
     
     outname = mdir + 'phasediagram_L0100N1504_27_{}.pdf'
     plt.savefig(outname.format(plotset), format='pdf', bbox_inches='tight')
