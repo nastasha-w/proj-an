@@ -4461,7 +4461,7 @@ def saveemtables(z=cosmopars_27['z']):
         deltanH = np.average(np.diff(lognHcm3))
         table = np.copy(_table[:, :, ol.line_nos_ion[line]])
         
-        with h5py.File(outname_base.format(line=line, z=z)) as f:
+        with h5py.File(outname_base.format(line=line, z=z), 'w') as f:
             hed = f.create_group('Header')
             hed.attrs.create('info', np.string_('line emission table from Bertone et al. 2010')) 
             hed.attrs.create('emissivity', np.string_('Lambda / nH**2 / V'))     
@@ -4500,7 +4500,7 @@ def saveemtables(z=cosmopars_27['z']):
                     'logTK = _table.lognHcm3\n'  +\
                     'table -= 2. * lognHcm3[np.newaxis, :]\n'
         _line = line.replace(' ', '-')
-        with h5py.File(outname_base.format(line=_line, z=z)) as f:
+        with h5py.File(outname_base.format(line=_line, z=z), 'w') as f:
             hed = f.create_group('Header')
             hed.attrs.create('info', np.string_('line emission table from Ploeckinger & Schaye 2020')) 
             hed.attrs.create('emissivity', np.string_('Lambda / nH**2 / V'))     
