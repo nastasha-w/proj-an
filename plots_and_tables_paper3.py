@@ -4402,7 +4402,7 @@ def plot_phasediagrams_Lweighted(plotset='all'):
     metals =  ['carbon', 'nitrogen', 'oxygen', 'neon', 'magnesium', 'silicon',
                'iron']
     if plotset == 'all':
-        weights = ['Mass', 'propvol'] + metals + plotlines_SB + plotlines_PS20
+        weights = ['Mass', 'propvol'] + metals + plot_lines_SB + plot_lines_PS20
         contours = [[wt] for wt in wts]
     elif plotset == 'focus':
         weights = ['Mass', 'oxygen', 'o7r', 'o8', 'Fe17      17.0510A']
