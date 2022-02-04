@@ -4417,6 +4417,11 @@ def addtablecontours(ax, line, maxfracs, **kwargs):
         dax = f['hydrogennumberdensity'].attrs['table axis']
         logt = f['temperature'][:]
         tax = f['temperature'].attrs['table axis']
+        print(table.shape)
+        print(logd.shape)
+        print(dax)
+        print(logt.shape)
+        print(tax)
     if dax > tax:
         table = table.T
     ciemax = np.max(table[-1, :])
