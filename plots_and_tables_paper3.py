@@ -4427,11 +4427,14 @@ def plot_phasediagrams_Lweighted(plotset='all'):
     datakeys = {wt for st in contours for wt in st}
     datakeys = datakeys | set(weights)
     data = {wt: readpddata(wt) for wt in datakeys}
+    hdata = {wt: np.log10(data[wt]['hist'] / np.sum(data[wt]['hist'] /\
+                          np.diff(data[wt]['logd'])[:, np.newaxis]) /\
+                          np.diff(data[wt]['logt'])[np.newaxis, :]) \
+             for wt in datakeys}
     
     dynrange = 6.
-    maxs = [np.log10(np.max(data[wt]['hist'])) for wt in data]
-    mins = [np.log10(np.min(data[wt]['hist'][np.isfinite(data[wt]['hist'])]))\
-            for wt in data]
+    maxs = [np.max(hdata[wt]) for wt in data]
+    mins = [np.min(hdata[wt][np.isfinite(hdata[wt])]) for wt in data]
     vmax = max(maxs)
     minmax = min(maxs)
     vmin = max(min(mins), minmax - dynrange)
@@ -4487,7 +4490,7 @@ def plot_phasediagrams_Lweighted(plotset='all'):
     xlabel = '$\\log_{10} \\, \\mathrm{n}_{}\\mathrm{H} \\;' +\
              '[\\mathrm{cm}^{-3}]$' 
     ylabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
-    clabel = '$\\log_{10} \\, \\partial^2 \\mathrm{fraction} \\,/\\,$' + \
+    clabel = '$\\log_{10} \\, \\partial^2 \\mathrm{frac.} \\,/\\,' + \
              '\\partial \\log_{10}\\mathrm{T} \\,' + \
              '\\partial \\log_{10} \\, \\mathrm{n}_{}\\mathrm{H}$'
     fontsize = 12
@@ -4499,17 +4502,10 @@ def plot_phasediagrams_Lweighted(plotset='all'):
             ax.set_ylabel(ylabel, fontsize=fontsize)
         if numpanels - axi >= numcols:
             ax.set_xlabel(xlabel, fontsize=fontsize)
-        xdat = data[wt]['logd']
-        ydat = data[wt]['logt']
-        _hist = data[wt]['hist']
-        _hist /= np.sum(_hist)
-        _hist /= np.diff(xdat)[:, np.newaxis]
-        _hist /= np.diff(ydat)[np.newaxis, :]
-        img = ax.pcolormesh(xdat, ydat, np.log10(_hist.T), cmap=cmap,
-                            vmin=vmin, vmax=vmax)
-        print(cts)
+        img = ax.pcolormesh(data[wt]['logd'], data[wt]['logt'], hdata[wt].T, 
+                            cmap=cmap, vmin=vmin, vmax=vmax)
+                            
         for ct, color in zip(cts, colorlist):
-            print(ct)
             pu.add_2dhist_contours(ax, data[ct]['hist'], 
                                    [data[ct]['logd'], data[ct]['logt']], 
                                    [0, 1],
