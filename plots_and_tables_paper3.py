@@ -4430,7 +4430,7 @@ def plot_phasediagrams_Lweighted(plotset='all'):
     
     dynrange = 6.
     maxs = [np.log10(np.max(data[wt]['hist'])) for wt in data]
-    mins = [np.log10(np.min(data[wt]['hist'][np.isifinite(data[wt]['hist'])]))\
+    mins = [np.log10(np.min(data[wt]['hist'][np.isfinite(data[wt]['hist'])]))\
             for wt in data]
     vmax = max(maxs)
     minmax = min(maxs)
