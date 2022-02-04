@@ -4374,8 +4374,11 @@ def readpddata(weight):
                     '_T4EOS_Temperature_T4EOS'
         dname = 'Niondens_hydrogen_SmAb' + _siontab + '_T4EOS'       
         smpt = 'SmAb_'   
-    else:
+    elif weight in ['Mass', 'propvol']:
         wfill = weight
+        smpt = ''
+    else:
+        wfill = 'Nion_' + weight
         smpt = ''
     
     with h5py.File(path + filebase.format(wt=wfill, smpt=smpt), 'r') as f:
