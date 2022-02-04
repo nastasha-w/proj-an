@@ -4441,7 +4441,86 @@ def save_emcurves_PS20(lineset=None, z=0.1, nH='CIE'):
             fo.write(fill.format(T=T[i], **{line.replace('.', 'p'): \
                                             curves[line][i] for line in lineset}))
     
+def saveemtables(z=cosmopars_27['z']):
+    import make_maps_v3_master as m3
+    
+    outdir = ddir + 'emtables/'
+    outname_base = outdir + 'emissiontable_{line}_z-{z:.3f}.hdf5'
+    
+    lines_SB = ['c5r', 'c6', 'n6-actualr', 'n7', 'o7r', 'o7iy', 'o7f', 'o8',
+                'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r']
+    lines_PS20 = ['Fe17      15.2620A', 'Fe17      16.7760A',
+                  'Fe17      17.0510A', 'Fe17      17.0960A', 
+                  'Fe18      16.0720A']
+    
+    for line in lines_SB:             
+        elt = ol.elements_ion[line]
+        _table, logTK, lognHcm3 = cu.findemtables(elt, z)
         
+        deltaT = np.average(np.diff(logTK))
+        deltanH = np.average(np.diff(lognHcm3))
+        table = np.copy(_table[:, :, ol.line_nos_ion[line]])
+        
+        with h5py.File(outname_base.format(line=line, z=z)) as f:
+            hed = f.create_group('Header')
+            hed.attrs.create('info', np.string_('line emission table from Bertone et al. 2010')) 
+            hed.attrs.create('emissivity', np.string_('Lambda / nH**2 / V'))     
+            hed.attrs.create('units', np.string_('log10 erg * cm**3 * s**-1'))
+            hed.attrs.create('line', np.string_(line))
+            hed.attrs.create('method', np.string_('_table, logTK, lognHcm3 = cu.findemtables(elt, z)\ntable = np.copy(_table[:, :, ol.line_nos_ion[line]])'))
+            
+            tab = f.create_dataset('emissivity', data=table)
+            tab.attrs.create('units', np.string_('erg * cm**3 * s**-1'))
+            tab.attrs.create('definition', np.string_('Lambda / nH**2 / V'))
+            tab.attrs.create('log', True) 
+            logt = f.create_dataset('temperature', data=logTK)
+            logt.attrs.create('log', True) 
+            logt.attrs.create('units', 'K') 
+            logt.attrs.create('table axis', 0) 
+            logd = f.create_dataset('hydrogennumberdensity', data=lognHcm3)
+            logt.attrs.create('log', True) 
+            logt.attrs.create('units', 'cm**-3') 
+            logt.attrs.create('table axis', 1) 
+            
+    for line in lines_PS20:        
+        _table = m3.linetable_PS20(line, z, emission=True)
+        _table.findemtable()
+        # solar Z (just linear scaling, so doesn't really matter)
+        zind = np.where(_table.logZsol == 0.)[0][0]
+        table = np.copy(_table.emtable_T_Z_nH[:, zind, :])
+        lognHcm3 = _table.lognHcm3
+        logTK = _table.lognHcm3
+        table -= 2. * lognHcm3[np.newaxis, :]
+        
+        methoddoc = '_table = m3.linetable_PS20(line, z, emission=True)\n' +\
+                    '_table.findemtable()\n' +\
+                    'zind = np.where(_table.logZsol == 0.)[0][0]\n' +\
+                    'table = np.copy(_table.emtable_T_Z_nH[:, zind, :])\n' +\
+                    'table -= 2. * lognHcm3[np.newaxis, :]\n' +\
+                    'lognHcm3 = _table.lognHcm3\n' +\
+                    'logTK = _table.lognHcm3\n' +\       
+        _line = line.replace(' ', '-')
+        with h5py.File(outname_base.format(line=_line, z=z)) as f:
+            hed = f.create_group('Header')
+            hed.attrs.create('info', np.string_('line emission table from Ploeckinger & Schaye 2020')) 
+            hed.attrs.create('emissivity', np.string_('Lambda / nH**2 / V'))     
+            hed.attrs.create('units', np.string_('log10 erg * cm**3 * s**-1'))
+            hed.attrs.create('line', np.string_(line))
+            hed.attrs.create('method', np.string_(methoddoc))
+            
+            tab = f.create_dataset('emissivity', data=table)
+            tab.attrs.create('units', np.string_('erg * cm**3 * s**-1'))
+            tab.attrs.create('definition', np.string_('Lambda / nH**2 / V'))
+            tab.attrs.create('log', True) 
+            logt = f.create_dataset('temperature', data=logTK)
+            logt.attrs.create('log', True) 
+            logt.attrs.create('units', 'K') 
+            logt.attrs.create('table axis', 0) 
+            logd = f.create_dataset('hydrogennumberdensity', data=lognHcm3)
+            logt.attrs.create('log', True) 
+            logt.attrs.create('units', 'cm**-3') 
+            logt.attrs.create('table axis', 1) 
+
 def plot_emcurves(z=0.1):
     '''
     contour plots for ions balances + shading for halo masses at different Tvir

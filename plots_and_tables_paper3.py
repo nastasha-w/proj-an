@@ -4417,10 +4417,14 @@ def plot_phasediagrams_Lweighted(plotset='all'):
         weights.remove('Fe17      15.2620A') #rerun: memory error
         weights.remove('Fe17      17.0510A') #rerun: missed or something
         contours = [[wt] for wt in weights]
+        contourlevels = [0.999, 0.99, 0.9, 0.5]
+        contourstyles = ['dotted', 'dashdot', 'dashed', 'solid']
     elif plotset == 'focus':
         weights = ['Mass', 'oxygen', 'o7r', 'o8', 'Fe17      17.0510A']
         contours = [['Mass', 'propvol'], ['oxygen', 'iron', 'nitrogen'],
                     ['o7r'], ['o8'], ['Fe17      17.0510A']]
+        contourlevels = [0.99, 0.9]
+        contourstyles = ['dashed', 'solid']
     else:
         raise ValueError('invalid plotset option')
     
@@ -4440,8 +4444,6 @@ def plot_phasediagrams_Lweighted(plotset='all'):
     vmin = max(min(mins), minmax - dynrange)
     
     
-    contourlevels = [0.999, 0.99, 0.9, 0.5]
-    contourstyles = ['dotted', 'dashdot', 'dashed', 'solid']
     colorlist = [_c1.blue, _c1.green, _c1.red, 
                  _c1.yellow, _c1.purple, _c1.cyan]
     cmap = 'gist_yarg'
@@ -4519,7 +4521,7 @@ def plot_phasediagrams_Lweighted(plotset='all'):
                                    legendlabel_pre=None, shiftx=0., shifty=0.,
                                    dimshifts=None, 
                                    colors=[color] * len(contourlevels),
-                                   linestyles=contourstyles, linewidth=1.5)
+                                   linestyles=contourstyles, linewidth=1.)
         label=namepdpanel(wt)
         ax.text(0.05, 0.95, label, fontsize=fontsize,
                 transform=ax.transAxes, horizontalalignment='left',
