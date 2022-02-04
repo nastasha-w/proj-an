@@ -4556,9 +4556,9 @@ def plot_phasediagrams_Lweighted(plotset='all'):
             handles = [mlines.Line2D((), (), label=namepdpanel(ct), 
                                      color=color, linewidth=1.5, 
                                      linestyle='solid')
-                        for ct, color in zip(contours, colorlist)]
-            ax.legend(handles=handles, fontsize=fontsize - 1., 
-                      loc='lower right')
+                        for ct, color in zip(cts, colorlist)]
+            ax.legend(handles=handles, handlelength=1., fontsize=fontsize - 2., 
+                      loc='upper right')
     
     xlims = [ax.get_xlim() for ax in axes] 
     xmax = max([xlim[1] for xlim in xlims])
@@ -4583,7 +4583,8 @@ def plot_phasediagrams_Lweighted(plotset='all'):
     handles2 = [mlines.Line2D((), (), label=emtablabel, 
                              color=_c1.yellow, linewidth=1., 
                              linestyle='dashdot')]
-    axes[-2].legend(handles=handles2, fontsize=fontsize, loc='lower right')
+    axes[-2].legend(handles=handles2, fontsize=fontsize - 1., 
+                    loc='lower right')
     
     outname = mdir + 'phasediagram_L0100N1504_27_{}.pdf'
     plt.savefig(outname.format(plotset), format='pdf', bbox_inches='tight')
