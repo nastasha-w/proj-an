@@ -3700,7 +3700,7 @@ elif jobind in range(20454, 20481):
                  'ne9r', 'ne10', 'mg11r', 'mg12', 'si13r']
     metals = ['iron', 'carbon', 'nitrogen', 'oxygen', 'neon', 'magnesium', 
               'silicon']
-    weights_other = ['Mass', 'Volume']
+    weights_other = ['Mass', 'propvol']
     allweights = lines_PS20 + lines_SB + metals + weights_other
     wt = allweights[jobind - 20454]
     m3.ol.ndir = '/net/luttero/data2/imgs/paper3/datasets/histograms/'
