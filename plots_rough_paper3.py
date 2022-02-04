@@ -4478,9 +4478,9 @@ def saveemtables(z=cosmopars_27['z']):
             logt.attrs.create('units', 'K') 
             logt.attrs.create('table axis', 0) 
             logd = f.create_dataset('hydrogennumberdensity', data=lognHcm3)
-            logt.attrs.create('log', True) 
-            logt.attrs.create('units', 'cm**-3') 
-            logt.attrs.create('table axis', 1) 
+            logd.attrs.create('log', True) 
+            logd.attrs.create('units', 'cm**-3') 
+            logd.attrs.create('table axis', 1) 
             
     for line in lines_PS20:        
         _table = m3.linetable_PS20(line, z, emission=True)
@@ -4517,9 +4517,9 @@ def saveemtables(z=cosmopars_27['z']):
             logt.attrs.create('units', 'K') 
             logt.attrs.create('table axis', 0) 
             logd = f.create_dataset('hydrogennumberdensity', data=lognHcm3)
-            logt.attrs.create('log', True) 
-            logt.attrs.create('units', 'cm**-3') 
-            logt.attrs.create('table axis', 1) 
+            logd.attrs.create('log', True) 
+            logd.attrs.create('units', 'cm**-3') 
+            logd.attrs.create('table axis', 1) 
 
 def plot_emcurves(z=0.1):
     '''
