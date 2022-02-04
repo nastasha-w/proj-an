@@ -4412,7 +4412,7 @@ def plot_phasediagrams_Lweighted(plotset='all'):
         raise ValueError('invalid plotset option')
     
     datakeys = {wt for st in contours for wt in st}
-    datakeys = datakeys + set(weights)
+    datakeys = datakeys | set(weights)
     data = {wt: readpddata(wt) for wt in datakeys}
     
     dynrange = 6.
