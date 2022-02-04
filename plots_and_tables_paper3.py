@@ -4377,17 +4377,17 @@ def readpddata(weight):
     with h5py.File(path + file.format(wfill), 'r') as f:
         hpath = groupname + 'histogram'
         hist = f[hpath][:]
-        if bool(f[hpath].attrs['log'])):
+        if bool(f[hpath].attrs['log']):
             hist = 10**hist
         tpath = groupname + tname
         logt = f[tpath + '/bins'][:]
         tax = f[tpath].attrs['histogram axis']
-        if not bool(f[tpath].attrs['log'])):
+        if not bool(f[tpath].attrs['log']):
             logt = np.log10(logt)
         dpath = groupname + dname
         logd = f[dpath + '/bins'][:]
         dax = f[dpath].attrs['histogram axis']
-        if not bool(f[dpath].attrs['log'])):
+        if not bool(f[dpath].attrs['log']):
             logd = np.log10(logd)
     if dax > tax:
         hist = hist.T
