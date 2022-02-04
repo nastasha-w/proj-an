@@ -4489,7 +4489,7 @@ def saveemtables(z=cosmopars_27['z']):
         zind = np.where(_table.logZsol == 0.)[0][0]
         table = np.copy(_table.emtable_T_Z_nH[:, zind, :])
         lognHcm3 = _table.lognHcm3
-        logTK = _table.lognHcm3
+        logTK = _table.logTK
         table -= 2. * lognHcm3[np.newaxis, :]
         
         methoddoc = '_table = m3.linetable_PS20(line, z, emission=True)\n' +\
