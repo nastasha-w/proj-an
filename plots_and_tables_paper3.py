@@ -4521,7 +4521,9 @@ def plot_phasediagrams_Lweighted(plotset='all'):
                                    colors=[color] * len(contourlevels),
                                    linestyles=contourstyles, linewidth=1.5)
         label=namepdpanel(wt)
-        ax.text(0.05, 0.95, label, fontsize=fontsize)
+        ax.text(0.05, 0.95, label, fontsize=fontsize,
+                transform=ax.transAxes, horizontalalignment='left',
+                verticalalignment='top')
         if len(cts) > 1 or cts[0] != wt:
             handles = [mlines.Line2D((), (), label=namepdpanel(ct), 
                                      color=color, linewidth=1.5, 
