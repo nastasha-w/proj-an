@@ -4437,8 +4437,8 @@ def plot_phasediagrams_Lweighted(plotset='all'):
                'iron']
     if plotset == 'all':
         weights = ['Mass', 'propvol'] + metals + plot_lines_SB + plot_lines_PS20
-        weights.remove('Fe17      15.2620A') #rerun: memory error
-        weights.remove('Fe17      17.0510A') #rerun: missed or something
+        #weights.remove('Fe17      15.2620A') #rerun: memory error
+        #weights.remove('Fe17      17.0510A') #rerun: missed or something
         contours = [[wt] for wt in weights]
         contourlevels = [0.999, 0.99, 0.9]
         contourstyles = ['dotted', 'dashed', 'solid']
