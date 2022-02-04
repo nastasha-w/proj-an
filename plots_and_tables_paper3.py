@@ -4465,8 +4465,8 @@ def plot_phasediagrams_Lweighted(plotset='all'):
         width_ratios = [panelwidth] * numcols
         cbar_orientation = 'horizontal'
     height_ratios = [panelheight] * numrows
-    figheight = sum(height_ratios) + (numcols - 1) * hspace
-    figwidth = sum(width_ratios) + (_numrows - 1) * wspace
+    figheight = sum(height_ratios) + (numrows - 1) * hspace
+    figwidth = sum(width_ratios) + (_numcols - 1) * wspace
     
     fig = plt.figure(figsize=(figwidth, figheight))
     grid = gsp.GridSpec(nrows=numrows, ncols=_numcols,
