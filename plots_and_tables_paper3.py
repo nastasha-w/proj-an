@@ -4352,7 +4352,7 @@ def namepdpanel(weight):
         label = nicenames_lines[weight]
     elif weight == 'Mass':
         label = 'mass'
-    elif label == 'propvol':
+    elif weight == 'propvol':
         label = 'volume'
     else:
         label = weight
