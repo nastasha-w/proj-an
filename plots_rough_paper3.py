@@ -4498,7 +4498,7 @@ def saveemtables(z=cosmopars_27['z']):
                     'table = np.copy(_table.emtable_T_Z_nH[:, zind, :])\n' +\
                     'table -= 2. * lognHcm3[np.newaxis, :]\n' +\
                     'lognHcm3 = _table.lognHcm3\n' +\
-                    'logTK = _table.lognHcm3\n' +\       
+                    'logTK = _table.lognHcm3\n' +\
         _line = line.replace(' ', '-')
         with h5py.File(outname_base.format(line=_line, z=z)) as f:
             hed = f.create_group('Header')
