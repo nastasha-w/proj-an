@@ -4502,7 +4502,9 @@ def plot_phasediagrams_Lweighted(plotset='all'):
         img = ax.pcolormesh(data[wt]['logd'], data[wt]['logt'], 
                             np.log10(data[wt]['hist'].T), cmap=cmap,
                             vmin=vmin, vmax=vmax)
+        print(cts)
         for ct, color in zip(cts, colorlist):
+            print(ct)
             pu.add_2dhist_contours(ax, data[ct]['hist'], 
                                    [data[ct]['logd'], data[ct]['logt']], 
                                    [0, 1],
