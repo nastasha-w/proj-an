@@ -4578,8 +4578,8 @@ def plot_phasediagrams_Lweighted(plotset='all'):
                for level, ls in zip(contourlevels, contourstyles)]     
     axes[-1].legend(handles=handles, fontsize=fontsize, loc='lower right')
     emtablabel = '$\\Lambda\\, \\mathrm{n}_{\\mathrm{H}}^{-2} \\, ' +\
-                 '\\mathrm{V}^{-1}$' + \
-                 '\n$ = 0.1 \\times \\mathrm{CIE}\\,\\mathrm{max}$'
+                 '\\mathrm{V}^{-1}$ = ' + \
+                 '\n$ 0.1 \\times \\mathrm{CIE}\\,\\mathrm{max}$'
     handles2 = [mlines.Line2D((), (), label=emtablabel, 
                              color=_c1.yellow, linewidth=1., 
                              linestyle='dashdot')]
