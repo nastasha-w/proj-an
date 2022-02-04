@@ -4361,7 +4361,7 @@ def namepdpanel(weight):
 def readpddata(weight):
     path = ddir + 'histograms/'
     filebase = 'particlehist_{wt}_L0100N1504_27_test3.7_{smpt}T4EOS.hdf5' 
-    groupname = 'Niondens_hydrogen_SmAb_T4EOS_Temperature_T4EOS/'
+    groupname = 'Niondens_hydrogen_SmAb_T4EOS_Temperature_T4EOS'
     dname = 'Niondens_hydrogen_SmAb_T4EOS'
     tname = 'Temperature_T4EOS'
     if weight in all_lines_SB:
@@ -4378,16 +4378,16 @@ def readpddata(weight):
         smpt = ''
     
     with h5py.File(path + filebase.format(wt=wfill, smpt=smpt), 'r') as f:
-        hpath = groupname + 'histogram'
+        hpath = groupname + '/histogram'
         hist = f[hpath][:]
         if bool(f[hpath].attrs['log']):
             hist = 10**hist
-        tpath = groupname + tname
+        tpath = groupname + '/' + tname
         logt = f[tpath + '/bins'][:]
         tax = f[tpath].attrs['histogram axis']
         if not bool(f[tpath].attrs['log']):
             logt = np.log10(logt)
-        dpath = groupname + dname
+        dpath = groupname + '/' + dname
         logd = f[dpath + '/bins'][:]
         dax = f[dpath].attrs['histogram axis']
         if not bool(f[dpath].attrs['log']):
