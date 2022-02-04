@@ -4374,7 +4374,7 @@ def readpddata(weight):
     else:
         wfill = weight
     
-    with h5py.File(path + file.format(wfill), 'r') as f:
+    with h5py.File(path + filebase.format(wfill), 'r') as f:
         hpath = groupname + 'histogram'
         hist = f[hpath][:]
         if bool(f[hpath].attrs['log']):
