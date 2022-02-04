@@ -4580,7 +4580,7 @@ def plot_phasediagrams_Lweighted(plotset='all'):
     emtablabel = '$\\Lambda\\, \\mathrm{n}_{\\mathrm{H}}^{-2} \\, ' +\
                  '\\mathrm{V}^{-1}$' + \
                  '\n$ = 0.1 \\times \\mathrm{CIE}\\,\\mathrm{max}$'
-    handles2 = [mlines.Line2D((), (), label=emablabel, 
+    handles2 = [mlines.Line2D((), (), label=emtablabel, 
                              color=_c1.yellow, linewidth=1., 
                              linestyle='dashdot')]
     axes[-2].legend(handles=handles2, fontsize=fontsize, loc='lower right')
