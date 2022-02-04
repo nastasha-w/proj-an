@@ -4493,7 +4493,7 @@ def plot_phasediagrams_Lweighted(plotset='all'):
     
     for axi, (wt, cts) in enumerate(zip(weights, contours)):
         ax = axes[axi]
-        pu.setticks(axi, fontsize=fontsize)
+        pu.setticks(ax, fontsize=fontsize)
         if axi % numcols == 0:
             ax.set_ylabel(ylabel, fontsize=fontsize)
         if numpanels - axi >= numcols:
