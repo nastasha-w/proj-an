@@ -4417,15 +4417,10 @@ def addtablecontours(ax, line, maxfracs, **kwargs):
         dax = f['hydrogennumberdensity'].attrs['table axis']
         logt = f['temperature'][:]
         tax = f['temperature'].attrs['table axis']
-        print(table.shape)
-        print(logd.shape)
-        print(dax)
-        print(logt.shape)
-        print(tax)
     if dax > tax:
         table = table.T
     ciemax = np.max(table[-1, :])
-    levels = [frac * ciemax for frac in maxfracs]
+    levels = [np.log10(frac) + ciemax for frac in maxfracs]
     contourset = ax.contour(logd, logt, table.T, levels, **kwargs)
         
     ax.set_xlim(xlim)
