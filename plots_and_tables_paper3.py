@@ -4444,10 +4444,10 @@ def plot_phasediagrams_Lweighted(plotset='all'):
         contourstyles = ['dotted', 'dashed', 'solid']
     elif plotset == 'focus':
         weights = ['Mass', 'oxygen', 'o7r', 'o8', 'Fe17      17.0510A']
-        contours = [['Mass', 'propvol'], ['oxygen', 'iron', 'nitrogen'],
+        contours = [['propvol', 'Mass'], ['iron', 'oxygen'],
                     ['o7r'], ['o8'], ['Fe17      17.0510A']]
-        contourlevels = [0.99, 0.9]
-        contourstyles = ['dashed', 'solid']
+        contourlevels = [0.999, 0.99, 0.9]
+        contourstyles = ['dotted', 'dashed', 'solid']
     else:
         raise ValueError('invalid plotset option')
     
@@ -4467,7 +4467,7 @@ def plot_phasediagrams_Lweighted(plotset='all'):
     vmin = max(min(mins), minmax - dynrange)
     
     
-    colorlist = [_c1.cyan, _c1.green, _c1.red, 
+    colorlist = [_c1.cyan, _c1.red, _c1.green, 
                  _c1.yellow, _c1.purple, _c1.blue]
     cmap = 'gist_yarg'
     
