@@ -4547,7 +4547,7 @@ def plot_phasediagrams_Lweighted(plotset='all'):
                                    linestyles=contourstyles, linewidth=1.)
         if wt in all_lines_PS20 or wt in all_lines_SB:
             addtablecontours(ax, wt, [0.1], colors=[_c1.yellow], 
-                             linestyles=['dotdash'])
+                             linestyles=['dashdot'])
         label=namepdpanel(wt)
         ax.text(0.05, 0.95, label, fontsize=fontsize,
                 transform=ax.transAxes, horizontalalignment='left',
@@ -4580,9 +4580,9 @@ def plot_phasediagrams_Lweighted(plotset='all'):
     emtablabel = '$\\Lambda\\, \\mathrm{n}_{\\mathrm{H}}^{-2} \\, ' +\
                  '\\mathrm{V}^{-1}$' + \
                  '\n$ = 0.1 \\times \\mathrm{CIE}\\,\\mathrm{max}$'
-    handles2 = [mlines.Line2D((), (), label=emtablabel, 
+    handles2 = [mlines.Line2D((), (), label=emablabel, 
                              color=_c1.yellow, linewidth=1., 
-                             linestyle='dotdash')]
+                             linestyle='dashdot')]
     axes[-2].legend(handles=handles2, fontsize=fontsize, loc='lower right')
     
     outname = mdir + 'phasediagram_L0100N1504_27_{}.pdf'
