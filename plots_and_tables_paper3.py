@@ -4479,7 +4479,8 @@ def plot_phasediagrams_Lweighted(plotset='all'):
         cax = fig.add_subplot(grid[:2, numcols])
         cax.set_aspect(10.)
     else:
-        idx = -1 * (numrows * numcols - numpanels)
+        idx = (numrows * numcols - numpanels)
+        idx = -1 * min(idx, 2)
         cax = fig.add_subplot(grid[numrows - 1, idx:])
         cax.set_aspect(0.1)
     
@@ -4488,7 +4489,7 @@ def plot_phasediagrams_Lweighted(plotset='all'):
     ylabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
     clabel = '$\\log_{10} \\, \\partial^2 \\mathrm{fraction} \\,/\\,$' + \
              '\\partial \\log_{10}\\mathrm{T} \\,' + \
-             '\\partial \\log_{10} \\, \\mathrm{n}_{}\\mathrm{H}'
+             '\\partial \\log_{10} \\, \\mathrm{n}_{}\\mathrm{H}$'
     fontsize = 12
     
     for axi, (wt, cts) in enumerate(zip(weights, contours)):
@@ -4498,9 +4499,13 @@ def plot_phasediagrams_Lweighted(plotset='all'):
             ax.set_ylabel(ylabel, fontsize=fontsize)
         if numpanels - axi >= numcols:
             ax.set_xlabel(xlabel, fontsize=fontsize)
-        
-        img = ax.pcolormesh(data[wt]['logd'], data[wt]['logt'], 
-                            np.log10(data[wt]['hist'].T), cmap=cmap,
+        xdat = data[wt]['logd']
+        ydat = data[wt]['logt']
+        _hist = data[wt]['hist']
+        _hist /= np.sum(_hist)
+        _hist /= np.diff(xdat)[:, np.newaxis]
+        _hist /= np.diff(ydat)[np.newaxis, :]
+        img = ax.pcolormesh(xdat, ydat, np.log10(_hist), cmap=cmap,
                             vmin=vmin, vmax=vmax)
         print(cts)
         for ct, color in zip(cts, colorlist):
