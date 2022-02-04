@@ -4440,8 +4440,8 @@ def plot_phasediagrams_Lweighted(plotset='all'):
         weights.remove('Fe17      15.2620A') #rerun: memory error
         weights.remove('Fe17      17.0510A') #rerun: missed or something
         contours = [[wt] for wt in weights]
-        contourlevels = [0.999, 0.99, 0.9, 0.5]
-        contourstyles = ['dotted', 'dashdot', 'dashed', 'solid']
+        contourlevels = [0.999, 0.99, 0.9]
+        contourstyles = ['dotted', 'dashed', 'solid']
     elif plotset == 'focus':
         weights = ['Mass', 'oxygen', 'o7r', 'o8', 'Fe17      17.0510A']
         contours = [['Mass', 'propvol'], ['oxygen', 'iron', 'nitrogen'],
@@ -4523,7 +4523,7 @@ def plot_phasediagrams_Lweighted(plotset='all'):
     for axi, (wt, cts) in enumerate(zip(weights, contours)):
         ax = axes[axi]
         leftlabel = axi % numcols == 0
-        lowerlabel = numpanels - axi >= numcols
+        lowerlabel = numpanels - axi <= numcols
         pu.setticks(ax, fontsize=fontsize, labelbottom=lowerlabel,
                     labelleft=leftlabel)
         if leftlabel:
@@ -4547,7 +4547,7 @@ def plot_phasediagrams_Lweighted(plotset='all'):
                                    linestyles=contourstyles, linewidth=1.)
         if wt in all_lines_PS20 or wt in all_lines_SB:
             addtablecontours(ax, wt, [0.1], colors=[_c1.yellow], 
-                             linestyles=['dotted'])
+                             linestyles=['dotdash'])
         label=namepdpanel(wt)
         ax.text(0.05, 0.95, label, fontsize=fontsize,
                 transform=ax.transAxes, horizontalalignment='left',
@@ -4578,11 +4578,11 @@ def plot_phasediagrams_Lweighted(plotset='all'):
                for level, ls in zip(contourlevels, contourstyles)]     
     axes[-1].legend(handles=handles, fontsize=fontsize, loc='lower right')
     emtablabel = '$\\Lambda\\, \\mathrm{n}_{\\mathrm{H}}^{-2} \\, ' +\
-                 '\\mathrm{V}^{-1}' + \
-                 ' = 0.1 \\times \\mathrm{CIE}\\,\\mathrm{max}$'
+                 '\\mathrm{V}^{-1}$' + \
+                 '\n$ = 0.1 \\times \\mathrm{CIE}\\,\\mathrm{max}$'
     handles2 = [mlines.Line2D((), (), label=emtablabel, 
                              color=_c1.yellow, linewidth=1., 
-                             linestyle='dotted')]
+                             linestyle='dotdash')]
     axes[-2].legend(handles=handles2, fontsize=fontsize, loc='lower right')
     
     outname = mdir + 'phasediagram_L0100N1504_27_{}.pdf'
