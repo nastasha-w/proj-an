@@ -17,6 +17,14 @@ firedata_test = '/projects/b1026/snapshots/AGN_suite/fiducial_jet/m12i_res57000/
 firedata_params = '/projects/b1026/snapshots/AGN_suite/fiducial_jet/m12i_res57000/params.txt-usedvalues'
 ddir = '/projects/b1026/nastasha/tests/start_fire/'
 
+# TO TEST FIRE BRANCH UNITS:
+# - coordinate selections: region (EAGLE), ppp (EAGLE with some hacks? BAHAMAS?), ppv (EAGLE)
+# - OnEquationOfState -> SFR: check same T4/excl. selections
+# luminosity_calc_halpha_fromSFR: conv. factor uses EAGLE raw units -> check conv. factor in FIRE units
+
+# TODO updates:
+# FIRE h1 option to use own tracked fraction
+
 
 def make_simple_phasediagram():
     '''

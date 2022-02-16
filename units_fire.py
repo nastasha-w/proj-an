@@ -215,7 +215,7 @@ class Units:
             # neutral hydrogen fraction (0 -- 1)
             return 1.
         elif field == 'StarFormationRate':
-            return c.solar_mass / c.seconds_per_year
+            return c.solar_mass / c.sec_per_year
         elif field in ['ParticleIDs', 'ParticleChildIDsNumber',
                        'ParticleIDGenerationNumber']: 
             print('Warning: Attempting a unit conversion for Particle IDs?')
