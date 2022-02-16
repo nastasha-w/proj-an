@@ -5745,6 +5745,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
     if parttype == '0':
         lsmooth = vardict_WQ.readif('SmoothingLength', rawunits=True)
         conv = vardict_WQ.CGSconv['SmoothingLength'] / c.cm_per_mpc / vardict_WQ.simfile.a
+        print(conv)
+        print(lsmooth)
         lsmooth *= conv
         vardict_WQ.delif('SmoothingLength', last=True)
         tree = False
