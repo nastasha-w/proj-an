@@ -93,7 +93,7 @@ def selecthalo(logM200c, _halocat=halocat, margin=0.05, randomseed=None):
     print(boxdata)
     return galid, m200c, [cenx, ceny, cenz], R200
 
-def getimgs(cen, size, sizemargin=2.):
+def getimgs(cen, size, sizemargin=2., imgtype='CV'):
     '''
     get images of a halo in a number of properties (see listed arguments)
 
@@ -105,7 +105,11 @@ def getimgs(cen, size, sizemargin=2.):
         halo size [cMpc].
     sizemargin : float, optional
         radius of the projected cube in units of the size. The default is 2..
-
+    imgtype: string, optional
+        which images to make. 
+        'CV' is the original temperature, density, O VII absorption, 
+        O VII emission plot.
+        'SM' is the density, metallicity plot for Smita Mathur
     Returns
     -------
     names : list of strings
@@ -128,17 +132,24 @@ def getimgs(cen, size, sizemargin=2.):
                   'periodic': False,\
                   'saveres': True,\
                   'hdf5': True,\
-                  'saveres': True,\
                   'ompproj': True}
-    
-    argsets = [[('basic',), {'quantityW': 'Mass', 'ptypeQ': 'basic',\
-                            'quantityQ': 'Temperature'}],\
-               [('basic',), {'quantityW': 'Mass', 'ptypeQ': 'basic',\
-                            'quantityQ': 'Density'}],\
-               [('coldens',), {'ionW': 'o7', 'abundsW': 'Pt'}],\
-               [('emission',), {'ionW': 'o7r', 'abundsW': 'Sm'}],\
-               ]
-    
+    if imgtype == 'CV':
+        argsets = [[('basic',), {'quantityW': 'Mass', 'ptypeQ': 'basic',
+                                 'quantityQ': 'Temperature'}],
+                   [('basic',), {'quantityW': 'Mass', 'ptypeQ': 'basic',
+                                 'quantityQ': 'Density'}],
+                   [('coldens',), {'ionW': 'o7', 'abundsW': 'Pt'}],
+                   [('emission',), {'ionW': 'o7r', 'abundsW': 'Sm'}],
+                ]
+    elif imgtype == 'SM':
+         argsets = [[('basic',), {'quantityW': 'Mass', 'ptypeQ': 'basic',
+                                  'quantityQ': 'Density'}],
+                    [('basic',), {'quantityW': 'Mass', 'ptypeQ': 'basic',
+                                  'quantityQ': 'Metallicity'}],
+                ]
+    else:
+        raise ValueError('{} is not a valid imgtype option'.format(imgtype))
+
     names = []
     for argset in argsets:
         args = firstargs + argset[0]
@@ -154,7 +165,7 @@ def getimgs(cen, size, sizemargin=2.):
                 inclq = True
                 names.append(name[0])
                 names.append(name[1])
-                if not (os.path.isfile(name[0]) and os.path.isfile(name[1])): 
+                if not (os.path.isfile(name[0]) and os.path.isfile(name[1])):
                     m3.make_map(*args, nameonly=False, **kwargs)
         if not inclq:
             names.append(name)
@@ -259,6 +270,12 @@ def plotimgs(names, R200c, M200c, galid):
             vmax = np.inf
             cmap = cm.get_cmap('viridis')
             units = c.atomw_H * c.u / 0.752
+        elif mt == 'Metallicity':
+            clabel = '$\\log_{10} \\, \\mathrm{Z} \\; [\\mathrm{Z}_{\\odot}]$'
+            vmin = -2.3
+            vmax = np.inf
+            cmap = cm.get_cmap('viridis')
+            units = ol.Zsun_ea
         elif mt == 'coldens_o7':
             clabel = '$\\log_{10} \\, \\mathrm{N}(\mathrm{O\\,VII}) \\; [\\mathrm{cm}^{-2}]$'
             vmin = 14.5
@@ -341,12 +358,20 @@ def plotimgs(names, R200c, M200c, galid):
                     transform=ax.transAxes, verticalalignment='bottom',\
                     horizontalalignment='center')
     
-    outname = 'galaxy{}_nH_T_o7_o7r.eps'.format(galid)
+    if imgtype == 'CV':
+        outname = 'galaxy{}_nH_T_o7_o7r.eps'.format(galid)
+    elif imgtype == 'SM':
+        outname = 'galaxy{}_nH_Z.eps'.format(galid)
     plt.savefig(mdir + outname, format='eps', bbox_inches='tight')
 
 if __name__ == '__main__':
     args = sys.argv
-    
+    imgtype = 'SM'
+
+    if imgtype == 'CV':
+        sizemargin = 2.
+    elif imgtype == 'SM':
+        sizemargin = 1.5
     m200_tar = float(sys.argv[1])
     if len(sys.argv) > 2:
         randomseed = int(sys.argv[2])
@@ -356,8 +381,8 @@ if __name__ == '__main__':
                      randomseed=randomseed)
     galid, m200c, cen, R200 = out
     
-    filens = getimgs(cen, R200, sizemargin=2.)
-    plotimgs(filens, R200, m200c, galid)
+    filens = getimgs(cen, R200, sizemargin=2., imgtype=imgtype)
+    plotimgs(filens, R200, m200c, galid, imgtype=imgtype)
     print('Made image for galaxy {}'.format(galid))
     print('Saved in {}'.format(mdir))
     
