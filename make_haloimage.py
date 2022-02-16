@@ -176,17 +176,19 @@ def getimgs(cen, size, sizemargin=2., imgtype='CV'):
     print(names)
     return names    
 
-def plotimgs(names, R200c, M200c, galid):
+def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
     
     while None in names:
         names.remove(None)
     
     fontsize = 12
-    maptypes = ['Density', 'Temperature', 'coldens_o7', 'emission_o7r']
-    
-    ncols = 4
+    if imgtype == 'CV':
+         maptypes = ['Density', 'Temperature', 'coldens_o7', 'emission_o7r']
+    elif imgtype == 'SM':
+        maptypes = ['Density', 'Metallicity']
+    ncols = min(len(maptypes), 4)
     nrows = (len(maptypes) - 1) // ncols + 1
-    figwidth = 11. 
+    figwidth = 11. * float(ncols) / 4.
     
     panelwidth = figwidth / ncols
     panelheight = panelwidth
@@ -272,7 +274,7 @@ def plotimgs(names, R200c, M200c, galid):
             units = c.atomw_H * c.u / 0.752
         elif mt == 'Metallicity':
             clabel = '$\\log_{10} \\, \\mathrm{Z} \\; [\\mathrm{Z}_{\\odot}]$'
-            vmin = -2.3
+            vmin = -2.5
             vmax = np.inf
             cmap = cm.get_cmap('viridis')
             units = ol.Zsun_ea
