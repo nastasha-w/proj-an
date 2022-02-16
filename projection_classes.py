@@ -30,10 +30,6 @@ try:
     import read_eagle_files_ceh_noregion as rce
 except ImportError:
     print('Warning: failed to import read_eagle_files_ceh_noregion')
-try:
-    import readin_fire_data as rfd
-except ImportError:
-    print('Warning: failed to import readin_fire_data')
     
 #################
 #    classes    #
@@ -47,7 +43,6 @@ class Simfile:
     but have different read-in options (regions or just selections) and libraries
 
     in case of C-EAGLE/Hydrangea: simfile is the halo number (int), var is ignored
-    in case of FIRE: simnum is the directory path to the snapshots, var is ignored
 
     anything beyond raw data passing is handled by Vardict.
     if necessary, e.g. tables or separate files can be used to set e.g., a, h, scalings
@@ -75,30 +70,16 @@ class Simfile:
         self.h_scaling = self.readfile.h_scaling
         self.CGSconversion = self.readfile.CGSconversion
         return arr
-    def readarray_fire(self, name, region=None, rawunits=False): #region is useless here
-        if region is not None:
-            print('Warning (readarray_fire): region selection will not have any effect')
-        arr = self.readfile.readarray_emulateEAGLE(name)
-        # CGS conversion should be safe to just take from the first file
-        self.CGSconvtot = self.readfile.toCGS
-        self.a_scaling = np.NaN
-        self.h_scaling = np.NaN
-        self.CGSconversion = np.NaN
-        if not rawunits:
-            arr *= self.CGSconvtot 
-        return arr
-    
-    def __init__(self, simnum, snapnum, var, file_type=ol.file_type, 
-                 simulation='eagle', override_filepath=None):
+
+    def __init__(self,simnum, snapnum, var, file_type=ol.file_type, simulation='eagle', override_filepath=None):
         self.simnum = simnum
         self.snapnum = snapnum
         self.var = var
         self.simulation = simulation
         self.filetype = file_type
         
-        if (override_filepath is not None) and \
-           (simulation not in ['eagle', 'fire']):
-            raise NotImplementedError('The filepath override option is only implemented for Eagle and FIRE.\
+        if (override_filepath is not None) and (simulation != 'eagle'):
+            raise NotImplementedError('The filepath override option is only implemented for Eagle.\
                                       To implement for other simulations, check the read_..._files py used for that simulation.\
                                       It may be neceassary to add an option to not add "/data/" to the file path, like in read_eagle_files.py.\
                                       Then, choose this option and set the file path for the simulation depending on these options.\
@@ -217,22 +198,7 @@ class Simfile:
             elif simnum in ol.halos_hydrangea:
                 self.region_supported = False # for now
             self.readarray = self.readarray_bahamas
-        elif simulation == 'fire':
-            if override_filepath is not None:
-                rfd.ol.simdir_fire = override_filepath
-            self.readfile = rfd.get_FireSnap(simnum, snapnum, filetype='snap')
-            # pass down readfile properties for reference
-            self.boxsize = self.readfile.cosmopars.boxsize
-            self.h = self.readfile.cosmopars.h
-            self.a = self.readfile.cosmopars.a
-            self.z = self.readfile.cosmopars.z
-            self.omegam = self.readfile.cosmopars.omegam
-            self.omegalambda = self.readfile.cosmopars.omegalambda
-            self.omegab = self.readfile.cosmopars.omegab
-            #self.particlemass_DM_g = np.NaN # FIRE outputs just seem to store the mass array 
 
-            self.region_supported = False
-            self.readarray = self.readarray_fire
         else:
             raise ValueError('Simulation %s is not supported.'%simulation)
     
@@ -470,7 +436,7 @@ class Vardict:
                 self.particle[name] = self.simfile.readarray('PartType%s/%s' %(self.parttype, name), rawunits=True, region=self.region_temp).astype(np.float32)[sel.val, :]
             else:
                 self.particle[name] = self.simfile.readarray('PartType%s/%s' %(self.parttype, name), rawunits=True, region=self.region_temp)[sel.val] #coordinates are always needed, so these will not be read in this way; other arrays are 1D
-            self.CGSconv[name] = self.simfile.CGSconvtot
+            self.CGSconv[name] = self.simfile.a ** self.simfile.a_scaling * (self.simfile.h ** self.simfile.h_scaling) * self.simfile.CGSconversion
             if not rawunits: # do CGS conversion here since read_eagle_files does not seem to modify the array in place
                 self.particle[name] *= self.CGSconv[name]
                 self.CGSconv[name] = 1.
