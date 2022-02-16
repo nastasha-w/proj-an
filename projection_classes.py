@@ -217,7 +217,7 @@ class Simfile:
             elif simnum in ol.halos_hydrangea:
                 self.region_supported = False # for now
             self.readarray = self.readarray_bahamas
-        if simulation == 'fire':
+        elif simulation == 'fire':
             if override_filepath is not None:
                 rfd.ol.simdir_fire = override_filepath
             self.readfile = rfd.get_FireSnap(simnum, snapnum, filetype='snap')
