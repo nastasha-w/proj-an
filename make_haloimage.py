@@ -276,7 +276,7 @@ def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
             clabel = '$\\log_{10} \\, \\mathrm{Z} \\; [\\mathrm{Z}_{\\odot}]$'
             vmin = -2.5
             vmax = np.inf
-            cmap = cm.get_cmap('viridis')
+            cmap = cm.get_cmap('magma')
             units = ol.Zsun_ea
         elif mt == 'coldens_o7':
             clabel = '$\\log_{10} \\, \\mathrm{N}(\mathrm{O\\,VII}) \\; [\\mathrm{cm}^{-2}]$'
@@ -383,7 +383,7 @@ if __name__ == '__main__':
                      randomseed=randomseed)
     galid, m200c, cen, R200 = out
     
-    filens = getimgs(cen, R200, sizemargin=2., imgtype=imgtype)
+    filens = getimgs(cen, R200, sizemargin=sizemargin, imgtype=imgtype)
     plotimgs(filens, R200, m200c, galid, imgtype=imgtype)
     print('Made image for galaxy {}'.format(galid))
     print('Saved in {}'.format(mdir))
