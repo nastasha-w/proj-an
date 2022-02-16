@@ -4128,7 +4128,7 @@ def readbasic(vardict, quantity, excludeSFR, last=True, **kwargs):
             vardict.readif('Temperature',rawunits=True)
 
     # Mass is not actually stored for DM in EAGLE: just use ones, and DM mass from file
-    elif vardict.parttype == '1' and quantity == 'Mass' 
+    elif vardict.parttype == '1' and quantity == 'Mass'\
         and vardict.simfile.simulation == 'eagle':
         vardict.readif('ParticleIDs', rawunits=True)
         vardict.add_part('Mass', np.ones((vardict.particle['ParticleIDs'].shape[0],)))
