@@ -4128,7 +4128,7 @@ def readbasic(vardict, quantity, excludeSFR, last=True, **kwargs):
             vardict.readif('Temperature',rawunits=True)
 
     # Mass is not actually stored for DM in EAGLE: just use ones, and DM mass from file
-    elif vardict.parttype == '1' and quantity == 'Mass' 
+    elif vardict.parttype == '1' and quantity == 'Mass'\
         and vardict.simfile.simulation == 'eagle':
         vardict.readif('ParticleIDs', rawunits=True)
         vardict.add_part('Mass', np.ones((vardict.particle['ParticleIDs'].shape[0],)))
@@ -5745,8 +5745,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
     if parttype == '0':
         lsmooth = vardict_WQ.readif('SmoothingLength', rawunits=True)
         conv = vardict_WQ.CGSconv['SmoothingLength'] / c.cm_per_mpc / vardict_WQ.simfile.a
-        vardict_WQ.delif('SmoothingLength', last=True)
         lsmooth *= conv
+        vardict_WQ.delif('SmoothingLength', last=True)
         tree = False
     elif parttype == '1': # DM: has a physically reasonable smoothing length, but it is not in the output files
         lsmooth = np.zeros(NumPart)
