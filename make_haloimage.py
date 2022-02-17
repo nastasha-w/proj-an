@@ -330,6 +330,10 @@ def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
                               extend=extend, fontsize=fontsize, 
                               orientation='horizontal')
         #cbar.ax.set_aspect(0.1)
+        if extend in ['min', 'both']:
+            cax.spines['left'].set_color(cmap(0.))
+        if extend in ['max', 'both']:
+            cax.spines['right'].set_color(cmap(1.))
         
         ax.tick_params(left=False, bottom=False, labelbottom=False,
                        labelleft=False)
