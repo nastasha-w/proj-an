@@ -185,15 +185,16 @@ def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
     fontsize = 12
     if imgtype == 'CV':
          maptypes = ['Density', 'Temperature', 'coldens_o7', 'emission_o7r']
+         cheight = 0.5
     elif imgtype == 'SM':
         maptypes = ['Density', 'Metallicity']
+        cheight = 0.7
     ncols = min(len(maptypes), 4)
     nrows = (len(maptypes) - 1) // ncols + 1
     figwidth = 11. * float(ncols) / 4.
     
     panelwidth = figwidth / ncols
     panelheight = panelwidth
-    cheight = 0.5
     height_ratios = [panelheight, cheight] * nrows
     
     figheight = sum(height_ratios)
@@ -315,7 +316,7 @@ def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
                         extent=extent, vmin=vmin, vmax=vmax, cmap=cmap)
             
         #cax.tick_params(labelsize=fontsize - 1)
-        cax.set_aspect(0.15)
+        #cax.set_aspect(0.15)
         #locator = ticker.MaxNLocator(nbins=5)
         #plt.colorbar(img, cax=cax, extend=extend, orientation='horizontal',
         #             aspect=0.07, ticks=locator)
@@ -324,7 +325,7 @@ def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
                               cmap=cmap, clabel=clabel, newax=False, 
                               extend=extend, fontsize=fontsize, 
                               orientation='horizontal')
-        #cbar.set_aspect(0.1)
+        cbar.ax.set_aspect(0.1)
         
         ax.tick_params(left=False, bottom=False, labelbottom=False,
                        labelleft=False)
