@@ -353,7 +353,7 @@ def add_2dhist_contours(ax, bins, edges, toplotaxes,
         if fraclevels:
             levels = [1., 0.9, 0.5] # enclosed fractions for each level (approximate)
         else:
-	        levels = [1e-3,3e-2,0.1,0.5]
+            levels = [1e-3,3e-2,0.1,0.5]
 
     if fraclevels: # assumes all levels are between 0 and 1
         binsum = binsum/np.sum(binsum) # redo normalisation for the smaller dataset

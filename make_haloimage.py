@@ -22,6 +22,7 @@ import matplotlib.ticker as ticker
 import make_maps_v3_master as m3
 import eagle_constants_and_units as c
 import make_maps_opts_locs as ol
+import plot_utils as pu
 
 
 halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
@@ -313,12 +314,17 @@ def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
         img = ax.imshow(_map.T, origin='lower', interpolation='nearest',
                         extent=extent, vmin=vmin, vmax=vmax, cmap=cmap)
             
-        cax.tick_params(labelsize=fontsize - 1)
+        #cax.tick_params(labelsize=fontsize - 1)
         cax.set_aspect(0.15)
-        locator = ticker.MaxNLocator(nbins=5)
-        plt.colorbar(img, cax=cax, extend=extend, orientation='horizontal',
-                     aspect=0.07, ticks=locator)
-        cax.set_xlabel(clabel, fontsize=fontsize)
+        #locator = ticker.MaxNLocator(nbins=5)
+        #plt.colorbar(img, cax=cax, extend=extend, orientation='horizontal',
+        #             aspect=0.07, ticks=locator)
+        #cax.set_xlabel(clabel, fontsize=fontsize)
+        cbar = pu.add_colorbar(cax, img=img, vmin=vmin, vmax=vmax, 
+                              cmap=cmap, clabel=clabel, newax=False, 
+                              extend=extend, fontsize=fontsize, 
+                              orientation='horizontal')
+        #cbar.set_aspect(0.1)
         
         ax.tick_params(left=False, bottom=False, labelbottom=False,
                        labelleft=False)
