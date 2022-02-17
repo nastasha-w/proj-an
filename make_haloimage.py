@@ -190,7 +190,7 @@ def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
     elif imgtype == 'SM':
         maptypes = ['Density', 'Metallicity']
         cheight = 0.5
-        cheight_rescale = 0.5
+        cheight_rescale = 0.3
     ncols = min(len(maptypes), 4)
     nrows = (len(maptypes) - 1) // ncols + 1
     figwidth = 11. * float(ncols) / 4.
@@ -215,7 +215,8 @@ def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
         _cax.axis('off')
         _l, _b, _w, _h = (_cax.get_position()).bounds
         margin = panelwidth * 0.07 / figwidth
-        subpos = [_l + margin, _b, _w - 2.* margin, _h * cheight_rescale]
+        subpos = [_l + margin, _b + 0.5 * (1. - cheight_rescale) * _h, 
+                  _w - 2.* margin, _h * cheight_rescale]
         #print(subpos)
         cax = fig.add_axes(subpos)
          
