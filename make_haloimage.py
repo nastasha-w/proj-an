@@ -314,7 +314,7 @@ def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
                         extent=extent, vmin=vmin, vmax=vmax, cmap=cmap)
             
         cax.tick_params(labelsize=fontsize - 1)
-        cax.set_aspect(0.2)
+        cax.set_aspect(0.15)
         locator = ticker.MaxNLocator(nbins=5)
         plt.colorbar(img, cax=cax, extend=extend, orientation='horizontal',
                      aspect=0.07, ticks=locator)
