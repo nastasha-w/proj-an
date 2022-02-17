@@ -213,8 +213,9 @@ def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
         _cax.axis('off')
         _l, _b, _w, _h = (_cax.get_position()).bounds
         margin = panelwidth * 0.07 / figwidth
-        cax = fig.add_axes([_l + margin, _b,\
-                            _w - 2.* margin, _h])
+        subpos = [_l + margin, _b, _w - 2.* margin, _h]
+        print(subpos)
+        cax = fig.add_axes(subpos)
         
         
         match = [(name.split('/')[-1]).startswith(mt) for name in names]
