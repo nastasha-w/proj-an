@@ -184,11 +184,13 @@ def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
     
     fontsize = 12
     if imgtype == 'CV':
-         maptypes = ['Density', 'Temperature', 'coldens_o7', 'emission_o7r']
-         cheight = 0.5
+        maptypes = ['Density', 'Temperature', 'coldens_o7', 'emission_o7r']
+        cheight = 0.5
+        cheight_rescale = 1.
     elif imgtype == 'SM':
         maptypes = ['Density', 'Metallicity']
-        cheight = 0.7
+        cheight = 0.5
+        cheight_rescale = 0.5
     ncols = min(len(maptypes), 4)
     nrows = (len(maptypes) - 1) // ncols + 1
     figwidth = 11. * float(ncols) / 4.
@@ -213,11 +215,10 @@ def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
         _cax.axis('off')
         _l, _b, _w, _h = (_cax.get_position()).bounds
         margin = panelwidth * 0.07 / figwidth
-        subpos = [_l + margin, _b, _w - 2.* margin, _h]
-        print(subpos)
+        subpos = [_l + margin, _b, _w - 2.* margin, _h * cheight_rescale]
+        #print(subpos)
         cax = fig.add_axes(subpos)
-        
-        
+         
         match = [(name.split('/')[-1]).startswith(mt) for name in names]
         match = np.where(match)[0]
         if len(match) == 0:
@@ -301,6 +302,7 @@ def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
         vmin = max(vmin, _min)
         vmax = min(vmax, _max)
         extent = (-0.5 * _l0, 0.5*_l0, -0.5*_l1, 0.5*_l1)
+        cmap = cmap.copy()
         cmap.set_under(cmap(0.))
         cmap.set_over(cmap(1.))
         if _min < vmin or np.any(np.logical_not(np.isfinite(_map))):
@@ -326,7 +328,7 @@ def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
                               cmap=cmap, clabel=clabel, newax=False, 
                               extend=extend, fontsize=fontsize, 
                               orientation='horizontal')
-        cbar.ax.set_aspect(0.1)
+        #cbar.ax.set_aspect(0.1)
         
         ax.tick_params(left=False, bottom=False, labelbottom=False,
                        labelleft=False)
