@@ -406,7 +406,7 @@ if __name__ == '__main__':
 
 def plotimgs_multigal(names_pergal, R200cs, M200cs, galids, imgtype='CV'):
     
-    for name in names_pergal:
+    for names in names_pergal:
         while None in names:
             names.remove(None)
     numgals = len(R200cs)
