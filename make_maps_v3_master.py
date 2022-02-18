@@ -127,13 +127,15 @@ import selecthalos as sh
 import cosmo_utils as cu
 import ion_line_data as ild # for functions to manipulate element/ion names
 
-if sys.version.split('.')[0] == '3':
-    def isstr(x):
-        return isinstance(x, str)
-elif sys.version.split('.')[0] == '2':
-    def isstr(x):
-        return isinstance(x, basestring)
-        
+#if sys.version.split('.')[0] == '3':
+#    def isstr(x):
+#        return isinstance(x, str)
+#elif sys.version.split('.')[0] == '2':
+#    def isstr(x):
+#        return isinstance(x, basestring)
+def isstr(x):
+    return isinstance(x, type(''))
+
 ##########################
 #      functions 1       #
 ##########################
@@ -3085,7 +3087,7 @@ def ppv_selselect_coordsgen(centre, Ls, Axis1, Axis2, Axis3, periodic, vardict, 
     vardict.particle['coords_cMpc-vel'][:,Axis3] %= boxvel
 
     # avoid fancy indexing to avoid array copies
-    to_cMpc = conv / c.cm_per_mpc / simfile.a
+    to_cMpc = conv / c.cm_per_mpc / vardict.simfile.a
     vardict.particle['coords_cMpc-vel'][:, Axis1] *= to_cMpc
     vardict.particle['coords_cMpc-vel'][:, Axis2] *= to_cMpc
  
