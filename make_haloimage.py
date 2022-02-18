@@ -405,7 +405,7 @@ def plotimgs_multigal(names_pergal, R200cs, M200cs, galids, imgtype='CV'):
     
     panelwidth = figwidth / ncols
     panelheight = panelwidth
-    height_ratios = [panelheight, cheight] * nrows
+    height_ratios = [panelheight] * (nrows - 1) +  [cheight] 
     
     figheight = sum(height_ratios)
     fig = plt.figure(figsize=(figwidth, figheight))

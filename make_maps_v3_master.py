@@ -133,8 +133,9 @@ import ion_line_data as ild # for functions to manipulate element/ion names
 #elif sys.version.split('.')[0] == '2':
 #    def isstr(x):
 #        return isinstance(x, basestring)
-def isstr(x) :
-    return isinstance(x, type(''))     
+
+def isstr(x):
+    return isinstance(x, type(''))       
 ##########################
 #      functions 1       #
 ##########################
