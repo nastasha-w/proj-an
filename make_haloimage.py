@@ -381,28 +381,6 @@ def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
         outname = 'galaxy{}_nH_Z.eps'.format(galid)
     plt.savefig(mdir + outname, format='eps', bbox_inches='tight')
 
-if __name__ == '__main__':
-    args = sys.argv
-    imgtype = 'SM'
-
-    if imgtype == 'CV':
-        sizemargin = 2.
-    elif imgtype == 'SM':
-        sizemargin = 1.5
-    m200_tar = float(sys.argv[1])
-    if len(sys.argv) > 2:
-        randomseed = int(sys.argv[2])
-    else:
-        randomseed = 0
-    out = selecthalo(m200_tar, _halocat=halocat, margin=0.05,\
-                     randomseed=randomseed)
-    galid, m200c, cen, R200 = out
-    
-    filens = getimgs(cen, R200, sizemargin=sizemargin, imgtype=imgtype)
-    plotimgs(filens, R200, m200c, galid, imgtype=imgtype)
-    print('Made image for galaxy {}'.format(galid))
-    print('Saved in {}'.format(mdir))
-
 
 def plotimgs_multigal(names_pergal, R200cs, M200cs, galids, imgtype='CV'):
     
@@ -646,7 +624,7 @@ if __name__ == '__main__':
             for rnd in randomseeds]
  
     if len(outs) == 1:
-        galid, m200c, cen, R200 = out[0]
+        galid, m200c, cen, R200 = outs[0]
         filens = getimgs(cen, R200, sizemargin=sizemargin, imgtype=imgtype)
         plotimgs(filens, R200, m200c, galid, imgtype=imgtype)
         print('Made image for galaxy {}'.format(galid))
@@ -657,7 +635,7 @@ if __name__ == '__main__':
         cens = [_[2] for _ in outs]
         R200cs = [_[3] for _ in outs]
 
-        filens_pergal = [getimgs(cen, R200, sizemargin=sizemargin, 
+        filens_pergal = [getimgs(cen, R200c, sizemargin=sizemargin, 
                                  imgtype=imgtype) \
                         for cen, R200c in zip(cens, R200cs)
                         ]
