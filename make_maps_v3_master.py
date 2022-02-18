@@ -3015,6 +3015,7 @@ def partselect_pos(simfile, centre, Ls, Axis1, Axis2, Axis3, parttype='0'): # th
         margin = np.max(lsmooth)
         # convert to cMpc / h (raw units in FIRE are ckpc / h, for example)
         margin *= simfile.CGSconvtot / c.cm_per_mpc / simfile.a * simfile.h
+        print(margin, ' cMpc/h')
         del lsmooth # read it in again later, if it's needed again
         region[[2*Axis2, 2*Axis2+1]] = [(centre[Axis2] - Ls[Axis2] * 0.5) * hconst - margin ,
                                         (centre[Axis2] + Ls[Axis2] * 0.5) * hconst + margin]
