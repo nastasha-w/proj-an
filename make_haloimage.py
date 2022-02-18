@@ -569,17 +569,17 @@ def plotimgs_multigal(names_pergal, R200cs, M200cs, galids, imgtype='CV'):
                     horizontalalignment='left',
                     path_effects=patheff_text)
                  
-            xlim = ax.get_xlim()
-            lenline = 250. * 1e-3 / cosmopars['a'] / (xlim[1] - xlim[0])
-            _text = '250 pkpc'
+                xlim = ax.get_xlim()
+                lenline = 250. * 1e-3 / cosmopars['a'] / (xlim[1] - xlim[0])
+                _text = '250 pkpc'
             
-            ax.plot([0.1, 0.1 + lenline], [0.05, 0.05],
-                    color='white', linewidth=0.7, path_effects=patheff,
-                    transform=ax.transAxes)
-            ax.text(0.1 + 0.5 * lenline, 0.06, _text,
-                    fontsize=fontsize, path_effects=patheff_text,
-                    transform=ax.transAxes, verticalalignment='bottom',
-                    horizontalalignment='center')
+                ax.plot([0.1, 0.1 + lenline], [0.05, 0.05],
+                        color='white', linewidth=0.7, path_effects=patheff,
+                        transform=ax.transAxes)
+                ax.text(0.1 + 0.5 * lenline, 0.06, _text,
+                        fontsize=fontsize, path_effects=patheff_text,
+                        transform=ax.transAxes, verticalalignment='bottom',
+                        horizontalalignment='center')
     
         #cax.tick_params(labelsize=fontsize - 1)
         #cax.set_aspect(0.15)
