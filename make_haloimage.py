@@ -402,5 +402,266 @@ if __name__ == '__main__':
     plotimgs(filens, R200, m200c, galid, imgtype=imgtype)
     print('Made image for galaxy {}'.format(galid))
     print('Saved in {}'.format(mdir))
+
+
+def plotimgs_multigal(names_pergal, R200cs, M200cs, galids, imgtype='CV'):
+    
+    for name in names_pergal:
+        while None in names:
+            names.remove(None)
+    numgals = len(R200cs)
+    
+    fontsize = 12
+    if imgtype == 'CV':
+        maptypes = ['Density', 'Temperature', 'coldens_o7', 'emission_o7r']
+        cheight = 0.5
+        cheight_rescale = 1.
+    elif imgtype == 'SM':
+        maptypes = ['Density', 'Metallicity']
+        cheight = 0.5
+        cheight_rescale = 0.3
+    ncols = min(len(maptypes), 4)
+    nrows = (len(maptypes) - 1) // ncols + 1
+    nrows *= (numgals + 1)
+    figwidth = 11. * float(ncols) / 4.
+    
+    panelwidth = figwidth / ncols
+    panelheight = panelwidth
+    height_ratios = [panelheight, cheight] * nrows
+    
+    figheight = sum(height_ratios)
+    fig = plt.figure(figsize=(figwidth, figheight))
+    grid = gsp.GridSpec(ncols=ncols, nrows=nrows, hspace=0.05, wspace=0.0,
+                        width_ratios=[panelwidth] * ncols,
+                        height_ratios=height_ratios)
+    axsets = [[fig.add_subplot(grid[(numgals + 1) * (i // ncols) + j, 
+                                    i % ncols])\
+               for i in range(len(maptypes))] \
+               for j in range(numgals)]
+    caxes = [fig.add_subplot(grid[numgals * (i // ncols) + numgals, 
+                                  i % ncols]) \
+             for i in range(len(maptypes))]
+ 
+    for mi, mt in enumerate(maptypes):
+        _cax = caxes[mi]
+        _cax.axis('off')
+        _l, _b, _w, _h = (_cax.get_position()).bounds
+        margin = panelwidth * 0.07 / figwidth
+        subpos = [_l + margin, _b + 0.5 * (1. - cheight_rescale) * _h, 
+                  _w - 2.* margin, _h * cheight_rescale]
+        #print(subpos)
+        cax = fig.add_axes(subpos)
+
+        if mt == 'Mass':
+            clabel = '$\\log_{10} \\Sigma_{\\mathrm{gas}} \\; [\\mathrm{M}_{\\mathrm{\\odot}} \\,/\\, \\mathrm{pkpc}^{2}]$'
+            vmin = -np.inf
+            vmax = np.inf
+            cmap = cm.get_cmap('viridis')
+            units = c.solar_mass / (c.cm_per_mpc * 1e-3)**2
+        elif mt == 'Temperature':
+            clabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
+            vmin = -np.inf
+            vmax = np.inf
+            cmap = cm.get_cmap('plasma')
+            units = 1.     
+        elif mt == 'Density':
+            clabel = '$\\log_{10} \\, \\mathrm{n}_{\\mathrm{H}} \\; [\\mathrm{cm}^{-3}]$'
+            vmin = -np.inf
+            vmax = np.inf
+            cmap = cm.get_cmap('viridis')
+            units = c.atomw_H * c.u / 0.752
+        elif mt == 'Metallicity':
+            clabel = '$\\log_{10} \\, \\mathrm{Z} \\; [\\mathrm{Z}_{\\odot}]$'
+            vmin = -2.5
+            vmax = np.inf
+            cmap = cm.get_cmap('magma')
+            units = ol.Zsun_ea
+        elif mt == 'coldens_o7':
+            clabel = '$\\log_{10} \\, \\mathrm{N}(\mathrm{O\\,VII}) \\; [\\mathrm{cm}^{-2}]$'
+            vmin = 14.5
+            vmax = np.inf
+            cmap = cm.get_cmap('magma')          
+            units = 1.
+        elif mt == 'emission_o7r':
+            clabel = '$\\log_{10} \\, \\mathrm{SB}(\mathrm{O\\,VII \, r}) \\; [\\mathrm{ph} \\,/\\,\\mathrm{s} \\, \\mathrm{cm}^{2} \\mathrm{sr}]$'
+            vmin = -2.5
+            vmax = np.inf
+            cmap = cm.get_cmap('inferno')
+            units = 1.
+        maps = []
+        mins = []
+        maxs = []
+        extents = []
+        allmapfinite = True
+
+        for gi, names in enumerate(names_pergal):
+            match = [(name.split('/')[-1]).startswith(mt) for name in names]
+            match = np.where(match)[0]
+            if len(match) == 0:
+                raise RuntimeError('{} map not found for names {}'.format(\
+                                    mt, names))
+            elif len(match) > 1:
+                fns = [names[i] for i in match]
+                if not np.all([fn == fns[0] for fn in fns]):
+                     raise RuntimeError('{} map has mltiple options: {}'.format(\
+                                    mt, fns))
+                fn = fns[0]
+            else:
+                fn = names[match[0]]
+        
+            with h5py.File(fn, 'r') as mf:
+                _map = mf['map'][:]
+                _min = mf['map'].attrs['minfinite']
+                _max = mf['map'].attrs['max']
+                cosmopars = {key: val for key, val \
+                    in mf['Header/inputpars/cosmopars'].attrs.items()}
+                log = bool(mf['Header/inputpars'].attrs['log'])
+                if not log:
+                     _map = np.log10(_map)
+            
+                axis = mf['Header/inputpars'].attrs['axis'].decode()
+                if axis == 'z':
+                    l0 = 'x'
+                    l1 = 'y'
+                elif axis == 'x':
+                    l0 = 'y'
+                    l1 = 'z'
+                elif axis == 'y':
+                    l0 = 'z'
+                    l1 = 'x'
+                _l0 = mf['Header/inputpars'].attrs['L_{ax}'.format(ax=l0)]
+                _l1 = mf['Header/inputpars'].attrs['L_{ax}'.format(ax=l1)]
+                #pixsize_0_cMpc = _l0 / float(mf['Header/inputpars'].attrs('npix_x'))
+                #pixsize_1_cMpc = _l1 / float(mf['Header/inputpars'].attrs('npix_y'))
+            _map -= np.log10(units)
+            _min -= np.log10(units)
+            _max -= np.log10(units)
+            _extent = (-0.5 * _l0, 0.5*_l0, -0.5*_l1, 0.5*_l1)
+            maps.append(_map)
+            mins.append(_min)
+            maxs.append(_max)
+            extents.append(_extent)
+            allmapfinite &= np.all(np.isfinite(_map))
+
+        vmin = max(vmin, min(mins))
+        vmax = min(vmax, max(maxs))
+        
+        cmap = cmap.copy()
+        cmap.set_under(cmap(0.))
+        cmap.set_over(cmap(1.))
+        if _min < vmin or not allmapfinite:
+            if _max > vmax:
+                extend = 'both'
+            else:
+                extend = 'min'
+        elif _max > vmax:
+            extend = 'max'
+        else:
+            extend = 'neither'
+
+        for gi, (_map, _extent, R200c, M200c, galid) in \
+            enumerate(zip(maps, extents, R200c, M200cs, galids)):    
+            ax = axsets[gi][mi]
+            ax.tick_params(left=False, bottom=False, labelbottom=False,
+                           labelleft=False)
+            img = ax.imshow(_map.T, origin='lower', interpolation='nearest',
+                            extent=_extent, vmin=vmin, vmax=vmax, cmap=cmap)
+            patches = [mpatch.Circle((0., 0.), R200c)] # x, y axes only
+            patheff = [mppe.Stroke(linewidth=1.2, foreground="black"),
+                       mppe.Stroke(linewidth=0.7, foreground="white"),
+                       mppe.Normal()] 
+            collection = mcol.PatchCollection(patches)
+            collection.set(edgecolor='white', facecolor='none', 
+                           linewidth=0.7, path_effects=patheff)    
+            ax.add_collection(collection)
+        
+            patheff_text = [mppe.Stroke(linewidth=2.0, foreground="white"),
+                            mppe.Stroke(linewidth=0.4, foreground="black"),
+                            mppe.Normal()] 
+            if mi == 0:
+                ax.text(0.05, 0.95,\
+                    '$\\log_{{10}} \\mathrm{{M}}_{{\\mathrm{{200c}}}} / \\mathrm{{M}}_{{\\odot}} = {M200c:.1f}$'.format(M200c=M200c),\
+                    fontsize=fontsize, verticalalignment='top',
+                    horizontalalignment='left', transform=ax.transAxes,
+                    path_effects=patheff_text)
+            if mi == 1:
+                ax.text(2.**-0.5 * R200c, 2.**-0.5 * R200c,
+                    '$\\mathrm{R}_{\\mathrm{200c}}$',
+                    fontsize=fontsize, verticalalignment='bottom',
+                    horizontalalignment='left',
+                    path_effects=patheff_text)
+                 
+            xlim = ax.get_xlim()
+            lenline = 250. * 1e-3 / cosmopars['a'] / (xlim[1] - xlim[0])
+            _text = '250 pkpc'
+            
+            ax.plot([0.1, 0.1 + lenline], [0.05, 0.05],
+                    color='white', linewidth=0.7, path_effects=patheff,
+                    transform=ax.transAxes)
+            ax.text(0.1 + 0.5 * lenline, 0.06, _text,
+                    fontsize=fontsize, path_effects=patheff_text,
+                    transform=ax.transAxes, verticalalignment='bottom',
+                    horizontalalignment='center')
+    
+        #cax.tick_params(labelsize=fontsize - 1)
+        #cax.set_aspect(0.15)
+        #locator = ticker.MaxNLocator(nbins=5)
+        #plt.colorbar(img, cax=cax, extend=extend, orientation='horizontal',
+        #             aspect=0.07, ticks=locator)
+        #cax.set_xlabel(clabel, fontsize=fontsize)
+        cbar = pu.add_colorbar(cax, img=img, vmin=vmin, vmax=vmax, 
+                               cmap=cmap, clabel=clabel, newax=False, 
+                               extend=extend, fontsize=fontsize, 
+                               orientation='horizontal')
+        #cbar.ax.set_aspect(0.1)
+        if extend in ['min', 'both']:
+            cax.spines['left'].set_color(cmap(0.))
+        if extend in ['max', 'both']:
+            cax.spines['right'].set_color(cmap(1.))
+    
+    galpart = '-'.join([str(gid) for gid in galids])
+    if imgtype == 'CV':
+        outname = 'galaxies{}_nH_T_o7_o7r.eps'.format(galpart)
+    elif imgtype == 'SM':
+        outname = 'galaxies{}_nH_Z.eps'.format(galpart)
+    plt.savefig(mdir + outname, format='eps', bbox_inches='tight')
+
+if __name__ == '__main__':
+    args = sys.argv
+    imgtype = 'SM'
+
+    if imgtype == 'CV':
+        sizemargin = 2.
+    elif imgtype == 'SM':
+        sizemargin = 1.5
+    m200_tar = float(sys.argv[1])
+    if len(sys.argv) == 3:
+        randomseed = [int(sys.argv[2])]
+    elif len(sys.argv) > 3:
+        randomseeds = [int(arg) for arg in sys.argv[2:]]
+    else:
+        randomseed = [0]
+    outs = [selecthalo(m200_tar, _halocat=halocat, margin=0.05,
+                       randomseed=rnd)\
+            for rnd in randomseeds]
+ 
+    if len(outs) == 1:
+        galid, m200c, cen, R200 = out[0]
+        filens = getimgs(cen, R200, sizemargin=sizemargin, imgtype=imgtype)
+        plotimgs(filens, R200, m200c, galid, imgtype=imgtype)
+        print('Made image for galaxy {}'.format(galid))
+        print('Saved in {}'.format(mdir))
+    else:
+        galids = [_[0] for _ in outs]
+        m200cs = [_[1] for _ in outs]
+        cens = [_[2] for _ in outs]
+        R200cs = [_[3] for _ in outs]
+
+        filens_pergal = [getimgs(cen, R200, sizemargin=sizemargin, 
+                                 imgtype=imgtype) \
+                        for cen, R200c in zip(cens, R200cs)
+                        ]
+        plotimgs_multigal(filens_pergal, R200cs, m200cs, galids,
+                          imgtype=imgtype)
     
     
