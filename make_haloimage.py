@@ -538,7 +538,7 @@ def plotimgs_multigal(names_pergal, R200cs, M200cs, galids, imgtype='CV'):
             extend = 'neither'
 
         for gi, (_map, _extent, R200c, M200c, galid) in \
-            enumerate(zip(maps, extents, R200c, M200cs, galids)):    
+            enumerate(zip(maps, extents, R200cs, M200cs, galids)):    
             ax = axsets[gi][mi]
             ax.tick_params(left=False, bottom=False, labelbottom=False,
                            labelleft=False)
