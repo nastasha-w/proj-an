@@ -2905,7 +2905,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
         elif talkvnum == 3:
             _lines = ['c6', 'n7', 'o8', 'ne10', 'mg12']
         elif talkvnum == 4:
-            _lines = ['c6', 'o7r', 'o8', 'Fe17      16.7760A', 'ne10']
+            _lines = ['c6', 'o7r', 'o8', 'Fe17      16.7760A', 'ne10', 'mg12']
         
         numlines = len(_lines)
         fontsize = 14
