@@ -3212,10 +3212,10 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                     _ed = ed_min * hoffsets[mi]
                     _cens = _ed[:-1] + 0.5 * np.diff(_ed)
                     vals_min = yvals[tag][ykeys_scatter[0]]
-                    # should lead to out-of-bounds but ok error bars
+                    # should lead to out-of-plot-bounds but ok error bars
                     vals_min[vals_min == -np.inf] = -100. 
                     vals_max = yvals[tag][ykeys_scatter[1]]
-                    midy = [0.5 * (vals_min + vals_max)]
+                    midy = 0.5 * (vals_min + vals_max)
                     delta = vals_max - midy
                     #print(_cens)
                     #print(midy)
