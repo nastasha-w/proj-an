@@ -2807,7 +2807,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
     #              }        
     #for key in kwargs_ins:
     #    kwargs_ins[key].update(_kwargs)
-    _kwargs = {'linewidth': 2., 'z': -1.,
+    _kwargs = {'linewidth': 2., 'zorder': -1.,
                'xerr': None, 'yerr': 0.4, 'fmt': 'none', 'capsize': 0.0,
                }
     kwargs_ins = {'athena-xifu':   {'linestyle': 'solid', 'color': 'gray'},
