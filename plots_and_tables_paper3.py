@@ -2736,7 +2736,7 @@ def plot_radprof_main_v1(talkversion=False, slidenum=0, talkvnum=0):
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 
-def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
+def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=True):
     '''
     plot mean and median profiles for the different lines in different halo 
     mass bins
@@ -2751,6 +2751,8 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
     print('z=0.1, Ref-L100N1504, 6.25 cMpc slice Z-projection, SmSb,'+\
           ' C2 kernel')
     print('Using max. 1000 (random) galaxies in each mass bin, centrals only')
+    if showscatter:
+        print('Error bars mark central 80% of annular mean profiles')
     
     # get minimum SB for the different instruments
     omegat_use = [1e6] #[1e6, 1e7]
@@ -2851,10 +2853,12 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
     #                   (ph / m**2 / 100 ks / 10 arcmin^2)
     # right_over_left = m**2 / cm**2 * 100 ks / s * 10 arcmin**2 / rad**2 
     # value ratio is inverse of unit ratio    
-    ys = [('mean',), ('perc', 50.), ('perc', 10.), ('perc', 90.)]
+    ys = [('mean',), ('perc', 50.)]
+    if showscatter: 
+            ys += [('perc', 10.), ('perc', 90.)]
+            ykeys_scatter = [('perc', 10.), ('perc', 90.)]
     ykey_mean = ('mean',)
     ykey_median = ('perc', 50.)
-    ykeys_scatter = [('perc', 10.), ('perc', 90.)]
     ls_mean = 'dotted'
     ls_median = 'solid'
     
@@ -2869,8 +2873,12 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
         
     outname = 'radprof2d_0.1-0.25dex-annuli_L0100N1504_27_test3.x'+\
               '_SmAb_C2Sm_6p25slice_noEOS_to-2R200c_1000_centrals_' +\
-              'halomasscomp_mean-median-scatter-10-90_mmin-{mmin}'
-    outname = outname.format(mmin=mmin)
+              'halomasscomp_mean-median{sct}-{mmin}'
+    if showscatter:
+        sct = '-scatter-10-90_mmin'
+    else: 
+        sct = ''
+    outname = outname.format(mmin=mmin, sct=sct)
     outname = outname.replace('.', 'p')
     if talkversion:
         if talkvnum == 0:
@@ -3157,7 +3165,9 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                                        runit='pkpc', separate=False,
                                        binset=binset_medianofmeans, 
                                        retlog=True, ofmean=True)
-        __yvals, __bins = readin_radprof(filename, seltags, ykeys_scatter,
+        if showscatter:
+            __yvals, __bins = readin_radprof(filename, seltags, 
+                                             ykeys_scatter,
                                        runit='pkpc', separate=False,
                                        binset=binset_medianofmeans, 
                                        retlog=True, ofmean=True)
@@ -3203,7 +3213,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                 cens = ed[:-1] + 0.5 * np.diff(ed)
                 ax.plot(cens, vals, color=colordct[me], linewidth=2.,
                         path_effects=patheff, linestyle=ls, zorder=zo)
-                if ykey == ykey_median:
+                if ykey == ykey_median and showscatter:
                     ed_min = bins[tag][ykeys_scatter[0]]
                     ed_max = bins[tag][ykeys_scatter[1]]
                     if not np.all(ed_min == ed_max):
@@ -3298,7 +3308,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
             #patch = mpatch.Rectangle([minx, miny], maxx - minx, maxy - miny,
             #                         **kwargs_ins[ins])
             #ax.add_artist(patch)
-            ax.errorbar([minx, miny], [maxx, maxy], **kwargs_ins[ins])
+            ax.errorbar([minx, maxx], [miny, maxy], **kwargs_ins[ins])
         ax.set_xlim(*_xlim)
         ax.set_ylim(*_ylim)
         
