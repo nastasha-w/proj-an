@@ -3234,7 +3234,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
                                 ecolor=colordct[me], elinewidth=1.,
                                 path_effects=None, linestyle='none', 
                                 zorder=zo - 2., fmt='none', capsize=0.0,
-                                errorevery=(mi%3, 3))
+                                errorevery=(mi%5, 5))
             # indicate R200c
             mmin = 10**me
             if mi < len(medges) - 1:
