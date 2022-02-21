@@ -2978,9 +2978,13 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
                         width_ratios=width_ratios)
     axes = [fig.add_subplot(grid[i // ncols, i % ncols]) \
             for i in range(numlines)]
+    legend_fontsize = fontsize
     if cax_right:
         ncols_insleg = 1 
-        leg_kw = {'loc': 'upper left', 'bbox_to_anchor': (0.15, 1.)}
+        xmin_leg = 0.15
+        if talkvnum in [4]:
+            xmin_leg = 0.25
+        leg_kw = {'loc': 'upper left', 'bbox_to_anchor': (xmin_leg, 1.)}
         insleg_kw = leg_kw.copy()
         if nrows > 5: 
             csl = slice(nrows // 2 - 1, nrows // 2 + 2, None)
@@ -2995,7 +2999,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
             lsl = slice(0, 1, None)
             l2sl = slice(0, 1, None)
             insleg_kw = {'loc': 'lower left',
-                     'bbox_to_anchor': (0.15, 0.0),
+                     'bbox_to_anchor': (xmin_leg, 0.0),
                      'handlelength': 1.8,
                      'columnspacing': 0.8,
                      }
@@ -3003,6 +3007,9 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
             msg = 'Could not find a place for the legend and color bar at'+\
                   ' the right of the plot (1 row)'
             raise RuntimeError(msg)
+        if talkvnum in [4]:
+            legend_fontsize = fontsize - 2.
+
         cax = fig.add_subplot(grid[csl, ncols])
         lax = fig.add_subplot(grid[lsl, ncols])
         lax.axis('off')
@@ -3276,7 +3283,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
                                      linewidth=2.) \
                        for ls, label in zip([ls_mean, ls_median], 
                                             ['mean', 'median'])]
-            lax.legend(handles=handles, fontsize=fontsize, **leg_kw)
+            lax.legend(handles=handles, fontsize=legend_fontsize, **leg_kw)
         
         # add SB mins
         _sel = df2['galaxy absorption included in limit']
@@ -3350,10 +3357,10 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
                                  color=kwargs_ins[ins]['color'],
                                  linewidth=kwargs_ins[ins]['linewidth']) \
                    for ins in _inss]   
-    leg_ins = lax2.legend(handles=handles_ins, fontsize=fontsize, 
+    leg_ins = lax2.legend(handles=handles_ins, fontsize=legend_fontsize, 
                           ncol=ncols_insleg, **insleg_kw)
     leg_ins.set_title(legendtitle_minsb)
-    leg_ins.get_title().set_fontsize(fontsize)
+    leg_ins.get_title().set_fontsize(legend_fontsize)
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
