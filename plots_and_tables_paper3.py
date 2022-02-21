@@ -2873,7 +2873,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
         
     outname = 'radprof2d_0.1-0.25dex-annuli_L0100N1504_27_test3.x'+\
               '_SmAb_C2Sm_6p25slice_noEOS_to-2R200c_1000_centrals_' +\
-              'halomasscomp_mean-median{sct}-{mmin}'
+              'halomasscomp_mean-median{sct}-{mmin}_rev1'
     if showscatter:
         sct = '-scatter-10-90_mmin'
     else: 
