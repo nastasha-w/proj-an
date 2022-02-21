@@ -3326,8 +3326,10 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
             if 'lynx' in ins:
                 _inss.remove(ins)
             
-    handles_ins = [mpatch.Patch(label=inslabels[ins], **kwargs_ins[ins]) \
-                   for ins in _inss]    
+    #handles_ins = [mpatch.Patch(label=inslabels[ins], **kwargs_ins[ins]) \
+    #               for ins in _inss]    
+    handles_ins = [mlines.Line2D(label=inslabels[ins], **kwargs_ins[ins]) \
+                   for ins in _inss]   
     leg_ins = lax2.legend(handles=handles_ins, fontsize=fontsize, 
                           ncol=ncols_insleg, **insleg_kw)
     leg_ins.set_title(legendtitle_minsb)
