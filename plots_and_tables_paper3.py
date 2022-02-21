@@ -3171,7 +3171,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
         _n = len(medges)
         hoffsets = 1. + 0.1 * np.linspace(-0.5 * _n, 0.5 * _n, _n)
         random.seed(0)
-        hoffsets = random.shuffle(hoffsets)
+        random.shuffle(hoffsets)
         for mi, me in enumerate(medges):
             tag = seltag_keys[me]
             
