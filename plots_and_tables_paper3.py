@@ -2811,7 +2811,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
     #for key in kwargs_ins:
     #    kwargs_ins[key].update(_kwargs)
     _kwargs = {'linewidth': 2., 'zorder': -1.,
-               'xerr': None, 'yerr': 0.4, 'fmt': 'none', 'capsize': 0.0,
+               'xerr': None, 'yerr': 0.2, 'fmt': 'none', 'capsize': 0.0,
                }
     kwargs_ins = {'athena-xifu':   {'linestyle': 'solid', 'color': 'gray'},
                   'lynx-lxm-main': {'linestyle': 'dotted', 'color': 'black'},
@@ -3234,7 +3234,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
                                 ecolor=colordct[me], elinewidth=1.,
                                 path_effects=None, linestyle='none', 
                                 zorder=zo - 2., fmt='none', capsize=0.0,
-                                errorevery=(mi%5, 5))
+                                errorevery=(mi%4, 4))
             # indicate R200c
             mmin = 10**me
             if mi < len(medges) - 1:
@@ -3308,7 +3308,10 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
             #patch = mpatch.Rectangle([minx, miny], maxx - minx, maxy - miny,
             #                         **kwargs_ins[ins])
             #ax.add_artist(patch)
-            ax.errorbar([minx, maxx], [miny, maxy], **kwargs_ins[ins])
+            _kw = kwargs_ins[ins]
+            ax.errorbar([minx, maxx], [miny, maxy], **_kw)
+            ax.plot([minx, maxx], [miny, maxy], color=_kw['color'],
+                    linestyle=_kw['linestyle'], linewidth=_kw['linewidth'])
         ax.set_xlim(*_xlim)
         ax.set_ylim(*_ylim)
         
