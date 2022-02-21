@@ -2735,6 +2735,7 @@ def plot_radprof_main_v1(talkversion=False, slidenum=0, talkvnum=0):
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
+
 def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
     '''
     plot mean and median profiles for the different lines in different halo 
@@ -2760,7 +2761,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
             ' \\Omega \\, \\Delta t =$ \n $'+\
             vals + '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
     else:
-        legendtitle_minsb = 'min. SB ($5\\sigma$ detection) for $\\Delta' +\
+        legendtitle_minsb = 'min. SB ($5\\sigma$ detection) for \n $\\Delta' +\
             ' \\Omega \\, \\Delta t = '+\
             vals + '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
     
@@ -2866,7 +2867,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
     else:
         mmin = mmin_default # 11. or 11.5
         
-    outname = 'radprof2d_0p1-0p25dex-annuli_L0100N1504_27_test3px'+\
+    outname = 'radprof2d_0.1-0.25dex-annuli_L0100N1504_27_test3.x'+\
               '_SmAb_C2Sm_6p25slice_noEOS_to-2R200c_1000_centrals_' +\
               'halomasscomp_mean-median-scatter-10-90_mmin-{mmin}'
     outname = outname.format(mmin=mmin)
@@ -3169,7 +3170,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
             bins[tag].update(__bins[tag])
             yvals[tag].update(__yvals[tag])
         _n = len(medges)
-        hoffsets = 1. + 0.1 * np.linspace(-0.5 * _n, 0.5 * _n, _n)
+        hoffsets = 1. + 0.05 * np.linspace(-0.5 * _n, 0.5 * _n, _n)
         random.seed(0)
         random.shuffle(hoffsets)
         for mi, me in enumerate(medges):
@@ -3211,8 +3212,10 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                     _ed = ed_min * hoffsets[mi]
                     _cens = _ed[:-1] + 0.5 * np.diff(_ed)
                     vals_min = yvals[tag][ykeys_scatter[0]]
+                    # should lead to out-of-bounds but ok error bars
+                    vals_min[vals_min == -np.inf] = -100. 
                     vals_max = yvals[tag][ykeys_scatter[1]]
-                    midy = 0.5 * (vals_min + vals_max)
+                    midy = [0.5 * (vals_min + vals_max)]
                     delta = vals_max - midy
                     #print(_cens)
                     #print(midy)
@@ -3221,7 +3224,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                                 ecolor=colordct[me], elinewidth=1.,
                                 path_effects=None, linestyle='none', 
                                 zorder=zo - 2., fmt='none', capsize=0.0,
-                                )
+                                errorevery=(3, mi%3))
             # indicate R200c
             mmin = 10**me
             if mi < len(medges) - 1:
