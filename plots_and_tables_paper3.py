@@ -3209,11 +3209,12 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                         print(filename, binset_medianofmeans, tag, ykeys_scatter)
                         raise RuntimeError('Scatter min. and max. bins mismatch') 
                     _ed = ed_min * hoffsets[mi]
+                    _cens = _ed[:-1] + 0.5 * np.diff(_ed)
                     vals_min = yvals[tag][ykeys_scatter[0]]
                     vals_max = yvals[tag][ykeys_scatter[1]]
-                    mid = 0.5 * (vals_min + vals_max)
-                    delta = vals_max - mid
-                    ax.errorbar(_ed, mid, xerr=None, yerr=delta,
+                    midy = 0.5 * (vals_min + vals_max)
+                    delta = vals_max - midy
+                    ax.errorbar(_cens, midy, xerr=None, yerr=delta,
                                 color=colordct[me], linewidth=1.,
                                 path_effects=None, linestyle='none', 
                                 zorder=zo - 2., fmt=None, capsize=0.0,
