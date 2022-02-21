@@ -3177,8 +3177,9 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
             #print(tag)
             bins[tag].update(_bins[tag])
             yvals[tag].update(_yvals[tag])
-            bins[tag].update(__bins[tag])
-            yvals[tag].update(__yvals[tag])
+            if showscatter:
+                bins[tag].update(__bins[tag])
+                yvals[tag].update(__yvals[tag])
         _n = len(medges)
         hoffsets = 1. + 0.05 * np.linspace(-0.5 * _n, 0.5 * _n, _n)
         random.seed(0)
