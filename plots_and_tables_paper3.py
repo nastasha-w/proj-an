@@ -3214,9 +3214,9 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                     vals_max = yvals[tag][ykeys_scatter[1]]
                     midy = 0.5 * (vals_min + vals_max)
                     delta = vals_max - midy
-                    print(_cens)
-                    print(midy)
-                    print('yerr', delta)
+                    #print(_cens)
+                    #print(midy)
+                    #print('yerr', delta)
                     ax.errorbar(_cens, midy, xerr=None, yerr=delta,
                                 ecolor=colordct[me], elinewidth=1.,
                                 path_effects=None, linestyle='none', 
@@ -3295,7 +3295,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
             #patch = mpatch.Rectangle([minx, miny], maxx - minx, maxy - miny,
             #                         **kwargs_ins[ins])
             #ax.add_artist(patch)
-            ax.errorbar([minx, miny], [maxx, maxy], **kwargs_ins)
+            ax.errorbar([minx, miny], [maxx, maxy], **kwargs_ins[ins])
         ax.set_xlim(*_xlim)
         ax.set_ylim(*_ylim)
         
