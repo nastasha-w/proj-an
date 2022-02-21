@@ -2983,7 +2983,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
         ncols_insleg = 1 
         xmin_leg = 0.15
         if talkvnum in [4]:
-            xmin_leg = 0.25
+            xmin_leg = 0.28
         leg_kw = {'loc': 'upper left', 'bbox_to_anchor': (xmin_leg, 1.)}
         insleg_kw = leg_kw.copy()
         if nrows > 5: 
@@ -3008,7 +3008,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
                   ' the right of the plot (1 row)'
             raise RuntimeError(msg)
         if talkvnum in [4]:
-            legend_fontsize = fontsize - 2.
+            legend_fontsize = fontsize - 3.
 
         cax = fig.add_subplot(grid[csl, ncols])
         lax = fig.add_subplot(grid[lsl, ncols])
