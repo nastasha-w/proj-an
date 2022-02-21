@@ -3214,10 +3214,13 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
                     vals_max = yvals[tag][ykeys_scatter[1]]
                     midy = 0.5 * (vals_min + vals_max)
                     delta = vals_max - midy
+                    print(_cens)
+                    print(midy)
+                    print('yerr', delta)
                     ax.errorbar(_cens, midy, xerr=None, yerr=delta,
-                                color=colordct[me], linewidth=1.,
+                                ecolor=colordct[me], elinewidth=1.,
                                 path_effects=None, linestyle='none', 
-                                zorder=zo - 2., fmt=None, capsize=0.0,
+                                zorder=zo - 2., fmt='none', capsize=0.0,
                                 )
             # indicate R200c
             mmin = 10**me
