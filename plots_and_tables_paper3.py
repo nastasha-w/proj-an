@@ -2866,9 +2866,9 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0):
     else:
         mmin = mmin_default # 11. or 11.5
         
-    outname = 'radprof2d_0.1-0.25dex-annuli_L0100N1504_27_test3.x'+\
-              '_SmAb_C2Sm_6.25slice_noEOS_to-2R200c_1000_centrals_' +\
-              'halomasscomp_mean-median_mmin-{mmin}'
+    outname = 'radprof2d_0p1-0p25dex-annuli_L0100N1504_27_test3px'+\
+              '_SmAb_C2Sm_6p25slice_noEOS_to-2R200c_1000_centrals_' +\
+              'halomasscomp_mean-median-scatter-10-90_mmin-{mmin}'
     outname = outname.format(mmin=mmin)
     outname = outname.replace('.', 'p')
     if talkversion:
