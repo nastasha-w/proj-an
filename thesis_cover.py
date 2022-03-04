@@ -970,6 +970,29 @@ def plotdefaults(settings=1):
         print(region_back)
         name = 'thesis_cover.pdf'
         # decrease width 
+    elif settings == 11:
+        # region2 = [ 52.5, 72.0, 73.0,  90.0, 87.5,  93.75]
+        _region = region2
+        #_subregion_back = None
+        #_subregion_front = None
+        _transpose = True
+        _flipx = True
+        _flipy = True
+        _striplocs = [69.8, 68., 62., 54.5]
+        oneplot = False
+        margin_cm = 0.0
+        spinewidth_cm = 0.5
+        region_height =_region[1] - _region[0]
+        region_fwidth = region_height / totalheight_cm * width_front_cm
+        region_bwidth = region_height / totalheight_cm * width_back_cm
+        rightcoord_front = 87.
+        region_front = [rightcoord_front, rightcoord_front - region_fwidth, 72.0, 52.5]
+        region_back = [region_front[1], region_front[1] + region_bwidth] + region_front[2:]
+        print(region_front)
+        print(region_back)
+        _subregion_front = region_front
+        _subregion_back = region_back
+        # decrease width 
     if oneplot:
         #plotcover(subregion_front=region_front, subregion_back=region_back,
         #          striplocs=_striplocs, outname=name, 
