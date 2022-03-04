@@ -986,8 +986,9 @@ def plotdefaults(settings=1):
         region_fwidth = region_height / totalheight_cm * width_front_cm
         region_bwidth = region_height / totalheight_cm * width_back_cm
         rightcoord_front = 87.
-        region_front = [rightcoord_front, rightcoord_front - region_fwidth, 72.0, 52.5]
-        region_back = [region_front[1], region_front[1] + region_bwidth] + region_front[2:]
+        region_front = [72.0, 52.5, rightcoord_front, rightcoord_front - region_fwidth]
+        region_back = region_front
+        # region_back = [region_front[1], region_front[1] + region_bwidth] + region_front[2:]
         print(region_front)
         print(region_back)
         _subregion_front = region_front
