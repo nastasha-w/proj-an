@@ -3138,7 +3138,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
     l2ax.set_ylabel(y2label, fontsize=fontsize)
     
     ind_min = ncols - (nrows * ncols - numlines)
-    if nrows * ncols - numlines <= 2:
+    if nrows * ncols - numlines <= 2 or numlines == 3:
         labelax.set_xlabel(xlabel, fontsize=fontsize)    
     else:
         labelax1 = fig.add_subplot(grid[:nrows, :ind_min], frameon=False)
