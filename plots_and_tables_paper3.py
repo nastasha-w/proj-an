@@ -2862,15 +2862,14 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
     ls_mean = 'dotted'
     ls_median = 'solid'
     
-    
     if talkversion:
         if talkvnum == 0:
             mmin = 11.
-        elif talkvnum in [1, 2, 3, 4]:
+        elif talkvnum in [1, 2, 3, 4, 5]:
             mmin = 11.5
     else:
         mmin = mmin_default # 11. or 11.5
-        
+
     outname = 'radprof2d_0.1-0.25dex-annuli_L0100N1504_27_test3.x'+\
               '_SmAb_C2Sm_6p25slice_noEOS_to-2R200c_1000_centrals_' +\
               'halomasscomp_mean-median{sct}-{mmin}_rev1'
@@ -2906,7 +2905,8 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
             _lines = ['c6', 'n7', 'o8', 'ne10', 'mg12']
         elif talkvnum == 4:
             _lines = ['c6', 'o7r', 'o8', 'Fe17      16.7760A', 'ne10', 'mg12']
-        
+        elif talkvnum == 5:
+            _lines = ['o7r', 'o8', 'Fe17      16.7760A']
         numlines = len(_lines)
         fontsize = 14
         
@@ -2924,7 +2924,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
         figwidth = 11. 
         caxwidth = 1.
     
-    if ncols * nrows - numlines >= 2:
+    if ncols * nrows - numlines >= 2 or numlines == 3:
         cax_right = False
         _ncols = ncols
         panelwidth = figwidth / ncols
@@ -3199,7 +3199,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
                                     [ls_mean, ls_median], 
                                     [5, 6]):
                 if talkversion:
-                    if talkvnum == 2:
+                    if talkvnum in [2, 5]:
                         if ykey == ykey_mean:
                             continue
                     if ykey == ykey_mean:
@@ -3278,7 +3278,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
         ax.text(0.98, 0.97, linelabel, fontsize=fontsize,
                 transform=ax.transAxes, horizontalalignment='right',
                 verticalalignment='top')
-        if li == 0 and not (talkversion and talkvnum == 2):
+        if li == 0 and not (talkversion and talkvnum in [2, 5]):
             handles = [mlines.Line2D((), (), label=label, color='black', ls=ls,
                                      linewidth=2.) \
                        for ls, label in zip([ls_mean, ls_median], 
