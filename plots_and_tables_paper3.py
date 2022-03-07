@@ -2924,13 +2924,21 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
         figwidth = 11. 
         caxwidth = 1.
     
-    if ncols * nrows - numlines >= 2 or numlines == 3:
+    if ncols * nrows - numlines >= 2:
         cax_right = False
         _ncols = ncols
         panelwidth = figwidth / ncols
         width_ratios = [panelwidth] * ncols
         c_orientation = 'horizontal'
         c_aspect = 0.08
+    elif numlines == 3:
+        cax_right = False
+        _ncols = ncols
+        panelwidth = figwidth / ncols
+        width_ratios = [panelwidth] * ncols
+        c_orientation = 'horizontal'
+        c_aspect = 0.08
+        nrows = nrows + 1
     else:
         cax_right = True
         _ncols = ncols + 1
