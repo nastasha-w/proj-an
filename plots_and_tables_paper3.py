@@ -2756,16 +2756,6 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
     
     # get minimum SB for the different instruments
     omegat_use = [1e6] #[1e6, 1e7]
-    vals = ['{:.0e}'.format(t) for t in omegat_use]
-    vals = ', '.join(vals)
-    if talkversion:
-        legendtitle_minsb = 'min. SB ($5\\sigma$) for $\\Delta' +\
-            ' \\Omega \\, \\Delta t =$ \n $'+\
-            vals + '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
-    else:
-        legendtitle_minsb = 'min. SB ($5\\sigma$ detection) for \n $\\Delta' +\
-            ' \\Omega \\, \\Delta t = '+\
-            vals + '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
     
     filen_SB = 'minSBtable.dat'
     filen_PS20 = 'minSBtable_PS20_Fe-L-shell.dat'
@@ -2924,6 +2914,21 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
         figwidth = 11. 
         caxwidth = 1.
     
+    vals = ['{:.0e}'.format(t) for t in omegat_use]
+    vals = ', '.join(vals)
+    if talkversion:
+        legendtitle_minsb = 'min. SB ($5\\sigma$) for $\\Delta' +\
+            ' \\Omega \\, \\Delta t =$ \n $'+\
+            vals + '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
+        if numlines == 3:
+            legendtitle_minsb = 'min. SB ($5\\sigma$) for $\\Delta' +\
+            ' \\Omega \\, \\Delta t ='+\
+            vals + '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
+    else:
+        legendtitle_minsb = 'min. SB ($5\\sigma$ detection) for \n $\\Delta' +\
+            ' \\Omega \\, \\Delta t = '+\
+            vals + '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
+
     if ncols * nrows - numlines >= 2:
         cax_right = False
         _ncols = ncols
@@ -3116,8 +3121,10 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
         lax.axis('off')
         lax2.axis('off')
         
-        
-    labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
+    if numlines == 3:
+        labelax = fig.add_subplot(grid[:nrows - 1, :ncols], frameon=False)
+    else:
+        labelax = fig.add_subplot(grid[:nrows, :ncols], frameon=False)
     labelax.tick_params(labelcolor='none', top=False, bottom=False, 
                         left=False, right=False)
     labelax.set_ylabel(ylabel, fontsize=fontsize)
@@ -3131,7 +3138,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
     l2ax.set_ylabel(y2label, fontsize=fontsize)
     
     ind_min = ncols - (nrows * ncols - numlines)
-    if nrows * ncols - numlines <= 2 or numlines == 3:
+    if nrows * ncols - numlines <= 2:
         labelax.set_xlabel(xlabel, fontsize=fontsize)    
     else:
         labelax1 = fig.add_subplot(grid[:nrows, :ind_min], frameon=False)
