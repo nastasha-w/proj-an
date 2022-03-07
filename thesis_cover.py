@@ -565,6 +565,12 @@ def plotmaps(ion, line, region_cMpc, axis, pixsize_regionunits,
                                      4))
     
     xovery = (cdext[1] - cdext[0]) / (cdext[3] - cdext[2])
+    if subregion_front is not None and subregion_back is not None:
+        if np.all(np.array(subregion_front) == np.array(subregion_back)):
+            xovery = np.abs(subregion_front[1] - subregion_front[0]) /\
+                     np.abs(subregion_front[3] - subregion_front[2])
+            if transpose:
+                xovery = 1. / xovery
     gridspec_kw = {'top': 1., 'bottom': 0., 'left': 0., 'right': 1.}
     if figsize_front is None:
         figsize_front = (5.5, 5.5 / xovery)
@@ -981,7 +987,7 @@ def plotdefaults(settings=1):
         _striplocs = [69.8, 68., 62., 54.5]
         oneplot = False
         margin_cm = 0.0
-        spinewidth_cm = 0.5
+        spinewidth_cm = 0.0
         region_height =_region[1] - _region[0]
         region_fwidth = region_height / totalheight_cm * width_front_cm
         region_bwidth = region_height / totalheight_cm * width_back_cm
