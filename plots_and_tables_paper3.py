@@ -5077,7 +5077,7 @@ def addtablecontours(ax, line, maxfracs, **kwargs):
     return contourset
     
 # pd phase diagram
-def plot_phasediagrams_Lweighted(plotset='all'):
+def plot_phasediagrams_Lweighted(plotset='all', emtabcontours=True):
     '''
     plot phase diagrams weighted by line luminosity, mass, volume, 
     metal mass
@@ -5095,6 +5095,16 @@ def plot_phasediagrams_Lweighted(plotset='all'):
         weights = ['Mass', 'oxygen', 'o7r', 'o8', 'Fe17      17.0510A']
         contours = [['propvol', 'Mass'], ['iron', 'oxygen'],
                     ['o7r'], ['o8'], ['Fe17      17.0510A']]
+        contourlevels = [0.999, 0.99, 0.9]
+        contourstyles = ['dotted', 'dashed', 'solid']
+    elif plotset == 'o7r':
+        weights = ['o7r']
+        contours = [['o7r']]
+        contourlevels = [0.999, 0.99, 0.9]
+        contourstyles = ['dotted', 'dashed', 'solid']
+    elif plotset == 'Mass':
+        weights = ['Mass']
+        contours = [['propvol', 'Mass']]
         contourlevels = [0.999, 0.99, 0.9]
         contourstyles = ['dotted', 'dashed', 'solid']
     else:
@@ -5194,7 +5204,7 @@ def plot_phasediagrams_Lweighted(plotset='all'):
                                    dimshifts=None, 
                                    colors=[color] * len(contourlevels),
                                    linestyles=contourstyles, linewidth=1.)
-        if wt in all_lines_PS20 or wt in all_lines_SB:
+        if (wt in all_lines_PS20 or wt in all_lines_SB) and emtabcontours:
             addtablecontours(ax, wt, [0.1], colors=[_c1.yellow], 
                              linestyles=['dashdot'])
         label=namepdpanel(wt)
@@ -5226,14 +5236,15 @@ def plot_phasediagrams_Lweighted(plotset='all'):
                              color=colorlist[0], linewidth=1., linestyle=ls) \
                for level, ls in zip(contourlevels, contourstyles)]     
     axes[-1].legend(handles=handles, fontsize=fontsize, loc='lower right')
-    emtablabel = '$\\Lambda\\, \\mathrm{n}_{\\mathrm{H}}^{-2} \\, ' +\
-                 '\\mathrm{V}^{-1}$ = ' + \
-                 '\n$ 0.1 \\times \\mathrm{CIE}\\,\\mathrm{max}$'
-    handles2 = [mlines.Line2D((), (), label=emtablabel, 
-                             color=_c1.yellow, linewidth=1., 
-                             linestyle='dashdot')]
-    axes[-2].legend(handles=handles2, fontsize=fontsize - 1., 
-                    loc='lower right')
+    if emtabcontours:
+        emtablabel = '$\\Lambda\\, \\mathrm{n}_{\\mathrm{H}}^{-2} \\, ' +\
+                     '\\mathrm{V}^{-1}$ = ' + \
+                     '\n$ 0.1 \\times \\mathrm{CIE}\\,\\mathrm{max}$'
+        handles2 = [mlines.Line2D((), (), label=emtablabel, 
+                                 color=_c1.yellow, linewidth=1., 
+                                 linestyle='dashdot')]
+        axes[-2].legend(handles=handles2, fontsize=fontsize - 1., 
+                        loc='lower right')
     
     outname = mdir + 'phasediagram_L0100N1504_27_{}.pdf'
     plt.savefig(outname.format(plotset), format='pdf', bbox_inches='tight')
