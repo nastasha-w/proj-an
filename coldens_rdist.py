@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # to calculate the radial distribution of column densities around some point
 
 import numpy as np
@@ -3027,12 +3029,12 @@ def plot_pethalos1_rpofiles(dct_rp, ionname, ion):
     fig.suptitle(r'2d radial profiles for $\mathrm{%s}$'%ionname)
     for label in labels:
         for mind in range(len(masses)):
-    	    if pets[label][mind] is None:
-    	        continue
-    	    subplot_pethalos(dct_rp[str(pets[label][mind])],\
-    	      bins, label, axes[mind], color=petcolors[label],\
-    	      ylabel=ylabel, xlabel=xlabel, title=titles[mind],\
-    	      fontsize=fontsize)
+            if pets[label][mind] is None:
+                continue
+            subplot_pethalos(dct_rp[str(pets[label][mind])],
+              bins, label, axes[mind], color=petcolors[label],
+              ylabel=ylabel, xlabel=xlabel, title=titles[mind],
+              fontsize=fontsize)
     handles, labels = axes[0].get_legend_handles_labels()
     lax.legend(handles, labels, fontsize=fontsize, ncol=2)
     lax.axis('off')
