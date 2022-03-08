@@ -3768,7 +3768,7 @@ elif jobind in range(20481, 20490):
     wt = wts[jobind - 20481]
     ax = axs[jobind - 20481]
 
-    m3.ol.ndir = '~/waystation/'
+    m3.ol.ndir = '/home/wijers/waystation/'
     
     simnum = 'L0100N1504'
     snapnum = 27
