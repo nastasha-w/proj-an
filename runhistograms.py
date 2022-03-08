@@ -3752,11 +3752,60 @@ elif jobind in range(20454, 20481):
                     print('Deleting incomplete data group')
     if not done:
         m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
-### also redo for n6-actualr:
-# x p3g.extracthists_luminosity()
-# x p3g.extract_totweighted_luminosity(samplename='L0100N1504_27_Mh0p5dex_1000',\
-#              addedges=(0.0, 1.), weight='Luminosity', logM200min=11.0)
-# - rad. prof. at end of this file
+
+# mass traced by a given fraction of ions. 
+# mass axes are just to get totals since zero ion density particles
+# won't be counted otherwise
+elif jobind in range(20481, 20490):
+    wts = ['Mass', 'Mass', ('Nion', 'o7'), ('Nion', 'o8'),
+           'Mass', 'Mass', ('Nion', 'o7'), ('Nion', 'o7'),
+           'Mass', ('Nion', 'o7'), ('Nion', 'o8')]
+    axs = [('Niondens', 'o7'), ('Niondens', 'o8'), 
+           ('Niondens', 'o7'), ('Niondens', 'o8'),
+           ('Nion', 'o7'), ('Nion', 'o8'), 
+           ('Nion', 'o7'), ('Nion', 'o8'),
+           'Mass', 'Mass', 'Mass']
+    wt = wts[jobind - 20481]
+    ax = axs[jobind - 20481]
+
+    m3.ol.ndir = '~/waystation/'
+    
+    simnum = 'L0100N1504'
+    snapnum = 27
+    var = 'REFERENCE'
+    if wt == 'Mass':
+        ptype = 'basic'
+        kwargs = {'quantity': wt}
+    elif wt[0] == 'Nion':
+        ptype = 'Nion'
+        kwargs = {'ion': wt[1]}
+    if ax[0].startswith('Nion'): 
+        axesdct = [{'ptype': ax[0], 'ion': ax[1]}]
+    else:
+        axesdct = [{'ptype': 'basic', 'quantity': ax}]
+    axbins = 0.1
+    logax = [True]
+    
+    args = (ptype, simnum, snapnum, var, axesdct)
+    _kwargs = dict(simulation='eagle',
+                   excludeSFR='T4', abunds='Pt', parttype='0',
+                   axbins=axbins,
+                   sylviasshtables=False, bensgadget2tables=False,
+                   allinR200c=True, mdef='200c',
+                   L_x=None, L_y=None, L_z=None, centre=None, Ls_in_Mpc=True,
+                   misc=None,
+                   name_append=None, logax=logax, loghist=False,
+                  )
+    _kwargs.update(kwargs)
+    kwargs = _kwargs
+    filen, grpn = m3.makehistograms_perparticle(*args, nameonly=True, **kwargs)
+    done = False
+    if os.path.isfile(filen):
+        with h5py.File(filen) as fi:
+            if grpn in fi:
+                done = True
+    if not done:
+        m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
 
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
