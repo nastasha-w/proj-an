@@ -1562,7 +1562,7 @@ def gethalomask_basic(xpix, size, pixsize, indct,
     closest_normradius: bool
         if excluding halos, exclude based on closest halo center normalised
         by radius (otherwise, base on which halo is closest)
-    axis: str: ‘x’, ‘y’, or ‘z’
+    axis: str: 'x', 'y', or 'z'
         which is the line of sight axis for the map? Matches the projection
         axis in column density maps.
     periodic: bool
