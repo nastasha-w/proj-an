@@ -3757,8 +3757,10 @@ elif jobind in range(20454, 20481):
 # mass axes are just to get totals since zero ion density particles
 # won't be counted otherwise
 elif jobind in range(20481, 20490):
-    wts = ['Mass', 'Mass', ('Nion', 'o7'), ('Nion', 'o8'),
-           'Mass', 'Mass', ('Nion', 'o7'), ('Nion', 'o7'),
+    wts = ['Mass', 'Mass', 
+           ('Nion', 'o7'), ('Nion', 'o8'),
+           'Mass', 'Mass', 
+           ('Nion', 'o7'), ('Nion', 'o8'),
            'Mass', ('Nion', 'o7'), ('Nion', 'o8')]
     axs = [('Niondens', 'o7'), ('Niondens', 'o8'), 
            ('Niondens', 'o7'), ('Niondens', 'o8'),
