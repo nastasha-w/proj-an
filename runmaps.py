@@ -54,7 +54,7 @@ if jobind in range(1, 97):
               }
     outname = m3.make_map(*args, nameonly=True, **kwargs)
     run = True
-    if os.path.isfileO(outname[0]):
+    if os.path.isfile(outname[0]):
         if outname[1] is None:
             run = False
         elif os.path.isfile(outname[1]):
