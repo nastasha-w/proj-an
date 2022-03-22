@@ -5750,7 +5750,8 @@ def make_map(simnum, snapnum, centre, L_x, L_y, L_z, npix_x, npix_y,
 
     NumPart = vardict_WQ.particle['coords_cMpc-vel'].shape[0]
     if parttype == '0':
-        lsmooth = vardict_WQ.readif('SmoothingLength', rawunits=True)
+        vardict_WQ.readif('SmoothingLength', rawunits=True)
+        lsmooth =  vardict_WQ['SmoothingLength']
         conv = vardict_WQ.CGSconv['SmoothingLength'] / c.cm_per_mpc / vardict_WQ.simfile.a
         print(conv)
         print(lsmooth)
