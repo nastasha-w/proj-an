@@ -3809,6 +3809,32 @@ elif jobind in range(20481, 20490):
     if not done:
         m3.makehistograms_perparticle(*args, nameonly=False, **kwargs)
 
+## for Smita Mathur's proposal 2022-03
+# halo projection CDDFs for H I, Si IV, C IV
+elif jobind in range(20490, 20498):
+    subind = jobind - 20490
+    ions_hi = ['o7', 'o8']
+    ions_lo = ['c1', 'fe2', 'si4', 'c4']
+    
+    ion_hi = ions_hi[subind // len(ions_lo)]
+    ion_lo = ions_lo[subind % len(ions_lo)]
+    
+    fills_100 =  [str(i) for i in (np.arange(16) + 0.5) * 100./16.]
+    bins = np.arange(-28., 25.01, 0.05)
+    bins = np.array([-np.inf] + list(bins) + [np.inf])
+        
+    filebase = 'coldens_{ion}_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-T_L0100N1504_28_test3.7_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.hdf5'
+    fb_hi = filebase.format(ion=ion_hi)
+    fb_lo = filebase.format(ion=ion_lo)
+    filebases = [fb_lo, fb_hi]
+
+    outname = 'hist_' + filebase.format(ion='-'.join([ion_lo, ion_hi]))
+    outname = outname%('-all')
+    
+    mh.makehist_masked_toh5py(filebases, fills=fills_100, bins=[bins],
+                              includeinf=True, outfilename=outname)
+    
+
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################
