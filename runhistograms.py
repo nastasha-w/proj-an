@@ -3822,6 +3822,7 @@ elif jobind in range(20490, 20498):
     fills_100 =  [str(i) for i in (np.arange(16) + 0.5) * 100./16.]
     bins = np.arange(-28., 25.01, 0.05)
     bins = np.array([-np.inf] + list(bins) + [np.inf])
+    bins = [bins, bins]
         
     filebase = 'coldens_{ion}_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-T_L0100N1504_28_test3.7_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.hdf5'
     fb_hi = filebase.format(ion=ion_hi)
