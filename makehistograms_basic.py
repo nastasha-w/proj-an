@@ -90,11 +90,11 @@ def makehist(arrdict, **kwargs):
          # extract arrays, load (should work for open npz or hdf5 files. Yay python!)
         inarrs = [arr['arr_0'][sel] if 'arr_0' in arr.keys() else\
                   arr['map'][sel] \
-                  for arr in arrdict[arrdict.keys()[0]]]
+                  for arr in arrdict[list(arrdict.keys())[0]]]
         #print(inarrs)
         if kwargss['includeinf']:
             allfinite = slice(None, None, None)
-            print('Doing key %s'%(arrdict.keys()[0]))
+            print('Doing key %s'%(list(arrdict.keys())[0]))
         else:
             allfinite = np.all(np.array([np.isfinite(inarrs[ind]) for ind in range(len(inarrs))]), axis=0) # check where all arrays are finite 
             print('For key %s, %i values were excluded for being non-finite.'%(arrdict.keys()[0],np.prod(allfinite.shape)-np.sum(allfinite)))
@@ -367,9 +367,16 @@ def makehist_masked_toh5py(*filenames, **kwargs):
             maskfiles = [filen if filen is None else ol.ndir + filen if '/' not in filen else filen for filen in maskfiles]
             maskfiles = [filen if filen is None else filen + '.hdf5' if filen[-5:] != '.hdf5' else filen for filen in maskfiles]
         else:
-            maskfiles = {fill: [filen if filen is None else ol.ndir + filen if '/' not in filen else filen for filen in maskfiles[fill]] for fill in maskfiles.keys()}
-            maskfiles = {fill: [filen if filen is None else filen + '.hdf5' if filen[-5:] != '.hdf5' else filen for filen in maskfiles[fill]] for fill in maskfiles.keys()}
-            k0 = maskfiles.keys()[0]
+            maskfiles = {fill: [filen if filen is None else \
+                                ol.ndir + filen if '/' not in filen else \
+                                filen \
+                                for filen in maskfiles[fill]] \
+                         for fill in maskfiles.keys()}
+            maskfiles = {fill: [filen if filen is None else \
+                                filen + '.hdf5' if filen[-5:] != '.hdf5' else \
+                                filen for filen in maskfiles[fill]] \
+                         for fill in maskfiles.keys()}
+            k0 = list(maskfiles.keys())[0]
             if not np.all([len(maskfiles[key]) == len(maskfiles[k0]) for key in maskfiles.keys()]):
                 raise ValueError('The number of masks for different fills does not match')
         del kwargs['maskfiles']
@@ -378,7 +385,7 @@ def makehist_masked_toh5py(*filenames, **kwargs):
         if maskfiles == [None]:
             masknames = [None]
         else:    
-            masknames = ['masks_%i'%ind for ind in range(len(maskfiles[maskfiles.keys()[0]]))]
+            masknames = ['masks_%i'%ind for ind in range(len(maskfiles[list(maskfiles.keys())[0]]))]
     else:
         masknames = kwargs['masknames']
         del kwargs['masknames']
@@ -418,13 +425,13 @@ def makehist_masked_toh5py(*filenames, **kwargs):
                             
                             if 'included' in mfsel.keys():
                                 ssubgrp = subgrp.create_group('selection/included')
-                                keys = mfsel['included'].keys()
+                                keys = list(mfsel['included'].keys())
                                 keys.remove('galaxyid')
                                 [ssubgrp.create_dataset(key, data=np.array(mfsel['included/%s'%key])) for key in keys]
                                 
                             if 'excluded' in mfsel.keys():
                                 ssubgrp = subgrp.create_group('selection/excluded')
-                                keys = mfsel['excluded'].keys()
+                                keys = list(mfsel['excluded'].keys())
                                 keys.remove('galaxyid')
                                 [ssubgrp.create_dataset(key, data=np.array(mfsel['excluded/%s'%key])) for key in keys]
                         except KeyError:
@@ -443,13 +450,13 @@ def makehist_masked_toh5py(*filenames, **kwargs):
                                 
                                 if 'included' in mfsel.keys():
                                     ssubgrp = subgrp.create_group('selection/included')
-                                    keys = mfsel['included'].keys()
+                                    keys = list(mfsel['included'].keys())
                                     keys.remove('galaxyid')
                                     [ssubgrp.create_dataset(key, data=np.array(mfsel['included/%s'%key])) for key in keys]
                                     
                                 if 'excluded' in mfsel.keys():
                                     ssubgrp = subgrp.create_group('selection/excluded')
-                                    keys = mfsel['excluded'].keys()
+                                    keys = list(mfsel['excluded'].keys())
                                     keys.remove('galaxyid')
                                     [ssubgrp.create_dataset(key, data=np.array(mfsel['excluded/%s'%key])) for key in keys]
                             except KeyError:
@@ -457,8 +464,12 @@ def makehist_masked_toh5py(*filenames, **kwargs):
                                 
     # run the actual histograms
     if fills is None:
-        hists, edges, covfracs = makehist_1slice_masked(*tuple(filenames), maskfilenames=maskfiles, **kwargs)
-        if not np.all(np.array([np.all(np.array([np.all(kwargs['bins'][i] == edges[key][i]) for i in range(len(kwargs['bins'])) ])) for key in edges.keys()])):
+        hists, edges, covfracs = makehist_1slice_masked(*tuple(filenames), 
+                                    maskfilenames=maskfiles, **kwargs)
+        if not np.all(np.array([np.all(np.array([np.all(\
+                      kwargs['bins'][i] == edges[key][i]) \
+                      for i in range(len(kwargs['bins'])) ])) \
+                      for key in edges.keys()])):
             errmes = "Input bins do not match returned edges"
             errmes = errmes + '\n no fills call'
             errmes = errmes + '\ninput edges were:\n' + str(kwargs['bins'])
@@ -474,7 +485,9 @@ def makehist_masked_toh5py(*filenames, **kwargs):
             #print(maskkeytoname)
             #masknametokey = {masknames[i]: maskkeys[i] for i in range(len(masknames))}
             subhists, edges, subcovfracs = makehist_1slice_masked(*(filename%fill for filename in filenames), maskfilenames=maskfiles[fill], **kwargs)
-            if not np.all(np.array([np.all(np.array([np.all(kwargs['bins'][i] == edges[key][i]) for i in range(len(kwargs['bins'])) ])) for key in edges.keys()])):
+            if not np.all(np.array([np.all(np.array([np.all(kwargs['bins'][i] == edges[key][i]) \
+                    for i in range(len(kwargs['bins'])) ])) \
+                    for key in edges.keys()])):
                 errmes = "Input bins do not match returned edges"
                 errmes = errmes + '\n error occurred for fill %s'%(fill)
                 errmes = errmes + '\ninput edges were:\n' + str(kwargs['bins'])
