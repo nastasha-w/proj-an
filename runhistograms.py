@@ -3826,12 +3826,12 @@ elif jobind in range(20490, 20498):
     filebase = 'coldens_{ion}_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-T_L0100N1504_28_test3.7_PtAb_C2Sm_32000pix_6.25slice_zcen%s_z-projection_T4EOS.hdf5'
     fb_hi = filebase.format(ion=ion_hi)
     fb_lo = filebase.format(ion=ion_lo)
-    filebases = [fb_lo, fb_hi]
+    filebases = (fb_lo, fb_hi)
 
     outname = 'hist_' + filebase.format(ion='-'.join([ion_lo, ion_hi]))
     outname = outname%('-all')
     
-    mh.makehist_masked_toh5py(filebases, fills=fills_100, bins=[bins],
+    mh.makehist_masked_toh5py(*filebases, fills=fills_100, bins=[bins],
                               includeinf=True, outfilename=outname)
     
 

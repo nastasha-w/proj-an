@@ -404,9 +404,13 @@ def makehist_masked_toh5py(*filenames, **kwargs):
 
     # record the more compact mask file data and the filenames
     with h5py.File(outfilename, 'a') as fo:
-        fo.create_dataset('input_filenames', data=np.array([filen.split('/')[-1] for filen in filenames]))
+        fo.create_dataset('input_filenames', 
+                          data=np.array([filen.split('/')[-1] \
+                                         for filen in filenames]))
         bgrp = fo.create_group('bins')
-        [bgrp.create_dataset('axis_%i'%i, data=np.array(kwargs['bins'][i])) for i in range(len(kwargs['bins']))]
+        [bgrp.create_dataset('axis_%i'%i, 
+                             data=np.array(kwargs['bins'][i])) \
+                                           for i in range(len(kwargs['bins']))]
         
         if fills is not None:
             fo.create_dataset('fills', data=np.array([str(fill) for fill in fills]))
