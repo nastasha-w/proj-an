@@ -17,6 +17,7 @@ import cosmo_utils as cu
 import eagle_constants_and_units as c
 import make_maps_v3_master as m3
 import make_maps_opts_locs as ol
+import plot_utils as pu # for percentiles_from_histogram
 
 # directory for metadata files
 tdir = '/net/luttero/data2/imgs/CGM/3dprof/'
@@ -669,7 +670,7 @@ def genhists_luminositydist(samplename='L0100N1504_27_Mh0p5dex_1000',\
     axdct: 'Trprof': T profile
            'nrprof': n_H profile
            'Zrprof': Z profile
-           'pds':    n_H, T, Z in course radial bins
+           'pds':    n_H, T, Z in coarse radial bins
            '{elt}-rprof': Smoothed Z profile for an element (for Mass- and 
            Volume weighttypes)
     idsel: project only a subset of galaxies according to the given list
@@ -2015,3 +2016,220 @@ def deletesets(filen):
         with h5py.File(filen, 'a') as fi:
             del fi[groupn]
     
+
+def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None, 
+                          weighttype='Mass', histtype='rprof_rho-T-nion',
+                          binby=('M200c_Msun', 
+                          10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),
+                          percentiles=np.array([2., 10., 50., 80., 98.]),
+                          inclSFgas=True):
+    '''
+    from q - 3D radius histograms weighted by w, extract w-weighted 
+    percentiles of the q distribution as a function of radius
+    done for each individual galaxy in the sample
+
+    geared towards a particular luminosity-weighted sample
+    other samples will need additional paramters to determine whether 
+    to select or sum over certain axes.
+
+    idsel: project only a subset of galaxies according to the given list
+           useful for testing on a few galaxies
+           ! do not run in  parallel: different processes will try to write to
+           the same list of output files
+    binby: only used for sample subselection and consistency checks 
+           (i.e., values above and below the bin range are excluded,
+            histogram axes must match.)
+            some data is saved per binby group though, to save some space
+    percaxis: axis to get the profile for
+    '''
+    if samplename is None:
+        samplename = defaults['sample']
+    fdata = dataname(samplename)
+    fname = files(samplename, weighttype, histtype=histtype)
+    
+    with open(fdata, 'r') as fi:
+        # scan for halo catalogue (only metadata needed for this)
+        headlen = 0
+        halocat = None
+        while True:
+            line = fi.readline()
+            if line == '':
+                if halocat is None:
+                    raise RuntimeError('Reached the end of %s without finding the halo catalogue name'%(fdata))
+                else:
+                    break
+            elif line.startswith('halocat'):
+                halocat = line.split(':')[1]
+                halocat = halocat.strip()
+                headlen += 1
+            elif ':' in line or line == '\n':
+                headlen += 1
+    
+    with h5py.File(halocat, 'r') as hc:
+        hed = hc['Header']
+        cosmopars = {key: item for key, item in hed['cosmopars'].attrs.items()}
+        #simnum = hed.attrs['simnum']
+        #snapnum = hed.attrs['snapnum']
+        #var = hed.attrs['var']
+        #ap = hed.attrs['subhalo_aperture_size_Mstar_Mbh_SFR_pkpc']
+    
+    galdata_all = pd.read_csv(fdata, header=headlen, sep='\t', 
+                              index_col='galaxyid')
+    galname_all = pd.read_csv(fname, header=0, sep='\t', 
+                              index_col='galaxyid')
+    galids = np.array(galname_all.index) # galdata may also include non-selected haloes
+    
+    colsel = binby[0]
+    galbins = binby[1]
+    numgalbins = len(galbins) - 1
+    edgedata = [None] * numgalbins
+    galids_base = [None] * numgalbins
+    galids_bin = [[]] * numgalbins
+    ggrpn_base = 'galaxy_{galid}'
+
+    # construct name of summed histogram by removing position specs from a specific one
+    outname = galname_all.at[galids[0], 'filename']
+    pathparts = outname.split('/')
+    namepart = pathparts[-1]
+    ext = namepart.split('.')[-1]
+    namepart = '.'.join(namepart.split('.')[:-1])
+    nameparts = (namepart).split('_')
+    outname = []
+    for part in nameparts:
+        if not (part[0] in ['x', 'y', 'z'] and '-pm' in part):
+            outname.append(part)
+    outname.append('indiv-gal-rad3Dprof')
+    outname = '_'.join(outname)
+    outname = '/'.join(pathparts[:-1]) + '/' +  outname + '.' + ext
+    #print(outname)
+    
+    # axis data attributes that are allowed to differ between summed histograms
+    neqlist = ['number of particles',\
+               'number of particles > max value',\
+               'number of particles < min value',\
+               'number of particles with finite values']
+    
+    with h5py.File(outname, 'a') as fo:
+        # encodes data stored -> same name is a basic consistency check 
+        # for the sample
+        igrpn = galname_all.at[galids[0], 'groupname']
+        
+        for galid in galids:
+            selval = galdata_all.at[galid, colsel]
+            binind = np.searchsorted(galbins, selval, side='right') - 1
+            if binind in [-1, numgalbins]: # halo/stellar mass does not fall into any of the selected ranges
+                continue
+            
+            # retrieve data from this histogram for checks
+            igrpn_temp = galname_all.at[galid, 'groupname']   
+            if igrpn_temp != igrpn:
+                raise RuntimeError('histogram names for galaxyid %i: %s, %i: %s did not match'%(galids[0], igrpn, galid, igrpn_temp))
+            ifilen_temp = galname_all.at[galid, 'filename']   
+            
+            #try:
+            with h5py.File(ifilen_temp, 'r') as fit:
+                igrp_t = fit[igrpn_temp]
+                hist_t = np.array(igrp_t['histogram'])
+                if bool(igrp_t['histogram'].attrs['log']):
+                    hist_t = 10**hist_t
+                #wtsum_t = igrp_t['histogram'].attrs['sum of weights'] # includes stuff outside the maximum radial bin
+                edges_t = [np.array(igrp_t['binedges/Axis%i'%i]) for i in range(len(hist_t.shape))]
+                edgekeys_t = list(igrp_t.keys())
+                edgekeys_t.remove('histogram')
+                edgekeys_t.remove('binedges')
+                edgedata_t = {}
+                for ekey in edgekeys_t: 
+                    edgedata_t[ekey] =  {akey: item for akey, item in igrp_t[ekey].attrs.items()}
+                    for akey in neqlist:
+                        del edgedata_t[ekey][akey]
+            #except IOError:
+            #    print('Failed to find file for galaxy %i'%(galid))
+            #continue
+                        
+            # run compatibility checks, align/expand edges
+            galids_bin[binind].append(galid)
+            if edgedata[binind] is None:
+                edgedata[binind] = edgedata_t
+                galids_base[binind] = galid
+            else:
+                if not set(edgekeys_t) == set(edgedata[binind].keys()):
+                    msg = 'Mismatch in histogram axis names for galaxyids %i, %i'
+                    msg = msg%(galids_base[binind], galid)
+                    raise RuntimeError(msg)
+                if not np.all([edgedata_t[ekey][akey] == \
+                               edgedata[binind][akey] \
+                               for akey in edgedata_t[ekey].keys()] \
+                              for ekey in edgekeys_t):
+                    msg = 'Mismatch in histogram axis properties for galaxyids %i, %i'
+                    msg = msg%(galids_base[binind], galid)
+                    raise RuntimeError(msg)
+            
+            # edges are compatible: shift and combine histograms
+            # radial bins: only shift if R200c units needed
+            try:
+                rax = edgedata_t['3Dradius']['histogram axis']
+            except KeyError:
+                raise KeyError('Could not retrieve histogram axis for galaxy %i, file %s'%(galid, ifilen_temp))
+            try:
+                pax = edgedata_t[percaxis]['histogram axis']
+            except KeyError:
+                raise KeyError('Could not retrieve percentile property axis {} for galaxy {}, file {}'%(percaxis, galid, ifilen_temp))
+            
+            numaxes = len(edges_t)
+            sumaxes = list(range(numaxes))
+            sumaxes.remove(pax)
+            sumaxes.remove(rax)
+            axessel = [slice(None, None, None)] * numaxes
+            if not inclSFgas:
+                sfaxname = 'StarFormationRate'
+                try:
+                    sfax = edgedata_t[sfaxname]['histogram axis']
+                except KeyError:
+                    raise KeyError('Could not retrieve SFR axis {} for galaxy {}, file {}'%(sfaxname, galid, ifilen_temp))
+                sfi = np.where(np.isclose(edges_t[sfax]), 0.)[0][0]
+                axessel[sfax] = slice(0, sfi, None)
+            if len(sumaxes) > 1:
+                hist_t = np.sum(hist_t[tuple(axessel)], axis=sumaxes)
+            # axes in summed histogram
+            _pax, _rax = np.argsort([pax, rax])
+            # shape: percentile, radial bin
+            percs = pu.percentiles_from_histogram(hist_t, edges_t[pax], 
+                                                  axis=_pax, 
+                                                  percentiles=percentiles)
+            
+            # store the data
+            # don't forget the list of galids (galids_bin, and edgedata)
+            #print(hists)
+
+            ogrpn = '%s/%s'%(percaxis, samplename)
+            if ogrpn in fo:
+               ogrp = fo[ogrpn]
+            else:
+                ogrp = fo.create_group(ogrpn)
+            
+            ggrpn = ggrpn_base.format(galid=galid)
+            ggrp = ogrp.create_group(ggrpn) if ggrpn not in ogrp\
+                     else ogrp[ggrpn] 
+            ggrp.create_dataset('percentiles', data=percs)
+            ggrp['percentiles'].attrs.create('axis_perc', 0)
+            ggrp['percentiles'].attrs.create('axis_r3D', 1)
+            ggrp.create_dataset('edges_r3D', data=edges_t[pax])
+            ggrp['edges_r3D'].attrs.create('units', np.string_('cm'))
+            ggrp['edges_r3D'].attrs.create('comoving', False)
+
+    for bi in range(numgalbins):
+        bgrpn = binby[0] + \
+                '_{:.2f}-{:.2f}'.format(binby[1][bi], binby[1][bi + 1])
+        bgrp = ogrp.create_group(bgrpn)
+        edged = edgedata[bi]
+        hgrp = bgrp.create_group('orig_hist_data')
+        for key in edged.keys():
+            hgrp.create_group(key)
+            for skey in edged[key].keys():
+                m3.saveattr(bgrp[key], skey, edged[key][skey])
+                
+        bgrp.create_dataset('galaxyids', data=np.array(galids_bin[binind]))
+        bgrp.create_dataset('percentiles', data=percentiles)
+            
+    print('Saved data to file {}'.format(outname))  
+    print('Main hdf5 group: {}/{}'.format(igrpn, samplename))
