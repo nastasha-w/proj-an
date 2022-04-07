@@ -2077,8 +2077,15 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                               index_col='galaxyid')
     galname_all = pd.read_csv(fname, header=0, sep='\t', 
                               index_col='galaxyid')
-    galids = np.array(galname_all.index) # galdata may also include non-selected haloes
     
+    if idsel is not None:
+        if isinstance(idsel, slice):
+            galids = np.array(galdata_all.index)[idsel]
+        else:
+            galids = idsel
+    else:
+        galids = np.array(galname_all.index) # galdata may also include non-selected haloes
+
     colsel = binby[0]
     galbins = binby[1]
     numgalbins = len(galbins) - 1
@@ -2216,7 +2223,13 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             ggrp.create_dataset('edges_r3D', data=edges_t[pax])
             ggrp['edges_r3D'].attrs.create('units', np.string_('cm'))
             ggrp['edges_r3D'].attrs.create('comoving', False)
-
+    
+    hgrp = ogrp.create_group('Header')
+    cgrp = hgrp.create_group('cosmopars')
+    for key in cosmopars:
+        cgrp.attrs.create(key, cosmopars[key])
+    hgrp.attrs.create('galaxy_data_file', np.string_(fdata))
+    hgrp.attrs.create('galaxy_histogram_file_list', np.string_(fname))
     for bi in range(numgalbins):
         bgrpn = binby[0] + \
                 '_{:.2f}-{:.2f}'.format(binby[1][bi], binby[1][bi + 1])
