@@ -2314,11 +2314,12 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                     '_{:.2f}-{:.2f}'.format(binby[1][bi], binby[1][bi + 1])
             bgrp = ogrp.create_group(bgrpn)
             edged = edgedata[bi]
-            hgrp = bgrp.create_group('orig_hist_data')
-            for key in edged.keys():
-                hgrp.create_group(key)
-                for skey in edged[key].keys():
-                    m3.saveattr(bgrp[key], skey, edged[key][skey])
+            if edged is not None: # in test cases, a bin may be empty
+                hgrp = bgrp.create_group('orig_hist_data')
+                for key in edged.keys():
+                    hgrp.create_group(key)
+                    for skey in edged[key].keys():
+                        m3.saveattr(bgrp[key], skey, edged[key][skey])
                 
             bgrp.create_dataset('galaxyids', data=np.array(galids_bin[binind]))
             bgrp.create_dataset('percentiles', data=percentiles)
