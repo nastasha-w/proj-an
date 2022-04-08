@@ -3844,16 +3844,27 @@ elif jobind in range(20498, 20516):
                    'Fe17      15.2620A', 'ne9r', 'ne10', 'mg11r', 'mg12',
                    'si13r']
 
-    weighttype = weighttypes[jobind - 20498]
-    weighttype = 'em-' + weighttype.replace(' ', '-')
+    line = weighttypes[jobind - 20498]
+    weighttype = 'em-' + line.replace(' ', '-')
     samplename = 'L0100N1504_27_Mh0p5dex_1000'
     binby = ('M200c_Msun', 
              10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.]))
+    percvals = np.array([2., 10., 50., 90., 98.])
+
+    ps20str = '_PS20-iontab-UVB-dust1-CR1-G1-shield1_depletion-F' \
+              if '-' in weighttype else '' 
+    ion = line.split(' ')[0]
+    elt = ol.elements_ion[ion.lower()].capitalize()
+    percaxes = {'Trprof': 'Temperature_T4EOS',
+                'nrprof': 'Niondens_hydrogen_SmAb{}_T4EOS'.format(ps20str),
+                'Zrprof': 'SmoothedElementAbundance-{}_T4EOS'.format(elt),
+                }
     for axdct in ['Trprof', 'nrprof', 'Zrprof']:
-        p3g.extract_indiv_radprof(percaxis=None, samplename=samplename,
+        percaxis = percaxes[axdct]
+        p3g.extract_indiv_radprof(percaxis=paercaxis, samplename=samplename,
                                   idsel=None, weighttype=weighttype, 
                                   histtype=axdct, binby=binby,
-                                  percentiles=np.array([2., 10., 50., 90., 98.]),
+                                  percentiles=percvals,
                                   inclSFgas=True)
 
 elif jobind in range(20516, 20518):
@@ -3864,6 +3875,7 @@ elif jobind in range(20516, 20518):
     axdcts = ['{elt}-rprof'.format(elt=elt) for elt in metals]
     axdcts += ['Trprof', 'nrprof']
     weighttypes = ['Mass', 'Volume']
+    percvals = np.array([2., 10., 50., 90., 98.])
     binby = ('M200c_Msun', 
              10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.]))
     
@@ -3871,12 +3883,19 @@ elif jobind in range(20516, 20518):
     # trying to run axdcts concurrently will just cause I/O errors
     weighttype = weighttypes[jobind - 20516]
     for axdct in axdcts:
-        p3g.extract_indiv_radprof(percaxis=None, samplename=samplename,
+        if axdct == 'Trprof':
+            percaxis = 'Temperature_T4EOS'
+        elif axdct == 'nrprof':
+            percaxis = 'Niondens_hydrogen_SmAb_T4EOS'
+        else:
+            elt = axdct.split('-')[0]
+            percaxis = 'SmoothedElementAbundance-{}_T4EOS'.format(elt)
+        p3g.extract_indiv_radprof(percaxis=percaxis, samplename=samplename,
                                   idsel=None, weighttype=weighttype, 
                                   histtype=axdct, binby=binby,
-                                  percentiles=np.array([2., 10., 50., 90., 98.]),
+                                  percentiles=percvals,
                                   inclSFgas=True)
-                                  
+
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################
