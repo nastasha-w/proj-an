@@ -2168,6 +2168,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
     for part in nameparts:
         if not (part[0] in ['x', 'y', 'z'] and '-pm' in part):
             outname.append(part)
+    outname.append('inclSFgas' if inclSFgas else 'exclSFgas')
     outname.append('indiv-gal-rad3Dprof')
     outname = '_'.join(outname)
     outname = '/'.join(pathparts[:-1]) + '/' +  outname + '.' + ext
@@ -2297,6 +2298,11 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             ggrp['edges_r3D'].attrs.create('units', np.string_('cm'))
             ggrp['edges_r3D'].attrs.create('comoving', False)
     
+    ogrpn = '%s/%s'%(percaxis, samplename)
+    if ogrpn in fo:
+        ogrp = fo[ogrpn]
+    else:
+        ogrp = fo.create_group(ogrpn)
     hgrp = ogrp.create_group('Header')
     cgrp = hgrp.create_group('cosmopars')
     for key in cosmopars:
@@ -2509,9 +2515,8 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             # axes in summed histogram
             _pax, _rax = np.argsort([pax, rax])
             # shape: percentile, radial bin
-            percs = pu.percentiles_from_histogram(hist_t, edges_t[pax], 
-                                                  axis=_pax, 
-                                                  percentiles=percentiles)
+            percs = percentiles_from_histogram_handlezeros(hist_t, 
+                        edges_t[pax], axis=_pax, percentiles=percentiles)
             
             # store the data
             # don't forget the list of galids (galids_bin, and edgedata)
