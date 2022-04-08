@@ -2172,7 +2172,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
     outname.append('indiv-gal-rad3Dprof')
     outname = '_'.join(outname)
     outname = '/'.join(pathparts[:-1]) + '/' +  outname + '.' + ext
-    #print(outname)
+    print('will save to: {}'.format(outname))
     
     # axis data attributes that are allowed to differ between summed histograms
     neqlist = ['number of particles',\
@@ -2298,30 +2298,30 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             ggrp['edges_r3D'].attrs.create('units', np.string_('cm'))
             ggrp['edges_r3D'].attrs.create('comoving', False)
     
-    ogrpn = '%s/%s'%(percaxis, samplename)
-    if ogrpn in fo:
-        ogrp = fo[ogrpn]
-    else:
-        ogrp = fo.create_group(ogrpn)
-    hgrp = ogrp.create_group('Header')
-    cgrp = hgrp.create_group('cosmopars')
-    for key in cosmopars:
-        cgrp.attrs.create(key, cosmopars[key])
-    hgrp.attrs.create('galaxy_data_file', np.string_(fdata))
-    hgrp.attrs.create('galaxy_histogram_file_list', np.string_(fname))
-    for bi in range(numgalbins):
-        bgrpn = binby[0] + \
-                '_{:.2f}-{:.2f}'.format(binby[1][bi], binby[1][bi + 1])
-        bgrp = ogrp.create_group(bgrpn)
-        edged = edgedata[bi]
-        hgrp = bgrp.create_group('orig_hist_data')
-        for key in edged.keys():
-            hgrp.create_group(key)
-            for skey in edged[key].keys():
-                m3.saveattr(bgrp[key], skey, edged[key][skey])
+        ogrpn = '%s/%s'%(percaxis, samplename)
+        if ogrpn in fo:
+            ogrp = fo[ogrpn]
+        else:
+            ogrp = fo.create_group(ogrpn)
+        hgrp = ogrp.create_group('Header')
+        cgrp = hgrp.create_group('cosmopars')
+        for key in cosmopars:
+            cgrp.attrs.create(key, cosmopars[key])
+        hgrp.attrs.create('galaxy_data_file', np.string_(fdata))
+        hgrp.attrs.create('galaxy_histogram_file_list', np.string_(fname))
+        for bi in range(numgalbins):
+            bgrpn = binby[0] + \
+                    '_{:.2f}-{:.2f}'.format(binby[1][bi], binby[1][bi + 1])
+            bgrp = ogrp.create_group(bgrpn)
+            edged = edgedata[bi]
+            hgrp = bgrp.create_group('orig_hist_data')
+            for key in edged.keys():
+                hgrp.create_group(key)
+                for skey in edged[key].keys():
+                    m3.saveattr(bgrp[key], skey, edged[key][skey])
                 
-        bgrp.create_dataset('galaxyids', data=np.array(galids_bin[binind]))
-        bgrp.create_dataset('percentiles', data=percentiles)
+            bgrp.create_dataset('galaxyids', data=np.array(galids_bin[binind]))
+            bgrp.create_dataset('percentiles', data=percentiles)
             
     print('Saved data to file {}'.format(outname))  
     print('Main hdf5 group: {}/{}'.format(igrpn, samplename))
