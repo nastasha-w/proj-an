@@ -2143,7 +2143,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
     
     if idsel is not None:
         if isinstance(idsel, slice):
-            galids = np.array(galdata_all.index)[idsel]
+            galids = np.array(galname_all.index)[idsel]
         else:
             galids = idsel
     else:
