@@ -17,7 +17,7 @@ import cosmo_utils as cu
 import eagle_constants_and_units as c
 import make_maps_v3_master as m3
 import make_maps_opts_locs as ol
-import plot_utils as pu # for percentiles_from_histogram
+#import plot_utils as pu # for percentiles_from_histogram
 
 # directory for metadata files
 tdir = '/net/luttero/data2/imgs/CGM/3dprof/'
@@ -195,7 +195,70 @@ def combine_hists(h1, h2, e1, e2, rtol=1e-5, atol=1e-8, add=True):
         return hs, es
     else:
         return h1, h2, es
-    
+
+def percentiles_from_histogram_handlezeros(histogram, edgesaxis, axis=-1, 
+                       percentiles=np.array([0.1, 0.25, 0.5, 0.75, 0.9])):
+    '''
+    get percentiles from the histogram along axis
+    edgesaxis are the bin edges along that same axis
+    histograms can be weighted by something: this function just solves 
+    cumulative distribution == percentiles
+
+    differs from the plot_utils version in its ability to handle zero 
+    cumulative values. (outputs NaN for those)
+    '''
+    percentiles = np.array(percentiles)
+    if not np.all(percentiles >= 0.) and np.all(percentiles <= 1.):
+        raise ValueError('Input percentiles shoudl be fractions in the range [0, 1]')
+    cdists = np.cumsum(histogram, axis=axis, dtype=np.float) 
+    sel = list((slice(None, None, None),) * len(histogram.shape))
+    sel2 = np.copy(sel)
+    sel[axis] = -1
+    sel2[axis] = np.newaxis
+    zeroweight = cdists[sel] == 0.
+    zeroweight = zeroweight[tuple(sel2)]
+    cdists /= (cdists[tuple(sel)])[tuple(sel2)] # normalised cumulative dist: divide by total along axis
+    # bin-edge corrspondence: at edge 0, cumulative value is zero
+    # histogram values are counts in cells -> hist bin 0 is what is accumulated between edges 0 and 1
+    # cumulative sum: counts in cells up to and including the current one: 
+    # if percentile matches cumsum in cell, the percentile value is it's right edges -> edge[cell index + 1]
+    # effectively, if the cumsum is prepended by zeros, we get a hist bin matches edge bin matching
+
+    oldshape1 = list(histogram.shape)[:axis] 
+    oldshape2 = list(histogram.shape)[axis + 1:]
+    newlen1 = int(np.prod(oldshape1))
+    newlen2 = int(np.prod(oldshape2))
+    axlen = histogram.shape[axis]
+    cdists = cdists.reshape((newlen1, axlen, newlen2))
+    zeroweight = zeroweight.reshape((newlen1, 1, newlen2))
+    cdists = np.append(np.zeros((newlen1, newlen2)), cdists, axis=1)
+    cdists[:, -1, :] = 1. # should already be true, but avoids fp error issues
+
+    leftarr  = cdists[np.newaxis, :, :, :] <= percentiles[:, np.newaxis, np.newaxis, np.newaxis]
+    rightarr = cdists[np.newaxis, :, :, :] >= percentiles[:, np.newaxis, np.newaxis, np.newaxis]
+    leftarr[0, zeroweight] = True
+    rightarr[-1, zeroweight] = True
+
+    leftbininds = np.array([[[ np.max(np.where(leftarr[pind, ind1, :, ind2])[0]) \
+                               for ind2 in range(newlen2)] for ind1 in range(newlen1)] for pind in range(len(percentiles))])
+    # print leftarr.shape
+    # print rightarr.shape
+    rightbininds = np.array([[[np.min(np.where(rightarr[pind, ind1, :, ind2])[0]) \
+                               for ind2 in range(newlen2)] for ind1 in range(newlen1)] for pind in range(len(percentiles))])
+    # if left and right bins are the same, effictively just choose one
+    # if left and right bins are separated by more than one (plateau edge), 
+    #    this will give the middle of the plateau
+    lweights = np.array([[[ (cdists[ind1, rightbininds[pind, ind1, ind2], ind2] - percentiles[pind]) \
+                            / ( cdists[ind1, rightbininds[pind, ind1, ind2], ind2] - cdists[ind1, leftbininds[pind, ind1, ind2], ind2]) \
+                            if rightbininds[pind, ind1, ind2] != leftbininds[pind, ind1, ind2] \
+                            else 1.
+                           for ind2 in range(newlen2)] for ind1 in range(newlen1)] for pind in range(len(percentiles))])
+                
+    outperc = lweights * edgesaxis[leftbininds] + (1. - lweights) * edgesaxis[rightbininds]
+    outperc[:, zeroweight.reshape(newlen1, newlen2)] = np.NaN
+    outperc = outperc.reshape((len(percentiles),) + tuple(oldshape1 + oldshape2))
+    return outperc
+
 def gensample(samplename=None, galaxyselector=None):
     '''
     retrieve and store metadata for a given sample
@@ -2210,9 +2273,8 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             # axes in summed histogram
             _pax, _rax = np.argsort([pax, rax])
             # shape: percentile, radial bin
-            percs = pu.percentiles_from_histogram(hist_t, edges_t[pax], 
-                                                  axis=_pax, 
-                                                  percentiles=percentiles)
+            percs = percentiles_from_histogram_handlezeros(hist_t, 
+                    edges_t[pax], axis=_pax, percentiles=percentiles)
             
             # store the data
             # don't forget the list of galids (galids_bin, and edgedata)
