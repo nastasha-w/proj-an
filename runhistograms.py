@@ -3835,7 +3835,48 @@ elif jobind in range(20490, 20498):
     mh.makehist_masked_toh5py(*filebases, fills=fills_100, bins=bins,
                               includeinf=True, outfilename=outname)
     
+# get median of medians 3d profiles: step 1 -- individual halo profiles
+elif jobind in range(20498, 20516):
+    p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    weighttypes = ['c5r', 'c6', 'n6-actualr', 'n7', 'o7f', 'o7iy', 'o7r', 
+                   'o8', 'Fe17      17.0960A', 'Fe17      17.0510A',
+                   'Fe17      16.7760A', 'Fe18      16.0720A',
+                   'Fe17      15.2620A', 'ne9r', 'ne10', 'mg11r', 'mg12',
+                   'si13r']
 
+    weighttype = weighttypes[jobind - 20498]
+    weighttype = 'em-' + weighttype.replace(' ', '-')
+    samplename = 'L0100N1504_27_Mh0p5dex_1000'
+    binby = ('M200c_Msun', 
+             10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.]))
+    for axdct in ['Trprof', 'nrprof', 'Zrprof']:
+        p3g.extract_indiv_radprof(percaxis=None, samplename=samplename,
+                                  idsel=None, weighttype=weighttype, 
+                                  histtype=axdct, binby=binby,
+                                  percentiles=np.array([2., 10., 50., 90., 98.]),
+                                  inclSFgas=True)
+
+elif jobind in range(20516, 20518):
+    p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    samplename = 'L0100N1504_27_Mh0p5dex_1000'
+    metals = ['Carbon', 'Nitrogen', 'Oxygen', 'Neon', 'Magnesium',
+                  'Iron', 'Silicon']
+    axdcts = ['{elt}-rprof'.format(elt=elt) for elt in metals]
+    axdcts += ['Trprof', 'nrprof']
+    weighttypes = ['Mass', 'Volume']
+    binby = ('M200c_Msun', 
+             10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.]))
+    
+    # iterate over weighttypes since these will and up in the same files
+    # trying to run axdcts concurrently will just cause I/O errors
+    weighttype = weighttypes[jobind - 20516]
+    for axdct in axdcts:
+        p3g.extract_indiv_radprof(percaxis=None, samplename=samplename,
+                                  idsel=None, weighttype=weighttype, 
+                                  histtype=axdct, binby=binby,
+                                  percentiles=np.array([2., 10., 50., 90., 98.]),
+                                  inclSFgas=True)
+                                  
 ###############################################################################
 ####### mask generation: fast enough for ipython, but good to have documented #
 ###############################################################################
