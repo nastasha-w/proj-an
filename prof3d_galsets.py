@@ -2140,7 +2140,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                               index_col='galaxyid')
     galname_all = pd.read_csv(fname, header=0, sep='\t', 
                               index_col='galaxyid')
-    
+    return galdata_all, galname_all
     if idsel is not None:
         if isinstance(idsel, slice):
             galids = np.array(galname_all.index)[idsel]
