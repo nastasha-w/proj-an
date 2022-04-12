@@ -2189,6 +2189,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             selval = galdata_all.at[galid, colsel]
             binind = np.searchsorted(galbins, selval, side='right') - 1
             if binind in [-1, numgalbins]: # halo/stellar mass does not fall into any of the selected ranges
+                print('Skipping galaxy id {}'.format(galid))
                 continue
             
             # retrieve data from this histogram for checks
@@ -2281,7 +2282,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             # store the data
             # don't forget the list of galids (galids_bin, and edgedata)
             #print(hists)
-            print('Tryign to gave for galid {}'.format(galid))
+            print('Trying to save for galid {}'.format(galid))
             ogrpn = '%s/%s'%(percaxis, samplename)
             if ogrpn in fo:
                ogrp = fo[ogrpn]
@@ -2298,7 +2299,8 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             ggrp.create_dataset('edges_r3D', data=edges_t[pax])
             ggrp['edges_r3D'].attrs.create('units', np.string_('cm'))
             ggrp['edges_r3D'].attrs.create('comoving', False)
-    
+        
+        print('Trying to save overall/bin data')
         ogrpn = '%s/%s'%(percaxis, samplename)
         if ogrpn in fo:
             ogrp = fo[ogrpn]
