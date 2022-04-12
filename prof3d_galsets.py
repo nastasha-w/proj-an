@@ -2179,7 +2179,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                'number of particles > max value',\
                'number of particles < min value',\
                'number of particles with finite values']
-    
+    print('using galaxy ids {}'.format(galids))
     with h5py.File(outname, 'a') as fo:
         # encodes data stored -> same name is a basic consistency check 
         # for the sample
@@ -2198,6 +2198,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             ifilen_temp = galname_all.at[galid, 'filename']   
             
             #try:
+            print('trying galaxy id {}'.format(galid))
             with h5py.File(ifilen_temp, 'r') as fit:
                 igrp_t = fit[igrpn_temp]
                 hist_t = np.array(igrp_t['histogram'])
@@ -2280,7 +2281,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             # store the data
             # don't forget the list of galids (galids_bin, and edgedata)
             #print(hists)
-
+            print('Tryign to gave for galid {}'.format(galid))
             ogrpn = '%s/%s'%(percaxis, samplename)
             if ogrpn in fo:
                ogrp = fo[ogrpn]
