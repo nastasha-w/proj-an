@@ -215,7 +215,7 @@ def percentiles_from_histogram_handlezeros(histogram, edgesaxis, axis=-1,
     sel2 = np.copy(sel)
     sel[axis] = -1
     sel2[axis] = np.newaxis
-    zeroweight = cdists[sel] == 0.
+    zeroweight = cdists[tuple(sel)] == 0.
     zeroweight = zeroweight[tuple(sel2)]
     cdists /= (cdists[tuple(sel)])[tuple(sel2)] # normalised cumulative dist: divide by total along axis
     # bin-edge corrspondence: at edge 0, cumulative value is zero
@@ -231,7 +231,7 @@ def percentiles_from_histogram_handlezeros(histogram, edgesaxis, axis=-1,
     axlen = histogram.shape[axis]
     cdists = cdists.reshape((newlen1, axlen, newlen2))
     zeroweight = zeroweight.reshape((newlen1, 1, newlen2))
-    cdists = np.append(np.zeros((newlen1, newlen2)), cdists, axis=1)
+    cdists = np.append(np.zeros((newlen1, 1, newlen2)), cdists, axis=1)
     cdists[:, -1, :] = 1. # should already be true, but avoids fp error issues
 
     leftarr  = cdists[np.newaxis, :, :, :] <= percentiles[:, np.newaxis, np.newaxis, np.newaxis]
