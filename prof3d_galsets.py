@@ -2273,7 +2273,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                 sfi = np.where(np.isclose(edges_t[sfax]), 0.)[0][0]
                 axessel[sfax] = slice(0, sfi, None)
             if len(sumaxes) > 0:
-                hist_t = np.sum(hist_t[tuple(axessel)], axis=sumaxes)
+                hist_t = np.sum(hist_t[tuple(axessel)], axis=tuple(sumaxes))
             # axes in summed histogram
             _pax, _rax = np.argsort([pax, rax])
             # shape: percentile, radial bin
