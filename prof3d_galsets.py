@@ -236,8 +236,9 @@ def percentiles_from_histogram_handlezeros(histogram, edgesaxis, axis=-1,
 
     leftarr  = cdists[np.newaxis, :, :, :] <= percentiles[:, np.newaxis, np.newaxis, np.newaxis]
     rightarr = cdists[np.newaxis, :, :, :] >= percentiles[:, np.newaxis, np.newaxis, np.newaxis]
-    leftarr[0, zeroweight] = True
-    rightarr[-1, zeroweight] = True
+    _zwsel = np.repeat(zeroweight, axlen, axis=1)
+    leftarr[:, _zwsel] = True
+    rightarr[:, _zwsel] = True
 
     leftbininds = np.array([[[ np.max(np.where(leftarr[pind, ind1, :, ind2])[0]) \
                                for ind2 in range(newlen2)] for ind1 in range(newlen1)] for pind in range(len(percentiles))])

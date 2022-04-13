@@ -3849,7 +3849,7 @@ elif jobind in range(20498, 20516):
     samplename = 'L0100N1504_27_Mh0p5dex_1000'
     binby = ('M200c_Msun', 
              10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.]))
-    percvals = np.array([2., 10., 50., 90., 98.])
+    percvals = np.array([0.02, 0.1, 0.5, 0.9, 0.98])
 
     ps20str = '_PS20-iontab-UVB-dust1-CR1-G1-shield1_depletion-F' \
               if '-' in weighttype else '' 
@@ -3875,7 +3875,7 @@ elif jobind in range(20516, 20518):
     axdcts = ['{elt}-rprof'.format(elt=elt) for elt in metals]
     axdcts += ['Trprof', 'nrprof']
     weighttypes = ['Mass', 'Volume']
-    percvals = np.array([2., 10., 50., 90., 98.])
+    percvals = np.array([0.02, 0.1, 0.5, 0.9, 0.98])
     binby = ('M200c_Msun', 
              10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.]))
     
