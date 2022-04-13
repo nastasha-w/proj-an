@@ -236,7 +236,7 @@ def percentiles_from_histogram_handlezeros(histogram, edgesaxis, axis=-1,
 
     leftarr  = cdists[np.newaxis, :, :, :] <= percentiles[:, np.newaxis, np.newaxis, np.newaxis]
     rightarr = cdists[np.newaxis, :, :, :] >= percentiles[:, np.newaxis, np.newaxis, np.newaxis]
-    _zwsel = np.repeat(zeroweight, axlen, axis=1)
+    _zwsel = np.repeat(zeroweight, axlen + 1, axis=1)
     leftarr[:, _zwsel] = True
     rightarr[:, _zwsel] = True
 
