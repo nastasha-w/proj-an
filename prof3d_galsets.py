@@ -236,7 +236,7 @@ def percentiles_from_histogram_handlezeros(histogram, edgesaxis, axis=-1,
 
     leftarr  = cdists[np.newaxis, :, :, :] <= percentiles[:, np.newaxis, np.newaxis, np.newaxis]
     rightarr = cdists[np.newaxis, :, :, :] >= percentiles[:, np.newaxis, np.newaxis, np.newaxis]
-    _zwsel = np.repeat(zeroweight, axlen + 1, axis=1)
+    _zwsel = np.repeat(zeroweight, axlen + 1, axis=1) # appended zeros
     leftarr[:, _zwsel] = True
     rightarr[:, _zwsel] = True
 
@@ -2323,7 +2323,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                 for key in edged.keys():
                     hgrp.create_group(key)
                     for skey in edged[key].keys():
-                        m3.saveattr(bgrp[key], skey, edged[key][skey])
+                        m3.saveattr(hgrp[key], skey, edged[key][skey])
                 
             bgrp.create_dataset('galaxyids', data=np.array(galids_bin[binind]))
             bgrp.create_dataset('percentiles', data=percentiles)
