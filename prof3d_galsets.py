@@ -2272,7 +2272,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                         raise KeyError()
                 sfi = np.where(np.isclose(edges_t[sfax]), 0.)[0][0]
                 axessel[sfax] = slice(0, sfi, None)
-            if len(sumaxes) > 1:
+            if len(sumaxes) > 0:
                 hist_t = np.sum(hist_t[tuple(axessel)], axis=sumaxes)
             # axes in summed histogram
             _pax, _rax = np.argsort([pax, rax])
@@ -2297,7 +2297,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             ggrp['percentiles'].attrs.create('axis_perc', 0)
             ggrp['percentiles'].attrs.create('axis_r3D', 1)
             ggrp['percentiles'].attrs.create('inclSFgas', inclSFgas)
-            ggrp.create_dataset('edges_r3D', data=edges_t[pax])
+            ggrp.create_dataset('edges_r3D', data=edges_t[rax])
             ggrp['edges_r3D'].attrs.create('units', np.string_('cm'))
             ggrp['edges_r3D'].attrs.create('comoving', False)
         
@@ -2318,6 +2318,8 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                     '_{:.2f}-{:.2f}'.format(binby[1][bi], binby[1][bi + 1])
             bgrp = ogrp.create_group(bgrpn)
             edged = edgedata[bi]
+            print(bgrpn)
+            print(edged)
             if edged is not None: # in test cases, a bin may be empty
                 hgrp = bgrp.create_group('orig_hist_data')
                 for key in edged.keys():
