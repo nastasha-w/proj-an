@@ -2080,12 +2080,14 @@ def deletesets(filen):
         with h5py.File(filen, 'a') as fi:
             del fi[groupn]
     
-
+# tested output files with one set of 10 galaxies 
+# (some weren't in the mass selection)
+# tested percentiles with one of them, inclSFgas True option only
 def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None, 
                           weighttype='Mass', histtype='rprof_rho-T-nion',
                           binby=('M200c_Msun', 
                           10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),
-                          percentiles=np.array([2., 10., 50., 90., 98.]),
+                          percentiles=np.array([0.02, 0.1, 0.5, 0.9, 0.98]),
                           inclSFgas=True):
     '''
     from q - 3D radius histograms weighted by w, extract w-weighted 
@@ -2567,4 +2569,4 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
         bgrp.create_dataset('percentiles', data=percentiles)
             
     print('Saved data to file {}'.format(outname))  
-    print('Main hdf5 group: {}/{}'.format(igrpn, samplename))
+    print('Main hdf5 group: {}/{}'.format(ogrpn, samplename))

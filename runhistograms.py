@@ -3861,7 +3861,7 @@ elif jobind in range(20498, 20516):
                 }
     for axdct in ['Trprof', 'nrprof', 'Zrprof']:
         percaxis = percaxes[axdct]
-        p3g.extract_indiv_radprof(percaxis=paercaxis, samplename=samplename,
+        p3g.extract_indiv_radprof(percaxis=percaxis, samplename=samplename,
                                   idsel=None, weighttype=weighttype, 
                                   histtype=axdct, binby=binby,
                                   percentiles=percvals,
