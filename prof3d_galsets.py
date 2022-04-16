@@ -2415,18 +2415,72 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
     inname = '/'.join(pathparts[:-1]) + '/' +  inname + '.' + ext
     outname = inname.replace('indiv', 'comb')
     #print(outname)
-        
+    
+    ogrpn = '/'.join([percaxis, samplename])
     with h5py.File(outname, 'a') as fo:
         # encodes data stored -> same name is a basic consistency check 
         # for the sample
-
-
         
-        for galid in galids:
-            selval = galdata_all.at[galid, colsel]
-            binind = np.searchsorted(galbins, selval, side='right') - 1
-            if binind in [-1, numgalbins]: # halo/stellar mass does not fall into any of the selected ranges
-                continue
+        mgrp = fo[ogrpn]
+        allkeys = list(mgrp.keys())
+        binkeys = {key if key != 'Header' and 'galaxy' not in key\
+                   else None for key in allkeys}
+        binkeys -= {None}
+        binkeys = list(binkeys)
+        
+        for bkey in binkeys:
+            bgrp = mgrp[bkey]
+            percentiles_stored = bgrp['percentiles'][:]
+            galids_bin = bgrp['galaxyids'][:]
+        
+            edges_ref = None
+            percvals = []
+            for galid in galids_bin:
+                ggrpn = ggrpn_base.format(galid)
+                ggrp = mgrp[ggrpn]
+                _ed = ggrpn['edges_r3D']
+                if edges_ref is None:
+                    edges_ref = _ed
+                elif not np.allclose(_ed, edges_ref):
+                    msg = 'edges within one galaxy bin are mismatched' +\
+                          'galxyids {}, {} in {}'
+                    msg = msg.format(galid, galids_bin[0], bkey)
+                    raise RuntimeError(msg)
+                percvals.append(ggrpn['percentiles'])
+            # shape: galaxy, percentile, radius
+            percvals = np.array(percvals) 
+
+            sgrp = bgrp.create_group('ensemble_percentiles')
+            dsfmt = 'perc-{pout:.3f}_of_indiv_perc-{pin:.3f}' 
+            nanref = None
+            for p_outind, p_in in percentiles_in:
+                if not np.any(np.isclose(p_in, percentiles_stored)):
+                    msg = 'percentile {} was not stored'.format(p_in)
+                    raise RuntimeError(msg)
+                pind_in = np.argmin(np.abs(p_in - percentiles_stored))
+                _pv = percvals[:, pind_in, :]
+                ppoints_out = percentiles_out[p_outind]
+
+                percofperc = np.nanquantile(_pv, ppoints_out, axis=0)
+                nancount = np.sum(np.isnan(_pv), axis=0)
+                galcount = _pv.shape[0]
+                
+                if nanref is None:
+                    nanref = nancount
+                elif not np.all(nanref == nancount):
+                    raise RuntimeError('NaN counts different for different percentiles')
+                for i, pout in enumerate(ppoints_out):
+                    _data = percofperc[i, :]
+                    dsname = dsfmt.format(pout=pout, pin=p_in)
+                    sgrp.create_dataset(dsname, data=_data)
+
+            sgrp.create_dataset('edges_r3D', data=edges_ref)
+            sgrp['edges_r3D'].attrs.create('units', np.string_('cm'))
+            sgrp['edges_r3D'].attrs.create('comoving', False)
+            sgrp.create_dataset('NaN_per_bin', data=nancount)
+            sgrp.attrs.create('galaxy_count', galcount)
+
+
             
             #try:
             with h5py.File(inname, 'r') as fit:
@@ -2551,5 +2605,3 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             
     print('Saved data to file {}'.format(outname))  
     print('Main hdf5 group: {}/{}'.format(ogrpn, samplename))
-
-    #np.nanquantile(a, q, axis=None, out=None, overwrite_input=False, method='linear', keepdims=<no value>, *, interpolation=None)
