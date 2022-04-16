@@ -3927,7 +3927,7 @@ elif jobind in range(20518, 20536):
                    'Fe17      15.2620A', 'ne9r', 'ne10', 'mg11r', 'mg12',
                    'si13r']
 
-    line = weighttypes[jobind - 20498]
+    line = weighttypes[jobind - 20518]
     weighttype = 'em-' + line.replace(' ', '-')
     samplename = 'L0100N1504_27_Mh0p5dex_1000'
     #binby = ('M200c_Msun', 
@@ -3969,7 +3969,7 @@ elif jobind in range(20536, 20538):
     p_out = [[0.5], [0.5], [0.02, 0.1, 0.5, 0.9, 0.98], [0.5], [0.5]]
     # iterate over weighttypes since these will and up in the same files
     # trying to run axdcts concurrently will just cause I/O errors
-    weighttype = weighttypes[jobind - 20516]
+    weighttype = weighttypes[jobind - 20536]
     for axdct in axdcts:
         if axdct == 'Trprof':
             percaxis = 'Temperature_T4EOS'
