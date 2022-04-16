@@ -2183,6 +2183,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                'number of particles < min value',\
                'number of particles with finite values']
     print('using galaxy ids {}'.format(galids))
+
     with h5py.File(outname, 'a') as fo:
         # encodes data stored -> same name is a basic consistency check 
         # for the sample
@@ -2249,7 +2250,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             try:
                 pax = edgedata_t[percaxis]['histogram axis']
             except KeyError:
-                raise KeyError('Could not retrieve percentile property axis {} for galaxy {}, file {}'%(percaxis, galid, ifilen_temp))
+                raise KeyError('Could not retrieve percentile property axis {} for galaxy {}, file {}'.format(percaxis, galid, ifilen_temp))
             
             numaxes = len(edges_t)
             sumaxes = list(range(numaxes))
@@ -2551,4 +2552,4 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
     print('Saved data to file {}'.format(outname))  
     print('Main hdf5 group: {}/{}'.format(ogrpn, samplename))
 
-    np.nanquantile(a, q, axis=None, out=None, overwrite_input=False, method='linear', keepdims=<no value>, *, interpolation=None)
+    #np.nanquantile(a, q, axis=None, out=None, overwrite_input=False, method='linear', keepdims=<no value>, *, interpolation=None)
