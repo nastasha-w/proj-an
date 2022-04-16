@@ -3852,7 +3852,7 @@ elif jobind in range(20498, 20516):
     percvals = np.array([0.02, 0.1, 0.5, 0.9, 0.98])
 
     ps20str = '_PS20-iontab-UVB-dust1-CR1-G1-shield1_depletion-F' \
-              if '-' in weighttype else '' 
+              if '-' in line else '' 
     ion = line.split(' ')[0]
     elt = ol.elements_ion[ion.lower()].capitalize()
     percaxes = {'Trprof': 'Temperature_T4EOS',

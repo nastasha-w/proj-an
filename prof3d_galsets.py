@@ -2192,7 +2192,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             selval = galdata_all.at[galid, colsel]
             binind = np.searchsorted(galbins, selval, side='right') - 1
             if binind in [-1, numgalbins]: # halo/stellar mass does not fall into any of the selected ranges
-                print('Skipping galaxy id {}'.format(galid))
+                #print('Skipping galaxy id {}'.format(galid))
                 continue
             
             # retrieve data from this histogram for checks
@@ -2335,10 +2335,9 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
     print('Saved data to file {}'.format(outname))  
     print('Main hdf5 group: {}/{}'.format(igrpn, samplename))
 
+
 def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None, 
                           weighttype='Mass', histtype='rprof_rho-T-nion',
-                          binby=('M200c_Msun', 
-                          10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),
                           percentiles_in=np.array([2., 10., 50., 90., 98.]),
                           percentiles_out=[[50.], [50.], 
                                            [2., 10., 50., 90., 98.],
@@ -2347,15 +2346,12 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
     '''
     get percentiles of individual percentile distributions in galaxy 
     property sets. Saved in the same file as the individual profiles
+    binning is done using the groups set in the previous step
 
     idsel: project only a subset of galaxies according to the given list
            useful for testing on a few galaxies
            ! do not run in  parallel: different processes will try to write to
            the same list of output files
-    binby: only used for sample subselection and consistency checks 
-           (i.e., values above and below the bin range are excluded,
-            histogram axes must match.)
-            some data is saved per binby group though, to save some space
     percaxis: axis to get the profile for
     '''
     if samplename is None:
@@ -2389,30 +2385,18 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
         #var = hed.attrs['var']
         #ap = hed.attrs['subhalo_aperture_size_Mstar_Mbh_SFR_pkpc']
     
-    galdata_all = pd.read_csv(fdata, header=headlen, sep='\t', 
-                              index_col='galaxyid')
     galname_all = pd.read_csv(fname, header=0, sep='\t', 
                               index_col='galaxyid')
     
     if idsel is not None:
         if isinstance(idsel, slice):
-            galids = np.array(galdata_all.index)[idsel]
+            galids = np.array(galname_all.index)[idsel]
         else:
             galids = idsel
     else:
         galids = np.array(galname_all.index) # galdata may also include non-selected haloes
 
-    colsel = binby[0]
-    galbins = binby[1]
-    numgalbins = len(galbins) - 1
-    edgedata = [None] * numgalbins
-    galids_base = [None] * numgalbins
-    galids_bin = [[]] * numgalbins
     ggrpn_base = 'galaxy_{galid}'
-    colsel = binby[0]
-    galbins = binby[1]
-    numgalbins = len(galbins) - 1
-
 
     # construct name of summed histogram by removing position specs from a specific one
     outname = galname_all.at[galids[0], 'filename']
@@ -2430,16 +2414,12 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
     inname = '/'.join(pathparts[:-1]) + '/' +  inname + '.' + ext
     outname = inname.replace('indiv', 'comb')
     #print(outname)
-    
-    # axis data attributes that are allowed to differ between summed histograms
-    neqlist = ['number of particles',\
-               'number of particles > max value',\
-               'number of particles < min value',\
-               'number of particles with finite values']
-    
+        
     with h5py.File(outname, 'a') as fo:
         # encodes data stored -> same name is a basic consistency check 
         # for the sample
+
+
         
         for galid in galids:
             selval = galdata_all.at[galid, colsel]
@@ -2570,3 +2550,5 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             
     print('Saved data to file {}'.format(outname))  
     print('Main hdf5 group: {}/{}'.format(ogrpn, samplename))
+
+    np.nanquantile(a, q, axis=None, out=None, overwrite_input=False, method='linear', keepdims=<no value>, *, interpolation=None)
