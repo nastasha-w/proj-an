@@ -2339,15 +2339,14 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
 
 def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None, 
                           weighttype='Mass', histtype='rprof_rho-T-nion',
-                          percentiles_in=np.array([2., 10., 50., 90., 98.]),
-                          percentiles_out=[[50.], [50.], 
-                                           [2., 10., 50., 90., 98.],
-                                           [50.], [50.]],
-                          inclSFgas=True):
+                          percentiles_in=np.array([0.02, 0.1, 0.5, 0.9, 0.98]),
+                          percentiles_out=[[0.5], [0.5], 
+                                           [0.02, 0.1, 0.5, 0.9, 0.98], 
+                                           [0.5], [0.5]]):
     '''
     get percentiles of individual percentile distributions in galaxy 
     property sets. Saved in the same file as the individual profiles
-    binning is done using the groups set in the previous step
+    binning, inclSFgs follows the groups set in the previous step
 
     idsel: project only a subset of galaxies according to the given list
            useful for testing on a few galaxies
@@ -2480,128 +2479,5 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             sgrp.create_dataset('NaN_per_bin', data=nancount)
             sgrp.attrs.create('galaxy_count', galcount)
 
-
-            
-            #try:
-            with h5py.File(inname, 'r') as fit:
-                igrp_t = fit[igrpn_temp]
-                hist_t = np.array(igrp_t['histogram'])
-                if bool(igrp_t['histogram'].attrs['log']):
-                    hist_t = 10**hist_t
-                #wtsum_t = igrp_t['histogram'].attrs['sum of weights'] # includes stuff outside the maximum radial bin
-                edges_t = [np.array(igrp_t['binedges/Axis%i'%i]) for i in range(len(hist_t.shape))]
-                edgekeys_t = list(igrp_t.keys())
-                edgekeys_t.remove('histogram')
-                edgekeys_t.remove('binedges')
-                edgedata_t = {}
-                for ekey in edgekeys_t: 
-                    edgedata_t[ekey] =  {akey: item for akey, item in igrp_t[ekey].attrs.items()}
-                    for akey in neqlist:
-                        del edgedata_t[ekey][akey]
-            #except IOError:
-            #    print('Failed to find file for galaxy %i'%(galid))
-            #continue
-                        
-            # run compatibility checks, align/expand edges
-            galids_bin[binind].append(galid)
-            if edgedata[binind] is None:
-                edgedata[binind] = edgedata_t
-                galids_base[binind] = galid
-            else:
-                if not set(edgekeys_t) == set(edgedata[binind].keys()):
-                    msg = 'Mismatch in histogram axis names for galaxyids %i, %i'
-                    msg = msg%(galids_base[binind], galid)
-                    raise RuntimeError(msg)
-                if not np.all([edgedata_t[ekey][akey] == \
-                               edgedata[binind][akey] \
-                               for akey in edgedata_t[ekey].keys()] \
-                              for ekey in edgekeys_t):
-                    msg = 'Mismatch in histogram axis properties for galaxyids %i, %i'
-                    msg = msg%(galids_base[binind], galid)
-                    raise RuntimeError(msg)
-            
-            # edges are compatible: shift and combine histograms
-            # radial bins: only shift if R200c units needed
-            try:
-                rax = edgedata_t['3Dradius']['histogram axis']
-            except KeyError:
-                raise KeyError('Could not retrieve histogram axis for galaxy %i, file %s'%(galid, ifilen_temp))
-            try:
-                pax = edgedata_t[percaxis]['histogram axis']
-            except KeyError:
-                raise KeyError('Could not retrieve percentile property axis {} for galaxy {}, file {}'%(percaxis, galid, ifilen_temp))
-            
-            numaxes = len(edges_t)
-            sumaxes = list(range(numaxes))
-            sumaxes.remove(pax)
-            sumaxes.remove(rax)
-            axessel = [slice(None, None, None)] * numaxes
-            if not inclSFgas:
-                sfaxname = 'StarFormationRate'
-                try:
-                    sfax = edgedata_t[sfaxname]['histogram axis']
-                except KeyError:
-                    _keys = edgedata_t.keys()
-                    sfcandidate = [sfaxname in _key for _key in _keys]
-                    if sum(sfcandidate) == 1:
-                        _sfki = np.where(sfcandidate)[0][0]
-                        _sfaxname = _keys[_sfki]
-                        sfax = edgedata_t[_sfaxname]['histogram axis']
-                    else:
-                        msg = 'Could not retrieve SFR axis like {} from options' +\
-                              ' {} for galaxy {}, file {}'
-                        msg = msg.format(sfaxname, _keys, galid, ifilen_temp)
-                        raise KeyError()
-                sfi = np.where(np.isclose(edges_t[sfax]), 0.)[0][0]
-                axessel[sfax] = slice(0, sfi, None)
-            if len(sumaxes) > 1:
-                hist_t = np.sum(hist_t[tuple(axessel)], axis=sumaxes)
-            # axes in summed histogram
-            _pax, _rax = np.argsort([pax, rax])
-            # shape: percentile, radial bin
-            percs = percentiles_from_histogram_handlezeros(hist_t, 
-                        edges_t[pax], axis=_pax, percentiles=percentiles)
-            
-            # store the data
-            # don't forget the list of galids (galids_bin, and edgedata)
-            #print(hists)
-
-            ogrpn = '%s/%s'%(percaxis, samplename)
-            if ogrpn in fo:
-               ogrp = fo[ogrpn]
-            else:
-                ogrp = fo.create_group(ogrpn)
-            
-            ggrpn = ggrpn_base.format(galid=galid)
-            ggrp = ogrp.create_group(ggrpn) if ggrpn not in ogrp\
-                     else ogrp[ggrpn] 
-            ggrp.create_dataset('percentiles', data=percs)
-            ggrp['percentiles'].attrs.create('axis_perc', 0)
-            ggrp['percentiles'].attrs.create('axis_r3D', 1)
-            ggrp['percentiles'].attrs.create('inclSFgas', inclSFgas)
-            ggrp.create_dataset('edges_r3D', data=edges_t[pax])
-            ggrp['edges_r3D'].attrs.create('units', np.string_('cm'))
-            ggrp['edges_r3D'].attrs.create('comoving', False)
-    
-    hgrp = ogrp.create_group('Header')
-    cgrp = hgrp.create_group('cosmopars')
-    for key in cosmopars:
-        cgrp.attrs.create(key, cosmopars[key])
-    hgrp.attrs.create('galaxy_data_file', np.string_(fdata))
-    hgrp.attrs.create('galaxy_histogram_file_list', np.string_(fname))
-    for bi in range(numgalbins):
-        bgrpn = binby[0] + \
-                '_{:.2f}-{:.2f}'.format(binby[1][bi], binby[1][bi + 1])
-        bgrp = ogrp.create_group(bgrpn)
-        edged = edgedata[bi]
-        hgrp = bgrp.create_group('orig_hist_data')
-        for key in edged.keys():
-            hgrp.create_group(key)
-            for skey in edged[key].keys():
-                m3.saveattr(bgrp[key], skey, edged[key][skey])
-                
-        bgrp.create_dataset('galaxyids', data=np.array(galids_bin[binind]))
-        bgrp.create_dataset('percentiles', data=percentiles)
-            
     print('Saved data to file {}'.format(outname))  
     print('Main hdf5 group: {}/{}'.format(ogrpn, samplename))
