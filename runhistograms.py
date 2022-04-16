@@ -3838,6 +3838,17 @@ elif jobind in range(20490, 20498):
 # get median of medians 3d profiles: step 1 -- individual halo profiles
 elif jobind in range(20498, 20516):
     p3g.tdir = '/net/luttero/data2/imgs/paper3/3dprof/'
+    lines_PS20 = ['C  5      40.2678A', 'C  6      33.7372A', 
+              'N  6      29.5343A', 'N  6      28.7870A',
+              'N  7      24.7807A', 'O  7      21.6020A',
+              'O  7      21.8044A', 'O  7      21.8070A',
+              'O  7      22.1012A', 'O  8      18.9709A',
+              'Ne 9      13.4471A', 'Ne10      12.1375A',
+              'Mg11      9.16875A', 'Mg12      8.42141A',
+              'Si13      6.64803A', 'Fe17      17.0510A',
+              'Fe17      15.2620A', 'Fe17      16.7760A',
+              'Fe17      17.0960A', 'Fe18      16.0720A',
+              ]
     weighttypes = ['c5r', 'c6', 'n6-actualr', 'n7', 'o7f', 'o7iy', 'o7r', 
                    'o8', 'Fe17      17.0960A', 'Fe17      17.0510A',
                    'Fe17      16.7760A', 'Fe18      16.0720A',
@@ -3852,7 +3863,7 @@ elif jobind in range(20498, 20516):
     percvals = np.array([0.02, 0.1, 0.5, 0.9, 0.98])
 
     ps20str = '_PS20-iontab-UVB-dust1-CR1-G1-shield1_depletion-F' \
-              if '-' in line else '' 
+              if line in lines_PS20 else '' 
     ion = line.split(' ')[0]
     elt = ol.elements_ion[ion.lower()].capitalize()
     percaxes = {'Trprof': 'Temperature_T4EOS',
