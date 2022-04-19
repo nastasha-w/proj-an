@@ -2420,7 +2420,20 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
         # encodes data stored -> same name is a basic consistency check 
         # for the sample
         
+        print('file: ', outname)
+        print('ogrpn: ', ogrpn)
+        parts = ogrpn.split('/')
+        _mark = fo 
+        for part in parts:
+            if part in _mark.keys():
+                print('going ok up to: ', part)
+                _mark = _mark[part]
+            else:
+                print('at ', _mark)
+                print('group ',  part, ' not in ', list(_mark.keys()))
+                break
         mgrp = fo[ogrpn]
+        
         allkeys = list(mgrp.keys())
         binkeys = {key if key != 'Header' and 'galaxy' not in key\
                    else None for key in allkeys}
