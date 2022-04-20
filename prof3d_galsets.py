@@ -2423,17 +2423,17 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
         # for the sample
         
         print('file: ', outname)
-        print('ogrpn: ', ogrpn)
-        parts = ogrpn.split('/')
-        _mark = fo 
-        for part in parts:
-            if part in _mark.keys():
-                print('going ok up to: ', part)
-                _mark = _mark[part]
-            else:
-                print('at ', _mark)
-                print('group ',  part, ' not in ', list(_mark.keys()))
-                break
+        print('main group: ', ogrpn)
+        #parts = ogrpn.split('/')
+        #_mark = fo 
+        #for part in parts:
+        #    if part in _mark.keys():
+        #        print('going ok up to: ', part)
+        #        _mark = _mark[part]
+        #    else:
+        #        print('at ', _mark)
+        #        print('group ',  part, ' not in ', list(_mark.keys()))
+        #        break
         mgrp = fo[ogrpn]
         
         allkeys = list(mgrp.keys())
@@ -2450,7 +2450,7 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             edges_ref = None
             percvals = []
             for galid in galids_bin:
-                ggrpn = ggrpn_base.format(galid)
+                ggrpn = ggrpn_base.format(galid=galid)
                 ggrp = mgrp[ggrpn]
                 _ed = ggrpn['edges_r3D']
                 if edges_ref is None:
