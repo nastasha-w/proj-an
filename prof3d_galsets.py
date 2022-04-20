@@ -2386,6 +2386,8 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
         #var = hed.attrs['var']
         #ap = hed.attrs['subhalo_aperture_size_Mstar_Mbh_SFR_pkpc']
     
+    galdata_all = pd.read_csv(fdata, header=headlen, sep='\t', 
+                              index_col='galaxyid')
     galname_all = pd.read_csv(fname, header=0, sep='\t', 
                               index_col='galaxyid')
     
@@ -2452,7 +2454,9 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             for galid in galids_bin:
                 ggrpn = ggrpn_base.format(galid=galid)
                 ggrp = mgrp[ggrpn]
-                _ed = ggrp['edges_r3D']
+                r200c = galdata_all.at[galid, 'R200c_cMpc']
+                r200c *= cosmopars['a'] * c.cm_per_mpc
+                _ed = ggrp['edges_r3D'] / r200c
                 if edges_ref is None:
                     edges_ref = _ed
                 elif not np.allclose(_ed, edges_ref):
@@ -2489,8 +2493,8 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                     sgrp.create_dataset(dsname, data=_data)
 
             sgrp.create_dataset('edges_r3D', data=edges_ref)
-            sgrp['edges_r3D'].attrs.create('units', np.string_('cm'))
-            sgrp['edges_r3D'].attrs.create('comoving', False)
+            sgrp['edges_r3D'].attrs.create('units', np.string_('R200c'))
+            #sgrp['edges_r3D'].attrs.create('comoving', False)
             sgrp.create_dataset('NaN_per_bin', data=nancount)
             sgrp.attrs.create('galaxy_count', galcount)
 
