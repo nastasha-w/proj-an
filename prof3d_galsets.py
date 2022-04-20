@@ -2412,7 +2412,7 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
     inname.append('indiv-gal-rad3Dprof')
     inname = '_'.join(inname)
     inname = '/'.join(pathparts[:-1]) + '/' +  inname + '.' + ext
-    outname = inname.replace('indiv', 'comb')
+    outname = inname #.replace('indiv', 'comb')
     #print(outname)
     
     ogrpn = '/'.join([percaxis, samplename])
