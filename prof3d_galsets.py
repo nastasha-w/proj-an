@@ -2414,6 +2414,7 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             inname.append(part)
     inname.append('inclSFgas' if inclSFgas else 'exclSFgas')
     inname.append('indiv-gal-rad3Dprof')
+    inname.append('testfile') # debug without messing up previous work
     inname = '_'.join(inname)
     inname = '/'.join(pathparts[:-1]) + '/' +  inname + '.' + ext
     outname = inname #.replace('indiv', 'comb')
