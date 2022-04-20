@@ -2315,7 +2315,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                 ggrp['percentiles'].attrs.create('axis_perc', 0)
                 ggrp['percentiles'].attrs.create('axis_r3D', 1)
                 ggrp['percentiles'].attrs.create('inclSFgas', inclSFgas)
-                ggrp.create_dataset('edges_r3D', data=edges_t[rax])
+            ggrp.create_dataset('edges_r3D', data=edges_t[rax])
             ggrp['edges_r3D'].attrs.create('units', np.string_('cm'))
             ggrp['edges_r3D'].attrs.create('comoving', False)
         
