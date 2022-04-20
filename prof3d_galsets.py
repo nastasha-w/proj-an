@@ -2460,7 +2460,7 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                           'galxyids {}, {} in {}'
                     msg = msg.format(galid, galids_bin[0], bkey)
                     raise RuntimeError(msg)
-                percvals.append(ggrpn['percentiles'])
+                percvals.append(ggrp['percentiles'])
             # shape: galaxy, percentile, radius
             percvals = np.array(percvals) 
 
