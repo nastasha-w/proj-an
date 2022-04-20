@@ -2471,7 +2471,7 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             sgrp = bgrp.create_group('ensemble_percentiles')
             dsfmt = 'perc-{pout:.3f}_of_indiv_perc-{pin:.3f}' 
             nanref = None
-            for p_outind, p_in in percentiles_in:
+            for p_outind, p_in in enumerate(percentiles_in):
                 if not np.any(np.isclose(p_in, percentiles_stored)):
                     msg = 'percentile {} was not stored'.format(p_in)
                     raise RuntimeError(msg)
