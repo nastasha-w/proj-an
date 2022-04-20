@@ -2452,7 +2452,7 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             for galid in galids_bin:
                 ggrpn = ggrpn_base.format(galid=galid)
                 ggrp = mgrp[ggrpn]
-                _ed = ggrpn['edges_r3D']
+                _ed = ggrp['edges_r3D']
                 if edges_ref is None:
                     edges_ref = _ed
                 elif not np.allclose(_ed, edges_ref):
