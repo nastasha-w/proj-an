@@ -2112,7 +2112,11 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
     if samplename is None:
         samplename = defaults['sample']
     fdata = dataname(samplename)
-    fname = files(samplename, weighttype, histtype=histtype)
+    if histtype == 'cumul':
+        _histtype = 'nrprof'
+    else:
+        _histtype = histtype
+    fname = files(samplename, weighttype, histtype=_histtype)
     
     with open(fdata, 'r') as fi:
         # scan for halo catalogue (only metadata needed for this)
@@ -2366,6 +2370,14 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
            the same list of output files
     percaxis: axis to get the profile for
     '''
+    # non-cumul: profile tested on Trprof, em-c5r, one halo mass bin,
+    # percentile 50 of 90th percentiles 
+    # generally looked ok (equal numbers > and < 50th percentile in individual
+    # profiles), except in the smallest bin, where the number of values
+    # equal to the median is larger then the difference between the number
+    # of higher and lower values.
+    # overall, tested for non-cumul profiles
+
     if samplename is None:
         samplename = defaults['sample']
     fdata = dataname(samplename)
