@@ -2106,7 +2106,8 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
            (i.e., values above and below the bin range are excluded,
             histogram axes must match.)
             some data is saved per binby group though, to save some space
-    percaxis: axis to get the profile for
+    percaxis: axis to get the profile for. 'cumul' get the cumulative 
+            weight profiles
     '''
     if samplename is None:
         samplename = defaults['sample']
@@ -2244,18 +2245,19 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             
             # edges are compatible: shift and combine histograms
             # radial bins: only shift if R200c units needed
+            numaxes = len(edges_t)
+            sumaxes = list(range(numaxes))
             try:
                 rax = edgedata_t['3Dradius']['histogram axis']
             except KeyError:
                 raise KeyError('Could not retrieve histogram axis for galaxy %i, file %s'%(galid, ifilen_temp))
-            try:
-                pax = edgedata_t[percaxis]['histogram axis']
-            except KeyError:
-                raise KeyError('Could not retrieve percentile property axis {} for galaxy {}, file {}'.format(percaxis, galid, ifilen_temp))
+            if percaxis != 'cumul':
+                try:
+                    pax = edgedata_t[percaxis]['histogram axis']
+                except KeyError:
+                    raise KeyError('Could not retrieve percentile property axis {} for galaxy {}, file {}'.format(percaxis, galid, ifilen_temp))
+                sumaxes.remove(pax)
             
-            numaxes = len(edges_t)
-            sumaxes = list(range(numaxes))
-            sumaxes.remove(pax)
             sumaxes.remove(rax)
             axessel = [slice(None, None, None)] * numaxes
             if not inclSFgas:
@@ -2279,10 +2281,14 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             if len(sumaxes) > 0:
                 hist_t = np.sum(hist_t[tuple(axessel)], axis=tuple(sumaxes))
             # axes in summed histogram
-            _pax, _rax = np.argsort([pax, rax])
+            if percaxis == 'cumul':
+                _rax = 0
+                cumulvals = np.cumsum(hist_t)
+            else:
+                _pax, _rax = np.argsort([pax, rax])
             # shape: percentile, radial bin
-            percs = percentiles_from_histogram_handlezeros(hist_t, 
-                    edges_t[pax], axis=_pax, percentiles=percentiles)
+                percs = percentiles_from_histogram_handlezeros(hist_t, 
+                        edges_t[pax], axis=_pax, percentiles=percentiles)
             
             # store the data
             # don't forget the list of galids (galids_bin, and edgedata)
@@ -2297,11 +2303,15 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             ggrpn = ggrpn_base.format(galid=galid)
             ggrp = ogrp.create_group(ggrpn) if ggrpn not in ogrp\
                      else ogrp[ggrpn] 
-            ggrp.create_dataset('percentiles', data=percs)
-            ggrp['percentiles'].attrs.create('axis_perc', 0)
-            ggrp['percentiles'].attrs.create('axis_r3D', 1)
-            ggrp['percentiles'].attrs.create('inclSFgas', inclSFgas)
-            ggrp.create_dataset('edges_r3D', data=edges_t[rax])
+            if percaxis == 'cumul':
+                ggrp.create_dataset('cumulative_weight', data=cumulvals)
+                ggrp['percentiles'].attrs.create('inclSFgas', inclSFgas)
+            else:
+                ggrp.create_dataset('percentiles', data=percs)
+                ggrp['percentiles'].attrs.create('axis_perc', 0)
+                ggrp['percentiles'].attrs.create('axis_r3D', 1)
+                ggrp['percentiles'].attrs.create('inclSFgas', inclSFgas)
+                ggrp.create_dataset('edges_r3D', data=edges_t[rax])
             ggrp['edges_r3D'].attrs.create('units', np.string_('cm'))
             ggrp['edges_r3D'].attrs.create('comoving', False)
         
@@ -2448,7 +2458,8 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
         
         for bkey in binkeys:
             bgrp = mgrp[bkey]
-            percentiles_stored = bgrp['percentiles'][:]
+            if percaxis != 'cumul':
+                percentiles_stored = bgrp['percentiles'][:]
             galids_bin = bgrp['galaxyids'][:]
         
             edges_ref = None
@@ -2466,38 +2477,58 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                           'galxyids {}, {} in {}'
                     msg = msg.format(galid, galids_bin[0], bkey)
                     raise RuntimeError(msg)
-                percvals.append(ggrp['percentiles'])
-            # shape: galaxy, percentile, radius
+                if percaxis == 'cumul':
+                    percvals.append(ggrp['percentiles'])
+                else:
+                    percvals.append(ggrp['cumulative_weight'])
+
+                
+            # shape: galaxy, [percentile,] radius
             percvals = np.array(percvals) 
+            galcount = percvals.shape[0]
 
             sgrp = bgrp.create_group('ensemble_percentiles')
-            dsfmt = 'perc-{pout:.3f}_of_indiv_perc-{pin:.3f}' 
-            nanref = None
-            for p_outind, p_in in enumerate(percentiles_in):
-                if not np.any(np.isclose(p_in, percentiles_stored)):
-                    msg = 'percentile {} was not stored'.format(p_in)
-                    raise RuntimeError(msg)
-                pind_in = np.argmin(np.abs(p_in - percentiles_stored))
-                _pv = percvals[:, pind_in, :]
-                ppoints_out = percentiles_out[p_outind]
-
-                percofperc = np.nanquantile(_pv, ppoints_out, axis=0)
-                nancount = np.sum(np.isnan(_pv), axis=0)
-                galcount = _pv.shape[0]
+            if percaxis == 'cumul':
+                dsfmt = 'perc-{pout:.3f}'
+                if hasattr(percentiles_out[0], 'len'):
+                    perc_out = set()
+                    for _po in percentiles_out:
+                        perc_out = perc_out.union(_po)
+                    perc_out = list(perc_out).sort()
+                else:
+                    perc_out = percentiles_out
+                percofcumul = np.quantile(percvals, perc_out, axis=0)
+                for poind, pout in enumerate(perc_out):
+                    dsname = dsfmt.format(pout=pout)
+                    sgrp.create_dataset(dsname, data=percofcumul[poind, :])
                 
-                if nanref is None:
-                    nanref = nancount
-                elif not np.all(nanref == nancount):
-                    raise RuntimeError('NaN counts different for different percentiles')
-                for i, pout in enumerate(ppoints_out):
-                    _data = percofperc[i, :]
-                    dsname = dsfmt.format(pout=pout, pin=p_in)
-                    sgrp.create_dataset(dsname, data=_data)
+            else:
+                dsfmt = 'perc-{pout:.3f}_of_indiv_perc-{pin:.3f}' 
+                nanref = None
+                for p_outind, p_in in enumerate(percentiles_in):
+                    if not np.any(np.isclose(p_in, percentiles_stored)):
+                        msg = 'percentile {} was not stored'.format(p_in)
+                        raise RuntimeError(msg)
+                    pind_in = np.argmin(np.abs(p_in - percentiles_stored))
+                    _pv = percvals[:, pind_in, :]
+                    ppoints_out = percentiles_out[p_outind]
+
+                    percofperc = np.nanquantile(_pv, ppoints_out, axis=0)
+                    nancount = np.sum(np.isnan(_pv), axis=0)
+                
+                    if nanref is None:
+                        nanref = nancount
+                    elif not np.all(nanref == nancount):
+                        raise RuntimeError('NaN counts different for different percentiles')
+                    for i, pout in enumerate(ppoints_out):
+                        _data = percofperc[i, :]
+                        dsname = dsfmt.format(pout=pout, pin=p_in)
+                        sgrp.create_dataset(dsname, data=_data)
+                sgrp.create_dataset('NaN_per_bin', data=nancount)
 
             sgrp.create_dataset('edges_r3D', data=edges_ref)
             sgrp['edges_r3D'].attrs.create('units', np.string_('R200c'))
             #sgrp['edges_r3D'].attrs.create('comoving', False)
-            sgrp.create_dataset('NaN_per_bin', data=nancount)
             sgrp.attrs.create('galaxy_count', galcount)
 
     print('Saved data to file {}'.format(outname))  
