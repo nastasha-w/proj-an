@@ -2173,6 +2173,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             outname.append(part)
     outname.append('inclSFgas' if inclSFgas else 'exclSFgas')
     outname.append('indiv-gal-rad3Dprof')
+    outname.append('testfile') # debug without messing up previous work
     outname = '_'.join(outname)
     outname = '/'.join(pathparts[:-1]) + '/' +  outname + '.' + ext
     print('will save to: {}'.format(outname))
