@@ -2083,6 +2083,8 @@ def deletesets(filen):
 # tested output files with one set of 10 galaxies 
 # (some weren't in the mass selection)
 # tested percentiles with one of them, inclSFgas True option only
+# tested for cumul and Temperature_T4EOS percaxis, histtypes
+# nrprof and Trprof respectively
 def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None, 
                           weighttype='Mass', histtype='rprof_rho-T-nion',
                           binby=('M200c_Msun', 
@@ -2148,7 +2150,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                               index_col='galaxyid')
     galname_all = pd.read_csv(fname, header=0, sep='\t', 
                               index_col='galaxyid')
-    return galdata_all, galname_all
+    #return galdata_all, galname_all # to get input files for checking output
     if idsel is not None:
         if isinstance(idsel, slice):
             galids = np.array(galname_all.index)[idsel]
