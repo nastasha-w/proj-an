@@ -2338,6 +2338,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
 
 
 def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None, 
+                          inclSFgas=True,
                           weighttype='Mass', histtype='rprof_rho-T-nion',
                           percentiles_in=np.array([0.02, 0.1, 0.5, 0.9, 0.98]),
                           percentiles_out=[[0.5], [0.5], 
@@ -2346,7 +2347,7 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
     '''
     get percentiles of individual percentile distributions in galaxy 
     property sets. Saved in the same file as the individual profiles
-    binning, inclSFgs follows the groups set in the previous step
+    binning follows the groups set in the previous step
 
     idsel: project only a subset of galaxies according to the given list
            useful for testing on a few galaxies
@@ -2409,6 +2410,7 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
     for part in nameparts:
         if not (part[0] in ['x', 'y', 'z'] and '-pm' in part):
             inname.append(part)
+    inname.append('inclSFgas' if inclSFgas else 'exclSFgas')
     inname.append('indiv-gal-rad3Dprof')
     inname = '_'.join(inname)
     inname = '/'.join(pathparts[:-1]) + '/' +  inname + '.' + ext
