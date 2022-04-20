@@ -2309,7 +2309,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                      else ogrp[ggrpn] 
             if percaxis == 'cumul':
                 ggrp.create_dataset('cumulative_weight', data=cumulvals)
-                ggrp['percentiles'].attrs.create('inclSFgas', inclSFgas)
+                ggrp['cumulative_weight'].attrs.create('inclSFgas', inclSFgas)
             else:
                 ggrp.create_dataset('percentiles', data=percs)
                 ggrp['percentiles'].attrs.create('axis_perc', 0)
