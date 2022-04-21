@@ -2510,6 +2510,7 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                             ni = encledge[0]
                         else:
                             ni = np.argmin(np.abs(_ed, - normp))
+                        ni = ni - 1 # cumulative value is at right bin edge
                         _cumul = ggrp['cumulative_weight'][:]
                         _cumul *= 1. / _cumul[ni]
                         percvals.append(_cumul)
