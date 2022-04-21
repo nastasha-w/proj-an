@@ -2505,7 +2505,7 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             sgrp = bgrp.create_group('ensemble_percentiles')
             if percaxis == 'cumul':
                 dsfmt = 'perc-{pout:.3f}'
-                if hasattr(percentiles_out[0], 'len'):
+                if hasattr(percentiles_out[0], '__len__'):
                     perc_out = set()
                     for _po in percentiles_out:
                         perc_out = perc_out.union(set(list(_po)))
