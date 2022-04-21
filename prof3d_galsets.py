@@ -2360,7 +2360,8 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                           percentiles_in=np.array([0.02, 0.1, 0.5, 0.9, 0.98]),
                           percentiles_out=[[0.5], [0.5], 
                                            [0.02, 0.1, 0.5, 0.9, 0.98], 
-                                           [0.5], [0.5]]):
+                                           [0.5], [0.5]],
+                          cumul_normrad_r200c=1.):
     '''
     get percentiles of individual percentile distributions in galaxy 
     property sets. Saved in the same file as the individual profiles
@@ -2371,6 +2372,9 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
            ! do not run in  parallel: different processes will try to write to
            the same list of output files
     percaxis: axis to get the profile for
+    cumul_normrad: for cumulative profiles, normalize to the value at this
+            radius before getting percentiles. None means no normalization
+            beforehand.
     '''
     # non-cumul: profile tested on Trprof, em-c5r, one halo mass bin,
     # percentile 50 of 90th percentiles 
@@ -2492,7 +2496,24 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                     msg = msg.format(galid, galids_bin[0], bkey)
                     raise RuntimeError(msg)
                 if percaxis == 'cumul':
-                    percvals.append(ggrp['cumulative_weight'])
+                    if cumul_normrad_r200c is None:
+                        percvals.append(ggrp['cumulative_weight'])
+                    else:
+                        np = cumul_normrad_r200c
+                        encledge = np.where(np.isclose(_ed, np))[0]
+                        if len(encledge) == 0:
+                            msg = 'could not find a value close to {}' + \
+                                  ' R200c for galaxy {}'
+                            msg = msg.format(np, galid)
+                            raise RuntimeError(msg)
+                        elif len(encledge) == 1:
+                            ni = encledge[0]
+                        else:
+                            ni = np.argmin(np.abs(_ed, - np))
+                        _cumul = ggrp['cumulative_weight'][:]
+                        _cumul *= 1. / _cumul[ni]
+                        percvals.append(_cumul)
+
                 else:
                     percvals.append(ggrp['percentiles'])
                     
@@ -2514,12 +2535,17 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                     perc_out = np.array(perc_out)
                 else:
                     perc_out = np.array(percentiles_out)
-                print('percvals: ', percvals)
-                print('perc_out: ', perc_out)
+                #print('percvals: ', percvals)
+                #print('perc_out: ', perc_out)
                 percofcumul = np.quantile(percvals, perc_out, axis=0)
                 for poind, pout in enumerate(perc_out):
                     dsname = dsfmt.format(pout=pout)
                     sgrp.create_dataset(dsname, data=percofcumul[poind, :])
+                    isnormed = cumul_normrad_r200c is not None
+                    sgrp.attrs.create('normalized profiles', isnormed)
+                    if isnormed:
+                        sgrp.attrs.create('indiv. normalized at [R200c]', 
+                                          cumul_normrad_r200c)
                 
             else:
                 dsfmt = 'perc-{pout:.3f}_of_indiv_perc-{pin:.3f}' 
@@ -2551,4 +2577,4 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             sgrp.attrs.create('galaxy_count', galcount)
 
     print('Saved data to file {}'.format(outname))  
-    print('Main hdf5 group: {}/{}'.format(ogrpn, samplename))
+    print('Main hdf5 group: '.format(ogrpn))
