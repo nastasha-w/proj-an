@@ -2512,6 +2512,8 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                     perc_out = np.array(list(perc_out).sort())
                 else:
                     perc_out = np.array(percentiles_out)
+                print('percvals: ', percvals)
+                print('perc_out: ', perc_out)
                 percofcumul = np.quantile(percvals, perc_out, axis=0)
                 for poind, pout in enumerate(perc_out):
                     dsname = dsfmt.format(pout=pout)
