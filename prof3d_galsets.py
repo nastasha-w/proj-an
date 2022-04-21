@@ -2492,9 +2492,10 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                     msg = msg.format(galid, galids_bin[0], bkey)
                     raise RuntimeError(msg)
                 if percaxis == 'cumul':
-                    percvals.append(ggrp['percentiles'])
-                else:
                     percvals.append(ggrp['cumulative_weight'])
+                else:
+                    percvals.append(ggrp['percentiles'])
+                    
 
                 
             # shape: galaxy, [percentile,] radius
