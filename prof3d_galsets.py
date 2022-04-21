@@ -2508,7 +2508,7 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                 if hasattr(percentiles_out[0], 'len'):
                     perc_out = set()
                     for _po in percentiles_out:
-                        perc_out = perc_out.union(_po)
+                        perc_out = perc_out.union(set(list(_po)))
                     perc_out = np.array(list(perc_out).sort())
                 else:
                     perc_out = np.array(percentiles_out)
