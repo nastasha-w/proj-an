@@ -2499,17 +2499,17 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                     if cumul_normrad_r200c is None:
                         percvals.append(ggrp['cumulative_weight'])
                     else:
-                        np = cumul_normrad_r200c
-                        encledge = np.where(np.isclose(_ed, np))[0]
+                        normp = cumul_normrad_r200c
+                        encledge = np.where(np.isclose(_ed, normp))[0]
                         if len(encledge) == 0:
                             msg = 'could not find a value close to {}' + \
                                   ' R200c for galaxy {}'
-                            msg = msg.format(np, galid)
+                            msg = msg.format(normp, galid)
                             raise RuntimeError(msg)
                         elif len(encledge) == 1:
                             ni = encledge[0]
                         else:
-                            ni = np.argmin(np.abs(_ed, - np))
+                            ni = np.argmin(np.abs(_ed, - normp))
                         _cumul = ggrp['cumulative_weight'][:]
                         _cumul *= 1. / _cumul[ni]
                         percvals.append(_cumul)
