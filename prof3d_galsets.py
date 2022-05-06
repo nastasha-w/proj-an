@@ -2299,7 +2299,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                 redges = np.copy(edges_t[rax])
                 r200c = galdata_all.at[galid, 'R200c_cMpc']
                 r200c *= cosmopars['a'] * c.cm_per_mpc
-                redges = ggrp['edges_r3D'] / r200c
+                redges *= 1. / r200c
                 si = np.where(np.isclose(redges, minrad_use_r200c))[0]
                 if len(si) != 1:
                     msg = 'did not find edge matching {} R200c for {}'

@@ -3967,6 +3967,8 @@ elif jobind in range(20536, 20538):
     #         10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.]))
     p_in = np.array([0.02, 0.1, 0.5, 0.9, 0.98])
     p_out = [[0.5], [0.5], [0.02, 0.1, 0.5, 0.9, 0.98], [0.5], [0.5]]
+    binby = ('M200c_Msun', 
+             10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.]))
     # iterate over weighttypes since these will and up in the same files
     # trying to run axdcts concurrently will just cause I/O errors
     weighttype = weighttypes[jobind - 20536]
