@@ -2480,7 +2480,7 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
     inname.append('inclSFgas' if inclSFgas else 'exclSFgas')
     inname.append('indiv-gal-rad3Dprof')
     if minrad_use_r200c is not None:
-        outname.append('from-{:.2f}-R200c'.format(minrad_use_r200c))
+        inname.append('from-{:.2f}-R200c'.format(minrad_use_r200c))
     #inname.append('testfile') # debug without messing up previous work
     inname = '_'.join(inname)
     inname = '/'.join(pathparts[:-1]) + '/' +  inname + '.' + ext
