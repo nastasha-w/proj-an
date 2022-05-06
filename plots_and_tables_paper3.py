@@ -3750,8 +3750,8 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                             pedges = edges[1:]
                             eplus = pvals[2] - pvals[1]
                             emin = pvals[1] - pvals[0]
-                            ax.plot(pedges, pvals[1], yerr=[emin, eplus],
-                                   color=color, linestyle='dotted')
+                            ax.errorbar(pedges, pvals[1], yerr=[emin, eplus],
+                                        color=color, linestyle='dotted')
 
                         else:
                             if yq == 'Volume':
@@ -3767,8 +3767,8 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                             pedges = 0.5 * (edges[:-1] + edges[1:])
                             eplus = pvals[4] - pvals[0]
                             emin = pvals[0] - pvals[3]
-                            ax.plot(pedges, pvals[0], yerr=[emin, eplus],
-                                   color=color, linestyle=ls)
+                            ax.errorbar(pedges, pvals[0], yerr=[emin, eplus],
+                                        color=color, linestyle=ls)
                             ax.fill_between(pedges, pvals[1], pvals[2],
                                             alpha=0.5, color=color,
                                             linestyle='none')
