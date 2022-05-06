@@ -3753,16 +3753,15 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                                                          __mmin, __mmax, pofp)
                             pedges = np.log10(redges[1:])
                             pvals = [np.log10(_a) for _a in pvals]
+                            if yq == 'Z':
+                                pvals = [_a - np.log10(Zsol) for _a in pvals]
                             eplus = pvals[2] - pvals[1]
                             emin = pvals[1] - pvals[0]
                             ax.errorbar(pedges, pvals[1], yerr=[emin, eplus],
                                         color=color, linestyle='dotted')
 
                         else:
-                            if weight == 'Volume':
-                                ls = 'dashdot'
-                            else:
-                                ls = 'dotted'
+                            ls = 'dotted'
                             pofp = [(0.5, 0.5), (0.1, 0.5), (0.9, 0.5),
                                     (0.5, 0.1), (0.5, 0.9)]
                             redges, pvals, nancount, numgals = \
@@ -3864,21 +3863,21 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                         horizontalalignment='left', verticalalignment='top',
                         transform=ax.transAxes)
                 if mi == 1:
-                    handles = [mlines.Line2D((), (), linestyle='dotted',
+                    handles = [ mlines.Line2D((), (), linestyle='solid',
                                          color='black', alpha=1., 
                                          linewidth=linewidth_thick,
-                                         marker='+',
-                                         label='median, 80% intra-halo'),
-                               mlines.Line2D((), (), linestyle='dashdot',
+                                         label='median R200c norm. stack'),
+                               mlines.Line2D((), (), linestyle='dotted',
                                          color='black', alpha=1., 
                                          linewidth=linewidth_thick,
-                                         label='V median, 80% intra-halo'),
+                                         marker='|', markersize=30,
+                                         label='med of med, 80% intra-halo'),
                                mpatch.Patch(edgecolor='none', 
                                             facecolor='black', alpha=0.5,
-                                            label='80% inter-halo scatter')
+                                            label='80% inter-halo med scatter')
                                ]
-                    labels = ['median, 80% inter-halo',
-                              'V median, 80% inter-halo',
+                    labels = ['median R200c norm. stack',
+                              'median, 80% inter-halo',
                               '80% intra-halo scatter'
                               ]
                     ax.legend(handles, labels, fontsize=fontsize-2,
