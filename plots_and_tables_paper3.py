@@ -3488,7 +3488,7 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp,
                      for pp in pofp]
             return redges, pvals
         else:
-            numgals = len(wgrp['galaxyids'])
+            numgals = len(mgrp[matchkey]['galaxyids'])
             nancount = wgrp['NaN_per_bin'][:]
             pstr = 'perc-{:.3f}_of_indiv_perc-{:.3f}'
             pvals = [wgrp[pstr.format(*pp)][:] for pp in pofp]
