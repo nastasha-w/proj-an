@@ -3380,7 +3380,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 
-def readin_3dprof_percofperc(weight, quantity, mmin, mmin, pofp):
+def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp):
     '''
     Parameters:
     -----------
@@ -3401,8 +3401,73 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmin, pofp):
         radial bin edges in units [R200c]
     percentile values: list of arrays of floats
         list indices match pofp indices
-
+    NaN_per_bin: array of ints
+        number of profiles excluded per bin due to zero weight
+    numgals: int
+        number of galaxies in the mass bin
     '''
+    
+    ps20str_fn = '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F'
+    if weight in all_lines_PS20:
+        _ps20str = ps20str_fn
+        wtsr = 'Luminosity_{line}'.format(line=weight.replace(' ', '-'))
+    elif weight in all_lines_SB:
+        _ps20str = ''
+        wtsr = 'Luminosity_{line}'.format(line=weight)
+    elif weight == 'Volume':
+        wstr = 'propvol'
+        _ps20str = ''
+    else:
+        strw = weight
+        _ps20str = '' 
+    filebase = 'particlehist_{wt}{ps20}_L0100N1504_27_test3.7_SmAb_T4EOS' + \
+               '_inclSFgas_indiv-gal-rad3Dprof.hdf5'
+    filen = ddir + 'histograms/' + filebase.format(wt=wstr, ps20=_ps20str)
+    
+    if quantity in ['T']:
+        tgrpn = 'Temperature_T4EOS'
+    elif quantity in ['nH']:
+        trgpn = 'Niondens_hydrogen_SmAb{ps20}_T4EOS'
+        tgrpn = tgrpn.format(ps20=_ps20str)  
+    elif quantity.startswith('Z-'):
+        elt = quantity.split('-')[1]
+        tgrpn = 'SmoothedElementAbundance-{elt}_T4EOS'
+        tgrpn = tgrpn.format(elt=string.capwords(elt))
+    
+    mgrpn = '{trgpn}/L0100N1504_27_Mh0p5dex_1000'.format(tgrpn=tgrpn)
+    with h5py.File(filen, 'r') as f:
+        mgrp = f[mgrpn]
+        keys = set(list(mgrp.keys()))
+        mkeys = {key if 'galaxy' not in key else None for key in keys}
+        mkeys.remove(None)
+        mkeys.remove('Header')
+        mkeys = list(mkeys)
+        # bin names format: 'M200c_Msun_3162277660168.38-10000000000000.00'
+        masses = [key.split('_')[-1] for key in mkeys]
+        masses = [mass.split('-') for mass in masses]
+        masses = [[float(val) for val in _ls] for _ls in masses]
+        masses = np.array(masses)
+        target = np.array([10**mmin, 10**mmax])
+        match = np.where([np.allclose(mass, target)for mass in masses])[0]
+        if len(match) != 1:
+            msg = 'no single match for masses {} in list {} from {}'
+            raise RuntimeError(msg.format(target, masses, mkeys))
+        matchkey = mkeys[match[0]]
+        if not matchkey.startswith('M200c_Msun_'):
+            raise RuntimeError('unexpected mass units {}'.format(matchkey))
+        wgrp = mgrp[matchkey]
+        
+        numgals = len(wgrp['galaxyids'])
+        nancount = wgrp['NaN_per_bin'][:]
+        redges = wgrp['edges_r3D'][:]
+        pstr = 'perc-{:.3f}_of_indiv_perc-{:.3f}'
+        pvals = [wgrp[pstr.format(pp)][:] for pp in pofp]
+
+        return redges, pvals, nancount, numgals
+
+
+
+
 
 
 def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):

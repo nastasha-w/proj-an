@@ -4037,7 +4037,7 @@ elif jobind in range(20538, 20556):
                                   percentiles=p_in,
                                   inclSFgas=True,
                                   minrad_use_r200c=minr200c)
-        if percaxis == 'nrprof':
+        if axdct == 'nrprof':
             p3g.extract_indiv_radprof(percaxis='cumul', 
                                       samplename=samplename,
                                       idsel=None, weighttype=weighttype, 
@@ -4077,7 +4077,7 @@ elif jobind in range(20556, 20558):
                                   percentiles=p_in,
                                   inclSFgas=True,
                                   minrad_use_r200c=minr200c)
-        if percaxis == 'nrprof':
+        if axdct == 'nrprof':
             p3g.extract_indiv_radprof(percaxis='cumul', 
                                       samplename=samplename,
                                       idsel=None, weighttype=weighttype, 
@@ -4135,7 +4135,7 @@ elif jobind in range(20558, 20576):
                                   inclSFgas=True,
                                   cumul_normrad_r200c=1.,
                                   minrad_use_r200c=minr200c)
-        if percaxis == 'nrprof':
+        if axdct == 'nrprof':
             p3g.combine_indiv_radprof(percaxis='cumul', 
                                       samplename=samplename,
                                       idsel=None, weighttype=weighttype, 
@@ -4180,7 +4180,7 @@ elif jobind in range(20576, 20578):
                                   cumul_normrad_r200c=1.,
                                   minrad_use_r200c=minr200c)
 
-        if percaxis == 'nrprof':
+        if axdct == 'nrprof':
             p3g.combine_indiv_radprof(percaxis='cumul', 
                                       samplename=samplename,
                                       idsel=None, weighttype=weighttype, 
