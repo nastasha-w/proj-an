@@ -4013,8 +4013,8 @@ elif jobind in range(20538, 20556):
     line = weighttypes[jobind - 20538]
     weighttype = 'em-' + line.replace(' ', '-')
     samplename = 'L0100N1504_27_Mh0p5dex_1000'
-    #binby = ('M200c_Msun', 
-    #         10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.]))
+    binby = ('M200c_Msun', 
+             10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.]))
     #percvals = np.array([0.02, 0.1, 0.5, 0.9, 0.98])
 
     ps20str = '_PS20-iontab-UVB-dust1-CR1-G1-shield1_depletion-F' \
