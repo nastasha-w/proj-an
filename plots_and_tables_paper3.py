@@ -3387,13 +3387,14 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp):
     weight: str
         'Mass', 'Volume', or a line name
     quantity: str
-        'T', 'nH', 'Z-{element name}', or 'cumul'
+        'T', 'n', 'Z-{element name}', or 'cumul'
     mmin: float
         minimum mass (log10 Msun)
     mmax: float
         maximum mass (log10 Msun)
     pofp: list of tuples of floats in range 0 to 1
         percentile tuple[0] of individual galaxy percentile tuple[1]
+        for 'cumul', the zero entry is used
     
     Returns:
     --------
@@ -3426,13 +3427,15 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp):
     
     if quantity in ['T']:
         tgrpn = 'Temperature_T4EOS'
-    elif quantity in ['nH']:
+    elif quantity in ['n']:
         trgpn = 'Niondens_hydrogen_SmAb{ps20}_T4EOS'
         tgrpn = tgrpn.format(ps20=_ps20str)  
     elif quantity.startswith('Z-'):
         elt = quantity.split('-')[1]
         tgrpn = 'SmoothedElementAbundance-{elt}_T4EOS'
         tgrpn = tgrpn.format(elt=string.capwords(elt))
+    else: # 'cumul'
+        tgrpn = quantity
     
     mgrpn = '{trgpn}/L0100N1504_27_Mh0p5dex_1000'.format(tgrpn=tgrpn)
     with h5py.File(filen, 'r') as f:
@@ -3457,18 +3460,21 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp):
             raise RuntimeError('unexpected mass units {}'.format(matchkey))
         wgrp = mgrp[matchkey]
         
-        numgals = len(wgrp['galaxyids'])
-        nancount = wgrp['NaN_per_bin'][:]
         redges = wgrp['edges_r3D'][:]
-        pstr = 'perc-{:.3f}_of_indiv_perc-{:.3f}'
-        pvals = [wgrp[pstr.format(pp)][:] for pp in pofp]
+        if quantity == 'cumul':
+            pstr = 'perc-{:.3f}'
+            pvals = [wgrp[pstr.format(*pp)][:] \
+                     if isinstance(pp, tuple) else \
+                     wgrp[pstr.format(pp)][:] \
+                     for pp in pofp]
+            return redges, pvals
+        else:
+            numgals = len(wgrp['galaxyids'])
+            nancount = wgrp['NaN_per_bin'][:]
+            pstr = 'perc-{:.3f}_of_indiv_perc-{:.3f}'
+            pvals = [wgrp[pstr.format(*pp)][:] for pp in pofp]
 
-        return redges, pvals, nancount, numgals
-
-
-
-
-
+            return redges, pvals, nancount, numgals
 
 def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
     '''
@@ -3488,6 +3494,426 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
     inclSF = True #False is not implemented in the histogram extraction
     outname = mdir + 'prof3d_L0100N1504_27_Mh0p5dex_1000_{}_set{ws}'+\
                      '_mmin-{mmin}'
+    # for halo mass selections
+    minhalomass = mmin_default
+    if M200cslice is None:
+        massslice = slice(None, None, 2)
+    else:
+        massslice = M200cslice
+    minrshow = np.log10(0.1) # log10 R200c
+    
+    outname = outname.format('wSF' if inclSF else 'nSF', ws=weightset, 
+                             mmin=minhalomass)
+    outname = outname.replace('.', 'p') + '.pdf'
+    
+    # 'n6r', 'o7ix', 
+    weightsets = {1: ['c5r', 'c6'],
+                  2: ['n6-actualr', 'n7'],
+                  3: ['ne9r', 'ne10'],
+                  4: ['mg11r', 'mg12'],
+                  5: ['si13r'],
+                  6: ['o7r', 'o8'],
+                  7: ['o7r', 'o7iy', 'o7f'],
+                  8: ['fe17', 'fe17-other1', 'fe18', 'fe19'],
+                  9: ['C  5      40.2678A', 'C  6      33.7372A'],
+                  10: ['N  6      28.7870A', 'N  7      24.7807A'],
+                  11: ['O  7      22.1012A', 'O  8      18.9709A'],
+                  12: ['O  7      22.1012A', 'O  7      21.8070A',
+                       'O  7      21.6020A'],
+                  13: ['Ne 9      13.4471A', 'Ne10      12.1375A'],
+                  14: ['Mg11      9.16875A', 'Mg12      8.42141A'],
+                  15: ['Si13      6.64803A'],
+                  16: ['Fe17      17.0510A', 'Fe17      15.2620A', 
+                       'Fe17      16.7760A', 'Fe17      17.0960A', 
+                       'Fe18      16.0720A'],
+                  }
+    
+    ws = weightsets[weightset]
+    weights = ['Mass', 'Volume'] + ws
+    axweights = {0: ['Mass', 'Volume']}
+    axweights.update({i + 1: [ws[i]] for i in range(len(ws))})
+    elt = string.capwords(parentelts[ws[0]])
+    Zsol = ol.solar_abunds_ea[elt.lower()]
+    print('Using {elt} metallicity, solar value {Zsol}'.format(elt=elt,
+          Zsol=Zsol))
+        
+    fontsize = 12
+    percentile = 0.50
+    rbinu = 'R200c'
+    combmethods = ['addnormed-R200c'] # 'add', 
+    #comblabels = {'add': 'L median',
+    #              'addnormed-R200c': 'L / $\\mathrm{L}_{\\mathrm{200c}}$'}
+    print('Showing percentile ' + str(percentile))
+    alphas = {'add': 0.4,
+              'addnormed-R200c': 1.,
+              }
+    linestyles = {weight: 'solid' for weight in weights}
+    linestyles.update({'Volume': 'dashed'})
+    title = 'medians from stacked histograms'
+    print(title)
+    
+    # snapshot 27
+    # avoid having to read in the halo catalogue just for this; 
+    # copied from there
+    cosmopars = cosmopars_27 
+    
+    axlabels = {'T': '$\\log_{10} \\, \\mathrm{T} \; [\\mathrm{K}]$',
+                'n': '$\\log_{10} \\, \\mathrm{n}(\\mathrm{H}) \\;'+\
+                     ' [\\mathrm{cm}^{-3}]$',
+                'Z': '$\\log_{10} \\, \\mathrm{Z} \\; [\\mathrm{Z}_{\\odot}]$',
+                'weight': ['$\\log_{10} \\, \\mathrm{M}(< r) \\,/\\,'+\
+                           '\\mathrm{M}(< \\mathrm{R}_{\\mathrm{200c}})$',
+                           '$\\log_{10} \\, \\mathrm{L}(< r) \\,/\\,'+\
+                           '\\mathrm{L}(< \\mathrm{R}_{\\mathrm{200c}})$'
+                           ]
+                }
+    # weight: '$\\log_{10} \\, \\mathrm{\\Sigma}(< r) \\,/\\,'+\
+    # ' \\mathrm{\\Sigma}(< \\mathrm{R}_{\\mathrm{200c}})$',
+    axnl = {0: 'weight', 1: 'n', 2: 'T', 3: 'Z'}
+    
+    filebase_line_SB = 'particlehist_Luminosity_{line}_L0100N1504_27'+\
+                       '_test3.6_SmAb_T4EOS_galcomb.hdf5'
+    filebase_line_PS20 = 'particlehist_Luminosity_{line}'+\
+                         '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F'+\
+                         '_L0100N1504_27_test3.7_SmAb_T4EOS_galcomb.hdf5'                   
+    filebase_basic = 'particlehist_{qt}_L0100N1504_27_test3.6_T4EOS'+\
+                     '_galcomb.hdf5'
+    _dir = ddir + 'histograms/'
+    filenames = {weight: _dir + filebase_line_SB.format(line=weight)\
+                        if weight in all_lines_SB else\
+                        _dir + filebase_line_PS20.format(
+                            line=weight.replace(' ', '-')) \
+                        if weight in all_lines_PS20 else \
+                        _dir + filebase_basic.format(
+                            qt='propvol' if weight == 'Volume' else weight)\
+                 for weight in weights}
+    # read in data: stacked histograms -> process to plottables
+    hists = {}
+    edges = {}
+    for cbm in combmethods:
+        hists[cbm] = {}
+        edges[cbm] = {}
+        for weight in weights:
+            hists[cbm][weight], edges[cbm][weight], _ =\
+            readin_3dprof_stacked(filenames[weight], Zelt=elt, weight=weight,
+                          combmethod=cbm, rbinu=rbinu)
+        
+    # set up plot grid
+    panelwidth = 3.
+    panelheight = 2.5
+    toplabelheight = 0.0
+    caxwidth = 0.5
+    #nmassbins = len(hists[combmethods[0]][weights[0]])
+    nprof = 4 # cumulative, n, T, Z
+    
+    width_ratios = [panelwidth] * len(axweights) + [caxwidth]
+    fig = plt.figure(figsize=(len(axweights) * panelwidth + caxwidth,
+                              nprof * panelheight + toplabelheight))
+    grid = gsp.GridSpec(nrows=nprof, ncols=len(axweights) + 1,
+                        hspace=0.0, wspace=0.0,
+                        width_ratios=width_ratios,
+                        height_ratios=[panelheight] * nprof,
+                        top=0.97, bottom=0.05)
+    axes = np.array([[fig.add_subplot(grid[yi, xi])\
+                      for xi in range(len(axweights))]\
+                      for yi in range(nprof)])
+    cax  = fig.add_subplot(grid[:, len(axweights)])
+    
+
+    massedges = np.arange(minhalomass, 14.1, 0.5)
+    massedges.sort()
+    _list = tc.tol_cmap('rainbow_discrete', lut=len(massedges))
+    clist = _list(np.linspace(0.,  1., len(massedges)))
+    massincl = massedges[massslice]
+    massexcl = np.array([ed not in massincl for ed in massedges])
+    clist[massexcl] = np.array([1., 1., 1., 1.])
+    keys = massedges
+    colordct = {keys[i]: clist[i] for i in range(len(keys))}
+    #del _masks
+    
+    #print(clist)
+    cmap = mpl.colors.ListedColormap(clist[:-1])
+    cmap.set_over(clist[-1])
+    norm = mpl.colors.BoundaryNorm(massedges, cmap.N)
+    bounds = np.append(massedges, np.array(massedges[-1] + 1.))
+    cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,
+                                norm=norm,
+                                boundaries=bounds,
+                                ticks=massedges,
+                                spacing='proportional', extend='max',
+                                orientation='vertical')
+    # to use 'extend', you must
+    # specify two extra boundaries:
+    # boundaries=[0] + bounds + [13],
+    # extend='both',
+    # ticks=bounds,  # optional
+    clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\;'+\
+             ' [\\mathrm{M}_{\\odot}]$'
+    cbar.set_label(clabel, fontsize=fontsize)
+    cax.tick_params(labelsize=fontsize - 1)
+    cax.set_aspect(8.)
+    
+    xlabel = '$\\log_{10} \\, \\mathrm{r} \\, / \\,'+ \
+             ' \\mathrm{R}_\\mathrm{200c}}$'
+    linewidth = 1.
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"),
+               mppe.Stroke(linewidth=linewidth, foreground="w"),
+               mppe.Normal()]
+    linewidth_thick = 2.
+    patheff_thick = [mppe.Stroke(linewidth=linewidth_thick + 0.5, 
+                                 foreground="black"),
+                     mppe.Stroke(linewidth=linewidth_thick, foreground="w"),
+                     mppe.Normal()]
+     
+    #fig.suptitle(title, fontsize=fontsize + 2)
+    
+   
+    for mi in axweights:
+        for ti in range(nprof):
+            # where are we
+            ax = axes[ti, mi]
+            labelx = ti == nprof - 1
+            labely = mi == 0
+            yq = axnl[ti]
+            _weights = axweights[mi]
+            
+            # set up axis
+            pu.setticks(ax, top=True, left=True, labelleft=labely,
+                        labelbottom=labelx, fontsize=fontsize)
+            ax.grid(b=True)
+            
+            if labelx:
+                ax.set_xlabel(xlabel, fontsize=fontsize)
+            if labely:
+                if yq == 'weight':
+                    _yl = axlabels[yq][0]
+                else:
+                    _yl = axlabels[yq]
+                ax.set_ylabel(_yl, fontsize=fontsize)
+            if mi == len(axweights) - 1 and yq == 'weight':
+                ax.set_ylabel(axlabels[yq][1], fontsize=fontsize)
+                ax.yaxis.set_label_position('right')
+            
+            # plot stacked histogram
+            for weight in _weights:
+                for cmb in combmethods:
+
+                    _hists = hists[cmb][weight]
+                    _edges = edges[cmb][weight]
+                    mkeys = _hists.keys()
+                    for mkey in mkeys:
+                        keymatch = np.isclose(massincl, mkey)
+                        if not np.any(keymatch):
+                            continue
+                        cmkey = massincl[np.where(keymatch)[0][0]]
+                        color = colordct[cmkey]
+
+                        ### percentile of percentile
+                        __weight = weight.copy()
+                        if __weight.startswith('em-'):
+                            __weight = '-'.join(weight.split('-')[1:])
+                        if '--' in __weight:
+                            __weight = __weight.replace('-', ' ')
+                        if yq == 'Z'
+                            quantity = 'Z-{}'.format(elt)
+                        elif yq == 'weight':
+                            quantity = 'cumul'
+                        else:
+                            quantity = yq
+                        __mmin = cmkey
+                        __mmax = __mmin + 1. if np.isclose(__mmin, 14.) else\
+                                 __mmin + 0.5 
+                        if yq == 'weight':
+                            pofp = [(0.1,), (0.5,), (0.9,)]
+                            edges, pvals = \
+                                readin_3dprof_percofperc(weight, quantity, 
+                                                         __mmin, __mmax, pofp)
+                            pedges = edges[1:]
+                            eplus = pvals[2] - pvals[1]
+                            emin = pvals[1] - pvals[0]
+                            ax.plot(pedges, pvals[1], yerr=[emin, eplus],
+                                   color=color, linestyle='dotted')
+
+                        else:
+                            if yq == 'Volume':
+                                ls = 'dashdot'
+                            else:
+                                ls = 'dotted'
+                            pofp = [(0.5, 0.5), (0.1, 0.5), (0.9, 0.5),
+                                    (0.5, 0.1), (0.5, 0.9)]
+                            redges, pvals, nancount, numgals = \
+                                readin_3dprof_percofperc(weight, quantity, 
+                                                         __mmin, __mmax, pofp)
+
+                            pedges = 0.5 * (edges[:-1] + edges[1:])
+                            eplus = pvals[4] - pvals[0]
+                            emin = pvals[0] - pvals[3]
+                            ax.plot(pedges, pvals[0], yerr=[emin, eplus],
+                                   color=color, linestyle=ls)
+                            ax.fill_between(pedges, pvals[1], pvals[2],
+                                            alpha=0.5, color=color,
+                                            linestyle='none')
+
+
+                        ### percentile of stacks
+                        edges_r = _edges[mkey][yq][0] 
+                        si = np.where(np.isclose(edges_r, minrshow))[0][0]
+                        
+                        if yq != 'weight':
+                            edges_y = _edges[mkey][yq][1]
+                            hist = _hists[mkey][yq]
+                            re = np.sum(hist[:si, :], axis=0)[np.newaxis, :]
+                            hist = np.append(re, hist[si:, :], axis=0)
+                            if yq == 'Z':
+                                edges_y -= np.log10(Zsol)
+                            perclines = pu.percentiles_from_histogram(hist, 
+                                        edges_y, axis=1, 
+                                        percentiles=np.array([percentile]))
+                            mid_r = edges_r[:-1] + 0.5 * np.diff(edges_r)
+                            mid_r = mid_r[si - 1:]
+                            
+                            
+                            pi = 0
+                            ax.plot(mid_r, perclines[pi], color=color,
+                                    linestyle=linestyles[weight], 
+                                    alpha=alphas[cmb],
+                                    path_effects=patheff_thick, 
+                                    linewidth=linewidth_thick)
+                            
+                        else:
+                            # just takes up space in a cumulative profile
+                            if weight == 'Volume': 
+                                continue
+                            hist = _hists[mkey][yq][si:]
+                            edges_r = edges_r[si:]
+                            #if combmethod == 'add':
+                            #    numgal = len(galids_main[mkey])
+                            #    hist /= float(numgal)
+                                
+                            ax.plot(edges_r, np.log10(hist), color=color,
+                                        linestyle=linestyles[weight], 
+                                        alpha=alphas[cmb],
+                                        path_effects=patheff_thick, 
+                                        linewidth=linewidth_thick)
+                        
+                        # add CIE T indicators
+                        if weight in line_Tmax and yq == 'T':
+                            Tcen = line_Tmax[weight]
+                            Tran = line_Trange[weight]
+                            ax.axhline(Tcen, color='black', linestyle='solid',
+                                       linewidth=linewidth)
+                            ax.axhline(Tran[0], color='black', 
+                                       linestyle='dotted',
+                                       linewidth=linewidth)
+                            ax.axhline(Tran[1], color='black', 
+                                       linestyle='dotted',
+                                       linewidth=linewidth)
+                        # add Tvir indicator
+                        elif weight == 'Mass' and yq == 'T':
+                            medm = 10**medianmasses[cmkey] # M200c [Msun]
+                            Tv = cu.Tvir(medm, cosmopars=cosmopars, mu=0.59)
+                            ax.axhline(np.log10(Tv), color=color,
+                                       linestyle='dotted', 
+                                       linewidth=linewidth,
+                                       path_effects=patheff)
+                            
+            # if ti == 0 and len(_weights) > 1:
+            #     handles = [mlines.Line2D((), (), linestyle=linestyles[weight],
+            #                              color='black', alpha=1., 
+            #                              linewidth=linewidth_thick,
+            #                              label=weight) for weight in _weights]
+            #     labels = [weight for weight in _weights]
+            #     ax.legend(handles, labels, fontsize=fontsize, 
+            #               bbox_to_anchor=(1., 0.), loc='lower right')
+            if ti != 0 and len(_weights) > 1:
+                handles = [mlines.Line2D((), (), linestyle=linestyles[weight],
+                                         color='black', alpha=1., 
+                                         linewidth=linewidth_thick,
+                                         label=weight) for weight in _weights]
+                labels = [weight[0] for weight in _weights]
+                ax.legend(handles, labels, fontsize=fontsize)
+                #, bbox_to_anchor=(1., 1.), loc='upper right'
+            elif ti == 0:
+                plabel = _weights[0]
+                if plabel in nicenames_lines:
+                    plabel = nicenames_lines[plabel]
+                ax.text(0.05, 0.95, plabel, fontsize=fontsize,
+                        horizontalalignment='left', verticalalignment='top',
+                        transform=ax.transAxes)
+                if mi == 1:
+                    handles = [mlines.Line2D((), (), linestyle='dotted',
+                                         color='black', alpha=1., 
+                                         linewidth=linewidth_thick,
+                                         marker='+'
+                                         label='median, 80% intra-halo'),
+                               mlines.Line2D((), (), linestyle='dashdot',
+                                         color='black', alpha=1., 
+                                         linewidth=linewidth_thick,
+                                         label='V median, 80% intra-halo'),
+                               mpatch.Patch(edgecolor='none', 
+                                            facecolor='black', alpha=0.5,
+                                            label='80% inter-halo scatter')
+                               ]
+                    ax.legend(handles, fontsize=fontsize-2)
+                
+            # if ti == 0 and mi == 1:
+            #     handles = [mlines.Line2D((), (), linestyle='solid', 
+            #                              color='black', alpha=alphas[cmb], 
+            #                              linewidth=linewidth_thick, 
+            #                              label=comblabels[cmb])\
+            #                for cmb in combmethods]
+            #     #labels = [comblabels[cmb] for cmb in combmethods]
+            #     ax.legend(handles=handles, fontsize=fontsize, 
+            #               bbox_to_anchor=(1., 0.), loc='lower right')
+                
+    # sync y limits on plots
+    for yi in range(nprof):
+        if axnl[yi] == 'T':
+            y0min = 3.5
+            y1max = 8.
+        elif axnl[yi] == 'n':
+            y0min = -6.5
+            y1max = 0.
+        elif axnl[yi] == 'Z':
+            y0min = -2.5
+            y1max = 0.8
+        elif axnl[yi] == 'weight':
+            y0min = -2.5
+            y1max = 1.
+        ylims = np.array([axes[yi, mi].get_ylim() \
+                          for mi in range(len(axweights))])
+        miny = max(np.min(ylims[:, 0]), y0min)
+        maxy = min(np.max(ylims[:, 1]), y1max)
+        # for Z and cumulative
+        miny = max(miny, maxy - 10.)
+        [[axes[yi, mi].set_ylim(miny, maxy) for mi in range(len(axweights))]]
+    for xi in range(len(axweights)):
+        xlims = np.array([axes[i, xi].get_xlim() for i in range(nprof)])
+        minx = np.min(xlims[:, 0])
+        maxx = np.max(xlims[:, 1])
+        [axes[i, xi].set_xlim(minx, maxx) for i in range(nprof)]
+    
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
+
+def plot_radprof3d_comp_stack_med(weightset=1, M200cslice=None):
+    '''
+    plot: cumulative profile of weight, rho profile, T profile, Z profile
+    rows show different weights
+    compare profiles from stacking and percentile-of-percentile
+    
+    input:
+    ------
+    weightset: int
+        which set of weights to plot. Always: M/V weighted and some lines from 
+        the same element
+    M200cslice: slice object or None
+        Which halo mass ranges (M200c, 0.5 dex starting at 10**11 Msun) to
+        include in the plot. The default (if None) is every other mass bin.
+    '''
+    
+    inclSF = True #False is not implemented in the histogram extraction
+    outname = mdir + 'prof3d_L0100N1504_27_Mh0p5dex_1000_{}_set{ws}'+\
+                     '_mmin-{mmin}_stack-vs-percofperc'
     # for halo mass selections
     minhalomass = mmin_default
     if M200cslice is None:
