@@ -3473,11 +3473,12 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp,
         matchkey = mkeys[match[0]]
         if not matchkey.startswith('M200c_Msun_'):
             raise RuntimeError('unexpected mass units {}'.format(matchkey))
-        wgrp = mgrp[matchkey]
+        wgrp = mgrp[matchkey]['ensemble_percentiles']
         
-        print(weight, quantity, mmin, mmax)
-        print(wgrp)
-        print(list(wgrp.keys()))
+        #print(weight, quantity, mmin, mmax)
+        #print(wgrp)
+        #print(list(wgrp.keys()))
+
         redges = wgrp['edges_r3D'][:]
         if quantity == 'cumul':
             pstr = 'perc-{:.3f}'
