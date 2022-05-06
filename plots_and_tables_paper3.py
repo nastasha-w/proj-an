@@ -3437,7 +3437,7 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp):
     else: # 'cumul'
         tgrpn = quantity
     
-    mgrpn = '{trgpn}/L0100N1504_27_Mh0p5dex_1000'.format(tgrpn=tgrpn)
+    mgrpn = '{tgrpn}/L0100N1504_27_Mh0p5dex_1000'.format(tgrpn=tgrpn)
     with h5py.File(filen, 'r') as f:
         mgrp = f[mgrpn]
         keys = set(list(mgrp.keys()))
