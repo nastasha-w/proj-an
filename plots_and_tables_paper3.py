@@ -3748,6 +3748,7 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                                 readin_3dprof_percofperc(__weight, quantity, 
                                                          __mmin, __mmax, pofp)
                             pedges = np.log10(redges[1:])
+                            pvals = [np.log10(_a) for _a in pvals]
                             eplus = pvals[2] - pvals[1]
                             emin = pvals[1] - pvals[0]
                             ax.errorbar(pedges, pvals[1], yerr=[emin, eplus],
