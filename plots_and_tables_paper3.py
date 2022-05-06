@@ -3380,7 +3380,8 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 
-def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp):
+def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp,
+                             rminuse_r200c=0.1):
     '''
     Parameters:
     -----------
@@ -3395,6 +3396,9 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp):
     pofp: list of tuples of floats in range 0 to 1
         percentile tuple[0] of individual galaxy percentile tuple[1]
         for 'cumul', the zero entry is used
+    rminuse_r200c: float or None
+        minimum radius in units of R200c, after zero. None means the 
+        binning used in the intial per-halo histograms
     
     Returns:
     --------
@@ -3412,20 +3416,29 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp):
     if weight in all_lines_PS20:
         _ps20str = ps20str_fn
         wtsr = 'Luminosity_{line}'.format(line=weight.replace(' ', '-'))
+        abst = '_SmAb'
     elif weight in all_lines_SB:
         _ps20str = ''
         wtsr = 'Luminosity_{line}'.format(line=weight)
+        abst = '_SmAb'
     elif weight == 'Volume':
         wstr = 'propvol'
         _ps20str = ''
+        abst = ''
     else:
         wstr = weight
         _ps20str = '' 
+        abst = ''
     tv = 'test3.6' if _ps20str == '' else 'test3.7'
-    filebase = 'particlehist_{wt}{ps20}_L0100N1504_27_{tv}_SmAb_T4EOS' + \
-               '_inclSFgas_indiv-gal-rad3Dprof_from-0.10-R200c.hdf5'
+    if rminuse_r200c is None:
+        rminst = ''
+    else:
+        rminst = '_from-{:.2f}-R200c'.format(rminuse_r200c)
+    filebase = 'particlehist_{wt}{ps20}_L0100N1504_27_{tv}{ab}_T4EOS' + \
+               '_inclSFgas_indiv-gal-rad3Dprof{rmin}.hdf5'
     filen = ddir + 'histograms/' + filebase.format(wt=wstr, ps20=_ps20str,
-                                                   tv=tv)
+                                                   tv=tv, ab=abst,
+                                                   rmin=rminst)
     
     if quantity in ['T']:
         tgrpn = 'Temperature_T4EOS'
