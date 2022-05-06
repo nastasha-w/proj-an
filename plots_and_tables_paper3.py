@@ -3882,7 +3882,7 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                               '80% intra-halo scatter'
                               ]
                     ax.legend(handles, labels, fontsize=fontsize-2,
-                             legend_loc='lower left')
+                              loc='lower left')
                 
             # if ti == 0 and mi == 1:
             #     handles = [mlines.Line2D((), (), linestyle='solid', 
