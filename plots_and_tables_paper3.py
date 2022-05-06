@@ -3714,7 +3714,7 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                             __weight = '-'.join(weight.split('-')[1:])
                         if '--' in __weight:
                             __weight = __weight.replace('-', ' ')
-                        if yq == 'Z'
+                        if yq == 'Z':
                             quantity = 'Z-{}'.format(elt)
                         elif yq == 'weight':
                             quantity = 'cumul'
@@ -3844,7 +3844,7 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                     handles = [mlines.Line2D((), (), linestyle='dotted',
                                          color='black', alpha=1., 
                                          linewidth=linewidth_thick,
-                                         marker='+'
+                                         marker='+',
                                          label='median, 80% intra-halo'),
                                mlines.Line2D((), (), linestyle='dashdot',
                                          color='black', alpha=1., 
