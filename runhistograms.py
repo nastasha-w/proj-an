@@ -4034,7 +4034,7 @@ elif jobind in range(20538, 20556):
                                   samplename=samplename,
                                   idsel=None, weighttype=weighttype, 
                                   histtype=axdct, binby=binby,
-                                  percentiles=percvals,
+                                  percentiles=p_in,
                                   inclSFgas=True,
                                   minrad_use_r200c=minr200c)
         if percaxis == 'nrprof':
