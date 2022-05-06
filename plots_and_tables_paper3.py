@@ -3709,7 +3709,7 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                         color = colordct[cmkey]
 
                         ### percentile of percentile
-                        __weight = weight.copy()
+                        __weight = weight # copy
                         if __weight.startswith('em-'):
                             __weight = '-'.join(weight.split('-')[1:])
                         if '--' in __weight:
