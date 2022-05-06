@@ -3415,11 +3415,11 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp,
     ps20str_fn = '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F'
     if weight in all_lines_PS20:
         _ps20str = ps20str_fn
-        wtsr = 'Luminosity_{line}'.format(line=weight.replace(' ', '-'))
+        wstr = 'Luminosity_{line}'.format(line=weight.replace(' ', '-'))
         abst = '_SmAb'
     elif weight in all_lines_SB:
         _ps20str = ''
-        wtsr = 'Luminosity_{line}'.format(line=weight)
+        wstr = 'Luminosity_{line}'.format(line=weight)
         abst = '_SmAb'
     elif weight == 'Volume':
         wstr = 'propvol'
@@ -3549,8 +3549,8 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
     
     ws = weightsets[weightset]
     weights = ['Mass', 'Volume'] + ws
-    axweights = {0: ['Mass', 'Volume']}
-    axweights.update({i + 1: [ws[i]] for i in range(len(ws))})
+    axweights = {0: ['Mass'], 1: ['Volume']}
+    axweights.update({i + 2: [ws[i]] for i in range(len(ws))})
     elt = string.capwords(parentelts[ws[0]])
     Zsol = ol.solar_abunds_ea[elt.lower()]
     print('Using {elt} metallicity, solar value {Zsol}'.format(elt=elt,
@@ -3755,8 +3755,10 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                                         color=color, linestyle='dotted')
 
                         else:
-                            if yq == 'Volume':
+                            if weight == 'Volume':
                                 ls = 'dashdot'
+                                if yq == 'weight':
+                                    continue 
                             else:
                                 ls = 'dotted'
                             pofp = [(0.5, 0.5), (0.1, 0.5), (0.9, 0.5),
