@@ -3443,7 +3443,7 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp,
     if quantity in ['T']:
         tgrpn = 'Temperature_T4EOS'
     elif quantity in ['n']:
-        trgpn = 'Niondens_hydrogen_SmAb{ps20}_T4EOS'
+        tgrpn = 'Niondens_hydrogen_SmAb{ps20}_T4EOS'
         tgrpn = tgrpn.format(ps20=_ps20str)  
     elif quantity.startswith('Z-'):
         elt = quantity.split('-')[1]
@@ -3475,6 +3475,9 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp,
             raise RuntimeError('unexpected mass units {}'.format(matchkey))
         wgrp = mgrp[matchkey]
         
+        print(weight, quantity, mmin, mmax)
+        print(wgrp)
+        print(list(wgrp.keys()))
         redges = wgrp['edges_r3D'][:]
         if quantity == 'cumul':
             pstr = 'perc-{:.3f}'
