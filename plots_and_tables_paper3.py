@@ -3744,10 +3744,10 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                                  __mmin + 0.5 
                         if yq == 'weight':
                             pofp = [(0.1,), (0.5,), (0.9,)]
-                            edges, pvals = \
-                                readin_3dprof_percofperc(weight, quantity, 
+                            redges, pvals = \
+                                readin_3dprof_percofperc(__weight, quantity, 
                                                          __mmin, __mmax, pofp)
-                            pedges = edges[1:]
+                            pedges = redges[1:]
                             eplus = pvals[2] - pvals[1]
                             emin = pvals[1] - pvals[0]
                             ax.errorbar(pedges, pvals[1], yerr=[emin, eplus],
@@ -3761,10 +3761,10 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                             pofp = [(0.5, 0.5), (0.1, 0.5), (0.9, 0.5),
                                     (0.5, 0.1), (0.5, 0.9)]
                             redges, pvals, nancount, numgals = \
-                                readin_3dprof_percofperc(weight, quantity, 
+                                readin_3dprof_percofperc(__weight, quantity, 
                                                          __mmin, __mmax, pofp)
 
-                            pedges = 0.5 * (edges[:-1] + edges[1:])
+                            pedges = 0.5 * (redges[:-1] + redges[1:])
                             eplus = pvals[4] - pvals[0]
                             emin = pvals[0] - pvals[3]
                             ax.errorbar(pedges, pvals[0], yerr=[emin, eplus],
