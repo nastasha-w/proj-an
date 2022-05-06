@@ -3747,7 +3747,7 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                             redges, pvals = \
                                 readin_3dprof_percofperc(__weight, quantity, 
                                                          __mmin, __mmax, pofp)
-                            pedges = redges[1:]
+                            pedges = np.log10(redges[1:])
                             eplus = pvals[2] - pvals[1]
                             emin = pvals[1] - pvals[0]
                             ax.errorbar(pedges, pvals[1], yerr=[emin, eplus],
@@ -3764,14 +3764,13 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                                 readin_3dprof_percofperc(__weight, quantity, 
                                                          __mmin, __mmax, pofp)
 
-                            pedges = 0.5 * (redges[:-1] + redges[1:])
+                            pedges = np.log10(0.5 * (redges[:-1] + redges[1:]))
                             eplus = pvals[4] - pvals[0]
                             emin = pvals[0] - pvals[3]
                             ax.errorbar(pedges, pvals[0], yerr=[emin, eplus],
                                         color=color, linestyle=ls)
                             ax.fill_between(pedges, pvals[1], pvals[2],
-                                            alpha=0.5, color=color,
-                                            linestyle='none')
+                                            alpha=0.5, color=color)
 
 
                         ### percentile of stacks
