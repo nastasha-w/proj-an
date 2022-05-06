@@ -3739,10 +3739,13 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                             quantity = 'cumul'
                         else:
                             quantity = yq
+                        print(cmkey)
                         __mmin = cmkey
                         __mmax = __mmin + 1. if np.isclose(__mmin, 14.) else\
                                  __mmin + 0.5 
                         if yq == 'weight':
+                            if weight == 'Volume':
+                                continue
                             pofp = [(0.1,), (0.5,), (0.9,)]
                             redges, pvals = \
                                 readin_3dprof_percofperc(__weight, quantity, 
@@ -3757,8 +3760,6 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                         else:
                             if weight == 'Volume':
                                 ls = 'dashdot'
-                                if yq == 'weight':
-                                    continue 
                             else:
                                 ls = 'dotted'
                             pofp = [(0.5, 0.5), (0.1, 0.5), (0.9, 0.5),
@@ -3875,7 +3876,11 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                                             facecolor='black', alpha=0.5,
                                             label='80% inter-halo scatter')
                                ]
-                    ax.legend(handles, fontsize=fontsize-2)
+                    labels = ['median, 80% intra-halo',
+                              'V median, 80% intra-halo',
+                              '80% inter-halo scatter'
+                              ]
+                    ax.legend(handles, labels, fontsize=fontsize-2)
                 
             # if ti == 0 and mi == 1:
             #     handles = [mlines.Line2D((), (), linestyle='solid', 
