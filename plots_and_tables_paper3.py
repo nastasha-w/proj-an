@@ -3422,7 +3422,7 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp):
         wstr = weight
         _ps20str = '' 
     filebase = 'particlehist_{wt}{ps20}_L0100N1504_27_test3.7_SmAb_T4EOS' + \
-               '_inclSFgas_indiv-gal-rad3Dprof.hdf5'
+               '_inclSFgas_indiv-gal-rad3Dprof_from-0.10-R200c.hdf5'
     filen = ddir + 'histograms/' + filebase.format(wt=wstr, ps20=_ps20str)
     
     if quantity in ['T']:
