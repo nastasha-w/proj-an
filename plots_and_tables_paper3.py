@@ -3419,7 +3419,7 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp):
         wstr = 'propvol'
         _ps20str = ''
     else:
-        strw = weight
+        wstr = weight
         _ps20str = '' 
     filebase = 'particlehist_{wt}{ps20}_L0100N1504_27_test3.7_SmAb_T4EOS' + \
                '_inclSFgas_indiv-gal-rad3Dprof.hdf5'
