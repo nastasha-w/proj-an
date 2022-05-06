@@ -3466,11 +3466,12 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp,
         masses = [[float(val) for val in _ls] for _ls in masses]
         masses = np.array(masses)
         target = np.array([10**mmin, 10**mmax])
-        match = np.where([np.allclose(mass, target)for mass in masses])[0]
+        match = np.where([np.allclose(mass, target) for mass in masses])[0]
         if len(match) != 1:
             msg = 'no single match for masses {} in list {} from {}'
             raise RuntimeError(msg.format(target, masses, mkeys))
         matchkey = mkeys[match[0]]
+        print(matchkey)
         if not matchkey.startswith('M200c_Msun_'):
             raise RuntimeError('unexpected mass units {}'.format(matchkey))
         wgrp = mgrp[matchkey]['ensemble_percentiles']
@@ -3876,11 +3877,12 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                                             facecolor='black', alpha=0.5,
                                             label='80% inter-halo scatter')
                                ]
-                    labels = ['median, 80% intra-halo',
-                              'V median, 80% intra-halo',
-                              '80% inter-halo scatter'
+                    labels = ['median, 80% inter-halo',
+                              'V median, 80% inter-halo',
+                              '80% intra-halo scatter'
                               ]
-                    ax.legend(handles, labels, fontsize=fontsize-2)
+                    ax.legend(handles, labels, fontsize=fontsize-2,
+                             legend_loc='lower left')
                 
             # if ti == 0 and mi == 1:
             #     handles = [mlines.Line2D((), (), linestyle='solid', 
