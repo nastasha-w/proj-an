@@ -4126,20 +4126,20 @@ elif jobind in range(20558, 20576):
     minr200c = 0.1
     for axdct in ['Trprof', 'nrprof', 'Zrprof']:
         percaxis = percaxes[axdct]
-        p3g.extract_indiv_radprof(percaxis=percaxis, 
+        p3g.combine_indiv_radprof(percaxis=percaxis, 
                                   samplename=samplename,
                                   idsel=None, weighttype=weighttype, 
-                                  histtype=axdct, binby=binby,
+                                  histtype=axdct,
                                   percentiles_in=p_in,
                                   percentiles_out=p_out,
                                   inclSFgas=True,
                                   cumul_normrad_r200c=1.,
                                   minrad_use_r200c=minr200c)
         if percaxis == 'nrprof':
-            p3g.extract_indiv_radprof(percaxis='cumul', 
+            p3g.combine_indiv_radprof(percaxis='cumul', 
                                       samplename=samplename,
                                       idsel=None, weighttype=weighttype, 
-                                      histtype=axdct, binby=binby,
+                                      histtype=axdct,
                                       percentiles_in=p_in,
                                       percentiles_out=p_out,
                                       inclSFgas=True,
@@ -4171,9 +4171,9 @@ elif jobind in range(20576, 20578):
         else:
             elt = axdct.split('-')[0]
             percaxis = 'SmoothedElementAbundance-{}_T4EOS'.format(elt)
-        p3g.extract_indiv_radprof(percaxis=percaxis, samplename=samplename,
+        p3g.combine_indiv_radprof(percaxis=percaxis, samplename=samplename,
                                   idsel=None, weighttype=weighttype, 
-                                  histtype=axdct, binby=binby,
+                                  histtype=axdct,
                                   percentiles_in=p_in,
                                   percentiles_out=p_out,
                                   inclSFgas=True,
@@ -4181,10 +4181,10 @@ elif jobind in range(20576, 20578):
                                   minrad_use_r200c=minr200c)
 
         if percaxis == 'nrprof':
-            p3g.extract_indiv_radprof(percaxis='cumul', 
+            p3g.combine_indiv_radprof(percaxis='cumul', 
                                       samplename=samplename,
                                       idsel=None, weighttype=weighttype, 
-                                      histtype=axdct, binby=binby,
+                                      histtype=axdct,
                                       percentiles_in=p_in,
                                       percentiles_out=p_out,
                                       inclSFgas=True,
