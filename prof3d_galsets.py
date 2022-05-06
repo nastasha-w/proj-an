@@ -2085,12 +2085,14 @@ def deletesets(filen):
 # tested percentiles with one of them, inclSFgas True option only
 # tested for cumul and Temperature_T4EOS percaxis, histtypes
 # nrprof and Trprof respectively
+# minrad_use is untested, copied from plotting stuff
 def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None, 
                           weighttype='Mass', histtype='rprof_rho-T-nion',
                           binby=('M200c_Msun', 
                           10**np.array([11., 11.5, 12., 12.5, 13., 13.5, 14., 15.])),
                           percentiles=np.array([0.02, 0.1, 0.5, 0.9, 0.98]),
-                          inclSFgas=True):
+                          inclSFgas=True,
+                          minrad_use_r200c=0.1):
     '''
     from q - 3D radius histograms weighted by w, extract w-weighted 
     percentiles of the q distribution as a function of radius
@@ -2180,7 +2182,9 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             outname.append(part)
     outname.append('inclSFgas' if inclSFgas else 'exclSFgas')
     outname.append('indiv-gal-rad3Dprof')
-    outname.append('testfile') # debug without messing up previous work
+    if minrad_use_r200c is not None:
+        outname.append('from-{:.2f}-R200c'.format(minrad_use_r200c))
+    #outname.append('testfile') # debug without messing up previous work
     outname = '_'.join(outname)
     outname = '/'.join(pathparts[:-1]) + '/' +  outname + '.' + ext
     print('will save to: {}'.format(outname))
@@ -2288,11 +2292,39 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                 hist_t = np.sum(hist_t[tuple(axessel)], axis=tuple(sumaxes))
             # axes in summed histogram
             if percaxis == 'cumul':
-                _rax = 0
+               _rax = 0
+            else:
+               _pax, _rax = np.argsort([pax, rax])
+            if minrad_use_r200c is not None:
+                redges = np.copy(edges_t[rax])
+                r200c = galdata_all.at[galid, 'R200c_cMpc']
+                r200c *= cosmopars['a'] * c.cm_per_mpc
+                redges = ggrp['edges_r3D'] / r200c
+                si = np.where(np.isclose(redges, minrad_use_r200c))[0]
+                if len(si) != 1:
+                    msg = 'did not find edge matching {} R200c for {}'
+                    msg = msg.format(minrad_use_r200c, galid)
+                    raise RuntimeError(msg)
+                si = si[0]
+                ssel = [slice(None, None, None)] * len(hist_t.shape)
+                ssel_keep = ssel.copy()
+                ssel_keep[_rax] = slice(si, None, None)
+                ssel_keep = tuple(ssel_keep)
+                ssel_sum = ssel.copy()
+                ssel_sum[_rax] = slice(None, si, None)
+                ssel_sum = tuple(ssel_sum)
+                ssel_appax = ssel.copy()
+                ssel_appax[_rax] = np.newaxis
+                ssel_appax = tuple(ssel_appax)
+                _hist = np.sum(hist_t[ssel_sum], axis=_rax)[ssel_appax]
+                _hist = np.append(_hist, hist_t[ssel_keep], axis=_rax)
+                hist_t = _hist
+                edges_t[rax] = np.append(edges_t[rax][0], edges_t[rax][si:])
+            if percaxis == 'cumul':
                 cumulvals = np.cumsum(hist_t)
             else:
-                _pax, _rax = np.argsort([pax, rax])
             # shape: percentile, radial bin
+                
                 percs = percentiles_from_histogram_handlezeros(hist_t, 
                         edges_t[pax], axis=_pax, percentiles=percentiles)
             
@@ -2361,7 +2393,8 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                           percentiles_out=[[0.5], [0.5], 
                                            [0.02, 0.1, 0.5, 0.9, 0.98], 
                                            [0.5], [0.5]],
-                          cumul_normrad_r200c=1.):
+                          cumul_normrad_r200c=1.,
+                          minrad_use_r200c=0.1):
     '''
     get percentiles of individual percentile distributions in galaxy 
     property sets. Saved in the same file as the individual profiles
@@ -2375,6 +2408,8 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
     cumul_normrad: for cumulative profiles, normalize to the value at this
             radius before getting percentiles. None means no normalization
             beforehand.
+    minrad_use_r200c: any radial bins below this edge are collapsed into one 
+            bin before stacking
     '''
     # non-cumul: profile tested on Trprof, em-c5r, one halo mass bin,
     # percentile 50 of 90th percentiles 
@@ -2382,7 +2417,8 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
     # profiles), except in the smallest bin, where the number of values
     # equal to the median is larger then the difference between the number
     # of higher and lower values.
-    # overall, tested for non-cumul profiles
+    # cumul: profile tested on nrprof, em-c5r, one halo mass bin, 
+    # percentile 10, normalized at R200c
 
     if samplename is None:
         samplename = defaults['sample']
@@ -2443,7 +2479,9 @@ def combine_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             inname.append(part)
     inname.append('inclSFgas' if inclSFgas else 'exclSFgas')
     inname.append('indiv-gal-rad3Dprof')
-    inname.append('testfile') # debug without messing up previous work
+    if minrad_use_r200c is not None:
+        outname.append('from-{:.2f}-R200c'.format(minrad_use_r200c))
+    #inname.append('testfile') # debug without messing up previous work
     inname = '_'.join(inname)
     inname = '/'.join(pathparts[:-1]) + '/' +  inname + '.' + ext
     outname = inname #.replace('indiv', 'comb')

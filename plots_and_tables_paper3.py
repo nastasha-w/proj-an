@@ -3380,7 +3380,32 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 
-def plot_radprof3d(weightset=1, M200cslice=None):
+def readin_3dprof_percofperc(weight, quantity, mmin, mmin, pofp):
+    '''
+    Parameters:
+    -----------
+    weight: str
+        'Mass', 'Volume', or a line name
+    quantity: str
+        'T', 'nH', 'Z-{element name}', or 'cumul'
+    mmin: float
+        minimum mass (log10 Msun)
+    mmax: float
+        maximum mass (log10 Msun)
+    pofp: list of tuples of floats in range 0 to 1
+        percentile tuple[0] of individual galaxy percentile tuple[1]
+    
+    Returns:
+    --------
+    bins: array of floats
+        radial bin edges in units [R200c]
+    percentile values: list of arrays of floats
+        list indices match pofp indices
+
+    '''
+
+
+def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
     '''
     plot: cumulative profile of weight, rho profile, T profile, Z profile
     rows show different weights
