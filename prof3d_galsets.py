@@ -2379,7 +2379,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                     for skey in edged[key].keys():
                         m3.saveattr(hgrp[key], skey, edged[key][skey])
                 
-            bgrp.create_dataset('galaxyids', data=np.array(galids_bin[binind]))
+            bgrp.create_dataset('galaxyids', data=np.array(galids_bin[bi]))
             bgrp.create_dataset('percentiles', data=percentiles)
             
     print('Saved data to file {}'.format(outname))  

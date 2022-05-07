@@ -3496,7 +3496,7 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp,
 
             return redges, pvals, nancount, numgals
 
-def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
+def plot_radprof3d_comp_stack_med(weightset=1, M200cslice=None):
     '''
     plot: cumulative profile of weight, rho profile, T profile, Z profile
     rows show different weights
@@ -3753,8 +3753,6 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                                                          __mmin, __mmax, pofp)
                             pedges = np.log10(redges[1:])
                             pvals = [np.log10(_a) for _a in pvals]
-                            if yq == 'Z':
-                                pvals = [_a - np.log10(Zsol) for _a in pvals]
                             eplus = pvals[2] - pvals[1]
                             emin = pvals[1] - pvals[0]
                             ax.errorbar(pedges, pvals[1], yerr=[emin, eplus],
@@ -3767,7 +3765,9 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                             redges, pvals, nancount, numgals = \
                                 readin_3dprof_percofperc(__weight, quantity, 
                                                          __mmin, __mmax, pofp)
-
+                            if yq == 'Z':
+                                pvals = [_a - np.log10(Zsol) for _a in pvals]
+                                
                             pedges = np.log10(0.5 * (redges[:-1] + redges[1:]))
                             eplus = pvals[4] - pvals[0]
                             emin = pvals[0] - pvals[3]
@@ -3870,7 +3870,7 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
                                mlines.Line2D((), (), linestyle='dotted',
                                          color='black', alpha=1., 
                                          linewidth=linewidth_thick,
-                                         marker='|', markersize=30,
+                                         marker='|', markersize=15,
                                          label='med of med, 80% intra-halo'),
                                mpatch.Patch(edgecolor='none', 
                                             facecolor='black', alpha=0.5,
@@ -3922,7 +3922,7 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
-def plot_radprof3d_comp_stack_med(weightset=1, M200cslice=None):
+def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
     '''
     plot: cumulative profile of weight, rho profile, T profile, Z profile
     rows show different weights
