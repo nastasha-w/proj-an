@@ -3947,7 +3947,7 @@ def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
     
     inclSF = True #False is not implemented in the histogram extraction
     outname = mdir + 'prof3d_L0100N1504_27_Mh0p5dex_1000_{}_set{ws}'+\
-                     '_mmin-{mmin}_stack-vs-percofperc'
+                     '_mmin-{mmin}_stack'
     # for halo mass selections
     minhalomass = mmin_default
     if M200cslice is None:
