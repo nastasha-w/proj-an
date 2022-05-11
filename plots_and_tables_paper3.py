@@ -3454,6 +3454,8 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp,
     
     mgrpn = '{tgrpn}/L0100N1504_27_Mh0p5dex_1000'.format(tgrpn=tgrpn)
     with h5py.File(filen, 'r') as f:
+        print(list(f.keys()))
+        print(mgrpn)
         mgrp = f[mgrpn]
         keys = set(list(mgrp.keys()))
         mkeys = {key if 'galaxy' not in key else None for key in keys}
@@ -3767,7 +3769,7 @@ def plot_radprof3d_comp_stack_med(weightset=1, M200cslice=None):
                                                          __mmin, __mmax, pofp)
                             if yq == 'Z':
                                 pvals = [_a - np.log10(Zsol) for _a in pvals]
-                                
+
                             pedges = np.log10(0.5 * (redges[:-1] + redges[1:]))
                             eplus = pvals[4] - pvals[0]
                             emin = pvals[0] - pvals[3]
