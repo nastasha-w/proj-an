@@ -3413,21 +3413,26 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp,
     '''
     
     ps20str_fn = '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F'
+    ps20str_gp = '_PS20-iontab-UVB-dust1-CR1-G1-shield1_depletion-F'
     if weight in all_lines_PS20:
         _ps20str = ps20str_fn
+        _ps20gstr = ps20str_gp
         wstr = 'Luminosity_{line}'.format(line=weight.replace(' ', '-'))
         abst = '_SmAb'
     elif weight in all_lines_SB:
         _ps20str = ''
+        _ps20gstr = ''
         wstr = 'Luminosity_{line}'.format(line=weight)
         abst = '_SmAb'
     elif weight == 'Volume':
         wstr = 'propvol'
         _ps20str = ''
+        _ps20gstr = ''
         abst = ''
     else:
         wstr = weight
         _ps20str = '' 
+        _ps20gstr = ''
         abst = ''
     tv = 'test3.6' if _ps20str == '' else 'test3.7'
     if rminuse_r200c is None:
@@ -3444,7 +3449,7 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp,
         tgrpn = 'Temperature_T4EOS'
     elif quantity in ['n']:
         tgrpn = 'Niondens_hydrogen_SmAb{ps20}_T4EOS'
-        tgrpn = tgrpn.format(ps20=_ps20str)  
+        tgrpn = tgrpn.format(ps20=_ps20gstr)  
     elif quantity.startswith('Z-'):
         elt = quantity.split('-')[1]
         tgrpn = 'SmoothedElementAbundance-{elt}_T4EOS'
