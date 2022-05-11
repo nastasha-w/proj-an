@@ -3459,8 +3459,8 @@ def readin_3dprof_percofperc(weight, quantity, mmin, mmax, pofp,
     
     mgrpn = '{tgrpn}/L0100N1504_27_Mh0p5dex_1000'.format(tgrpn=tgrpn)
     with h5py.File(filen, 'r') as f:
-        print(list(f.keys()))
-        print(mgrpn)
+        #print(list(f.keys()))
+        #print(mgrpn)
         mgrp = f[mgrpn]
         keys = set(list(mgrp.keys()))
         mkeys = {key if 'galaxy' not in key else None for key in keys}
@@ -3520,7 +3520,7 @@ def plot_radprof3d_comp_stack_med(weightset=1, M200cslice=None):
     
     inclSF = True #False is not implemented in the histogram extraction
     outname = mdir + 'prof3d_L0100N1504_27_Mh0p5dex_1000_{}_set{ws}'+\
-                     '_mmin-{mmin}'
+                     '_mmin-{mmin}_comp_stack_median'
     # for halo mass selections
     minhalomass = mmin_default
     if M200cslice is None:
