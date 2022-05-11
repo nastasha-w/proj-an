@@ -2166,7 +2166,11 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
     numgalbins = len(galbins) - 1
     edgedata = [None] * numgalbins
     galids_base = [None] * numgalbins
-    galids_bin = [[]] * numgalbins
+    # with this method, internal empty lists are the same 
+    # -> append to one means append to all. ffs.
+    #galids_bin = [[]] * numgalbins
+    galids_bin = [[] for i in range(numgalbins)]
+    
     ggrpn_base = 'galaxy_{galid}'
 
     # construct name of summed histogram by removing position specs from a specific one
@@ -2195,7 +2199,7 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                'number of particles < min value',\
                'number of particles with finite values']
     print('using galaxy ids {}'.format(galids))
-    debug_binsused = set()
+    #debug_binsused = set()
     with h5py.File(outname, 'a') as fo:
         # encodes data stored -> same name is a basic consistency check 
         # for the sample
@@ -2207,9 +2211,9 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
             if binind in [-1, numgalbins]: # halo/stellar mass does not fall into any of the selected ranges
                 #print('Skipping galaxy id {}'.format(galid))
                 continue
-            debug_binsused |= {binind}
-            if len(debug_binsused) > 2:
-                return None
+            #debug_binsused |= {binind}
+            #if len(debug_binsused) > 2:
+            #    return None
             
             # retrieve data from this histogram for checks
             igrpn_temp = galname_all.at[galid, 'groupname']   
@@ -2240,9 +2244,9 @@ def extract_indiv_radprof(percaxis=None, samplename=None, idsel=None,
                         
             # run compatibility checks, align/expand edges
             galids_bin[binind].append(galid)
-            print(galid)
-            print(binind)
-            print(galids_bin)
+            #print(galid)
+            #print(binind)
+            #print(galids_bin)
 
             if edgedata[binind] is None:
                 edgedata[binind] = edgedata_t
