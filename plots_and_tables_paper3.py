@@ -3929,6 +3929,318 @@ def plot_radprof3d_comp_stack_med(weightset=1, M200cslice=None):
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
+def plot_radprof3d_med(weightset=1, M200cslice=None):
+    '''
+    plot: cumulative profile of weight, rho profile, T profile, Z profile
+    rows show different weights
+    
+    input:
+    ------
+    weightset: int
+        which set of weights to plot. Always: M/V weighted and some lines from 
+        the same element
+    M200cslice: slice object or None
+        Which halo mass ranges (M200c, 0.5 dex starting at 10**11 Msun) to
+        include in the plot. The default (if None) is every other mass bin.
+    '''
+    
+    inclSF = True #False is not implemented in the histogram extraction
+    outname = mdir + 'prof3d_L0100N1504_27_Mh0p5dex_1000_{}_set{ws}'+\
+                     '_mmin-{mmin}_median_of_median'
+    if M200cslice is not None:
+        outname = outname + '_slice-{}-{}-{}'.format(M200cslice.start, 
+                                                     M200cslice.stop,
+                                                     M200cslice.step)
+    # for halo mass selections
+    minhalomass = mmin_default
+    if M200cslice is None:
+        massslice = slice(None, None, 2)
+    else:
+        massslice = M200cslice
+    minrshow = np.log10(0.1) # log10 R200c
+    
+    outname = outname.format('wSF' if inclSF else 'nSF', ws=weightset, 
+                             mmin=minhalomass)
+    outname = outname.replace('.', 'p') + '.pdf'
+    
+    # 'n6r', 'o7ix', 
+    weightsets = {1: ['c5r', 'c6'],
+                  2: ['n6-actualr', 'n7'],
+                  3: ['ne9r', 'ne10'],
+                  4: ['mg11r', 'mg12'],
+                  5: ['si13r'],
+                  6: ['o7r', 'o8'],
+                  7: ['o7r', 'o7iy', 'o7f'],
+                  8: ['Fe17      17.0510A', 'Fe17      15.2620A', 
+                      'Fe17      16.7760A', 'Fe17      17.0960A', 
+                      'Fe18      16.0720A'],
+                  }
+    
+    ws = weightsets[weightset]
+    weights = ['Mass', 'Volume'] + ws
+    axweights = {0: ['Mass', 'Volume']}
+    axweights.update({i + 1: [ws[i]] for i in range(len(ws))})
+    elt = string.capwords(parentelts[ws[0]])
+    Zsol = ol.solar_abunds_ea[elt.lower()]
+    print('Using {elt} metallicity, solar value {Zsol}'.format(elt=elt,
+          Zsol=Zsol))
+        
+    fontsize = 12
+
+    linestyles = {weight: 'solid' for weight in weights}
+    linestyles.update({'Volume': 'dashed'})
+    title = 'medians from stacked histograms'
+    print(title)
+    
+    # snapshot 27
+    # avoid having to read in the halo catalogue just for this; 
+    # copied from there
+    cosmopars = cosmopars_27 
+    
+    axlabels = {'T': '$\\log_{10} \\, \\mathrm{T} \; [\\mathrm{K}]$',
+                'n': '$\\log_{10} \\, \\mathrm{n}(\\mathrm{H}) \\;'+\
+                     ' [\\mathrm{cm}^{-3}]$',
+                'Z': '$\\log_{10} \\, \\mathrm{Z} \\; [\\mathrm{Z}_{\\odot}]$',
+                'weight': ['$\\log_{10} \\, \\mathrm{M}(< r) \\,/\\,'+\
+                           '\\mathrm{M}(< \\mathrm{R}_{\\mathrm{200c}})$',
+                           '$\\log_{10} \\, \\mathrm{L}(< r) \\,/\\,'+\
+                           '\\mathrm{L}(< \\mathrm{R}_{\\mathrm{200c}})$'
+                           ]
+                }
+    # weight: '$\\log_{10} \\, \\mathrm{\\Sigma}(< r) \\,/\\,'+\
+    # ' \\mathrm{\\Sigma}(< \\mathrm{R}_{\\mathrm{200c}})$',
+    axnl = {0: 'weight', 1: 'n', 2: 'T', 3: 'Z'}
+            
+    # set up plot grid
+    panelwidth = 3.
+    panelheight = 2.5
+    toplabelheight = 0.0
+    caxwidth = 0.5
+    #nmassbins = len(hists[combmethods[0]][weights[0]])
+    nprof = 4 # cumulative, n, T, Z
+    
+    width_ratios = [panelwidth] * len(axweights) + [caxwidth]
+    fig = plt.figure(figsize=(len(axweights) * panelwidth + caxwidth,
+                              nprof * panelheight + toplabelheight))
+    grid = gsp.GridSpec(nrows=nprof, ncols=len(axweights) + 1,
+                        hspace=0.0, wspace=0.0,
+                        width_ratios=width_ratios,
+                        height_ratios=[panelheight] * nprof,
+                        top=0.97, bottom=0.05)
+    axes = np.array([[fig.add_subplot(grid[yi, xi])\
+                      for xi in range(len(axweights))]\
+                      for yi in range(nprof)])
+    cax  = fig.add_subplot(grid[:, len(axweights)])
+    
+
+    massedges = np.arange(minhalomass, 14.1, 0.5)
+    massedges.sort()
+    _list = tc.tol_cmap('rainbow_discrete', lut=len(massedges))
+    clist = _list(np.linspace(0.,  1., len(massedges)))
+    massincl = massedges[massslice]
+    massexcl = np.array([ed not in massincl for ed in massedges])
+    clist[massexcl] = np.array([1., 1., 1., 1.])
+    keys = massedges
+    colordct = {keys[i]: clist[i] for i in range(len(keys))}
+    #del _masks
+    
+    #print(clist)
+    cmap = mpl.colors.ListedColormap(clist[:-1])
+    cmap.set_over(clist[-1])
+    norm = mpl.colors.BoundaryNorm(massedges, cmap.N)
+    bounds = np.append(massedges, np.array(massedges[-1] + 1.))
+    cbar = mpl.colorbar.ColorbarBase(cax, cmap=cmap,
+                                norm=norm,
+                                boundaries=bounds,
+                                ticks=massedges,
+                                spacing='proportional', extend='max',
+                                orientation='vertical')
+    # to use 'extend', you must
+    # specify two extra boundaries:
+    # boundaries=[0] + bounds + [13],
+    # extend='both',
+    # ticks=bounds,  # optional
+    clabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{200c}} \\;'+\
+             ' [\\mathrm{M}_{\\odot}]$'
+    cbar.set_label(clabel, fontsize=fontsize)
+    cax.tick_params(labelsize=fontsize - 1)
+    cax.set_aspect(8.)
+    
+    xlabel = '$\\log_{10} \\, \\mathrm{r} \\, / \\,'+ \
+             ' \\mathrm{R}_\\mathrm{200c}}$'
+    linewidth = 1.
+    patheff = [mppe.Stroke(linewidth=linewidth + 0.5, foreground="black"),
+               mppe.Stroke(linewidth=linewidth, foreground="w"),
+               mppe.Normal()]
+    linewidth_thick = 2.
+    patheff_thick = [mppe.Stroke(linewidth=linewidth_thick + 0.5, 
+                                 foreground="black"),
+                     mppe.Stroke(linewidth=linewidth_thick, foreground="w"),
+                     mppe.Normal()]
+     
+    #fig.suptitle(title, fontsize=fontsize + 2)
+    
+   
+    for mi in axweights:
+        for ti in range(nprof):
+            # where are we
+            ax = axes[ti, mi]
+            labelx = ti == nprof - 1
+            labely = mi == 0
+            yq = axnl[ti]
+            _weights = axweights[mi]
+            
+            # set up axis
+            pu.setticks(ax, top=True, left=True, labelleft=labely,
+                        labelbottom=labelx, fontsize=fontsize)
+            ax.grid(b=True)
+            
+            if labelx:
+                ax.set_xlabel(xlabel, fontsize=fontsize)
+            if labely:
+                if yq == 'weight':
+                    _yl = axlabels[yq][0]
+                else:
+                    _yl = axlabels[yq]
+                ax.set_ylabel(_yl, fontsize=fontsize)
+            if mi == len(axweights) - 1 and yq == 'weight':
+                ax.set_ylabel(axlabels[yq][1], fontsize=fontsize)
+                ax.yaxis.set_label_position('right')
+            
+            # plot stacked histogram
+            for weight in _weights:
+                for mkey in mkeys:
+                    keymatch = np.isclose(massincl, mkey)
+                    if not np.any(keymatch):
+                        continue
+                    mind = np.where(keymatch)[0][0]
+                    numm = len(massincl)
+                    errorevery = (mind, numm)
+                    cmkey = massincl[mind]
+                    color = colordct[cmkey]
+
+                    ### percentile of percentile
+                    __weight = weight # copy
+                    if __weight.startswith('em-'):
+                        __weight = '-'.join(weight.split('-')[1:])
+                    if '--' in __weight:
+                        __weight = __weight.replace('-', ' ')
+                    if yq == 'Z':
+                        quantity = 'Z-{}'.format(elt)
+                    elif yq == 'weight':
+                        quantity = 'cumul'
+                    else:
+                        quantity = yq
+                    __mmin = cmkey
+                    __mmax = __mmin + 1. if np.isclose(__mmin, 14.) else\
+                             __mmin + 0.5 
+                    ls = linestyles[weight]
+                    if yq == 'weight':
+                        if weight == 'Volume':
+                            continue
+                        pofp = [(0.1,), (0.5,), (0.9,)]
+                        redges, pvals = \
+                        readin_3dprof_percofperc(__weight, quantity, 
+                                                 __mmin, __mmax, pofp)
+                        pedges = np.log10(redges[1:])
+                        pvals = [np.log10(_a) for _a in pvals]
+                        eplus = pvals[2] - pvals[1]
+                        emin = pvals[1] - pvals[0]
+                        ax.errorbar(pedges, pvals[1], yerr=[emin, eplus],
+                                    color=color, linestyle=ls,
+                                    errorevery=errorevery)
+
+                    else:
+                        pofp = [(0.5, 0.5), (0.1, 0.5), (0.9, 0.5)]
+                        redges, pvals, nancount, numgals = \
+                            readin_3dprof_percofperc(__weight, quantity, 
+                                                     __mmin, __mmax, pofp)
+                        if yq == 'Z':
+                            pvals = [_a - np.log10(Zsol) for _a in pvals]
+
+                        pedges = np.log10(0.5 * (redges[:-1] + redges[1:]))
+                        eplus = pvals[2] - pvals[0]
+                        emin = pvals[0] - pvals[1]
+                        ax.errorbar(pedges, pvals[0], yerr=[emin, eplus],
+                                    color=color, linestyle=ls,
+                                    errorevery=errorevery)
+                        #ax.fill_between(pedges, pvals[1], pvals[2],
+                        #                alpha=0.5, color=color)
+                                                
+                        # add CIE T indicators
+                        if weight in line_Tmax and yq == 'T':
+                            Tcen = line_Tmax[weight]
+                            Tran = line_Trange[weight]
+                            ax.axhline(Tcen, color='black', linestyle='solid',
+                                       linewidth=linewidth)
+                            ax.axhline(Tran[0], color='black', 
+                                       linestyle='dotted',
+                                       linewidth=linewidth)
+                            ax.axhline(Tran[1], color='black', 
+                                       linestyle='dotted',
+                                       linewidth=linewidth)
+                        # add Tvir indicator
+                        elif weight == 'Mass' and yq == 'T':
+                            medm = 10**medianmasses[cmkey] # M200c [Msun]
+                            Tv = cu.Tvir(medm, cosmopars=cosmopars, mu=0.59)
+                            ax.axhline(np.log10(Tv), color=color,
+                                       linestyle='dotted', 
+                                       linewidth=linewidth,
+                                       path_effects=patheff)
+                            
+            # if ti == 0 and len(_weights) > 1:
+            #     handles = [mlines.Line2D((), (), linestyle=linestyles[weight],
+            #                              color='black', alpha=1., 
+            #                              linewidth=linewidth_thick,
+            #                              label=weight) for weight in _weights]
+            #     labels = [weight for weight in _weights]
+            #     ax.legend(handles, labels, fontsize=fontsize, 
+            #               bbox_to_anchor=(1., 0.), loc='lower right')
+            if ti != 0 and len(_weights) > 1:
+                handles = [mlines.Line2D((), (), linestyle=linestyles[weight],
+                                         color='black', alpha=1., 
+                                         linewidth=linewidth_thick,
+                                         label=weight) for weight in _weights]
+                labels = [weight[0] for weight in _weights]
+                ax.legend(handles, labels, fontsize=fontsize)
+                #, bbox_to_anchor=(1., 1.), loc='upper right'
+            elif ti == 0:
+                plabel = _weights[0]
+                if plabel in nicenames_lines:
+                    plabel = nicenames_lines[plabel]
+                ax.text(0.05, 0.95, plabel, fontsize=fontsize,
+                        horizontalalignment='left', verticalalignment='top',
+                        transform=ax.transAxes)
+                
+    # sync y limits on plots
+    for yi in range(nprof):
+        if axnl[yi] == 'T':
+            y0min = 3.5
+            y1max = 8.
+        elif axnl[yi] == 'n':
+            y0min = -6.5
+            y1max = 0.
+        elif axnl[yi] == 'Z':
+            y0min = -2.5
+            y1max = 0.8
+        elif axnl[yi] == 'weight':
+            y0min = -2.5
+            y1max = 1.
+        ylims = np.array([axes[yi, mi].get_ylim() \
+                          for mi in range(len(axweights))])
+        miny = max(np.min(ylims[:, 0]), y0min)
+        maxy = min(np.max(ylims[:, 1]), y1max)
+        # for Z and cumulative
+        miny = max(miny, maxy - 10.)
+        [[axes[yi, mi].set_ylim(miny, maxy) for mi in range(len(axweights))]]
+    for xi in range(len(axweights)):
+        xlims = np.array([axes[i, xi].get_xlim() for i in range(nprof)])
+        minx = np.min(xlims[:, 0])
+        maxx = np.max(xlims[:, 1])
+        [axes[i, xi].set_xlim(minx, maxx) for i in range(nprof)]
+    
+    plt.savefig(outname, format='pdf', bbox_inches='tight')
+
 def plot_radprof3d_meanstacks(weightset=1, M200cslice=None):
     '''
     plot: cumulative profile of weight, rho profile, T profile, Z profile
