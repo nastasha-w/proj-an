@@ -3878,10 +3878,10 @@ def plot_radprof3d_comp_stack_med(weightset=1, M200cslice=None):
                                          color='black', alpha=1., 
                                          linewidth=linewidth_thick,
                                          marker='|', markersize=15,
-                                         label='med of med, 80% intra-halo'),
+                                         label='med of med, 80% inter-halo'),
                                mpatch.Patch(edgecolor='none', 
                                             facecolor='black', alpha=0.5,
-                                            label='80% inter-halo med scatter')
+                                            label='80% intra-halo scatter')
                                ]
                     labels = ['median R200c norm. stack',
                               'median, 80% inter-halo',
@@ -4068,7 +4068,7 @@ def plot_radprof3d_med(weightset=1, M200cslice=None):
              ' [\\mathrm{M}_{\\odot}]$'
     cbar.set_label(clabel, fontsize=fontsize)
     cax.tick_params(labelsize=fontsize - 1)
-    cax.set_aspect(8.)
+    cax.set_aspect(7.)
     
     xlabel = '$\\log_{10} \\, \\mathrm{r} \\, / \\,'+ \
              ' \\mathrm{R}_\\mathrm{200c}}$'
