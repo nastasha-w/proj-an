@@ -6026,7 +6026,7 @@ def plot_phasediagrams_Lweighted(plotset='all', emtabcontours=True):
         gap = numcols * numrows - numpanels
         axes = [fig.add_subplot(grid[0, i]) for i in range(gap)]
         axes = axes + [fig.add_subplot(grid[1 + i // numcols, i % numcols])\
-                        or i in range(numpanels - numcols + gap)]
+                        for i in range(numpanels - numcols + gap)]
         
     else:
         axes = np.array([fig.add_subplot(grid[i // numcols, i % numcols])\
