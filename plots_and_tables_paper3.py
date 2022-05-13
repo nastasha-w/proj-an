@@ -4030,12 +4030,12 @@ def plot_radprof3d_med(weightset=1, M200cslice=None):
     axes = np.array([[fig.add_subplot(grid[yi, xi])\
                       for xi in range(len(axweights))]\
                       for yi in range(nprof)])
-    numrows = len(axweights)
-    if numrows > 2:
+    if nprof > 2:
         caxslice = slice(1, 3, None)
     else:
         caxslice = slice(None, None, None)
-    cax  = fig.add_subplot(grid[:, caxslice])    
+    cax  = fig.add_subplot(grid[caxslice, len(axweights)])
+    
 
     massedges = np.arange(minhalomass, 14.1, 0.5)
     massedges.sort()
