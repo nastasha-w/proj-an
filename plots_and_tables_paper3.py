@@ -6040,7 +6040,7 @@ def plot_phasediagrams_Lweighted(plotset='all', emtabcontours=True):
             _cax = fig.add_subplot(grid[0, -1 * gap:])
             _cax.axis('off')
             _l, _b, _w, _h = (_cax.get_position()).bounds
-            ftop = 0.75
+            ftop = 2. / 3.
             hfrac = 0.1
             wmargin = 0.1
             __w = _w * (1. - 2. * wmargin)
