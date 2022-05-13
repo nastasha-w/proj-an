@@ -6021,29 +6021,60 @@ def plot_phasediagrams_Lweighted(plotset='all', emtabcontours=True):
                         hspace=hspace, wspace=wspace,
                         width_ratios=width_ratios,
                         height_ratios=height_ratios)
-    axes = np.array([fig.add_subplot(grid[i // numcols, i % numcols])\
-                     for i in range(numpanels)])
+    if plotset == 'focus':
+        # put the gap on the top row instead of the bottom
+        gap = numcols * numrows - numpanels
+        axes = [fig.add_subplot(grid[0, i]) for i in range(gap)]
+        axes = axes + [fig.add_subplot(grid[1 + i // numcols, i % numcols])\
+                        or i in range(numpanels - numcols + gap)]
+        
+    else:
+        axes = np.array([fig.add_subplot(grid[i // numcols, i % numcols])\
+                         or i in range(numpanels)])
     if cbar_right:
         cax = fig.add_subplot(grid[:2, numcols])
         cax.set_aspect(10.)
     else:
-        idx = (numrows * numcols - numpanels)
-        idx = -1 * min(idx, 2)
-        cax = fig.add_subplot(grid[numrows - 1, idx:])
-        cax.set_aspect(0.2)
+        if plotset == 'focus':
+            _cax = fig.add_subplot(grid[0, -1 * gap:])
+            _cax.axis('off')
+            _l, _b, _w, _h = )(_cax.get_position()).bounds
+            ftop = 2. / 3.
+            hfrac = 0.1
+            wmargin = 0.1
+            __w = _w * (1. - 2. * wmargin)
+            __l = _l + 0.1 * _w * wmargin
+            __h = hfrac * _h
+            __b = _b + ftop * _h 
+            cax = fig.add_axes([__l, __b, __w, __h])
+        else:
+            idx = (numrows * numcols - numpanels)
+            idx = -1 * min(idx, 2)
+            cax = fig.add_subplot(grid[numrows - 1, idx:])
+            cax.set_aspect(0.2)
     
     xlabel = '$\\log_{10} \\, \\mathrm{n}_{}\\mathrm{H} \\;' +\
              '[\\mathrm{cm}^{-3}]$' 
     ylabel = '$\\log_{10} \\, \\mathrm{T} \\; [\\mathrm{K}]$'
-    clabel = '$\\log_{10} \\, \\partial^2 \\mathrm{frac.} \\,/\\,' + \
+    clabel = '$\\log_{10} \\, \\partial^2 \\mathrm{f} \\,/\\,' + \
              '\\partial \\log_{10}\\mathrm{T} \\,' + \
-             '\\partial \\log_{10} \\, \\mathrm{n}_{}\\mathrm{H}$'
+             '\\partial \\log_{10} \\, \\mathrm{n}_{\\mathrm{H}}$'
     fontsize = 12
     
     for axi, (wt, cts) in enumerate(zip(weights, contours)):
         ax = axes[axi]
-        leftlabel = axi % numcols == 0
-        lowerlabel = numpanels - axi <= numcols
+        # _axi is axis index if all slots in the grid were filled up
+        # left to right, top to bottom
+        if plotset == 'focus':
+            numcols_top = numcols - gap
+            if axi <= numcols_top:
+                _axi = axi
+            else:
+                _axi = axi + gap
+        else:
+            _axi = axi
+        leftlabel = _axi % numcols == 0
+        lowerlabel = numpanels - _axi <= numcols
         pu.setticks(ax, fontsize=fontsize, labelbottom=lowerlabel,
                     labelleft=leftlabel)
         if leftlabel:
@@ -6068,7 +6099,7 @@ def plot_phasediagrams_Lweighted(plotset='all', emtabcontours=True):
         if (wt in all_lines_PS20 or wt in all_lines_SB) and emtabcontours:
             addtablecontours(ax, wt, [0.1], colors=[_c1.yellow], 
                              linestyles=['dashdot'])
-        label=namepdpanel(wt)
+        label = namepdpanel(wt)
         ax.text(0.05, 0.95, label, fontsize=fontsize,
                 transform=ax.transAxes, horizontalalignment='left',
                 verticalalignment='top')
@@ -6076,7 +6107,7 @@ def plot_phasediagrams_Lweighted(plotset='all', emtabcontours=True):
             handles = [mlines.Line2D((), (), label=namepdpanel(ct), 
                                      color=color, linewidth=1.5, 
                                      linestyle='solid')
-                        for ct, color in zip(cts, colorlist)]
+                       for ct, color in zip(cts, colorlist)]
             ax.legend(handles=handles, handlelength=1., fontsize=fontsize - 2., 
                       loc='upper right')
     
