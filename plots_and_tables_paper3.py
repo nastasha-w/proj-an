@@ -6072,6 +6072,7 @@ def plot_phasediagrams_Lweighted(plotset='all', emtabcontours=True):
                 _axi = axi
             else:
                 _axi = axi + gap
+            print(axi)
         else:
             _axi = axi
         leftlabel = _axi % numcols == 0
