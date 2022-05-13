@@ -6068,7 +6068,7 @@ def plot_phasediagrams_Lweighted(plotset='all', emtabcontours=True):
         # left to right, top to bottom
         if plotset == 'focus':
             numcols_top = numcols - gap
-            if axi <= numcols_top:
+            if axi < numcols_top:
                 _axi = axi
             else:
                 _axi = axi + gap
