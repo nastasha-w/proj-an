@@ -6024,9 +6024,10 @@ def plot_phasediagrams_Lweighted(plotset='all', emtabcontours=True):
     if plotset == 'focus':
         # put the gap on the top row instead of the bottom
         gap = numcols * numrows - numpanels
-        axes = [fig.add_subplot(grid[0, i]) for i in range(gap)]
+        axes = [fig.add_subplot(grid[0, i]) for i in range(numcols - gap)]
         axes = axes + [fig.add_subplot(grid[1 + i // numcols, i % numcols])\
                         for i in range(numpanels - numcols + gap)]
+        axes = np.array(axes)
         
     else:
         axes = np.array([fig.add_subplot(grid[i // numcols, i % numcols])\
