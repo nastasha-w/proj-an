@@ -6083,7 +6083,7 @@ def plot_phasediagrams_Lweighted(plotset='all', emtabcontours=True):
         if lowerlabel:
             ax.set_xlabel(xlabel, fontsize=fontsize)
         img = ax.pcolormesh(data[wt]['logd'], data[wt]['logt'], hdata[wt].T, 
-                            cmap=cmap, vmin=vmin, vmax=vmax)
+                            cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True)
                             
         for ct, color in zip(cts, colorlist):
             pu.add_2dhist_contours(ax, data[ct]['hist'], 
