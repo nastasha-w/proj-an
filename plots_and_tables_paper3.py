@@ -5365,8 +5365,8 @@ def plot_r200Lw_halodist(weightset=1, inclSF=True):
             y1max = 1.
         ylims = np.array([axes[yi, mi].get_ylim() \
                           for mi in range(len(axweights))])
-        miny = max(np.min(ylims[:, 0]), y0min)
-        maxy = min(np.max(ylims[:, 1]), y1max)
+        miny = max(np.min(ylims[:, 0]) - 0.1, y0min)
+        maxy = min(np.max(ylims[:, 1]) + 0.1, y1max)
         # for Z and cumulative
         miny = max(miny, maxy - 10.)
         [[axes[yi, mi].set_ylim(miny, maxy) for mi in range(len(axweights))]]
@@ -8187,8 +8187,9 @@ if __name__ == '__main__':
         plot_barchart_Ls(simple=False)
         plot_luminosities_nice(addedges=(0., 1.), talkversion=False)
         plot_radprof_main(talkversion=False)
-        for i in range(1, 17):
-            plot_radprof3d(weightset=i, M200cslice=slice(None, None, 2)) 
+        for i in range(1, 17): 
             plot_r200Lw_halodist(weightset=i, inclSF=False) 
+        for i in range(1, 9):
+            plot_radprof3d_med(weightset=i, M200cslice=None)
         plot_sample_fbeffect()
         plot_sample_resconv()
