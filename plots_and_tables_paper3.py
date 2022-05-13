@@ -6040,11 +6040,11 @@ def plot_phasediagrams_Lweighted(plotset='all', emtabcontours=True):
             _cax = fig.add_subplot(grid[0, -1 * gap:])
             _cax.axis('off')
             _l, _b, _w, _h = (_cax.get_position()).bounds
-            ftop = 2. / 3.
+            ftop = 0.75
             hfrac = 0.1
             wmargin = 0.1
             __w = _w * (1. - 2. * wmargin)
-            __l = _l + 0.1 * _w * wmargin
+            __l = _l + _w * wmargin
             __h = hfrac * _h
             __b = _b + ftop * _h 
             cax = fig.add_axes([__l, __b, __w, __h])
@@ -6136,8 +6136,12 @@ def plot_phasediagrams_Lweighted(plotset='all', emtabcontours=True):
         handles2 = [mlines.Line2D((), (), label=emtablabel, 
                                  color=_c1.yellow, linewidth=1., 
                                  linestyle='dashdot')]
-        axes[-2].legend(handles=handles2, fontsize=fontsize - 1., 
-                        loc='lower right')
+        if plotset == 'focus':
+            _cax.legend(handles=handles2, fontsize=fontsize - 1., 
+                            loc='lower center')
+        else:
+            axes[-2].legend(handles=handles2, fontsize=fontsize - 1., 
+                            loc='lower right')
     
     outname = mdir + 'phasediagram_L0100N1504_27_{}.pdf'
     plt.savefig(outname.format(plotset), format='pdf', bbox_inches='tight')
