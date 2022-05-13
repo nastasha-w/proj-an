@@ -3989,7 +3989,7 @@ def plot_radprof3d_med(weightset=1, M200cslice=None):
 
     linestyles = {weight: 'solid' for weight in weights}
     linestyles.update({'Volume': 'dashed'})
-    title = 'medians from stacked histograms'
+    title = 'medians and 10th and 90th percentiles of halo medians'
     print(title)
     
     # snapshot 27
@@ -4109,14 +4109,9 @@ def plot_radprof3d_med(weightset=1, M200cslice=None):
             
             # plot stacked histogram
             for weight in _weights:
-                for mkey in mkeys:
-                    keymatch = np.isclose(massincl, mkey)
-                    if not np.any(keymatch):
-                        continue
-                    mind = np.where(keymatch)[0][0]
-                    numm = len(massincl)
+                numm = len(massincl)
+                for mind, cmkey in enumerate(massincl):                    
                     errorevery = (mind, numm)
-                    cmkey = massincl[mind]
                     color = colordct[cmkey]
 
                     ### percentile of percentile
