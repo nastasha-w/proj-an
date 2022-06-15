@@ -245,7 +245,24 @@ def readstrdata(filen, separator=None, headerlength=1):
 
 # finds emission tables for element and interpolates them to zcalc if needed and possible
 def findemtables(element, zcalc):
-
+    '''
+    Parameters:
+    -----------
+    element: str
+        element producing the line. full name, all lowercase
+    zcalc: float
+        redshift to extract/interpolate the table for
+    
+    Returns:
+    --------
+    lines: numpy array, dimension 3
+        the emissivity values for all tabulated temperatures, densities, and
+        emission lines of the element 
+    logTK: array, dimension 1
+        the tabulated temperature values (log10 K) 
+    logrhocm3: array, dimension 1
+        the tabulated density values (log10 hydrogen nuclei / physical cm**-3)
+    '''
     #### checks and setup
 
     if not element in ol.elements:
@@ -328,7 +345,38 @@ def findemtables(element, zcalc):
 
 # calculate emission using C function (interpolator)
 def find_emdenssq(z, elt, dct_nH_T, lineind):
-
+    '''
+    Parameters:
+    -----------
+    z: float
+        redshift
+    elt: str
+        name of the element (all lowercase)
+    dct_nH_T: dict
+        dictionary containing two arrays describing the gas for which to
+        calculate the emissivity:
+        'logT': temperatures (log10 K)
+        'lognH': densities (log10 hydrogen nuclei / physical cm**-3) 
+    lineind: int
+        index of the line of which to calculate the emissivity
+    
+    Returns:
+    --------
+    inlogemission: array
+        log10 emissivity of the gas (energy emitted per unit time, volume, 
+         and density squared; erg * cm**3 / s). 
+         
+         exponentiate and multiply by 
+         nH**2 * V * (n_elt / n_H) / (n_elt / n_H)_sun
+         to get the line luminosity for a single SPH particle
+         where V = density / Mass, 
+         n_elt is the element number density 
+         n_H is the hydrogen number density
+         (n_elt = mass density * element mass fraction / element atomic mass, 
+         so the ratio can be computed from the element and hydrogen mass 
+         fractions and atomic mass ratios
+         
+    '''
     p_emtable, logTK, lognHcm3 = findemtables(elt,z)
     emtable = p_emtable[:,:,lineind]
     lognH = dct_nH_T['lognH']
@@ -381,7 +429,25 @@ def find_emdenssq(z, elt, dct_nH_T, lineind):
 
 
 
-def findiontables(ion,z):
+def findiontables(ion, z):
+    '''
+    Parameters:
+    -----------
+    ion: str
+        format of lowercase element abbreviation, ionisation stage.
+        E.g., 'h1' is neutral hydrogen, 'ne8', 'fe17'
+    z float
+        redshift to extract/interpolate the table for
+    
+    Returns:
+    --------
+    balance: numpy array, dimension 2
+        the ion fractions for all tabulated temperatures and densities
+    logTK: array, dimension 1
+        the tabulated temperature values (log10 K) 
+    logrhocm3: array, dimension 1
+        the tabulated density values (log10 hydrogen nuclei / physical cm**-3)
+    '''
     # README in dir_iontab:
     # files are hdf5, contain ionisation fraction of a species for rho, T, z
 
@@ -433,6 +499,26 @@ def findiontables(ion,z):
     return balance, logTK, lognHcm3
 
 def find_ionbal(z, ion, dct_nH_T):
+    '''
+    Parameters:
+    -----------
+    z: float
+        redshift
+    ion: str
+        format of lowercase element abbreviation, ionisation stage.
+        E.g., 'h1' is neutral hydrogen, 'ne8', 'fe17'
+    dct_nH_T: dict
+        dictionary containing two arrays describing the gas for which to
+        calculate the emissivity:
+        'logT': temperatures (log10 K)
+        'lognH': densities (log10 hydrogen nuclei / physical cm**-3) 
+    
+    Returns:
+    --------
+    balance: array
+        ratio between the number (and mass) of the ion and that of the 
+        element it is an ion of (e.g., O VII mass divided by oxygen mass) 
+    '''
 
     # compared to the line emission files, the order of the nH, T indices in the balance tables is switched
     lognH = dct_nH_T['lognH']
