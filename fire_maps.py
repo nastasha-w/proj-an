@@ -33,7 +33,7 @@ def test_mainhalodata_units():
 
     halodat = mainhalodata(dirpath, snapnum)
     snap = rf.Firesnap(snapfile) 
-    cen = np.array([[halodat['Xc'], halodat['Yc'], halodat['Zc']]])
+    cen = np.array([halodat['Xc'], halodat['Yc'], halodat['Zc']])
     
     # gas
     coords_pt0 = snap.readarray_emulateEAGLE('PartType0/Coordinates')
