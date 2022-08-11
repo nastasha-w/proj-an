@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 '''
 Retrieve the units for different quantities in FIRE simulation outputs
