@@ -156,8 +156,15 @@ class Units:
             missing = {attr if not hasattr(self, attr) else None \
                        for attr in self.reqlist}
             missing -= {None}
-            msg = 'Could not find required values: {}'.format(missing)
-            raise RuntimeError(msg)
+            # ad-hoc handling of missing values
+            # issue with the m12i_ress7100 test; seems ok to assume for cosmo volumes
+            if 'cosmoexp' in missing:
+                print('warning: assuming cosmologically expanding volume (cosmoexp = True)')
+                self.cosmoexp = True
+                missing -= {'cosmoexp'}
+            if len(missing) > 0:
+                msg = 'Could not find required values: {}'.format(missing)
+                raise RuntimeError(msg)
         self.codemass_g /= self.HubbleParam
         self.codelength_cm /= self.HubbleParam
         if not self.cosmoexp:
