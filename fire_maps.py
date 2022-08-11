@@ -40,27 +40,41 @@ def test_mainhalodata_units():
     coords_pt0_toCGS = snap.toCGS
     masses_pt0 = snap.readarray_emulateEAGLE('PartType0/Masses')
     masses_pt0_toCGS = snap.toCGS
+    d2 = (coords_pt0 - cen)**2
+    sel = d2 <= halodat['Rvir']**2
+    hm_pt0 = np.sum(masses_pt0[sel])
+    print('Halo gas mass (sim units): ', hm_pt0)
+    del coords_pt0
+    del masses_pt0
+    del d2
+    del sel
     # dm (high-res)
     coords_pt1 = snap.readarray_emulateEAGLE('PartType1/Coordinates')
     coords_pt1_toCGS = snap.toCGS
     masses_pt1 = snap.readarray_emulateEAGLE('PartType1/Masses')
     masses_pt1_toCGS = snap.toCGS
+    d2 = (coords_pt1 - cen)**2
+    sel = d2 <= halodat['Rvir']**2
+    hm_pt1 = np.sum(masses_pt1[sel])
+    print('Halo dm mass (sim units): ', hm_pt1)
+    del coords_pt1
+    del masses_pt1
+    del d2
+    del sel
     # stars
     coords_pt4 = snap.readarray_emulateEAGLE('PartType4/Coordinates')
     coords_pt4_toCGS = snap.toCGS
     masses_pt4 = snap.readarray_emulateEAGLE('PartType4/Masses')
     masses_pt4_toCGS = snap.toCGS
-    
-    d2 = (coords_pt0 - cen)**2
-    sel = d2 <= halodat['Rvir']**2
-    hm_pt0 = np.sum(masses_pt0[sel])
-    d2 = (coords_pt1 - cen)**2
-    sel = d2 <= halodat['Rvir']**2
-    hm_pt1 = np.sum(masses_pt1[sel])
     d2 = (coords_pt4 - cen)**2
     sel = d2 <= halodat['Rvir']**2
     hm_pt4 = np.sum(masses_pt4[sel])
     hm = hm_pt0 + hm_pt1 + hm_pt4
+    print('Halo stellar mass (sim units): ', hm_pt4)
+    del coords_pt4
+    del masses_pt4
+    del d2
+    del sel
 
     msg = 'Got halo mass {hm}, listed Mvir is {Mvir}'
     print(msg.format(hm=hm, Mvir=halodat['Mvir']))
