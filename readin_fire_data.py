@@ -168,7 +168,7 @@ class Firesnap:
             cdct['boxsize'] = self.ff['Header'].attrs['BoxSize'] 
             try:
                 cdct['omegab'] = self.ff['Header'].attrs['OmegaBaryon']
-            except AttributeError:
+            except KeyError:
                 print('Warning: did not find a value for Omega_b, using NaN')
                 cdct['omegab'] = np.NaN
         else:
