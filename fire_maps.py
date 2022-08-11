@@ -81,6 +81,8 @@ def test_mainhalodata_units():
     hm_logmsun = np.log10(hm) + np.log10(masses_pt0_toCGS / cu.c.solar_mass)
     print('sum total is 10^{logm} Msun'.format(logm=hm_logmsun))
 
+if __name__ == '__main__':
+    test_mainhalodata_units()
 
 
 
