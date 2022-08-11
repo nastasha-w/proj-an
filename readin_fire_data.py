@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 # first exploration of FIRE data files, from a quick look at one or two of 
 # them probably will be replaced by pre-written code by others at some point,
 # or based on actually reading the docs
