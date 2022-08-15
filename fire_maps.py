@@ -44,6 +44,7 @@ def test_mainhalodata_units():
     sel = d2 <= halodat['Rvir']**2
     hm_pt0 = np.sum(masses_pt0[sel])
     print('Halo gas mass (sim units): ', hm_pt0)
+    print('Selected {}/{} particles'.format(np.sum(sel), len(sel)))
     del coords_pt0
     del masses_pt0
     del d2
@@ -57,6 +58,7 @@ def test_mainhalodata_units():
     sel = d2 <= halodat['Rvir']**2
     hm_pt1 = np.sum(masses_pt1[sel])
     print('Halo dm mass (sim units): ', hm_pt1)
+    print('Selected {}/{} particles'.format(np.sum(sel), len(sel)))
     del coords_pt1
     del masses_pt1
     del d2
@@ -71,6 +73,7 @@ def test_mainhalodata_units():
     hm_pt4 = np.sum(masses_pt4[sel])
     hm = hm_pt0 + hm_pt1 + hm_pt4
     print('Halo stellar mass (sim units): ', hm_pt4)
+    
     del coords_pt4
     del masses_pt4
     del d2
