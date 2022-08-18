@@ -4,6 +4,7 @@
 import numpy as np
 import h5py
 import pandas as pd
+import sys
 
 import readin_fire_data as rf
 import units_fire as uf
@@ -98,8 +99,19 @@ def test_mainhalodata_units():
     hm_logmsun = np.log10(hm) + np.log10(masses_pt0_toCGS / cu.c.solar_mass)
     print('sum total is 10^{logm} Msun'.format(logm=hm_logmsun))
 
+
+def fromcommandline(index):
+    if index == 1:
+        test_mainhalodata_units()
+    else:
+        raise ValueError('Nothing specified for index {}'.format(index))
+
 if __name__ == '__main__':
-    test_mainhalodata_units()
+    if len(sys.argv) > 1:
+        ind = int(sys.argv[1])
+    fromcommandline(ind)
+    
+    
 
 
 
