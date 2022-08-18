@@ -109,6 +109,8 @@ def fromcommandline(index):
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         ind = int(sys.argv[1])
+    else:
+        raise ValueError('Please specify an integer index > 1')
     fromcommandline(ind)
     
     
