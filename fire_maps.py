@@ -8,6 +8,7 @@ import pandas as pd
 import readin_fire_data as rf
 import units_fire as uf
 import cosmo_utils as cu
+import eagle_constants_and_units as c
 from make_maps_v3_master import linetable_PS20, project
 
 
@@ -20,9 +21,15 @@ def mainhalodata(path, snapnum):
     df = pd.read_csv(fn, sep='\t')
     i = np.where(df['snum'] == snapnum)[0][0]
     out = {}
+    # units from AHF docs: http://popia.ft.uam.es/AHF/files/AHF.pdf
     props = ['Mvir', 'Rvir', 'Xc', 'Yc', 'Zc']
+    outprops = {'Mvir': 'Mvir_Msunoverh',
+                'Rvir': 'Rvir_ckpcoverh',
+                'Xc':   'Xc_ckpcoverh',
+                'Yc':   'Yc_ckpcoverh',
+                'Zc':   'Zc_ckpcoverh'}
     for prop in props:
-        out[prop] = df[prop][i]
+        out[outprops[prop]] = df[prop][i]
     return out
 
 def test_mainhalodata_units():
@@ -33,15 +40,20 @@ def test_mainhalodata_units():
 
     halodat = mainhalodata(dirpath, snapnum)
     snap = rf.Firesnap(snapfile) 
-    cen = np.array([halodat['Xc'], halodat['Yc'], halodat['Zc']])
+    cen = np.array([halodat['Xc_ckpcoverh'], 
+                    halodat['Yc_ckpcoverh'], 
+                    halodat['Zc_ckpcoverh']])
+    cen_cm = cen * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
+    rvir_cm = halodat['Rvir_ckpcoverh'] \
+              * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
     
     # gas
     coords_pt0 = snap.readarray_emulateEAGLE('PartType0/Coordinates')
     coords_pt0_toCGS = snap.toCGS
     masses_pt0 = snap.readarray_emulateEAGLE('PartType0/Masses')
     masses_pt0_toCGS = snap.toCGS
-    d2 = np.sum((coords_pt0 - cen)**2, axis=1)
-    sel = d2 <= halodat['Rvir']**2
+    d2 = np.sum((coords_pt0 - cen_cm / coords_pt0_toCGS)**2, axis=1)
+    sel = d2 <= (rvir_cm / coords_pt0_toCGS) **2
     hm_pt0 = np.sum(masses_pt0[sel])
     print('Halo gas mass (sim units): ', hm_pt0)
     print('Selected {}/{} particles'.format(np.sum(sel), len(sel)))
@@ -54,8 +66,8 @@ def test_mainhalodata_units():
     coords_pt1_toCGS = snap.toCGS
     masses_pt1 = snap.readarray_emulateEAGLE('PartType1/Masses')
     masses_pt1_toCGS = snap.toCGS
-    d2 = np.sum((coords_pt1 - cen)**2, axis=1)
-    sel = d2 <= halodat['Rvir']**2
+    d2 = np.sum((coords_pt1 - cen_cm / coords_pt1_toCGS)**2, axis=1)
+    sel = d2 <= (rvir_cm / coords_pt1_toCGS) **2
     hm_pt1 = np.sum(masses_pt1[sel])
     print('Halo dm mass (sim units): ', hm_pt1)
     print('Selected {}/{} particles'.format(np.sum(sel), len(sel)))
@@ -68,8 +80,8 @@ def test_mainhalodata_units():
     coords_pt4_toCGS = snap.toCGS
     masses_pt4 = snap.readarray_emulateEAGLE('PartType4/Masses')
     masses_pt4_toCGS = snap.toCGS
-    d2 = np.sum((coords_pt4 - cen)**2, axis=1)
-    sel = d2 <= halodat['Rvir']**2
+    d2 = np.sum((coords_pt4 - cen_cm / coords_pt4_toCGS)**2, axis=1)
+    sel = d2 <= (rvir_cm / coords_pt4_toCGS) **2
     hm_pt4 = np.sum(masses_pt4[sel])
     hm = hm_pt0 + hm_pt1 + hm_pt4
     print('Halo stellar mass (sim units): ', hm_pt4)
@@ -80,7 +92,9 @@ def test_mainhalodata_units():
     del sel
 
     msg = 'Got halo mass {hm}, listed Mvir is {Mvir}'
-    print(msg.format(hm=hm, Mvir=halodat['Mvir']))
+    hm_list_msun = halodat['Mvir_Msunoverh'] / snap.cosmopars.h
+    hm_sum_msun = hm * (masses_pt0_toCGS / cu.c.solar_mass)
+    print(msg.format(hm=hm_sum_msun, Mvir=hm_list_msun))
     hm_logmsun = np.log10(hm) + np.log10(masses_pt0_toCGS / cu.c.solar_mass)
     print('sum total is 10^{logm} Msun'.format(logm=hm_logmsun))
 
