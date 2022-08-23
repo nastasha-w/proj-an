@@ -107,6 +107,7 @@ def fromcommandline(index):
         raise ValueError('Nothing specified for index {}'.format(index))
 
 if __name__ == '__main__':
+    print('fire_maps.py script started')
     if len(sys.argv) > 1:
         ind = int(sys.argv[1])
     else:
