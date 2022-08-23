@@ -33,11 +33,19 @@ def mainhalodata(path, snapnum):
         out[outprops[prop]] = df[prop][i]
     return out
 
-def test_mainhalodata_units():
-
-    dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
-    snapfile = dirpath + 'output/snapdir_600/snapshot_600.0.hdf5'
-    snapnum = 600
+def test_mainhalodata_units(opt=1):
+    
+    if opt == 1: # redshift 0 test
+        dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
+        snapfile = dirpath + 'output/snapdir_600/snapshot_600.0.hdf5'
+        snapnum = 600
+    elif opt == 2: # higher z test 
+        dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
+        snapfile = dirpath + 'output/snapdir_399/snapshot_399.0.hdf5'
+        snapnum = 399
+    else:
+        msg = 'test_mainhalodata_units parameter opt = {} is invalid'
+        raise ValueError(msg.format(opt))
 
     halodat = mainhalodata(dirpath, snapnum)
     snap = rf.Firesnap(snapfile) 
@@ -118,8 +126,8 @@ def test_mainhalodata_units():
 
 
 def fromcommandline(index):
-    if index == 1:
-        test_mainhalodata_units()
+    if index > 0 and index < 3:
+        test_mainhalodata_units(index)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
