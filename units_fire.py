@@ -41,6 +41,7 @@ class Units:
                         'codevelocity_cm_per_s', 'codemageneticfield_gauss',
                         'codemass_g', 'codelength_cm']
         
+        # read baseline code units (as in the parameter file)
         if len(args) > 0:
             self._get_kwargs_ha(required=False, **kwargs)
             snapn = args[0]
@@ -58,15 +59,19 @@ class Units:
             self._get_kwargs_ha(required=True, **kwargs)
             print('Using FIRE default units')
             self._use_fire_defaults()
-            
+        
+        # check if everything is present, add h factors
         self._process_code_units()
+        # 
         self._get_derived_units_and_acorr()
       
     def _use_fire_defaults(self):
+        # no HubbleParam factors, since these are applied separately 
+        # by _process_code_units for snapshot/parameter file code units as well
         if not hasattr(self, 'HubbleParam'):
             self.HubbleParam = 0.7
         if not hasattr(self, 'codemass_g'):
-            self.codemass_g = 1e10 / self.HubbleParam
+            self.codemass_g = 1e10 * c.solar_mass #/ self.HubbleParam
         if not hasattr(self, 'codelength_cm'):
             self.codelength_cm = c.cm_per_mpc * 1e-3 #/ self.HubbleParam
         if not hasattr(self, 'codevelocity_cm_per_s'):
@@ -75,17 +80,6 @@ class Units:
             self.codemageneticfield_gauss =  1.
         if not hasattr(self, 'cosmpexp'):
             self.cosmpexp = True
-    
-    def _get_derived_units_and_acorr(self):
-         self.codetime_s = self.codelength_cm / self.codevelocity_cm_per_s
-         self.codedensity_g_per_cm3 = self.codemass_g / self.codelength_cm**3
-         self.codeinternalenergy_cm2_per_s2 = self.codevelocity_cm_per_s**2
-         self.codedivergencedampingfield = self.codemageneticfield_gauss * \
-                                           self.codevelocity_cm_per_s
-         
-         self.codelength_cm *= self.a
-         self.codevelocity_cm_per_s *= np.sqrt(self.a)
-         self.codedensity_g_per_cm3 *= self.a**-3
         
     def _read_snapshot_data(self, snapn):
         with h5py.File(snapn) as _f:
@@ -136,7 +130,21 @@ class Units:
                     break
         if not (setl and setm and setv and setb and setc and seth):
             print('Could not find all units in the parameterfile')
-            
+    
+    def _get_kwargs_ha(self, required=False, **kwargs):
+        if 'h' in kwargs: 
+            print('Using kwarg h value')
+            self.HubbleParam = kwargs['h']
+        #elif required:
+        #    msg = 'If no snapshot is given, h must be specified as a keyword'
+        #    raise ValueError(msg)
+        if 'a' in kwargs:
+            print('Using kwarg a value')
+            self.a = kwargs['a'] 
+        elif required:
+            msg = 'If no snapshot is given, "a" must be specified as a keyword'
+            raise ValueError(msg) 
+
     def _check_baseunits_present(self):
         present = {attr: hasattr(self, attr) for attr in self.reqlist}
         alldone = np.all([present[attr] for attr in present])
@@ -170,20 +178,17 @@ class Units:
         if not self.cosmoexp:
             self.a = 1.
         self.units_processed = True
-        
-    def _get_kwargs_ha(self, required=False, **kwargs):
-        if 'h' in kwargs: 
-            print('Using kwarg h value')
-            self.HubbleParam = kwargs['h']
-        #elif required:
-        #    msg = 'If no snapshot is given, h must be specified as a keyword'
-        #    raise ValueError(msg)
-        if 'a' in kwargs:
-            print('Using kwarg a value')
-            self.a = kwargs['a'] 
-        elif required:
-            msg = 'If no snapshot is given, "a" must be specified as a keyword'
-            raise ValueError(msg) 
+
+    def _get_derived_units_and_acorr(self):
+         self.codetime_s = self.codelength_cm / self.codevelocity_cm_per_s
+         self.codedensity_g_per_cm3 = self.codemass_g / self.codelength_cm**3
+         self.codeinternalenergy_cm2_per_s2 = self.codevelocity_cm_per_s**2
+         self.codedivergencedampingfield = self.codemageneticfield_gauss * \
+                                           self.codevelocity_cm_per_s
+         
+         self.codelength_cm *= self.a
+         self.codevelocity_cm_per_s *= np.sqrt(self.a)
+         self.codedensity_g_per_cm3 *= self.a**-3
     
     def getunits(self, field):
         '''
