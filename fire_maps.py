@@ -13,6 +13,7 @@ import eagle_constants_and_units as c
 from make_maps_v3_master import linetable_PS20, project
 
 
+
 def mainhalodata(path, snapnum):
     '''
     get properties of the main halo in the snapshot from halo_00000_smooth.dat
@@ -124,10 +125,12 @@ def test_mainhalodata_units(opt=1):
     hm_logmsun = np.log10(hm) + np.log10(masses_pt0_toCGS / cu.c.solar_mass)
     print('sum total is 10^{logm} Msun'.format(logm=hm_logmsun))
 
+def massmap():
+    pass
 
 def fromcommandline(index):
     if index > 0 and index < 3:
-        test_mainhalodata_units(index)
+        test_mainhalodata_units(opt=index)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
