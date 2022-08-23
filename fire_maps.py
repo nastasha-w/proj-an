@@ -44,15 +44,24 @@ def test_mainhalodata_units():
     cen = np.array([halodat['Xc_ckpcoverh'], 
                     halodat['Yc_ckpcoverh'], 
                     halodat['Zc_ckpcoverh']])
-    cen_cm = cen * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
-    rvir_cm = halodat['Rvir_ckpcoverh'] \
+    cen_cm = cen * snap.cosmopars.a * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
+    rvir_cm = halodat['Rvir_ckpcoverh'] * snap.cosmopars.a \
               * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
+    print('Center [AHF units]: {}'.format(cen))
+    print('Rvir [AHF units]: {}'.format(halodat['Rvir_ckpcoverh']))
+    print('Center [attempted cm]: {}'.format(cen_cm))
+    print('Rvir [attempted cm]: {}'.format(rvir_cm))
     
     # gas
     coords_pt0 = snap.readarray_emulateEAGLE('PartType0/Coordinates')
     coords_pt0_toCGS = snap.toCGS
     masses_pt0 = snap.readarray_emulateEAGLE('PartType0/Masses')
     masses_pt0_toCGS = snap.toCGS
+    # sanity check
+    med_c = np.median(coords_pt0, axis=0)
+    print('Median gas coords [sim units]: {}'.format(med_c))
+    print('Median gas coordinates [cm]: {}'.format(med_c * coords_pt0_toCGS))
+
     d2 = np.sum((coords_pt0 - cen_cm / coords_pt0_toCGS)**2, axis=1)
     sel = d2 <= (rvir_cm / coords_pt0_toCGS) **2
     hm_pt0 = np.sum(masses_pt0[sel])
@@ -67,6 +76,9 @@ def test_mainhalodata_units():
     coords_pt1_toCGS = snap.toCGS
     masses_pt1 = snap.readarray_emulateEAGLE('PartType1/Masses')
     masses_pt1_toCGS = snap.toCGS
+    med_c = np.median(coords_pt1, axis=0)
+    print('Median DM coords [sim units]: {}'.format(med_c))
+    print('Median DM coordinates [cm]: {}'.format(med_c * coords_pt1_toCGS))
     d2 = np.sum((coords_pt1 - cen_cm / coords_pt1_toCGS)**2, axis=1)
     sel = d2 <= (rvir_cm / coords_pt1_toCGS) **2
     hm_pt1 = np.sum(masses_pt1[sel])
@@ -81,16 +93,19 @@ def test_mainhalodata_units():
     coords_pt4_toCGS = snap.toCGS
     masses_pt4 = snap.readarray_emulateEAGLE('PartType4/Masses')
     masses_pt4_toCGS = snap.toCGS
+    med_c = np.median(coords_pt4, axis=0)
+    print('Median star coords [sim units]: {}'.format(med_c))
+    print('Median star coordinates [cm]: {}'.format(med_c * coords_pt4_toCGS))
+
     d2 = np.sum((coords_pt4 - cen_cm / coords_pt4_toCGS)**2, axis=1)
     sel = d2 <= (rvir_cm / coords_pt4_toCGS) **2
     hm_pt4 = np.sum(masses_pt4[sel])
-    hm = hm_pt0 + hm_pt1 + hm_pt4
     print('Halo stellar mass (sim units): ', hm_pt4)
-    
     del coords_pt4
     del masses_pt4
     del d2
     del sel
+    hm = hm_pt0 + hm_pt1 + hm_pt4
 
     msg = 'Got halo mass {hm}, listed Mvir is {Mvir}'
     hm_list_msun = halodat['Mvir_Msunoverh'] / snap.cosmopars.h
