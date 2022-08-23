@@ -47,6 +47,8 @@ def test_mainhalodata_units():
     cen_cm = cen * snap.cosmopars.a * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
     rvir_cm = halodat['Rvir_ckpcoverh'] * snap.cosmopars.a \
               * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
+    print('Cosmology:')
+    print(snap.cosmopars.getdct())
     print('Center [AHF units]: {}'.format(cen))
     print('Rvir [AHF units]: {}'.format(halodat['Rvir_ckpcoverh']))
     print('Center [attempted cm]: {}'.format(cen_cm))
