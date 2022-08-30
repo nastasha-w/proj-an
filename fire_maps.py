@@ -125,10 +125,26 @@ def test_mainhalodata_units(opt=1):
     hm_logmsun = np.log10(hm) + np.log10(masses_pt0_toCGS / cu.c.solar_mass)
     print('sum total is 10^{logm} Msun'.format(logm=hm_logmsun))
 
-def massmap():
-    pass
+def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0):
+    halodat = mainhalodata(dirpath, snapnum)
+    snap = rf.Firesnap(snapfile) 
+    cen = np.array([halodat['Xc_ckpcoverh'], 
+                    halodat['Yc_ckpcoverh'], 
+                    halodat['Zc_ckpcoverh']])
+    cen_cm = cen * snap.cosmopars.a * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
+    rvir_cm = halodat['Rvir_ckpcoverh'] * snap.cosmopars.a \
+              * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
+    
+    basepath = 'PartType{}/'.format(particle_type)
+
+    coords = snap.readarray_emulateEAGLE(basepath + 'Coordinates')
+    coords_toCGS = snap.toCGS
+    masses = snap.readarray_emulateEAGLE(basepath + 'Masses')
+    masses_toCGS = snap.toCGS
+
 
 def fromcommandline(index):
+    print('Running fire_maps.py process {}'.format(index))
     if index > 0 and index < 3:
         test_mainhalodata_units(opt=index)
     else:
@@ -137,7 +153,12 @@ def fromcommandline(index):
 if __name__ == '__main__':
     print('fire_maps.py script started')
     if len(sys.argv) > 1:
-        ind = int(sys.argv[1])
+        try:
+            ind = int(sys.argv[1])
+        except ValueError as msg1:
+            msg2 = 'Could not interpret first command-line argument {} as int'
+            msg2.format(sys.argv[1])
+            raise ValueError('/n'.join(msg1, msg2))
     else:
         raise ValueError('Please specify an integer index > 1')
     fromcommandline(ind)
