@@ -125,7 +125,25 @@ def test_mainhalodata_units(opt=1):
     hm_logmsun = np.log10(hm) + np.log10(masses_pt0_toCGS / cu.c.solar_mass)
     print('sum total is 10^{logm} Msun'.format(logm=hm_logmsun))
 
-def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0):
+
+def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0,
+            pixsize_pkpc=3., axis='z', outfilen=None):
+    if axis == 'z':
+        Axis1 = 0
+        Axis2 = 1
+        Axis3 = 2
+    elif axis == 'x':
+        Axis1 = 2
+        Axis2 = 0
+        Axis3 = 1
+    elif axis == 'y':
+        Axis1 = 1
+        Axis2 = 2
+        Axis3 = 0
+    else:
+        msg = 'axis should be "x", "y", or "z", not {}'
+        raise ValueError(msg.format(axis))
+
     halodat = mainhalodata(dirpath, snapnum)
     snap = rf.Firesnap(snapfile) 
     cen = np.array([halodat['Xc_ckpcoverh'], 
@@ -135,12 +153,77 @@ def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0):
     rvir_cm = halodat['Rvir_ckpcoverh'] * snap.cosmopars.a \
               * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
     
+    # calculate pixel numbers and projection region based
+    # on target size and extended for integer pixel number
+    target_size_cm = np.array([2. * radius_rvir * rvir_cm] * 3)
+    pixel_cm = pixsize_pkpc * c.cm_per_mpc * 1e-3
+    npix3 = np.ceil(target_size_cm / pixel_cm) 
+    npix_x = npix3[Axis1]
+    npix_y = npix3[Axis2]
+    size_touse_cm = target_size_cm
+    size_touse_cm[Axis1] = npix_x * pixel_cm
+    size_touse_cm[Axis2] = npix_y * pixel_cm
+
     basepath = 'PartType{}/'.format(particle_type)
+    haslsmooth = particle_type == 0
+    if haslsmooth: # gas
+        lsmooth = snap.readarray_emulateEAGLE(basepath + 'SmoothingLength')
+        lsmooth_toCGS = snap.toCGS
 
     coords = snap.readarray_emulateEAGLE(basepath + 'Coordinates')
     coords_toCGS = snap.toCGS
-    masses = snap.readarray_emulateEAGLE(basepath + 'Masses')
+    # needed for projection step anyway
+    coords -= cen_cm / coords_toCGS
+    # select box region
+    # zoom regions are generally centered -> don't worry
+    # about edge overlap
+    box_dims = size_touse_cm / coords_toCGS
+    filter = np.all(np.abs((coords)) <= 0.5 * box_dims, 
+                    axis=1)   
+    if haslsmooth:
+        # extreme values will occur at zoom region edges -> restrict
+        lmax = np.max(lsmooth[filter]) 
+        # might be lower-density stuff outside the region, but overlapping it
+        lmargin = 2. * lmax 
+        filter = np.all(np.abs((coords)) <= box_dims + lmargin, axis=1)
+        lsmooth = lsmooth[filter]
+        conv = lsmooth_toCGS / coords_toCGS
+        if not np.isclose(conv, 1.):
+            lsmooth *= conv
+    
+    coords = coords[filter]
+    masses = snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
     masses_toCGS = snap.toCGS
+    
+    # stars, black holes. DM: should do neighbour finding. Won't though.
+    if not haslsmooth:
+        # minimum smoothing length is set in the projection
+        lsmooth = np.zeros(shape=(len(masses),), dtype=coords.dtype)
+        lsmooth_toCGS = 1.
+    
+    tree = False
+    periodic = False # zoom region
+    NumPart = len(masses)
+    dct = {'coords': coords, 'lsmooth': lsmooth, 
+           'qW': masses, 
+           'qQ': np.zeros(len(masses), dtype=np.float32)}
+    Ls = box_dims
+    # cosmopars uses EAGLE-style cMpc/h units for the box
+    box3 = [snap.cosmopars.boxsize * c.cm_per_mpc / snap.cosmopars.h \
+            / coords_toCGS] * 3
+    mapW, mapQ = project(NumPart, Ls, Axis1, Axis2, Axis3, box3,
+                         periodic, npix_x, npix_y,
+                         'C2', dct, tree, ompproj=True, 
+                         projmin=None, projmax=None)
+    if outfilen is None:
+        return mapW, mapQ
+    
+    with h5py.File(outfilen, 'w') as f:
+        f.create_dataset('map', np.log10(mapW))
+        # units, log/not log, cosmopars, settings...
+
+
+
 
 
 def fromcommandline(index):
