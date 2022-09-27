@@ -14,7 +14,6 @@ import eagle_constants_and_units as c
 from make_maps_v3_master import linetable_PS20, project
 
 
-
 def mainhalodata(path, snapnum):
     '''
     get properties of the main halo in the snapshot from halo_00000_smooth.dat
@@ -164,6 +163,7 @@ def test_mainhalodata_units_multi_handler(opt=1):
         printfile += 'metal_diffusion__m12i_res7100.txt'
     else:
         raise ValueError('opt {} is not allowed'.format(opt))
+    test_mainhalodata_units_multi(dirpath, printfile)
 
 def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0,
             pixsize_pkpc=3., axis='z', outfilen=None):
