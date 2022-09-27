@@ -142,6 +142,7 @@ def test_mainhalodata_units(opt=1, dirpath=None, snapnum=None,
             f.write('\t'.join(vals))
             
 def test_mainhalodata_units_multi(dirpath, printfile):
+    print('running test_mainhalodata_units_multi')
     _snapdirs = os.listdir(dirpath)
     snaps = []
     for _sd in _snapdirs:
@@ -149,8 +150,10 @@ def test_mainhalodata_units_multi(dirpath, printfile):
         if _sd.startswith('snapdir'):
             snaps.append(int(_sd.split('_')[-1]))
     for snap in snaps:
-         test_mainhalodata_units(opt=None, dirpath=dirpath, snapnum=snap,
+        print('Snapshot ', snap)
+        test_mainhalodata_units(opt=None, dirpath=dirpath, snapnum=snap,
                                  printfile=printfile)
+        print('\n')
 
 def test_mainhalodata_units_multi_handler(opt=1):
     if opt == 1:
@@ -159,7 +162,11 @@ def test_mainhalodata_units_multi_handler(opt=1):
         printfile += 'metal_diffusion__m12i_res7100.txt'
     else:
         raise ValueError('opt {} is not allowed'.format(opt))
+    print('Running test_mainhalodata_units_multi(dirpath, printfile)')
+    print('dirpath: ', dirpath)
+    print('printfile: ', printfile)
     test_mainhalodata_units_multi(dirpath, printfile)
+
 
 def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0,
             pixsize_pkpc=3., axis='z', outfilen=None):
