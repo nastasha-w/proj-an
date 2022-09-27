@@ -5,6 +5,7 @@ import numpy as np
 import h5py
 import pandas as pd
 import sys
+import os
 
 import readin_fire_data as rf
 import units_fire as uf
@@ -34,7 +35,8 @@ def mainhalodata(path, snapnum):
         out[outprops[prop]] = df[prop][i]
     return out
 
-def test_mainhalodata_units(opt=1):
+def test_mainhalodata_units(opt=1, dirpath=None, snapnum=None,
+    printfile=None):
     
     if opt == 1: # redshift 0 test
         dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
@@ -48,6 +50,12 @@ def test_mainhalodata_units(opt=1):
         dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
         snapfile = dirpath + 'output/snapdir_492/snapshot_492.0.hdf5'
         snapnum = 492
+    elif opt == 3: # higher z test 
+        dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
+        snapfile = dirpath + 'output/snapdir_492/snapshot_492.0.hdf5'
+        snapnum = 492
+    elif opt is None:
+        snapfile = dirpath + 'output/snapdir_{sn:03d}/snapshot_{sn:03d}.0.hdf5'
     else:
         msg = 'test_mainhalodata_units parameter opt = {} is invalid'
         raise ValueError(msg.format(opt))
@@ -129,6 +137,33 @@ def test_mainhalodata_units(opt=1):
     hm_logmsun = np.log10(hm) + np.log10(masses_pt0_toCGS / cu.c.solar_mass)
     print('sum total is 10^{logm} Msun'.format(logm=hm_logmsun))
 
+    if printfile is not None:
+        new = not sys.path.isfile(printfile)
+        with open(printfile, 'a') as f:
+            if new:
+                columns = ['snapnum', 'redshift', 'Mvir_sum_Msun', 'Mvir_AHF_Msun']
+                f.write('\t'.join(columns))
+            vals = [snapnum, snap.cosmopars.z, hm_sum_msun, hm_list_msun]
+            f.write('\t'.join(vals))
+            
+def test_mainhalodata_units_multi(dirpath, printfile):
+    _snapdirs = os.listdir(dirpath)
+    snaps = []
+    for _sd in _snapdirs:
+        # looking for something like snapdir_196, extract 196
+        if _sd.startswith('snapdir'):
+            snaps.append(int(_sd.split('_')[-1]))
+    for snap in snaps:
+         test_mainhalodata_units(opt=None, dirpath=dirpath, snapnum=snap,
+                                 printfile=printfile)
+
+def test_mainhalodata_units_multi_handler(opt=1):
+    if opt == 1:
+        dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
+        printfile = '/projects/b1026/nastasha/tests/start_fire/AHF_unit_tests/'
+        printfile += 'metal_diffusion__m12i_res7100.txt'
+    else:
+        raise ValueError('opt {} is not allowed'.format(opt))
 
 def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0,
             pixsize_pkpc=3., axis='z', outfilen=None):
@@ -307,6 +342,9 @@ def fromcommandline(index):
     print('Running fire_maps.py process {}'.format(index))
     if index > 0 and index < 4:
         test_mainhalodata_units(opt=index)
+    elif index == 4:
+        # test a whole lot of snapshots in one go
+        test_mainhalodata_units_multi_handler(opt=1)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
