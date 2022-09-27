@@ -26,10 +26,10 @@ def mainhalodata(path, snapnum):
     # units from AHF docs: http://popia.ft.uam.es/AHF/files/AHF.pdf
     props = ['Mvir', 'Rvir', 'Xc', 'Yc', 'Zc']
     outprops = {'Mvir': 'Mvir_Msunoverh',
-                'Rvir': 'Rvir_ckpcoverh',
-                'Xc':   'Xc_ckpcoverh',
-                'Yc':   'Yc_ckpcoverh',
-                'Zc':   'Zc_ckpcoverh'}
+                'Rvir': 'Rvir_pkpcoverh',
+                'Xc':   'Xc_pkpcoverh',
+                'Yc':   'Yc_pkpcoverh',
+                'Zc':   'Zc_pkpcoverh'}
     for prop in props:
         out[outprops[prop]] = df[prop][i]
     return out
@@ -50,11 +50,11 @@ def test_mainhalodata_units(opt=1):
 
     halodat = mainhalodata(dirpath, snapnum)
     snap = rf.Firesnap(snapfile) 
-    cen = np.array([halodat['Xc_ckpcoverh'], 
-                    halodat['Yc_ckpcoverh'], 
-                    halodat['Zc_ckpcoverh']])
-    cen_cm = cen * snap.cosmopars.a * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
-    rvir_cm = halodat['Rvir_ckpcoverh'] * snap.cosmopars.a \
+    cen = np.array([halodat['Xc_pkpcoverh'], 
+                    halodat['Yc_pkpcoverh'], 
+                    halodat['Zc_pkpcoverh']])
+    cen_cm = cen * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
+    rvir_cm = halodat['Rvir_pkpcoverh'] \
               * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
     print('Cosmology:')
     print(snap.cosmopars.getdct())
