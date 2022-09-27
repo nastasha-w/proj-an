@@ -128,6 +128,41 @@ def test_mainhalodata_units(opt=1):
 
 def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0,
             pixsize_pkpc=3., axis='z', outfilen=None):
+    '''
+    Creates a mass map projected perpendicular to a line of sight axis
+    by assuming the simulation resolution elements divide their mass 
+    following a C2 SPH kernel.
+
+    Parameters:
+    -----------
+    snapfile: str
+        file (or example file, if split) containing the snapshot data
+    dirpath: str
+        path to the directory containing the 'output' directory with the
+        snapshots
+    snapnum: int
+        snapshot number
+    radius_rvir: float 
+        radius of the cube to project in units of Rvir. Note that in the sky 
+        plane, this will be (slightly) extended to get the exact pixel size.
+    particle_type: int
+        particle type to project (follows FIRE format)
+    pixsize_pkpc: float
+        size of the map pixels in proper kpc
+    axis: str, 'x', 'y', or 'z'
+        axis corresponding to the line of sight 
+    outfilen: str or None. 
+        if a string, the name of the file to save the output data to. The
+        default is None, meaning the maps are returned as output
+    
+    Output:
+    -------
+    massW: 2D array of floats
+        projected mass image [log g/cm^-2]
+    massQ: NaN array, for future work
+
+
+    '''
     if axis == 'z':
         Axis1 = 0
         Axis2 = 1
@@ -177,19 +212,22 @@ def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0,
     # select box region
     # zoom regions are generally centered -> don't worry
     # about edge overlap
-    box_dims = size_touse_cm / coords_toCGS
-    filter = np.all(np.abs((coords)) <= 0.5 * box_dims, 
-                    axis=1)   
+    box_dims_coordunit = size_touse_cm / coords_toCGS
+
     if haslsmooth:
         # extreme values will occur at zoom region edges -> restrict
         lmax = np.max(lsmooth[filter]) 
-        # might be lower-density stuff outside the region, but overlapping it
-        lmargin = 2. * lmax 
-        filter = np.all(np.abs((coords)) <= box_dims + lmargin, axis=1)
-        lsmooth = lsmooth[filter]
         conv = lsmooth_toCGS / coords_toCGS
+        # might be lower-density stuff outside the region, but overlapping it
+        lmargin = 2. * lmax * conv
+        filter = np.all(np.abs((coords)) <= 0.5 * box_dims_coordunit \
+                        + lmargin, axis=1)
+        lsmooth = lsmooth[filter]
         if not np.isclose(conv, 1.):
             lsmooth *= conv
+    
+    else:
+        filter = np.all(np.abs((coords)) <= 0.5 * box_dims_coordunit, axis=1)   
     
     coords = coords[filter]
     masses = snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
@@ -207,7 +245,7 @@ def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0,
     dct = {'coords': coords, 'lsmooth': lsmooth, 
            'qW': masses, 
            'qQ': np.zeros(len(masses), dtype=np.float32)}
-    Ls = box_dims
+    Ls = box_dims_coordunit
     # cosmopars uses EAGLE-style cMpc/h units for the box
     box3 = [snap.cosmopars.boxsize * c.cm_per_mpc / snap.cosmopars.h \
             / coords_toCGS] * 3
@@ -215,16 +253,18 @@ def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0,
                          periodic, npix_x, npix_y,
                          'C2', dct, tree, ompproj=True, 
                          projmin=None, projmax=None)
+    lmapW = np.log10(mapW)
+    lmapW += np.log10(masses_toCGS)
     if outfilen is None:
-        return mapW, mapQ
+        return lmapW, mapQ
     
     with h5py.File(outfilen, 'w') as f:
         # map (emulate make_maps format)
-        f.create_dataset('map', np.log10(mapW))
+        f.create_dataset('map', lmapW)
         f['map'].attrs.create('log', True)
-        minfinite = np.log10(np.min(mapW[mapW > 0]))
+        minfinite = np.min(lmapW[np.isfinite(lmapW)])
         f['map'].attrs.create('minfinite', minfinite)
-        f['map'].attrs.create('max', np.log10(np.max(map))
+        f['map'].attrs.create('max', np.max(lampW))
         
         # cosmopars (emulate make_maps format)
         hed = f.create_group('Header')
@@ -232,6 +272,27 @@ def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0,
         csm = snap.cosmopars.getdct()
         for key in csm:
             cgrp.create_attribute(key, csm[key])
+        
+        # direct input parameters
+        igrp = hed['inputpars']
+        igrp.attrs.create('snapfile', np.string_(snapfile))
+        igrp.attrs.create('dirpath', np.string_(dirpath))
+        igrp.attrs.create('radius_rvir', radius_rvir)
+        igrp.attrs.create('particle_type', particle_type)
+        igrp.attrs.create('pixsize_pkpc', pixsize_pkpc)
+        igrp.attrs.create('axis', np.string_(axis))
+        igrp.attrs.create('outfilen', np.string_(outfilen))
+        # useful derived/used stuff
+        igrp.attrs.create('Axis1', Axis1)
+        igrp.attrs.create('Axis2', Axis2)
+        igrp.attrs.create('Axis3', Axis3)
+        igrp.attrs.create('diameter_used_cm', np.array(size_touse_cm))
+        if haslsmooth:
+            igrp.attrs.create('margin_lsmooth_cm', lmargin * coords_toCGS)
+        _grp = igrp.create_group('halodata')
+        for key in halodat:
+            _grp.attrs.create(key, halodat[key])
+        
         
 
 
