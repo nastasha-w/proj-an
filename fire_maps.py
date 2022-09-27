@@ -35,7 +35,7 @@ def mainhalodata(path, snapnum):
     return out
 
 def test_mainhalodata_units(opt=1, dirpath=None, snapnum=None,
-    printfile=None):
+                            printfile=None):
     
     if opt == 1: # redshift 0 test
         dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
@@ -45,11 +45,7 @@ def test_mainhalodata_units(opt=1, dirpath=None, snapnum=None,
         dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
         snapfile = dirpath + 'output/snapdir_399/snapshot_399.0.hdf5'
         snapnum = 399
-    elif opt == 3: # higher z test 
-        dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
-        snapfile = dirpath + 'output/snapdir_492/snapshot_492.0.hdf5'
-        snapnum = 492
-    elif opt == 3: # higher z test 
+    elif opt == 3: # try other z
         dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
         snapfile = dirpath + 'output/snapdir_492/snapshot_492.0.hdf5'
         snapnum = 492
