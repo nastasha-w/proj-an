@@ -138,9 +138,9 @@ def test_mainhalodata_units(opt=1, dirpath=None, snapnum=None,
         with open(printfile, 'a') as f:
             if new:
                 columns = ['snapnum', 'redshift', 'Mvir_sum_Msun', 'Mvir_AHF_Msun']
-                f.write('\t'.join(columns))
+                f.write('\t'.join(columns) + '\n')
             vals = [snapnum, snap.cosmopars.z, hm_sum_msun, hm_list_msun]
-            f.write('\t'.join([str(val) for val in vals]))
+            f.write('\t'.join([str(val) for val in vals]) + '\n')
             
 def test_mainhalodata_units_multi(dirpath, printfile):
     print('running test_mainhalodata_units_multi')
@@ -149,7 +149,12 @@ def test_mainhalodata_units_multi(dirpath, printfile):
     for _sd in _snapdirs:
         # looking for something like snapdir_196, extract 196
         if _sd.startswith('snapdir'):
-            snaps.append(int(_sd.split('_')[-1]))
+            _snap = int(_sd.split('_')[-1])
+            # special case, permissions error
+            dp1 = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100'
+            if _snap == 599 and dirpath == dp1:
+                continue
+            snaps.append(_snap)
     for snap in snaps:
         print('Snapshot ', snap)
         test_mainhalodata_units(opt=None, dirpath=dirpath, snapnum=snap,
