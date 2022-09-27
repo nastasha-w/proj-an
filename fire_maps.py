@@ -59,7 +59,7 @@ def test_mainhalodata_units(opt=1):
     print('Cosmology:')
     print(snap.cosmopars.getdct())
     print('Center [AHF units]: {}'.format(cen))
-    print('Rvir [AHF units]: {}'.format(halodat['Rvir_ckpcoverh']))
+    print('Rvir [AHF units]: {}'.format(halodat['Rvir_pkpcoverh']))
     print('Center [attempted cm]: {}'.format(cen_cm))
     print('Rvir [attempted cm]: {}'.format(rvir_cm))
     
