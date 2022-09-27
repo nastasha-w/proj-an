@@ -26,10 +26,10 @@ def mainhalodata(path, snapnum):
     # units from AHF docs: http://popia.ft.uam.es/AHF/files/AHF.pdf
     props = ['Mvir', 'Rvir', 'Xc', 'Yc', 'Zc']
     outprops = {'Mvir': 'Mvir_Msunoverh',
-                'Rvir': 'Rvir_pkpcoverh',
-                'Xc':   'Xc_pkpcoverh',
-                'Yc':   'Yc_pkpcoverh',
-                'Zc':   'Zc_pkpcoverh'}
+                'Rvir': 'Rvir_ckpcoverh',
+                'Xc':   'Xc_ckpcoverh',
+                'Yc':   'Yc_ckpcoverh',
+                'Zc':   'Zc_ckpcoverh'}
     for prop in props:
         out[outprops[prop]] = df[prop][i]
     return out
@@ -50,16 +50,16 @@ def test_mainhalodata_units(opt=1):
 
     halodat = mainhalodata(dirpath, snapnum)
     snap = rf.Firesnap(snapfile) 
-    cen = np.array([halodat['Xc_pkpcoverh'], 
-                    halodat['Yc_pkpcoverh'], 
-                    halodat['Zc_pkpcoverh']])
-    cen_cm = cen * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
-    rvir_cm = halodat['Rvir_pkpcoverh'] \
+    cen = np.array([halodat['Xc_ckpcoverh'], 
+                    halodat['Yc_ckpcoverh'], 
+                    halodat['Zc_ckpcoverh']])
+    cen_cm = cen * snap.cosmopars.a * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
+    rvir_cm = halodat['Rvir_ckpcoverh'] * snap.cosmopars.a\
               * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
     print('Cosmology:')
     print(snap.cosmopars.getdct())
     print('Center [AHF units]: {}'.format(cen))
-    print('Rvir [AHF units]: {}'.format(halodat['Rvir_pkpcoverh']))
+    print('Rvir [AHF units]: {}'.format(halodat['Rvir_ckpcoverh']))
     print('Center [attempted cm]: {}'.format(cen_cm))
     print('Rvir [attempted cm]: {}'.format(rvir_cm))
     
@@ -219,8 +219,20 @@ def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0,
         return mapW, mapQ
     
     with h5py.File(outfilen, 'w') as f:
+        # map (emulate make_maps format)
         f.create_dataset('map', np.log10(mapW))
-        # units, log/not log, cosmopars, settings...
+        f['map'].attrs.create('log', True)
+        minfinite = np.log10(np.min(mapW[mapW > 0]))
+        f['map'].attrs.create('minfinite', minfinite)
+        f['map'].attrs.create('max', np.log10(np.max(map))
+        
+        # cosmopars (emulate make_maps format)
+        hed = f.create_group('Header')
+        cgrp = hed.create_group('inputpars/cosmopars')
+        csm = snap.cosmopars.getdct()
+        for key in csm:
+            cgrp.create_attribute(key, csm[key])
+        
 
 
 
