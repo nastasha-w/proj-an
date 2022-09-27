@@ -134,7 +134,7 @@ def test_mainhalodata_units(opt=1, dirpath=None, snapnum=None,
     print('sum total is 10^{logm} Msun'.format(logm=hm_logmsun))
 
     if printfile is not None:
-        new = not sys.path.isfile(printfile)
+        new = not os.path.isfile(printfile)
         with open(printfile, 'a') as f:
             if new:
                 columns = ['snapnum', 'redshift', 'Mvir_sum_Msun', 'Mvir_AHF_Msun']
