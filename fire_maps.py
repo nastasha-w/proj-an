@@ -44,6 +44,10 @@ def test_mainhalodata_units(opt=1):
         dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
         snapfile = dirpath + 'output/snapdir_399/snapshot_399.0.hdf5'
         snapnum = 399
+    elif opt == 3: # higher z test 
+        dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
+        snapfile = dirpath + 'output/snapdir_492/snapshot_492.0.hdf5'
+        snapnum = 492
     else:
         msg = 'test_mainhalodata_units parameter opt = {} is invalid'
         raise ValueError(msg.format(opt))
@@ -264,7 +268,7 @@ def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0,
         f['map'].attrs.create('log', True)
         minfinite = np.min(lmapW[np.isfinite(lmapW)])
         f['map'].attrs.create('minfinite', minfinite)
-        f['map'].attrs.create('max', np.max(lampW))
+        f['map'].attrs.create('max', np.max(lmapW))
         
         # cosmopars (emulate make_maps format)
         hed = f.create_group('Header')
@@ -301,7 +305,7 @@ def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0,
 
 def fromcommandline(index):
     print('Running fire_maps.py process {}'.format(index))
-    if index > 0 and index < 3:
+    if index > 0 and index < 4:
         test_mainhalodata_units(opt=index)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
