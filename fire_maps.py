@@ -51,6 +51,7 @@ def test_mainhalodata_units(opt=1, dirpath=None, snapnum=None,
         snapnum = 492
     elif opt is None:
         snapfile = dirpath + 'output/snapdir_{sn:03d}/snapshot_{sn:03d}.0.hdf5'
+        snapfile = snapfile.format(sn=snapnum)
     else:
         msg = 'test_mainhalodata_units parameter opt = {} is invalid'
         raise ValueError(msg.format(opt))
