@@ -140,7 +140,7 @@ def test_mainhalodata_units(opt=1, dirpath=None, snapnum=None,
                 columns = ['snapnum', 'redshift', 'Mvir_sum_Msun', 'Mvir_AHF_Msun']
                 f.write('\t'.join(columns))
             vals = [snapnum, snap.cosmopars.z, hm_sum_msun, hm_list_msun]
-            f.write('\t'.join(vals))
+            f.write('\t'.join([str(val) for val in vals))
             
 def test_mainhalodata_units_multi(dirpath, printfile):
     print('running test_mainhalodata_units_multi')
