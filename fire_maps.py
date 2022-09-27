@@ -140,7 +140,7 @@ def test_mainhalodata_units(opt=1, dirpath=None, snapnum=None,
                 columns = ['snapnum', 'redshift', 'Mvir_sum_Msun', 'Mvir_AHF_Msun']
                 f.write('\t'.join(columns))
             vals = [snapnum, snap.cosmopars.z, hm_sum_msun, hm_list_msun]
-            f.write('\t'.join([str(val) for val in vals))
+            f.write('\t'.join([str(val) for val in vals]))
             
 def test_mainhalodata_units_multi(dirpath, printfile):
     print('running test_mainhalodata_units_multi')
@@ -341,8 +341,11 @@ def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0,
 
 
 
-
 def fromcommandline(index):
+    '''
+    This mapping is just based on the order in which I (first) ran things,
+    and will not generally follow any kind of logic
+    '''
     print('Running fire_maps.py process {}'.format(index))
     if index > 0 and index < 4:
         test_mainhalodata_units(opt=index)
