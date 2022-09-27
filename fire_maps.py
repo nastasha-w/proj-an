@@ -151,8 +151,8 @@ def test_mainhalodata_units_multi(dirpath, printfile):
         if _sd.startswith('snapdir'):
             _snap = int(_sd.split('_')[-1])
             # special case, permissions error
-            dp1 = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100'
-            if _snap == 599 and dirpath == dp1:
+            dp1 = 'metal_diffusion/m12i_res7100'
+            if _snap == 599 and dp1 in dirpath:
                 continue
             snaps.append(_snap)
     for snap in snaps:
