@@ -143,7 +143,7 @@ def test_mainhalodata_units(opt=1, dirpath=None, snapnum=None,
             
 def test_mainhalodata_units_multi(dirpath, printfile):
     print('running test_mainhalodata_units_multi')
-    _snapdirs = os.listdir(dirpath)
+    _snapdirs = os.listdir(dirpath + 'output/')
     snaps = []
     for _sd in _snapdirs:
         # looking for something like snapdir_196, extract 196
