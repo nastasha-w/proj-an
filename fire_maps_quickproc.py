@@ -45,15 +45,16 @@ def plot_halomasscheck(halofile, checkfile, imgname=None):
     # checks
     hconst =  0.702 
 
-    fig = plt.figure(figsize=(11., 4.))
-    grid = gsp.GridSpec(nrows=1, ncols=3, hspace=0.0, wspace=0.2, 
+    fig = plt.figure(figsize=(11., 3.))
+    grid = gsp.GridSpec(nrows=1, ncols=3, hspace=0.0, wspace=0.3, 
                         width_ratios=[1., 1., 1.])
     axes = [fig.add_subplot(grid[0, i]) for i in range(3)]
     fontsize = 12
     colors = tc.tol_cset('bright')
+    size = 10.
 
     ax = axes[0]
-    masslabel = 'Mvir [Msun]$'
+    masslabel = 'Mvir [Msun]'
     xlabel = 'AHF ' + masslabel
     ylabel = masslabel + ' from AHF center and Rvir'
     ax.set_xlabel(xlabel, fontsize=fontsize)
@@ -66,7 +67,7 @@ def plot_halomasscheck(halofile, checkfile, imgname=None):
     minv = min(np.min(xv), np.min(yv))
     maxv = max(np.max(xv), np.max(yv))
     ax.plot([minv, maxv], [minv, maxv], color='gray', linestyle='dotted')
-    ax.scatter(xv, yv, c=colors[0])
+    ax.scatter(xv, yv, c=colors[0], s=size)
 
     ax = axes[1]
     xlabel = 'log (1 + redshift)'
@@ -95,14 +96,14 @@ def plot_halomasscheck(halofile, checkfile, imgname=None):
         ax.plot(_x, _y, color='black')
     xv = np.log10(1. + checkdat['redshift'])
     ax.scatter(xv, checkdat['Mvir_AHF_Msun'], 
-               color=colors[0], label='AHF mass')
+               color=colors[0], label='AHF mass', s=size)
     ax.scatter(xv, checkdat['Mvir_sum_Msun'], 
-               color=colors[1], label='sum < AHF Rvir')
+               color=colors[1], label='sum < AHF Rvir', s=size)
     ax.legend(fontsize=fontsize)
     ax.set_title('black: AHF halo mass is exactly flat', fontsize=fontsize)
 
     ax = axes[2]
-    xlabel = 'log(1 + redshift)'
+    xlabel = 'log (1 + redshift)'
     ylabel = 'log abs ([M(< Rvir)] - [AHF M]) / [AHF M]'
     ax.set_xlabel(xlabel, fontsize=fontsize)
     ax.set_ylabel(ylabel, fontsize=fontsize)
@@ -111,7 +112,7 @@ def plot_halomasscheck(halofile, checkfile, imgname=None):
     vsum = np.array(checkdat['Mvir_sum_Msun'])
     yv = np.log10(np.abs((vsum - vahf) / vahf))
     xv = np.log10(1. + np.array(checkdat['redshift']))
-    plt.scatter(xv, yv)
+    plt.scatter(xv, yv, c=colors[0], s=size)
 
     if imgname is not None:
         plt.savefig(imgname, bbox_inches='tight')
