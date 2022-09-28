@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from xml.dom.expatbuilder import CDATA_SECTION_NODE
 import numpy as np
 import h5py
+import pandas as pd
+
+import tol_colors as tc
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gsp
@@ -13,6 +17,110 @@ import matplotlib.patheffects as mppe
 import eagle_constants_and_units as c
 import cosmo_utils as cu
 import plot_utils as pu
+
+
+def plot_halomasscheck(halofile, checkfile, imgname=None):
+    '''
+    compare the halo masses from the AHF/halo_0000_smooth.dat
+    file and direct calculation of all mass within Rvir
+    of the halo center Xc, Yc, Zc 
+
+    Parameters:
+    -----------
+    halofile: str
+        the halo_0000_smooth.dat file with full path
+    checkfile: str
+        file containing the calculated halo masses
+    imgname: str
+        name of the file to store the output image to
+    
+    Output:
+    -------
+    None
+    '''
+
+    checkdat = pd.read_csv(checkfile, sep='\t')
+    ahfdat = pd.read_csv(halofile, sep='\t')
+    # from log file of /projects/b1026/snapshots/metal_diffusion/m12i_res7100/
+    # checks
+    hconst =  0.702 
+
+    fig = plt.figure(figsize=(11., 4.))
+    grid = gsp.GridSpec(nrows=1, ncols=3, hspace=0.2, wspace=0.0, 
+                        width_ratios=[1., 1.])
+    axes = [fig.add_subplot(grid[0, i]) for i in range(3)]
+    fontsize = 12
+    colors = tc.tol_cset('bright')
+
+    ax = axes[0]
+    masslabel = '$\\mathrm{M}_{\\mathrm{vir}}$ \; [\\mathrm{M}_{\\odot}]$'
+    xlabel = 'AHF ' + masslabel
+    ylabel = masslabel + 'from AHF center and $\\mathrm{R}_{\\mathrm{vir}}$'
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    ax.tick_params(which='both', direction='in', labelsize=fontsize-1)
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    xv = np.array(checkdat['Mvir_AHF_Msun'])
+    yv = np.array(checkdat['Mvir_sum_Msun'])
+    minv = min(np.min(xv), np.min(yv))
+    maxv = max(np.max(xv), np.max(xv))
+    ax.plot([minv, minv], [maxv, maxv], color='gray', linestyle='dotted')
+    ax.scatter(xv, yv, c=colors[0])
+
+    ax = axes[1]
+    xlabel = 'redshift'
+    ylabel = masslabel
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    ax.tick_params(which='both', direction='in', labelsize=fontsize-1)
+    ax.set_yscale('log')
+    ahf_z = np.array(ahfdat['redshift'])
+    _sort = np.argsort(ahf_z)
+    ahf_z = ahf_z[_sort]
+    ahf_mvir = np.array(ahfdat['Mvir'])[_sort] / hconst
+    flat = np.diff(ahf_mvir) == 0.
+    sectionbreaks = list(np.where(np.diff(flat) != 0)[0] + 1) 
+    if flat[0]:
+        sectionbreaks = [0] + sectionbreaks
+    if flat[-1]:
+        sectionbreaks = sectionbreaks + [len(flat)]
+    sectionbreaks = np.array(sectionbreaks)
+    sections = sectionbreaks.reshape((len(sectionbreaks) // 2, 2))
+    flatx = [ahf_z[sect[0]: sect[1] + 1] for sect in sections]
+    flaty = [ahf_mvir[sect[0]: sect[1] + 1] for sect in sections]
+    ax.plot(ahf_z, ahf_mvir, color=colors[0])
+    for _x, _y in zip(flatx, flaty):
+        ax.plot(_x, _y, color='black')
+    ax.scatter(checkdat['redshift'], checkdat['Mvir_AHF_Msun'], 
+               color=colors[0], label='AHF mass')
+    ax.scatter(checkdat['redshift'], checkdat['Mvir_sum_Msun'], 
+               color=colors[1], label='sum < AHF Rvir')
+    ax.legend(fontsize=fontsize)
+    ax.set_title('black: AHF halo mass is exactly flat', fontsize=fontsize)
+
+    ax = axes[2]
+    xlabel = 'redshift'
+    ylabel = 'log abs ([< AHF Rvir sum] - [AHF Mvir]) / [AHF Mvir]'
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    ax.tick_params(which='both', direction='in', labelsize=fontsize-1)
+    vahf = np.array(checkdat['Mvir_AHF_Msun'])
+    vsum = np.array(checkdat['Mvir_sum_Msun'])
+    yv = np.log10(np.abs((vsum - vahf) / vahf))
+    xv = np.array(checkdat['redshift'])
+    plt.scatter(xv, yv)
+
+    if imgname is not None:
+        plt.savefig(imgname, bbox_inches='tight')
+
+
+
+
+
+
+
+
 
 def quicklook_massmap(filen, savename=None, mincol=None):
     '''

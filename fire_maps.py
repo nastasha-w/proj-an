@@ -206,7 +206,7 @@ def test_mainhalodata_units_multi_handler(opt=1):
     test_mainhalodata_units_multi(dirpath, printfile)
 
 
-def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0,
+def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
             pixsize_pkpc=3., axis='z', outfilen=None):
     '''
     Creates a mass map projected perpendicular to a line of sight axis
@@ -260,7 +260,7 @@ def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0,
         raise ValueError(msg.format(axis))
 
     halodat = mainhalodata(dirpath, snapnum)
-    snap = rf.Firesnap(snapfile) 
+    snap = rf.get_Firesnap(dirpath, snapnum) 
     cen = np.array([halodat['Xc_ckpcoverh'], 
                     halodat['Yc_ckpcoverh'], 
                     halodat['Zc_ckpcoverh']])
@@ -355,7 +355,7 @@ def massmap(snapfile, dirpath, snapnum, radius_rvir=2., particle_type=0,
         
         # direct input parameters
         igrp = hed['inputpars']
-        igrp.attrs.create('snapfile', np.string_(snapfile))
+        igrp.attrs.create('snapfiles', np.array([np.string_(fn) for fn in snap.filens]))
         igrp.attrs.create('dirpath', np.string_(dirpath))
         igrp.attrs.create('radius_rvir', radius_rvir)
         igrp.attrs.create('particle_type', particle_type)
