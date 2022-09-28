@@ -175,11 +175,12 @@ def test_mainhalodata_units_multi(dirpath, printfile):
             # something like snapshot_164.hdf5
             _snap = int((_sd.split('_')[-1]).split('.')[0])
             try:
-                f = h5py.File(_sd, 'r')
+                f = h5py.File(dirpath + 'output/' + _sd, 'r')
                 f.close()
             except Exception as err:
                 print('\nSkipping snapshot {} due to h5py read issues:')
-                print(err + '\n')
+                print(err)
+                print('\n')
                 
     for snap in snaps:
         print('Snapshot ', snap)
