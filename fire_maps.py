@@ -154,11 +154,14 @@ def test_mainhalodata_units_multi(dirpath, printfile):
         if _sd.startswith('snapdir'):
             _snap = int(_sd.split('_')[-1])
             # special case, permissions error
-            dp1 = 'metal_diffusion/m12i_res7100'
-            if _snap == 599 and dp1 in dirpath:
-                continue
-            else:
+            try: 
+                os.listdir(dirpath + 'output/' + _sd)
                 snaps.append(_snap)
+            except PermissionError:
+                # shows up seemingly randomly
+                print('\nskipping snapshot {} due to permissions issues\n'.format(snap)
+                continue
+                
     for snap in snaps:
         print('Snapshot ', snap)
         test_mainhalodata_units(opt=None, dirpath=dirpath, snapnum=snap,
