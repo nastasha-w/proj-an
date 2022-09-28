@@ -50,8 +50,18 @@ def test_mainhalodata_units(opt=1, dirpath=None, snapnum=None,
         snapfile = dirpath + 'output/snapdir_492/snapshot_492.0.hdf5'
         snapnum = 492
     elif opt is None:
-        snapfile = dirpath + 'output/snapdir_{sn:03d}/snapshot_{sn:03d}.0.hdf5'
-        snapfile = snapfile.format(sn=snapnum)
+        pathopts = ['output/snapdir_{sn:03d}/snapshot_{sn:03d}.0.hdf5',
+                    'output/snapshot_{sn:03d}.hdf5']
+        goodpath = False
+        for pathopt in pathopts:
+            snapfile = dirpath + pathopt.format(sn=snapnum)
+            if os.path.isfile(snapfile):
+                goodpath = True
+                break
+        if not goodpath:
+            tried = [dirpath + pathopts.format()]
+            msg = 'Could not find snapshot {} in {}'.format(snapnum, )
+            raise RuntimeError(msg)
     else:
         msg = 'test_mainhalodata_units parameter opt = {} is invalid'
         raise ValueError(msg.format(opt))
@@ -161,6 +171,15 @@ def test_mainhalodata_units_multi(dirpath, printfile):
                 # shows up seemingly randomly
                 print('\nskipping snapshot {} due to permissions issues\n'.format(_snap))
                 continue
+        elif _sd.startswith('snapshot') and _sd.endswith('.hdf5'):
+            # something like snapshot_164.hdf5
+            _snap = int((_sd.split('_')[-1]).split('.')[0])
+            try:
+                f = h5py.File(_sd, 'r')
+                f.close()
+            except Exception as err:
+                print('\nSkipping snapshot {} due to h5py read issues:')
+                print(err + '\n')
                 
     for snap in snaps:
         print('Snapshot ', snap)
