@@ -174,6 +174,7 @@ def test_mainhalodata_units_multi(dirpath, printfile):
                 continue
         elif _sd.startswith('snapshot') and _sd.endswith('.hdf5'):
             # something like snapshot_164.hdf5
+            print(_snap)
             _snap = int((_sd.split('_')[-1]).split('.')[0])
             try:
                 f = h5py.File(dirpath + 'output/' + _sd, 'r')
