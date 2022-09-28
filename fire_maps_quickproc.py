@@ -45,7 +45,7 @@ def plot_halomasscheck(halofile, checkfile, imgname=None):
     # checks
     hconst =  0.702 
 
-    fig = plt.figure(figsize=(11., 3.))
+    fig = plt.figure(figsize=(11., 4.))
     grid = gsp.GridSpec(nrows=1, ncols=3, hspace=0.0, wspace=0.3, 
                         width_ratios=[1., 1., 1.])
     axes = [fig.add_subplot(grid[0, i]) for i in range(3)]
@@ -104,7 +104,7 @@ def plot_halomasscheck(halofile, checkfile, imgname=None):
 
     ax = axes[2]
     xlabel = 'log (1 + redshift)'
-    ylabel = 'log abs ([M(< Rvir)] - [AHF M]) / [AHF M]'
+    ylabel = 'log abs ([M(< Rvir)] - [AHF]) / [AHF]'
     ax.set_xlabel(xlabel, fontsize=fontsize)
     ax.set_ylabel(ylabel, fontsize=fontsize)
     ax.tick_params(which='both', direction='in', labelsize=fontsize-1)
