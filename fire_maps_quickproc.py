@@ -114,6 +114,15 @@ def plot_halomasscheck(halofile, checkfile, imgname=None):
     if imgname is not None:
         plt.savefig(imgname, bbox_inches='tight')
 
+def runhalomasschecks(opt=1):
+    checkdir = '/projects/b1026/nastasha/tests/start_fire/AHF_unit_tests/'
+    if opt == 1:
+        checkfile = checkdir +  'metal_diffusion__m11i_res7100.txt'
+        halofile = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/halo/ahf/halo_00000_smooth.dat'
+        imgname = checkdir + 'metal_diffusion__m11i_res7100_AHF-vs-sum.pdf'
+        plot_halomasscheck(halofile, checkfile, imgname=imgname)
+    else:
+        raise ValueError('opt={} is not a valid option'.format(opt))
 
 
 
