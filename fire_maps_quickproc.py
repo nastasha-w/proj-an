@@ -46,16 +46,16 @@ def plot_halomasscheck(halofile, checkfile, imgname=None):
     hconst =  0.702 
 
     fig = plt.figure(figsize=(11., 4.))
-    grid = gsp.GridSpec(nrows=1, ncols=3, hspace=0.2, wspace=0.0, 
+    grid = gsp.GridSpec(nrows=1, ncols=3, hspace=0.0, wspace=0.2, 
                         width_ratios=[1., 1., 1.])
     axes = [fig.add_subplot(grid[0, i]) for i in range(3)]
     fontsize = 12
     colors = tc.tol_cset('bright')
 
     ax = axes[0]
-    masslabel = '$\\mathrm{M}_{\\mathrm{vir}}$ \; [\\mathrm{M}_{\\odot}]$'
+    masslabel = 'Mvir [Msun]$'
     xlabel = 'AHF ' + masslabel
-    ylabel = masslabel + 'from AHF center and $\\mathrm{R}_{\\mathrm{vir}}$'
+    ylabel = masslabel + ' from AHF center and Rvir'
     ax.set_xlabel(xlabel, fontsize=fontsize)
     ax.set_ylabel(ylabel, fontsize=fontsize)
     ax.tick_params(which='both', direction='in', labelsize=fontsize-1)
@@ -64,12 +64,12 @@ def plot_halomasscheck(halofile, checkfile, imgname=None):
     xv = np.array(checkdat['Mvir_AHF_Msun'])
     yv = np.array(checkdat['Mvir_sum_Msun'])
     minv = min(np.min(xv), np.min(yv))
-    maxv = max(np.max(xv), np.max(xv))
-    ax.plot([minv, minv], [maxv, maxv], color='gray', linestyle='dotted')
+    maxv = max(np.max(xv), np.max(yv))
+    ax.plot([minv, maxv], [minv, maxv], color='gray', linestyle='dotted')
     ax.scatter(xv, yv, c=colors[0])
 
     ax = axes[1]
-    xlabel = 'redshift'
+    xlabel = 'log (1 + redshift)'
     ylabel = masslabel
     ax.set_xlabel(xlabel, fontsize=fontsize)
     ax.set_ylabel(ylabel, fontsize=fontsize)
@@ -79,6 +79,7 @@ def plot_halomasscheck(halofile, checkfile, imgname=None):
     _sort = np.argsort(ahf_z)
     ahf_z = ahf_z[_sort]
     ahf_mvir = np.array(ahfdat['Mvir'])[_sort] / hconst
+    ahf_xv = np.log10(ahf_z + 1.)
     flat = np.diff(ahf_mvir) == 0.
     sectionbreaks = list(np.where(np.diff(flat) != 0)[0] + 1) 
     if flat[0]:
@@ -87,28 +88,29 @@ def plot_halomasscheck(halofile, checkfile, imgname=None):
         sectionbreaks = sectionbreaks + [len(flat)]
     sectionbreaks = np.array(sectionbreaks)
     sections = sectionbreaks.reshape((len(sectionbreaks) // 2, 2))
-    flatx = [ahf_z[sect[0]: sect[1] + 1] for sect in sections]
+    flatx = [ahf_xv[sect[0]: sect[1] + 1] for sect in sections]
     flaty = [ahf_mvir[sect[0]: sect[1] + 1] for sect in sections]
-    ax.plot(ahf_z, ahf_mvir, color=colors[0])
+    ax.plot(ahf_xv, ahf_mvir, color=colors[0])
     for _x, _y in zip(flatx, flaty):
         ax.plot(_x, _y, color='black')
-    ax.scatter(checkdat['redshift'], checkdat['Mvir_AHF_Msun'], 
+    xv = np.log10(1. + checkdat['redshift'])
+    ax.scatter(xv, checkdat['Mvir_AHF_Msun'], 
                color=colors[0], label='AHF mass')
-    ax.scatter(checkdat['redshift'], checkdat['Mvir_sum_Msun'], 
+    ax.scatter(xv, checkdat['Mvir_sum_Msun'], 
                color=colors[1], label='sum < AHF Rvir')
     ax.legend(fontsize=fontsize)
     ax.set_title('black: AHF halo mass is exactly flat', fontsize=fontsize)
 
     ax = axes[2]
-    xlabel = 'redshift'
-    ylabel = 'log abs ([< AHF Rvir sum] - [AHF Mvir]) / [AHF Mvir]'
+    xlabel = 'log(1 + redshift)'
+    ylabel = 'log abs ([M(< Rvir)] - [AHF M]) / [AHF M]'
     ax.set_xlabel(xlabel, fontsize=fontsize)
     ax.set_ylabel(ylabel, fontsize=fontsize)
     ax.tick_params(which='both', direction='in', labelsize=fontsize-1)
     vahf = np.array(checkdat['Mvir_AHF_Msun'])
     vsum = np.array(checkdat['Mvir_sum_Msun'])
     yv = np.log10(np.abs((vsum - vahf) / vahf))
-    xv = np.array(checkdat['redshift'])
+    xv = np.log10(1. + np.array(checkdat['redshift']))
     plt.scatter(xv, yv)
 
     if imgname is not None:
