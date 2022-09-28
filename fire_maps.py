@@ -159,7 +159,7 @@ def test_mainhalodata_units_multi(dirpath, printfile):
                 snaps.append(_snap)
             except PermissionError:
                 # shows up seemingly randomly
-                print('\nskipping snapshot {} due to permissions issues\n'.format(snap)
+                print('\nskipping snapshot {} due to permissions issues\n'.format(snap))
                 continue
                 
     for snap in snaps:
