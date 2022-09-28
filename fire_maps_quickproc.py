@@ -47,7 +47,7 @@ def plot_halomasscheck(halofile, checkfile, imgname=None):
 
     fig = plt.figure(figsize=(11., 4.))
     grid = gsp.GridSpec(nrows=1, ncols=3, hspace=0.2, wspace=0.0, 
-                        width_ratios=[1., 1.])
+                        width_ratios=[1., 1., 1.])
     axes = [fig.add_subplot(grid[0, i]) for i in range(3)]
     fontsize = 12
     colors = tc.tol_cset('bright')
