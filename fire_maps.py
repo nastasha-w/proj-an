@@ -60,7 +60,8 @@ def test_mainhalodata_units(opt=1, dirpath=None, snapnum=None,
                 break
         if not goodpath:
             tried = [dirpath + pathopts.format()]
-            msg = 'Could not find snapshot {} in {}'.format(snapnum, )
+            msg = 'Could not find snapshot {} in {}. Tried:'.format(snapnum, dirpath)
+            msg = msg + '\n' + '\n'.join(tried)
             raise RuntimeError(msg)
     else:
         msg = 'test_mainhalodata_units parameter opt = {} is invalid'
