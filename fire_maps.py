@@ -173,6 +173,10 @@ def test_mainhalodata_units_multi_handler(opt=1):
         dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
         printfile = '/projects/b1026/nastasha/tests/start_fire/AHF_unit_tests/'
         printfile += 'metal_diffusion__m12i_res7100.txt'
+    elif opt == 2:
+        dirpath = '/projects/b1026/snapshots/metal_diffusion/m11i_res7100/'
+        printfile = '/projects/b1026/nastasha/tests/start_fire/AHF_unit_tests/'
+        printfile += 'metal_diffusion__m11i_res7100.txt'
     else:
         raise ValueError('opt {} is not allowed'.format(opt))
     print('Running test_mainhalodata_units_multi(dirpath, printfile)')
@@ -364,6 +368,8 @@ def fromcommandline(index):
     elif index == 4:
         # test a whole lot of snapshots in one go
         test_mainhalodata_units_multi_handler(opt=1)
+    elif index == 5:
+        test_mainhalodata_units_multi_handler(opt=2)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
