@@ -141,7 +141,10 @@ def test_mainhalodata_units(opt=1, dirpath=None, snapnum=None,
                 f.write('\t'.join(columns) + '\n')
             vals = [snapnum, snap.cosmopars.z, hm_sum_msun, hm_list_msun]
             f.write('\t'.join([str(val) for val in vals]) + '\n')
-            
+
+# checkinh halo_0000_smooth.dat:
+# Mvir is exactly flat over a large range of redshift values in that file
+# might be an AHF issue?
 def test_mainhalodata_units_multi(dirpath, printfile):
     print('running test_mainhalodata_units_multi')
     _snapdirs = os.listdir(dirpath + 'output/')
@@ -154,7 +157,8 @@ def test_mainhalodata_units_multi(dirpath, printfile):
             dp1 = 'metal_diffusion/m12i_res7100'
             if _snap == 599 and dp1 in dirpath:
                 continue
-            snaps.append(_snap)
+            else:
+                snaps.append(_snap)
     for snap in snaps:
         print('Snapshot ', snap)
         test_mainhalodata_units(opt=None, dirpath=dirpath, snapnum=snap,
