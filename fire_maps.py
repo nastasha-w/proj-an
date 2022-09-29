@@ -280,7 +280,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
     # on target size and extended for integer pixel number
     target_size_cm = np.array([2. * radius_rvir * rvir_cm] * 3)
     pixel_cm = pixsize_pkpc * c.cm_per_mpc * 1e-3
-    npix3 = np.ceil(target_size_cm / pixel_cm) 
+    npix3 = int(np.ceil(target_size_cm / pixel_cm)) 
     npix_x = npix3[Axis1]
     npix_y = npix3[Axis2]
     size_touse_cm = target_size_cm
