@@ -264,7 +264,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
         raise ValueError(msg.format(axis))
     
     if center == 'AHFsmooth':
-        halodat = mainhalodata(dirpath, snapnum)
+        halodat = mainhalodata_AHFsmooth(dirpath, snapnum)
         snap = rf.get_Firesnap(dirpath, snapnum) 
         cen = np.array([halodat['Xc_ckpcoverh'], 
                         halodat['Yc_ckpcoverh'], 
@@ -275,7 +275,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
                   * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
     else:
         raise ValueError('Invalid center option {}'.format(center))
-        
+
     # calculate pixel numbers and projection region based
     # on target size and extended for integer pixel number
     target_size_cm = np.array([2. * radius_rvir * rvir_cm] * 3)
