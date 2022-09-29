@@ -362,7 +362,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
         cgrp = hed.create_group('inputpars/cosmopars')
         csm = snap.cosmopars.getdct()
         for key in csm:
-            cgrp.create_attribute(key, csm[key])
+            cgrp.attrs.create(key, csm[key])
         
         # direct input parameters
         igrp = hed['inputpars']
