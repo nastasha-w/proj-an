@@ -380,9 +380,29 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
         _grp = igrp.create_group('halodata')
         for key in halodat:
             _grp.attrs.create(key, halodat[key])
-        
-        
 
+# hard to do a true test, but check that projected masses and centering
+# sort of make sense
+def tryout_massmap(opt=1):
+    outdir = '/projects/b1026/nastasha/tests/start_fire/map_tests/'
+    outfilen = 'mass_pt{pt}_{sc}_snap{sn}_ahf-cen_2rvir_v1.hdf5'
+    if opt == 1:
+        parttypes = [0, 1, 4]
+        dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
+        simcode = 'metal-diffusion-m12i-res7100'
+        snapnum = 600
+    elif opt == 2:
+        parttypes = [0, 1, 4]
+        dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
+        simcode = 'metal-diffusion-m12i-res7100'
+        snapnum = 399
+
+    for pt in parttypes:
+        outfilen = outdir + outfilen.format(pt=pt, sc=simcode, 
+                                            sn=snapnum)
+        massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
+                pixsize_pkpc=3., axis='z', outfilen=outfilen,
+                center='AHFsmooth')
 
 
 
@@ -399,6 +419,10 @@ def fromcommandline(index):
         test_mainhalodata_units_multi_handler(opt=1)
     elif index == 5:
         test_mainhalodata_units_multi_handler(opt=2)
+    elif index == 6:
+        tryout_massmap(opt=1)
+    elif index == 7:
+        tryout_massmap(opt=2)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
