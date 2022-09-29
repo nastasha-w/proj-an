@@ -441,7 +441,7 @@ def get_FireSnap(path, snapnum, filetype='snap'):
     if parameterfile == '':
         msg = 'Could not find a parameter file {} in {}'
         dirs = [path + _d for _d in opts_pardir]
-        raise RuntimeError(msg.format(opts_parfile, dir))
+        raise RuntimeError(msg.format(opts_parfile, dirs))
     
     opts_snapdir = ['', 'output/']
     # parts with the snapshot number in there
