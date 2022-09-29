@@ -14,7 +14,7 @@ import eagle_constants_and_units as c
 from make_maps_v3_master import linetable_PS20, project
 
 
-def mainhalodata(path, snapnum):
+def mainhalodata_AHFsmooth(path, snapnum):
     '''
     get properties of the main halo in the snapshot from halo_00000_smooth.dat
     assume units are intrinsic simulation units
@@ -208,7 +208,8 @@ def test_mainhalodata_units_multi_handler(opt=1):
 
 
 def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
-            pixsize_pkpc=3., axis='z', outfilen=None):
+            pixsize_pkpc=3., axis='z', outfilen=None,
+            center='AHFsmooth'):
     '''
     Creates a mass map projected perpendicular to a line of sight axis
     by assuming the simulation resolution elements divide their mass 
@@ -235,7 +236,9 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
     outfilen: str or None. 
         if a string, the name of the file to save the output data to. The
         default is None, meaning the maps are returned as output
-    
+    center: {'AHFsmooth'}
+        how to find the halo center.
+        AMFsmooth: use halo_00000_smooth.dat from AHF 
     Output:
     -------
     massW: 2D array of floats
@@ -259,16 +262,20 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
     else:
         msg = 'axis should be "x", "y", or "z", not {}'
         raise ValueError(msg.format(axis))
-
-    halodat = mainhalodata(dirpath, snapnum)
-    snap = rf.get_Firesnap(dirpath, snapnum) 
-    cen = np.array([halodat['Xc_ckpcoverh'], 
-                    halodat['Yc_ckpcoverh'], 
-                    halodat['Zc_ckpcoverh']])
-    cen_cm = cen * snap.cosmopars.a * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
-    rvir_cm = halodat['Rvir_ckpcoverh'] * snap.cosmopars.a \
-              * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
     
+    if center == 'AHFsmooth':
+        halodat = mainhalodata(dirpath, snapnum)
+        snap = rf.get_Firesnap(dirpath, snapnum) 
+        cen = np.array([halodat['Xc_ckpcoverh'], 
+                        halodat['Yc_ckpcoverh'], 
+                        halodat['Zc_ckpcoverh']])
+        cen_cm = cen * snap.cosmopars.a * 1e-3 * c.cm_per_mpc \
+                 / snap.cosmopars.h
+        rvir_cm = halodat['Rvir_ckpcoverh'] * snap.cosmopars.a \
+                  * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
+    else:
+        raise ValueError('Invalid center option {}'.format(center))
+        
     # calculate pixel numbers and projection region based
     # on target size and extended for integer pixel number
     target_size_cm = np.array([2. * radius_rvir * rvir_cm] * 3)
