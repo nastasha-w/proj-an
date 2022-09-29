@@ -388,7 +388,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
 # sort of make sense
 def tryout_massmap(opt=1):
     outdir = '/projects/b1026/nastasha/tests/start_fire/map_tests/'
-    outfilen = 'mass_pt{pt}_{sc}_snap{sn}_ahf-cen_2rvir_v1.hdf5'
+    _outfilen = 'mass_pt{pt}_{sc}_snap{sn}_ahf-cen_2rvir_v1.hdf5'
     if opt == 1:
         parttypes = [0, 1, 4]
         dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
@@ -401,8 +401,8 @@ def tryout_massmap(opt=1):
         snapnum = 399
 
     for pt in parttypes:
-        outfilen = outdir + outfilen.format(pt=pt, sc=simcode, 
-                                            sn=snapnum)
+        outfilen = outdir + _outfilen.format(pt=pt, sc=simcode, 
+                                             sn=snapnum)
         massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
                 pixsize_pkpc=3., axis='z', outfilen=outfilen,
                 center='AHFsmooth')
