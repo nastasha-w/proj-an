@@ -140,17 +140,18 @@ def quicklook_massmap(filen, savename=None, mincol=None):
     '''
 
     with h5py.File(filen, 'r') as f:
-        map = f['map']
+        map = f['map'][:]
         vmin = f['map'].attrs['minfinite']
         vmax = f['map'].attrs['max']
 
         box_cm = f['Header/inputpars'].attrs['diameter_used_cm']
         cosmopars = {key: val for key, val in \
-                     f['Header/inputpars/cosmopars'].items()}
-        rvir_ckpc = f['Header/inputpars/halodata'].attrs['Rvir_ckpc']
+                     f['Header/inputpars/cosmopars'].attrs.items()}
+        #print(cosmopars)
+        rvir_ckpcoverh = f['Header/inputpars/halodata'].attrs['Rvir_ckpcoverh']
         xax = f['Header/inputpars'].attrs['Axis1']
         yax = f['Header/inputpars'].attrs['Axis2']
-        rvir_pkpc = rvir_ckpc * cosmopars['a']
+        rvir_pkpc = rvir_ckpcoverh * cosmopars['a'] / cosmopars['h']
         box_pkpc = box_cm / (1e-3 * c.cm_per_mpc)
         extent = (-0.5 * box_pkpc[xax], 0.5 * box_pkpc[xax],
                   -0.5 * box_pkpc[yax], 0.5 * box_pkpc[yax])
@@ -183,7 +184,8 @@ def quicklook_massmap(filen, savename=None, mincol=None):
     collection = mcol.PatchCollection(patches)
     collection.set(edgecolor=['red'], facecolor='none', linewidth=1.5)
     ax.add_collection(collection)
-    ax.text(2**-0.5 * rvir_pkpc, 2**-0.5 * rvir_pkpc, '$R_{\\mathrm{vir}}$',
+    ax.text(1.05 * 2**-0.5 * rvir_pkpc, 1.05 * 2**-0.5 * rvir_pkpc, 
+            '$R_{\\mathrm{vir}}$',
             color='red', fontsize=fontsize)
     
     if savename is not None:

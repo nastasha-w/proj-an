@@ -403,7 +403,7 @@ def tryout_massmap(opt=1):
     for pt in parttypes:
         outfilen = outdir + _outfilen.format(pt=pt, sc=simcode, 
                                              sn=snapnum)
-        massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
+        massmap(dirpath, snapnum, radius_rvir=2., particle_type=pt,
                 pixsize_pkpc=3., axis='z', outfilen=outfilen,
                 center='AHFsmooth')
 
