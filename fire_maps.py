@@ -351,7 +351,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
     
     with h5py.File(outfilen, 'w') as f:
         # map (emulate make_maps format)
-        f.create_dataset('map', lmapW)
+        f.create_dataset('map', data=lmapW)
         f['map'].attrs.create('log', True)
         minfinite = np.min(lmapW[np.isfinite(lmapW)])
         f['map'].attrs.create('minfinite', minfinite)
