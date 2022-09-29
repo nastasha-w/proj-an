@@ -304,8 +304,11 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
 
     if haslsmooth:
         # extreme values will occur at zoom region edges -> restrict
-        lmax = np.max(lsmooth[filter]) 
+        filter_temp = np.all(np.abs((coords)) <= 0.5 * box_dims_coordunit, 
+                             axis=1)
+        lmax = np.max(lsmooth[filter_temp]) 
         conv = lsmooth_toCGS / coords_toCGS
+        del filter_temp
         # might be lower-density stuff outside the region, but overlapping it
         lmargin = 2. * lmax * conv
         filter = np.all(np.abs((coords)) <= 0.5 * box_dims_coordunit \
