@@ -432,16 +432,17 @@ def get_FireSnap(path, snapnum, filetype='snap'):
     opts_parfile = ['params.txt-usedvalues',
                     'parameters-usedvalues',  
                     'params.txt']
-    parameterfile = ''
+    parameterfile = None
     for subdir in opts_pardir:
         for opt in opts_parfile:
             if os.path.isfile(path + subdir + opt):
                 parameterfile = path + subdir + opt
                 break
-    if parameterfile == '':
+    if parameterfile is None:
         msg = 'Could not find a parameter file {} in {}'
         dirs = [path + _d for _d in opts_pardir]
-        raise RuntimeError(msg.format(opts_parfile, dirs))
+        print(msg.format(opts_parfile, dirs))
+        print('Using parameterfile=None for FireSnap')
     
     opts_snapdir = ['', 'output/']
     # parts with the snapshot number in there
