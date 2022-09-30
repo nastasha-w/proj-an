@@ -207,6 +207,8 @@ class Firesnap:
         '''
         read in an array from the snapshot file
         note that subsample read-ins are slow
+        sets a .toCGS attribute: multiply array by this to get (physical)
+        cgs units.
         
         Parameters:
         -----------
@@ -221,16 +223,21 @@ class Firesnap:
         subindex: int or None
             specific index to read in if the array is 2D instead of 1D 
             (e.g., only read in the X coordinates -> subindex=0)
+
         Returns:
         --------
         the desired array 
+
+        Errors:
+        -------
+        FieldNotFoundError: the desired field was not present in (any) file
         '''
         self.toCGS = np.NaN # overwrite and old values to avoid undetected errors
         # just let h5py handle it
-        if path not in self.ff:
-            raise FieldNotFoundError
             
         if self.numfiles == 1:
+            if path not in self.ff:
+                raise FieldNotFoundError
             sel = slice(None, None, subsample)
             if subindex is not None:
                 sel = (sel, subindex)
@@ -242,26 +249,35 @@ class Firesnap:
             parttypeindex = int(path.split('/')[0][-1]) 
             numpart = self.ff['Header'].attrs['NumPart_Total'][parttypeindex] 
             arrsize = (numpart - 1) // subsample + 1
-            dtype = self.ff[path].dtype
-            if subindex is None:
-                shape = (arrsize,) + self.ff[path].shape[1:]
-            else:
-                shape = (arrsize,)
-            # empty means values will not stand out if 'filled in' wrong
-            arr = np.empty(shape=shape, dtype=dtype)
-            arr[:] = errorflag 
-            print('Array shape: ', arr.shape)
+            if numpart == 0:
+                msg = 'No particles of type {} present in files {}'
+                raise IOError(msg.format(parttypeindex, self.filens))
             # lowest non-overflow value for int data, 
             # 'nan', 'na', or 'n' for string/bytes data (depends on max. 
             # string length)
             
             start = 0
             combindex = 0
+            array_init = False
             for filen in self.filens:
                 print(filen)
                 with h5py.File(filen, 'r') as f:
+                    npt = 'NumPart_ThisFile'
+                    sublen_tot = f['Header'].attrs[npt][parttypeindex]
+                    if sublen_tot == 0:
+                        continue
+                    if not array_init:
+                        dtype = f[path].dtype
+                        if subindex is None:
+                            shape = (arrsize,) + f[path].shape[1:]
+                        else:
+                            shape = (arrsize,)
+                        # empty means values will not stand out if 'filled in' wrong
+                        arr = np.empty(shape=shape, dtype=dtype)
+                        arr[:] = errorflag 
+                        print('Array shape: ', arr.shape)
+                        array_init = True
                     ds = f[path]
-                    sublen_tot = ds.shape[0]
                     print('size on file: ', sublen_tot)
                     # in combined array indices: 
                     # next multiple of subsample - first element in subarray
@@ -289,6 +305,9 @@ class Firesnap:
                     
                     start += sublen_tot
                     combindex += numsel
+            if not array_init:
+                # evidently, the field wasn't in any file
+                raise FieldNotFoundError
         self.toCGS = self.units.getunits(path)
         return arr
     
