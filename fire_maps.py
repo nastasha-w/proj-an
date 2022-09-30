@@ -209,7 +209,7 @@ def test_mainhalodata_units_multi_handler(opt=1):
 
 def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
             pixsize_pkpc=3., axis='z', outfilen=None,
-            center='AHFsmooth'):
+            center='AHFsmooth', norm='pixsize_phys'):
     '''
     Creates a mass map projected perpendicular to a line of sight axis
     by assuming the simulation resolution elements divide their mass 
@@ -239,6 +239,10 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
     center: {'AHFsmooth'}
         how to find the halo center.
         AMFsmooth: use halo_00000_smooth.dat from AHF 
+    norm: {'pixsize_phys'}
+        how to normalize the column values 
+        'pixsize_phys': [quantity] / cm**2
+
     Output:
     -------
     massW: 2D array of floats
@@ -287,6 +291,9 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
     size_touse_cm[Axis1] = npix_x * pixel_cm
     size_touse_cm[Axis2] = npix_y * pixel_cm
 
+    if norm == 'pixsize_phys':
+        multipafter = 1. / pixel_cm**2
+
     basepath = 'PartType{}/'.format(particle_type)
     haslsmooth = particle_type == 0
     if haslsmooth: # gas
@@ -323,6 +330,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
     coords = coords[filter]
     masses = snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
     masses_toCGS = snap.toCGS
+    multipafter *= masses_toCGS
     
     # stars, black holes. DM: should do neighbour finding. Won't though.
     if not haslsmooth:
@@ -345,7 +353,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
                          'C2', dct, tree, ompproj=True, 
                          projmin=None, projmax=None)
     lmapW = np.log10(mapW)
-    lmapW += np.log10(masses_toCGS)
+    lmapW += np.log10(multipafter)
     if outfilen is None:
         return lmapW, mapQ
     
