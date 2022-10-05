@@ -190,3 +190,47 @@ def quicklook_massmap(filen, savename=None, mincol=None):
     
     if savename is not None:
         plt.savefig(savename, bbox_inches='tight')
+
+
+def masstest_map(filens):
+    '''
+    files for all parttypes
+    '''
+    
+    # mass in g will overflow 
+    enclmass = np.float64(0.)
+    for filen in filens:
+        with h5py.File(filen, 'r') as f:
+            map = 10**f['map'][:]
+
+            box_cm = f['Header/inputpars'].attrs['diameter_used_cm']
+            cosmopars = {key: val for key, val in \
+                         f['Header/inputpars/cosmopars'].attrs.items()}
+            #print(cosmopars)
+            halopath = 'Header/inputpars/halodata'
+            rvir_ckpcoverh = f[halopath].attrs['Rvir_ckpcoverh']
+            mvir_msunoverh = np.float64(f[halopath].attrs['Mvir_Msunoverh'])
+            pixsize_pkpc = f['Header/inputpars'].attrs['pixsize_pkpc']
+            rvir_pkpc = rvir_ckpcoverh * cosmopars['a'] / cosmopars['h']
+            xax = f['Header/inputpars'].attrs['Axis1']
+            yax = f['Header/inputpars'].attrs['Axis2']
+            box_pkpc = box_cm / (1e-3 * c.cm_per_mpc)
+            xcminmax = (-0.5 * box_pkpc[xax] + 0.5 * pixsize_pkpc, 
+                        0.5 * box_pkpc[xax] - 0.5 * pixsize_pkpc)
+            ycminmax = (-0.5 * box_pkpc[yax] + 0.5 * pixsize_pkpc,
+                        0.5 * box_pkpc[yax] - 0.5 * pixsize_pkpc)
+            npix_x = map.shape[0]
+            npix_y = map.shape[1]
+            pixdist2_pkpc = np.linspace(xcminmax[0], xcminmax[1], npix_x)**2 +\
+                            np.linspace(ycminmax[0], ycminmax[1], npix_y)**2
+            mapsel = pixdist2_pkpc < rvir_pkpc**2
+            pixarea_cm = (pixsize_pkpc * 1e-3 * c.cm_per_mpc)**2
+            partmass = np.float64(np.sum(map[mapsel])) * pixarea_cm
+            enclmass += partmass
+    halomass_g = mvir_msunoverh * c.solar_mass / cosmopars['h']
+    print('Found Mvir (AHF) = {:.3e} g'.format(halomass_g))
+    print('Found enclosed mass in projection = {:.3e} g'.format(enclmass))
+
+
+
+

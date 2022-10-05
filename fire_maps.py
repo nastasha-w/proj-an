@@ -7,6 +7,9 @@ import pandas as pd
 import sys
 import os
 
+# Andrew Wetzel's Rockstar halo catalogue wrangler
+import halo_analysis as ha
+
 import readin_fire_data as rf
 import units_fire as uf
 import cosmo_utils as cu
@@ -33,6 +36,102 @@ def mainhalodata_AHFsmooth(path, snapnum):
     for prop in props:
         out[outprops[prop]] = df[prop][i]
     return out
+
+def halodata_rockstar(path, snapnum, select='maxmass'):
+    '''
+    retrieve position, mass, and radius from rockstar halo data
+    uses the Bryan and Norman overdensity mass (.vir in rockstar)
+    
+    Parameters:
+    -----------
+    path: str
+        path to the directory containing the output and halo directories
+        and the snapshot_times.txt file
+    snapnum: int
+        snapshot number
+    select: {'maxmass', 'mainprog', int}
+        how to select the halo to use
+        'maxmass': highest mass in the snapshot
+        'mainprog': main progenitor of the highest-mass halo at the
+                    lowest redshift available
+        int: index of the halo in the snapshot catalogue (Note: not the
+             tree index that's unique across snapshots)
+
+    '''
+    masspath = 'mass.vir'
+    # options: 'BN98', '####c', '######m'
+    if masspath == 'mass.vir':
+        meandensdef = 'BN98'
+    else:
+        meandensdef = masspath.split('.')[-1]
+    out = {}
+    if select == 'maxmass' or isinstance(select, int):
+        hal = ha.io.IO.read_catalogs('snapshot', snapnum, path)
+        if select == 'maxmass':
+            haloind = np.argmax(hal[masspath])
+        else:
+            haloind = select
+        out['Mvir_Msun'] = hal[masspath][haloind]
+        out['Xc_ckpc'], out['Yc_ckpc'], out['Zc_ckpc'] = \
+            hal['position'][haloind]
+        cosmopars = {}
+        cosmopars['omegalambda'] = hal.Cosmology['omega_lambda']
+        cosmopars['omegam'] = hal.Cosmology['omega_matter']
+        cosmopars['omegab'] = hal.Cosmology['omega_baryon']
+        cosmopars['h'] = hal.Cosmology['hubble']
+        cosmopars['a'] = hal.snapshot['scalefactor']
+        cosmopars['z'] = hal.snapshot['z']
+    elif select == 'mainprog':
+        halt = ha.io.IO.read_tree(simulation_directory=path, 
+                                  species_snapshot_indices=[snapnum])
+        # high-mass stuff isn't always run to z=0
+        finalsnap = np.max(halt['snapshot'])
+        wherefinalsnap = np.where(halt['snapshot'] == finalsnap)[0]
+        whereind_maxmfinal = np.argmax(halt[masspath][wherefinalsnap])
+        treeind_maxmfinal = wherefinalsnap[whereind_maxmfinal]
+        prog_main_index = treeind_maxmfinal
+        while prog_main_index >= 0:
+            snap_current = halt['snapshot'][prog_main_index]
+            if snap_current == snapnum:
+                break
+            if prog_main_index < 0:
+                msg = 'No main progenitor at snapshot {} was found'
+                raise RuntimeError(msg.format(snap_current + 1))
+            prog_main_index = halt['progenitor.main.index'][prog_main_index]
+        if bool(halt['am.phantom'][prog_main_index]):
+            msg = 'This halo was not found by Rockstar,'+\
+                  ' but interpolated'
+            raise RuntimeError(msg)
+        out['Mvir_Msun'] = halt['mass'][prog_main_index]
+        out['Xc_ckpc'], out['Yc_ckpc'], out['Zc_ckpc'] = \
+            halt['position'][prog_main_index]
+
+    if meandensdef == 'BN98':
+        # Bryan & Norman (1998)
+        # for Omega_r = 0: Delta_c = 18*np.pi**2 + 82 x - 39x^2
+        # x = 1 - Omega(z) = 1 - Omega_0 * (1 + z)^3 / E(z)^2
+        # E(z) = H(z) / H(z=0)
+        # 
+        _Ez = cu.Hubble(cosmopars['z'], cosmopars=cosmopars) \
+            / (cosmopars['h'] * c.hubble)
+        _x = 1. - cosmopars['omegam'] * (1. + cosmopars['z'])**3 / _Ez**2
+        _Deltac = 8*np.pi**2 + 82. * _x - 39. * _x**2
+        meandens = _Deltac * cu.rhocrit(cosmopars['z'], cosmopars=cosmopars)
+    elif meandensdef.endswith('c'):
+        overdens = float(meandensdef[:-1])
+        meandens = overdens * cu.rhocrit(cosmopars['z'], cosmopars=cosmopars)
+    elif meandensdef.endswith('m'):
+        overdens = float(meandensdef[:-1])
+        cosmo_meandens = cu.rhocrit(0., cosmopars=cosmopars) \
+                         * cosmopars['omegam'] * (1. + cosmopars['z'])**3
+        meandens = cosmo_meandens * overdens
+    #M = r_mean * 4/3 np.pi R63
+    out['Rvir_cm'] = (3. / (4. * np.pi) * out['Mvir_Msun'] \
+                      * c.solar_mass / meandens)**(1./3.)
+    return out, cosmopars
+
+
+
 
 def test_mainhalodata_units(opt=1, dirpath=None, snapnum=None,
                             printfile=None):
@@ -67,7 +166,7 @@ def test_mainhalodata_units(opt=1, dirpath=None, snapnum=None,
         msg = 'test_mainhalodata_units parameter opt = {} is invalid'
         raise ValueError(msg.format(opt))
 
-    halodat = mainhalodata(dirpath, snapnum)
+    halodat = mainhalodata_AHFsmooth(dirpath, snapnum)
     snap = rf.Firesnap(snapfile) 
     cen = np.array([halodat['Xc_ckpcoverh'], 
                     halodat['Yc_ckpcoverh'], 
