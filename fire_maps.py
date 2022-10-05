@@ -105,7 +105,16 @@ def halodata_rockstar(path, snapnum, select='maxmass'):
         out['Mvir_Msun'] = halt['mass'][prog_main_index]
         out['Xc_ckpc'], out['Yc_ckpc'], out['Zc_ckpc'] = \
             halt['position'][prog_main_index]
-
+        cosmopars = {}
+        cosmopars['omegalambda'] = halt.Cosmology['omega_lambda']
+        cosmopars['omegam'] = halt.Cosmology['omega_matter']
+        cosmopars['omegab'] = halt.Cosmology['omega_baryon']
+        cosmopars['h'] = halt.Cosmology['hubble']
+        # get redshift from halo catalog
+        hal = ha.io.IO.read_catalogs('snapshot', snapnum, path)
+        cosmopars['a'] = hal.snapshot['scalefactor']
+        cosmopars['z'] = hal.snapshot['z']
+        
     if meandensdef == 'BN98':
         # Bryan & Norman (1998)
         # for Omega_r = 0: Delta_c = 18*np.pi**2 + 82 x - 39x^2
