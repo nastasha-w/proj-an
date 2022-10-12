@@ -199,7 +199,7 @@ class Firesnap:
         if not len(partdict) == targetnum:
             msg = 'Could not find all time-independent cosmopars in the' + \
                   ' parameterfile'
-            raise RumtimeError(msg)
+            raise RuntimeError(msg)
         return partdict
     
     # read-in and subsampling tested

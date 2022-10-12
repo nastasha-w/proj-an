@@ -14,6 +14,8 @@ import readin_fire_data as rf
 import units_fire as uf
 import cosmo_utils as cu
 import eagle_constants_and_units as c
+# paths to c functions, ion tables
+import make_maps_opts_locs as ol
 from make_maps_v3_master import linetable_PS20, project
 
 
@@ -449,7 +451,100 @@ def test_mainhalodata_units_multi_handler(opt=1):
     print('printfile: ', printfile)
     test_mainhalodata_units_multi(dirpath, printfile, version=version)
 
+# untested draft
+def get_ionfrac(snap, ion, indct=None, table='PS20', simtype='fire',
+                ps20depletion=True):
+    '''
+    Get the fraction of an element in a given ionization state in 
+    a given snapshot.
 
+    Parameters:
+    -----------
+    snap: snapshot reader obect
+        exact class depends on the simulation
+    ion: str
+        ion to get the fraction of. Format e.g. 'o6', 'fe17'
+    indct: dict or None
+        dictionary containing any of the followign arrays
+        'filter': bool, size of arrays returned by the snap reader
+                  determines which resolution elements to use.
+                  If not repesent, all resolution elements are used.
+        If not present, the following values are obtained using snap:
+        'logT': temperature in log10 K. 
+        'lognH': hydrogen number density in log10 particles / cm**3
+        'logZ': metal mass fraction in log10 fraction of total mass (no 
+                solar scaling)
+    table: {'PS20'}
+        Which ionization tables to use.
+    simtype: {'fire'}
+        What format does the simulation reader class snap have?
+    ps20depletion: bool
+        Take away a fraction of the ions to account for the fraction of the
+        parent element depleted onto dust.
+    
+    Returns:
+    --------
+        the fraction of the parent element nuclei that are a part of the 
+        desired ion
+    '''
+    if simtype == 'fire':
+        readfunc = snap.readarray_emulateEAGLE
+        prepath = 'PartType0/'
+        redshift = snap.cosmopars.z
+    else:
+        raise ValueError('invalid simtype option: {}'.format(simtype))
+    
+    if indct is None:
+        indct = {}
+    if 'filter' in indct: # gas selection, e.g. a spatial region
+        filter = indct['filter']
+    else:
+        filter = slice(None, None, None)
+    if 'logT' in indct: # should be in [log10 K]
+        logT = indct['logT']
+    else:
+        logT = np.log10(readfunc(prepath + 'Temperature')[filter])
+        tocgs = snap.toCGS
+        if not np.isclose(tocgs, 1.):
+            logT += np.log10(tocgs)
+    if 'lognH' in indct: # should be in log10 cm**-3
+        lognH = indct['lognH']
+    else:
+        hdens = readfunc(prepath + 'Density')[filter]
+        d_tocgs = snap.toCGS
+        hmassfrac = readfunc(prepath + 'ElementAbundance/Hydrogen')[filter]
+        hmassfrac_tocgs = snap.toCGS
+        hdens *= hmassfrac 
+        hdens *= d_tocgs * hmassfrac_tocgs / (c.atomw_H * c.u)
+        del hmassfrac
+        lognH = np.log10(hdens)
+        del hdens
+    if table in ['PS20']:
+        if 'logZ' in indct: # no solar normalization, 
+            #just straight mass fraction
+            logZ = indct['logZ']
+        else:
+            logZ = readfunc(prepath + 'Metallicity')[filter]    
+            logZ = np.log10(logZ)
+            tocgs = snap.toCGS
+            if not np.isclose(tocgs, 1.):
+                logZ += np.log10(tocgs)
+    if table == 'PS20':
+        interpdct = {'logT': logT, 'lognH': lognH, 'logZ': logZ}
+        iontab = linetable_PS20(ion, redshift, emission=False, vol=True,
+                 ionbalfile=ol.iontab_sylvia_ssh, 
+                 emtabfile=ol.emtab_sylvia_ssh)
+        ionfrac = iontab.find_ionbal(interpdct, log=False)
+        if ps20depletion:
+            ionfrac *= (1. - iontab.find_depletion(interpdct))
+    else:
+        raise ValueError('invalid table option: {}'.format(table))
+    return ionfrac
+    
+    
+    
+# AHF: sorta tested
+# Rockstar: untested draft
 def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
             pixsize_pkpc=3., axis='z', outfilen=None,
             center='AHFsmooth', norm='pixsize_phys'):
@@ -479,9 +574,14 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
     outfilen: str or None. 
         if a string, the name of the file to save the output data to. The
         default is None, meaning the maps are returned as output
-    center: {'AHFsmooth'}
+    center: str
         how to find the halo center.
-        AMFsmooth: use halo_00000_smooth.dat from AHF 
+        'AHFsmooth': use halo_00000_smooth.dat from AHF 
+        'rockstar-maxmass': highest mass halo at snapshot from Rockstar
+        'rockstar-mainprog': main progenitor of most massive halo at
+                           final snapshot from Rockstar
+        'rockstar-<int>': halo with snapshot halo catalogue index <int>
+                          from Rockstar 
     norm: {'pixsize_phys'}
         how to normalize the column values 
         'pixsize_phys': [quantity] / cm**2
@@ -520,6 +620,22 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
                  / snap.cosmopars.h
         rvir_cm = halodat['Rvir_ckpcoverh'] * snap.cosmopars.a \
                   * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
+    elif center.startswith('rockstar'):
+        select = center.split('-')[-1]
+        if select not in ['maxmass', 'mainprog']:
+            try:
+                select = int(select)
+            except ValueError:
+                msg = 'invalid option for center: {}'.format(center)
+                raise ValueError(msg)
+        halodat, _csm_halo = halodata_rockstar(dirpath, snapnum, 
+                                               select=select)
+        snap = rf.get_FireSnap(dirpath, snapnum) 
+        cen = np.array([halodat['Xc_ckpc'], 
+                        halodat['Yc_ckpc'], 
+                        halodat['Zc_ckpc']])
+        cen_cm = cen * snap.cosmopars.a * 1e-3 * c.cm_per_mpc 
+        rvir_cm = halodat['Rvir_cm'] 
     else:
         raise ValueError('Invalid center option {}'.format(center))
 
@@ -631,6 +747,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
         igrp.attrs.create('diameter_used_cm', np.array(size_touse_cm))
         if haslsmooth:
             igrp.attrs.create('margin_lsmooth_cm', lmargin * coords_toCGS)
+        igrp.attrs.create('center', np.string_(center))
         _grp = igrp.create_group('halodata')
         for key in halodat:
             _grp.attrs.create(key, halodat[key])
@@ -654,7 +771,7 @@ def tryout_massmap(opt=1):
         parttypes = [0, 1, 4]
         dirpath = '/projects/b1026/snapshots/metal_diffusion/m12i_res7100/'
         simcode = 'metal-diffusion-m12i-res7100'
-        snapnum = 200
+        snapnum = 196
 
     for pt in parttypes:
         outfilen = outdir + _outfilen.format(pt=pt, sc=simcode, 
