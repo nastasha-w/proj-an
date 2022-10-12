@@ -124,7 +124,8 @@ class Firesnap:
             if not os.path.isfile(self.firstfilen):
                 msg = 'Based on the name {bf}, the expected file {ff}' + \
                       ' was not found'
-                raise ValueError(msg.format(bf=basefile, ff=firstfile))
+                raise ValueError(msg.format(bf=basename, 
+                                 ff=self.firstfilen))
             with h5py.File(self.firstfilen, 'r') as f:
                 self.numfiles = f['Header'].attrs['NumFilesPerSnapshot']
             self.filens = [basename + '.{num}.hdf5'.format(num=i) \
@@ -412,7 +413,7 @@ class Firesnap:
                 else:
                     raise ValueError('Field {} not found'.format(field))
                   
-def get_FireSnap(path, snapnum, filetype='snap'):
+def get_Firesnap(path, snapnum, filetype='snap'):
     '''
     return a FireSnap object, with the parameterfile and snapshot file 
     in the given path.

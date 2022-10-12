@@ -612,7 +612,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
     
     if center == 'AHFsmooth':
         halodat = mainhalodata_AHFsmooth(dirpath, snapnum)
-        snap = rf.get_FireSnap(dirpath, snapnum) 
+        snap = rf.get_Firesnap(dirpath, snapnum) 
         cen = np.array([halodat['Xc_ckpcoverh'], 
                         halodat['Yc_ckpcoverh'], 
                         halodat['Zc_ckpcoverh']])
@@ -630,7 +630,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
                 raise ValueError(msg)
         halodat, _csm_halo = halodata_rockstar(dirpath, snapnum, 
                                                select=select)
-        snap = rf.get_FireSnap(dirpath, snapnum) 
+        snap = rf.get_Firesnap(dirpath, snapnum) 
         cen = np.array([halodat['Xc_ckpc'], 
                         halodat['Yc_ckpc'], 
                         halodat['Zc_ckpc']])
