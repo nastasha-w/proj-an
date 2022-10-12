@@ -801,8 +801,11 @@ def fromcommandline(index):
         tryout_massmap(opt=2)
     elif index == 8:
         tryout_massmap(opt=3)
-    elif index > 8 and index <= 11:
-        test_mainhalodata_units_rockstar(opt=index - 7)
+    elif index > 8 and index <= 11: # opt starts at 1
+        opt = index - 7
+        msg = 'Calling test_mainhalodata_units_rockstar(opt={})'
+        print(msg.format(opt))
+        test_mainhalodata_units_rockstar(opt=opt)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
