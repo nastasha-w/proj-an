@@ -298,7 +298,7 @@ def test_mainhalodata_units_rockstar(opt=1, dirpath=None, snapnum=None,
         raise ValueError(msg.format(opt))
 
     halodat, halo_cosmopars = halodata_rockstar(dirpath, snapnum)
-    snap = rf.get_Firesnap(snapfile, snapnum) 
+    snap = rf.get_Firesnap(dirpath, snapnum) 
     cen = np.array([halodat['Xc_ckpc'], 
                     halodat['Yc_ckpc'], 
                     halodat['Zc_ckpc']])
