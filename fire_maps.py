@@ -19,6 +19,259 @@ import make_maps_opts_locs as ol
 from make_maps_v3_master import linetable_PS20, project
 
 
+def linterpsolve(xvals, yvals, xpoint):
+    '''
+    'solves' a monotonic function described by xvals and yvals by linearly 
+    interpolating between the points above and below xpoint 
+    xvals, yvals: 1D arrays
+    xpoint: float
+    '''
+    if np.all(np.diff(xvals) >= 0.):
+        incr = True
+    elif np.all(np.diff(xvals) <= 0.):
+        incr = False
+    else:
+        print('linterpsolve only works for monotonic functions')
+        return None
+    ind1 = np.where(xvals <= xpoint)[0]
+    ind2 = np.where(xvals >= xpoint)[0]
+    #print(ind1)
+    #print(ind2)
+    if len(ind2) == 0 or len(ind1) == 0:
+        print('xpoint is outside the bounds of xvals')
+        return None
+    if incr:
+        ind1 = np.max(ind1)
+        ind2 = np.min(ind2)
+    else:
+        ind1 = np.min(ind1)
+        ind2 = np.max(ind2)
+    #print('Indices x: %i, %i'%(ind1, ind2))
+    #print('x values: lower %s, upper %s, searched %s'%(xvals[ind1], xvals[ind2], xpoint))
+    if ind1 == ind2:
+        ypoint = yvals[ind1]
+    else:
+        w = (xpoint - xvals[ind1]) / (xvals[ind2] - xvals[ind1]) #weight
+        ypoint = yvals[ind2] * w + yvals[ind1] * (1. - w)
+    #print('y values: lower %s, upper %s, solution: %s'%(yvals[ind1], yvals[ind2], ypoint))
+    return ypoint
+
+def find_intercepts(yvals, xvals, ypoint, xydct=None):
+    '''
+    'solves' a monotonic function described by xvals and yvals by linearly 
+    interpolating between the points above and below ypoint 
+    xvals, yvals: 1D arrays
+    ypoint: float
+    Does not distinguish between intersections separated by less than 2 xvals points
+    '''
+    if xvals is None:
+        xvals = xydct['x']
+    if yvals is None:
+        yvals = xydct['y']
+
+    if not (np.all(np.diff(xvals) < 0.) or np.all(np.diff(xvals) > 0.)):
+        print('linterpsolve only works for monotonic x values')
+        return None
+    zerodiffs = yvals - ypoint
+    leqzero = np.where(zerodiffs <= 0.)[0]
+    if len(leqzero) == 0:
+        return np.array([])
+    elif len(leqzero) == 1:
+        edges = [[leqzero[0], leqzero[0]]]
+    else:
+        segmentedges = np.where(np.diff(leqzero) > 1)[0] + 1
+        if len(segmentedges) == 0: # one dip below zero -> edges are intercepts
+            edges = [[leqzero[0], leqzero[-1]]]
+        else:
+            parts = [leqzero[: segmentedges[0]] if si == 0 else \
+                     leqzero[segmentedges[si - 1] : segmentedges[si]] if si < len(segmentedges) else\
+                     leqzero[segmentedges[si - 1] :] \
+                     for si in range(len(segmentedges) + 1)]
+            edges = [[part[0], part[-1]] for part in parts]
+    intercepts = [[linterpsolve(zerodiffs[ed[0]-1: ed[0] + 1], xvals[ed[0]-1: ed[0] + 1], 0.),\
+                   linterpsolve(zerodiffs[ed[1]: ed[1] + 2],   xvals[ed[1]: ed[1] + 2], 0.)]  \
+                  if ed[0] != 0 and ed[1] != len(yvals) - 1 else \
+                  [None,\
+                   linterpsolve(zerodiffs[ed[1]: ed[1] + 2],   xvals[ed[1]: ed[1] + 2], 0.)] \
+                  if ed[1] != len(yvals) - 1 else \
+                  [linterpsolve(zerodiffs[ed[0]-1: ed[0] + 1], xvals[ed[0]-1: ed[0] + 1], 0.),\
+                   None]  \
+                  if ed[0] != 0 else \
+                  [None, None]
+                 for ed in edges]
+    intercepts = [i for i2 in intercepts for i in i2]
+    if intercepts[0] is None:
+        intercepts = intercepts[1:]
+    if intercepts[-1] is None:
+        intercepts = intercepts[:-1]
+    return np.array(intercepts)
+
+
+def getmeandensity(meandef, cosmopars):
+    if meandef == 'BN98':
+        # Bryan & Norman (1998)
+        # for Omega_r = 0: Delta_c = 18*np.pi**2 + 82 x - 39x^2
+        # x = 1 - Omega(z) = 1 - Omega_0 * (1 + z)^3 / E(z)^2
+        # E(z) = H(z) / H(z=0)
+        # 
+        _Ez = cu.Hubble(cosmopars['z'], cosmopars=cosmopars) \
+            / (cosmopars['h'] * c.hubble)
+        _x = 1. - cosmopars['omegam'] * (1. + cosmopars['z'])**3 / _Ez**2
+        _Deltac = 8*np.pi**2 + 82. * _x - 39. * _x**2
+        meandens = _Deltac * cu.rhocrit(cosmopars['z'], cosmopars=cosmopars)
+    elif meandef.endswith('c'):
+        overdens = float(meandef[:-1])
+        meandens = overdens * cu.rhocrit(cosmopars['z'], cosmopars=cosmopars)
+    elif meandef.endswith('m'):
+        overdens = float(meandef[:-1])
+        cosmo_meandens = cu.rhocrit(0., cosmopars=cosmopars) \
+                         * cosmopars['omegam'] * (1. + cosmopars['z'])**3
+        meandens = cosmo_meandens * overdens
+    return meandens
+
+def calchalocen(coordsmassesdict, shrinkfrac=0.5, minparticles=1000, 
+                initialradiusfactor=0.25):
+    '''
+    from: https://github.com/isulta/massive-halos/blob/d2dc0dd3649f359c0cea7191bfefd11b3498eeda/scripts/halo_analysis_scripts.py#L164 
+    Imran Sultan's method, citing Power et al. (2003):
+    their parameter values: 
+    shrinkpercent=2.5, minparticles=1000, initialradiusfactor=1
+
+    '''
+    coords = coordsmassesdict['coords']
+    masses = coordsmassesdict['masses']
+    totmass = np.sum(masses)
+    com = np.sum(coords * masses[:, np.newaxis], axis=0) / totmass
+    r2 = np.sum((coords - com[np.newaxis, :])**2, axis=1)
+    searchrad2 = initialradiusfactor**2 * np.max(r2)
+    Npart_conv = min(minparticles, len(masses) * 0.01)
+ 
+    it = 0
+    coords_it = coords.copy()
+    masses_it = masses.copy()
+    comlist = [com]
+    radiuslist = [np.sqrt(searchrad2)]
+    while len(masses_it) > Npart_conv:
+        searchrad2 *= shrinkfrac**2
+        mask = r2 <= searchrad2
+        coords_it = coords_it[mask]
+        masses_it = masses_it[mask]
+        com = np.sum(coords_it * masses_it[:, np.newaxis], axis=0) \
+               / np.sum(masses_it)
+        r2 = np.sum((coords_it - com[np.newaxis, :])**2, axis=1)
+
+        it += 1
+        comlist.append(com)
+        radiuslist.append(np.sqrt(searchrad2))
+    return com, comlist, radiuslist
+
+
+def calchalodata(path, snapshot, meandef=('200c', 'BN98')):
+    '''
+    Using Imran Sultan's shrinking spheres method, calculate the halo 
+    center, then find the halo mass and radius for a given overdensity
+    citerion
+    
+    '''
+    minparticles = 1000
+
+    snap = rf.get_Firesnap(path, snapshot)
+
+    # get mass and coordinate data
+    # use all zoom region particle types
+    parttypes = [0, 1, 4, 5]
+    dct_m = {}
+    dct_c = {}
+    toCGS_m = None
+    toCGS_c = None
+    for pt in parttypes:
+        cpath = 'PartType{}/Coordinates'
+        mpath = 'PartType{}/Mass'
+        try:
+            dct_c[pt] = snap.readarray_emulateEAGLE(cpath.format(pt))
+            _toCGS_c = snap.toCGS
+            dct_m[pt] = snap.readarray_emulateEAGLE(mpath.format(pt))
+            _toCGS_m = snap.toCGS
+        except OSError:
+            msg = 'Skipping PartType {} in center calc: not present on file'
+            print(msg.format(pt))
+            continue
+        if toCGS_m is None:
+            toCGS_m = _toCGS_m
+        elif not np.isclose(toCGS_m, _toCGS_m):
+                msg = 'Different particle type masses have different' + \
+                      ' CGS conversions in ' + snap.firstfilen
+                raise RuntimeError(msg)
+        if toCGS_c is None:
+            toCGS_c = _toCGS_c
+        elif not np.isclose(toCGS_c, _toCGS_c):
+                msg = 'Different particle type coordinates have different' + \
+                      ' CGS conversions in ' + snap.firstfilen
+                raise RuntimeError(msg)
+    pt_used = list(dct_m.keys()).sort()
+    totlen = sum([len(dct_m[pt]) for pt in pt_used])
+    masses = np.empty((totlen,), dtype=dct_m[pt_used[0]].dtype)
+    coords = np.empty((totlen, dct_c[pt_used[0]].shape[1]), 
+                      dtype=dct_c[pt_used[0]].dtype)
+    start = 0
+    for pt in pt_used:
+        partlen = len(dct_m[pt])
+        masses[start: start + partlen] = dct_m[pt]
+        coords[start: start + partlen] = dct_c[pt]
+        start += partlen
+
+        del dct_m[pt]
+        del dct_c[pt]
+    coordsmassdict = {'masses': masses, 'coords': coords}
+    com_simunits, comlist, radiuslist = \
+        calchalocen(coordsmassdict, shrinkfrac=0.5, 
+                    minparticles=minparticles, initialradiusfactor=0.25)
+    print('Found center of mass [sim units]: {}'.format(com_simunits))
+
+    # find Rvir/Mvir
+    cosmopars = snap.cosmopars.getdct()
+    if isinstance(meandef, type('')):
+        dens_targets_cgs = [getmeandensity(meandef, cosmopars)]
+    else:
+        dens_targets_cgs = [getmeandensity(md, cosmopars) for md in meandef]
+        
+    r2 = np.sum((coords - com_simunits[np.newaxis, :])**2, axis=1)
+    rorder = np.argsort(r2)
+    r2_order = r2[rorder]
+    masses_order = masses[rorder]
+    dens_targets = [target / toCGS_m * toCGS_c**3 for target in \
+                     dens_targets_cgs]
+    dens2_order = masses_order**2 / ((4. * np.pi / 3)**2 * r2_order**3)
+    
+    rsols_cgs = []
+    msols_cgs = []
+    xydct = {'x': r2_order, 'y': dens2_order}
+    for dti, dens_target in enumerate(dens_targets):
+        sols = find_intercepts(None, None, dens_target**2, xydct=xydct)
+        # no random low-density holes or anything
+        sols = sols[sols >= r2[minparticles]]
+        if len(sols) == 0:
+            msg = 'No solutions found for density {}'.format(meandef[dti])
+            print(msg)
+        elif len(sols) == 1:
+            rsol = np.sqrt(sols[0])
+            msol = 4. * np.pi / 3. * rsol**3 * dens_target
+            rsols_cgs.append(rsol * toCGS_c)
+            msols_cgs.append(msol * toCGS_m)
+        else:
+            # technically a solution, but there will be some 
+            # particle noise; smoothing?
+            # on the other hand, those effects are proabably tiny
+            sols_kpc = np.sqrt(sols) * toCGS_c / (1e-3 * c.cm_per_mpc)
+            print('Found radius solution options [pkpc] {}'.format(sols_kpc))
+            print('Selected first in list')
+            rsol = np.sqrt(sols[0])
+            msol = 4. * np.pi / 3. * rsol**3 * dens_target
+            rsols_cgs.append(rsol * toCGS_c)
+            msols_cgs.append(msol * toCGS_m)
+    return com_simunits * toCGS_c, rsols_cgs, msols_cgs
+    
+
 def mainhalodata_AHFsmooth(path, snapnum):
     '''
     get properties of the main halo in the snapshot from halo_00000_smooth.dat
