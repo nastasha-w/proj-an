@@ -298,7 +298,7 @@ def test_mainhalodata_units_rockstar(opt=1, dirpath=None, snapnum=None,
         raise ValueError(msg.format(opt))
 
     halodat, halo_cosmopars = halodata_rockstar(dirpath, snapnum)
-    snap = rf.Firesnap(snapfile) 
+    snap = rf.get_Firesnap(snapfile) 
     cen = np.array([halodat['Xc_ckpc'], 
                     halodat['Yc_ckpc'], 
                     halodat['Zc_ckpc']])
@@ -802,7 +802,7 @@ def fromcommandline(index):
     elif index == 8:
         tryout_massmap(opt=3)
     elif index > 8 and index <= 11: # opt starts at 1
-        opt = index - 7
+        opt = index - 8
         msg = 'Calling test_mainhalodata_units_rockstar(opt={})'
         print(msg.format(opt))
         test_mainhalodata_units_rockstar(opt=opt)
