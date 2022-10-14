@@ -1179,7 +1179,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
             igrp.attrs.create(key, val)
 # hard to do a true test, but check that projected masses and centering
 # sort of make sense
-def tryout_massmap(opt=1):
+def tryout_massmap(opt=1, center='AHFsmooth'):
     outdir = '/projects/b1026/nastasha/tests/start_fire/map_tests/'
     _outfilen = 'mass_pt{pt}_{sc}_snap{sn}_ahf-cen_2rvir_v1.hdf5'
     if opt == 1:
@@ -1203,7 +1203,7 @@ def tryout_massmap(opt=1):
                                              sn=snapnum)
         massmap(dirpath, snapnum, radius_rvir=2., particle_type=pt,
                 pixsize_pkpc=3., axis='z', outfilen=outfilen,
-                center='AHFsmooth')
+                center=center)
 
 
 
