@@ -166,7 +166,7 @@ def calchalocen(coordsmassesdict, shrinkfrac=0.5, minparticles=1000,
     return com, comlist, radiuslist
 
 
-def calchalodata(path, snapshot, meandef=('200c', 'BN98')):
+def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     '''
     Using Imran Sultan's shrinking spheres method, calculate the halo 
     center, then find the halo mass and radius for a given overdensity
@@ -410,26 +410,8 @@ def halodata_rockstar(path, snapnum, select='maxmass'):
         hal = ha.io.IO.read_catalogs('snapshot', snapnum, path)
         cosmopars['a'] = hal.snapshot['scalefactor']
         cosmopars['z'] = hal.snapshot['redshift']
-
-    if meandensdef == 'BN98':
-        # Bryan & Norman (1998)
-        # for Omega_r = 0: Delta_c = 18*np.pi**2 + 82 x - 39x^2
-        # x = 1 - Omega(z) = 1 - Omega_0 * (1 + z)^3 / E(z)^2
-        # E(z) = H(z) / H(z=0)
-        # 
-        _Ez = cu.Hubble(cosmopars['z'], cosmopars=cosmopars) \
-            / (cosmopars['h'] * c.hubble)
-        _x = 1. - cosmopars['omegam'] * (1. + cosmopars['z'])**3 / _Ez**2
-        _Deltac = 8*np.pi**2 + 82. * _x - 39. * _x**2
-        meandens = _Deltac * cu.rhocrit(cosmopars['z'], cosmopars=cosmopars)
-    elif meandensdef.endswith('c'):
-        overdens = float(meandensdef[:-1])
-        meandens = overdens * cu.rhocrit(cosmopars['z'], cosmopars=cosmopars)
-    elif meandensdef.endswith('m'):
-        overdens = float(meandensdef[:-1])
-        cosmo_meandens = cu.rhocrit(0., cosmopars=cosmopars) \
-                         * cosmopars['omegam'] * (1. + cosmopars['z'])**3
-        meandens = cosmo_meandens * overdens
+    
+    meandens = getmeandensity(meandensdef, cosmopars)
     #M = r_mean * 4/3 np.pi R63
     out['Rvir_cm'] = (3. / (4. * np.pi) * out['Mvir_Msun'] \
                       * c.solar_mass / meandens)**(1./3.)
