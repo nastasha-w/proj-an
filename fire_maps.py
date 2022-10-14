@@ -171,6 +171,38 @@ def calchalodata(path, snapshot, meandef=('200c', 'BN98')):
     Using Imran Sultan's shrinking spheres method, calculate the halo 
     center, then find the halo mass and radius for a given overdensity
     citerion
+
+    Parameters:
+    -----------
+    path: str
+        path containing the 'output' directory or the snapshot
+        files/directories for the chosen simulation
+    snapshot: int
+        snapshot number
+    meandef: str
+        overdensity definition for the halo
+        'BN98': Bryan & Norman 1998 fitting formula
+        '<float>c': <float> times the critical density at the snapshot 
+                    redshift
+        '<float>m': <float> times the mean matter density at the 
+                    snapshot redshift
+        tuple of values -> return a list of Mvir and Rvir, in same order
+    
+    Returns:
+    --------
+    outdct: dict
+        contains 
+        'Xc_cm', 'Yc_cm', 'Zc_cm': floats 
+            the coordinates of the halo center 
+        'Rvir_cm': float or list of floats
+            the virial radius (radii) according to the halo overdensity
+            criterion. float or list matches string or iterable choice
+            for the overdensity definition
+        'Mvir_cm': float or list of floats
+            the virial mass (masses) according to the halo overdensity
+            criterion. float or list matches string or iterable choice
+            for the overdensity definition
+        
     
     '''
     minparticles = 1000
@@ -231,8 +263,10 @@ def calchalodata(path, snapshot, meandef=('200c', 'BN98')):
     # find Rvir/Mvir
     cosmopars = snap.cosmopars.getdct()
     if isinstance(meandef, type('')):
+        outputsingle = True
         dens_targets_cgs = [getmeandensity(meandef, cosmopars)]
     else:
+        outputsingle = False
         dens_targets_cgs = [getmeandensity(md, cosmopars) for md in meandef]
         
     r2 = np.sum((coords - com_simunits[np.newaxis, :])**2, axis=1)
@@ -269,7 +303,13 @@ def calchalodata(path, snapshot, meandef=('200c', 'BN98')):
             msol = 4. * np.pi / 3. * rsol**3 * dens_target
             rsols_cgs.append(rsol * toCGS_c)
             msols_cgs.append(msol * toCGS_m)
-    return com_simunits * toCGS_c, rsols_cgs, msols_cgs
+    com_cgs = com_simunits * toCGS_c,
+    if outputsingle:
+        rsols_cgs = rsols_cgs[0]
+        msols_cgs = msols_cgs[0]
+    outdct = {'Xc_cm': com_cgs[0], 'Yc_cm': com_cgs[1], 'Zc_cm': com_cgs[2],
+              'Rvir_cm': rsols_cgs, 'Mvir_cm': msols_cgs}
+    return  outdct
     
 
 def mainhalodata_AHFsmooth(path, snapnum):
