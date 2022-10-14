@@ -108,6 +108,23 @@ def find_intercepts(yvals, xvals, ypoint, xydct=None):
         intercepts = intercepts[:-1]
     return np.array(intercepts)
 
+atomw_u_dct = \
+    {'Hydrogen':  c.atomw_H,
+     'Helium':    c.atomw_He,
+     'Carbon':    c.atomw_C,
+     'Nitrogen':  c.atomw_N,
+     'Oxygen':    c.atomw_O,
+     'Neon':      c.atomw_Ne,
+     'Magnesium': c.atomw_Mg,
+     'Silicon':   c.atomw_Si,
+     'Sulfur':    c.atomw_S,
+     'Sulphur':   c.atomw_S,
+     'Calcium':   c.atomw_Ca,
+     'Iron':      c.atomw_Fe}
+
+def elt_atomw_cgs(element):
+    element = string.capwords(element)
+    return atomw_u_dct[element] * c.u
 
 def getmeandensity(meandef, cosmopars):
     if meandef == 'BN98':
@@ -819,7 +836,7 @@ def get_ionfrac(snap, ion, indct=None, table='PS20', simtype='fire',
         raise ValueError('invalid table option: {}'.format(table))
     return ionfrac
     
-def get_mapqty(snap, parttype, maptype, maptype_args, filterdct=None):
+def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
     '''
     calculate a quantity to map
 
@@ -865,7 +882,8 @@ def get_mapqty(snap, parttype, maptype, maptype_args, filterdct=None):
             qty = snap.readarray_emulateEAGLE(eltpath)[filter]
             toCGS = snap.toCGS
             qty *= snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
-            toCGS =  toCGS * snap.toCGS
+            toCGS = toCGS * snap.toCGS
+            toCGS = toCGS / elt_atomw_cgs(element)
     elif maptype == 'ion':
         if parttype != 0 :
             msg = 'Can only calculate ion fractions for gas (PartType0),' + \
@@ -895,8 +913,11 @@ def get_mapqty(snap, parttype, maptype, maptype_args, filterdct=None):
 
     return qty, toCGS
 
-# AHF: sorta tested
+# AHF: sorta tested (enclosed 2D mass wasn't too far above Mvir)
 # Rockstar: untested draft
+# shrinking spheres: untested draft
+# mass maps: look ok
+# ion/metal maps: untested draft
 def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
             pixsize_pkpc=3., axis='z', outfilen=None,
             center='shrinksph', norm='pixsize_phys',
@@ -942,7 +963,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
     maptype: {'Mass', 'Metal', 'ion'}
         what sort of thing to map
     maptype_args: dict or None
-        see get_mapqty for parameters
+        see get_qty for parameters
     Output:
     -------
     massW: 2D array of floats
@@ -1051,7 +1072,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
         filter = np.all(np.abs((coords)) <= 0.5 * box_dims_coordunit, axis=1)   
     
     coords = coords[filter]
-    qW, toCGS = get_mapqty(snap, particle_type, maptype, maptype_args, 
+    qW, toCGS = get_qty(snap, particle_type, maptype, maptype_args, 
                     filterdct={'filter': filter})
     multipafter *= toCGS
     
