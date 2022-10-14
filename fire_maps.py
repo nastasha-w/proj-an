@@ -332,7 +332,8 @@ def mainhalodata_AHFsmooth(path, snapnum):
         out[outprops[prop]] = df[prop][i]
     return out
 
-def halodata_rockstar(path, snapnum, select='maxmass'):
+def halodata_rockstar(path, snapnum, select='maxmass', 
+                      masspath='mass.vir'):
     '''
     retrieve position, mass, and radius from rockstar halo data
     uses the Bryan and Norman overdensity mass (.vir in rockstar)
@@ -351,9 +352,9 @@ def halodata_rockstar(path, snapnum, select='maxmass'):
                     lowest redshift available
         int: index of the halo in the snapshot catalogue (Note: not the
              tree index that's unique across snapshots)
-
+    masspath: path in hdf5 file to mass to use
+        e.g., mass.mvir, mass.200c, mass.200m
     '''
-    masspath = 'mass.vir'
     # options: 'BN98', '####c', '######m'
     if masspath == 'mass.vir':
         meandensdef = 'BN98'
