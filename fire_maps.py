@@ -862,28 +862,40 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
                 deplete a fraction of the element onto dust and include
                 that factor in the ion fraction. Depletion follows the
                 Ploeckinger & Schaye (2020) table values.
-        ''        
+
+    Returns:
+    --------
+    qty: array
+        the desired quantity for all the filtered resolution elements
+    toCGS:
+        factor to convert the array to CGS units
+    todoc:
+        dictonary with useful info to store   
+        always contains a 'units' entry
     '''
     basepath = 'PartType{}/'.format(parttype)
     filter = slice(None, None, None)
+    todoc = {}
     if filterdct is not None:
         if 'filter' in filterdct:
             filter = filterdct['filter']
 
-    if maptype == 'Mass'
+    if maptype == 'Mass':
         qty = snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
         toCGS = snap.toCGS
+        todoc['units'] = 'g'
     elif maptype == 'Metal':
         element = maptype_args['element']
         if element == 'total':
             eltpath = basepath + 'Metallicity'
         else:
             eltpath = basepath + 'ElementAbundance/' + string.capwords(element)
-            qty = snap.readarray_emulateEAGLE(eltpath)[filter]
-            toCGS = snap.toCGS
-            qty *= snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
-            toCGS = toCGS * snap.toCGS
-            toCGS = toCGS / elt_atomw_cgs(element)
+        qty = snap.readarray_emulateEAGLE(eltpath)[filter]
+        toCGS = snap.toCGS
+        qty *= snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
+        toCGS = toCGS * snap.toCGS
+        toCGS = toCGS / elt_atomw_cgs(element)
+        todoc['units'] = '(# nuclei)'
     elif maptype == 'ion':
         if parttype != 0 :
             msg = 'Can only calculate ion fractions for gas (PartType0),' + \
@@ -910,7 +922,9 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
                               simtype=simtype, ps20depletion=ps20depletion)
         qty *= ionfrac
         toCGS = toCGS / (dummytab.elementmass_u * c.u)
-
+        todoc['units'] = '(# ions)'
+        todoc['table'] = dummytab.ionbalfile
+        todoc['tableformat'] = table
     return qty, toCGS
 
 # AHF: sorta tested (enclosed 2D mass wasn't too far above Mvir)
@@ -962,6 +976,9 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
         'pixsize_phys': [quantity] / cm**2
     maptype: {'Mass', 'Metal', 'ion'}
         what sort of thing to map
+        'Mass' -> g
+        'Metal' -> number of nuclei of the selected element
+        'ion' -> number of ions of the selected type
     maptype_args: dict or None
         see get_qty for parameters
     Output:
@@ -1037,6 +1054,9 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
 
     if norm == 'pixsize_phys':
         multipafter = 1. / pixel_cm**2
+        norm_units = ' / (physical cm)**2'
+    else:
+        raise ValueError('Invalid norm option {}'.format(norm))
 
     basepath = 'PartType{}/'.format(particle_type)
     haslsmooth = particle_type == 0
@@ -1072,8 +1092,8 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
         filter = np.all(np.abs((coords)) <= 0.5 * box_dims_coordunit, axis=1)   
     
     coords = coords[filter]
-    qW, toCGS = get_qty(snap, particle_type, maptype, maptype_args, 
-                    filterdct={'filter': filter})
+    qW, toCGS, todoc = get_qty(snap, particle_type, maptype, maptype_args, 
+                               filterdct={'filter': filter})
     multipafter *= toCGS
     
     # stars, black holes. DM: should do neighbour finding. Won't though.
@@ -1124,6 +1144,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
         igrp.attrs.create('particle_type', particle_type)
         igrp.attrs.create('pixsize_pkpc', pixsize_pkpc)
         igrp.attrs.create('axis', np.string_(axis))
+        igrp.attrs.create('norm', np.string_(norm))
         igrp.attrs.create('outfilen', np.string_(outfilen))
         # useful derived/used stuff
         igrp.attrs.create('Axis1', Axis1)
@@ -1147,7 +1168,15 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
                 if isinstance(val, type('')):
                     val = np.string_(val)
                 _grp.attrs.create(key, val)
-
+        for key in todoc:
+            if key == 'units':
+                val = todoc[key]
+                val = val + norm_units
+            else:
+                val = todoc[key]
+            if isinstance(val, type('')):
+                val = np.string_(val)
+            igrp.attrs.create(key, val)
 # hard to do a true test, but check that projected masses and centering
 # sort of make sense
 def tryout_massmap(opt=1):
