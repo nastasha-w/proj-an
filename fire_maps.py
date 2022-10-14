@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from curses import keyname
 import numpy as np
 import h5py
 import pandas as pd
+import string
 import sys
 import os
 
@@ -308,7 +310,7 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
         rsols_cgs = rsols_cgs[0]
         msols_cgs = msols_cgs[0]
     outdct = {'Xc_cm': com_cgs[0], 'Yc_cm': com_cgs[1], 'Zc_cm': com_cgs[2],
-              'Rvir_cm': rsols_cgs, 'Mvir_cm': msols_cgs}
+              'Rvir_cm': rsols_cgs, 'Mvir_g': msols_cgs}
     return  outdct
     
 
@@ -817,13 +819,88 @@ def get_ionfrac(snap, ion, indct=None, table='PS20', simtype='fire',
         raise ValueError('invalid table option: {}'.format(table))
     return ionfrac
     
-    
-    
+def get_mapqty(snap, parttype, maptype, maptype_args, filterdct=None):
+    '''
+    calculate a quantity to map
+
+    Parameters:
+    -----------
+    snap: Firesnap object (readin_fire_data.py)
+        used to read in what is needed
+    parttype: {0, 1, 4, 5}
+        particle type
+    maptype: {'Mass', 'Metal', 'ion'}
+        what sort of thing are we looking for
+    maptype_args: dict or None
+        additional arguments for each maptype
+        for maptype value:
+        'Mass': None (ignored)
+        'Metal': str
+            'element': str
+                element name, e.g. 'oxygen'
+        'ion': str
+            'ion': str
+                ion name. format e.g. 'o6', 'fe17'
+            'ps20depletion':
+                deplete a fraction of the element onto dust and include
+                that factor in the ion fraction. Depletion follows the
+                Ploeckinger & Schaye (2020) table values.
+        ''        
+    '''
+    basepath = 'PartType{}/'.format(parttype)
+    filter = slice(None, None, None)
+    if filterdct is not None:
+        if 'filter' in filterdct:
+            filter = filterdct['filter']
+
+    if maptype == 'Mass'
+        qty = snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
+        toCGS = snap.toCGS
+    elif maptype == 'Metal':
+        element = maptype_args['element']
+        if element == 'total':
+            eltpath = basepath + 'Metallicity'
+        else:
+            eltpath = basepath + 'ElementAbundance/' + string.capwords(element)
+            qty = snap.readarray_emulateEAGLE(eltpath)[filter]
+            toCGS = snap.toCGS
+            qty *= snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
+            toCGS =  toCGS * snap.toCGS
+    elif maptype == 'ion':
+        if parttype != 0 :
+            msg = 'Can only calculate ion fractions for gas (PartType0),' + \
+                   ' not particle type {}'
+            raise ValueError(msg.format(parttype))
+        ion = maptype_args['ion']
+        if 'ps20depletion' in maptype_args:
+            ps20depletion = maptype_args['ps20depletion']
+        else:
+            ps20depletion=True
+        table = 'PS20'
+        simtype = 'fire'
+        # no tables read in here, just an easy way to get parent element 
+        # etc.
+        dummytab = linetable_PS20(ion, snap.cosmopars.z, emission=False,
+                                  vol=True)
+        element = dummytab.element
+        eltpath = basepath + 'ElementAbundance/' + string.capwords(element)
+        qty = snap.readarray_emulateEAGLE(eltpath)[filter]
+        toCGS = snap.toCGS
+        qty *= snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
+        toCGS =  toCGS * snap.toCGS
+        ionfrac = get_ionfrac(snap, ion, indct=filterdct, table=table, 
+                              simtype=simtype, ps20depletion=ps20depletion)
+        qty *= ionfrac
+        toCGS = toCGS / (dummytab.elementmass_u * c.u)
+
+    return qty, toCGS
+
 # AHF: sorta tested
 # Rockstar: untested draft
 def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
             pixsize_pkpc=3., axis='z', outfilen=None,
-            center='AHFsmooth', norm='pixsize_phys'):
+            center='shrinksph', norm='pixsize_phys',
+            maptype='Mass', maptype_args=None):
     '''
     Creates a mass map projected perpendicular to a line of sight axis
     by assuming the simulation resolution elements divide their mass 
@@ -858,10 +935,14 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
                            final snapshot from Rockstar
         'rockstar-<int>': halo with snapshot halo catalogue index <int>
                           from Rockstar 
+        'shrinksph': Imran's shrinking spheres method
     norm: {'pixsize_phys'}
         how to normalize the column values 
         'pixsize_phys': [quantity] / cm**2
-
+    maptype: {'Mass', 'Metal', 'ion'}
+        what sort of thing to map
+    maptype_args: dict or None
+        see get_mapqty for parameters
     Output:
     -------
     massW: 2D array of floats
@@ -912,6 +993,13 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
                         halodat['Zc_ckpc']])
         cen_cm = cen * snap.cosmopars.a * 1e-3 * c.cm_per_mpc 
         rvir_cm = halodat['Rvir_cm'] 
+    elif center ==  'shrinksph':
+        halodat = calchalodata_shrinkingsphere(dirpath, snapnum, 
+                                               meandef='BN98')
+        cen_cm = np.array([halodat['Xc_cm'], 
+                           halodat['Yc_cm'], 
+                           halodat['Zc_cm']])
+        rvir_cm = halodat['Rvir_cm']
     else:
         raise ValueError('Invalid center option {}'.format(center))
 
@@ -963,22 +1051,22 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
         filter = np.all(np.abs((coords)) <= 0.5 * box_dims_coordunit, axis=1)   
     
     coords = coords[filter]
-    masses = snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
-    masses_toCGS = snap.toCGS
-    multipafter *= masses_toCGS
+    qW, toCGS = get_mapqty(snap, particle_type, maptype, maptype_args, 
+                    filterdct={'filter': filter})
+    multipafter *= toCGS
     
     # stars, black holes. DM: should do neighbour finding. Won't though.
     if not haslsmooth:
         # minimum smoothing length is set in the projection
-        lsmooth = np.zeros(shape=(len(masses),), dtype=coords.dtype)
+        lsmooth = np.zeros(shape=(len(qW),), dtype=coords.dtype)
         lsmooth_toCGS = 1.
     
     tree = False
     periodic = False # zoom region
-    NumPart = len(masses)
+    NumPart = len(qW)
     dct = {'coords': coords, 'lsmooth': lsmooth, 
-           'qW': masses, 
-           'qQ': np.zeros(len(masses), dtype=np.float32)}
+           'qW': qW, 
+           'qQ': np.zeros(len(qW), dtype=np.float32)}
     Ls = box_dims_coordunit
     # cosmopars uses EAGLE-style cMpc/h units for the box
     box3 = [snap.cosmopars.boxsize * c.cm_per_mpc / snap.cosmopars.h \
@@ -1027,6 +1115,17 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
         _grp = igrp.create_group('halodata')
         for key in halodat:
             _grp.attrs.create(key, halodat[key])
+        igrp.attrs.create('maptype', np.string_(maptype))
+        if maptype_args is None:
+            igrp.attrs.create('maptype_args', np.string_('None'))
+        else:
+            igrp.attrs.create('maptype_args', np.string_('dict'))
+            _grp = igrp.create_group('maptype_args_dict')
+            for key in maptype_args:
+                val = maptype_args[key]
+                if isinstance(val, type('')):
+                    val = np.string_(val)
+                _grp.attrs.create(key, val)
 
 # hard to do a true test, but check that projected masses and centering
 # sort of make sense
