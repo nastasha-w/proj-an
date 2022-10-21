@@ -1249,7 +1249,7 @@ def run_checkfields_units(index):
                'PartType0/Coordinates',
                'PartType0/SmoothingLength')
     outdir1 = '/projects/b1026/nastasha/tests/start_fire/'
-    outtemp = 'cgs_units_test_{simname}_snap{snap:03d}'
+    outtemp = 'cgs_units_test_{simname}_snap{snap:03d}.hdf5'
     if index in [0, 1]:
         snap = snaps1[index]
         outfilen = outdir1 + outtemp.format(simname=simname1, snap=snap)
