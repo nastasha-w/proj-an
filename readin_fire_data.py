@@ -163,15 +163,33 @@ class Firesnap:
         del a_z
         
         if self.parfilen is None:
-            cdct['omegam'] = self.ff['Header'].attrs['Omega0']
-            cdct['omegalambda'] = self.ff['Header'].attrs['OmegaLambda']
+            # FIRE-2 and FIRE-3 use different keys for the Omegas
+            tosearch = self.ff['Header'].attrs
+            # Omega_matter
+            if 'Omega0' in tosearch:
+                cdct['omegam'] = tosearch['Omega0']
+            elif 'Omega_Matter' in tosearch:
+                cdct['omegam'] = tosearch['Omega_Matter']
+            else:
+                raise KeyError('Could not find a value for omegam')
+            # Omega_Lambda
+            if 'OmegaLambda' in tosearch:
+                cdct['omegalambda'] = tosearch['OmegaLambda']
+            elif 'Omega_Lambda' in tosearch:
+                cdct['omegalambda'] = tosearch['Omega_Lambda']
+            else:
+                raise KeyError('Could not find a value for omegalambda')
+            # Omega_baryon
+            if 'OmegaBaryon' in tosearch:
+                cdct['omegab'] = tosearch['OmegaBaryon']
+            elif 'Omega_Baryon' in tosearch:
+                cdct['omegab'] = tosearch['Omega_Baryon']
+            else:
+                print('Warning: did not find a value for omegab, using NaN')
+                cdct['omegab'] = np.NaN
+            # other
             cdct['h'] = self.ff['Header'].attrs['HubbleParam'] 
             cdct['boxsize'] = self.ff['Header'].attrs['BoxSize'] 
-            try:
-                cdct['omegab'] = self.ff['Header'].attrs['OmegaBaryon']
-            except KeyError:
-                print('Warning: did not find a value for Omega_b, using NaN')
-                cdct['omegab'] = np.NaN
         else:
             pardict = self._cosmopars_from_parameterfile()
             cdct.update(pardict)
