@@ -1256,6 +1256,77 @@ def run_checkfields_units(index):
         checkfields_units(dirpath1, snap, *fields1, numpart=100, 
                           outfilen=outfilen)
 
+def test_ionbal_calc(dirpath, snapnum, ion, target_Z=0.01, delta_Z=0.001,
+                     ps20depletion=False, outfilen='ionbal_test.hdf5'):
+    snap = rf.get_Firesnap(dirpath, snapnum)
+    cosmopars = snap.cosmopars.getdct()
+    
+    # filter sim. particles and calculate ion balances, rho, T, Z
+    metallicity = snap.readarray_emulateEAGLE('PartType0/Metallicity')
+    zfilter = metallicity >= target_Z - delta_Z
+    zfilter &= metallicity <= target_Z + delta_Z
+    metallicity = metallicity[zfilter]
+    indct = {'filter': zfilter}
+    ionbals = get_ionfrac(snap, ion, indct=indct, table='PS20', simtype='fire',
+                          ps20depletion=ps20depletion)
+    temperature = snap.readarray_emulateEAGLE('PartType0/Temperature')[zfilter]
+    temperature *= snap.toCGS
+    hdens = snap.readarray_emulateEAGLE('PartType0/Density')[zfilter]
+    hconv = snap.toCGS
+    hdens *= snap.readarray_emulateEAGLE('PartType0/ElementAbundance/Hydrogen')[zfilter]
+    hconv *= snap.toCGS
+    hconv /= (c.atomw_H * c.u)
+    hdens *= hconv
+    
+    # get corresponding ion balance table
+    iontab = linetable_PS20(cosmopars['z'], ion, emission=False, vol=True)
+    iontab.findiontable()
+    tab_logT = iontab.logTK
+    tab_lognH = iontab.lognHcm3
+    tab_logZ = iontab.logZsol + np.log10(iontab.solarZ)
+    tab_ionbal_T_Z_nH = iontab.iontable_T_Z_nH.copy()
+    if ps20depletion:
+        iontab.finddepletiontable()
+        tab_depletion_T_Z_nH = iontab.depletiontable_T_Z_nH.copy()
+        tab_ionbal_T_Z_nH *= (1. - tab_depletion_T_Z_nH)
+
+    interpvalZ = np.log10(target_Z)
+    iZhi = np.where(tab_logZ >= interpvalZ)[0][0]
+    iZlo = np.where(tab_logZ <= interpvalZ)[0][-1]
+    if iZlo == iZhi:
+        tab_ionbal_T_nH = tab_ionbal_T_Z_nH[:, iZlo, :] 
+    else:
+        hiZ = tab_logZ[iZhi]
+        loZ = tab_logZ[iZhi]
+        tab_ionbal_T_nH = (hiZ - interpvalZ) / (hiZ - loZ) * tab_ionbal_nH_T_Z[:, iZlo, :] +\
+                          (interpvalZ - loZ) / (hiZ - loZ) * tab_ionbal_nH_T_Z[:, iZhi, :]
+    
+    # save data
+    with h5py.File(outfilen, 'w') as f:
+        hed = f.create_group('Header')
+        cgrp = hed.create_group('cosmopars')
+        cosmopars = snap.cosmopars.getdct()
+        for key in cosmopars:
+            cgrp.attrs.create(key, cosmopars[key])
+        hed.attrs.create('snapnum', snapnum)
+        hed.attrs.create('filepath_first', np.string_(snap.firstfilen))
+        _info = 'FIRE calculated ion balances and the underlying ion balance table'
+        hed.attrs.create('info', np.string_(_info))
+        hed.attrs.create('target_Z', target_Z)
+        hed.attrs.create('delta_Z', delta_Z)
+        hed.attrs.create('ion', np.string_(ion))
+        hed.attrs.create('ps20depletion', ps20depletion)
+        
+        gsim = f.create_group('simulation_data')
+        gsim.create_dataset('ionbal', data=ionbals)
+        gsim.create_dataset('T_K', data=temperature)
+        gsim.create_dataset('nH_cm**-3', data=hdens)
+        gsim.create_dataset('metallicity_abs_mass_frac', data=metallicity)
+        
+        gtab = f.create_group('iontab_data')
+        gtab.gsim.create_dataset('ionbal_T_nH', data=tab_ionbal_T_nH)
+        gsim.create_dataset('logT_K', data=tab_logT)
+        gsim.create_dataset('lognH_cm**-3', data=tab_lognH)
 
 def fromcommandline(index):
     '''
