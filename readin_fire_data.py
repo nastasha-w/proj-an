@@ -331,6 +331,12 @@ class Firesnap:
         return arr
     
     def readarray_emulateEAGLE(self, field, subsample=1, errorflag=np.nan):
+        '''
+        Read in an array and set to toCGS attribute. Includes conversions from 
+        field names in EAGLE and calculation of gas temperature
+
+        note, 'PartType0/Pressure' returns only the /Thermal/ pressure
+        '''
         self.toCGS = np.NaN # overwrite and old values to avoid undetected errors
         # Metals: field names match, but structure is different
         if 'Metallicity' in field:
@@ -396,9 +402,9 @@ class Firesnap:
                 # same stuff, different name
                 if field.endswith('Mass'): # Mass in EAGLE = Masses in FIRE
                     _field = field + 'es'
+                    self.toCGS = self.units.getunits(_field)
                     return self.readarray(_field, subsample=subsample, 
                                           errorflag=errorflag)
-                    self.toCGS = self.units.getunits(_field)
                 # temperature: need to calculate instead of read in
                 elif field == 'PartType0/Temperature':
                     hekey = 'PartType0/ElementAbundance/Helium'
@@ -428,6 +434,27 @@ class Firesnap:
                     # do the conversion: matches expected units from EAGLE
                     # and an extra scalar multiplication doesn't cost much
                     return temperature
+                elif field == 'PartType0/Pressure':
+                    # !! Thermal Pressure only !!
+                    # P = n * k_B * T
+                    # n = Density / mu (density = mu * n_part by definition)
+                    # T = mu * (gamma-1) * InternalEnergy / k_B
+                    # so P = Density / mu * k_B * mu * (gamma - 1) * InternalEnergy / k_B
+                    # so P = Density * (gamma - 1) * InternalEnergy
+                    pressure = self.readarray('PartType0/InternalEnergy',
+                                                 subsample=subsample, 
+                                                 errorflag=errorflag)
+                    # internal energy per unit mass
+                    _toCGS = self.units.getunits('PartType0/InternalEnergy')
+                    _toCGS *= (gamma_gas - 1.)
+                    pressure *= self.readarray('PartType0/Density',
+                                                 subsample=subsample, 
+                                                 errorflag=errorflag)
+                    _toCGS *= self.units.getunits('PartType0/Density')
+                    self.toCGS = _toCGS
+                    # do the conversion: matches expected units from EAGLE
+                    # and an extra scalar multiplication doesn't cost much
+                    return pressure
                 else:
                     raise ValueError('Field {} not found'.format(field))
                   
