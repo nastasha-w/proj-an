@@ -12,6 +12,19 @@ import h5py
 
 import eagle_constants_and_units as c 
 
+# setup from the internets
+class UnitsNotFoundError(Exception):
+    def __init__(self, *args):
+        if len(args) > 0:
+            self.message = args[0]
+        else:
+            self.message = None
+    def __str__(self):
+        if self.message is not None:
+            return 'UnitsNotFoundError: {0} '.format(self.message)
+        else:
+            return 'UnitsNotFoundError'
+
 class Units:
     def __init__(self, *args, **kwargs):
         '''         
@@ -254,4 +267,4 @@ class Units:
             raise NotImplementedError(msg.format(field))
         else:
             msg = '{} is not a (known) FIRE simulation output field'
-            raise ValueError(msg.format(field))
+            raise UnitsNotFoundError(msg.format(field))

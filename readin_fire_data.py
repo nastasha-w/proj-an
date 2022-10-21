@@ -394,11 +394,11 @@ class Firesnap:
             return out
         # lots of fields are just the same
         else:
-            try:
+            try: 
+                self.toCGS = self.units.getunits(field)
                 return self.readarray(field, subsample=subsample, 
                                       errorflag=errorflag)   
-                self.toCGS = self.units.getunits(field) 
-            except FieldNotFoundError:
+            except FieldNotFoundError or uf.UnitsNotFoundError:
                 # same stuff, different name
                 if field.endswith('Mass'): # Mass in EAGLE = Masses in FIRE
                     _field = field + 'es'
