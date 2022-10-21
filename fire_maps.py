@@ -1215,7 +1215,7 @@ def checkfields_units(dirpath, snap, *args, numpart=100,
     snap = rf.get_Firesnap(dirpath, snap) 
     with h5py.File(outfilen, 'w') as f:
         hed = f.create_group('Header')
-        cgrp = hed.create_croup('cosmopars')
+        cgrp = hed.create_group('cosmopars')
         cosmopars = snap.cosmopars.getdct()
         for key in cosmopars:
             cgrp.attrs.create(key, cosmopars[key])
