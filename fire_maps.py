@@ -1256,7 +1256,7 @@ def run_checkfields_units(index):
         checkfields_units(dirpath1, snap, *fields1, numpart=100, 
                           outfilen=outfilen)
 
-                          
+
 def fromcommandline(index):
     '''
     This mapping is just based on the order in which I (first) ran things,
@@ -1281,9 +1281,12 @@ def fromcommandline(index):
         msg = 'Calling test_mainhalodata_units_rockstar(opt={})'
         print(msg.format(opt))
         test_mainhalodata_units_rockstar(opt=opt)
+    elif index in [12, 13]:
+        opt = index - 12
+        run_checkfields_units(opt)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
-
+    
 if __name__ == '__main__':
     print('fire_maps.py script started')
     if len(sys.argv) > 1:
