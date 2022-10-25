@@ -1324,9 +1324,38 @@ def test_ionbal_calc(dirpath, snapnum, ion, target_Z=0.01, delta_Z=0.001,
         gsim.create_dataset('metallicity_abs_mass_frac', data=metallicity)
         
         gtab = f.create_group('iontab_data')
-        gtab.gsim.create_dataset('ionbal_T_nH', data=tab_ionbal_T_nH)
+        gtab.gsim.create_dataset('ionbal_T_nH', data=10**tab_ionbal_T_nH)
         gsim.create_dataset('logT_K', data=tab_logT)
         gsim.create_dataset('lognH_cm**-3', data=tab_lognH)
+
+def run_ionbal_test(opt=1):
+    dirpath1 = '/projects/b1026/snapshots/fire3/m13h206_m3e5/' + \
+               'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1' + \
+               '_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000/'
+    simname1 = 'm13h206_m3e5__' + \
+               'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1' + \
+               '_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000'
+    snaps1 = [27, 45]
+    ions1 = ['O{}'.format(i) for i in range(1, 10)]
+
+    outdir =  '/projects/b1026/nastasha/tests/start_fire/ionbal_tests/'
+    outtemplate = outdir + 'ionbal_test_PS20_{ion}_depletion-{dp}_Z-{Z}_{sim}.hdf5'
+
+    if opt >= 0 and opt < 6:
+        dirpath = dirpath1
+        simname = simname1
+        ions = ions1
+        ps20depletion = bool(opt % 2)
+        snapnum = snaps1[opt // 4]
+        target_Z = [0.01, 0.0001][(opt  // 2) % 2]
+        delta_Z = 0.1 * target_Z
+    else:
+        raise ValueError('Invalid opt {}'.format(opt))
+    for ion in ions:
+        outfilen = outtemplate.format(ion=ion, dp=ps20depletion, Z=target_Z, sim=simname)
+        test_ionbal_calc(dirpath, snapnum, ion, target_Z=target_Z, delta_Z=delta_Z,
+                         ps20depletion=ps20depletion, outfilen=outfilen)
+
 
 def fromcommandline(index):
     '''
@@ -1355,6 +1384,8 @@ def fromcommandline(index):
     elif index in [12, 13]:
         opt = index - 12
         run_checkfields_units(opt)
+    elif index >= 14 and index < 20:
+        run_ionbal_test(opt=index - 14)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
     
