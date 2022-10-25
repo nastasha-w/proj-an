@@ -1298,9 +1298,10 @@ def test_ionbal_calc(dirpath, snapnum, ion, target_Z=0.01, delta_Z=0.001,
     else:
         hiZ = tab_logZ[iZhi]
         loZ = tab_logZ[iZhi]
-        tab_ionbal_T_nH = (hiZ - interpvalZ) / (hiZ - loZ) * tab_ionbal_nH_T_Z[:, iZlo, :] +\
-                          (interpvalZ - loZ) / (hiZ - loZ) * tab_ionbal_nH_T_Z[:, iZhi, :]
-    
+        tab_ionbal_T_nH = (hiZ - interpvalZ) / (hiZ - loZ) * tab_ionbal_T_Z_nH[:, iZlo, :] +\
+                          (interpvalZ - loZ) / (hiZ - loZ) * tab_ionbal_T_Z_nH[:, iZhi, :]
+    tab_ionbal_T_nH = 10**tab_ionbal_T_nH
+
     # save data
     with h5py.File(outfilen, 'w') as f:
         hed = f.create_group('Header')
@@ -1324,7 +1325,7 @@ def test_ionbal_calc(dirpath, snapnum, ion, target_Z=0.01, delta_Z=0.001,
         gsim.create_dataset('metallicity_abs_mass_frac', data=metallicity)
         
         gtab = f.create_group('iontab_data')
-        gtab.gsim.create_dataset('ionbal_T_nH', data=10**tab_ionbal_T_nH)
+        gtab.gsim.create_dataset('ionbal_T_nH', data=tab_ionbal_T_nH)
         gsim.create_dataset('logT_K', data=tab_logT)
         gsim.create_dataset('lognH_cm**-3', data=tab_lognH)
 
