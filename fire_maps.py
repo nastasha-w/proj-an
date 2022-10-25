@@ -1340,7 +1340,8 @@ def run_ionbal_test(opt=1):
     ions1 = ['O{}'.format(i) for i in range(1, 10)]
 
     outdir =  '/projects/b1026/nastasha/tests/start_fire/ionbal_tests/'
-    outtemplate = outdir + 'ionbal_test_PS20_{ion}_depletion-{dp}_Z-{Z}_{sim}.hdf5'
+    outtemplate = outdir + 'ionbal_test_PS20_{ion}_depletion-{dp}_Z-{Z}' + \
+                           '_snap{snap:03d}_{sim}.hdf5'
 
     if opt >= 0 and opt < 6:
         dirpath = dirpath1
@@ -1353,7 +1354,8 @@ def run_ionbal_test(opt=1):
     else:
         raise ValueError('Invalid opt {}'.format(opt))
     for ion in ions:
-        outfilen = outtemplate.format(ion=ion, dp=ps20depletion, Z=target_Z, sim=simname)
+        outfilen = outtemplate.format(ion=ion, dp=ps20depletion, Z=target_Z, 
+                                      sim=simname, snap=snapnum)
         test_ionbal_calc(dirpath, snapnum, ion, target_Z=target_Z, delta_Z=delta_Z,
                          ps20depletion=ps20depletion, outfilen=outfilen)
 
