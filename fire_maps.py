@@ -1325,9 +1325,9 @@ def test_ionbal_calc(dirpath, snapnum, ion, target_Z=0.01, delta_Z=0.001,
         gsim.create_dataset('metallicity_abs_mass_frac', data=metallicity)
         
         gtab = f.create_group('iontab_data')
-        gtab.gsim.create_dataset('ionbal_T_nH', data=tab_ionbal_T_nH)
-        gsim.create_dataset('logT_K', data=tab_logT)
-        gsim.create_dataset('lognH_cm**-3', data=tab_lognH)
+        gtab.create_dataset('ionbal_T_nH', data=tab_ionbal_T_nH)
+        gtab.create_dataset('logT_K', data=tab_logT)
+        gtab.create_dataset('lognH_cm**-3', data=tab_lognH)
 
 def run_ionbal_test(opt=1):
     dirpath1 = '/projects/b1026/snapshots/fire3/m13h206_m3e5/' + \
