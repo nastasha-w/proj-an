@@ -1279,7 +1279,7 @@ def test_ionbal_calc(dirpath, snapnum, ion, target_Z=0.01, delta_Z=0.001,
     hdens *= hconv
     
     # get corresponding ion balance table
-    iontab = linetable_PS20(cosmopars['z'], ion, emission=False, vol=True)
+    iontab = linetable_PS20(ion, cosmopars['z'], emission=False, vol=True)
     iontab.findiontable()
     tab_logT = iontab.logTK
     tab_lognH = iontab.lognHcm3
