@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from xml.dom.expatbuilder import CDATA_SECTION_NODE
+'''
+plot or do quick checks on results from fire_maps
+'''
+
 import numpy as np
 import h5py
 import pandas as pd
@@ -231,6 +234,42 @@ def masstest_map(filens):
     print('Found Mvir (AHF) = {:.3e} g'.format(halomass_g))
     print('Found enclosed mass in projection = {:.3e} g'.format(enclmass))
 
+def ionbal_test(filens):
+    '''
+    for a series of files containing the tables and data for a full
+    ionisation series: plot the table and interpolated ion balances
+    and get a sense of whether the differences are ok
+    Also get the total element fraction, to check if it makes sense
+    with depletion.
+    '''
+    tot_iontab = None
+    logTtab = None
+    lognHtab = None
 
+    logTsim = None
+    lognHsim = None
+    tot_ionsim = None
 
+    target_Z = None
+    delta_Z = None
+    
+    for filen in filens:
+        pass
 
+def run_ionbal_tests(index):
+    # laptop
+    ddir = '/Users/nastasha/ciera/tests/fire_start/ionbal_tests/'
+    simname = 'm13h206_m3e5__m13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1'+\
+              '_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000'
+    pre = 'ionbal_test_PS20'
+    ftmp = ['{pre}_{ion}_depletion-False_Z-0.01_snap045_{simname}.hdf5',
+            '{pre}_{ion}_depletion-False_Z-0.0001_snap027_{simname}.hdf5',
+            '{pre}_{ion}_depletion-False_Z-0.01_snap045_{simname}.hdf5',
+            '{pre}_{ion}_depletion-True_Z-0.0001_snap027_{simname}.hdf5',
+            '{pre}_{ion}_depletion-True_Z-0.01_snap027_{simname}.hdf5',
+            '{pre}_{ion}_depletion-True_Z-0.01_snap045_{simname}.hdf5',
+            ]
+    ions = ['O{}'.format(i) for i in range(1, 10)]
+    filens = [ddir + ftmp[index].format(pre=pre, simname=simname, ion=ion) \
+              for ion in ions]
+    ionbal_test(filens)
