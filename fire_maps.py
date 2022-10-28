@@ -1300,7 +1300,7 @@ def test_ionbal_calc(dirpath, snapnum, ion, target_Z=0.01, delta_Z=0.001,
         loZ = tab_logZ[iZhi]
         tab_ionbal_T_nH = (hiZ - interpvalZ) / (hiZ - loZ) * tab_ionbal_T_Z_nH[:, iZlo, :] +\
                           (interpvalZ - loZ) / (hiZ - loZ) * tab_ionbal_T_Z_nH[:, iZhi, :]
-    tab_ionbal_T_nH = 10**tab_ionbal_T_nH
+    #tab_ionbal_T_nH = tab_ionbal_T_nH
 
     # save data
     with h5py.File(outfilen, 'w') as f:

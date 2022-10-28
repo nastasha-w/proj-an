@@ -248,13 +248,131 @@ def ionbal_test(filens):
 
     logTsim = None
     lognHsim = None
+    Zsim = None
     tot_ionsim = None
 
     target_Z = None
     delta_Z = None
     
+    redshift = None
+    ions = []
+
     for filen in filens:
-        pass
+        with h5py.File(filen, 'r') as f:
+            # title info
+            cosmopars = {key: val for key, val in \
+                         f['Header/cosmopars'].attrs.items()}
+            if redshift is None:
+                redshift = cosmopars['z']
+            elif not redshift == cosmopars['z']:
+                msg = 'Input files have different redshifts; found in {}'
+                raise ValueError(msg.format(filen))
+            _delta_Z = f['Header'].attrs['delta_Z']
+            if delta_Z is None:
+                delta_Z = _delta_Z
+            elif not delta_Z == _delta_Z:
+                msg = 'Input files have different delta_Z; found in {}'
+                raise ValueError(msg.format(filen))
+            _target_Z = f['Header'].attrs['target_Z']
+            if target_Z is None:
+                target_Z = _target_Z
+            elif not target_Z == _target_Z:
+                msg = 'Input files have different target_Z; found in {}'
+                raise ValueError(msg.format(filen))
+            ion = f['Header'].attrs['ion'].decode()
+            ps20depletion = bool(f['Header'].attrs['ps20depletion'])
+            ions.append(ion)
+            
+            # table data
+            if logTtab is None:
+                logTtab = f['iontab_data/logT_K'][:]
+            elif not np.all(logTtab == f['iontab_data/logT_K'][:]):
+                msg = 'Input files have different table log T bins; found in {}'
+                raise ValueError(msg.format(filen))
+            if lognHtab is None:
+                lognHtab = f['iontab_data/lognH_cm**-3'][:]
+            elif not np.all(lognHtab == f['iontab_data/lognH_cm**-3'][:]):
+                msg = 'Input files have different table log nH bins; found in {}'
+                raise ValueError(msg.format(filen))
+            iontab = f['iontab_data/ionbal_T_nH'][:].T
+            if tot_iontab is None:
+                tot_iontab = iontab
+            else:
+                tot_iontab += iontab 
+            
+            # sim data
+            if logTsim is None:
+                logTsim = np.log10(f['simulation_data/T_K'])
+            elif not np.all(logTsim == np.log10(f['simulation_data/T_K'])):
+                msg = 'Input files have different simulation log T values; found in {}'
+                raise ValueError(msg.format(filen))
+            if lognHsim is None:
+                lognHsim = np.log10(f['simulation_data/nH_cm**-3'])
+            elif not np.all(lognHsim == np.log10(f['simulation_data/nH_cm**-3'])):
+                msg = 'Input files have different simulation log nH values; found in {}'
+                raise ValueError(msg.format(filen))
+            if Zsim is None:
+                Zsim = f['simulation_data/metallicity_abs_mass_frac'][:]
+            elif not np.all(Zsim == f['simulation_data/metallicity_abs_mass_frac'][:]):
+                msg = 'Input files have different simulation Z values; found in {}'
+                raise ValueError(msg.format(filen))
+            ionsim = f['simulation_data/ionbal'][:]
+            if tot_ionsim is None:
+                tot_ionsim = ionsim
+            else:
+                tot_ionsim += ionsim
+            
+        title = '{ion} PS20 table at z={z:.2f} vs. interp., dust depl. {dep}' 
+        title = title.format(ion=ion, dep=ps20depletion, z=redshift)
+        
+        fig = plt.figure(figsize=(11., 4.))
+        grid = gsp.GridSpec(nrows=1, ncols=5, hspace=0.0, wspace=0.3, 
+                        width_ratios=[1., 0.1, 1., 0.1, 1.])
+        axes = [fig.add_subplot(grid[0, i]) for i in range(3)]
+        fontsize = 12
+        cmap = 'viridis'
+        size = 20.
+        vmin = -10
+        vmax = 0.
+
+        fig.suptitle(title, fontsize=fontsize)
+
+        ax = axes[0]
+        cax = axes[1]
+
+        xedges = lognHtab[:-1] - 0.5 * np.diff(lognHtab)
+        xend = [lognHtab[-1] - 0.5 * (lognHtab[-1] - lognHtab[-2]),
+                lognHtab[-1] + 0.5 * (lognHtab[-1] - lognHtab[-2])
+                ]
+        xedges = np.append(xedges, xend)
+        yedges = logTtab[:-1] - 0.5 * np.diff(logTtab)
+        yend = [logTtab[-1] - 0.5 * (logTtab[-1] - logTtab[-2]),
+                logTtab[-1] + 0.5 * (logTtab[-1] - logTtab[-2])
+                ]
+        yedges = np.append(yedges, yend)
+        img = ax.pcolormesh(xedges, yedges, np.log10(iontab.T), cmap=cmap, 
+                            rasterized=True, vmin=vmin, vmax=vmax)
+        plt.colorbar(img, cax=cax)
+        cax.set_ylabel('log ion fraction', fontsize=fontsize)
+
+        ax.scatter(lognHsim, logTsim, s=size, c=np.log10(ionsim),
+                   edgecolor='black', cmap=cmap, vmin=vmin, vmax=vmax)
+        ax.set_xlabel('$\\log \\, \\mathrm{T} \\; [\\mathrm{K]}$', 
+                      fontsize=fontsize)
+        ylabel = '$\\log \\, \\mathrm{n}_{\\mathrm{H}} \\;' + \
+                 ' [\\mathrm{cm}^{-3}]$'
+        ax.set_ylabel(ylabel, fontsize=fontsize)
+        ax.tick_params(which='both', axis='both', labelsize=fontsize - 1)
+        cax.tick_params(labelsize=fontsize - 1)
+
+
+        
+        
+
+
+
+
+            
 
 def run_ionbal_tests(index):
     # laptop
