@@ -365,8 +365,44 @@ def ionbal_test(filens):
         ax.tick_params(which='both', axis='both', labelsize=fontsize - 1)
         cax.tick_params(labelsize=fontsize - 1)
 
-
         
+        ax = axes[2]
+        cax = axes[3]
+        
+        Tinds = np.argmin(np.abs(logTsim[:, np.newaxis] 
+                                 - logTtab[np.newaxis, :]), axis=1)
+        nHinds = np.argmin(np.abs(lognHsim[:, np.newaxis] 
+                                 - lognHtab[np.newaxis, :]), axis=1)
+        closest_gridtosim = iontab[(nHinds, Tinds)]
+        dz = Zsim - target_Z
+        vmin = -1. * delta_Z
+        vmax = delta_Z
+        
+        delta_sim = closest_gridtosim - ionsim
+        xvals_sim = np.random.uniform(low=0.0, high=1.0, size=len(logTsim))
+
+        delta_tab1 = (iontab[1:, :] - iontab[:-1, :]).flatten()
+        delta_tab2 = (iontab[:, 1:] - iontab[:, :-1]).flatten()
+        xvals_tab1 = np.random.uniform(low=0.0, high=1.0, size=len(delta_tab1))
+        xvals_tab2 = np.random.uniform(low=0.0, high=1.0, size=len(delta_tab2))
+
+        ax.scatter(xvals_tab1, delta_tab1, s=0.5*size, color='black', 
+                   label='$\\Delta$ table grid')
+        ax.scatter(xvals_tab1, -1. * delta_tab1, s=0.5*size, color='black')
+        ax.scatter(xvals_tab2, delta_tab2, s=0.5*size, color='black')
+        ax.scatter(xvals_tab2, -1. * delta_tab2, s=0.5*size, color='black')
+
+        img = ax.scatter(xvals_sim, delta_sim, s=size, c=dz,
+                         edgecolor='black', cmap=cmap, vmin=vmin, vmax=vmax,
+                         label='sim - table')
+        plt.colorbar(img, cax=cax, extend='neither')
+        ax.set_ylabel('difference with nearest table value', 
+                      fontsize=fontsize)
+        cax.set_ylabel('simulation Z - table Z', fontsize=fontsize)
+
+        ax = axes[4]
+
+
         
 
 
