@@ -5,6 +5,7 @@
 plot or do quick checks on results from fire_maps
 '''
 
+from unicodedata import normalize
 import numpy as np
 import h5py
 import pandas as pd
@@ -234,7 +235,7 @@ def masstest_map(filens):
     print('Found Mvir (AHF) = {:.3e} g'.format(halomass_g))
     print('Found enclosed mass in projection = {:.3e} g'.format(enclmass))
 
-def ionbal_test(filens):
+def ionbal_test(filens, simlabel=None):
     '''
     for a series of files containing the tables and data for a full
     ionisation series: plot the table and interpolated ion balances
@@ -242,6 +243,9 @@ def ionbal_test(filens):
     Also get the total element fraction, to check if it makes sense
     with depletion.
     '''
+    if simlabel is None:
+        simlabel = 'testhalo1-m13h206_m3e5'
+
     tot_iontab = None
     logTtab = None
     lognHtab = None
@@ -256,6 +260,9 @@ def ionbal_test(filens):
     
     redshift = None
     ions = []
+
+    imgdir = '/'.join(filens[0].split('/')[:-1]) + '/'
+    _imgname = 'ionbal-test_{ion}_depletion-False_Z-0.01_snap045_{simname}.pdf'
 
     for filen in filens:
         with h5py.File(filen, 'r') as f:
@@ -321,6 +328,8 @@ def ionbal_test(filens):
                 tot_ionsim = ionsim
             else:
                 tot_ionsim += ionsim
+        
+        outname = imgdir + _imgname.format(sim=simlabel, ion=ion)
             
         title = '{ion} PS20 table at z={z:.2f} vs. interp., dust depl. {dep}' 
         title = title.format(ion=ion, dep=ps20depletion, z=redshift)
@@ -399,8 +408,32 @@ def ionbal_test(filens):
         ax.set_ylabel('difference with nearest table value', 
                       fontsize=fontsize)
         cax.set_ylabel('simulation Z - table Z', fontsize=fontsize)
+        ax.legend(fontsize=fontsize)
 
         ax = axes[4]
+
+        nbins = 100
+        maxv = np.max(np.abs(delta_tab1))
+        maxv = max(maxv, np.abs(delta_tab2))
+        maxv = max(maxv, np.abs(delta_sim))
+        bins = np.linspace(-1. * maxv, maxv, nbins)
+        
+        tabvals = np.append(delta_tab1, -1. * delta_tab1)
+        tabvals = np.append(tabvals, delta_tab2)
+        tabvals = np.append(tabvals, -1. * delta_tab2)
+        ax.hist(tabvals, bins=bins, log=True, histtype='step', color='black',
+                label='$\\Delta$ table grid', align='mid', density=True)
+        ax.hist(tabvals, bins=bins, log=True, histtype='step', color='blue',
+                label='sim - table', linestyle='dashed', align='mid', 
+                density=True)
+
+        ax.set_xlabel('difference with nearest table value', 
+                      fontsize=fontsize)
+        ax.set_ylabel('probability density', fontsize=fontsize)
+        ax.legend(fontsize=fontsize)
+        
+        plt.savefig(outname, bbox_inches='tight')
+    
 
 
         
