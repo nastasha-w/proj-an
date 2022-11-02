@@ -259,7 +259,8 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
                 msg = 'Different particle type coordinates have different' + \
                       ' CGS conversions in ' + snap.firstfilen
                 raise RuntimeError(msg)
-    pt_used = list(dct_m.keys()).sort()
+    pt_used = list(dct_m.keys())
+    pt_used.sort()
     totlen = sum([len(dct_m[pt]) for pt in pt_used])
     masses = np.empty((totlen,), dtype=dct_m[pt_used[0]].dtype)
     coords = np.empty((totlen, dct_c[pt_used[0]].shape[1]), 
