@@ -135,7 +135,7 @@ def getmeandensity(meandef, cosmopars):
         # 
         _Ez = cu.Hubble(cosmopars['z'], cosmopars=cosmopars) \
             / (cosmopars['h'] * c.hubble)
-        _x = 1. - cosmopars['omegam'] * (1. + cosmopars['z'])**3 / _Ez**2
+        _x = cosmopars['omegam'] * (1. + cosmopars['z'])**3 / _Ez**2 - 1.
         _Deltac = 8*np.pi**2 + 82. * _x - 39. * _x**2
         meandens = _Deltac * cu.rhocrit(cosmopars['z'], cosmopars=cosmopars)
     elif meandef.endswith('c'):
