@@ -126,6 +126,8 @@ def elt_atomw_cgs(element):
     element = string.capwords(element)
     return atomw_u_dct[element] * c.u
 
+# 200c, 200m tested against cosmology calculator at z=0, 2.8
+# BN98 values lay between the two at those redshifts
 def getmeandensity(meandef, cosmopars):
     if meandef == 'BN98':
         # Bryan & Norman (1998)
@@ -225,7 +227,7 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     
     '''
     minparticles = 1000
-
+    minpart_halo = 100
     snap = rf.get_Firesnap(path, snapshot)
 
     # get mass and coordinate data
@@ -295,7 +297,7 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     masses_order = masses[rorder]
     dens_targets = [target / toCGS_m * toCGS_c**3 for target in \
                      dens_targets_cgs]
-    dens2_order = masses_order**2 / ((4. * np.pi / 3)**2 * r2_order**3)
+    dens2_order = np.cumsum(masses_order)**2 / ((4. * np.pi / 3)**2 * r2_order**3)
     
     rsols_cgs = []
     msols_cgs = []
@@ -303,7 +305,7 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     for dti, dens_target in enumerate(dens_targets):
         sols = find_intercepts(None, None, dens_target**2, xydct=xydct)
         # no random low-density holes or anything
-        sols = sols[sols >= r2[minparticles]]
+        sols = sols[sols >= r2[minpart_halo]]
         if len(sols) == 0:
             msg = 'No solutions found for density {}'.format(meandef[dti])
             print(msg)
@@ -323,7 +325,7 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
             msol = 4. * np.pi / 3. * rsol**3 * dens_target
             rsols_cgs.append(rsol * toCGS_c)
             msols_cgs.append(msol * toCGS_m)
-    com_cgs = com_simunits * toCGS_c,
+    com_cgs = com_simunits * toCGS_c
     if outputsingle:
         rsols_cgs = rsols_cgs[0]
         msols_cgs = msols_cgs[0]
