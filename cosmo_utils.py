@@ -317,7 +317,7 @@ def Hubble(z, cosmopars=None):
     else:
         # use cosmological parameters for the simulation file (read in in Simfile.__init__ from hdf5 output files)
         hpar = cosmopars['h'] # use hubble parameter from the simulation; c.hubble is 100 km/s/Mpc 
-        z = cosmopars['z']    # override input z by the value for the used snapshot
+        #z = cosmopars['z']    # override input z by the value for the used snapshot
         omega0 = cosmopars['omegam']
         omegalambda = cosmopars['omegalambda']
         
