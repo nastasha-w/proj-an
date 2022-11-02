@@ -1285,10 +1285,13 @@ def test_ionbal_calc(dirpath, snapnum, ion, target_Z=0.01, delta_Z=0.001,
     tab_lognH = iontab.lognHcm3
     tab_logZ = iontab.logZsol + np.log10(iontab.solarZ)
     tab_ionbal_T_Z_nH = iontab.iontable_T_Z_nH.copy()
+    tab_ionbal_T_Z_nH = 10**tab_ionbal_T_Z_nH
     if ps20depletion:
+        tab_ionbal_T_Z_nH = 10**tab_ionbal_T_Z_nH
         iontab.finddepletiontable()
         tab_depletion_T_Z_nH = iontab.depletiontable_T_Z_nH.copy()
         tab_ionbal_T_Z_nH *= (1. - 10**tab_depletion_T_Z_nH)
+        tab_ionbal_T_Z_nH = np.log10(tab_ionbal_T_Z_nH)
 
     interpvalZ = np.log10(target_Z)
     iZhi = np.where(tab_logZ >= interpvalZ)[0][0]
