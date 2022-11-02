@@ -1205,6 +1205,45 @@ def tryout_massmap(opt=1, center='AHFsmooth'):
                 pixsize_pkpc=3., axis='z', outfilen=outfilen,
                 center=center)
 
+def tryout_ionmap(opt=1):
+    outdir = '/projects/b1026/nastasha/tests/start_fire/map_tests/'
+    dirpath1 = '/projects/b1026/snapshots/fire3/m13h206_m3e5/' + \
+               'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1' + \
+               '_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000/'
+    simname1 = 'm13h206_m3e5__' + \
+               'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1' + \
+               '_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000'
+    _outfilen = 'coldens_{qt}_{sc}_snap{sn}_shrink-sph-cen_BN98' + \
+                '_2rvir{depl}_v1.hdf5'
+    if opt == 1:
+        simname = simname1
+        dirpath = dirpath1
+        ions = ['o6']
+        maptype = 'ion'
+        _maptype_args = {'ps20depletion': False}
+        snapnum = 27
+    
+        maptype_argss = [{key: val for key, val in _maptype_args} \
+                         for ion in ions]
+        maptype_argss = [maptype_args.update({'ion': ion}) \
+                         for maptype_args, ion in zip(maptype_argss, ions)]
+
+    for maptype_args in maptype_argss:
+        if maptype == 'ion'
+            qt = maptype_args['ion']
+            _depl = maptype_args['ps20depletion']
+            depl = '_ps20-depl' if _depl else ''
+        elif maptype == 'Metal':
+            qt = maptype_args['element']
+
+        outfilen = outdir + _outfilen.format(sc=simname, sn=snapnum, 
+                                             depl=depl, qt=qt)
+        
+        massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
+                pixsize_pkpc=3., axis='z', outfilen=outfilen,
+                center='shrinksph', norm='pixsize_phys',
+                maptype=maptype, maptype_args=maptype_args)
+
 def checkfields_units(dirpath, snapnum, *args, numpart=100, 
                       outfilen='fields.hdf5'):
     '''
@@ -1285,7 +1324,6 @@ def test_ionbal_calc(dirpath, snapnum, ion, target_Z=0.01, delta_Z=0.001,
     tab_lognH = iontab.lognHcm3
     tab_logZ = iontab.logZsol + np.log10(iontab.solarZ)
     tab_ionbal_T_Z_nH = iontab.iontable_T_Z_nH.copy()
-    tab_ionbal_T_Z_nH = 10**tab_ionbal_T_Z_nH
     if ps20depletion:
         tab_ionbal_T_Z_nH = 10**tab_ionbal_T_Z_nH
         iontab.finddepletiontable()
@@ -1300,7 +1338,7 @@ def test_ionbal_calc(dirpath, snapnum, ion, target_Z=0.01, delta_Z=0.001,
         tab_ionbal_T_nH = tab_ionbal_T_Z_nH[:, iZlo, :] 
     else:
         hiZ = tab_logZ[iZhi]
-        loZ = tab_logZ[iZhi]
+        loZ = tab_logZ[iZlo]
         tab_ionbal_T_nH = (hiZ - interpvalZ) / (hiZ - loZ) * tab_ionbal_T_Z_nH[:, iZlo, :] +\
                           (interpvalZ - loZ) / (hiZ - loZ) * tab_ionbal_T_Z_nH[:, iZhi, :]
     tab_ionbal_T_nH = 10**tab_ionbal_T_nH
@@ -1392,6 +1430,8 @@ def fromcommandline(index):
         run_checkfields_units(opt)
     elif index >= 14 and index < 20:
         run_ionbal_test(opt=index - 14)
+    elif index == 20:
+        tryout_ionmap(opt=1)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
     
