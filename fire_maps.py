@@ -1225,8 +1225,8 @@ def tryout_ionmap(opt=1):
     
         maptype_argss = [{key: _maptype_args[key] for key in _maptype_args} \
                          for ion in ions]
-        maptype_argss = [maptype_args.update({'ion': ion}) \
-                         for maptype_args, ion in zip(maptype_argss, ions)]
+        [maptype_args.update({'ion': ion}) \
+         for maptype_args, ion in zip(maptype_argss, ions)]
 
     for maptype_args in maptype_argss:
         if maptype == 'ion':
