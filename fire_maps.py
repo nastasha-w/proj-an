@@ -1370,6 +1370,10 @@ def test_ionbal_calc(dirpath, snapnum, ion, target_Z=0.01, delta_Z=0.001,
         gsim.create_dataset('metallicity_abs_mass_frac', data=metallicity)
         
         gtab = f.create_group('iontab_data')
+        print('About to save tab_ionbal_T_nH')
+        print('{} / {} NaN'.format(np.sum(np.isnan(tab_ionbal_T_nH)), 
+                                   np.prod(tab_ionbal_T_nH.shape)))
+        print(tab_ionbal_T_nH)
         gtab.create_dataset('ionbal_T_nH', data=tab_ionbal_T_nH)
         gtab.create_dataset('logT_K', data=tab_logT)
         gtab.create_dataset('lognH_cm**-3', data=tab_lognH)
