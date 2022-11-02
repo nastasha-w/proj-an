@@ -1229,7 +1229,7 @@ def tryout_ionmap(opt=1):
                          for maptype_args, ion in zip(maptype_argss, ions)]
 
     for maptype_args in maptype_argss:
-        if maptype == 'ion'
+        if maptype == 'ion':
             qt = maptype_args['ion']
             _depl = maptype_args['ps20depletion']
             depl = '_ps20-depl' if _depl else ''
