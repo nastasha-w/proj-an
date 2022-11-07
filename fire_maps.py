@@ -18,7 +18,8 @@ import cosmo_utils as cu
 import eagle_constants_and_units as c
 # paths to c functions, ion tables
 import make_maps_opts_locs as ol
-from make_maps_v3_master import linetable_PS20, project
+from make_maps_v3_master import project
+from ion_utils import linetable_PS20
 
 
 def linterpsolve(xvals, yvals, xpoint):
