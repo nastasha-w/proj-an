@@ -248,7 +248,7 @@ class linetable_PS20:
                                        self.iontable_T_Z_nH[:, :, :])
         if (not self.lintable) and (not log):
             res = 10**res
-        elif self.linetable and log:
+        elif self.lintable and log:
             res = np.log10(res)
         return res
         
