@@ -976,6 +976,266 @@ def test_tablesum_direct(ztargets = [0., 1., 3.], element='oxygen'):
             cax.set_ylabel(flabel, fontsize=fontsize)
             plt.savefig(_savename, bbox_inches='tight')
 
+def test_lin_option_ionbal(filen_old, filen_new_log, filen_new_lin):
+
+    imgdir = '/'.join(filen_old[0].split('/')[:-1]) + '/'
+    imgname_oldnew = 'ionbal_comp_test_ps20-logtable_ps20-old_{ion}' + \
+                     '_{sim}_z-{z:.2f}_logZ-{:.2f}_depletion-{dep}.pdf'
+    imgname_linlog = 'ionbal_comp_test_ps20-log-lintable' + \
+                     '_{sim}_z-{z:.2f}_logZ-{met:.2f}_depletion-{dep}.pdf'
+
+    if simlabel is None:
+        simlabel = 'testhalo1-m13h206_m3e5'
+
+    logTsim = None
+    lognHsim = None
+    Zsim = None
+
+    target_Z = None
+    delta_Z = None
+    ion = None
+    ps20depletion = None
+    
+    redshift = None
+
+    dct_old = {}
+    dct_new_log = {}
+    dct_new_lin = {}
+
+    for filen, dct in zip([filen_old, filen_new_log, filen_new_lin],
+                          [dct_old, dct_new_log, dct_new_lin]):
+        with h5py.File(filen, 'r') as f:
+            # title info
+            cosmopars = {key: val for key, val in \
+                        f['Header/cosmopars'].attrs.items()}
+            if redshift is None:
+                redshift = cosmopars['z']
+            elif not redshift == cosmopars['z']:
+                msg = 'Input files have different redshifts; found in {}'
+                raise ValueError(msg.format(filen))
+            _delta_Z = f['Header'].attrs['delta_Z']
+            if delta_Z is None:
+                delta_Z = _delta_Z
+            elif not delta_Z == _delta_Z:
+                msg = 'Input files have different delta_Z; found in {}'
+                raise ValueError(msg.format(filen))
+            _target_Z = f['Header'].attrs['target_Z']
+            if target_Z is None:
+                target_Z = _target_Z
+            elif not target_Z == _target_Z:
+                msg = 'Input files have different target_Z; found in {}'
+                raise ValueError(msg.format(filen))
+            _ion = f['Header'].attrs['ion'].decode()
+            if ion is None:
+                ion = _ion
+            elif not ion == _ion:
+                msg = 'Input files have different ion; found in {}'
+                raise ValueError(msg.format(filen))
+            _ps20depletion = bool(f['Header'].attrs['ps20depletion'])
+            if ps20depletion is None:
+                ps20depletion = _ps20depletion
+            elif not ps20depletion == _ps20depletion:
+                msg = 'Input files have different ps20depletion; found in {}'
+                raise ValueError(msg.format(filen))
+            if 'lintable' in f['Header'].attrs:
+                dct['lintable'] = bool(f['Header'].attrs['lintable']) 
+            else:
+                dct['lintable'] = None
+            
+            # sim data
+            if logTsim is None:
+                logTsim = np.log10(f['simulation_data/T_K'])
+            elif not np.all(logTsim == np.log10(f['simulation_data/T_K'])):
+                msg = 'Input files have different simulation log T values; found in {}'
+                raise ValueError(msg.format(filen))
+            if lognHsim is None:
+                lognHsim = np.log10(f['simulation_data/nH_cm**-3'])
+            elif not np.all(lognHsim == np.log10(f['simulation_data/nH_cm**-3'])):
+                msg = 'Input files have different simulation log nH values; found in {}'
+                raise ValueError(msg.format(filen))
+            if Zsim is None:
+                Zsim = f['simulation_data/metallicity_abs_mass_frac'][:]
+            elif not np.all(Zsim == f['simulation_data/metallicity_abs_mass_frac'][:]):
+                msg = 'Input files have different simulation Z values; found in {}'
+                raise ValueError(msg.format(filen))
+            dct['ionsim'] = f['simulation_data/ionbal'][:]
+    
+    # new log vs. old version
+    title = 'interpolated {ion} PS20 tables at z={z:.2f}, '+ \
+            'Z={met:.1e} from FIRE data, dust depl. {dep}' 
+    title = title.format(ion=ion, dep=ps20depletion, 
+                         z=redshift, met=target_Z)
+    
+    fig = plt.figure(figsize=(13., 4.))
+    grid = gsp.GridSpec(nrows=1, ncols=5, hspace=0.0, wspace=0.5, 
+                        width_ratios=[1., 0.1, 1., 0.1, 1.],
+                        left=0.05, right=0.95)
+    axes = [fig.add_subplot(grid[0, i]) for i in range(5)]
+    fontsize = 12
+    cmap = 'viridis'
+    size = 10.
+    
+    ionbal_old = dct_old['ionsim']
+    ionbal_new_log = dct_new_log['ionsim']
+    ionbal_new_lin = dct_new_lin['ionsim']
+    vmax = 0.
+    vmin = -10.
+
+    fig.suptitle(title, fontsize=fontsize)
+
+    ax = axes[0]
+    cax = axes[1]
+    img = ax.scatter(lognHsim, logTsim, s=size, c=np.log10(ionbal_old),
+                     edgecolor='black', cmap=cmap, vmin=vmin, vmax=vmax,
+                     rasterized=True)
+    plt.colorbar(img, cax=cax)
+    cax.set_ylabel('$\\log_{10}$ ion fraction', fontsize=fontsize)
+
+    ax.set_ylabel('$\\log \\, \\mathrm{T} \\; [\\mathrm{K]}$', 
+                    fontsize=fontsize)
+    xlabel = '$\\log \\, \\mathrm{n}_{\\mathrm{H}} \\;' + \
+                ' [\\mathrm{cm}^{-3}]$'
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.tick_params(which='both', axis='both', labelsize=fontsize - 1)
+    cax.tick_params(labelsize=fontsize - 1, labelright=False, labelleft=True,
+                    right=False, left=True)
+    cax.yaxis.set_label_position('left')
+    ax.text(0.05, 0.95, 'Old table interp.,\nlog space',
+            horizontalalignment='left', verticalalignment='top',
+            transform=ax.transAxes)
+
+    ax = axes[2]
+    cax = axes[3]
+    delta_oldnew = np.log10(ionbal_new_log) - np.log10(ionbal_old)
+    img = ax.scatter(lognHsim, logTsim, s=size, 
+                     c=delta_oldnew,
+                     edgecolor='black', cmap=cmap, vmin=vmin, vmax=vmax,
+                     rasterized=True)
+    plt.colorbar(img, cax=cax)
+    clabel = '$\\Delta_{\\mathrm{new, old}} \\, \\log_{10} ion fraction$'
+    cax.set_ylabel(clabel, fontsize=fontsize)
+
+    ax.set_ylabel('$\\log \\, \\mathrm{T} \\; [\\mathrm{K]}$', 
+                    fontsize=fontsize)
+    xlabel = '$\\log \\, \\mathrm{n}_{\\mathrm{H}} \\;' + \
+                ' [\\mathrm{cm}^{-3}]$'
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.tick_params(which='both', axis='both', labelsize=fontsize - 1)
+    cax.tick_params(labelsize=fontsize - 1, labelright=False, labelleft=True,
+                    right=False, left=True)
+    cax.yaxis.set_label_position('left')
+ 
+    ax = axes[4]
+
+    nbins = 100
+    maxv = np.max(np.abs(delta_oldnew))
+    if maxv == 0.:
+        print('Old, new log maps are same to fp precision')
+        maxv = 1e-49
+    bins = np.linspace(-1. * maxv, maxv, nbins)
+
+    ax.set_yscale('log')
+    ax.hist(delta_oldnew, bins=bins, histtype='step', color='blue',
+            label=None, linestyle='dashed', align='mid', 
+            density=True)
+
+    ax.set_xlabel(clabel, fontsize=fontsize)
+    ax.set_ylabel('probability density', fontsize=fontsize)
+    ax.legend(fontsize=fontsize - 1)
+    
+    outname = imgdir + imgname_oldnew.format(sim=simlabel, dep=ps20depletion,
+                                             z=redshift, met=np.log10(target_Z),
+                                             ion=ion)
+    plt.savefig(outname, bbox_inches='tight')
+
+    # new log vs. new lin
+    title = 'interpolated {ion} PS20 tables at z={z:.2f}, '+ \
+            'Z={met:.1e} from FIRE data, dust depl. {dep}' 
+    title = title.format(ion=ion, dep=ps20depletion, 
+                         z=redshift, met=target_Z)
+    
+    fig = plt.figure(figsize=(13., 4.))
+    grid = gsp.GridSpec(nrows=1, ncols=5, hspace=0.0, wspace=0.5, 
+                        width_ratios=[1., 0.1, 1., 0.1, 1.],
+                        left=0.05, right=0.95)
+    axes = [fig.add_subplot(grid[0, i]) for i in range(5)]
+    fontsize = 12
+    cmap = 'viridis'
+    size = 10.
+    
+    vmax = 0.
+    vmin = -10.
+
+    fig.suptitle(title, fontsize=fontsize)
+
+    ax = axes[0]
+    cax = axes[1]
+    img = ax.scatter(lognHsim, logTsim, s=size, c=np.log10(ionbal_new_lin),
+                     edgecolor='black', cmap=cmap, vmin=vmin, vmax=vmax,
+                     rasterized=True)
+    plt.colorbar(img, cax=cax)
+    cax.set_ylabel('$\\log_{10}$ ion fraction', fontsize=fontsize)
+
+    ax.set_ylabel('$\\log \\, \\mathrm{T} \\; [\\mathrm{K]}$', 
+                    fontsize=fontsize)
+    xlabel = '$\\log \\, \\mathrm{n}_{\\mathrm{H}} \\;' + \
+                ' [\\mathrm{cm}^{-3}]$'
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.tick_params(which='both', axis='both', labelsize=fontsize - 1)
+    cax.tick_params(labelsize=fontsize - 1, labelright=False, labelleft=True,
+                    right=False, left=True)
+    cax.yaxis.set_label_position('left')
+    ax.text(0.05, 0.95, 'New table interp.,\nlin space',
+            horizontalalignment='left', verticalalignment='top',
+            transform=ax.transAxes)
+
+    ax = axes[2]
+    cax = axes[3]
+    delta_linlog = np.log10(ionbal_new_lin) - np.log10(ionbal_new_log)
+    img = ax.scatter(lognHsim, logTsim, s=size, 
+                     c=delta_linlog,
+                     edgecolor='black', cmap=cmap, vmin=vmin, vmax=vmax,
+                     rasterized=True)
+    plt.colorbar(img, cax=cax)
+    clabel = '$\\Delta_{\\mathrm{lin, log}} \\, \\log_{10} ion fraction$'
+    cax.set_ylabel(clabel, fontsize=fontsize)
+
+    ax.set_ylabel('$\\log \\, \\mathrm{T} \\; [\\mathrm{K]}$', 
+                    fontsize=fontsize)
+    xlabel = '$\\log \\, \\mathrm{n}_{\\mathrm{H}} \\;' + \
+                ' [\\mathrm{cm}^{-3}]$'
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.tick_params(which='both', axis='both', labelsize=fontsize - 1)
+    cax.tick_params(labelsize=fontsize - 1, labelright=False, labelleft=True,
+                    right=False, left=True)
+    cax.yaxis.set_label_position('left')
+ 
+    ax = axes[4]
+
+    nbins = 100
+    maxv = np.max(np.abs(delta_linlog))
+    if maxv == 0.:
+        print('new lin, log maps are same to fp precision')
+        maxv = 1e-49
+    bins = np.linspace(-1. * maxv, maxv, nbins)
+
+    ax.set_yscale('log')
+    ax.hist(delta_linlog, bins=bins, histtype='step', color='blue',
+            label=None, linestyle='dashed', align='mid', 
+            density=True)
+
+    ax.set_xlabel(clabel, fontsize=fontsize)
+    ax.set_ylabel('probability density', fontsize=fontsize)
+    ax.legend(fontsize=fontsize - 1)
+    
+    outname = imgdir + imgname_linlog.format(sim=simlabel, dep=ps20depletion,
+                                             z=redshift, met=np.log10(target_Z),
+                                             ion=ion)
+    plt.savefig(outname, bbox_inches='tight')
+    
+        
+
+
 def test_tablesum_interpolate_to_tabulated(ztargets = [0., 1., 3.], 
                                            element='oxygen'):
     '''
