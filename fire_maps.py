@@ -752,7 +752,7 @@ def test_mainhalodata_units_multi_handler(opt=1):
 
 # untested draft
 def get_ionfrac(snap, ion, indct=None, table='PS20', simtype='fire',
-                ps20depletion=True):
+                ps20depletion=True, lintable=True):
     '''
     Get the fraction of an element in a given ionization state in 
     a given snapshot.
@@ -780,7 +780,10 @@ def get_ionfrac(snap, ion, indct=None, table='PS20', simtype='fire',
     ps20depletion: bool
         Take away a fraction of the ions to account for the fraction of the
         parent element depleted onto dust.
-    
+    lintable: bool 
+        interpolate the ion balance (and depletion, if applicable) in linear
+        space (True), otherwise, it's done in log space (False) 
+
     Returns:
     --------
         the fraction of the parent element nuclei that are a part of the 
@@ -832,7 +835,7 @@ def get_ionfrac(snap, ion, indct=None, table='PS20', simtype='fire',
         interpdct = {'logT': logT, 'lognH': lognH, 'logZ': logZ}
         iontab = linetable_PS20(ion, redshift, emission=False, vol=True,
                  ionbalfile=ol.iontab_sylvia_ssh, 
-                 emtabfile=ol.emtab_sylvia_ssh)
+                 emtabfile=ol.emtab_sylvia_ssh, lintable=lintable)
         ionfrac = iontab.find_ionbal(interpdct, log=False)
         if ps20depletion:
             ionfrac *= (1. - iontab.find_depletion(interpdct))
@@ -862,10 +865,14 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
         'ion': str
             'ion': str
                 ion name. format e.g. 'o6', 'fe17'
-            'ps20depletion':
+            'ps20depletion': bool
                 deplete a fraction of the element onto dust and include
                 that factor in the ion fraction. Depletion follows the
                 Ploeckinger & Schaye (2020) table values.
+            'lintable': bool
+                interpolate the tables in linear space (True) or log 
+                space (False)
+                
 
     Returns:
     --------
@@ -909,13 +916,17 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
         if 'ps20depletion' in maptype_args:
             ps20depletion = maptype_args['ps20depletion']
         else:
-            ps20depletion=True
+            ps20depletion = True
+        if 'linetable' in maptype_args:
+            lintable = maptype_args['lintable']
+        else:
+            lintable = True
         table = 'PS20'
         simtype = 'fire'
         # no tables read in here, just an easy way to get parent element 
         # etc.
         dummytab = linetable_PS20(ion, snap.cosmopars.z, emission=False,
-                                  vol=True)
+                                  vol=True, lintable=lintable)
         element = dummytab.element
         eltpath = basepath + 'ElementAbundance/' + string.capwords(element)
         qty = snap.readarray_emulateEAGLE(eltpath)[filter]
@@ -923,7 +934,8 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
         qty *= snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
         toCGS =  toCGS * snap.toCGS
         ionfrac = get_ionfrac(snap, ion, indct=filterdct, table=table, 
-                              simtype=simtype, ps20depletion=ps20depletion)
+                              simtype=simtype, ps20depletion=ps20depletion,
+                              lintable=lintable)
         qty *= ionfrac
         toCGS = toCGS / (dummytab.elementmass_u * c.u)
         todoc['units'] = '(# ions)'
