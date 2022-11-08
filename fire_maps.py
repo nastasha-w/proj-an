@@ -1300,7 +1300,8 @@ def run_checkfields_units(index):
                           outfilen=outfilen)
 
 def test_ionbal_calc(dirpath, snapnum, ion, target_Z=0.01, delta_Z=0.001,
-                     ps20depletion=False, outfilen='ionbal_test.hdf5'):
+                     ps20depletion=False, outfilen='ionbal_test.hdf5',
+                     lintable=False):
     snap = rf.get_Firesnap(dirpath, snapnum)
     cosmopars = snap.cosmopars.getdct()
     
@@ -1311,7 +1312,7 @@ def test_ionbal_calc(dirpath, snapnum, ion, target_Z=0.01, delta_Z=0.001,
     metallicity = metallicity[zfilter]
     indct = {'filter': zfilter}
     ionbals = get_ionfrac(snap, ion, indct=indct, table='PS20', simtype='fire',
-                          ps20depletion=ps20depletion)
+                          ps20depletion=ps20depletion, lintable=lintable)
     temperature = snap.readarray_emulateEAGLE('PartType0/Temperature')[zfilter]
     temperature *= snap.toCGS
     hdens = snap.readarray_emulateEAGLE('PartType0/Density')[zfilter]
@@ -1322,7 +1323,9 @@ def test_ionbal_calc(dirpath, snapnum, ion, target_Z=0.01, delta_Z=0.001,
     hdens *= hconv
     
     # get corresponding ion balance table
-    iontab = linetable_PS20(ion, cosmopars['z'], emission=False, vol=True)
+    # for table read-in only, lin/log shouldn't matter; problems weren't there
+    iontab = linetable_PS20(ion, cosmopars['z'], emission=False, vol=True,
+                            lintable=False)
     iontab.findiontable()
     tab_logT = iontab.logTK
     tab_lognH = iontab.lognHcm3
@@ -1363,6 +1366,7 @@ def test_ionbal_calc(dirpath, snapnum, ion, target_Z=0.01, delta_Z=0.001,
         hed.attrs.create('delta_Z', delta_Z)
         hed.attrs.create('ion', np.string_(ion))
         hed.attrs.create('ps20depletion', ps20depletion)
+        hed.attrs.create('lintable', lintable)
         
         gsim = f.create_group('simulation_data')
         gsim.create_dataset('ionbal', data=ionbals)
@@ -1379,7 +1383,7 @@ def test_ionbal_calc(dirpath, snapnum, ion, target_Z=0.01, delta_Z=0.001,
         gtab.create_dataset('logT_K', data=tab_logT)
         gtab.create_dataset('lognH_cm**-3', data=tab_lognH)
 
-def run_ionbal_test(opt=1):
+def run_ionbal_test(opt=0):
     dirpath1 = '/projects/b1026/snapshots/fire3/m13h206_m3e5/' + \
                'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1' + \
                '_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000/'
@@ -1390,9 +1394,11 @@ def run_ionbal_test(opt=1):
     ions1 = ['O{}'.format(i) for i in range(1, 10)]
 
     outdir =  '/projects/b1026/nastasha/tests/start_fire/ionbal_tests/'
-    outtemplate = outdir + 'ionbal_test_PS20_{ion}_depletion-{dp}_Z-{Z}' + \
-                           '_snap{snap:03d}_{sim}.hdf5'
-
+    outtemplate1 = outdir + 'ionbal_test_PS20_{ion}_depletion-{dp}_Z-{Z}' + \
+                            '_snap{snap:03d}_{sim}.hdf5'
+    outtemplate2 = outdir + 'ionbal_test_PS20_{ion}_depletion-{dp}_Z-{Z}' + \
+                            '_snap{snap:03d}_lintable-{lintable}_{sim}.hdf5'
+    
     if opt >= 0 and opt < 6:
         dirpath = dirpath1
         simname = simname1
@@ -1401,13 +1407,38 @@ def run_ionbal_test(opt=1):
         snapnum = snaps1[opt // 4]
         target_Z = [0.01, 0.0001][(opt  // 2) % 2]
         delta_Z = 0.1 * target_Z
+        outtemplate = outtemplate1
+        dolintable = False
+    if opt >= 6 and opt < 18:
+        _opt = opt - 6
+        __opt = _opt % 6
+        lintable = bool(_opt // 6)
+        dirpath = dirpath1
+        simname = simname1
+        ions = ions1
+        ps20depletion = bool(__opt % 2)
+        snapnum = snaps1[__opt // 4]
+        target_Z = [0.01, 0.0001][(__opt  // 2) % 2]
+        delta_Z = 0.1 * target_Z
+        outtemplate = outtemplate2
+        dolintable = True
     else:
         raise ValueError('Invalid opt {}'.format(opt))
     for ion in ions:
-        outfilen = outtemplate.format(ion=ion, dp=ps20depletion, Z=target_Z, 
-                                      sim=simname, snap=snapnum)
-        test_ionbal_calc(dirpath, snapnum, ion, target_Z=target_Z, delta_Z=delta_Z,
-                         ps20depletion=ps20depletion, outfilen=outfilen)
+        if dolintable:
+            outfilen = outtemplate.format(ion=ion, dp=ps20depletion, 
+                                          Z=target_Z, sim=simname, 
+                                          snap=snapnum, lintable=lintable)
+            test_ionbal_calc(dirpath, snapnum, ion, target_Z=target_Z, 
+                             delta_Z=delta_Z, ps20depletion=ps20depletion, 
+                             outfilen=outfilen, lintable=lintable)
+        else:
+            outfilen = outtemplate.format(ion=ion, dp=ps20depletion, 
+                                          Z=target_Z, sim=simname, 
+                                          snap=snapnum)
+            test_ionbal_calc(dirpath, snapnum, ion, target_Z=target_Z, 
+                             delta_Z=delta_Z, ps20depletion=ps20depletion, 
+                             outfilen=outfilen)
 
 
 def fromcommandline(index):
@@ -1437,7 +1468,7 @@ def fromcommandline(index):
     elif index in [12, 13]:
         opt = index - 12
         run_checkfields_units(opt)
-    elif index >= 14 and index < 20:
+    elif index >= 14 and index < 32:
         run_ionbal_test(opt=index - 14)
     elif index == 20:
         tryout_ionmap(opt=1)

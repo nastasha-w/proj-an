@@ -262,7 +262,7 @@ def ionbal_test(filens, simlabel=None):
     ions = []
 
     imgdir = '/'.join(filens[0].split('/')[:-1]) + '/'
-    _imgname = 'ionbal-test_{ion}_depletion-{dep}_Z-{met}_z-{z:.1f}_{simname}.pdf'
+    _imgname = 'ionbal-test_{ion}_depletion-{dep}_Z-{met}_z-{z:.1f}{lt}_{simname}.pdf'
 
     for filen in filens:
         with h5py.File(filen, 'r') as f:
@@ -289,7 +289,14 @@ def ionbal_test(filens, simlabel=None):
             ion = f['Header'].attrs['ion'].decode()
             ps20depletion = bool(f['Header'].attrs['ps20depletion'])
             ions.append(ion)
-            
+            if 'lintable' in f['Header'].attrs:
+                dolintable = True
+                lintable = bool(f['Header'].attrs['lintable']) 
+                lttable = '_lintable-{}'.format(lintable)
+            else:
+                dolintable = False
+                ltlabel = ''
+  
             # table data
             if logTtab is None:
                 logTtab = f['iontab_data/logT_K'][:]
@@ -331,10 +338,13 @@ def ionbal_test(filens, simlabel=None):
         
         outname = imgdir + _imgname.format(simname=simlabel, ion=ion, 
                                            dep=ps20depletion,
-                                           met=target_Z, z=redshift)
+                                           met=target_Z, z=redshift,
+                                           lt=ltlabel)
             
         title = '{ion} PS20 table at z={z:.2f}, Z={met:.1e} vs. interp. FIRE data, dust depl. {dep}' 
         title = title.format(ion=ion, dep=ps20depletion, z=redshift, met=target_Z)
+        if dolintable:
+            title = title + ', lin. table {}'.format(lintable)
         
         fig = plt.figure(figsize=(13., 4.))
         grid = gsp.GridSpec(nrows=1, ncols=5, hspace=0.0, wspace=0.5, 
@@ -456,11 +466,15 @@ def ionbal_test(filens, simlabel=None):
     
     outname = imgdir + _imgname.format(simname=simlabel, ion='-'.join(ions), 
                                        dep=ps20depletion,
-                                       met=target_Z, z=redshift)
+                                       met=target_Z, z=redshift,
+                                       lt=ltlabel)
         
-    title = 'sum of {ion} PS20 tables at z={z:.2f}, Z={met:.1e} vs. interp. FIRE data, dust depl. {dep}' 
+    title = 'sum of {ion} PS20 tables at z={z:.2f}, Z={met:.1e} vs. ' + \
+            'interp. FIRE data, dust depl. {dep}' 
     title = title.format(ion=', '.join(ions), dep=ps20depletion, 
                          z=redshift, met=target_Z)
+    if dolintable:
+        title = title + ', lin. table {}'.format(lintable)
     
     fig = plt.figure(figsize=(13., 4.))
     grid = gsp.GridSpec(nrows=1, ncols=5, hspace=0.0, wspace=0.5, 
@@ -584,10 +598,11 @@ def ionbal_test(filens, simlabel=None):
     plt.savefig(outname, bbox_inches='tight')
 
     # sum test tables
-    _imgname = 'ionbal-test_tablesum_{ion}_depletion-{dep}_Z-{met}_z-{z:.1f}.pdf'
+    _imgname = 'ionbal-test_tablesum_{ion}_depletion-{dep}_Z-{met}_z-{z:.1f}{lt}.pdf'
     outname = imgdir + _imgname.format(simname=simlabel, ion=ion, 
                                        dep=ps20depletion,
-                                       met=target_Z, z=redshift)
+                                       met=target_Z, z=redshift,
+                                       lt=ltlabel)
 
     title = 'sum of {ion} PS20 tables at z={z:.2f}, Z={met:.1e} vs. 1.0 dust depl. {dep}' 
     title = title.format(ion=', '.join(ions), dep=ps20depletion, 
@@ -690,18 +705,23 @@ def ionbal_test(filens, simlabel=None):
 
     outname = imgdir + _imgname.format(simname=simlabel, ion='-'.join(ions), 
                                        dep=ps20depletion,
-                                       met=target_Z, z=redshift)
+                                       met=target_Z, z=redshift,
+                                       lt=ltlabel)
 
     # sum test interp
-    _imgname = 'ionbal-test_interp-sum_{ion}_depletion-{dep}_Z-{met}_z-{z:.1f}_{simname}.pdf'
+    _imgname = 'ionbal-test_interp-sum_{ion}_depletion-{dep}_Z-{met}'+\
+               '_z-{z:.1f}{lt}_{simname}.pdf'
     outname = imgdir + _imgname.format(simname=simlabel, ion='-'.join(ions), 
                                        dep=ps20depletion,
-                                       met=target_Z, z=redshift)
+                                       met=target_Z, z=redshift,
+                                       lt=ltlabel)
         
     title = 'sum of interpolated {ion} PS20 tables at z={z:.2f}, '+ \
             'Z={met:.1e} from FIRE data, dust depl. {dep}' 
     title = title.format(ion=', '.join(ions), dep=ps20depletion, 
                          z=redshift, met=target_Z)
+    if dolintable:
+        title = title + ', lin. table {}'.format(lintable)
     
     fig = plt.figure(figsize=(13., 4.))
     grid = gsp.GridSpec(nrows=1, ncols=5, hspace=0.0, wspace=0.5, 
@@ -795,15 +815,24 @@ def run_ionbal_tests(index):
     simname = 'm13h206_m3e5__m13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1'+\
               '_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000'
     pre = 'ionbal_test_PS20'
-    ftmp = ['{pre}_{ion}_depletion-False_Z-0.01_snap045_{simname}.hdf5',
-            '{pre}_{ion}_depletion-False_Z-0.0001_snap027_{simname}.hdf5',
-            '{pre}_{ion}_depletion-False_Z-0.01_snap027_{simname}.hdf5',
-            '{pre}_{ion}_depletion-True_Z-0.0001_snap027_{simname}.hdf5',
-            '{pre}_{ion}_depletion-True_Z-0.01_snap027_{simname}.hdf5',
-            '{pre}_{ion}_depletion-True_Z-0.01_snap045_{simname}.hdf5',
+    ftmp = ['{pre}_{ion}_depletion-False_Z-0.01_snap045_{lt}{simname}.hdf5',
+            '{pre}_{ion}_depletion-False_Z-0.0001_snap027_{lt}{simname}.hdf5',
+            '{pre}_{ion}_depletion-False_Z-0.01_snap027_{lt}{simname}.hdf5',
+            '{pre}_{ion}_depletion-True_Z-0.0001_snap027_{lt}{simname}.hdf5',
+            '{pre}_{ion}_depletion-True_Z-0.01_snap027_{lt}{simname}.hdf5',
+            '{pre}_{ion}_depletion-True_Z-0.01_snap045_{lt}{simname}.hdf5',
             ]
+    _index = index % 6
+    lti = index // 6
+    if lti == 0:
+        lt = ''
+    elif lti == 1:
+        lt = '_lintable-False'
+    elif lti == 2:
+        lt = '_lintable-True'
     ions = ['O{}'.format(i) for i in range(1, 10)]
-    filens = [ddir + ftmp[index].format(pre=pre, simname=simname, ion=ion) \
+    filens = [ddir + ftmp[_index].format(pre=pre, simname=simname, 
+                                         ion=ion, lt=lt) \
               for ion in ions]
     ionbal_test(filens)
 
