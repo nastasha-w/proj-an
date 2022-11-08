@@ -1468,10 +1468,13 @@ def fromcommandline(index):
     elif index in [12, 13]:
         opt = index - 12
         run_checkfields_units(opt)
-    elif index >= 14 and index < 32:
+    elif index >= 14 and index < 20:
         run_ionbal_test(opt=index - 14)
     elif index == 20:
         tryout_ionmap(opt=1)
+    elif index >= 21 and index < 33:
+        # opt in [6, 18)
+        run_ionbal_test(opt=index - 15)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
     
