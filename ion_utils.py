@@ -52,6 +52,12 @@ class linetable_PS20:
                 msg = msg.format(line=self.ion, elt=self.elementshort,
                                  stage=self.ionstage)
                 print(msg)
+                if self.ion.endswith('A'):
+                    # wavelength in Angstrom
+                    self.wavelength_cm = float(self.ion[4:-1]) * 1e-8
+                else:
+                    msg = 'Could not extract wavelength from line "{}"'
+                    raise ValueError(msg.format(self.ion))
             except:
                 msg = 'Failed to parse "{}" as an emission line'
                 raise ValueError(msg.format(self.ion))

@@ -292,7 +292,7 @@ def ionbal_test(filens, simlabel=None):
             if 'lintable' in f['Header'].attrs:
                 dolintable = True
                 lintable = bool(f['Header'].attrs['lintable']) 
-                lttable = '_lintable-{}'.format(lintable)
+                ltlabel = '_lintable-{}'.format(lintable)
             else:
                 dolintable = False
                 ltlabel = ''
@@ -815,12 +815,12 @@ def run_ionbal_tests(index):
     simname = 'm13h206_m3e5__m13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1'+\
               '_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000'
     pre = 'ionbal_test_PS20'
-    ftmp = ['{pre}_{ion}_depletion-False_Z-0.01_snap045_{lt}{simname}.hdf5',
-            '{pre}_{ion}_depletion-False_Z-0.0001_snap027_{lt}{simname}.hdf5',
-            '{pre}_{ion}_depletion-False_Z-0.01_snap027_{lt}{simname}.hdf5',
-            '{pre}_{ion}_depletion-True_Z-0.0001_snap027_{lt}{simname}.hdf5',
-            '{pre}_{ion}_depletion-True_Z-0.01_snap027_{lt}{simname}.hdf5',
-            '{pre}_{ion}_depletion-True_Z-0.01_snap045_{lt}{simname}.hdf5',
+    ftmp = ['{pre}_{ion}_depletion-False_Z-0.01_snap045{lt}_{simname}.hdf5',
+            '{pre}_{ion}_depletion-False_Z-0.0001_snap027{lt}_{simname}.hdf5',
+            '{pre}_{ion}_depletion-False_Z-0.01_snap027{lt}_{simname}.hdf5',
+            '{pre}_{ion}_depletion-True_Z-0.0001_snap027{lt}_{simname}.hdf5',
+            '{pre}_{ion}_depletion-True_Z-0.01_snap027{lt}_{simname}.hdf5',
+            '{pre}_{ion}_depletion-True_Z-0.01_snap045{lt}_{simname}.hdf5',
             ]
     _index = index % 6
     lti = index // 6
@@ -978,14 +978,12 @@ def test_tablesum_direct(ztargets = [0., 1., 3.], element='oxygen'):
 
 def test_lin_option_ionbal(filen_old, filen_new_log, filen_new_lin):
 
-    imgdir = '/'.join(filen_old[0].split('/')[:-1]) + '/'
+    imgdir = '/'.join(filen_old.split('/')[:-1]) + '/'
     imgname_oldnew = 'ionbal_comp_test_ps20-logtable_ps20-old_{ion}' + \
-                     '_{sim}_z-{z:.2f}_logZ-{:.2f}_depletion-{dep}.pdf'
+                     '_{sim}_z-{z:.2f}_logZ-{met:.2f}_depletion-{dep}.pdf'
     imgname_linlog = 'ionbal_comp_test_ps20-log-lintable' + \
                      '_{sim}_z-{z:.2f}_logZ-{met:.2f}_depletion-{dep}.pdf'
-
-    if simlabel is None:
-        simlabel = 'testhalo1-m13h206_m3e5'
+    simlabel = 'testhalo1-m13h206_m3e5'
 
     logTsim = None
     lognHsim = None
@@ -1100,19 +1098,29 @@ def test_lin_option_ionbal(filen_old, filen_new_log, filen_new_lin):
     cax.tick_params(labelsize=fontsize - 1, labelright=False, labelleft=True,
                     right=False, left=True)
     cax.yaxis.set_label_position('left')
-    ax.text(0.05, 0.95, 'Old table interp.,\nlog space',
-            horizontalalignment='left', verticalalignment='top',
+    ax.text(0.05, 0.05, 'Old table interp.,\nlog space',
+            horizontalalignment='left', verticalalignment='bottom',
             transform=ax.transAxes)
 
     ax = axes[2]
     cax = axes[3]
     delta_oldnew = np.log10(ionbal_new_log) - np.log10(ionbal_old)
+    if np.all(ionbal_new_log == ionbal_old):
+        print('Old, new log maps are same to fp precision')
+        vmax = 1e-49
+        vmin = -1. * vmax
+        dohist = False
+    else:
+        vmax = np.max(np.abs(delta_oldnew))
+        vmin = -1. * vmax
+        dohist = True
+
     img = ax.scatter(lognHsim, logTsim, s=size, 
                      c=delta_oldnew,
-                     edgecolor='black', cmap=cmap, vmin=vmin, vmax=vmax,
+                     edgecolor='black', cmap='RdBu', vmin=vmin, vmax=vmax,
                      rasterized=True)
     plt.colorbar(img, cax=cax)
-    clabel = '$\\Delta_{\\mathrm{new, old}} \\, \\log_{10} ion fraction$'
+    clabel = '$\\Delta_{\\mathrm{new, old}} \\, \\log_{10}$ ion fraction'
     cax.set_ylabel(clabel, fontsize=fontsize)
 
     ax.set_ylabel('$\\log \\, \\mathrm{T} \\; [\\mathrm{K]}$', 
@@ -1126,22 +1134,27 @@ def test_lin_option_ionbal(filen_old, filen_new_log, filen_new_lin):
     cax.yaxis.set_label_position('left')
  
     ax = axes[4]
+    
+    if dohist: 
+        nbins = 100
+        maxv = np.max(np.abs(delta_oldnew))
+        bins = np.linspace(-1. * maxv, maxv, nbins)
 
-    nbins = 100
-    maxv = np.max(np.abs(delta_oldnew))
-    if maxv == 0.:
-        print('Old, new log maps are same to fp precision')
-        maxv = 1e-49
-    bins = np.linspace(-1. * maxv, maxv, nbins)
+        ax.set_yscale('log')
+        ax.hist(delta_oldnew, bins=bins, histtype='step', color='blue',
+                label=None, linestyle='dashed', align='mid', 
+                density=True)
 
-    ax.set_yscale('log')
-    ax.hist(delta_oldnew, bins=bins, histtype='step', color='blue',
-            label=None, linestyle='dashed', align='mid', 
-            density=True)
-
-    ax.set_xlabel(clabel, fontsize=fontsize)
-    ax.set_ylabel('probability density', fontsize=fontsize)
-    ax.legend(fontsize=fontsize - 1)
+        ax.set_xlabel(clabel, fontsize=fontsize)
+        ax.set_ylabel('probability density', fontsize=fontsize)
+        ax.legend(fontsize=fontsize - 1)
+    else:
+        ax.text(0.5, 0.5, 'Old, new log maps are\nthe same to fp precision',
+                horizontalalignment='center', verticalalignment='center',
+                transform=ax.transAxes)
+        ax.tick_params(left=False, bottom=False, labelleft=False, 
+                       labelbottom=False, which='both')
+        
     
     outname = imgdir + imgname_oldnew.format(sim=simlabel, dep=ps20depletion,
                                              z=redshift, met=np.log10(target_Z),
@@ -1185,19 +1198,31 @@ def test_lin_option_ionbal(filen_old, filen_new_log, filen_new_lin):
     cax.tick_params(labelsize=fontsize - 1, labelright=False, labelleft=True,
                     right=False, left=True)
     cax.yaxis.set_label_position('left')
-    ax.text(0.05, 0.95, 'New table interp.,\nlin space',
-            horizontalalignment='left', verticalalignment='top',
+    ax.text(0.05, 0.05, 'New table interp.,\nlin space',
+            horizontalalignment='left', verticalalignment='bottom',
             transform=ax.transAxes)
 
     ax = axes[2]
     cax = axes[3]
     delta_linlog = np.log10(ionbal_new_lin) - np.log10(ionbal_new_log)
+    if np.all(ionbal_new_log == ionbal_new_lin):
+        print('New log, lin maps are the same to fp precision')
+        vmax = 1e-49
+        dohist = False
+    else:
+        vmax = np.max(np.abs(delta_linlog[np.isfinite(delta_linlog)]))
+        extend = 'neither'
+        if vmax > 1.:
+            vmax = 1.
+            extend = 'both'
+        vmin = -1. * vmax
+        dohist = True
     img = ax.scatter(lognHsim, logTsim, s=size, 
                      c=delta_linlog,
-                     edgecolor='black', cmap=cmap, vmin=vmin, vmax=vmax,
+                     edgecolor='black', cmap='RdBu', vmin=vmin, vmax=vmax,
                      rasterized=True)
-    plt.colorbar(img, cax=cax)
-    clabel = '$\\Delta_{\\mathrm{lin, log}} \\, \\log_{10} ion fraction$'
+    plt.colorbar(img, cax=cax, extend=extend)
+    clabel = '$\\Delta_{\\mathrm{lin, log}} \\, \\log_{10}$ ion fraction'
     cax.set_ylabel(clabel, fontsize=fontsize)
 
     ax.set_ylabel('$\\log \\, \\mathrm{T} \\; [\\mathrm{K]}$', 
@@ -1211,29 +1236,56 @@ def test_lin_option_ionbal(filen_old, filen_new_log, filen_new_lin):
     cax.yaxis.set_label_position('left')
  
     ax = axes[4]
-
-    nbins = 100
-    maxv = np.max(np.abs(delta_linlog))
-    if maxv == 0.:
-        print('new lin, log maps are same to fp precision')
-        maxv = 1e-49
-    bins = np.linspace(-1. * maxv, maxv, nbins)
-
-    ax.set_yscale('log')
-    ax.hist(delta_linlog, bins=bins, histtype='step', color='blue',
-            label=None, linestyle='dashed', align='mid', 
-            density=True)
-
-    ax.set_xlabel(clabel, fontsize=fontsize)
-    ax.set_ylabel('probability density', fontsize=fontsize)
-    ax.legend(fontsize=fontsize - 1)
     
+    if dohist:
+        nbins = 100
+        maxv = np.max(np.abs(delta_linlog[np.isfinite(delta_linlog)]))
+        bins = np.linspace(-1. * maxv, maxv, nbins)
+
+        ax.set_yscale('log')
+        ax.hist(delta_linlog, bins=bins, histtype='step', color='blue',
+                label=None, linestyle='dashed', align='mid', 
+                density=True)
+
+        ax.set_xlabel(clabel, fontsize=fontsize)
+        ax.set_ylabel('probability density', fontsize=fontsize)
+        ax.legend(fontsize=fontsize - 1)
+    else:
+        ax.text(0.5, 0.5, 'New lin, log maps are\nthe same to fp precision',
+                horizontalalignment='center', verticalalignment='center',
+                transform=ax.transAxes)
+        ax.tick_params(left=False, bottom=False, labelleft=False, 
+                       labelbottom=False, which='both')
+
     outname = imgdir + imgname_linlog.format(sim=simlabel, dep=ps20depletion,
                                              z=redshift, met=np.log10(target_Z),
                                              ion=ion)
     plt.savefig(outname, bbox_inches='tight')
     
-        
+def run_test_lin_option_ionbal(index):
+     # laptop
+    ddir = '/Users/nastasha/ciera/tests/fire_start/ionbal_tests/'
+    simname = 'm13h206_m3e5__m13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1'+\
+              '_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000'
+    pre = 'ionbal_test_PS20'
+    ftmp = ['{pre}_{ion}_depletion-False_Z-0.01_snap045{lt}_{simname}.hdf5',
+            '{pre}_{ion}_depletion-False_Z-0.0001_snap027{lt}_{simname}.hdf5',
+            '{pre}_{ion}_depletion-False_Z-0.01_snap027{lt}_{simname}.hdf5',
+            '{pre}_{ion}_depletion-True_Z-0.0001_snap027{lt}_{simname}.hdf5',
+            '{pre}_{ion}_depletion-True_Z-0.01_snap027{lt}_{simname}.hdf5',
+            '{pre}_{ion}_depletion-True_Z-0.01_snap045{lt}_{simname}.hdf5',
+            ]
+    ions = ['O{}'.format(i) for i in range(1, 10)]
+    lts = ['', '_lintable-False', '_lintable-True']
+
+    ioni = index % len(ions)
+    vari = index // len(ions)
+    
+    filen_old, filen_new_log, filen_new_lin = \
+        (ddir + ftmp[vari].format(pre=pre, simname=simname, 
+                                  ion=ions[ioni], lt=lt) \
+         for lt in lts)
+    test_lin_option_ionbal(filen_old, filen_new_log, filen_new_lin)
 
 
 def test_tablesum_interpolate_to_tabulated(ztargets = [0., 1., 3.], 

@@ -750,7 +750,13 @@ def test_mainhalodata_units_multi_handler(opt=1):
     print('printfile: ', printfile)
     test_mainhalodata_units_multi(dirpath, printfile, version=version)
 
-# untested draft
+# tested -> seems to work
+# dust on/off, redshifts 1.0, 2.8, Z=0.01, 0.0001
+# compared FIRE interpolation to neighboring table values
+# tested ions sum to 1: lintable=True -> yes, except for molecules,
+#                       dust depletion (high nH, low T, more at higher Z)
+#                       lintable=False -> no, in some regions of phase 
+#                       space, without good physics reasons
 def get_ionfrac(snap, ion, indct=None, table='PS20', simtype='fire',
                 ps20depletion=True, lintable=True):
     '''
@@ -842,6 +848,177 @@ def get_ionfrac(snap, ion, indct=None, table='PS20', simtype='fire',
     else:
         raise ValueError('invalid table option: {}'.format(table))
     return ionfrac
+
+# untested, including lintable option and consistency with table values
+def get_loglinelum(snap, line, indct=None, table='PS20', simtype='fire',
+                   ps20depletion=True, lintable=True, ergs=False,
+                   density=False):
+    '''
+    Get the fraction of an element in a given ionization state in 
+    a given snapshot.
+
+    Parameters:
+    -----------
+    snap: snapshot reader obect
+        exact class depends on the simulation
+    line: str
+        line to calculate the luminosity of. Should match the line
+        list in the table.
+    indct: dict or None
+        dictionary containing any of the followign arrays
+        'filter': bool, size of arrays returned by the snap reader
+                  determines which resolution elements to use.
+                  If not repesent, all resolution elements are used.
+        If not present, the following values are obtained using snap:
+        'logT': temperature in log10 K. 
+        'lognH': hydrogen number density in log10 particles / cm**3
+        'logZ': metal mass fraction in log10 fraction of total mass (no 
+                solar scaling)
+        'eltmassf': mass fraction of the line-producing 
+                element (no solar scaling)
+        'hmassf': log mass fraction of hydrogen (no solar scaling)
+        'mass': mass in g
+        'density': density in g/cm**3
+                
+    table: {'PS20'}
+        Which ionization tables to use.
+    simtype: {'fire'}
+        What format does the simulation reader class snap have?
+    ps20depletion: bool
+        Take away a fraction of the ions to account for the fraction of the
+        parent element depleted onto dust.
+    lintable: bool 
+        interpolate the ion balance (and depletion, if applicable) in linear
+        space (True), otherwise, it's done in log space (False) 
+    ergs: bool
+        output luminosity in erg/s (True); otherwise, output in photons/s 
+        (False)
+    density: bool
+
+    Returns:
+    --------
+        the log luminosity (erg/s or photons/s, depending on ergs value)
+        or log luminosity density (erg/s/cm**3 or photons/s/cm**3, depending
+        on the ergs value), depending on the density value
+        
+    '''
+    if simtype == 'fire':
+        readfunc = snap.readarray_emulateEAGLE
+        prepath = 'PartType0/'
+        redshift = snap.cosmopars.z
+    else:
+        raise ValueError('invalid simtype option: {}'.format(simtype))
+    
+    # read in filter, any arrays already present
+    if indct is None:
+        indct = {}
+    if 'filter' in indct: # gas selection, e.g. a spatial region
+        filter = indct['filter']
+    else:
+        filter = slice(None, None, None)
+    if 'logT' in indct: # should be in [log10 K]
+        logT = indct['logT']
+    else:
+        logT = np.log10(readfunc(prepath + 'Temperature')[filter])
+        tocgs = snap.toCGS
+        if not np.isclose(tocgs, 1.):
+            logT += np.log10(tocgs)
+    if 'Hmassf' in indct:
+        hmassf = indct['Hmassf']
+    else:
+        hmassf = readfunc(prepath + 'ElementAbundance/Hydrogen')[filter]
+        hmassf_tocgs = snap.toCGS
+    if 'lognH' in indct: # should be in log10 cm**-3
+        lognH = indct['lognH']
+    else:
+        hdens = readfunc(prepath + 'Density')[filter]
+        d_tocgs = snap.toCGS
+        hdens *= hmassf
+        hdens *= d_tocgs * hmassf_tocgs / (c.atomw_H * c.u)
+        del hmassfrac
+        lognH = np.log10(hdens)
+        del hdens
+    if table in ['PS20']:
+        if 'logZ' in indct: # no solar normalization, 
+            #just straight mass fraction
+            logZ = indct['logZ'].copy()
+        else:
+            logZ = readfunc(prepath + 'Metallicity')[filter]    
+            logZ = np.log10(logZ)
+            tocgs = snap.toCGS
+            if not np.isclose(tocgs, 1.):
+                logZ += np.log10(tocgs)
+        # interpolation needs finite values, float32(1e-100) == 0
+        logZ[logZ == -np.inf] = -100.
+    if table == 'PS20':
+        interpdct = {'logT': logT, 'lognH': lognH, 'logZ': logZ}
+        table = linetable_PS20(line, redshift, emission=False, vol=True,
+                               ionbalfile=ol.iontab_sylvia_ssh, 
+                               emtabfile=ol.emtab_sylvia_ssh, 
+                               lintable=lintable)
+        # log10 erg / s / cm**3 
+        luminosity = table.find_logemission(interpdct)
+        # luminosity in table = (1 - depletion) * luminosity_if_all_elt_in_gas
+        # so divide by depleted fraction to get undepleted emission
+        if not ps20depletion:
+            luminosity -= \
+                np.log10(1. - table.find_depletion(interpdct))
+        
+        # table values are for solar element ratios at Z
+        # rescale to actual element density / hydrogen density
+        parentelt = string.capwords(table.element)
+        if parentelt == 'Hydrogen':
+            del logZ
+            del logT
+            del lognH
+        else:
+            linelum_erg_invs_invcm3 -= \
+                table.find_assumedabundance(interpdct, log=True)
+            del logT
+            del lognH
+            del logZ
+
+            if 'eltmassf' in indct:
+                eltmassf = indct['eltmassf']
+            else:
+                readpath = prepath + 'ElementAbundance/' + parentelt
+                eltmassf = readfunc(readpath)[filter]
+            zscale = eltmassf / hmassf
+            del eltmassf
+            del hmassf
+            zscale *= atomw_u_dct['Hydrogen'] / table.elementmass_u
+            luminosity += np.log10(zscale)
+        if not density:
+            # log10 erg / s / cm**3 -> erg / s
+            if 'mass' in indct:
+                logmass = np.log10(indct['mass'])
+                m_toCGS = 1.
+            else:
+                logmass = np.log10(readfunc(prepath + 'Mass')[filter])
+                m_toCGS = snap.toCGS
+                        # log10 erg / s / cm**3 -> erg/s
+            if 'density' in indct:
+                logdens = np.log10(indct['density'])
+                d_toCGS = 1.
+            else:
+                logmass = np.log10(readfunc(prepath + 'Density')[filter])
+                d_toCGS = snap.toCGS
+            logvol = logmass - logdens
+            del logmass
+            del logdens
+            v_toCGS = np.log10(m_toCGS / d_toCGS)
+            if not np.isclose(v_toCGS, 0.):
+                logvol += v_toCGS
+            luminosity += logvol
+            del logvol
+        if not ergs:
+            # erg -> photons
+            wl = table.wavelength_cm
+            erg_per_photon = c.planck * c.c / wl
+            luminosity -= erg_per_photon         
+    else:
+        raise ValueError('invalid table option: {}'.format(table))
+    return luminosity
     
 def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
     '''
@@ -917,7 +1094,7 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
             ps20depletion = maptype_args['ps20depletion']
         else:
             ps20depletion = True
-        if 'linetable' in maptype_args:
+        if 'lintable' in maptype_args:
             lintable = maptype_args['lintable']
         else:
             lintable = True
