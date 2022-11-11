@@ -850,12 +850,15 @@ def get_ionfrac(snap, ion, indct=None, table='PS20', simtype='fire',
     return ionfrac
 
 # untested, including lintable option and consistency with table values
+# do a test like test_ionbal_calc before using
+# (note that element abundance rescaling and volume multiplication will
+# make the direct table comparison harder than with the ion fractions;
+# best to do some direct input tests for that)
 def get_loglinelum(snap, line, indct=None, table='PS20', simtype='fire',
                    ps20depletion=True, lintable=True, ergs=False,
                    density=False):
     '''
-    Get the fraction of an element in a given ionization state in 
-    a given snapshot.
+    Get the luminosity (density) of a series of resolution elements.
 
     Parameters:
     -----------
@@ -891,9 +894,11 @@ def get_loglinelum(snap, line, indct=None, table='PS20', simtype='fire',
         interpolate the ion balance (and depletion, if applicable) in linear
         space (True), otherwise, it's done in log space (False) 
     ergs: bool
-        output luminosity in erg/s (True); otherwise, output in photons/s 
-        (False)
+        output luminosity in erg/s[/cm**3] (True); 
+        otherwise, output in photons/s[/cm**3] (False)
     density: bool
+        output luminosity density ([erg or photons]/s/cm**3) (True);
+        otherwise, output (total) luminosity ([erg or photons]/s) (False)
 
     Returns:
     --------
