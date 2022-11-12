@@ -1236,6 +1236,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
                            halodat['Yc_cm'], 
                            halodat['Zc_cm']])
         rvir_cm = halodat['Rvir_cm']
+        snap = rf.get_Firesnap(dirpath, snapnum) 
     else:
         raise ValueError('Invalid center option {}'.format(center))
 
@@ -1375,10 +1376,185 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
             if isinstance(val, type('')):
                 val = np.string_(val)
             igrp.attrs.create(key, val)
+
+def massmap_wholezoom(dirpath, snapnum, pixsize_pkpc=3.,
+                      outfilen_DM='map_DM_{ax}-axis.hdf5',
+                      outfilen_gas='map_gas_{ax}-axis.hdf5',
+                      outfilen_stars='map_stars_{ax}-axis.hdf5',
+                      outfilen_BH='map_BH_{ax}-axis.hdf5'):
+    '''
+    for debugging: make a mass map of basically the whole zoom region
+    (for centering tests)
+    '''
+    parttype_outfilen = {0: outfilen_DM,
+                         1: outfilen_gas,
+                         4: outfilen_stars,
+                         5: outfilen_BH}
+    snap = rf.get_Firesnap(dirpath, snapnum)
+    coords = {}
+    mass = {}
+    lsmooth = {}
+    masspath = 'PartType{}/Masses'
+    coordpath = 'PartType{}/Coordinates'
+    lsmoothpath = 'PartType{}/SmoothingLength'
+    coords_toCGS = None
+    lsmooth_toCGS = None
+    mass_toCGS = None
+    maxl = -np.inf
+    coordsbox = np.array([[np.inf, -np.inf]] * 3) 
+    for pt in parttype_outfilen:
+        try:
+            coords[pt] = snap.readarray(coordpath.format(pt))
+            _toCGS = snap.toCGS
+            if coords_toCGS is None:
+                coords_toCGS = _toCGS
+            elif coords_toCGS != _toCGS:
+                msg = 'Different particle types have different coordinate'+\
+                      ' toCGS: {}, {}'
+                raise RuntimeError(msg.format(coords_toCGS, _toCGS))
+        except rf.FieldNotFoundError as err:
+            print('PartType {} not found'.format(pt))
+            print(err)
+            continue
+        mass[pt] = snap.readarray(masspath.format(pt))
+        _toCGS = snap.toCGS
+        if mass_toCGS is None:
+            mass_toCGS = _toCGS
+        elif mass_toCGS != _toCGS:
+            msg = 'Different particle types have different mass'+\
+                    ' toCGS: {}, {}'
+            raise RuntimeError(msg.format(mass_toCGS, _toCGS))
+        coordsbox[:, 0] = np.min([coordsbox[:, 0], 
+                                  np.min(coords[pt], axis=0)], 
+                                 axis=0)
+        coordsbox[:, -1] = np.max([coordsbox[:, -1], 
+                                  np.max(coords[pt], axis=0)], 
+                                 axis=0)
+        if pt == 0:
+            lsmooth[pt] = snap.readarray(lsmoothpath.format(pt))
+            _toCGS = snap.toCGS
+            if lsmooth_toCGS is None:
+                lsmooth_toCGS = _toCGS
+            elif lsmooth_toCGS != _toCGS:
+                msg = 'Different particle types have different smoothing '+\
+                      'length toCGS: {}, {}'
+                raise RuntimeError(msg.format(lsmooth_toCGS, _toCGS))
+            maxl = max(maxl, np.max(lsmooth[pt]))
+    coordsbox[:, 0] -= maxl * lsmooth_toCGS / coords_toCGS
+    coordsbox[:, -1] += maxl * lsmooth_toCGS / coords_toCGS
+    print('coordsbox before pixel adjustments: ', coordsbox)
+
+    target_size_cm = (coordsbox[:, -1] - coordsbox[:, 0]) * coords_toCGS
+    pixel_cm = pixsize_pkpc * c.cm_per_mpc * 1e-3
+    npix3 = (np.ceil(target_size_cm / pixel_cm)).astype(int)
+    center = 0.5 * np.sum(coordsbox, axis=1)
+    Ls = npix3 * pixel_cm / coords_toCGS
+    coordsbox = center[:, np.newaxis] \
+                + Ls[:, np.newaxis] * np.array([-0.5, + 0.5])[np.newaxis, :]
+    print('coordsbox: ', coordsbox)
+
+    multipafter = mass_toCGS / pixel_cm**2
+    units = 'g / (physical cm)**2'
+    
+    for pt in coords:
+        print('Running particle type ', pt)
+        qW = mass[pt]
+        if pt in lsmooth:
+            _lsmooth = lsmooth[pt]
+            _lsmooth_toCGS = lsmooth_toCGS
+        else:
+            # minimum smoothing length is set in the projection
+            _lsmooth = np.zeros(shape=(len(qW),), dtype=(coords[pt]).dtype)
+            _lsmooth_toCGS = 1.
+        tree = False
+        periodic = False # zoom region
+        NumPart = len(qW)
+        dct = {'coords': coords[pt] - center, 'lsmooth': _lsmooth, 
+               'qW': qW, 
+               'qQ': np.zeros(len(qW), dtype=np.float32)}
+        print('Extent of coordinates: ',
+              np.min(coords[pt], axis=0), 
+              ', ',
+              np.max(coords[pt], axis=0))
+        print('Extent of centered coordinates: ',
+              np.min(dct['coords'], axis=0), 
+              ', ',
+              np.max(dct['coords'], axis=0))
+        print('Ls: ', Ls)
+        print('Coordinates in box: ', 
+              np.sum(np.all(np.abs(dct['coords']) < Ls, axis=1)),
+              ' / ', len(dct['coords']))
+
+        # cosmopars uses EAGLE-style cMpc/h units for the box
+        box3 = [snap.cosmopars.boxsize * c.cm_per_mpc / snap.cosmopars.h \
+                / coords_toCGS] * 3
+        for axis in ['x', 'y', 'z']:
+            if axis == 'z':
+                Axis1 = 0
+                Axis2 = 1
+                Axis3 = 2
+            elif axis == 'x':
+                Axis1 = 2
+                Axis2 = 0
+                Axis3 = 1
+            elif axis == 'y':
+                Axis1 = 1
+                Axis2 = 2
+                Axis3 = 0
+            npix_x = npix3[Axis1]
+            npix_y = npix3[Axis2]
+
+            mapW, mapQ = project(NumPart, Ls, Axis1, Axis2, Axis3, box3,
+                                 periodic, npix_x, npix_y,
+                                 'C2', dct, tree, ompproj=True, 
+                                 projmin=None, projmax=None)
+            lmapW = np.log10(mapW)
+            lmapW += np.log10(multipafter)
+        
+            outfilen = (parttype_outfilen[pt]).format(ax=axis)
+    
+            with h5py.File(outfilen, 'w') as f:
+                # map (emulate make_maps format)
+                f.create_dataset('map', data=lmapW)
+                f['map'].attrs.create('log', True)
+                minfinite = np.min(lmapW[np.isfinite(lmapW)])
+                f['map'].attrs.create('minfinite', minfinite)
+                f['map'].attrs.create('max', np.max(lmapW))
+            
+                # cosmopars (emulate make_maps format)
+                hed = f.create_group('Header')
+                cgrp = hed.create_group('inputpars/cosmopars')
+                csm = snap.cosmopars.getdct()
+                for key in csm:
+                    cgrp.attrs.create(key, csm[key])
+        
+                # direct input parameters
+                igrp = hed['inputpars']
+                igrp.attrs.create('snapfiles', np.array([np.string_(fn) \
+                                  for fn in snap.filens]))
+                igrp.attrs.create('dirpath', np.string_(dirpath))
+            
+                igrp.attrs.create('particle_type', pt)
+                igrp.attrs.create('pixsize_pkpc', pixsize_pkpc)
+                igrp.attrs.create('axis', np.string_(axis))
+                igrp.attrs.create('units', np.string_(units))
+                igrp.attrs.create('outfilen', np.string_(outfilen))
+                # useful derived/used stuff
+                igrp.attrs.create('Axis1', Axis1)
+                igrp.attrs.create('Axis2', Axis2)
+                igrp.attrs.create('Axis3', Axis3)
+                igrp.attrs.create('maptype', np.string_('Mass'))
+                igrp.attrs.create('mapped_region_cm', coordsbox)
+                igrp.attrs.create('maptype_args', np.string_('None'))
+                # useful for plotting centers in sim units
+                igrp.attrs.create('coords_toCGS', coords_toCGS)
+
+
+
 # hard to do a true test, but check that projected masses and centering
 # sort of make sense
 def tryout_massmap(opt=1, center='AHFsmooth'):
-    outdir = '/projects/b1026/nastasha/tests/start_fire/map_tests/'
+    outdir = 'ls'
     _outfilen = 'mass_pt{pt}_{sc}_snap{sn}_ahf-cen_2rvir_v1.hdf5'
     if opt == 1:
         parttypes = [0, 1, 4]
@@ -1441,6 +1617,33 @@ def tryout_ionmap(opt=1):
                 pixsize_pkpc=3., axis='z', outfilen=outfilen,
                 center='shrinksph', norm='pixsize_phys',
                 maptype=maptype, maptype_args=maptype_args)
+
+def tryout_wholezoom(index):
+    outdir = '/projects/b1026/nastasha/tests/start_fire/map_tests/'
+
+    if index == 0:
+        dirpath = '/projects/b1026/snapshots/fire3/m13h206_m3e5/' + \
+               'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1' + \
+               '_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000/' 
+        simname = 'm13h206_m3e5__' + \
+                  'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1' + \
+               '_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000'                     
+        snapnum = 27  
+        outfilen_template = 'mass_pt{pt}_{sc}_snap{sn}_axis-{ax}_' + \
+                            'wholezoom_v1.hdf5'
+        _temp = outdir + outfilen_template 
+        outfilens = {'outfilen_DM': _temp.format(pt=0, sc=simname, 
+                                                 sn=snapnum, ax='{ax}'),
+                     'outfilen_gas': _temp.format(pt=1, sc=simname, 
+                                                 sn=snapnum, ax='{ax}'),
+                     'outfilen_stars': _temp.format(pt=4, sc=simname, 
+                                                 sn=snapnum, ax='{ax}'),
+                     'outfilen_BH': _temp.format(pt=5, sc=simname, 
+                                                 sn=snapnum, ax='{ax}'),                            
+                    }
+
+    massmap_wholezoom(dirpath, snapnum, pixsize_pkpc=3.,
+                      **outfilens)
 
 def checkfields_units(dirpath, snapnum, *args, numpart=100, 
                       outfilen='fields.hdf5'):
