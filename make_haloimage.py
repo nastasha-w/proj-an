@@ -27,7 +27,9 @@ import plot_utils as pu
 
 halocat = 'catalogue_RefL0100N1504_snap27_aperture30.hdf5'
 
-mdir = '/net/luttero/data2/imgs/pretty/'
+#mdir = '/net/luttero/data2/imgs/pretty/'
+mdir = '/cosma5/data/dp004/dc-wije1/line_em_abs/img/pretty_haloes/'
+
 
 def selecthalo(logM200c, _halocat=halocat, margin=0.05, randomseed=None):
     '''
@@ -94,7 +96,7 @@ def selecthalo(logM200c, _halocat=halocat, margin=0.05, randomseed=None):
     print(boxdata)
     return galid, m200c, [cenx, ceny, cenz], R200
 
-def getimgs(cen, size, sizemargin=2., imgtype='CV'):
+def getimgs(cen, size, sizemargin=2., imgtype='nHT'):
     '''
     get images of a halo in a number of properties (see listed arguments)
 
@@ -111,6 +113,7 @@ def getimgs(cen, size, sizemargin=2., imgtype='CV'):
         'CV' is the original temperature, density, O VII absorption, 
         O VII emission plot.
         'SM' is the density, metallicity plot for Smita Mathur
+        'nHT' is density, temperature
     Returns
     -------
     names : list of strings
@@ -148,6 +151,12 @@ def getimgs(cen, size, sizemargin=2., imgtype='CV'):
                     [('basic',), {'quantityW': 'Mass', 'ptypeQ': 'basic',
                                   'quantityQ': 'Metallicity'}],
                 ]
+    elif imgtype == 'nHT':
+        argsets = [[('basic',), {'quantityW': 'Mass', 'ptypeQ': 'basic',
+                                 'quantityQ': 'Temperature'}],
+                   [('basic',), {'quantityW': 'Mass', 'ptypeQ': 'basic',
+                                 'quantityQ': 'Density'}]
+                   ]
     else:
         raise ValueError('{} is not a valid imgtype option'.format(imgtype))
 
@@ -177,7 +186,7 @@ def getimgs(cen, size, sizemargin=2., imgtype='CV'):
     print(names)
     return names    
 
-def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
+def plotimgs(names, R200c, M200c, galid, imgtype='nHT'):
     
     while None in names:
         names.remove(None)
@@ -189,6 +198,10 @@ def plotimgs(names, R200c, M200c, galid, imgtype='CV'):
         cheight_rescale = 1.
     elif imgtype == 'SM':
         maptypes = ['Density', 'Metallicity']
+        cheight = 0.5
+        cheight_rescale = 0.3
+    elif imgtype == 'nHT':
+        maptypes = ['Density', 'Temperature']
         cheight = 0.5
         cheight_rescale = 0.3
     ncols = min(len(maptypes), 4)
@@ -396,6 +409,10 @@ def plotimgs_multigal(names_pergal, R200cs, M200cs, galids, imgtype='CV'):
         cheight_rescale = 1.
     elif imgtype == 'SM':
         maptypes = ['Density', 'Metallicity']
+        cheight = 0.5
+        cheight_rescale = 0.3
+    elif imgtype == 'nHT':
+        maptypes = ['Density', 'Temperature']
         cheight = 0.5
         cheight_rescale = 0.3
     ncols = min(len(maptypes), 4)
@@ -606,11 +623,14 @@ def plotimgs_multigal(names_pergal, R200cs, M200cs, galids, imgtype='CV'):
 
 if __name__ == '__main__':
     args = sys.argv
-    imgtype = 'SM'
+    #imgtype = 'SM'
+    imgtype = 'nHT'
 
     if imgtype == 'CV':
         sizemargin = 2.
     elif imgtype == 'SM':
+        sizemargin = 1.5
+    elif imgtype == 'nHT':
         sizemargin = 1.5
     m200_tar = float(sys.argv[1])
     if len(sys.argv) == 3:
