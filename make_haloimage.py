@@ -634,11 +634,11 @@ if __name__ == '__main__':
         sizemargin = 1.5
     m200_tar = float(sys.argv[1])
     if len(sys.argv) == 3:
-        randomseed = [int(sys.argv[2])]
+        randomseeds = [int(sys.argv[2])]
     elif len(sys.argv) > 3:
         randomseeds = [int(arg) for arg in sys.argv[2:]]
     else:
-        randomseed = [0]
+        randomseeds = [0]
     outs = [selecthalo(m200_tar, _halocat=halocat, margin=0.05,
                        randomseed=rnd)\
             for rnd in randomseeds]
