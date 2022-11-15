@@ -318,6 +318,8 @@ def plotimgs(names, R200c, M200c, galid, imgtype='nHT'):
         extent = (-0.5 * _l0, 0.5*_l0, -0.5*_l1, 0.5*_l1)
         try:
             cmap = cmap.copy()
+        except:
+            pass
         cmap.set_under(cmap(0.))
         cmap.set_over(cmap(1.))
         if _min < vmin or np.any(np.logical_not(np.isfinite(_map))):
@@ -544,6 +546,8 @@ def plotimgs_multigal(names_pergal, R200cs, M200cs, galids, imgtype='CV'):
         
         try:
             cmap = cmap.copy()
+        except:
+            pass
         cmap.set_under(cmap(0.))
         cmap.set_over(cmap(1.))
         if _min < vmin or not allmapfinite:
