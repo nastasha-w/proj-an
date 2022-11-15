@@ -395,6 +395,8 @@ def plotimgs(names, R200c, M200c, galid, imgtype='nHT'):
         outname = 'galaxy{}_nH_T_o7_o7r.eps'.format(galid)
     elif imgtype == 'SM':
         outname = 'galaxy{}_nH_Z.eps'.format(galid)
+    elif imgtype == 'nHT':
+        outname = 'galaxy{}_nH_T.eps'.format(galid)
     plt.savefig(mdir + outname, format='eps', bbox_inches='tight')
 
 
@@ -625,6 +627,8 @@ def plotimgs_multigal(names_pergal, R200cs, M200cs, galids, imgtype='CV'):
         outname = 'galaxies{}_nH_T_o7_o7r.eps'.format(galpart)
     elif imgtype == 'SM':
         outname = 'galaxies{}_nH_Z.eps'.format(galpart)
+    elif imgtype == 'nHT':
+        outname = 'galaxies{}_nH_T.eps'.format(galpart)
     plt.savefig(mdir + outname, format='eps', bbox_inches='tight')
 
 if __name__ == '__main__':
