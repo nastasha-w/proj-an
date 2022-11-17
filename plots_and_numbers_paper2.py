@@ -17,10 +17,12 @@ import string
 import os
 #import scipy.interpolate as si
 
-datadir = '/net/luttero/data2/paper2/'
-mdir    = '/net/luttero/data2/imgs/CGM/plots_paper2/'
-tmdir = '/net/luttero/data2/imgs/CGM/plots_talks/'
-
+#datadir = '/net/luttero/data2/paper2/'
+#mdir    = '/net/luttero/data2/imgs/CGM/plots_paper2/'
+#tmdir = '/net/luttero/data2/imgs/CGM/plots_talks/'
+datadir = '/Users/nastasha/phd/data/plotdata_paper2/'
+mdir = '/Users/nastasha/phd/own_papers/cgm_xray_abs/figures_other/'
+tmdir = '/Users/nastasha/phd/own_papers/cgm_xray_abs/talk_figures/'
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -2981,7 +2983,7 @@ def plot3Dprof_ionw(minrshow=minrshow_R200c, ions=('o6', 'o7', 'o8'),\
         [ax.set_ylim(y0, y1) for ax in axes[:, ti]]
         
     plt.savefig(outdir + outname, format='pdf', box_inches='tight')
-    
+
 def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                      fontsize=fontsize,\
                      Zmw='oxygen',\
@@ -3000,10 +3002,14 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
             massslice = np.array([0, 1, 2, 4, 6])        
             axnl = ('T', 'rho')
             ions=('o7', 'o8')
-        if talksubversion == 2:
+        elif talksubversion == 2:
             massslice = np.array([0, 2, 4, 6])        
             axnl = ('T', 'rho')
             ions=('o7', 'o8')
+        elif talksubversion == 5:
+            massslice = np.array([0, 2, 4, 6])        
+            axnl = ('T')
+            ions = ()
         else:
             raise ValueError('invalid talksubversion')
     else:
@@ -3062,10 +3068,13 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
     #patheff_thick = [mppe.Stroke(linewidth=linewidth + 1., foreground="black"), mppe.Stroke(linewidth=linewidth + 1., foreground="w"), mppe.Normal()]
         
     if talkversion:
-        figwidth = 11.
         numions = 1 + len(ions)
         numpt   = len(axnl)
         ncols = min(4, numions)
+        if talksubversion == 5:
+            figwidth = 5.
+        else:
+            figwidth = 11.
         nrows = ((numions - 1) // ncols + 1) * numpt
         cheight = 0.0
         cspace = 0.0
@@ -3093,10 +3102,10 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
             yranges = {0: (3.7876171805576546, 7.686688499110875),\
                        1: (-6.875003876292874, -1.071639440241845)}
     else:
-        figwidth = 11.
         numions = 1 + len(ions)
         numpt   = len(axnl)
         ncols = min(4, numions)
+        figwidth = 11. 
         nrows = ((numions - 1) // ncols + 1) * numpt
         cheight = 0.5
         cwidth = 0.0
@@ -3119,7 +3128,6 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
         cax = fig.add_subplot(grid[nrows + 1, :])
         cax_below = True
         
-    
     # set up color bar (separate to leave white spaces for unused bins)
     massedges = np.array([11., 11.5, 12., 12.5, 13., 13.5, 14.])
     cmapname = 'rainbow'
@@ -3220,7 +3228,7 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
                         ax.text(loc[0], loc[1], r'$\mathrm{%s}$-weighted'%(name), fontsize=fontsize,\
                             transform=ax.transAxes, horizontalalignment=hza,\
                             verticalalignment=vta, fontweight='normal')
-                    else:
+                    elif numions > 1:
                         if (not talkversion) or (talkversion and talksubversion not in [2]):    
                             ax.text(loc[0], loc[1], r'M- or V-weighted', fontsize=fontsize,\
                                transform=ax.transAxes, horizontalalignment=hza,\
@@ -3308,7 +3316,7 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
             print('y range: {}-{}'.format(y0, y1))
             
         # sync x axes: (for partially filled in talk version plots)
-        for wi in range(len(axnl) + 1):
+        for wi in range(numions):
             xlims = np.array([ax.get_xlim() for ax in axes[wi, :]])
             x0 = np.min(xlims[:, 0])
             x1 = np.max(xlims[:, 1])
@@ -3347,11 +3355,14 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
             i2l = axplot[_key]
         else:
             i2l = 0
-        axes[0, i2l].legend(handles=handles, fontsize=fontsize,\
-                   loc='lower left', bbox_to_anchor=(0.0, 0.0),\
-                   frameon=False, ncol=1) #ncol=min(4, len(handles))
+        if talksubversion == 5:
+            _kwargs = {'loc': 'lower right', 'bbox_to_anchor':(1.0, 0.0)}
+        else:
+            _kwargs = {'loc': 'lower left', 'bbox_to_anchor':(0.0, 0.0)}
+        axes[0, i2l].legend(handles=handles, fontsize=fontsize,
+                            frameon=False, ncol=1, **_kwargs) #ncol=min(4, len(handles))
     
-    plt.savefig(outdir + outname, format='pdf', box_inches='tight')
+    plt.savefig(outdir + outname, format='pdf', bbox_inches='tight')
     
 ########################### halo mass splits ##################################
 

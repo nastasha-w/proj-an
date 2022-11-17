@@ -46,11 +46,14 @@ import ion_line_data as ild
 def isstr(x):
     return isinstance(x, type(''))
 
-# directories
-mdir = '/net/luttero/data2/imgs/paper3/img_paper/' 
-tmdir = '/net/luttero/data2/imgs/paper3/img_talks/'
-ddir = '/net/luttero/data2/imgs/paper3/datasets/'
-# add after line name for PS20 lines
+## directories
+#mdir = '/net/luttero/data2/imgs/paper3/img_paper/' 
+#tmdir = '/net/luttero/data2/imgs/paper3/img_talks/'
+#ddir = '/net/luttero/data2/imgs/paper3/datasets/'
+mdir = '/Users/Nastasha/phd/own_papers/cgm_xray_em/imgs_work/'
+tmdir = '/Users/Nastasha/phd/own_papers/cgm_xray_em/img_talks/'
+ddir = '/Users/Nastasha/phd/data/paper3/datasets/'
+## add after line name for PS20 lines
 siontab = '_iontab-PS20-UVB-dust1-CR1-G1-shield1_depletion-F' 
 
 fontsize = 12
@@ -2736,7 +2739,8 @@ def plot_radprof_main_v1(talkversion=False, slidenum=0, talkvnum=0):
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
 
-def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=True):
+def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, 
+                      showscatter=True):
     '''
     plot mean and median profiles for the different lines in different halo 
     mass bins
@@ -2838,6 +2842,10 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
     y2label = '$\\log_{10} \\, \\mathrm{SB} \\; ' + \
               '[\\mathrm{photons}\\,\\mathrm{m}^{-2} ' + \
               '(100 \\,\\mathrm{ks})^{-1}(10\\,\\mathrm{arcmin}^{2})^{-1}]$'
+    if talkversion and talkvnum == 6:
+         y2label = '$\\log_{10} \\, \\mathrm{SB} \\; ' + \
+              '[\\mathrm{ph.}\\,\\mathrm{m}^{-2} ' + \
+              '\\mathrm{Ms}^{-1} \\mathrm{arcmin}^{-2}]$'
     right_over_left = 1e4 * 1e5 * ((10. * np.pi**2 / 60.**2 / 180**2))
     # right_over_left = (ph / cm**2 / s / sr)  /  
     #                   (ph / m**2 / 100 ks / 10 arcmin^2)
@@ -2855,7 +2863,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
     if talkversion:
         if talkvnum == 0:
             mmin = 11.
-        elif talkvnum in [1, 2, 3, 4, 5]:
+        elif talkvnum in [1, 2, 3, 4, 5, 6]:
             mmin = 11.5
     else:
         mmin = mmin_default # 11. or 11.5
@@ -2897,12 +2905,18 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
             _lines = ['c6', 'o7r', 'o8', 'Fe17      16.7760A', 'ne10', 'mg12']
         elif talkvnum == 5:
             _lines = ['o7r', 'o8', 'Fe17      16.7760A']
+        elif talkvnum == 6:
+            _lines = ['o8']
         numlines = len(_lines)
         fontsize = 14
         
-        ncols = 3
+        if talkvnum == 6:
+            ncols = 1
+            figwidth = 8.
+        else:
+            ncols = 3
+            figwidth = 11. 
         nrows = (numlines - 1) // ncols + 1
-        figwidth = 11. 
         caxwidth = figwidth / float(ncols + 1)
         
     else:
@@ -2920,7 +2934,7 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
         legendtitle_minsb = 'min. SB ($5\\sigma$) for $\\Delta' +\
             ' \\Omega \\, \\Delta t =$ \n $'+\
             vals + '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
-        if numlines == 3:
+        if numlines == ncols:
             legendtitle_minsb = 'min. SB ($5\\sigma$) for $\\Delta' +\
             ' \\Omega \\, \\Delta t ='+\
             vals + '\\, \\mathrm{arcmin}^{2} \\, \\mathrm{s}$'
@@ -2931,26 +2945,42 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
 
     if ncols * nrows - numlines >= 2:
         cax_right = False
+        legend_right = False
         _ncols = ncols
         panelwidth = figwidth / ncols
         width_ratios = [panelwidth] * ncols
         c_orientation = 'horizontal'
         c_aspect = 0.08
+        _nrows = nrows
     elif numlines == 3:
         cax_right = False
+        legend_right = False
         _ncols = ncols
         panelwidth = figwidth / ncols
         width_ratios = [panelwidth] * ncols
         c_orientation = 'horizontal'
         c_aspect = 0.08
         nrows = nrows + 1
+        _nrows = nrows
+    elif numlines == 1 and ncols == 1:
+        # cax right, legend below
+        cax_right = True
+        legend_right = False
+        _ncols = ncols + 1
+        panelwidth = (figwidth - caxwidth) / ncols
+        width_ratios = [panelwidth] * ncols + [caxwidth]
+        c_orientation = 'vertical'
+        c_aspect = 8.
+        _nrows = nrows + 1
     else:
         cax_right = True
+        legend_right = True
         _ncols = ncols + 1
         panelwidth = (figwidth - caxwidth) / ncols
         width_ratios = [panelwidth] * ncols + [caxwidth]
         c_orientation = 'vertical'
         c_aspect = 10.
+        _nrows = nrows
     
     rfilebase = 'radprof_stamps_emission_{line}{it}_L0100N1504_27_' + \
                 'test3.{tv}_' + \
@@ -2984,10 +3014,10 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
         #print(filens[line])
         
     panelheight = panelwidth    
-    figheight = panelheight * nrows
+    figheight = panelheight * _nrows
     
     fig = plt.figure(figsize=(figwidth, figheight))
-    grid = gsp.GridSpec(ncols=_ncols, nrows=nrows, hspace=0.0, wspace=0.0,
+    grid = gsp.GridSpec(ncols=_ncols, nrows=_nrows, hspace=0.0, wspace=0.0,
                         width_ratios=width_ratios)
     axes = [fig.add_subplot(grid[i // ncols, i % ncols]) \
             for i in range(numlines)]
@@ -2999,36 +3029,55 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
             xmin_leg = 0.28
         leg_kw = {'loc': 'upper left', 'bbox_to_anchor': (xmin_leg, 1.)}
         insleg_kw = leg_kw.copy()
-        if nrows > 5: 
-            csl = slice(nrows // 2 - 1, nrows // 2 + 2, None)
-            lsl = slice(0, 1, None)
-            l2sl = slice(1, 2, None)
-        elif nrows > 2:
-            csl = slice(2, None, None)
-            lsl = slice(0, 1, None)
-            l2sl = slice(1, 2, None)
-        elif nrows == 2:
-            csl = slice(1, None, None)
-            lsl = slice(0, 1, None)
-            l2sl = slice(0, 1, None)
-            insleg_kw = {'loc': 'lower left',
-                     'bbox_to_anchor': (xmin_leg, 0.0),
-                     'handlelength': 1.8,
-                     'columnspacing': 0.8,
-                     }
+        if legend_right:
+            if nrows > 5: 
+                csl = slice(nrows // 2 - 1, nrows // 2 + 2, None)
+                lsl = slice(0, 1, None)
+                l2sl = slice(1, 2, None)
+            elif nrows > 2:
+                csl = slice(2, None, None)
+                lsl = slice(0, 1, None)
+                l2sl = slice(1, 2, None)
+            elif nrows == 2:
+                csl = slice(1, None, None)
+                lsl = slice(0, 1, None)
+                l2sl = slice(0, 1, None)
+                insleg_kw = {'loc': 'lower left',
+                        'bbox_to_anchor': (xmin_leg, 0.0),
+                        'handlelength': 1.8,
+                        'columnspacing': 0.8,
+                        }
+            else:
+                msg = 'Could not find a place for the legend and color bar at'+\
+                    ' the right of the plot (1 row)'
+                raise RuntimeError(msg)
+            
+            cax = fig.add_subplot(grid[csl, ncols])
+            lax = fig.add_subplot(grid[lsl, ncols])
+            lax.axis('off')
+            lax2 = fig.add_subplot(grid[l2sl, ncols])
+            lax2.axis('off')
         else:
-            msg = 'Could not find a place for the legend and color bar at'+\
-                  ' the right of the plot (1 row)'
-            raise RuntimeError(msg)
+            if nrows == 1 and ncols == 1:
+                csl = slice(0, 1, None)
+                lsl = slice(None, None, None)
+                #l2sl = slice(None, None, None)
+                leg_kw = {'loc': 'upper right', 
+                                 'bbox_to_anchor': (0.9, 0.85)}
+                insleg_kw = {'loc': 'upper left',
+                             'bbox_to_anchor': (-0.1, 0.85),
+                             'handlelength': 1.8,
+                             'columnspacing': 0.8,
+                              }
+                ncols_insleg = 2
+            cax = fig.add_subplot(grid[csl, ncols])
+            lax = fig.add_subplot(grid[_nrows - 1, lsl])
+            lax.axis('off')
+            lax2 = lax
+
         if talkvnum in [4]:
             legend_fontsize = fontsize - 3.
 
-        cax = fig.add_subplot(grid[csl, ncols])
-        lax = fig.add_subplot(grid[lsl, ncols])
-        lax.axis('off')
-        lax2 = fig.add_subplot(grid[l2sl, ncols])
-        lax2.axis('off')
-        
     else:
         ind_min = ncols - (nrows * ncols - numlines)
         _cax = fig.add_subplot(grid[nrows - 1, ind_min:])
@@ -3298,7 +3347,8 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
                                      linewidth=2.) \
                        for ls, label in zip([ls_mean, ls_median], 
                                             ['mean', 'median'])]
-            lax.legend(handles=handles, fontsize=legend_fontsize, **leg_kw)
+            leg1 = lax.legend(handles=handles, fontsize=legend_fontsize, 
+                              **leg_kw)
         
         # add SB mins
         _sel = df2['galaxy absorption included in limit']
@@ -3376,6 +3426,8 @@ def plot_radprof_main(talkversion=False, slidenum=0, talkvnum=0, showscatter=Tru
                           ncol=ncols_insleg, **insleg_kw)
     leg_ins.set_title(legendtitle_minsb)
     leg_ins.get_title().set_fontsize(legend_fontsize)
+    if lax2 == lax: # same axis -> first legend overwritten by default
+        lax2.add_artist(leg1)
     
     plt.savefig(outname, format='pdf', bbox_inches='tight')
 
