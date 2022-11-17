@@ -3010,6 +3010,14 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
             massslice = np.array([0, 2, 4, 6])        
             axnl = ('T')
             ions = ()
+        elif talksubversion == 6:
+            massslice = np.array([0, 2, 4, 6])        
+            axnl = ('Z')
+            ions = ('o8',)
+        elif talksubversion == 7:
+            massslice = np.array([0, 2, 4, 6])        
+            axnl = ('rho',)
+            ions = ('o8',)
         else:
             raise ValueError('invalid talksubversion')
     else:
@@ -3073,6 +3081,8 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
         ncols = min(4, numions)
         if talksubversion == 5:
             figwidth = 5.
+        elif talksubversion in [6, 7]:
+            figwidth = 6.5
         else:
             figwidth = 11.
         nrows = ((numions - 1) // ncols + 1) * numpt
@@ -3082,6 +3092,8 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
         wspace = 0.0
         panelwidth = (figwidth - cwidth - wspace * ncols) / ncols
         panelheight = 0.8 * panelwidth
+        if talkversion and talksubversion in [6, 7]:
+            panelheight = 1.1 * panelwidth
         figheight =  panelheight * nrows 
         width_ratios = [panelwidth] * ncols + [cwidth]   
         height_ratios=[panelheight] * nrows 
@@ -3168,7 +3180,21 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
               'Z_neon': 2,\
               'Z_iron': 2,\
               }
-    
+    if len(axnl) < 2:
+        _pos = 0
+        if 'T' in axnl:
+            axplot['T'] = _pos
+            _pos += 1
+        if 'rho' in axnl:
+            axplot['rho'] = _pos
+            _pos += 1
+        metkeys = {key if 'Z_' in key else None for key in axplot}
+        metkeys -= {None}
+        if len(metkeys) > 0:
+            for key in metkeys:
+                axplot[key] = _pos
+            _pos += 1
+
     axwplot = {'Mass': 0,\
                'Volume': 0}
     axwplot.update({ion: ind for ind, ion in enumerate(ions, 1)})
