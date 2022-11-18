@@ -3011,11 +3011,11 @@ def plot_3dprop_allw(minrshow=minrshow_R200c, minrshow_kpc=None,\
             axnl = ('T')
             ions = ()
         elif talksubversion == 6:
-            massslice = np.array([0, 2, 4, 6])        
+            massslice = np.array([1, 3, 5])        
             axnl = ('Z')
             ions = ('o8',)
         elif talksubversion == 7:
-            massslice = np.array([0, 2, 4, 6])        
+            massslice = np.array([1, 3, 5])        
             axnl = ('rho',)
             ions = ('o8',)
         else:
