@@ -313,7 +313,10 @@ def run_checkcenter_massmap(index, center=None, rvir=None,
                             masstype='gas'):
     outdir = '/projects/b1026/nastasha/tests/start_fire/map_tests/'
     cen = None
-
+    mincols = {'gas': -5.,
+               'DM': None,
+               'stars': None,
+               'BH': None}
     if index == 0:
         dirpath = '/projects/b1026/snapshots/fire3/m13h206_m3e5/' + \
                'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1' + \
@@ -337,7 +340,8 @@ def run_checkcenter_massmap(index, center=None, rvir=None,
         cen =  [48414.20743443, 49480.35333529, 48451.20700497]
     mapfile_template = mapfilens[masstype]
     
-    checkcenter_massmap(mapfile_template, savename=None, mincol=None,
+    checkcenter_massmap(mapfile_template, savename=None, 
+                        mincol=mincols[masstype],
                         center_simunits=cen, Rvir_simunits=None)
     
 
