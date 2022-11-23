@@ -152,7 +152,7 @@ def getmeandensity(meandef, cosmopars):
     return meandens
 
 def calchalocen(coordsmassesdict, shrinkfrac=0.025, minparticles=1000, 
-                initialradiusfactor=0.25):
+                initialradiusfactor=1.):
     '''
     from: https://github.com/isulta/massive-halos/blob/d2dc0dd3649f359c0cea7191bfefd11b3498eeda/scripts/halo_analysis_scripts.py#L164 
     Imran Sultan's method, citing Power et al. (2003):
@@ -228,7 +228,7 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     
     '''
     minparticles = 1000
-    minpart_halo = 100
+    minpart_halo = 1000
     snap = rf.get_Firesnap(path, snapshot)
 
     # get mass and coordinate data
