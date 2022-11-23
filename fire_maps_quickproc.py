@@ -152,10 +152,14 @@ def quicklook_massmap(filen, savename=None, mincol=None):
         cosmopars = {key: val for key, val in \
                      f['Header/inputpars/cosmopars'].attrs.items()}
         #print(cosmopars)
-        rvir_ckpcoverh = f['Header/inputpars/halodata'].attrs['Rvir_ckpcoverh']
+        if 'Rvir_ckpcoverh' in f['Header/inputpars/halodata'].attrs:
+            rvir_ckpcoverh = f['Header/inputpars/halodata'].attrs['Rvir_ckpcoverh']
+            rvir_pkpc = rvir_ckpcoverh * cosmopars['a'] / cosmopars['h']
+        elif 'Rvir_cm' in f['Header/inputpars/halodata'].attrs:
+            rvir_cm = f['Header/inputpars/halodata'].attrs['Rvir_cm']
+            rvir_pkpc = rvir_cm / (c.cm_per_mpc * 1e-3)
         xax = f['Header/inputpars'].attrs['Axis1']
         yax = f['Header/inputpars'].attrs['Axis2']
-        rvir_pkpc = rvir_ckpcoverh * cosmopars['a'] / cosmopars['h']
         box_pkpc = box_cm / (1e-3 * c.cm_per_mpc)
         extent = (-0.5 * box_pkpc[xax], 0.5 * box_pkpc[xax],
                   -0.5 * box_pkpc[yax], 0.5 * box_pkpc[yax])
