@@ -174,7 +174,7 @@ def calchalocen(coordsmassesdict, shrinkfrac=0.025, minparticles=1000,
     comlist = [com]
     radiuslist = [np.sqrt(searchrad2)]
     while len(masses_it) > Npart_conv:
-        searchrad2 *= shrinkfrac**2
+        searchrad2 *= (1. - shrinkfrac)**2
         mask = r2 <= searchrad2
         coords_it = coords_it[mask]
         masses_it = masses_it[mask]
