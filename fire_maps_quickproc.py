@@ -284,9 +284,9 @@ def checkcenter_massmap(filen_template, savename=None, mincol=None,
         ax.tick_params(axis='both', labelsize=fontsize-1)
         
         if center_simunits is not None:
-            _cen = [center_simunits[xinds[ax]], center_simunits[yinds[ax]]
+            _cen = [center_simunits[xinds[ax]], center_simunits[yinds[ax]]]
             ax.scatter([_cen[0]], [_cen[1]], marker='.', color='red',
-                       markersize=10)
+                        markersize=10)
             if Rvir_simunits is not None:
                 patches = [mpatch.Circle(_cen, Rvir_simunits)]
                 collection = mcol.PatchCollection(patches)
@@ -311,7 +311,7 @@ def run_checkcenter_massmap(index, center=None, rvir=None,
                             masstype='gas'):
     outdir = '/projects/b1026/nastasha/tests/start_fire/map_tests/'
     cen = None
-    
+
     if index == 0:
         dirpath = '/projects/b1026/snapshots/fire3/m13h206_m3e5/' + \
                'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1' + \
