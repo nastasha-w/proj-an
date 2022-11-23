@@ -1386,8 +1386,8 @@ def massmap_wholezoom(dirpath, snapnum, pixsize_pkpc=3.,
     for debugging: make a mass map of basically the whole zoom region
     (for centering tests)
     '''
-    parttype_outfilen = {0: outfilen_DM,
-                         1: outfilen_gas,
+    parttype_outfilen = {0: outfilen_gas,
+                         1: outfilen_DM,
                          4: outfilen_stars,
                          5: outfilen_BH}
     snap = rf.get_Firesnap(dirpath, snapnum)
@@ -1632,9 +1632,9 @@ def tryout_wholezoom(index):
         outfilen_template = 'mass_pt{pt}_{sc}_snap{sn}_axis-{ax}_' + \
                             'wholezoom_v1.hdf5'
         _temp = outdir + outfilen_template 
-        outfilens = {'outfilen_DM': _temp.format(pt=0, sc=simname, 
+        outfilens = {'outfilen_gas': _temp.format(pt=0, sc=simname, 
                                                  sn=snapnum, ax='{ax}'),
-                     'outfilen_gas': _temp.format(pt=1, sc=simname, 
+                     'outfilen_DM': _temp.format(pt=1, sc=simname, 
                                                  sn=snapnum, ax='{ax}'),
                      'outfilen_stars': _temp.format(pt=4, sc=simname, 
                                                  sn=snapnum, ax='{ax}'),

@@ -314,7 +314,7 @@ def run_checkcenter_massmap(index, center=None, rvir=None,
     outdir = '/projects/b1026/nastasha/tests/start_fire/map_tests/'
     cen = None
     mincols = {'gas': -5.,
-               'DM': None,
+               'DM': -5.,
                'stars': None,
                'BH': None}
     if index == 0:
@@ -328,9 +328,9 @@ def run_checkcenter_massmap(index, center=None, rvir=None,
         outfilen_template = 'mass_pt{pt}_{sc}_snap{sn}_axis-{ax}_' + \
                             'wholezoom_v1.hdf5'
         _temp = outdir + outfilen_template 
-        mapfilens = {'DM': _temp.format(pt=0, sc=simname, 
+        mapfilens = {'gas': _temp.format(pt=0, sc=simname, 
                                                  sn=snapnum, ax='{ax}'),
-                     'gas': _temp.format(pt=1, sc=simname, 
+                     'DM': _temp.format(pt=1, sc=simname, 
                                                  sn=snapnum, ax='{ax}'),
                      'stars': _temp.format(pt=4, sc=simname, 
                                                  sn=snapnum, ax='{ax}'),
