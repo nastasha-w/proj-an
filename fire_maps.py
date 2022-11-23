@@ -279,8 +279,8 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
         del dct_c[pt]
     coordsmassdict = {'masses': masses, 'coords': coords}
     com_simunits, comlist, radiuslist = \
-        calchalocen(coordsmassdict, shrinkfrac=0.5, 
-                    minparticles=minparticles, initialradiusfactor=0.25)
+        calchalocen(coordsmassdict, shrinkfrac=0.025, 
+                    minparticles=minparticles, initialradiusfactor=1.)
     print('Found center of mass [sim units]: {}'.format(com_simunits))
 
     # find Rvir/Mvir
