@@ -287,7 +287,7 @@ def checkcenter_massmap(filen_template, savename=None, mincol=None,
         if center_simunits is not None:
             _cen = [center_simunits[xinds[axn]], center_simunits[yinds[axn]]]
             ax.scatter([_cen[0]], [_cen[1]], marker='.', color='red',
-                        markersize=10)
+                        size=10)
             if Rvir_simunits is not None:
                 patches = [mpatch.Circle(_cen, Rvir_simunits)]
                 collection = mcol.PatchCollection(patches)
