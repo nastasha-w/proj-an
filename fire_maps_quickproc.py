@@ -213,8 +213,8 @@ def checkcenter_massmap(filen_template, savename=None, mincol=None,
                         width_ratios=[1., 1.])
     axes = {}
     axes['z'] = fig.add_subplot(grid[0, 0]) 
-    axes['y'] = fig.add_subplot(grid[1, 0])
-    axes['x'] = fig.add_subplot(grid[0, 1])
+    axes['y'] = fig.add_subplot(grid[0, 1])
+    axes['x'] = fig.add_subplot(grid[1, 0])
     cax = fig.add_subplot(grid[1, 1])
     fontsize = 12
 
