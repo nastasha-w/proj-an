@@ -276,16 +276,16 @@ def checkcenter_massmap(filen_template, savename=None, mincol=None,
     
     for axn in axes:
         ax = axes[axn]
-        ax.set_xlabel(xlabels[ax], fontsize=fontsize)
-        ax.set_ylabel(ylabels[ax], fontsize=fontsize)
+        ax.set_xlabel(xlabels[axn], fontsize=fontsize)
+        ax.set_ylabel(ylabels[axn], fontsize=fontsize)
 
-        img = ax.imshow(massmaps[ax].T, origin='lower', 
+        img = ax.imshow(massmaps[axn].T, origin='lower', 
                         interpolation='nearest', vmin=vmin,
-                        vmax=vmax, cmap=cmap, extent=extents[ax])
+                        vmax=vmax, cmap=cmap, extent=extents[anx])
         ax.tick_params(axis='both', labelsize=fontsize-1)
         
         if center_simunits is not None:
-            _cen = [center_simunits[xinds[ax]], center_simunits[yinds[ax]]]
+            _cen = [center_simunits[xinds[axn]], center_simunits[yinds[axn]]]
             ax.scatter([_cen[0]], [_cen[1]], marker='.', color='red',
                         markersize=10)
             if Rvir_simunits is not None:
@@ -293,10 +293,11 @@ def checkcenter_massmap(filen_template, savename=None, mincol=None,
                 collection = mcol.PatchCollection(patches)
                 collection.set(edgecolor=['red'], facecolor='none', 
                                linewidth=1.5)
-            ax.add_collection(collection)
-            ax.text(1.05 * 2**-0.5 * rvir_pkpc, 1.05 * 2**-0.5 * rvir_pkpc, 
-                   '$R_{\\mathrm{vir}}$',
-                    color='red', fontsize=fontsize)
+                ax.add_collection(collection)
+                ax.text(1.05 * 2**-0.5 * Rvir_simunits, 
+                        1.05 * 2**-0.5 * Rvir_simunits, 
+                        '$R_{\\mathrm{vir}}$',
+                        color='red', fontsize=fontsize)
     
     cbar = plt.colorbar(img, cax=cax, extend=extend, orientation='horizontal',
                         aspect=10)
