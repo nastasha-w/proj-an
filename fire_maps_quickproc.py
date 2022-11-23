@@ -240,7 +240,7 @@ def checkcenter_massmap(filen_template, savename=None, mincol=None,
             #coords_to_CGS = f['Header/inputpars'].attrs['coords_toCGS']
             #region_simunits = region_cm / coords_to_CGS
 
-            box_cm = f['Header/inputpars'].attrs['diameter_used_cm']
+            #box_cm = f['Header/inputpars'].attrs['diameter_used_cm']
             cosmopars = {key: val for key, val in \
                         f['Header/inputpars/cosmopars'].attrs.items()}
             _ax1 = f['Header/inputpars'].attrs['Axis1']
@@ -266,6 +266,7 @@ def checkcenter_massmap(filen_template, savename=None, mincol=None,
             ylabels[ax] = axlabels[yax]
             xinds[ax] = xax
             yinds[ax] = yax
+    print('redshift: ', cosmopars['z'])
 
     if mincol is None:
         cmap = 'viridis'
