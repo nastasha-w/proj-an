@@ -281,7 +281,7 @@ def checkcenter_massmap(filen_template, savename=None, mincol=None,
 
         img = ax.imshow(massmaps[axn].T, origin='lower', 
                         interpolation='nearest', vmin=vmin,
-                        vmax=vmax, cmap=cmap, extent=extents[anx])
+                        vmax=vmax, cmap=cmap, extent=extents[axn])
         ax.tick_params(axis='both', labelsize=fontsize-1)
         
         if center_simunits is not None:
