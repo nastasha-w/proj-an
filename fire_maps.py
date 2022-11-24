@@ -1131,7 +1131,7 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
         todoc['units'] = '(# ions)'
         todoc['table'] = dummytab.ionbalfile
         todoc['tableformat'] = table
-    return qty, toCGS
+    return qty, toCGS, todoc
 
 # AHF: sorta tested (enclosed 2D mass wasn't too far above Mvir)
 # Rockstar: untested draft
