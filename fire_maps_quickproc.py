@@ -312,7 +312,7 @@ def checkcenter_massmap(filen_template, savename=None, mincol=None,
 def run_checkcenter_massmap(index, center=None, rvir=None,
                             masstype='gas'):
     outdir = '/projects/b1026/nastasha/tests/start_fire/map_tests/'
-    cen = None
+    cen = center
     mincols = {'gas': -5.,
                'DM': -5.,
                'stars': -7.,
@@ -342,7 +342,7 @@ def run_checkcenter_massmap(index, center=None, rvir=None,
     
     checkcenter_massmap(mapfile_template, savename=None, 
                         mincol=mincols[masstype],
-                        center_simunits=cen, Rvir_simunits=None)
+                        center_simunits=cen, Rvir_simunits=rvir)
     
 
 def masstest_map(filens):
