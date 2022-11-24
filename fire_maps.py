@@ -151,6 +151,8 @@ def getmeandensity(meandef, cosmopars):
         meandens = cosmo_meandens * overdens
     return meandens
 
+# seems to work for at least one halo 
+# (m13 guinea pig at snapshot 27, comparing image to found center)
 def calchalocen(coordsmassesdict, shrinkfrac=0.025, minparticles=1000, 
                 initialradiusfactor=1.):
     '''
@@ -187,7 +189,9 @@ def calchalocen(coordsmassesdict, shrinkfrac=0.025, minparticles=1000,
         radiuslist.append(np.sqrt(searchrad2))
     return com, comlist, radiuslist
 
-
+# centering seems to work for at least one halo 
+# (m13 guinea pig at snapshot 27, comparing image to found center)
+# virial radius gives an error though.
 def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     '''
     Using Imran Sultan's shrinking spheres method, calculate the halo 
@@ -293,20 +297,24 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
         dens_targets_cgs = [getmeandensity(md, cosmopars) for md in meandef]
         
     r2 = np.sum((coords - com_simunits[np.newaxis, :])**2, axis=1)
+    del coords
     rorder = np.argsort(r2)
     r2_order = r2[rorder]
     masses_order = masses[rorder]
     dens_targets = [target / toCGS_m * toCGS_c**3 for target in \
                      dens_targets_cgs]
     dens2_order = np.cumsum(masses_order)**2 / ((4. * np.pi / 3)**2 * r2_order**3)
-    
+    # plotting sqrt dens2_order vs. sqrt r2_order, dens_targets -> 
+    # intersect at ~200 ckpc/h at z=2.8 for the m13 guinea pig
+    # seems reasonable...
+
     rsols_cgs = []
     msols_cgs = []
     xydct = {'x': r2_order, 'y': dens2_order}
     for dti, dens_target in enumerate(dens_targets):
         sols = find_intercepts(None, None, dens_target**2, xydct=xydct)
         # no random low-density holes or anything
-        sols = sols[sols >= r2[minpart_halo]]
+        sols = sols[sols >= r2_order[minpart_halo]]
         if len(sols) == 0:
             msg = 'No solutions found for density {}'.format(meandef[dti])
             print(msg)

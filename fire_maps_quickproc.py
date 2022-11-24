@@ -315,7 +315,7 @@ def run_checkcenter_massmap(index, center=None, rvir=None,
     cen = None
     mincols = {'gas': -5.,
                'DM': -5.,
-               'stars': None,
+               'stars': -7.,
                'BH': None}
     if index == 0:
         dirpath = '/projects/b1026/snapshots/fire3/m13h206_m3e5/' + \
