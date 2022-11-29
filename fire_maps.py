@@ -1609,6 +1609,21 @@ def tryout_ionmap(opt=1):
                          for ion in ions]
         [maptype_args.update({'ion': ion}) \
          for maptype_args, ion in zip(maptype_argss, ions)]
+    
+    elif opt > 1 and opt <= 9:
+        dirpath = '/projects/b1026/isultan/m12i_noAGNfb/'
+        simname = 'm12i_noAGNfb_CR-diff-coeff-690_FIRE-2'
+        _ions = ['si4', 'n5', 'o6', 'ne8']
+        ions = [_ions[(opt - 2) % 4]]
+        maptype = 'ion'
+        _maptype_args = {'ps20depletion': False}
+        snapshots = [277, 600]
+        snapnum = snapshots[(opt - 2) // 4]
+        
+        maptype_argss = [{key: _maptype_args[key] for key in _maptype_args} \
+                         for ion in ions]
+        [maptype_args.update({'ion': ion}) \
+         for maptype_args, ion in zip(maptype_argss, ions)]
 
     for maptype_args in maptype_argss:
         if maptype == 'ion':
@@ -1617,6 +1632,7 @@ def tryout_ionmap(opt=1):
             depl = '_ps20-depl' if _depl else ''
         elif maptype == 'Metal':
             qt = maptype_args['element']
+        
 
         outfilen = outdir + _outfilen.format(sc=simname, sn=snapnum, 
                                              depl=depl, qt=qt)
