@@ -326,7 +326,7 @@ class Firesnap:
                     combindex += numsel
             if not array_init:
                 # evidently, the field wasn't in any file
-                raise FieldNotFoundError
+                raise FieldNotFoundError(('Field {} not found'.format(path)))
         self.toCGS = self.units.getunits(path)
         return arr
     
@@ -454,7 +454,7 @@ class Firesnap:
                     self.toCGS = _toCGS
                     return pressure
                 else:
-                    raise err('Field {} not found'.format(field))
+                    raise err
                   
 def get_Firesnap(path, snapnum, filetype='snap'):
     '''
