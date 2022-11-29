@@ -1896,6 +1896,8 @@ def fromcommandline(index):
     elif index >= 21 and index < 33:
         # opt in [6, 18)
         run_ionbal_test(opt=index - 15)
+    elif index >= 33 and index < 41:
+        tryout_ionmap(opt=index - 32)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
     
