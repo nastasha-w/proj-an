@@ -398,7 +398,7 @@ class Firesnap:
                 self.toCGS = self.units.getunits(field)
                 return self.readarray(field, subsample=subsample, 
                                       errorflag=errorflag)   
-            except (FieldNotFoundError, uf.UnitsNotFoundError):
+            except (FieldNotFoundError, uf.UnitsNotFoundError) as err:
                 # same stuff, different name
                 if field.endswith('Mass'): # Mass in EAGLE = Masses in FIRE
                     _field = field + 'es'
@@ -452,11 +452,9 @@ class Firesnap:
                                                  errorflag=errorflag)
                     _toCGS *= self.units.getunits('PartType0/Density')
                     self.toCGS = _toCGS
-                    # do the conversion: matches expected units from EAGLE
-                    # and an extra scalar multiplication doesn't cost much
                     return pressure
                 else:
-                    raise ValueError('Field {} not found'.format(field))
+                    raise err('Field {} not found'.format(field))
                   
 def get_Firesnap(path, snapnum, filetype='snap'):
     '''
