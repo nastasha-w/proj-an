@@ -250,7 +250,7 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
             _toCGS_c = snap.toCGS
             dct_m[pt] = snap.readarray_emulateEAGLE(mpath.format(pt))
             _toCGS_m = snap.toCGS
-        except OSError:
+        except (OSError, rf.FieldNotFoundError):
             msg = 'Skipping PartType {} in center calc: not present on file'
             print(msg.format(pt))
             continue
