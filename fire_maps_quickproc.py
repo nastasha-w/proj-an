@@ -23,6 +23,46 @@ import cosmo_utils as cu
 import plot_utils as pu
 
 
+def get_rval_massmap(filen, units='pkpc'):
+    '''
+    get radius and map quantity matched arrays
+
+    Input:
+    ------
+    filen: str
+        file name including full path
+    units: {'pkpc', 'Rvir', 'cm'}
+        units for the radius (impact parameter)
+
+    Returns:
+    --------
+    radii: float array (1D)
+        impact parameters
+    map values: float array (1D) 
+        map values, matching impact parameters 
+    '''
+    with h5py.File(filen, 'r') as f:
+        _map = f['map'][:]
+        shape = _map.shape
+        xinds, yinds = np.indices(shape).astype(np.float32)
+        # centered on halo
+        xcen = 0.5 * float(shape[0])
+        ycen = 0.5 * float(shape[1])
+        dpix2 = (xinds + 0.5 - xcen)**2 + (yinds + 0.5 - ycen)**2
+        dpix = np.sqrt(dpix2)
+        
+        pixssize_pkpc = f['Header/inputpars'].attrs['pixsize_pkpc']
+        if units == 'pkpc':
+            dpix *= pixssize_pkpc
+        elif units == 'Rvir':
+            # using Imran's shrinking spheres method
+            rvir_cm = f['Header/inputpars/halodata'].attrs['Rvir_cm']
+            dpix *= pixssize_pkpc * c.cm_per_mpc * 1e-3 / rvir_cm
+        elif units == 'cm':
+            dpix *= pixssize_pkpc * c.cm_per_mpc * 1e-3
+    return dpix.flatten(), _map.flatten()
+        
+
 def plot_halomasscheck(halofile, checkfile, imgname=None):
     '''
     compare the halo masses from the AHF/halo_0000_smooth.dat
@@ -1578,3 +1618,29 @@ def test_tablesum_interpolate_to_tabulated(ztargets = [0., 1., 3.],
             plt.colorbar(img, cax=cax)
             cax.set_ylabel(flabel, fontsize=fontsize)
             plt.savefig(_savename, bbox_inches='tight')
+
+
+def plot_radprof_m12i_CR_comp(smallrange=True):
+    '''
+    Rough comparison to Ji, Chan, et al. (2020)
+    '''
+    if smallrange:
+        rbins = np.linspace(0., 0.8, 16)
+        yranges = {'si4': (10.8, 15.1), 'n5': (10.9, 14.7), 
+                   'o6': (13., 15.3), 'ne8': (12.8, 15.1)}
+
+    axes = {'si4': 0, 'n5': 1, 'o6': 2, 'ne8': 3}
+    snapshots = {277: 'gray', 600: 'black'}
+    snaplabels = {277: 'z=1', 600: 'z=0'}
+
+
+    fig = plt.figure(figsize=(13., 4.))
+    grid = gsp.GridSpec(nrows=2, ncols=2, hspace=0.3, wspace=0.3)
+    axes = [fig.add_subplot(grid[i % 2, i // 2]) for i in range(4)]
+    fontsize = 12
+    
+    title = 'm12i with CRs, linear average and full range column densities'
+    fig.suptitle(title, fontsize=fontsize)
+
+    for filen in filens:   
+        rd, cd = get_rval_massmap(filen, units='Rvir')
