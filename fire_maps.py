@@ -1583,7 +1583,184 @@ def massmap_wholezoom(dirpath, snapnum, pixsize_pkpc=3.,
                 # useful for plotting centers in sim units
                 igrp.attrs.create('coords_toCGS', coords_toCGS)
 
+def getaxbins(minfinite, maxfinite, bin):
+    if isinstance(bin, int):
+        bins = np.linspace(minfinite, maxfinite, bin + 1)
 
+
+def histogram_radprof(dirpath, snapnum,
+                      weighttype, weighttype_args, axtypes, axtypes_args,
+                      particle_type=0, 
+                      center='shrinksph', rbins=(0., 1.), runit='Rvir'
+                      logweights=True, logaxes=True, axbins=0.1,
+                      outfilen=None):
+    '''
+    make a weightype, weighttype_args weighted histogram of 
+    axtypes, axtypes_args.
+
+    Parameters:
+    -----------
+    dirpath: str
+        path to the directory containing the 'output' directory with the
+        snapshots
+    snapnum: int
+        snapshot number
+    weightype: float
+        what to weight the histogram by. Options are maptype options in 
+        get_qty
+    weighttype_args: dict
+        additional arguments for what to weight the histogram by. Options 
+        are maptype_args options in get_qty
+    axtypes: list
+        list of what to histogram; each entry is one histogram dimension.
+        Options are maptype options in get_qty.
+    axtypes_args: list of dicts
+        list of additional arguments for the histogram dimensions. Options 
+        are maptype_args options in get_qty. Mind the 'density' option for
+        ions and metals. These are matched to axtypes by list index.
+    particle_type: int
+        particle type to project (follows FIRE format)
+    center: str
+        how to find the halo center.
+        'AHFsmooth': use halo_00000_smooth.dat from AHF 
+        'rockstar-maxmass': highest mass halo at snapshot from Rockstar
+        'rockstar-mainprog': main progenitor of most massive halo at
+                           final snapshot from Rockstar
+        'rockstar-<int>': halo with snapshot halo catalogue index <int>
+                          from Rockstar 
+        'shrinksph': Imran's shrinking spheres method
+    rbins: array-like of floats
+        bin edges in 3D distance from the halo center. Ignored if center is 
+        None.
+    runit: {'Rvir', 'pkpc'}
+        unit to use for the rbins. These bins are never log values. 
+    logweights: bool
+        save log of the weight sum in each bin instead of the linear sum.
+    logaxes: bool or list of bools
+        save and process the histogram axis quantities in log units instead
+        of linear. If a list, this is applied to each dimension by matching
+        list index.
+    axbins: int, float, array, or list of those.
+                      outfilen=None
+
+    Output:
+    -------
+    massW: 2D array of floats
+        projected mass image [log g/cm^-2]
+    massQ: NaN array, for future work
+
+    '''
+    todoc_gen = {}
+    basepath = 'PartType{}/'.format(particle_type)
+    _axvals = []
+    _axbins = []
+    _axdoc = []
+    
+    if center is not None:
+        todoc_gen['center'] = center
+        if center == 'AHFsmooth':
+            halodat = mainhalodata_AHFsmooth(dirpath, snapnum)
+            snap = rf.get_Firesnap(dirpath, snapnum) 
+            cen = np.array([halodat['Xc_ckpcoverh'], 
+                            halodat['Yc_ckpcoverh'], 
+                            halodat['Zc_ckpcoverh']])
+            cen_cm = cen * snap.cosmopars.a * 1e-3 * c.cm_per_mpc \
+                    / snap.cosmopars.h
+            rvir_cm = halodat['Rvir_ckpcoverh'] * snap.cosmopars.a \
+                    * 1e-3 * c.cm_per_mpc / snap.cosmopars.h
+        elif center.startswith('rockstar'):
+            select = center.split('-')[-1]
+            if select not in ['maxmass', 'mainprog']:
+                try:
+                    select = int(select)
+                except ValueError:
+                    msg = 'invalid option for center: {}'.format(center)
+                    raise ValueError(msg)
+            halodat, _csm_halo = halodata_rockstar(dirpath, snapnum, 
+                                                select=select)
+            snap = rf.get_Firesnap(dirpath, snapnum) 
+            cen = np.array([halodat['Xc_ckpc'], 
+                            halodat['Yc_ckpc'], 
+                            halodat['Zc_ckpc']])
+            cen_cm = cen * snap.cosmopars.a * 1e-3 * c.cm_per_mpc 
+            rvir_cm = halodat['Rvir_cm'] 
+        elif center ==  'shrinksph':
+            halodat = calchalodata_shrinkingsphere(dirpath, snapnum, 
+                                                meandef='BN98')
+            cen_cm = np.array([halodat['Xc_cm'], 
+                            halodat['Yc_cm'], 
+                            halodat['Zc_cm']])
+            rvir_cm = halodat['Rvir_cm']
+            snap = rf.get_Firesnap(dirpath, snapnum) 
+            todoc_gen['Rvir_def'] = 'BN98'
+        else:
+            raise ValueError('Invalid center option {}'.format(center))
+        todoc_gen['center_cm'] = cen_cm
+        todoc_gen['Rvir_cm'] = rvir_cm
+
+        coords = snap.readarray_emulateEAGLE(basepath + 'Coordinates')
+        coords_toCGS = snap.toCGS
+        coords -= cen_cm / coords_toCGS
+    else:
+        todoc_gen['center'] = 'None'
+        todoc_gen['info_halo'] = 'no halo particle selection applied'
+
+
+    if outfilen is not None:
+        with h5py.File(outfilen, 'w') as f:
+            # map (emulate make_maps format)
+            f.create_dataset('map', data=lmapW)
+            f['map'].attrs.create('log', True)
+            minfinite = np.min(lmapW[np.isfinite(lmapW)])
+            f['map'].attrs.create('minfinite', minfinite)
+            f['map'].attrs.create('max', np.max(lmapW))
+            
+            # cosmopars (emulate make_maps format)
+            hed = f.create_group('Header')
+            cgrp = hed.create_group('inputpars/cosmopars')
+            csm = snap.cosmopars.getdct()
+            for key in csm:
+                cgrp.attrs.create(key, csm[key])
+            
+            # direct input parameters
+            igrp = hed['inputpars']
+            igrp.attrs.create('snapfiles', np.array([np.string_(fn) for fn in snap.filens]))
+            igrp.attrs.create('dirpath', np.string_(dirpath))
+            igrp.attrs.create('radius_rvir', radius_rvir)
+            igrp.attrs.create('particle_type', particle_type)
+            igrp.attrs.create('pixsize_pkpc', pixsize_pkpc)
+            igrp.attrs.create('axis', np.string_(axis))
+            igrp.attrs.create('norm', np.string_(norm))
+            igrp.attrs.create('outfilen', np.string_(outfilen))
+            # useful derived/used stuff
+            igrp.attrs.create('Axis1', Axis1)
+            igrp.attrs.create('Axis2', Axis2)
+            igrp.attrs.create('Axis3', Axis3)
+            igrp.attrs.create('diameter_used_cm', np.array(size_touse_cm))
+            if haslsmooth:
+                igrp.attrs.create('margin_lsmooth_cm', lmargin * coords_toCGS)
+            igrp.attrs.create('center', np.string_(center))
+            _grp = igrp.create_group('halodata')
+            for key in halodat:
+                _grp.attrs.create(key, halodat[key])
+            igrp.attrs.create('maptype', np.string_(maptype))
+            if maptype_args is None:
+                igrp.attrs.create('maptype_args', np.string_('None'))
+            else:
+                igrp.attrs.create('maptype_args', np.string_('dict'))
+                _grp = igrp.create_group('maptype_args_dict')
+                for key in maptype_args:
+                    val = maptype_args[key]
+                    if isinstance(val, type('')):
+                        val = np.string_(val)
+                    _grp.attrs.create(key, val)
+            for key in todoc_gen:
+                val = todoc_gen[key]
+                if isinstance(val, type('')):
+                    val = np.string_(val)
+                if val is None:
+                    val = np.string_(val)
+                igrp.attrs.create(key, val)
 
 # hard to do a true test, but check that projected masses and centering
 # sort of make sense
@@ -1657,7 +1834,7 @@ def tryout_ionmap(opt=1):
         dirpath = dirpath1
         snapnum = 27
         if opt < 19:
-            ions = ['O{}'.format(opt - 10)]
+            ions = ['O{}'.format(opt - 9)]
             maptype = 'ion'
             _maptype_args = {'ps20depletion': False}
     
