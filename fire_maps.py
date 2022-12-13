@@ -1059,9 +1059,10 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
                 deplete a fraction of the element onto dust and include
                 that factor in the ion fraction. Depletion follows the
                 Ploeckinger & Schaye (2020) table values.
+                The default is False.
             'lintable': bool
                 interpolate the tables in linear space (True) or log 
-                space (False)
+                space (False). The default is True.
                 
 
     Returns:
@@ -1106,7 +1107,7 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
         if 'ps20depletion' in maptype_args:
             ps20depletion = maptype_args['ps20depletion']
         else:
-            ps20depletion = True
+            ps20depletion = False
         if 'lintable' in maptype_args:
             lintable = maptype_args['lintable']
         else:
@@ -1624,6 +1625,31 @@ def tryout_ionmap(opt=1):
                          for ion in ions]
         [maptype_args.update({'ion': ion}) \
          for maptype_args, ion in zip(maptype_argss, ions)]
+    
+    elif opt >= 10 and opt < 21:
+        # check ion sum, los metallicity
+        simname = simname1
+        dirpath = dirpath1
+        snapnum = 27
+        if opt < 19:
+            ions = ['O{}'.format(opt - 10)]
+            maptype = 'ion'
+            _maptype_args = {'ps20depletion': False}
+    
+            maptype_argss = [{key: _maptype_args[key] for key in _maptype_args} \
+                              for ion in ions]
+            [maptype_args.update({'ion': ion}) \
+             for maptype_args, ion in zip(maptype_argss, ions)]
+        elif opt == 19:
+            maptype = 'Metal'
+            _maptype_args = {'element': 'Oxygen'}
+            
+            maptype_argss = [_maptype_args]
+        elif opt == 20:
+            maptype = 'Mass'
+            _maptype_args = {}
+            
+            maptype_argss = [_maptype_args]
 
     for maptype_args in maptype_argss:
         if maptype == 'ion':
@@ -1632,7 +1658,8 @@ def tryout_ionmap(opt=1):
             depl = '_ps20-depl' if _depl else ''
         elif maptype == 'Metal':
             qt = maptype_args['element']
-        
+        elif maptype == 'Metal':
+            qt = 'gas-mass'
 
         outfilen = outdir + _outfilen.format(sc=simname, sn=snapnum, 
                                              depl=depl, qt=qt)
