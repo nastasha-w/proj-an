@@ -1709,8 +1709,14 @@ def test_ionsum_and_Z_maps():
     
     ionbase = ''
     ionfiles = [ionbase.format(ion='O{}'.format(i)) for i in range(1, 10)]
-    sumfile = ''
+    eltfile = ''
     massfile = ''
+
+    ionmaps = []
+    ion_mapext = []
+    eltmap = None
+    massmap = None
+    eltmass = c.atomw_O * c.u
     
     fig = plt.figure(figsize=(11., 11.))
     grid = gsp.GridSpec(nrows=4, ncols=5, hspace=0.05, wspace=0.05)
@@ -1729,8 +1735,39 @@ def test_ionsum_and_Z_maps():
     cmap_Z = 'plasma'
     cmap_delta = 'RdBu'
 
+    coordsax.axis('off')
     coordsax.set_xlabel('X [pkpc]', fontsize=fontsize)
     coordsax.set_ylabel('Y [pkpc]', fontsize=fontsize)
+
+    vmin_i = np.inf
+    vmax_i = -np.inf
+    for ionf in ionfiles:
+        with h5py.File(ionf, 'w') as f:
+            _map = f['map'][:]
+            ionmaps.append(_map)
+            vmin = f['map'].attrs['minfinite']
+            vmax = f['map'].attrs['max']
+            vmin_i = min(vmin, vmin_i)
+            vmax_i = max(vmax, vmax_i)
+
+            box_cm = f['Header/inputpars'].attrs['diameter_used_cm']
+            cosmopars = {key: val for key, val in \
+                        f['Header/inputpars/cosmopars'].attrs.items()}
+            #print(cosmopars)
+            if 'Rvir_ckpcoverh' in f['Header/inputpars/halodata'].attrs:
+                rvir_ckpcoverh = f['Header/inputpars/halodata'].attrs['Rvir_ckpcoverh']
+                rvir_pkpc = rvir_ckpcoverh * cosmopars['a'] / cosmopars['h']
+            elif 'Rvir_cm' in f['Header/inputpars/halodata'].attrs:
+                rvir_cm = f['Header/inputpars/halodata'].attrs['Rvir_cm']
+                rvir_pkpc = rvir_cm / (c.cm_per_mpc * 1e-3)
+            xax = f['Header/inputpars'].attrs['Axis1']
+            yax = f['Header/inputpars'].attrs['Axis2']
+            box_pkpc = box_cm / (1e-3 * c.cm_per_mpc)
+            extent = (-0.5 * box_pkpc[xax], 0.5 * box_pkpc[xax],
+                      -0.5 * box_pkpc[yax], 0.5 * box_pkpc[yax])
+            ion_mapext.append(extent)
+            
+
 
 
     

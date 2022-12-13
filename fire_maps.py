@@ -1995,7 +1995,7 @@ def tryout_ionmap(opt=1):
                depl = '_ps20-depl'
         elif maptype == 'Metal':
             qt = maptype_args['element']
-        elif maptype == 'Metal':
+        elif maptype == 'Mass':
             qt = 'gas-mass'
 
         outfilen = outdir + _outfilen.format(sc=simname, sn=snapnum, 
