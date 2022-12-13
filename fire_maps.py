@@ -1925,6 +1925,8 @@ def fromcommandline(index):
         run_ionbal_test(opt=index - 15)
     elif index >= 33 and index < 41:
         tryout_ionmap(opt=index - 31)
+    elif index >= 41 and index < 52:
+        tryout_ionmap(opt=index - 31)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
     
