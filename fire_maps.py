@@ -1583,15 +1583,30 @@ def massmap_wholezoom(dirpath, snapnum, pixsize_pkpc=3.,
                 # useful for plotting centers in sim units
                 igrp.attrs.create('coords_toCGS', coords_toCGS)
 
-def getaxbins(minfinite, maxfinite, bin):
+def getaxbins(minfinite, maxfinite, bin, extendmin=True, extendmax=True):
     if isinstance(bin, int):
         bins = np.linspace(minfinite, maxfinite, bin + 1)
+    elif isinstance(bin, float):
+        minbin = np.floor(minfinite / bin) * bin
+        maxbin = np.ceil(maxfinite / bin) * bin
+        bins = np.arange(minbin, maxbin + 0.5 * bin, bin)
+    else:
+        bins = np.array(bin)
+        if minfinite < bins[0]:
+            extendmin = True
+        if maxfinite >= bins[1]:
+            extendmax = True
+    if extendmin:
+        bins = np.append(-np.inf, bins)
+    if extendmax:
+        bins = np.append(bins, np.inf)
+    return bin
 
 
 def histogram_radprof(dirpath, snapnum,
                       weighttype, weighttype_args, axtypes, axtypes_args,
                       particle_type=0, 
-                      center='shrinksph', rbins=(0., 1.), runit='Rvir'
+                      center='shrinksph', rbins=(0., 1.), runit='Rvir',
                       logweights=True, logaxes=True, axbins=0.1,
                       outfilen=None):
     '''
@@ -1641,13 +1656,29 @@ def histogram_radprof(dirpath, snapnum,
         of linear. If a list, this is applied to each dimension by matching
         list index.
     axbins: int, float, array, or list of those.
-                      outfilen=None
+        int: use that many bins between whatever min and maxfinite values are
+             present in the data
+        float: use bins of that size, in (log) cgs units. The edges are chosen
+             so zero wis an edge if the value range includes zero.
+             A useful option to allow stacking/comparison without using too 
+             much storage.
+        array: just the bin edges directly. Monotonically increasing, (log) 
+             cgs units.
+        Note that the range are always extended with -np.inf and np.inf if the
+        values include non-finite ones or values outside the specified range.
+        If a list is given, the options are specified per histogram axis, 
+        matched by list index. Note that if giving an array option, it should 
+        be enclosed in a list to ensure it is not interpreted as a per-axis
+        option list.
+        Units are always (log) cgs. 
+    outfilen: str
+        file to save to output histogram to. None means no file is saved.
+        The file must include the full path.
 
     Output:
     -------
-    massW: 2D array of floats
-        projected mass image [log g/cm^-2]
-    massQ: NaN array, for future work
+    file with saved histogram data, if a file is specified
+    otherwise, the histogram and bins
 
     '''
     todoc_gen = {}
@@ -1655,12 +1686,19 @@ def histogram_radprof(dirpath, snapnum,
     _axvals = []
     _axbins = []
     _axdoc = []
+    _axbins_outunit = []
+    if not hasattr(axbins, '__len__'):
+        axbins = [axbins] * len(axtypes)
+    if not hasattr(logaxes, '__len__'):
+        logaxes = [logaxes] * len(axtypes)
+
+    snap = rf.get_Firesnap(dirpath, snapnum)
     
     if center is not None:
-        todoc_gen['center'] = center
+        todoc_cen = {}
+        todoc_cen['center'] = center
         if center == 'AHFsmooth':
             halodat = mainhalodata_AHFsmooth(dirpath, snapnum)
-            snap = rf.get_Firesnap(dirpath, snapnum) 
             cen = np.array([halodat['Xc_ckpcoverh'], 
                             halodat['Yc_ckpcoverh'], 
                             halodat['Zc_ckpcoverh']])
@@ -1678,7 +1716,6 @@ def histogram_radprof(dirpath, snapnum,
                     raise ValueError(msg)
             halodat, _csm_halo = halodata_rockstar(dirpath, snapnum, 
                                                 select=select)
-            snap = rf.get_Firesnap(dirpath, snapnum) 
             cen = np.array([halodat['Xc_ckpc'], 
                             halodat['Yc_ckpc'], 
                             halodat['Zc_ckpc']])
@@ -1691,69 +1728,165 @@ def histogram_radprof(dirpath, snapnum,
                             halodat['Yc_cm'], 
                             halodat['Zc_cm']])
             rvir_cm = halodat['Rvir_cm']
-            snap = rf.get_Firesnap(dirpath, snapnum) 
-            todoc_gen['Rvir_def'] = 'BN98'
+            todoc_cen['Rvir_def'] = 'BN98'
         else:
             raise ValueError('Invalid center option {}'.format(center))
-        todoc_gen['center_cm'] = cen_cm
-        todoc_gen['Rvir_cm'] = rvir_cm
+        todoc_cen['center_cm'] = cen_cm
+        todoc_cen['Rvir_cm'] = rvir_cm
+        todoc_cen['units'] = runit
+        todoc_cen['log'] = False
 
         coords = snap.readarray_emulateEAGLE(basepath + 'Coordinates')
         coords_toCGS = snap.toCGS
         coords -= cen_cm / coords_toCGS
-    else:
-        todoc_gen['center'] = 'None'
-        todoc_gen['info_halo'] = 'no halo particle selection applied'
+        
+        if runit == 'Rvir':
+            rbins_simu = np.array(rbins) * rvir_cm / coords_toCGS
+            simu_to_runit = coords_toCGS / rvir_cm 
+        elif runit == 'pkpc':
+            rbins_simu = np.array(rbins) * c.cm_per_mpc * 1e-3 / coords_toCGS
+            simu_to_runit = coords_toCGS / (c.cm_per_mpc * 1e-3)
+        else:
+            raise ValueError('Invalid runit option: {}'.format(runit))
+        rbins2_simu = rbins_simu**2
+        r2vals = np.sum(coords**2, axis=1)
+        del coords
+        filter = r2vals <= rbins2_simu[-1]
+        rbins2_simu = rbins2_simu[filter]
 
+        _axvals.append(rbins2_simu)
+        _axbins.append(rbins2_simu)
+        _axdoc.append(todoc_cen)
+        _axbins_outunit.append(np.sqrt(rbins2_simu) * simu_to_runit)
+        filterdct = {'filter': filter}
+    else:
+        todoc_gen['info_halo'] = 'no halo particle selection applied'
+        filterdct = {'filter': slice(None, None, None)}
+        halodat = None
+    
+    for axt, axarg, logax, axb in zip(axtypes, axtypes_args, logaxes, axbins):
+        qty, toCGS, todoc = get_qty(snap, particle_type, axt, axarg, 
+                                    filterdct=filterdct)
+        if logax:
+            qty = np.log10(qty)
+        qty_good = np.isfinite(qty)
+        minq = np.min(qty[qty_good])
+        maxq = np.max(qty[qty_good])
+        needext = not np.all(qty_good)
+        if hasattr(axb, '__len__'):
+            _axb = axb / toCGS
+        else:
+            _axb = axb
+        usebins_simu = getaxbins(minq, maxq, _axb, extendmin=needext, 
+                                 extendmax=needext)
+        
+        _axvals.append(qty)
+        _axbins.append(usebins_simu)
+        _axdoc.append(todoc)
+        _axbins_outunit.append(usebins_simu * toCGS)
+    
+    wt, wt_toCGS, wt_todoc = get_qty(snap, particle_type, weighttype, 
+                                     weighttype_args, 
+                                     filterdct=filterdct)
+
+    maxperloop = 752**3 // 8
+    if len(wt) <= maxperloop:
+        hist, edges = np.histogramdd(_axvals, weights=wt, bins=_axbins,
+                                     density=False, normed=False)
+    else:
+        lentot = len(wt)
+        numperloop = maxperloop
+        slices = [slice(i * numperloop, 
+                        min((i + 1) * numperloop, lentot), 
+                        None) \
+                  for i in range((lentot - 1) // numperloop + 1)]
+        for slind in range(len(slices)):
+            axdata_temp = [data[slices[slind]] for data in _axvals]
+            hist_temp, edges_temp = np.histogramdd(axdata_temp, 
+                                                   weights=wt[slices[slind]], 
+                                                   bins=_axbins)
+            if slind == 0 :
+                hist = hist_temp
+                edges = edges_temp
+            else:
+                hist += hist_temp
+                if not np.all(np.array([np.all(edges[i] == edges_temp[i]) \
+                              for i in range(len(edges))])):
+                    msg = 'Error: edges mismatch in histogramming'+\
+                          ' loop (slind = {})'.format(slind)
+                    raise RuntimeError(msg)
+    if logweights:
+        hist = np.log10(hist)
+        hist += np.log10(wt_toCGS)
+    else:
+        hist *= wt_toCGS
 
     if outfilen is not None:
         with h5py.File(outfilen, 'w') as f:
-            # map (emulate make_maps format)
-            f.create_dataset('map', data=lmapW)
-            f['map'].attrs.create('log', True)
-            minfinite = np.min(lmapW[np.isfinite(lmapW)])
-            f['map'].attrs.create('minfinite', minfinite)
-            f['map'].attrs.create('max', np.max(lmapW))
+            # histogram and weight
+            f.create_dataset('hist', data=hist)
+            f['hist'].attrs.create('log', logweights)
+            for key in wt_todoc:
+                val = todoc_gen[key]
+                if isinstance(val, type('')):
+                    val = np.string_(val)
+                if val is None:
+                    val = np.string_(val)
+                f['hist'].attrs.create(key, val)
+            f['hist'].attrs.create('weight_type', np.string_(weighttype))
+            wagrp = f['hist'].attrs.create_group('weight_type_args')
+            for key in weighttype_args:
+                val = weighttype_args[key]
+                if isinstance(val, type('')):
+                    val = np.string_(val)
+                if val is None:
+                    val = np.string_(val)
+                wagrp.attrs.create(key, val)
+            
+            # histogram axes
+            for i in range(len(_axbins)):
+                agrp = hed.create_group('axis_{}'.format(i))
+                _bins = _axbins_outunit[i]
+                agrp.create_dataset('bins', data=_bins)
+                agrp.attrs.create('log', logaxes[i])
+                agrp.attrs.create('bin_input', axbins[i])
+                _todoc = _axdoc[i]
+                for key in _todoc:
+                    val = _todoc[key]
+                    if isinstance(val, type('')):
+                        val = np.string_(val)
+                    if val is None:
+                        val = np.string_(val)
+                    agrp.attrs.create(key, val)
+                agrp.attrs.create('qty_type', np.string_(axtypes[i]))
+                aagrp = agrp.attrs.create_group('qty_type_args')
+                for key in axtypes_args[i]:
+                    val = axtypes_args[i][key]
+                    if isinstance(val, type('')):
+                        val = np.string_(val)
+                    if val is None:
+                        val = np.string_(val)
+                    aagrp.attrs.create(key, val)
             
             # cosmopars (emulate make_maps format)
             hed = f.create_group('Header')
-            cgrp = hed.create_group('inputpars/cosmopars')
+            cgrp = hed.create_group('cosmopars')
             csm = snap.cosmopars.getdct()
             for key in csm:
                 cgrp.attrs.create(key, csm[key])
             
             # direct input parameters
-            igrp = hed['inputpars']
+            igrp = hed.create_group('inputpars')
             igrp.attrs.create('snapfiles', np.array([np.string_(fn) for fn in snap.filens]))
             igrp.attrs.create('dirpath', np.string_(dirpath))
-            igrp.attrs.create('radius_rvir', radius_rvir)
             igrp.attrs.create('particle_type', particle_type)
-            igrp.attrs.create('pixsize_pkpc', pixsize_pkpc)
-            igrp.attrs.create('axis', np.string_(axis))
-            igrp.attrs.create('norm', np.string_(norm))
             igrp.attrs.create('outfilen', np.string_(outfilen))
-            # useful derived/used stuff
-            igrp.attrs.create('Axis1', Axis1)
-            igrp.attrs.create('Axis2', Axis2)
-            igrp.attrs.create('Axis3', Axis3)
-            igrp.attrs.create('diameter_used_cm', np.array(size_touse_cm))
-            if haslsmooth:
-                igrp.attrs.create('margin_lsmooth_cm', lmargin * coords_toCGS)
-            igrp.attrs.create('center', np.string_(center))
-            _grp = igrp.create_group('halodata')
-            for key in halodat:
-                _grp.attrs.create(key, halodat[key])
-            igrp.attrs.create('maptype', np.string_(maptype))
-            if maptype_args is None:
-                igrp.attrs.create('maptype_args', np.string_('None'))
-            else:
-                igrp.attrs.create('maptype_args', np.string_('dict'))
-                _grp = igrp.create_group('maptype_args_dict')
-                for key in maptype_args:
-                    val = maptype_args[key]
-                    if isinstance(val, type('')):
-                        val = np.string_(val)
-                    _grp.attrs.create(key, val)
+            
+            if halodat is not None:
+                _grp = igrp.create_group('halodata')
+                for key in halodat:
+                    _grp.attrs.create(key, halodat[key])
+
             for key in todoc_gen:
                 val = todoc_gen[key]
                 if isinstance(val, type('')):
