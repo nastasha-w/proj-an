@@ -1705,3 +1705,33 @@ def plot_radprof_m12i_CR_comp(smallrange=True):
     plt.savefig(outname, bbox_inches='tight')
 
 
+def test_ionsum_and_Z_maps():
+    
+    ionbase = ''
+    ionfiles = [ionbase.format(ion='O{}'.format(i)) for i in range(1, 10)]
+    sumfile = ''
+    massfile = ''
+    
+    fig = plt.figure(figsize=(11., 11.))
+    grid = gsp.GridSpec(nrows=4, ncols=5, hspace=0.05, wspace=0.05)
+    coordsax = fig.add_subplot(grid[:4, :4])
+    ionaxes = [fig.add_subplot(grid[i // 4, i % 4]) for i in range(9)]
+    ionsumax = fig.add_subplot(grid[2, 1])
+    elttotax = fig.add_subplot(grid[2, 2])
+    deltaionsumax = fig.add_subplot(grid[2, 3])
+    massax = fig.add_subplot(grid[3, 0])
+    metax = fig.add_subplot(grid[3, 1])
+    histax = fig.add_subplot(grid[3, 3])
+    fontsize = 12
+
+    cmap_cd = 'afmhot'
+    cmap_gas = 'viridis'
+    cmap_Z = 'plasma'
+    cmap_delta = 'RdBu'
+
+    coordsax.set_xlabel('X [pkpc]', fontsize=fontsize)
+    coordsax.set_ylabel('Y [pkpc]', fontsize=fontsize)
+
+
+    
+

@@ -1052,6 +1052,9 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
         'Metal': str
             'element': str
                 element name, e.g. 'oxygen'
+            'density': bool
+                get the metal number density instead of number of nuclei.
+                The default is False.
         'ion': str
             'ion': str
                 ion name. format e.g. 'o6', 'fe17'
@@ -1063,6 +1066,9 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
             'lintable': bool
                 interpolate the tables in linear space (True) or log 
                 space (False). The default is True.
+            'density': bool
+                get the ion density instead of number of nuclei.
+                The default is False.
                 
 
     Returns:
@@ -1092,12 +1098,21 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
             eltpath = basepath + 'Metallicity'
         else:
             eltpath = basepath + 'ElementAbundance/' + string.capwords(element)
+        if 'density' in maptype_args:
+            output_density = maptype_args['density']
+        else:
+            output_density = False
         qty = snap.readarray_emulateEAGLE(eltpath)[filter]
         toCGS = snap.toCGS
-        qty *= snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
-        toCGS = toCGS * snap.toCGS
+        if output_density:
+            qty *= snap.readarray_emulateEAGLE(basepath + 'Density')[filter]
+        else:
+            qty *= snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
         toCGS = toCGS / elt_atomw_cgs(element)
         todoc['units'] = '(# nuclei)'
+        if output_density:
+            todoc['units'] += ' * cm**-3'
+        todoc['density'] = output_density
     elif maptype == 'ion':
         if parttype != 0 :
             msg = 'Can only calculate ion fractions for gas (PartType0),' + \
@@ -1112,6 +1127,10 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
             lintable = maptype_args['lintable']
         else:
             lintable = True
+        if 'density' in maptype_args:
+            output_density = maptype_args['density']
+        else:
+            output_density = False
         table = 'PS20'
         simtype = 'fire'
         # no tables read in here, just an easy way to get parent element 
@@ -1122,7 +1141,10 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
         eltpath = basepath + 'ElementAbundance/' + string.capwords(element)
         qty = snap.readarray_emulateEAGLE(eltpath)[filter]
         toCGS = snap.toCGS
-        qty *= snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
+        if output_density:
+            qty *= snap.readarray_emulateEAGLE(basepath + 'Density')[filter]
+        else:
+            qty *= snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
         toCGS =  toCGS * snap.toCGS
         ionfrac = get_ionfrac(snap, ion, indct=filterdct, table=table, 
                               simtype=simtype, ps20depletion=ps20depletion,
@@ -1130,8 +1152,11 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
         qty *= ionfrac
         toCGS = toCGS / (dummytab.elementmass_u * c.u)
         todoc['units'] = '(# ions)'
+        if output_density:
+            todoc['units'] += ' * cm**-3'
         todoc['table'] = dummytab.ionbalfile
         todoc['tableformat'] = table
+        todoc['density'] = output_density
     return qty, toCGS, todoc
 
 # AHF: sorta tested (enclosed 2D mass wasn't too far above Mvir)
