@@ -1852,12 +1852,14 @@ def tryout_ionmap(opt=1):
             _maptype_args = {}
             
             maptype_argss = [_maptype_args]
-
+    
     for maptype_args in maptype_argss:
+        depl = ''
         if maptype == 'ion':
             qt = maptype_args['ion']
             _depl = maptype_args['ps20depletion']
-            depl = '_ps20-depl' if _depl else ''
+            if _depl:
+               depl = '_ps20-depl'
         elif maptype == 'Metal':
             qt = maptype_args['element']
         elif maptype == 'Metal':
