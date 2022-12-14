@@ -1108,6 +1108,7 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
             qty *= snap.readarray_emulateEAGLE(basepath + 'Density')[filter]
         else:
             qty *= snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
+        toCGS = toCGS * snap.toCGS
         toCGS = toCGS / elt_atomw_cgs(element)
         todoc['units'] = '(# nuclei)'
         if output_density:

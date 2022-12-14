@@ -1707,19 +1707,22 @@ def plot_radprof_m12i_CR_comp(smallrange=True):
 
 def test_ionsum_and_Z_maps():
     
-    ionbase = ''
-    ionfiles = [ionbase.format(ion='O{}'.format(i)) for i in range(1, 10)]
-    eltfile = ''
-    massfile = ''
+    fdir = '/Users/nastasha/ciera/tests/fire_start/map_tests/'
+    ionb = 'coldens_{ion}_m13h206_m3e5__m13h206_m3e5_MHDCRspec1_fire3' + \
+           '_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5' +\
+           '_fcr1e-3_vw3000_snap27_shrink-sph-cen_BN98_2rvir_v1.hdf5'
+    ionfiles = [fdir + ionb.format(ion='O{}'.format(i)) for i in range(1, 10)]
+    eltfile = fdir + ionb.format(ion='Oxygen')
+    massfile = fdir + ionb.format(ion='gas-mass')
 
     ionmaps = []
     ion_mapext = []
-    eltmap = None
-    massmap = None
     eltmass = c.atomw_O * c.u
     
+    width_ratios = [1.] * 4 + [0.2]
     fig = plt.figure(figsize=(11., 11.))
-    grid = gsp.GridSpec(nrows=4, ncols=5, hspace=0.05, wspace=0.05)
+    grid = gsp.GridSpec(nrows=4, ncols=5, hspace=0.05, wspace=0.05,
+                        width_ratios=width_ratios)
     coordsax = fig.add_subplot(grid[:4, :4])
     ionaxes = [fig.add_subplot(grid[i // 4, i % 4]) for i in range(9)]
     ionsumax = fig.add_subplot(grid[2, 1])
@@ -1729,20 +1732,36 @@ def test_ionsum_and_Z_maps():
     metax = fig.add_subplot(grid[3, 1])
     histax = fig.add_subplot(grid[3, 3])
     fontsize = 12
+    
 
     cmap_cd = 'afmhot'
     cmap_gas = 'viridis'
     cmap_Z = 'plasma'
     cmap_delta = 'RdBu'
 
-    coordsax.axis('off')
-    coordsax.set_xlabel('X [pkpc]', fontsize=fontsize)
-    coordsax.set_ylabel('Y [pkpc]', fontsize=fontsize)
+    cax_i = fig.add_subplot(grid[0, 4])
+    cax_Z = fig.add_subplot(grid[1, 4])
+    cax_delta = fig.add_subplot(grid[2, 4])
+    cax_gas = fig.add_subplot(grid[3, 4])
+
+    coordsax.spines['right'].set_visible(False)
+    coordsax.spines['top'].set_visible(False)
+    coordsax.spines['left'].set_visible(False)
+    coordsax.spines['bottom'].set_visible(False)
+    coordsax.tick_params(which='both', labelbottom=False, labelleft=False,
+                         left=False, bottom=False)
+    coordsax.set_xlabel('X [pkpc]', fontsize=fontsize, labelpad=40.)
+    coordsax.set_ylabel('Y [pkpc]', fontsize=fontsize, labelpad=40.)
+
+    patheff_text = [mppe.Stroke(linewidth=2.0, foreground="white"),
+                    mppe.Stroke(linewidth=0.4, foreground="black"),
+                    mppe.Normal()]  
 
     vmin_i = np.inf
     vmax_i = -np.inf
     for ionf in ionfiles:
-        with h5py.File(ionf, 'w') as f:
+        with h5py.File(ionf, 'r') as f:
+            #print(ionf)
             _map = f['map'][:]
             ionmaps.append(_map)
             vmin = f['map'].attrs['minfinite']
@@ -1766,7 +1785,147 @@ def test_ionsum_and_Z_maps():
             extent = (-0.5 * box_pkpc[xax], 0.5 * box_pkpc[xax],
                       -0.5 * box_pkpc[yax], 0.5 * box_pkpc[yax])
             ion_mapext.append(extent)
-            
+
+    with h5py.File(eltfile, 'r') as f:
+        map_elt = f['map'][:]
+        vmin = f['map'].attrs['minfinite']
+        vmax = f['map'].attrs['max']
+        vmin_i = min(vmin, vmin_i)
+        vmax_i = max(vmax, vmax_i)
+
+        box_cm = f['Header/inputpars'].attrs['diameter_used_cm']
+        cosmopars = {key: val for key, val in \
+                    f['Header/inputpars/cosmopars'].attrs.items()}
+        #print(cosmopars)
+        if 'Rvir_ckpcoverh' in f['Header/inputpars/halodata'].attrs:
+            rvir_ckpcoverh = f['Header/inputpars/halodata'].attrs['Rvir_ckpcoverh']
+            rvir_pkpc = rvir_ckpcoverh * cosmopars['a'] / cosmopars['h']
+        elif 'Rvir_cm' in f['Header/inputpars/halodata'].attrs:
+            rvir_cm = f['Header/inputpars/halodata'].attrs['Rvir_cm']
+            rvir_pkpc = rvir_cm / (c.cm_per_mpc * 1e-3)
+        xax = f['Header/inputpars'].attrs['Axis1']
+        yax = f['Header/inputpars'].attrs['Axis2']
+        box_pkpc = box_cm / (1e-3 * c.cm_per_mpc)
+        extent_elt = (-0.5 * box_pkpc[xax], 0.5 * box_pkpc[xax],
+                      -0.5 * box_pkpc[yax], 0.5 * box_pkpc[yax])
+    
+    with h5py.File(massfile, 'r') as f:
+        map_mass = f['map'][:]
+        vmin = f['map'].attrs['minfinite']
+        vmax = f['map'].attrs['max']
+        vmin_m = min(vmin, vmin_i)
+        vmax_m = max(vmax, vmax_i)
+
+        box_cm = f['Header/inputpars'].attrs['diameter_used_cm']
+        cosmopars = {key: val for key, val in \
+                     f['Header/inputpars/cosmopars'].attrs.items()}
+        #print(cosmopars)
+        if 'Rvir_ckpcoverh' in f['Header/inputpars/halodata'].attrs:
+            rvir_ckpcoverh = f['Header/inputpars/halodata'].attrs['Rvir_ckpcoverh']
+            rvir_pkpc = rvir_ckpcoverh * cosmopars['a'] / cosmopars['h']
+        elif 'Rvir_cm' in f['Header/inputpars/halodata'].attrs:
+            rvir_cm = f['Header/inputpars/halodata'].attrs['Rvir_cm']
+            rvir_pkpc = rvir_cm / (c.cm_per_mpc * 1e-3)
+        xax = f['Header/inputpars'].attrs['Axis1']
+        yax = f['Header/inputpars'].attrs['Axis2']
+        box_pkpc = box_cm / (1e-3 * c.cm_per_mpc)
+        extent_mass = (-0.5 * box_pkpc[xax], 0.5 * box_pkpc[xax],
+                       -0.5 * box_pkpc[yax], 0.5 * box_pkpc[yax])
+        
+    
+    _vmin_i = max(vmin_i, vmax_i - 10.)
+    extlow_i = 'neither' if _vmin_i >= vmin_i else 'min'
+    vtrans = 12.5
+    if vtrans > _vmin_i and vtrans < vmax_i:
+        _cmap_cd = pu.paste_cmaps(['gist_yarg', cmap_cd], 
+        [_vmin_i, vtrans, vmax_i])    
+    else:
+        _cmap_cd = cmap_cd
+    patheff_circ = [mppe.Stroke(linewidth=2.0, foreground="white"),
+                    mppe.Stroke(linewidth=1.5, foreground="black"),
+                    mppe.Normal()]  
+
+    isum = np.zeros(ionmaps[0].shape, dtype=ionmaps[0].dtype)
+    for ii, (imap, iext) in enumerate(zip(ionmaps, ion_mapext)):
+        ax = ionaxes[ii]
+        ion = 'O{}'.format(ii + 1)
+        cen = (0.5 * (iext[0] + iext[1]), 0.5 * (iext[2] + iext[3]))
+        ynum = ii % 4 == 0
+        ax.tick_params(axis='both', labelsize=fontsize-1, labelbottom=False,
+                       labelleft=ynum, direction='out')
+
+        img_i = ax.imshow(imap.T, origin='lower', interpolation='nearest',
+                          extent=iext, vmin=_vmin_i, vmax=vmax_i, 
+                          cmap=_cmap_cd)
+        ax.text(0.05, 0.95, ion, fontsize=fontsize,
+                horizontalalignment='left', verticalalignment='top',
+                transform=ax.transAxes, color='blue', 
+                path_effects=patheff_text)
+        patches = [mpatch.Circle(cen, rvir_pkpc)]
+        collection = mcol.PatchCollection(patches)
+        collection.set(edgecolor=['blue'], facecolor='none', linewidth=1.5,
+                       linestyle='dashed', path_effects=patheff_circ)
+        ax.add_collection(collection)
+        if ii == 0:
+            ax.text(1.05 * 2**-0.5 * rvir_pkpc, 1.05 * 2**-0.5 * rvir_pkpc, 
+                    '$R_{\\mathrm{vir}}$',
+                    color='blue', fontsize=fontsize,
+                    path_effects=patheff_text)
+        isum += 10**imap
+    
+    plt.colorbar(img_i, cax=cax_i, extend=extlow_i, orientation='vertical')
+    cax_i.set_ylabel('$\\log_{10} \\, \\mathrm{N} \\; [\\mathrm{cm}^{-2}]$',
+                     fontsize=fontsize)
+
+    isum = np.log10(isum)
+    ax = ionsumax
+    ion = 'ion sum'
+    cen = (0.5 * (iext[0] + iext[1]), 0.5 * (iext[2] + iext[3]))
+    ynum = False
+    ax.tick_params(axis='both', labelsize=fontsize-1, labelbottom=False,
+                   labelleft=ynum, direction='out')
+
+    ax.imshow(isum.T, origin='lower', interpolation='nearest',
+              extent=iext, vmin=_vmin_i, vmax=vmax_i, 
+              cmap=_cmap_cd)
+    ax.text(0.05, 0.95, ion, fontsize=fontsize,
+            horizontalalignment='left', verticalalignment='top',
+            transform=ax.transAxes, color='blue', 
+            path_effects=patheff_text)
+    patches = [mpatch.Circle(cen, rvir_pkpc)]
+    collection = mcol.PatchCollection(patches)
+    collection.set(edgecolor=['blue'], facecolor='none', linewidth=1.5,
+                    linestyle='dashed', path_effects=patheff_circ)
+    ax.add_collection(collection)
+    
+    ax = elttotax
+    ion = 'all O'
+    cen = (0.5 * (iext[0] + iext[1]), 0.5 * (iext[2] + iext[3]))
+    ynum = False
+    ax.tick_params(axis='both', labelsize=fontsize-1, labelbottom=False,
+                   labelleft=ynum, direction='out')
+    print(map_elt)
+    ax.imshow(map_elt.T, origin='lower', interpolation='nearest',
+              extent=extent_elt, vmin=_vmin_i, vmax=vmax_i, 
+              cmap=_cmap_cd)
+    ax.text(0.05, 0.95, ion, fontsize=fontsize,
+            horizontalalignment='left', verticalalignment='top',
+            transform=ax.transAxes, color='blue', 
+            path_effects=patheff_text)
+    patches = [mpatch.Circle(cen, rvir_pkpc)]
+    collection = mcol.PatchCollection(patches)
+    collection.set(edgecolor=['blue'], facecolor='none', linewidth=1.5,
+                    linestyle='dashed', path_effects=patheff_circ)
+    ax.add_collection(collection)
+     
+        
+        
+
+        
+
+        
+
+
 
 
 
