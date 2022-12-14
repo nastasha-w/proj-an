@@ -1043,7 +1043,7 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
         used to read in what is needed
     parttype: {0, 1, 4, 5}
         particle type
-    maptype: {'Mass', 'Metal', 'ion'}
+    maptype: {'Mass', 'Metal', 'ion', 'sim-direct'}
         what sort of thing are we looking for
     maptype_args: dict or None
         additional arguments for each maptype
@@ -1069,6 +1069,10 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
             'density': bool
                 get the ion density instead of number of nuclei.
                 The default is False.
+        'sim-direct': str
+            'field': str
+                the name of the field (after 'PartType<#>') to read 
+                in from the simulation.
                 
 
     Returns:
@@ -1080,6 +1084,7 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
     todoc:
         dictonary with useful info to store   
         always contains a 'units' entry
+        for auto read-in, might just be 'cgs' though
     '''
     basepath = 'PartType{}/'.format(parttype)
     filter = slice(None, None, None)
@@ -1158,6 +1163,15 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
         todoc['table'] = dummytab.ionbalfile
         todoc['tableformat'] = table
         todoc['density'] = output_density
+    elif maptype == 'sim-direct':
+        field = maptype_args['field']
+        qty = snap.readarray_emulateEAGLE(basepath + field)[filter]
+        toCGS = snap.toCGS
+        todoc['units'] = '(cgs {})'.format(field)
+        if field == 'Pressure':
+            todoc['info'] = 'thermal pressure only'
+    else:
+        raise ValueError('Invalid maptype: {}'.format(maptype))
     return qty, toCGS, todoc
 
 # AHF: sorta tested (enclosed 2D mass wasn't too far above Mvir)
