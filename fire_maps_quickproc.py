@@ -1730,7 +1730,33 @@ def test_ionsum_and_Z_maps():
     deltaionsumax = fig.add_subplot(grid[2, 3])
     massax = fig.add_subplot(grid[3, 0])
     metax = fig.add_subplot(grid[3, 1])
-    histax = fig.add_subplot(grid[3, 3])
+    
+    # slightly smaller panel to add axes labels and stuff
+    _histax = fig.add_subplot(grid[3, 2])
+    _histax.set_axis_off()
+    _histax.tick_params(which='both', labelleft=False, labelbottom=False,
+                        left=False, bottom=False)
+    hpos = _histax.get_position()
+    fmarx = 0.3
+    fmary = 0.2
+    histax = fig.add_axes([hpos.x0 + fmarx * hpos.width, 
+                           hpos.y0 + fmary * hpos.height,
+                           hpos.width * (1. - fmarx), 
+                           hpos.height * (1. - fmary)])
+
+    _dhistax = fig.add_subplot(grid[3, 3])
+    _dhistax.set_axis_off()
+    _dhistax.tick_params(which='both', labelleft=False, labelbottom=False,
+                         left=False, bottom=False)
+    hpos = _dhistax.get_position()
+    fmarx = 0.3
+    fmary = 0.2
+    dhistax = fig.add_axes([hpos.x0 + fmarx * hpos.width, 
+                            hpos.y0 + fmary * hpos.height,
+                            hpos.width * (1. - fmarx), 
+                            hpos.height * (1. - fmary)])
+    
+
     fontsize = 12
     
 
@@ -1750,7 +1776,7 @@ def test_ionsum_and_Z_maps():
     coordsax.spines['bottom'].set_visible(False)
     coordsax.tick_params(which='both', labelbottom=False, labelleft=False,
                          left=False, bottom=False)
-    coordsax.set_xlabel('X [pkpc]', fontsize=fontsize, labelpad=40.)
+    coordsax.set_xlabel('X [pkpc]', fontsize=fontsize, labelpad=20.)
     coordsax.set_ylabel('Y [pkpc]', fontsize=fontsize, labelpad=40.)
 
     patheff_text = [mppe.Stroke(linewidth=2.0, foreground="white"),
@@ -1904,7 +1930,7 @@ def test_ionsum_and_Z_maps():
     ynum = False
     ax.tick_params(axis='both', labelsize=fontsize-1, labelbottom=False,
                    labelleft=ynum, direction='out')
-    print(map_elt)
+    #print(map_elt)
     ax.imshow(map_elt.T, origin='lower', interpolation='nearest',
               extent=extent_elt, vmin=_vmin_i, vmax=vmax_i, 
               cmap=_cmap_cd)
@@ -1918,7 +1944,98 @@ def test_ionsum_and_Z_maps():
                     linestyle='dashed', path_effects=patheff_circ)
     ax.add_collection(collection)
      
-        
+    ax = deltaionsumax
+    _map = isum - map_elt
+    maxd = np.max(np.abs(_map[np.isfinite(_map)]))
+    if np.any(np.abs(_map) > maxd):
+        extend = 'both'
+    else:
+        extend = 'neither'
+    ion = 'ion sum - all O'
+    cen = (0.5 * (iext[0] + iext[1]), 0.5 * (iext[2] + iext[3]))
+    ynum = False
+    ax.tick_params(axis='both', labelsize=fontsize-1, labelbottom=False,
+                   labelleft=ynum, direction='out')
+    img_delta = ax.imshow(_map.T, origin='lower', interpolation='nearest',
+                          extent=extent_elt, vmin=-maxd, vmax=maxd, 
+                          cmap=cmap_delta)
+    ax.text(0.05, 0.95, ion, fontsize=fontsize,
+            horizontalalignment='left', verticalalignment='top',
+            transform=ax.transAxes, color='black', 
+            path_effects=patheff_text)
+    patches = [mpatch.Circle(cen, rvir_pkpc)]
+    collection = mcol.PatchCollection(patches)
+    collection.set(edgecolor=['black'], facecolor='none', linewidth=1.5,
+                    linestyle='dashed', path_effects=patheff_circ)
+    ax.add_collection(collection)
+    
+    plt.colorbar(img_delta, cax=cax_delta, extend=extend, orientation='vertical')
+    cax_delta.set_ylabel('$\\Delta \\, \\log_{10} \\, \\mathrm{N}$',
+                         fontsize=fontsize)
+
+    ax = dhistax
+    ax.set_xlabel('$\\Delta \\, \\log_{10} \\, \\mathrm{N}$',
+                  fontsize=fontsize)
+    ax.set_ylabel('number of pixels', fontsize=fontsize)
+    ax.hist(_map.flatten(), bins=100, log=True, histtype='stepfilled',
+            color='blue')
+    ax.text(0.05, 0.95, 'ion sum - all O', fontsize=fontsize,
+            horizontalalignment='left', verticalalignment='top',
+            transform=ax.transAxes, color='black', 
+            path_effects=patheff_text)
+    ax.set_xlim(-1.05 * maxd, 1.05 * maxd)
+    ax.tick_params(axis='both', labelsize=fontsize-1, labelbottom=True,
+                   labelleft=True, direction='in')
+    
+    ax = massax
+    _map = map_mass
+    extend = 'neither'
+    ion = 'gas'
+    cen = (0.5 * (extent_mass[0] + extent_mass[1]), 
+           0.5 * (extent_mass[2] + extent_mass[3]))
+    ynum = True
+    ax.tick_params(axis='both', labelsize=fontsize-1, labelbottom=True,
+                   labelleft=ynum, direction='out')
+    img_mass = ax.imshow(_map.T, origin='lower', interpolation='nearest',
+                          extent=extent_mass, cmap=cmap_gas)
+    ax.text(0.05, 0.95, ion, fontsize=fontsize,
+            horizontalalignment='left', verticalalignment='top',
+            transform=ax.transAxes, color='red', 
+            path_effects=patheff_text)
+    patches = [mpatch.Circle(cen, rvir_pkpc)]
+    collection = mcol.PatchCollection(patches)
+    collection.set(edgecolor=['red'], facecolor='none', linewidth=1.5,
+                    linestyle='dashed', path_effects=patheff_circ)
+    ax.add_collection(collection)
+
+    plt.colorbar(img_mass, cax=cax_gas, extend=extend, orientation='vertical')
+    cax_gas.set_ylabel('$\\log_{10} \\, \\Sigma \\; ' + \
+                         '[\\mathrm{g}\\,\\mathrm{cm}^{-2}]$',
+                         fontsize=fontsize)
+    
+    ax = metax
+    _map = map_elt + np.log10(eltmass) - map_mass
+    extend = 'neither'
+    ion = 'O mass frac.'
+    cen = (0.5 * (extent_mass[0] + extent_mass[1]), 
+           0.5 * (extent_mass[2] + extent_mass[3]))
+    ynum = True
+    ax.tick_params(axis='both', labelsize=fontsize-1, labelbottom=True,
+                   labelleft=ynum, direction='out')
+    img_Z = ax.imshow(_map.T, origin='lower', interpolation='nearest',
+                      extent=extent_mass, cmap=cmap_Z)
+    ax.text(0.05, 0.95, ion, fontsize=fontsize,
+            horizontalalignment='left', verticalalignment='top',
+            transform=ax.transAxes, color='red', 
+            path_effects=patheff_text)
+    patches = [mpatch.Circle(cen, rvir_pkpc)]
+    collection = mcol.PatchCollection(patches)
+    collection.set(edgecolor=['red'], facecolor='none', linewidth=1.5,
+                    linestyle='dashed', path_effects=patheff_circ)
+    ax.add_collection(collection)
+
+    plt.colorbar(img_Z, cax=cax_Z, extend=extend, orientation='vertical')
+    cax_Z.set_ylabel('$\\log_{10} \\, \\mathrm{Z}$', fontsize=fontsize)
         
 
         
