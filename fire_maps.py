@@ -1850,6 +1850,13 @@ def histogram_radprof(dirpath, snapnum,
 
     if outfilen is not None:
         with h5py.File(outfilen, 'w') as f:
+            # cosmopars (emulate make_maps format)
+            hed = f.create_group('Header')
+            cgrp = hed.create_group('cosmopars')
+            csm = snap.cosmopars.getdct()
+            for key in csm:
+                cgrp.attrs.create(key, csm[key])
+
             # histogram and weight
             hgrp = f.create_group('histogram')
             hgrp.create_dataset('histogram', data=hist)
@@ -1873,7 +1880,7 @@ def histogram_radprof(dirpath, snapnum,
             
             # histogram axes
             for i in range(len(_axbins)):
-                agrp = hed.create_group('axis_{}'.format(i))
+                agrp = f.create_group('axis_{}'.format(i))
                 _bins = _axbins_outunit[i]
                 agrp.create_dataset('bins', data=_bins)
                 agrp.attrs.create('log', logaxes[i])
@@ -1895,13 +1902,6 @@ def histogram_radprof(dirpath, snapnum,
                     if val is None:
                         val = np.string_(val)
                     aagrp.attrs.create(key, val)
-            
-            # cosmopars (emulate make_maps format)
-            hed = f.create_group('Header')
-            cgrp = hed.create_group('cosmopars')
-            csm = snap.cosmopars.getdct()
-            for key in csm:
-                cgrp.attrs.create(key, csm[key])
             
             # direct input parameters
             igrp = hed.create_group('inputpars')
