@@ -1623,7 +1623,7 @@ def histogram_radprof(dirpath, snapnum,
                       particle_type=0, 
                       center='shrinksph', rbins=(0., 1.), runit='Rvir',
                       logweights=True, logaxes=True, axbins=0.1,
-                      outfilen=None):
+                      outfilen=None, overwrite=True):
     '''
     make a weightype, weighttype_args weighted histogram of 
     axtypes, axtypes_args.
@@ -1689,13 +1689,19 @@ def histogram_radprof(dirpath, snapnum,
     outfilen: str
         file to save to output histogram to. None means no file is saved.
         The file must include the full path.
-
+    overwrite: bool
+        If a file with name outfilen already exists, overwrite it (True) or
+        raise a ValueError (False)
     Output:
     -------
     file with saved histogram data, if a file is specified
     otherwise, the histogram and bins
 
     '''
+    if outfilen is not None:
+        if os.path.isfile(outfilen) and not overwrite:
+            raise ValueError('File {} already exists.'.format(outfilen))
+
     todoc_gen = {}
     basepath = 'PartType{}/'.format(particle_type)
     _axvals = []
@@ -1848,7 +1854,7 @@ def histogram_radprof(dirpath, snapnum,
             f.create_dataset('hist', data=hist)
             f['hist'].attrs.create('log', logweights)
             for key in wt_todoc:
-                val = todoc_gen[key]
+                val = wt_todoc[key]
                 if isinstance(val, type('')):
                     val = np.string_(val)
                 if val is None:
