@@ -1615,7 +1615,7 @@ def getaxbins(minfinite, maxfinite, bin, extendmin=True, extendmax=True):
         bins = np.append(-np.inf, bins)
     if extendmax:
         bins = np.append(bins, np.inf)
-    return bin
+    return bins
 
 
 def histogram_radprof(dirpath, snapnum,
