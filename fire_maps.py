@@ -1851,17 +1851,18 @@ def histogram_radprof(dirpath, snapnum,
     if outfilen is not None:
         with h5py.File(outfilen, 'w') as f:
             # histogram and weight
-            f.create_dataset('hist', data=hist)
-            f['hist'].attrs.create('log', logweights)
+            hgrp = f.create_group('histogram')
+            hgrp.create_dataset('histogram', data=hist)
+            hgrp.attrs.create('log', logweights)
             for key in wt_todoc:
                 val = wt_todoc[key]
                 if isinstance(val, type('')):
                     val = np.string_(val)
                 if val is None:
                     val = np.string_(val)
-                f['hist'].attrs.create(key, val)
-            f['hist'].attrs.create('weight_type', np.string_(weighttype))
-            wagrp = f['hist'].create_group('weight_type_args')
+                hgrp.attrs.create(key, val)
+            hgrp.attrs.create('weight_type', np.string_(weighttype))
+            wagrp = hgrp.create_group('weight_type_args')
             for key in weighttype_args:
                 val = weighttype_args[key]
                 if isinstance(val, type('')):
