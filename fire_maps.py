@@ -1708,6 +1708,9 @@ def histogram_radprof(dirpath, snapnum,
     _axbins = []
     _axdoc = []
     _axbins_outunit = []
+    _logaxes = []
+    _axtypes = []
+    _axtypes_args = []
     if not hasattr(axbins, '__len__'):
         axbins = [axbins] * len(axtypes)
     if not hasattr(logaxes, '__len__'):
@@ -1717,7 +1720,7 @@ def histogram_radprof(dirpath, snapnum,
     
     if center is not None:
         todoc_cen = {}
-        todoc_cen['center'] = center
+        todoc_cen['center_method'] = center
         if center == 'AHFsmooth':
             halodat = mainhalodata_AHFsmooth(dirpath, snapnum)
             cen = np.array([halodat['Xc_ckpcoverh'], 
@@ -1779,6 +1782,9 @@ def histogram_radprof(dirpath, snapnum,
         _axbins.append(rbins2_simu)
         _axdoc.append(todoc_cen)
         _axbins_outunit.append(np.sqrt(rbins2_simu) * simu_to_runit)
+        _logaxes.append(False)
+        _axtypes.append('halo_3Dradius')
+        _axtypes_args.append({})
         filterdct = {'filter': filter}
     else:
         todoc_gen['info_halo'] = 'no halo particle selection applied'
@@ -1807,6 +1813,9 @@ def histogram_radprof(dirpath, snapnum,
         _axvals.append(qty)
         _axbins.append(usebins_simu)
         _axdoc.append(todoc)
+        _logaxes.append(logax)
+        _axtypes.append(axt)
+        _axtypes_args.append({})
         if logax:
             _bins_doc = usebins_simu + np.log10(toCGS)
         else:
@@ -1879,12 +1888,17 @@ def histogram_radprof(dirpath, snapnum,
                 wagrp.attrs.create(key, val)
             
             # histogram axes
-            for i in range(len(_axbins)):
+            for i in range(0, len(_axbins)):
                 agrp = f.create_group('axis_{}'.format(i))
                 _bins = _axbins_outunit[i]
                 agrp.create_dataset('bins', data=_bins)
-                agrp.attrs.create('log', logaxes[i])
-                agrp.attrs.create('bin_input', axbins[i])
+                agrp.attrs.create('log', _logaxes[i])
+                if center is None:
+                    agrp.attrs.create('bin_input', axbins[i])
+                elif i == 0:
+                    agrp.attrs.create('bin_input', rbins)
+                else:
+                    agrp.attrs.create('bin_input', axbins[i - 1])
                 _todoc = _axdoc[i]
                 for key in _todoc:
                     val = _todoc[key]
