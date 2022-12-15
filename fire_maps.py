@@ -1813,8 +1813,7 @@ def histogram_radprof(dirpath, snapnum,
     print(_axbins)
     maxperloop = 752**3 // 8
     if len(wt) <= maxperloop:
-        hist, edges = np.histogramdd(_axvals, weights=wt, bins=_axbins,
-                                     density=False, normed=False)
+        hist, edges = np.histogramdd(_axvals, weights=wt, bins=_axbins)
     else:
         lentot = len(wt)
         numperloop = maxperloop
