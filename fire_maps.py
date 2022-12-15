@@ -1861,7 +1861,7 @@ def histogram_radprof(dirpath, snapnum,
                     val = np.string_(val)
                 f['hist'].attrs.create(key, val)
             f['hist'].attrs.create('weight_type', np.string_(weighttype))
-            wagrp = f['hist'].attrs.create_group('weight_type_args')
+            wagrp = f['hist'].create_group('weight_type_args')
             for key in weighttype_args:
                 val = weighttype_args[key]
                 if isinstance(val, type('')):
