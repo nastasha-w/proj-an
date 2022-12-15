@@ -1894,7 +1894,7 @@ def histogram_radprof(dirpath, snapnum,
                         val = np.string_(val)
                     agrp.attrs.create(key, val)
                 agrp.attrs.create('qty_type', np.string_(axtypes[i]))
-                aagrp = agrp.attrs.create_group('qty_type_args')
+                aagrp = agrp.create_group('qty_type_args')
                 for key in axtypes_args[i]:
                     val = axtypes_args[i][key]
                     if isinstance(val, type('')):
