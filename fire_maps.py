@@ -1789,7 +1789,10 @@ def histogram_radprof(dirpath, snapnum,
         maxq = np.max(qty[qty_good])
         needext = not np.all(qty_good)
         if hasattr(axb, '__len__'):
-            _axb = axb / toCGS
+            if logax:
+                _axb = axb - np.log10(toCGS)
+            else:
+                _axb = axb / toCGS
         else:
             _axb = axb
         usebins_simu = getaxbins(minq, maxq, _axb, extendmin=needext, 
@@ -1798,12 +1801,16 @@ def histogram_radprof(dirpath, snapnum,
         _axvals.append(qty)
         _axbins.append(usebins_simu)
         _axdoc.append(todoc)
-        _axbins_outunit.append(usebins_simu * toCGS)
+        if logax:
+            _bins_doc = usebins_simu + np.log10(toCGS)
+        else:
+            _bins_doc = usebins_simu * toCGS
+        _axbins_outunit.append(_bins_doc)
     
     wt, wt_toCGS, wt_todoc = get_qty(snap, particle_type, weighttype, 
                                      weighttype_args, 
                                      filterdct=filterdct)
-
+    print(_axbins)
     maxperloop = 752**3 // 8
     if len(wt) <= maxperloop:
         hist, edges = np.histogramdd(_axvals, weights=wt, bins=_axbins,
