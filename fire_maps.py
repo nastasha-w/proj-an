@@ -1767,9 +1767,9 @@ def histogram_radprof(dirpath, snapnum,
         r2vals = np.sum(coords**2, axis=1)
         del coords
         filter = r2vals <= rbins2_simu[-1]
-        rbins2_simu = rbins2_simu[filter]
+        r2vals = r2vals[filter]
 
-        _axvals.append(rbins2_simu)
+        _axvals.append(r2vals)
         _axbins.append(rbins2_simu)
         _axdoc.append(todoc_cen)
         _axbins_outunit.append(np.sqrt(rbins2_simu) * simu_to_runit)
