@@ -278,7 +278,7 @@ def checkcenter_massmap(filen_template, savename=None, mincol=None,
             # error in file creation -- no actual conversion to cm
             region_simunits = f['Header/inputpars'].attrs['mapped_region_cm']
             #coords_to_CGS = f['Header/inputpars'].attrs['coords_toCGS']
-            #region_simunits = region_cm / coords_to_CGS
+            # region_simunits = region_cm / coords_to_CGS
 
             #box_cm = f['Header/inputpars'].attrs['diameter_used_cm']
             cosmopars = {key: val for key, val in \
@@ -1714,6 +1714,15 @@ def test_ionsum_and_Z_maps():
     ionfiles = [fdir + ionb.format(ion='O{}'.format(i)) for i in range(1, 10)]
     eltfile = fdir + ionb.format(ion='Oxygen')
     massfile = fdir + ionb.format(ion='gas-mass')
+    fdir_h = '/Users/nastasha/ciera/tests/fire_start/hist_tests/'
+    histZfile = fdir_h + 'hist_Oxygen_by_Mass_0-1-2Rvir_m13h206_m3e5__' + \
+                'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021' +\
+                '_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000_snap27_' + \
+                'shrink-sph-cen_BN98_2rvir_v1.hdf5'
+    
+    outfilen = fdir + 'O-sum-and-Z-frac-test_m13h206_m3e5_MHDCRspec1_fire3' +\
+           '_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5' +\
+           '_fcr1e-3_vw3000_snap27_shrink-sph-cen_BN98_2rvir_v1.pdf'
 
     ionmaps = []
     ion_mapext = []
@@ -1976,7 +1985,7 @@ def test_ionsum_and_Z_maps():
     ax = dhistax
     ax.set_xlabel('$\\Delta \\, \\log_{10} \\, \\mathrm{N}$',
                   fontsize=fontsize)
-    ax.set_ylabel('number of pixels', fontsize=fontsize)
+    ax.set_ylabel('# pixels', fontsize=fontsize)
     ax.hist(_map.flatten(), bins=100, log=True, histtype='stepfilled',
             color='blue')
     ax.text(0.05, 0.95, 'ion sum - all O', fontsize=fontsize,
@@ -1986,6 +1995,7 @@ def test_ionsum_and_Z_maps():
     ax.set_xlim(-1.05 * maxd, 1.05 * maxd)
     ax.tick_params(axis='both', labelsize=fontsize-1, labelbottom=True,
                    labelleft=True, direction='in')
+    ax.tick_params(axis='x', which='both', rotation=45.)
     
     ax = massax
     _map = map_mass
@@ -2019,7 +2029,7 @@ def test_ionsum_and_Z_maps():
     ion = 'O mass frac.'
     cen = (0.5 * (extent_mass[0] + extent_mass[1]), 
            0.5 * (extent_mass[2] + extent_mass[3]))
-    ynum = True
+    ynum = False
     ax.tick_params(axis='both', labelsize=fontsize-1, labelbottom=True,
                    labelleft=ynum, direction='out')
     img_Z = ax.imshow(_map.T, origin='lower', interpolation='nearest',
@@ -2037,6 +2047,50 @@ def test_ionsum_and_Z_maps():
     plt.colorbar(img_Z, cax=cax_Z, extend=extend, orientation='vertical')
     cax_Z.set_ylabel('$\\log_{10} \\, \\mathrm{Z}$', fontsize=fontsize)
         
+    with h5py.File(histZfile, 'r') as f:
+        hist = f['histogram/histogram'][:]
+        hist -= np.log10(c.solar_mass)
+        xvals = f['axis_1/bins'][:]
+    
+    ax = histax
+    ynum = True
+    ax.tick_params(axis='both', labelsize=fontsize-1, labelbottom=True,
+                   labelleft=ynum, direction='in')
+    label = 'O/M hist.'
+    ax.text(0.05, 0.95, label, fontsize=fontsize,
+            horizontalalignment='left', verticalalignment='top',
+            transform=ax.transAxes, color='black', 
+            path_effects=patheff_text)
+    xlabel = '$\\log_{10} \\, \\mathrm{M}_{\\mathrm{O}} \\,/\\,' +\
+             '\\mathrm{M}_{\\mathrm{gas}}$'
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.set_ylabel('$\\log_{10} \\, \\mathrm{M} \\; [\\mathrm{M}_{\\odot}]$',
+                  fontsize=fontsize)
+    
+    _hist = np.empty((hist.shape[0], hist.shape[1] + 1), dtype=hist.dtype)
+    _hist[:, :-1] = hist
+    _hist[:, -1] = -np.inf
+    maxy = np.max(_hist)
+    miny = np.min(_hist[np.isfinite(_hist)])
+    _hist[_hist == -np.inf] = -100.
+
+    ax.step(xvals, _hist[0, :], color='black', linewidth=2., where='post')
+    ax.step(xvals, _hist[1, :], color='blue', linewidth=1.5, 
+            linestyle='dashed', where='post')
+    ax.text(0.05, 0.70, '$< \\mathrm{R}_{\\mathrm{vir}}$', 
+            fontsize=fontsize - 2,
+            horizontalalignment='left', verticalalignment='top',
+            transform=ax.transAxes, color='black', 
+            path_effects=patheff_text)
+    ax.text(0.05, 0.80, '$1 \\endash 2 \\, \\mathrm{R}_{\\mathrm{vir}}$', 
+            fontsize=fontsize - 2,
+            horizontalalignment='left', verticalalignment='top',
+            transform=ax.transAxes, color='blue', 
+            path_effects=patheff_text)
+    ax.set_ylim(miny * 0.95, maxy * 1.1)
+    
+    plt.savefig(outfilen, bbox_inches='tight')
+
 
         
 

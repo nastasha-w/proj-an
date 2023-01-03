@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from curses import keyname
 import numpy as np
 import h5py
 import pandas as pd
@@ -1825,7 +1824,7 @@ def histogram_radprof(dirpath, snapnum,
     wt, wt_toCGS, wt_todoc = get_qty(snap, particle_type, weighttype, 
                                      weighttype_args, 
                                      filterdct=filterdct)
-    print(_axbins)
+    #print(_axbins)
     maxperloop = 752**3 // 8
     if len(wt) <= maxperloop:
         hist, edges = np.histogramdd(_axvals, weights=wt, bins=_axbins)
