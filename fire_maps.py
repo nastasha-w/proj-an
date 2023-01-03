@@ -9,7 +9,12 @@ import sys
 import os
 
 # Andrew Wetzel's Rockstar halo catalogue wrangler
-import halo_analysis as ha
+try:
+    import halo_analysis as ha
+except ModuleNotFoundError:
+    msg = 'Could not import module "halo_analysis";' +\
+          ' Rockstar halo data read-in will fail.'
+    print(msg)
 
 import readin_fire_data as rf
 import units_fire as uf
