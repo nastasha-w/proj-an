@@ -5,7 +5,6 @@
 plot or do quick checks on results from fire_maps
 '''
 
-from unicodedata import normalize
 import numpy as np
 import h5py
 import pandas as pd
