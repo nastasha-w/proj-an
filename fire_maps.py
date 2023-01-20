@@ -2343,6 +2343,9 @@ def fromcommandline(index):
         tryout_ionmap(opt=index - 31)
     elif index == 52:
         tryout_hist(0)
+    elif index >= 53 and index < 58:
+        # launcher + script loading test
+        print('Hello from index {}'.format(index))
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
@@ -2361,7 +2364,7 @@ def launchergen(*args, logfilebase='{ind}.out'):
     prints the launcher file lines. Direct output to a file to generate one.
     '''
     
-    fillline = 'python fire_maps.py {ind} >> ' + logfilebase
+    fillline = 'python ./fire_maps.py {ind} >> ' + logfilebase
     for arg in args:
         print(fillline.format(ind=arg))
 
