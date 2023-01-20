@@ -2345,19 +2345,63 @@ def fromcommandline(index):
         tryout_hist(0)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
+
+def launchergen(*args, logfilebase='{ind}.out'):
+    '''
+    Parameters:
+    -----------
+    args: indexable of integers
+        the indices to call fromcommandline with, one for each launched
+        process
+    logfilebase: string, formattable with argument 'ind'
+        where to write the logfiles. {ind} is replaced by the index in each 
+        line
+    Returns:
+    --------
+    prints the launcher file lines. Direct output to a file to generate one.
+    '''
     
+    fillline = 'python fire_maps.py {ind} >> ' + logfilebase
+    for arg in args:
+        print(fillline.format(ind=arg))
+
 if __name__ == '__main__':
     print('fire_maps.py script started')
     if len(sys.argv) > 1:
-        try:
-            ind = int(sys.argv[1])
-        except ValueError as msg1:
-            msg2 = 'Could not interpret first command-line argument {} as int'
-            msg2.format(sys.argv[1])
-            raise ValueError('/n'.join(msg1, msg2))
+        # generate launcher file for frontera
+        # arguments: 
+        #   --launchergen : generate a launcher file instead of 
+        #                   default 'run with this index'
+        #   --logfilebase=<string> : write log files for each launcher 
+        #                   process to a file like this. Must contain a
+        #                   '{ind}' part, since this is where the script
+        #                   will fill in the index each process is called 
+        #                   with
+        #   integers :      the indices to call this script (fire_maps.py)
+        #                   with in the launcher run
+        if '--launchergen' in sys.argv:
+            inds = [int(arg) if '-' not in arg else None \
+                    for arg in sys.argv[1:]]
+            while None in inds:
+                inds.remove(None)
+            kw = {}
+            for arg in sys.argv[1:]:
+                if '--logfilebase=' in arg:
+                    kw['logfilebase'] = arg.split('=')[-1]
+                    break
+            launchergen(*inds, **kw)
+        # just run code
+        else:
+            try:
+                ind = int(sys.argv[1])
+            except ValueError as msg1:
+                msg2 = 'Could not interpret first command-line' + \
+                       ' argument {} as int'
+                msg2 = msg2.format(sys.argv[1])
+                raise ValueError('/n'.join(msg1, msg2))
+            fromcommandline(ind)
     else:
         raise ValueError('Please specify an integer index > 1')
-    fromcommandline(ind)
     
     
 
