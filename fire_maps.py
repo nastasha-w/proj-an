@@ -2369,7 +2369,7 @@ def launchergen(*args, logfilebase='{ind}.out'):
         print(fillline.format(ind=arg))
 
 if __name__ == '__main__':
-    print('fire_maps.py script started')
+    #print('fire_maps.py script started')
     if len(sys.argv) > 1:
         # generate launcher file for frontera
         # arguments: 
@@ -2395,6 +2395,7 @@ if __name__ == '__main__':
             launchergen(*inds, **kw)
         # just run code
         else:
+            print('fire_maps.py script started')
             try:
                 ind = int(sys.argv[1])
             except ValueError as msg1:
