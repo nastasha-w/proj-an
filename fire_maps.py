@@ -2031,7 +2031,57 @@ def tryout_ionmap(opt=1):
             _maptype_args = {}
             
             maptype_argss = [_maptype_args]
-    
+    elif opt >= 21 and opt < 777:
+        # 756 indices; frontera paths
+        outdir = '/scratch1/08466/tg877653/output/maps/set1_BH_noBH/'
+        # CUBS https://arxiv.org/pdf/2209.01228.pdf: 
+        # At 𝑧≈1, HST/COS FUV spectra cover a wide
+        # range of ions, including 
+        # H i, He i, Cii, N ii to N iv, O i to O v, S ii to
+        # S v, Ne iv to Ne vi, Ne viii, and Mg x
+        # kinda random subset of those, H I not yet FIRE-consistent
+        ions = ['Mass', 'O6', 'Ne8', 'N5', 'C2', 'Si2', 'Fe2', 'Mg2', 'Mg10']
+        # z ~ 0, z ~ 1
+        snaps = [60, 58, 56, 46, 45, 44]
+        # standard res M12, M13 w and w/o BH
+        _dirpath = '/scratch3/01799/phopkins/'
+        simnames = ['m12i_m6e4_MHD_fire3_fireBH_Sep052021_crdiffc690_sdp1e-4_gacc31_fa0.5',
+                    'm12m_m6e4_MHD_fire3_fireBH_Sep052021_crdiffc690_sdp1e-4_gacc31_fa0.5',
+                    'm12q_m6e4_MHD_fire3_fireBH_Sep052021_crdiffc690_sdp1e-4_gacc31_fa0.5',
+                    'm12i_m6e4_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    'm12m_m6e4_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    'm12q_m6e4_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    'm13h02_m3e5_MHD_fire3_fireBH_Sep052021_crdiffc690_sdp1e-4_gacc31_fa0.5',
+                    'm13h29_m3e5_MHD_fire3_fireBH_Sep052021_crdiffc690_sdp1e-4_gacc31_fa0.5',
+                    'm13h113_m3e5_MHD_fire3_fireBH_Sep052021_crdiffc690_sdp1e-4_gacc31_fa0.5',
+                    'm13h206_m3e5_MHD_fire3_fireBH_Sep052021_crdiffc690_sdp1e-4_gacc31_fa0.5',
+                    'm13h002_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    'm13h029_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    'm13h113_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    'm13h206_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                   ]
+        ind = opt - 21
+        simi = ind // (len(snaps) * len(ions))
+        snpi = (ind % (len(snaps) * len(ions))) // len(ions)
+        ioni = ind % len(ions)
+        simname = simnames[simi]
+        snapnum = snaps[snpi]
+        ion = ions[ioni]
+        # directory is halo name + resolution 
+        dp2 = (simname.split('_')[:2]).join('_')
+        if dp2.startswith('m13h02'):
+            dp2 = dp2.replace('m13h02', 'm13h002')
+        dirpath = '/'.join([_dirpath, dp2, simname])
+
+        if ion == 'Mass':
+            maptype = 'Mass'
+            maptype_argss = [{}]
+        else:
+            maptype = 'ion'
+            _maptype_args = {'ps20depletion': False}
+            _maptype_args.update({'ion': ion})
+            maptype_argss = [_maptype_args.copy()]
+
     for maptype_args in maptype_argss:
         depl = ''
         if maptype == 'ion':
@@ -2346,6 +2396,8 @@ def fromcommandline(index):
     elif index >= 53 and index < 58:
         # launcher + script loading test
         print('Hello from index {}'.format(index))
+    elif index >= 58 and index < 814:
+        tryout_ionmap(opt=index - 58 + 21)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
@@ -2402,7 +2454,7 @@ if __name__ == '__main__':
                 msg2 = 'Could not interpret first command-line' + \
                        ' argument {} as int'
                 msg2 = msg2.format(sys.argv[1])
-                raise ValueError('/n'.join(msg1, msg2))
+                raise ValueError('/n'.join([msg1, msg2]))
             fromcommandline(ind)
     else:
         raise ValueError('Please specify an integer index > 1')
