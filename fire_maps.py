@@ -2031,8 +2031,8 @@ def tryout_ionmap(opt=1):
             _maptype_args = {}
             
             maptype_argss = [_maptype_args]
-    elif opt >= 21 and opt < 777:
-        # 756 indices; frontera paths
+    elif opt >= 21 and opt < 129:
+        # 108 indices; frontera paths
         outdir = '/scratch1/08466/tg877653/output/maps/set1_BH_noBH/'
         # CUBS https://arxiv.org/pdf/2209.01228.pdf: 
         # At 𝑧≈1, HST/COS FUV spectra cover a wide
@@ -2041,8 +2041,8 @@ def tryout_ionmap(opt=1):
         # S v, Ne iv to Ne vi, Ne viii, and Mg x
         # kinda random subset of those, H I not yet FIRE-consistent
         ions = ['Mass', 'O6', 'Ne8', 'N5', 'C2', 'Si2', 'Fe2', 'Mg2', 'Mg10']
-        # z ~ 0, z ~ 1
-        snaps = [60, 58, 56, 46, 45, 44]
+        # z=0.4, 0.5, 0.6, redshifts match exactly at least for same ICs
+        snaps = [49, 50, 51]
         # standard res M12, M13 w and w/o BH
         _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
         simnames = ['m12i_m6e4_MHD_fire3_fireBH_Sep052021_crdiffc690_sdp1e-4_gacc31_fa0.5',
@@ -2386,7 +2386,7 @@ def fromcommandline(index):
     elif index >= 53 and index < 58:
         # launcher + script loading test
         print('Hello from index {}'.format(index))
-    elif index >= 58 and index < 814:
+    elif index >= 58 and index < 166:
         tryout_ionmap(opt=index - 58 + 21)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
