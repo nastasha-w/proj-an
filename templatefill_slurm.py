@@ -16,6 +16,11 @@ for --firemaps_frontera_seq: (fire_maps.py calls with sequential indices)
     --start=<first index, int>
     --step=<number of tasks per node, int>
     --last=<last index, int>
+
+    generates a set of slurm scripts with tasks divided as evenly as possible.
+    Each calls fire_maps.py with a number of indices, so that all indices from
+    start to last are called, with step or (step - 1) on each node. No jobs 
+    with more than one node are created.
 '''
 
 import os
