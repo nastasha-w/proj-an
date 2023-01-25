@@ -533,5 +533,39 @@ def get_Firesnap(path, snapnum, filetype='snap'):
     print(msg.format(parameterfile, basename))
     return firesnap
      
-        
+def findclosestz_snap(path, redshift):
+    '''
+    Utility function for picking snapshots.
+
+    Parameters:
+    -----------
+    path: str
+        where to look for the snapshot list value. Same options as
+        the get_Firesnap path.
+    redshift: float
+        which redshift value to try to match
+    
+    Returns:
+    --------
+    snapnum: int
+        the number of the closest matching snapshot
+    zval: float
+        the redshift of the closest matching snapshot
+    '''
+    if path.endswith('output'):
+        path = path[:-6]
+    if not path.endswith('/'):
+        path = path + '/'
+    targetfile = path + 'snapshot_scale-factors.txt'
+    if not os.path.isfile(targetfile):
+        raise RuntimeError('No file {} found'.format(targetfile))
+    with open(targetfile, 'r') as f:
+        aopts = f.read()
+    aopts = f.split('\n')
+    aopts = np.array([float(aopt) for aopt in aopts])
+    zopts = 1. / aopts - 1.
+    snapnum = np.argmin(np.abs(zopts - redshift))
+    zval = zopts[snapnum]
+    return snapnum, zval
+    
         
