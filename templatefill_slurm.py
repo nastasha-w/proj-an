@@ -64,11 +64,11 @@ def fillin_firemaps_frontera_seqinds(**kwargs):
     keys_opt = list(defaults.keys())
     kwargs_next = defaults.copy()
     for key in kwargs:
-        if key not in keys_req or keys_opt:
+        if (key not in keys_req) and (key not in keys_opt):
             msg = 'skipping key {}: not an option for this template'
             print(msg.format(key))
             continue
-        kwargs_next.update(key, kwargs_next[key])
+        kwargs_next.update({key, kwargs_next[key]})
         if key in keys_req:
             keys_req.remove(key)
     if len(keys_req) > 0:
