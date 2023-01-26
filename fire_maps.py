@@ -2062,6 +2062,7 @@ def tryout_ionmap(opt=1):
         if dp2.startswith('m13h02'):
             dp2 = dp2.replace('m13h02', 'm13h002')
         dirpath = '/'.join([_dirpath, dp2, simname])
+        print(dirpath)
 
         if ion == 'Mass':
             maptype = 'Mass'
