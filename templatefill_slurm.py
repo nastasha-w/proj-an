@@ -43,7 +43,7 @@ def fillin(templatefilen, outfilen, **kwargs):
     out = template
     for key in kwargs:
         val = kwargs[key]
-        out = out.replace(key, val)
+        out = out.replace(key, str(val))
     with open(outfilen, 'w') as f_out:
         f_out.write(out)
     # make executable (for me)
