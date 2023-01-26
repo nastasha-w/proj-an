@@ -38,7 +38,7 @@ def fillin(templatefilen, outfilen, **kwargs):
     with the corresponding value, writes out the result to outfilen.
     '''
     print(templatefilen)
-    with open(templatefilen, 'a') as f:
+    with open(templatefilen, 'r') as f:
         template = f.read()
     out = template
     for key in kwargs:
