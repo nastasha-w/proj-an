@@ -37,7 +37,7 @@ def fillin(templatefilen, outfilen, **kwargs):
     reads in templatefilen, replaces instances of each kwarg key
     with the corresponding value, writes out the result to outfilen.
     '''
-    print(templatefilen)
+    #print(templatefilen)
     with open(templatefilen, 'r') as f:
         template = f.read()
     out = template
@@ -47,7 +47,7 @@ def fillin(templatefilen, outfilen, **kwargs):
     with open(outfilen, 'w') as f_out:
         f_out.write(out)
     # make executable (for me)
-    os.chmod(outfilen, stat.S_IXUSR)
+    os.chmod(outfilen, 755)
 
 def fillin_firemaps_frontera_seqinds(**kwargs):
     '''
