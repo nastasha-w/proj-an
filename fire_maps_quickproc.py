@@ -2144,13 +2144,15 @@ def plotsnaps_m13noBH():
         data.update({key: val})
         vals.append(val)
     
-    commonvals = [val if np.sum([val in vals[i] for i in range(len(vals))])\
+    commonvals = [val if np.all([val in vals[i] for i in range(len(vals))])\
                   else None for val in vals[0]]
     normalvals = [val if np.sum([val in vals[i] for i in range(len(vals))]) \
                          > 0.5 * len(vals)\
-                  else None for val in vals[0]]
+                  else None for val in vals[3]]
     while None in commonvals:
         commonvals.remove(None)
+    while None in normalvals:
+        normalvals.remove(None)
     
     fontsize = 12
     fig = plt.figure(figsize=(10., 5))
@@ -2180,7 +2182,7 @@ def plotsnaps_m13noBH():
             else:   
                 st = '{}'.format(ind)
             ax.text(xv, yval, st,
-                    horizontalalignment='left' if ind % 4 < 2 else 'right',
+                    horizontalalignment='left' if ind % 4 > 1 else 'right',
                     verticalalignment='bottom' if ind % 2 else 'top')
         numsnaps = len(xvals)
         ax.text(11., yval, '({})'.format(numsnaps),
@@ -2195,6 +2197,9 @@ def plotsnaps_m13noBH():
             horizontalalignment='left', verticalalignment='center')
     ax.set_xlim(0.8 * xzeroval, 17.)
     ax.set_xscale('log')
+
+    plt.savefig('/Users/nastasha/ciera/tests/fire_start/' + \
+                'snaptimes_m13_noBH_sample_Lindsey.pdf')
     
         
 

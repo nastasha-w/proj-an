@@ -86,9 +86,9 @@ def fillset_firemaps_frontera_seqinds(**kwargs):
     for key in keys_req:
         if key not in kwargs:
             raise ValueError('Argument {} missing'.format(key))
-    start = kwargs['start']
-    step = kwargs['step']
-    last = kwargs['last']
+    start = int(kwargs['start'])
+    step = int(kwargs['step'])
+    last = int(kwargs['last'])
     for key in keys_req:
         del kwargs[key]
     _kwargs_next = kwargs.copy()
