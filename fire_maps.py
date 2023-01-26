@@ -2407,7 +2407,7 @@ def launchergen(*args, logfilebase='{ind}.out'):
     prints the launcher file lines. Direct output to a file to generate one.
     '''
     
-    fillline = 'python ./fire_maps.py {ind} >> ' + logfilebase
+    fillline = 'python ./fire_maps.py {ind} > ' + logfilebase + ' 2>&1'
     for arg in args:
         print(fillline.format(ind=arg))
 
