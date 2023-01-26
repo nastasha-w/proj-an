@@ -8,6 +8,7 @@ plot or do quick checks on results from fire_maps
 import numpy as np
 import h5py
 import pandas as pd
+import os
 
 import tol_colors as tc
 
@@ -2090,9 +2091,111 @@ def test_ionsum_and_Z_maps():
     
     plt.savefig(outfilen, bbox_inches='tight')
 
-
+def readfile_outputtimes(path):
+    if path.endswith('output'):
+        path = path[:-6]
+    if not path.endswith('/'):
+        path = path + '/'
+    targetfile = path + 'snapshot_scale-factors.txt'
+    if not os.path.isfile(targetfile):
+        raise RuntimeError('No file {} found'.format(targetfile))
+    with open(targetfile, 'r') as f:
+        aopts = f.read()
+    aopts = (aopts.strip()).split('\n')
+    aopts = np.array([float(aopt) for aopt in aopts])
+    zopts = 1. / aopts - 1.
+    return zopts
         
-
+def plotsnaps_m13noBH():
+    #basedir = '/scratch3/01799/phopkins/fire3_suite_done/'
+    basedir = '/Users/nastasha/ciera/fire_data/'
+    
+    # noBH m13s from Lindsey's spreadsheet 
+    checkpaths = ['m13h002_m3e5/m13h002_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                  'm13h007_m3e5/m13h007_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                  'm13h029_m3e5/m13h029_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                  'm13h113_m3e5/m13h113_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                  'm13h206_m3e5/m13h206_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                  'm13h206_m3e5/m13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct142021_crdiffc1_sdp1e10_gacc31_fa0.5',
+                  'm13h206_m3e5/m13h206_m3e5_MHD_fire3_fireBH_Sep052021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                  'm13h206_m3e5/m13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR0_Oct142021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                  'm13h206_m3e5/m13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct142021_crdiffc1_sdp1e10_gacc31_fa0.5',
+                  'm13h206_m3e5/m13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e10_gacc31_fa0.5_fcr3e-3_vw3000',
+                  'm13h223_m3e5/m13h223_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                  'm13h236_m3e5/m13h236_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                  ]
+    data = {}
+    vals = []
+    title = 'snapshot redshifts: m13, m3e5, fire3_fireBH, sdp1e10_gacc31_fa0.5'
+    for path in checkpaths:
+        val = readfile_outputtimes(basedir + path)
+        key = path.split('/')[-1]
+        # shorten
+        key = key.replace('m13', '')
+        key = key.replace('_m3e5', '')
+        key = key.replace('_fire3_fireBH', '')
+        key = key.replace('_sdp1e10_gacc31_fa0.5', '')
+        if len(key) > 30:
+            tot = len(key)
+            opts = np.where([char == '_' for char in key])[0]
+            splitopt = np.argmin(np.abs(opts - 0.5 * tot))
+            splitpoint = opts[splitopt]
+            key = key[:splitpoint] + '\n' + key[splitpoint:]
+        data.update({key: val})
+        vals.append(val)
+    
+    commonvals = [val if np.sum([val in vals[i] for i in range(len(vals))])\
+                  else None for val in vals[0]]
+    normalvals = [val if np.sum([val in vals[i] for i in range(len(vals))]) \
+                         > 0.5 * len(vals)\
+                  else None for val in vals[0]]
+    while None in commonvals:
+        commonvals.remove(None)
+    
+    fontsize = 12
+    fig = plt.figure(figsize=(10., 5))
+    ax = fig.add_axes([0.33, 0.1, 0.62, 0.8])
+    fig.suptitle(title, fontsize=fontsize)
+    keys = list(data.keys())
+    keys.sort()
+    yvals = np.arange(len(keys)) + 0.5
+    xzeroval = 0.01
+    for key, yval in zip(keys, yvals):
+        xvals = data[key]
+        if xvals[0] <= 0.:
+            xvals[0] = xzeroval
+        xall = [val in normalvals for val in xvals]
+        colors = np.ones((len(xvals), 4)) * np.array([0.0, 0.0, 0.0, 1.0])
+        colors[np.logical_not(xall)] = np.array([0.0, 1.0, 0.0, 0.4])
+        ax.scatter(xvals, [yval] * len(xvals), c=colors, marker='o',
+                   s=15)
+        oddvals = np.where(np.logical_not(xall))[0]
+        for ind in oddvals:
+            xv = xvals[ind]
+            if ind > 0:
+                if xv == xvals[ind - 1]:
+                    st = st + '={}'.format(int)
+                else:
+                    st = '{}'.format(ind)
+            else:   
+                st = '{}'.format(ind)
+            ax.text(xv, yval, st,
+                    horizontalalignment='left' if ind % 4 < 2 else 'right',
+                    verticalalignment='bottom' if ind % 2 else 'top')
+        numsnaps = len(xvals)
+        ax.text(11., yval, '({})'.format(numsnaps),
+                horizontalalignment='left', verticalalignment='center')
+    for xv in commonvals:
+        ax.axvline(xv, color='gray', alpha=0.3)
+    ax.set_yticks(yvals, labels=keys)
+    ax.tick_params(left=True, bottom=True, labelsize=fontsize - 1,
+                   direction='in', which='both')
+    ax.set_xlabel('redshift', fontsize=fontsize)
+    ax.text(xzeroval, yvals[0], '$z=0$', fontsize=fontsize - 1,
+            horizontalalignment='left', verticalalignment='center')
+    ax.set_xlim(0.8 * xzeroval, 17.)
+    ax.set_xscale('log')
+    
         
 
 
