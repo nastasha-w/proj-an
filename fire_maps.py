@@ -2058,7 +2058,7 @@ def tryout_ionmap(opt=1):
         snapnum = snaps[snpi]
         ion = ions[ioni]
         # directory is halo name + resolution 
-        dp2 = (simname.split('_')[:2]).join('_')
+        dp2 = '_'.join(simname.split('_')[:2])
         if dp2.startswith('m13h02'):
             dp2 = dp2.replace('m13h02', 'm13h002')
         dirpath = '/'.join([_dirpath, dp2, simname])
