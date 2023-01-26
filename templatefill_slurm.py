@@ -47,7 +47,8 @@ def fillin(templatefilen, outfilen, **kwargs):
     with open(outfilen, 'w') as f_out:
         f_out.write(out)
     # make executable (for me)
-    os.chmod(outfilen, '0700')
+    os.chmod(outfilen, 
+             stat.S_IRWXU or stat.S_IRGRP or stat.S_IXGRP or stat.S_IRWXO)
 
 def fillin_firemaps_frontera_seqinds(**kwargs):
     '''
