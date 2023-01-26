@@ -76,7 +76,7 @@ def find_intercepts(yvals, xvals, ypoint, xydct=None):
     if yvals is None:
         yvals = xydct['y']
 
-    if not (np.all(np.diff(xvals) < 0.) or np.all(np.diff(xvals) > 0.)):
+    if not (np.all(np.diff(xvals) <= 0.) or np.all(np.diff(xvals) >= 0.)):
         print('linterpsolve only works for monotonic x values')
         return None
     zerodiffs = yvals - ypoint
