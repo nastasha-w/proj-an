@@ -2066,7 +2066,7 @@ def tryout_ionmap(opt=1):
         print(dirpath)
     elif opt >= 57 and opt < 93:
         # 36 indices; frontera paths
-        outdir = '/scratch1/08466/tg877653/output/maps/set1_BH_noBH/'
+        outdir = '/scratch1/08466/tg877653/output/maps/set2_BH_noBH/'
         # CUBS https://arxiv.org/pdf/2209.01228.pdf: 
         # At 𝑧≈1, HST/COS FUV spectra cover a wide
         # range of ions, including 
@@ -2106,7 +2106,7 @@ def tryout_ionmap(opt=1):
         if dp2.startswith('m13h02'):
             dp2 = dp2.replace('m13h02', 'm13h002')
         dirpath = '/'.join([_dirpath, dp2, simname])
-        print(dirpath)
+        #print(dirpath)
 
         if ion == 'Mass':
             maptype = 'Mass'

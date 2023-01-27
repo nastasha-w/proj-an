@@ -2216,6 +2216,7 @@ def plotcomp_mass_ion_BH_noBH(fnmass_noBH='', fnion_noBH='',
     vmaxs = {}
     extents = {}
     rvirs = {}
+    mvirs = {}
     for key in mapn:
         with h5py.File(mapn[key], 'r') as f:
             map = f['map'][:]
@@ -2242,12 +2243,12 @@ def plotcomp_mass_ion_BH_noBH(fnmass_noBH='', fnion_noBH='',
             vmaxs[key] = vmax
             extents[key] = extent
             rvirs[key] = rvir_pkpc
-
-
+            mvirs[key] = f['Header/inputpars/halodata'].attrs['Mvir_g']
+            
     vmin_mass = min([vmins[key] if 'mass' in key else np.inf for key in mapn])
     vmax_mass = max([vmaxs[key] if 'mass' in key else -np.inf for key in mapn])
     cmap_mass = 'viridis'
-    mincol_ion = 12.
+    mincol_ion = 13.
     vmin_ion = min([vmins[key] if 'ion' in key else np.inf for key in mapn])
     vmax_ion = max([vmaxs[key] if 'ion' in key else -np.inf for key in mapn])
     if vmin_ion < mincol_ion and vmax_ion > mincol_ion:
@@ -2256,14 +2257,25 @@ def plotcomp_mass_ion_BH_noBH(fnmass_noBH='', fnion_noBH='',
     else:
         cmap_ion = 'plasma'
 
-    fig = plt.figure(figsize=(5.5, 6.))
     ncols = 2
-    grid = gsp.GridSpec(nrows=3, ncols=ncols, hspace=0.2, wspace=0.1, 
-                        width_ratios=[1., 1.],
-                        height_ratios=[2.5, 2.5, 1.])
-    axes = fig.add_subplot(grid[i, i%ncols] for i in range(len(mapn))) 
-    cax_mass = fig.add_subplot(grid[2, 0])
-    cax_ion = fig.add_subplot(grid[2, 1])
+    nrows = 2
+    hspace = 0.2
+    wspace = 0.35
+    panelsize = 2.5
+    caxw = 0.12 * panelsize
+    width_ratios = [panelsize] * ncols + [caxw]
+    height_ratios = [panelsize] * nrows
+    
+    width = sum(width_ratios) * (1. + ncols / (ncols + 1.) * wspace)
+    height = sum(height_ratios) * (1. + (nrows - 1)/ (nrows) * hspace)
+    fig = plt.figure(figsize=(width, height))
+    grid = gsp.GridSpec(nrows=nrows, ncols=ncols + 1,
+                        hspace=hspace, wspace=hspace, 
+                        width_ratios=width_ratios,
+                        height_ratios=height_ratios)
+    axes = [fig.add_subplot(grid[i // 2, i%ncols]) for i in range(len(mapn))]
+    cax_mass = fig.add_subplot(grid[0, 2])
+    cax_ion = fig.add_subplot(grid[1, 2])
     fontsize = 12
     
     xlabel = ['X', 'Y', 'Z'][xax] + ' [pkpc]'
@@ -2271,24 +2283,35 @@ def plotcomp_mass_ion_BH_noBH(fnmass_noBH='', fnion_noBH='',
     fig.suptitle(title, fontsize=fontsize)
 
     imgs = {}
-    for axi, (ax, mapkey) in enumerate(axes, mapkeys):
-        labelx = axi > len(mapn) - ncols
+    for axi, (ax, mapkey) in enumerate(zip(axes, mapkeys)):
+        labelx = axi >= len(mapn) - ncols
         labely = axi % ncols == 0
         if labelx:
             ax.set_xlabel(xlabel, fontsize=fontsize)
         if labely:
             ax.set_ylabel(ylabel, fontsize=fontsize)
-        ax.tick_params(axis='both', labelsize=fontsize-1)
+        ax.tick_params(axis='both', labelsize=fontsize-2)
         
         if 'ion' in mapkey:
             vmin = vmin_ion
             vmax = vmax_ion
             cmap = cmap_ion
+            axtitle = 'ion, '
         elif 'mass' in mapkey:
             vmin = vmin_mass
             vmax = vmax_mass
             cmap = cmap_mass
-
+            axtitle = 'gas, '
+        if '_noBH' in mapkey:
+            axtitle = axtitle + 'BH off'
+        else:
+            axtitle = axtitle + 'BH on'
+        mvir_logmsun = np.log10(mvirs[mapkey] / c.solar_mass)
+        masspart = '$\\mathrm{{M}}_\\mathrm{{vir}}=10^{{{logm_msun:.1f}}}'+\
+                   '\\; \\mathrm{{M}}_{{\\odot}}$'
+        masspart = masspart.format(logm_msun=mvir_logmsun)
+        axtitle = masspart + '\n' + axtitle
+        
         imgs[mapkey] = ax.imshow(maps[mapkey].T, origin='lower', 
                                  interpolation='nearest', vmin=vmin,
                                  vmax=vmax, cmap=cmap, extent=extent)
@@ -2302,17 +2325,63 @@ def plotcomp_mass_ion_BH_noBH(fnmass_noBH='', fnion_noBH='',
                     1.05 * 2**-0.5 * rvirs[mapkey], 
                     '$R_{\\mathrm{vir}}$',
                     color='red', fontsize=fontsize)
+        ax.text(0.02, 0.98, axtitle, fontsize=fontsize - 1, color='red',
+                horizontalalignment='left', verticalalignment='top',
+                transform=ax.transAxes)
 
     plt.colorbar(imgs[examplekey_ion], cax=cax_ion, 
-                 extend=False, orientation='horizontal') 
+                 extend='neither', orientation='vertical')
+    cax_ion.set_ylabel('$\\log_{10} \\, \\mathrm{N} \\; [\\mathrm{cm}]^{-2}$',
+                        fontsize=fontsize) 
     plt.colorbar(imgs[examplekey_mass], cax=cax_mass, 
-                 extend=False, orientation='horizontal') 
-    
+                 extend='neither', orientation='vertical') 
+    clabel_mass = '$\\log_{10} \\, \\Sigma_{\\mathrm{gas}}' + \
+                  ' \\; [\\mathrm{g} \\, \\mathrm{cm}]^{-2}$'
+    cax_mass.set_ylabel(clabel_mass, fontsize=fontsize) 
     if outname is not None:
         plt.savefig(outname, bbox_inches='tight')
 
+def plotcomps_mass_ion_BH_noBH(mapset=2):
+    outdir = '/Users/nastasha/ciera/projects_lead/fire3_ionabs/maps_BH_noBH/'
+    if mapset == 2:
+        mdir = '/Users/nastasha/ciera/sim_maps/fire/set2_BH_noBH/'
+        template_m12i = 'coldens_{qt}_m12i_m6e4_MHDCRspec1_fire3_fireBH_fireCR0_Oct142021_crdiffc690_{bh}_gacc31_fa0.5_snap50_shrink-sph-cen_BN98_2rvir_v1.hdf5'
+        template_m13h206 = 'coldens_{qt}_m13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR0_Oct142021_crdiffc690_{bh}_gacc31_fa0.5_snap50_shrink-sph-cen_BN98_2rvir_v1.hdf5' 
+        bh_on = 'sdp1e-4'
+        bh_off = 'sdp1e10'
+        qt_mass = 'gas-mass'
+        qts_ion = ['O6', 'Ne8', 'N5', 'C2', 'Si2', 'Fe2', 'Mg2', 'Mg10']
 
+        templates = {'m12i': template_m12i,
+                     'm13h206': template_m13h206}
+        labels_tpl = {'m12i': 'm12i_m6e4, MHDCRspec1, fireCR0, crdiffc690, gacc31_fa0.5',
+                           'm13h206': 'm13h206_m3e5, MHDCRspec1, fireCR0, crdiffc690, gacc31_fa0.5'}
+        title_tpl= 'Gas and {ion} columns, z=0.5, {template}'
+        _outname = 'mapcomp_BH_noBH_set2_{template}_gas_{ion}.pdf'
 
+    for templatekey in templates:
+        for ion in qts_ion:
+            filetemplate = mdir + templates[templatekey]
+            fnmass_noBH = filetemplate.format(qt=qt_mass, bh=bh_off)
+            fnion_noBH = filetemplate.format(qt=ion, bh=bh_off)
+            fnmass_BH = filetemplate.format(qt=qt_mass, bh=bh_on)
+            fnion_BH = filetemplate.format(qt=ion, bh=bh_on)
+            outname = outdir + _outname.format(template=templatekey, ion=ion)
+            title = title_tpl.format(ion=ion, 
+                                     template=labels_tpl[templatekey])
+            if len(title) > 50:
+                splitopts = np.where([char == ',' for char in title])[0]
+                optchoice = np.argmin(np.abs(splitopts - 0.5 * len(title)))
+                splitind = splitopts[optchoice]
+                title = (title[:splitind + 1]).strip() + '\n' +\
+                        (title[splitind + 1:]).strip()
+
+            plotcomp_mass_ion_BH_noBH(fnmass_noBH=fnmass_noBH, 
+                                      fnion_noBH=fnion_noBH,
+                                      fnmass_BH=fnmass_BH, 
+                                      fnion_BH=fnion_BH,
+                                      outname=outname, 
+                                      title=title)
 
     
 
