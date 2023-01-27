@@ -239,7 +239,6 @@ def quicklook_massmap(filen, savename=None, mincol=None):
     if savename is not None:
         plt.savefig(savename, bbox_inches='tight')
 
-
 def checkcenter_massmap(filen_template, savename=None, mincol=None,
                         center_simunits=None, Rvir_simunits=None):
     '''
@@ -2200,9 +2199,117 @@ def plotsnaps_m13noBH():
 
     plt.savefig('/Users/nastasha/ciera/tests/fire_start/' + \
                 'snaptimes_m13_noBH_sample_Lindsey.pdf')
-    
-        
 
+def plotcomp_mass_ion_BH_noBH(fnmass_noBH='', fnion_noBH='',
+                              fnmass_BH='', fnion_BH='',
+                              outname='', title=''):
+    mapn = {'mass_noBH': fnmass_noBH,
+            'ion_noBH': fnion_noBH,
+            'mass_BH': fnmass_BH,
+            'ion_BH': fnion_BH}
+    mapkeys = ['mass_noBH', 'mass_BH',
+               'ion_noBH', 'ion_BH']
+    examplekey_ion = 'ion_noBH'
+    examplekey_mass = 'mass_noBH'
+    maps = {}
+    vmins = {}
+    vmaxs = {}
+    extents = {}
+    rvirs = {}
+    for key in mapn:
+        with h5py.File(mapn[key], 'r') as f:
+            map = f['map'][:]
+            vmin = f['map'].attrs['minfinite']
+            vmax = f['map'].attrs['max']
+
+            box_cm = f['Header/inputpars'].attrs['diameter_used_cm']
+            cosmopars = {key: val for key, val in \
+                        f['Header/inputpars/cosmopars'].attrs.items()}
+            #print(cosmopars)
+            if 'Rvir_ckpcoverh' in f['Header/inputpars/halodata'].attrs:
+                rvir_ckpcoverh = f['Header/inputpars/halodata'].attrs['Rvir_ckpcoverh']
+                rvir_pkpc = rvir_ckpcoverh * cosmopars['a'] / cosmopars['h']
+            elif 'Rvir_cm' in f['Header/inputpars/halodata'].attrs:
+                rvir_cm = f['Header/inputpars/halodata'].attrs['Rvir_cm']
+                rvir_pkpc = rvir_cm / (c.cm_per_mpc * 1e-3)
+            xax = f['Header/inputpars'].attrs['Axis1']
+            yax = f['Header/inputpars'].attrs['Axis2']
+            box_pkpc = box_cm / (1e-3 * c.cm_per_mpc)
+            extent = (-0.5 * box_pkpc[xax], 0.5 * box_pkpc[xax],
+                      -0.5 * box_pkpc[yax], 0.5 * box_pkpc[yax])
+            maps[key] = map
+            vmins[key] = vmin
+            vmaxs[key] = vmax
+            extents[key] = extent
+            rvirs[key] = rvir_pkpc
+
+
+    vmin_mass = min([vmins[key] if 'mass' in key else np.inf for key in mapn])
+    vmax_mass = max([vmaxs[key] if 'mass' in key else -np.inf for key in mapn])
+    cmap_mass = 'viridis'
+    mincol_ion = 12.
+    vmin_ion = min([vmins[key] if 'ion' in key else np.inf for key in mapn])
+    vmax_ion = max([vmaxs[key] if 'ion' in key else -np.inf for key in mapn])
+    if vmin_ion < mincol_ion and vmax_ion > mincol_ion:
+        cmap_ion = pu.paste_cmaps(['gist_yarg', 'plasma'], 
+                                  [vmin_ion, mincol_ion, vmax_ion])
+    else:
+        cmap_ion = 'plasma'
+
+    fig = plt.figure(figsize=(5.5, 6.))
+    ncols = 2
+    grid = gsp.GridSpec(nrows=3, ncols=ncols, hspace=0.2, wspace=0.1, 
+                        width_ratios=[1., 1.],
+                        height_ratios=[2.5, 2.5, 1.])
+    axes = fig.add_subplot(grid[i, i%ncols] for i in range(len(mapn))) 
+    cax_mass = fig.add_subplot(grid[2, 0])
+    cax_ion = fig.add_subplot(grid[2, 1])
+    fontsize = 12
+    
+    xlabel = ['X', 'Y', 'Z'][xax] + ' [pkpc]'
+    ylabel = ['X', 'Y', 'Z'][yax] + ' [pkpc]'
+    fig.suptitle(title, fontsize=fontsize)
+
+    imgs = {}
+    for axi, (ax, mapkey) in enumerate(axes, mapkeys):
+        labelx = axi > len(mapn) - ncols
+        labely = axi % ncols == 0
+        if labelx:
+            ax.set_xlabel(xlabel, fontsize=fontsize)
+        if labely:
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+        ax.tick_params(axis='both', labelsize=fontsize-1)
+        
+        if 'ion' in mapkey:
+            vmin = vmin_ion
+            vmax = vmax_ion
+            cmap = cmap_ion
+        elif 'mass' in mapkey:
+            vmin = vmin_mass
+            vmax = vmax_mass
+            cmap = cmap_mass
+
+        imgs[mapkey] = ax.imshow(maps[mapkey].T, origin='lower', 
+                                 interpolation='nearest', vmin=vmin,
+                                 vmax=vmax, cmap=cmap, extent=extent)
+
+        patches = [mpatch.Circle((0., 0.), rvirs[mapkey])]
+        collection = mcol.PatchCollection(patches)
+        collection.set(edgecolor=['red'], facecolor='none', linewidth=1.5)
+        ax.add_collection(collection)
+        if axi == 0:
+            ax.text(1.05 * 2**-0.5 * rvirs[mapkey], 
+                    1.05 * 2**-0.5 * rvirs[mapkey], 
+                    '$R_{\\mathrm{vir}}$',
+                    color='red', fontsize=fontsize)
+
+    plt.colorbar(imgs[examplekey_ion], cax=cax_ion, 
+                 extend=False, orientation='horizontal') 
+    plt.colorbar(imgs[examplekey_mass], cax=cax_mass, 
+                 extend=False, orientation='horizontal') 
+    
+    if outname is not None:
+        plt.savefig(outname, bbox_inches='tight')
 
 
 

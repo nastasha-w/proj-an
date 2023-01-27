@@ -2045,12 +2045,56 @@ def tryout_ionmap(opt=1):
         snaps = [50] # 49, 51
         # standard res M12, M13 w and w/o BH
         _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
+        # the m13 sdp1e-4 run (with BH) was only run down to z=1
         simnames = ['m12i_m6e4_MHD_fire3_fireBH_Sep052021_crdiffc690_sdp1e-4_gacc31_fa0.5',
                     'm12i_m6e4_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
                     'm13h206_m3e5_MHD_fire3_fireBH_Sep052021_crdiffc690_sdp1e-4_gacc31_fa0.5',
                     'm13h206_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
                    ]
         ind = opt - 21
+        simi = ind // (len(snaps) * len(ions))
+        snpi = (ind % (len(snaps) * len(ions))) // len(ions)
+        ioni = ind % len(ions)
+        simname = simnames[simi]
+        snapnum = snaps[snpi]
+        ion = ions[ioni]
+        # directory is halo name + resolution 
+        dp2 = '_'.join(simname.split('_')[:2])
+        if dp2.startswith('m13h02'):
+            dp2 = dp2.replace('m13h02', 'm13h002')
+        dirpath = '/'.join([_dirpath, dp2, simname])
+        print(dirpath)
+    elif opt >= 57 and opt < 93:
+        # 36 indices; frontera paths
+        outdir = '/scratch1/08466/tg877653/output/maps/set1_BH_noBH/'
+        # CUBS https://arxiv.org/pdf/2209.01228.pdf: 
+        # At 𝑧≈1, HST/COS FUV spectra cover a wide
+        # range of ions, including 
+        # H i, He i, Cii, N ii to N iv, O i to O v, S ii to
+        # S v, Ne iv to Ne vi, Ne viii, and Mg x
+        # kinda random subset of those, H I not yet FIRE-consistent
+        ions = ['Mass', 'O6', 'Ne8', 'N5', 'C2', 'Si2', 'Fe2', 'Mg2', 'Mg10']
+        # z=0.4, 0.5, 0.6, redshifts match exactly at least for same ICs
+        snaps = [50] # 49, 51
+        # standard res M12, M13 w and w/o BH
+        _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
+        # the m13s noBH run down to z=0 are all crdiff690
+        # m13s with BH: m13h29 has crdiffc690, but noBH counterpart is not down to z=0
+        #               same for m13h113, m13h236
+        # m13h206 has m13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR0_Oct142021_crdiffc690_sdp1e-4_gacc31_fa0.5
+        #             m13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR0_vcr1000_Oct252021_crdiffc690_sdp1e-4_gacc31_fa0.5_fcr3e-4_vw3000
+        # to z=0, with BH
+        # noBH h206:  m13h206_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5
+        #             m13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR0_Oct142021_crdiffc690_sdp1e10_gacc31_fa0.5  
+        # -> ONE m13 option down to z=0 for same physics model BH/noBH comp.             
+        # also only has one m12 match, for m12i
+        # checked all have 60 snaps 
+        simnames = ['m12i_m6e4_MHDCRspec1_fire3_fireBH_fireCR0_Oct142021_crdiffc690_sdp1e-4_gacc31_fa0.5',
+                    'm12i_m6e4_MHDCRspec1_fire3_fireBH_fireCR0_Oct142021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR0_Oct142021_crdiffc690_sdp1e-4_gacc31_fa0.5',
+                    'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR0_Oct142021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                   ]
+        ind = opt - 57
         simi = ind // (len(snaps) * len(ions))
         snpi = (ind % (len(snaps) * len(ions))) // len(ions)
         ioni = ind % len(ions)
@@ -2389,6 +2433,8 @@ def fromcommandline(index):
         print('Hello from index {}'.format(index))
     elif index >= 58 and index < 94:
         tryout_ionmap(opt=index - 58 + 21)
+    elif index >= 94 and index < 130:
+        tryout_ionmap(opt=index - 94 + 57) 
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
