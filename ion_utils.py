@@ -181,6 +181,13 @@ class linetable_PS20:
         self.emission = emission
         self.vol = vol
         self.lintable = lintable
+
+        if self.z < 0.:
+            if np.isclose(self.z, 0.):
+                print('Resetting z from {} to 0.0'.format(self.z))
+                self.z = 0.
+            else:
+                raise ValueError('Input redshift {} is < 0.'.format(self.z))
         
         self.parse_ionname()
         self.getmetadata()
@@ -387,7 +394,7 @@ class linetable_PS20:
             
             if self.z < self.redshifts[0] or self.z > self.redshifts[-1]:
                 msg = 'Desired redshift {z} is outside the tabulated range '+\
-                      + '{zmin} - {zmax}'
+                      '{zmin} - {zmax}'
                 msg = msg.format(z=self.z, zmin=self.redshifts[0], 
                                  zmax=self.reshifts[-1])
                 raise ValueError(msg)

@@ -2128,7 +2128,7 @@ def tryout_ionmap(opt=1):
             maptype_argss = [_maptype_args.copy()]
 
     elif opt >= 93 and opt < 189:
-        # 36 indices; frontera paths
+        # 96 indices; frontera paths
         ind = opt - 93
         outdir = '/scratch1/08466/tg877653/output/maps/set3_BH_noBH/'
         # CUBS https://arxiv.org/pdf/2209.01228.pdf: 

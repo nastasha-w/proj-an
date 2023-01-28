@@ -2355,9 +2355,33 @@ def plotcomps_mass_ion_BH_noBH(mapset=2):
         templates = {'m12i': template_m12i,
                      'm13h206': template_m13h206}
         labels_tpl = {'m12i': 'm12i_m6e4, MHDCRspec1, fireCR0, crdiffc690, gacc31_fa0.5',
-                           'm13h206': 'm13h206_m3e5, MHDCRspec1, fireCR0, crdiffc690, gacc31_fa0.5'}
+                      'm13h206': 'm13h206_m3e5, MHDCRspec1, fireCR0, crdiffc690, gacc31_fa0.5'}
         title_tpl= 'Gas and {ion} columns, z=0.5, {template}'
-        _outname = 'mapcomp_BH_noBH_set2_{template}_gas_{ion}.pdf'
+        _outname = 'mapcomp_BH_noBH_set2_{template}_snap50_gas_{ion}.pdf'
+    
+    elif mapset == 3:
+        mdir = '/Users/nastasha/ciera/sim_maps/fire/set3_BH_noBH/'
+        template_m12i = 'coldens_{{qt}}_m12i_m6e4_MHDCRspec1_fire3_fireBH_fireCR0_Oct142021_crdiffc690_{{bh}}_gacc31_fa0.5_snap{snap}_shrink-sph-cen_BN98_2rvir_v1.hdf5'
+        template_m13h206 = 'coldens_{{qt}}_m13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR0_Oct142021_crdiffc690_{{bh}}_gacc31_fa0.5_snap{snap}_shrink-sph-cen_BN98_2rvir_v1.hdf5' 
+        bh_on = 'sdp1e-4'
+        bh_off = 'sdp1e10'
+        qt_mass = 'gas-mass'
+        qts_ion = ['O6', 'Ne8', 'Mg10', 'N5', 'Mg2']
+        snaps = [45, 49, 51, 60]
+        
+        templates = {'m12i_snap{}'.format(snap): \
+                     template_m12i.format(snap=snap) for snap in snaps}
+        templates.update({'m13h206_snap{}'.format(snap): \
+                          template_m13h206.format(snap=snap) \
+                          for snap in snaps})
+        keys_m12i = ['m12i_snap{}'.format(snap) for snap in snaps]
+        keys_m13h206 = ['m13h206_snap{}'.format(snap) for snap in snaps]
+        labels_tpl = {key: 'm12i_m6e4, MHDCRspec1, fireCR0, crdiffc690, gacc31_fa0.5'\
+                      for key in keys_m12i}
+        labels_tpl.update({key: 'm13h206_m3e5, MHDCRspec1, fireCR0, crdiffc690, gacc31_fa0.5'\
+                           for key in keys_m13h206})              
+        title_tpl= 'Gas and {ion} columns, {template}'
+        _outname = 'mapcomp_BH_noBH_set2_{template}_snap50_gas_{ion}.pdf'
 
     for templatekey in templates:
         for ion in qts_ion:
