@@ -1979,6 +1979,7 @@ def tryout_ionmap(opt=1):
                '_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000'
     _outfilen = 'coldens_{qt}_{sc}_snap{sn}_shrink-sph-cen_BN98' + \
                 '_2rvir{depl}_v1.hdf5'
+    checkfileflag = False
     if opt == 1:
         simname = simname1
         dirpath = dirpath1
@@ -2184,6 +2185,7 @@ def tryout_ionmap(opt=1):
         # split into m12 and m13 as two sets: different snapshot ranges
         ind = opt - 189
         outdir = '/scratch1/08466/tg877653/output/maps/set4_BH_noBH/'
+        checkfileflag = True
         # CUBS https://arxiv.org/pdf/2209.01228.pdf: 
         # At 𝑧≈1, HST/COS FUV spectra cover a wide
         # range of ions, including 
@@ -2228,6 +2230,7 @@ def tryout_ionmap(opt=1):
         # split into m12 and m13 as two sets: different snapshot ranges
         ind = opt - 261
         outdir = '/scratch1/08466/tg877653/output/maps/set5_BH_noBH/'
+        checkfileflag = True
         # CUBS https://arxiv.org/pdf/2209.01228.pdf: 
         # At 𝑧≈1, HST/COS FUV spectra cover a wide
         # range of ions, including 
@@ -2272,6 +2275,7 @@ def tryout_ionmap(opt=1):
         # split into m12 and m13 as two sets: different snapshot ranges
         ind = opt - 357
         outdir = '/scratch1/08466/tg877653/output/maps/set6_BH_noBH/'
+        checkfileflag = True
         # CUBS https://arxiv.org/pdf/2209.01228.pdf: 
         # At 𝑧≈1, HST/COS FUV spectra cover a wide
         # range of ions, including 
@@ -2325,7 +2329,13 @@ def tryout_ionmap(opt=1):
 
         outfilen = outdir + _outfilen.format(sc=simname, sn=snapnum, 
                                              depl=depl, qt=qt)
-        
+        if checkfileflag:
+            if os.path.isfile(outfilen):
+                msg = 'For opt {}, output file already exists:\n{}'
+                print(msg.format(opt, outfilen))
+                print('Not running this map again')
+                return None
+
         massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
                 pixsize_pkpc=3., axis='z', outfilen=outfilen,
                 center='shrinksph', norm='pixsize_phys',
@@ -2636,8 +2646,8 @@ def fromcommandline(index):
         tryout_ionmap(opt=index - 130 + 93)
     elif index >= 226 and index < 394:
         # sets 4, 5, 6
-        # set 4 (m12, high-res): 226 - 297
-        # sets 5,6 (m13, standard-res): 298 - 393
+        # set 4 (m12, high-res): 226 - 297 (72 inds)
+        # sets 5,6 (m13, standard-res): 298 - 393 (96 inds)
         tryout_ionmap(opt=index - 226 + 189)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
