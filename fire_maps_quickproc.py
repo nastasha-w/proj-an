@@ -2376,12 +2376,12 @@ def plotcomps_mass_ion_BH_noBH(mapset=2):
                           for snap in snaps})
         keys_m12i = ['m12i_snap{}'.format(snap) for snap in snaps]
         keys_m13h206 = ['m13h206_snap{}'.format(snap) for snap in snaps]
-        labels_tpl = {key: 'm12i_m6e4, MHDCRspec1, fireCR0, crdiffc690, gacc31_fa0.5'\
+        labels_tpl = {key: key + ', MHDCRspec1, fireCR0, crdiffc690, gacc31_fa0.5'\
                       for key in keys_m12i}
-        labels_tpl.update({key: 'm13h206_m3e5, MHDCRspec1, fireCR0, crdiffc690, gacc31_fa0.5'\
+        labels_tpl.update({key: key + ', MHDCRspec1, fireCR0, crdiffc690, gacc31_fa0.5'\
                            for key in keys_m13h206})              
         title_tpl= 'Gas and {ion} columns, {template}'
-        _outname = 'mapcomp_BH_noBH_set2_{template}_snap50_gas_{ion}.pdf'
+        _outname = 'mapcomp_BH_noBH_set2_{template}_gas_{ion}.pdf'
 
     for templatekey in templates:
         for ion in qts_ion:
@@ -2399,7 +2399,12 @@ def plotcomps_mass_ion_BH_noBH(mapset=2):
                 splitind = splitopts[optchoice]
                 title = (title[:splitind + 1]).strip() + '\n' +\
                         (title[splitind + 1:]).strip()
-
+            print(fnmass_noBH)
+            print(fnion_noBH)
+            print(fnmass_BH)
+            print(fnion_BH)
+            print(outname)
+            print(title)
             plotcomp_mass_ion_BH_noBH(fnmass_noBH=fnmass_noBH, 
                                       fnion_noBH=fnion_noBH,
                                       fnmass_BH=fnmass_BH, 
