@@ -2202,13 +2202,16 @@ def plotsnaps_m13noBH():
 
 def plotcomp_mass_ion_BH_noBH(fnmass_noBH='', fnion_noBH='',
                               fnmass_BH='', fnion_BH='',
-                              outname='', title=''):
+                              outname='', title=None):
     mapn = {'mass_noBH': fnmass_noBH,
             'ion_noBH': fnion_noBH,
             'mass_BH': fnmass_BH,
             'ion_BH': fnion_BH}
     mapkeys = ['mass_noBH', 'mass_BH',
                'ion_noBH', 'ion_BH']
+    examplekey_BH = 'mass_BH'
+    examplekey_noBH = 'mass_noBH'
+
     examplekey_ion = 'ion_noBH'
     examplekey_mass = 'mass_noBH'
     maps = {}
@@ -2217,6 +2220,9 @@ def plotcomp_mass_ion_BH_noBH(fnmass_noBH='', fnion_noBH='',
     extents = {}
     rvirs = {}
     mvirs = {}
+    if title is None:
+        filens = {}
+        redshifts = {}
     for key in mapn:
         with h5py.File(mapn[key], 'r') as f:
             map = f['map'][:]
@@ -2244,6 +2250,15 @@ def plotcomp_mass_ion_BH_noBH(fnmass_noBH='', fnion_noBH='',
             extents[key] = extent
             rvirs[key] = rvir_pkpc
             mvirs[key] = f['Header/inputpars/halodata'].attrs['Mvir_g']
+            if title is None:
+                filen = f['Header/inputpars'].attrs['snapfiles'].decode()
+                filen = filen.split('/')
+                if 'output' in filen:
+                    filen = filen[-2]
+                else:
+                    filen = filen[-1]
+                filens[key] = filen
+                redshifts[key] = f['Header/inputpars/cosmopars'].attrs['z']
             
     vmin_mass = min([vmins[key] if 'mass' in key else np.inf for key in mapn])
     vmax_mass = max([vmaxs[key] if 'mass' in key else -np.inf for key in mapn])
@@ -2278,6 +2293,39 @@ def plotcomp_mass_ion_BH_noBH(fnmass_noBH='', fnion_noBH='',
     cax_ion = fig.add_subplot(grid[1, 2])
     fontsize = 12
     
+    if title is None:
+        if np.allclose(redshifts[examplekey_ion], 
+                       [redshifts[key] for key in mapkeys]):
+            title = ['redshift: {}'.format(redshifts[examplekey_ion])]
+        else:
+            print('files have different redshifts: {}'.format(redshifts))
+            title = []
+        for key, pre in zip([examplekey_noBH, examplekey_BH],
+                            ['left (no BH): ', 'right (BH): ']):
+            filen = pre + filens[key]
+            maxline = 50
+            if len(filen) > maxline:
+                splitopts = np.where([char == '_' for char in filen])[0]
+                origlen = len(filen)
+                filen = filen.split('_')
+                rest = origlen
+                splitlist=[]
+                last = 0
+                while rest > maxline:
+                    cur = last + sum(splitopts[last + 1:] \
+                                     <= splitopts[last] + maxline)
+                    if cur == last:
+                        msg = 'file name splitting for title failed for {}'
+                        raise RuntimeError(msg.format('_'.join(filen)))
+                    splitlist.append(cur)
+                    rest = rest - (splitopts[cur] - splitopts[last])
+                    last = cur
+                for i in splitlist:
+                    filen[splitopts[i]] = filen[splitopts[i]] + '\n'
+                filen = '_'.join(filen)
+            title.append(filen)
+        title = '\n'.join(title)
+
     xlabel = ['X', 'Y', 'Z'][xax] + ' [pkpc]'
     ylabel = ['X', 'Y', 'Z'][yax] + ' [pkpc]'
     fig.suptitle(title, fontsize=fontsize)
@@ -2399,12 +2447,12 @@ def plotcomps_mass_ion_BH_noBH(mapset=2):
                 splitind = splitopts[optchoice]
                 title = (title[:splitind + 1]).strip() + '\n' +\
                         (title[splitind + 1:]).strip()
-            print(fnmass_noBH)
-            print(fnion_noBH)
-            print(fnmass_BH)
-            print(fnion_BH)
-            print(outname)
-            print(title)
+            #print(fnmass_noBH)
+            #print(fnion_noBH)
+            #print(fnmass_BH)
+            #print(fnion_BH)
+            #print(outname)
+            #print(title)
             plotcomp_mass_ion_BH_noBH(fnmass_noBH=fnmass_noBH, 
                                       fnion_noBH=fnion_noBH,
                                       fnmass_BH=fnmass_BH, 
