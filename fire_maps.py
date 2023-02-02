@@ -867,6 +867,16 @@ def get_ionfrac(snap, ion, indct=None, table='PS20', simtype='fire',
     if np.any(np.isnan(ionfrac)):
         msg = 'Some ion fractions were NaN: {} out of {}'
         print(msg.format(np.sum(np.isnan(ionfrac)), len(ionfrac)))
+    if np.any(np.isnan(iontab.iontable_T_Z_nH)):
+        print('NaN values in the table to be interpolated')
+        print('Parameters used in linetable_PS20:')
+        print('ion: ', ion)
+        print('redshift: ', redshift)
+        print('emission: ', False)
+        print('vol: ', True)
+        print('ionbalfile: ', ol.iontab_sylvia_ssh)
+        print('emtabfile: ', ol.emtab_sylvia_ssh)
+        print('lintable: ', lintable)
     return ionfrac
 
 # untested, including lintable option and consistency with table values
@@ -1360,7 +1370,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
     if len(naninds) > 0:
         print('Some qW values are NaN')
         print('Used {}, {}, {}'.format(particle_type, maptype, maptype_args))
-        outfile_debug = outfilen.split('/')[-1]
+        outfile_debug = outfilen.split('/')[:-1]
         outfile_debug.append('debug_qW_naninfo.hdf5')
         outfile_debug = '/'.join(outfile_debug)
 
