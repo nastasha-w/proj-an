@@ -10,13 +10,14 @@ import h5py
 import pandas as pd
 import os
 
-import tol_colors as tc
-
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gsp
 import matplotlib.patches as mpatch
 import matplotlib.collections as mcol
 import matplotlib.patheffects as mppe
+import matplotlib.lines as mlines
+
+import tol_colors as tc
 
 import eagle_constants_and_units as c
 import cosmo_utils as cu
@@ -2614,5 +2615,81 @@ def plotcomps_mass_ion_BH_noBH(mapset=2):
                                       outname=outname, 
                                       title=title)
 
+def compare_profiles_BHnoBH(bhfiles, nobhfiles,
+                            legendlab_bhfs, legendlab_nobhfs,
+                            rbins_pkpc, title=None, 
+                            ylabel=None, ax=None,
+                            outname=None):
+    fontsize = 12
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, 1, figsize=(5.5, 5.))
+        if title is not None:
+            fig.suptitle(title, fontsize=fontsize)
+        if ylabel is not None:
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+        ax.set_xlabel('$\\mathrm{r}_{\\perp}$ [pkpc]', fontsize=fontsize)
+
+    ls_bh = 'solid'
+    ls_nobh = 'dashed'
+    lw_med = 1.
+    lw_av = 2.5
+    alpha_range = 0.3
+    colors = tc.tol_cset('bright')
+
+    rcens = 0.5 * (rbins_pkpc[1:] + rbins_pkpc[:-1])
     
+    for fi, (bhfn, nobhfn, bhlab, nobhlab) in \
+            enumerate(zip(bhfiles, nobhfiles, 
+                          legendlab_bhfs, legendlab_nobhfs)):
+        bh_av, bh_med, bh_90, bh_10 = get_profile_massmap(
+            bhfn, rbins_pkpc, rbin_units='pkpc', 
+            profiles=['av-lin', 'perc-0.5', 'perc-0.9', 'perc-0.1'])
+        
+        nb_av, nb_med, nb_90, nb_10 = get_profile_massmap(
+            nobhfn, rbins_pkpc, rbin_units='pkpc', 
+            profiles=['av-lin', 'perc-0.5', 'perc-0.9', 'perc-0.1'])
+        
+        color_bh = colors[2 * fi]
+        color_nobh = colors[2 * fi + 1]
+        ax.plot(rcens, bh_av, color=color_bh, linestyle=ls_bh, 
+                linewidth=lw_av, label=bhlab)
+        ax.plot(rcens, nb_av, color=color_nobh, linestyle=ls_nobh, 
+                linewidth=lw_av, label=nobhlab)
+        ax.plot(rcens, bh_med, color=color_bh, linestyle=ls_bh, 
+                linewidth=lw_med)
+        ax.plot(rcens, nb_med, color=color_nobh, linestyle=ls_nobh, 
+                linewidth=lw_med)
+        ax.fill_between(rcens, bh_10, bh_90, color=color_bh, 
+                        alpha=alpha_range, linestyle=ls_bh,
+                        linewith=0.5)
+        ax.fill_between(rcens, nb_10, nb_90, color=color_nobh, 
+                        alpha=alpha_range, linestyle=ls_nobh,
+                        linewith=0.5)
+
+    handles2, labels = ax.get_legend_handles_labels()
+    handles1 = [mlines.Line2D((), (), linewidth=lw_med, linestyle=ls_bh,
+                              label='med., w/ BH', color='black'),
+                mlines.Line2D((), (), linewidth=lw_med, linestyle=ls_nobh,
+                              label='med., no BH', color='black')
+                mlines.Line2D((), (), linewidth=lw_av, linestyle=ls_bh,
+                              label='mean, w/ BH', color='black'),
+                mlines.Line2D((), (), linewidth=lw_av, linestyle=ls_nobh,
+                              label='mean, no BH', color='black'),
+                mpatch.Patch(label='perc. 10-90', linewidth=0.5, 
+                             color='black', alpha=alpha_range)
+               ]
+    ax.legend(handles=handles1 + handles2, fontsize=fontsize)
+    ax.set_xscale('log')
+    if outname is not None:
+        plt.savefig(outname, bbox_inches='tight')
+        
+        
+
+
+
+    
+
+
+    
+
 
