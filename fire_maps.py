@@ -859,6 +859,11 @@ def get_ionfrac(snap, ion, indct=None, table='PS20', simtype='fire',
             ionfrac *= (1. - iontab.find_depletion(interpdct))
     else:
         raise ValueError('invalid table option: {}'.format(table))
+    # debug map NaN values
+    if np.any(ionfrac) < 0.:
+        print('some ion fractions < 0 from get_ionfrac')
+        print('min/max ion fraction values: {}, {}'.format(np.min(ionfrac),
+                                                           np.max(ionfrac)))
     return ionfrac
 
 # untested, including lintable option and consistency with table values
@@ -1420,8 +1425,6 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
                 ds = f.create_dataset('massfrac_{}_nanqW', data=_emet)
                 ds.attrs.create('toCGS', _emet_toCGS)
                 print(f'{element} mass fraction: ', _emet_todoc)
-
-        return None
     else:
         print('No NaN values in qW')
     # stars, black holes. DM: should do neighbour finding. Won't though.
@@ -1448,6 +1451,8 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
     # debug NaN values in maps
     if np.any(np.isNaN(mapW)):
         print('NaN values in mapW after projection')
+    if np.any(mapW < 0.):
+        print('values < 0 in mapW after projection')
     if np.any(np.isNaN(lmapW)):
         print('NaN values in log mapW before multipafter')
 
@@ -1455,7 +1460,6 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
 
     if np.any(np.isNaN(lmapW)):
         print('NaN values in log mapW after multipafter')
-        
     if outfilen is None:
         return lmapW, mapQ
     
