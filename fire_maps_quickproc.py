@@ -61,7 +61,65 @@ def get_rval_massmap(filen, units='pkpc'):
         elif units == 'cm':
             dpix *= pixssize_pkpc * c.cm_per_mpc * 1e-3
     return dpix.flatten(), _map.flatten()
-        
+
+def get_profile_massmap(filen, rbins, rbin_units='pkpc',
+                        profiles=[]):
+    '''
+    Parameters:
+    -----------
+    filen: str
+        name of the file containing the map (with full path)
+    rbins: array-like of floats
+        impact parameter bin edges
+    rbin_units: {'pkpc', 'Rvir', 'cm'}
+        units used for the rbins
+    profiles: iterable of strings
+        which profiles to extract. Returned in order of input
+        options are:
+            'av-lin' (linear average), 
+            'av-log' (log-space average),
+            'perc-<float>' (percentile, values 0 -- 1)
+            'min' (minimum)
+            'max' (maximum)
+    Returns:
+    --------
+    profiles: each an array of floats
+        the profile values in each radial bin
+    '''
+    
+    rvals, mvs = get_rval_massmap(filen, units=rbin_units)
+    with h5py.File(filen, 'r') as f:
+        islog = bool(f['map'].attrs['log'])
+    rinds = np.searchsorted(rbins, rvals) - 1
+    mvs_by_bin = [mvs[rinds == i] for i in range(len(rbins))]
+
+    out = []
+    for prof in profiles:
+        if prof == 'av-lin':
+            if islog:
+                _pr = np.log10(np.array([np.average(10**_mvs) \
+                                         for _mvs in mvs_by_bin]))
+            else:
+                _pr = np.array([np.average(_mvs) \
+                                for _mvs in mvs_by_bin])
+        elif prof == 'av-log':
+            if islog:
+                _pr = np.array([np.average(_mvs) \
+                                for _mvs in mvs_by_bin])
+            else:
+                _pr = 10**np.array([np.average(np.log10(_mvs)) \
+                                    for _mvs in mvs_by_bin])
+        elif prof == 'max':
+            _pr = np.array([np.max(_mvs) for _mvs in mvs_by_bin])
+        elif prof == 'max':
+            _pr = np.array([np.min(_mvs) for _mvs in mvs_by_bin])
+        elif prof.startswith('perc-'):
+            pv = float(prof.split('-')[-1])
+            _pr = np.array([np.quantile(_mvs, pv) for _mvs in mvs_by_bin])
+        out.append(_pr)
+    return out
+         
+
 
 def plot_halomasscheck(halofile, checkfile, imgname=None):
     '''
