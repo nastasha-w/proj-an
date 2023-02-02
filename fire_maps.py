@@ -1411,7 +1411,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
             ds.attrs.create('toCGS', _hden_toCGS)
             print('Hydrogen number density: ', _emet_todoc)
 
-            if maptype == 'ion'
+            if maptype == 'ion':
                 ion = maptype_args['ion']
                 dummytab = linetable_PS20(ion, snap.cosmopars.z, 
                                           emission=False,
