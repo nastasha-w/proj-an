@@ -864,6 +864,9 @@ def get_ionfrac(snap, ion, indct=None, table='PS20', simtype='fire',
         print('some ion fractions < 0 from get_ionfrac')
         print('min/max ion fraction values: {}, {}'.format(np.min(ionfrac),
                                                            np.max(ionfrac)))
+    if np.any(np.isnan(ionfrac)):
+        msg = 'Some ion fractions were NaN: {} out of {}'
+        print(msg.format(np.sum(np.isnan(ionfrac), len(ionfrac))))
     return ionfrac
 
 # untested, including lintable option and consistency with table values
@@ -1353,7 +1356,7 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
                                filterdct={'filter': filter})
     multipafter *= toCGS
     # debugging: check for NaN values
-    naninds = np.where(np.isNaN(qW))[0]
+    naninds = np.where(np.isnan(qW))[0]
     if len(naninds) > 0:
         print('Some qW values are NaN')
         print('Used {}, {}, {}'.format(particle_type, maptype, maptype_args))
@@ -1449,16 +1452,16 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
                          projmin=None, projmax=None)
     lmapW = np.log10(mapW)
     # debug NaN values in maps
-    if np.any(np.isNaN(mapW)):
+    if np.any(np.isnan(mapW)):
         print('NaN values in mapW after projection')
     if np.any(mapW < 0.):
         print('values < 0 in mapW after projection')
-    if np.any(np.isNaN(lmapW)):
+    if np.any(np.isnan(lmapW)):
         print('NaN values in log mapW before multipafter')
 
     lmapW += np.log10(multipafter)
 
-    if np.any(np.isNaN(lmapW)):
+    if np.any(np.isnan(lmapW)):
         print('NaN values in log mapW after multipafter')
     if outfilen is None:
         return lmapW, mapQ
