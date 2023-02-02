@@ -2404,6 +2404,24 @@ def tryout_ionmap(opt=1):
             _maptype_args = {'ps20depletion': False}
             _maptype_args.update({'ion': ion})
             maptype_argss = [_maptype_args.copy()]
+    elif opt == 357:
+        # example of map with NaN values for debugging
+        outdir = '/scratch1/08466/tg877653/output/maps/debug_mapnan/'
+        checkfileflag = False
+        _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
+        simname = 'm13h002_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5'
+        snapnum = 45
+        ion = 'Mg10'
+        # directory is halo name + resolution 
+        dp2 = '_'.join(simname.split('_')[:2])
+        if dp2.startswith('m13h02'):
+            dp2 = dp2.replace('m13h02', 'm13h002')
+        dirpath = '/'.join([_dirpath, dp2, simname])
+        #print(dirpath)
+        maptype = 'ion'
+        _maptype_args = {'ps20depletion': False}
+        _maptype_args.update({'ion': ion})
+        maptype_argss = [_maptype_args.copy()]
 
     for maptype_args in maptype_argss:
         depl = ''
@@ -2739,6 +2757,9 @@ def fromcommandline(index):
         # set 4 (m12, high-res): 226 - 297 (72 inds)
         # sets 5,6 (m13, standard-res): 298 - 393 (96 inds)
         tryout_ionmap(opt=index - 226 + 189)
+    elif index == 394:
+        # NaN values in maps debug: single map example
+        tryout_ionmap(opt=357)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
