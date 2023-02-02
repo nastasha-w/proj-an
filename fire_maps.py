@@ -866,7 +866,7 @@ def get_ionfrac(snap, ion, indct=None, table='PS20', simtype='fire',
                                                            np.max(ionfrac)))
     if np.any(np.isnan(ionfrac)):
         msg = 'Some ion fractions were NaN: {} out of {}'
-        print(msg.format(np.sum(np.isnan(ionfrac), len(ionfrac))))
+        print(msg.format(np.sum(np.isnan(ionfrac)), len(ionfrac)))
     return ionfrac
 
 # untested, including lintable option and consistency with table values
