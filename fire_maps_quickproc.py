@@ -23,6 +23,21 @@ import eagle_constants_and_units as c
 import cosmo_utils as cu
 import plot_utils as pu
 
+def hasnan_map(filen):
+    with h5py.File(filen, 'r') as f:
+        map_ = f['map'][:]
+        if np.any(np.isnan(map_)):
+            print('NaN values in map {}'.format(filen))
+            return True
+        else:
+            return False
+
+def checkdir_nanmap(dirn):
+    
+    anynan = False
+    for filen in filens:
+        anynan |= hasnan_map(filen)
+    return anynan
 
 def get_rval_massmap(filen, units='pkpc'):
     '''
