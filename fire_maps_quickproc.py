@@ -25,6 +25,9 @@ import plot_utils as pu
 
 def hasnan_map(filen):
     with h5py.File(filen, 'r') as f:
+        if 'map' not in f:
+            print('skipping {}'.format(filen))
+            return False # don't flag anything in a file loop
         map_ = f['map'][:]
         if np.any(np.isnan(map_)):
             print('NaN values in map {}'.format(filen))
@@ -33,10 +36,11 @@ def hasnan_map(filen):
             return False
 
 def checkdir_nanmap(dirn):
-    
+    filens = os.listdir(dirn)
+    filens = [filen for filen in filens if filen.endswith('.hdf5')]
     anynan = False
     for filen in filens:
-        anynan |= hasnan_map(filen)
+        anynan |= hasnan_map(dirn + filen)
     return anynan
 
 def get_rval_massmap(filen, units='pkpc'):
