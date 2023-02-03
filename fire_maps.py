@@ -849,6 +849,13 @@ def get_ionfrac(snap, ion, indct=None, table='PS20', simtype='fire',
             tocgs = snap.toCGS
             if not np.isclose(tocgs, 1.):
                 logZ += np.log10(tocgs)
+        # Inputting logZ values of -np.inf (zero metallicity, does 
+        # happen) leads to NaN ion fractions in interpolation.
+        # Since the closest edge of the tabulated values is used anyway
+        # it's safe to substute a tiny value like -100.
+        if np.any(logZ == -np.inf):
+            logZ = logZ.copy()
+            logZ[logZ == -np.inf] = -100.
     if table == 'PS20':
         interpdct = {'logT': logT, 'lognH': lognH, 'logZ': logZ}
         iontab = linetable_PS20(ion, redshift, emission=False, vol=True,
