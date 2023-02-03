@@ -2087,8 +2087,10 @@ def tryout_ionmap(opt=1):
     simname1 = 'm13h206_m3e5__' + \
                'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1' + \
                '_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000'
+    # version number depends on code edits; some indices might have
+    # been run with previous versions
     _outfilen = 'coldens_{qt}_{sc}_snap{sn}_shrink-sph-cen_BN98' + \
-                '_2rvir{depl}_v1.hdf5'
+                '_2rvir{depl}_v2.hdf5'
     checkfileflag = False
     if opt == 1:
         simname = simname1
