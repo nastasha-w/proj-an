@@ -866,24 +866,24 @@ def get_ionfrac(snap, ion, indct=None, table='PS20', simtype='fire',
             ionfrac *= (1. - iontab.find_depletion(interpdct))
     else:
         raise ValueError('invalid table option: {}'.format(table))
-    # debug map NaN values
-    if np.any(ionfrac) < 0.:
-        print('some ion fractions < 0 from get_ionfrac')
-        print('min/max ion fraction values: {}, {}'.format(np.min(ionfrac),
-                                                           np.max(ionfrac)))
-    if np.any(np.isnan(ionfrac)):
-        msg = 'Some ion fractions were NaN: {} out of {}'
-        print(msg.format(np.sum(np.isnan(ionfrac)), len(ionfrac)))
-    if np.any(np.isnan(iontab.iontable_T_Z_nH)):
-        print('NaN values in the table to be interpolated')
-        print('Parameters used in linetable_PS20:')
-        print('ion: ', ion)
-        print('redshift: ', redshift)
-        print('emission: ', False)
-        print('vol: ', True)
-        print('ionbalfile: ', ol.iontab_sylvia_ssh)
-        print('emtabfile: ', ol.emtab_sylvia_ssh)
-        print('lintable: ', lintable)
+    ## debug map NaN values
+    #if np.any(ionfrac) < 0.:
+    #    print('some ion fractions < 0 from get_ionfrac')
+    #    print('min/max ion fraction values: {}, {}'.format(np.min(ionfrac),
+    #                                                       np.max(ionfrac)))
+    #if np.any(np.isnan(ionfrac)):
+    #    msg = 'Some ion fractions were NaN: {} out of {}'
+    #    print(msg.format(np.sum(np.isnan(ionfrac)), len(ionfrac)))
+    # if np.any(np.isnan(iontab.iontable_T_Z_nH)):
+    #     print('NaN values in the table to be interpolated')
+    #     print('Parameters used in linetable_PS20:')
+    #     print('ion: ', ion)
+    #    print('redshift: ', redshift)
+    #    print('emission: ', False)
+    #    print('vol: ', True)
+    #    print('ionbalfile: ', ol.iontab_sylvia_ssh)
+    #    print('emtabfile: ', ol.emtab_sylvia_ssh)
+    #    print('lintable: ', lintable)
     return ionfrac
 
 # untested, including lintable option and consistency with table values
@@ -1372,81 +1372,81 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
     qW, toCGS, todoc = get_qty(snap, particle_type, maptype, maptype_args, 
                                filterdct={'filter': filter})
     multipafter *= toCGS
-    # debugging: check for NaN values
-    naninds = np.where(np.isnan(qW))[0]
-    if len(naninds) > 0:
-        print('Some qW values are NaN')
-        print('Used {}, {}, {}'.format(particle_type, maptype, maptype_args))
-        outfile_debug = outfilen.split('/')[:-1]
-        outfile_debug.append('debug_qW_naninfo.hdf5')
-        outfile_debug = '/'.join(outfile_debug)
-
-        numnan = len(naninds)
-        minW = np.min(qW[np.isfinite(qW)])
-        maxW = np.max(qW[np.isfinite(qW)])
-        with h5py.File(outfile_debug, 'w') as f:
-            hed = f.create_group('Header')
-            hed.attrs.create('number of qW values', len(qW))
-            hed.attrs.create('number of NaN values', numnan)
-            hed.attrs.create('number of inf values', np.sum(qW == np.inf))
-            hed.attrs.create('number of -inf values', np.sum(qW == -np.inf))
-            hed.attrs.create('number of 0 values', np.sum(qW == 0))
-            hed.attrs.create('number of values < 0', np.sum(qW < 0))
-            hed.attrs.create('number of values > 0', np.sum(qW > 0))
-            hed.attrs.create('qW_toCGS', toCGS)
-            hed.attrs.create('multipafter', multipafter)
-
-            if minW > 0:
-                bins = np.logspace(np.log10(minW), np.log10(maxW), 100)
-            else:
-                bins = np.linspace(minW, maxW, 100)
-            # NaN, inf, -inf values just aren't counted
-            hist, _ = np.histogram(qW, bins=bins)
-
-            f.create_dataset('qW_hist', data=hist)
-            f.create_dataset('qW_hist_bins', data=bins)
-
-            # issues were for ion columns; check rho, T, Z of NaN values
-            _filter = filter.copy()
-            _filter[_filter] = np.isnan(qW)
-
-            _temp, _temp_toCGS, _temp_todoc = get_qty(snap, particle_type, 
-                    'sim-direct', {'field': 'Temperature'}, 
-                    filterdct={'filter': _filter})
-            ds = f.create_dataset('Temperature_nanqW', data=_temp)
-            ds.attrs.create('toCGS', _temp_toCGS)
-            print('Temperature: ', _temp_todoc)
-
-            _dens, _dens_toCGS, _dens_todoc = get_qty(snap, particle_type, 
-                    'sim-direct', {'field': 'Density'}, 
-                    filterdct={'filter': _filter})
-            ds = f.create_dataset('Density_nanqW', data=_dens)
-            ds.attrs.create('toCGS', _dens_toCGS)
-            print('Density: ', _dens_todoc)
-
-            _hden, _hden_toCGS, _emet_todoc = get_qty(snap, particle_type, 
-                    'Metal', {'element': 'Hydrogen', 'density': True}, 
-                    filterdct={'filter': _filter})
-            ds = f.create_dataset('nH_nanqW', data=_hden)
-            ds.attrs.create('toCGS', _hden_toCGS)
-            print('Hydrogen number density: ', _emet_todoc)
-
-            if maptype == 'ion':
-                ion = maptype_args['ion']
-                dummytab = linetable_PS20(ion, snap.cosmopars.z, 
-                                          emission=False,
-                                          vol=True, lintable=True)
-                element = dummytab.element
-                eltpath = basepath + 'ElementAbundance/' +\
-                          string.capwords(element)
-                _emet, _emet_toCGS, _emet_todoc = get_qty(snap, particle_type, 
-                        'sim-direct', {'field': eltpath}, 
-                        filterdct={'filter': _filter})
-                ds = f.create_dataset('massfrac_{}_nanqW', data=_emet)
-                ds.attrs.create('toCGS', _emet_toCGS)
-                print(f'{element} mass fraction: ', _emet_todoc)
-    else:
-        print('No NaN values in qW')
+    ## debugging: check for NaN values
+    #naninds = np.where(np.isnan(qW))[0]
+    #if len(naninds) > 0:
+    #    print('Some qW values are NaN')
+    #    print('Used {}, {}, {}'.format(particle_type, maptype, maptype_args))
+    #    outfile_debug = outfilen.split('/')[:-1]
+    #    outfile_debug.append('debug_qW_naninfo.hdf5')
+    #    outfile_debug = '/'.join(outfile_debug)
+    #
+    #    numnan = len(naninds)
+    #    minW = np.min(qW[np.isfinite(qW)])
+    #    maxW = np.max(qW[np.isfinite(qW)])
+    #    with h5py.File(outfile_debug, 'w') as f:
+    #        hed = f.create_group('Header')
+    #        hed.attrs.create('number of qW values', len(qW))
+    #        hed.attrs.create('number of NaN values', numnan)
+    #        hed.attrs.create('number of inf values', np.sum(qW == np.inf))
+    #        hed.attrs.create('number of -inf values', np.sum(qW == -np.inf))
+    #        hed.attrs.create('number of 0 values', np.sum(qW == 0))
+    #        hed.attrs.create('number of values < 0', np.sum(qW < 0))
+    #        hed.attrs.create('number of values > 0', np.sum(qW > 0))
+    #        hed.attrs.create('qW_toCGS', toCGS)
+    #        hed.attrs.create('multipafter', multipafter)
+    #
+    #        if minW > 0:
+    #            bins = np.logspace(np.log10(minW), np.log10(maxW), 100)
+    #        else:
+    #            bins = np.linspace(minW, maxW, 100)
+    #        # NaN, inf, -inf values just aren't counted
+    #        hist, _ = np.histogram(qW, bins=bins)
+    #
+    #        f.create_dataset('qW_hist', data=hist)
+    #        f.create_dataset('qW_hist_bins', data=bins)
+    #
+    #        # issues were for ion columns; check rho, T, Z of NaN values
+    #        _filter = filter.copy()
+    #        _filter[_filter] = np.isnan(qW)
+    #
+    #        _temp, _temp_toCGS, _temp_todoc = get_qty(snap, particle_type, 
+    #                'sim-direct', {'field': 'Temperature'}, 
+    #                filterdct={'filter': _filter})
+    #        ds = f.create_dataset('Temperature_nanqW', data=_temp)
+    #        ds.attrs.create('toCGS', _temp_toCGS)
+    #        print('Temperature: ', _temp_todoc)
+    #
+    #        _dens, _dens_toCGS, _dens_todoc = get_qty(snap, particle_type, 
+    #                'sim-direct', {'field': 'Density'}, 
+    #                filterdct={'filter': _filter})
+    #        ds = f.create_dataset('Density_nanqW', data=_dens)
+    #        ds.attrs.create('toCGS', _dens_toCGS)
+    #        print('Density: ', _dens_todoc)
+    #
+    #        _hden, _hden_toCGS, _emet_todoc = get_qty(snap, particle_type, 
+    #                'Metal', {'element': 'Hydrogen', 'density': True}, 
+    #                filterdct={'filter': _filter})
+    #        ds = f.create_dataset('nH_nanqW', data=_hden)
+    #        ds.attrs.create('toCGS', _hden_toCGS)
+    #        print('Hydrogen number density: ', _emet_todoc)
+    #
+    #        if maptype == 'ion':
+    #            ion = maptype_args['ion']
+    #            dummytab = linetable_PS20(ion, snap.cosmopars.z, 
+    #                                      emission=False,
+    #                                      vol=True, lintable=True)
+    #            element = dummytab.element
+    #            eltpath = basepath + 'ElementAbundance/' +\
+    #                      string.capwords(element)
+    #            _emet, _emet_toCGS, _emet_todoc = get_qty(snap, particle_type, 
+    #                    'sim-direct', {'field': eltpath}, 
+    #                    filterdct={'filter': _filter})
+    #            ds = f.create_dataset('massfrac_{}_nanqW', data=_emet)
+    #            ds.attrs.create('toCGS', _emet_toCGS)
+    #            print(f'{element} mass fraction: ', _emet_todoc)
+    #else:
+    #    print('No NaN values in qW')
     # stars, black holes. DM: should do neighbour finding. Won't though.
     if not haslsmooth:
         # minimum smoothing length is set in the projection
@@ -1468,20 +1468,20 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
                          'C2', dct, tree, ompproj=True, 
                          projmin=None, projmax=None)
     lmapW = np.log10(mapW)
-    # debug NaN values in maps
-    if np.any(np.isnan(mapW)):
-        print('NaN values in mapW after projection')
-    if np.any(mapW < 0.):
-        print('values < 0 in mapW after projection')
-    if np.any(np.isnan(lmapW)):
-        print('NaN values in log mapW before multipafter')
+    ## debug NaN values in maps
+    #if np.any(np.isnan(mapW)):
+    #    print('NaN values in mapW after projection')
+    #if np.any(mapW < 0.):
+    #    print('values < 0 in mapW after projection')
+    #if np.any(np.isnan(lmapW)):
+    #    print('NaN values in log mapW before multipafter')
 
     lmapW += np.log10(multipafter)
 
-    if np.any(np.isnan(lmapW)):
-        print('NaN values in log mapW after multipafter')
-    if outfilen is None:
-        return lmapW, mapQ
+    #if np.any(np.isnan(lmapW)):
+    #    print('NaN values in log mapW after multipafter')
+    #if outfilen is None:
+    #    return lmapW, mapQ
     
     with h5py.File(outfilen, 'w') as f:
         # map (emulate make_maps format)
