@@ -2530,7 +2530,7 @@ def plotcomps_mass_ion_BH_noBH(mapset=2):
         tempkeys = keys_m12i + keys_m13h206 
     elif mapset == 4:
         mdir = '/Users/nastasha/ciera/sim_maps/fire/set4_BH_noBH/'
-        template = 'coldens_{{qt}}_{ic}_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_{{bh}}_gacc31_fa0.5_snap{snap}_shrink-sph-cen_BN98_2rvir_v1.hdf5'
+        template = 'coldens_{{qt}}_{ic}_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_{{bh}}_gacc31_fa0.5_snap{snap}_shrink-sph-cen_BN98_2rvir_v2.hdf5'
         bh_on = 'sdp2e-4'
         bh_off = 'sdp1e10'
         qt_mass = 'gas-mass'
@@ -2549,8 +2549,8 @@ def plotcomps_mass_ion_BH_noBH(mapset=2):
         tempkeys = keys
     elif mapset == 5:
         mdir = '/Users/nastasha/ciera/sim_maps/fire/set5_BH_noBH/'
-        template_noBH = 'coldens_{{qt}}_{ic}_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5_snap{snap}_shrink-sph-cen_BN98_2rvir_v1.hdf5'
-        template_BH = 'coldens_{{qt}}_{ic}_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000_snap{snap}_shrink-sph-cen_BN98_2rvir_v1.hdf5'
+        template_noBH = 'coldens_{{qt}}_{ic}_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5_snap{snap}_shrink-sph-cen_BN98_2rvir_v2.hdf5'
+        template_BH = 'coldens_{{qt}}_{ic}_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000_snap{snap}_shrink-sph-cen_BN98_2rvir_v2.hdf5'
         bh_on = 'sdp1e-4'
         bh_off = 'sdp1e10'
         qt_mass = 'gas-mass'
@@ -2572,8 +2572,8 @@ def plotcomps_mass_ion_BH_noBH(mapset=2):
 
     elif mapset == 6:
         mdir = '/Users/nastasha/ciera/sim_maps/fire/set6_BH_noBH/'
-        template_noBH = 'coldens_{{qt}}_{ic}_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5_snap{snap}_shrink-sph-cen_BN98_2rvir_v1.hdf5'
-        template_BH = 'coldens_{{qt}}_{ic}_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000_snap{snap}_shrink-sph-cen_BN98_2rvir_v1.hdf5'
+        template_noBH = 'coldens_{{qt}}_{ic}_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5_snap{snap}_shrink-sph-cen_BN98_2rvir_v2.hdf5'
+        template_BH = 'coldens_{{qt}}_{ic}_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000_snap{snap}_shrink-sph-cen_BN98_2rvir_v2.hdf5'
         bh_on = 'sdp1e-4'
         bh_off = 'sdp1e10'
         qt_mass = 'gas-mass'
@@ -2737,7 +2737,7 @@ def compare_profilesets(mapset, compmode):
         fdir = '/Users/nastasha/ciera/sim_maps/fire/set4_BH_noBH/'
         filetemp = ('coldens_{qt}_{ic}_m7e3_MHD_fire3_fireBH_Sep182021'
                     '_hr_crdiffc690_{bh}_gacc31_fa0.5_snap{snap}_'
-                    'shrink-sph-cen_BN98_2rvir_v1.hdf5')
+                    'shrink-sph-cen_BN98_2rvir_v2.hdf5')
         
         if compmode == 'indiv':
             filesets_bh = [[fdir + filetemp.format(bh=bhmodes['bh'], 
@@ -2770,14 +2770,66 @@ def compare_profilesets(mapset, compmode):
             outnames = [outdir + outtemp.format(ic=ic, qt=qt, snap=snap) \
                        for ic in ics for snap in snaps for qt in qts]
 
-        for fs_bh, fs_nobh, ll_bh, ll_nobh, \
-                rbins_pkpc, title, ylabel, outname in \
-                zip(filesets_bh, filesets_nobh, lls_bh, lls_nobh,
-                    rbinss, titles, ylabels, outnames):
-            compare_profiles_BHnoBH(fs_bh, fs_nobh, ll_bh, ll_nobh,
-                                    rbins_pkpc, title=title, 
-                                    ylabel=ylabel, ax=None,
-                                    outname=outname)
+    if mapset in [5, 6]:
+        outdir = ('/Users/nastasha/ciera/projects_lead/'
+                  'fire3_ionabs/profiles_BH_noBH/')
+        qts = ['gas-mass', 'Mg10', 'Ne8', 'O6', 'N5', 'Mg2']
+        if mapset == 5:
+           snaps = [60, 50, 45]
+           ics = ['m13h007', 'm13h206']
+        else:
+            snaps = [50, 45]
+            ics = ['m13h002']        
+        fdir = '/Users/nastasha/ciera/sim_maps/fire/set{}_BH_noBH/'
+        fdir = fdir.format(mapset)
+        filetemp_nobh = ('coldens_{qt}_{ic}_m3e5_MHD_fire3_fireBH_Sep182021'
+                       '_crdiffc690_sdp1e10_gacc31_fa0.5_snap{snap}_shrink'
+                       '-sph-cen_BN98_2rvir_v2.hdf5')
+        filetemp_bh = ('coldens_{qt}_{ic}_m3e5_MHDCRspec1_fire3_fireBH'
+                         '_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5'
+                         '_fcr1e-3_vw3000_snap{snap}_shrink-sph-cen_BN98'
+                         '_2rvir_v2.hdf5')
+        
+        if compmode == 'indiv':
+            filesets_bh = [[fdir + filetemp_bh.format(snap=snap,
+                                                      ic=ic, qt=qt)] \
+                            for ic in ics for snap in snaps for qt in qts]
+            filesets_nobh = [[fdir + filetemp_nobh.format(snap=snap,
+                                                          ic=ic, qt=qt)] \
+                            for ic in ics for snap in snaps for qt in qts]
+            ttemp = ('set {set_}, {qt}, snapshot {snap}, {ic}_m3e5,\n'
+                     'no BH: MHD_fire3_fireBH_Sep182021_crdiffc690,'
+                     ' gacc31_fa0.5\n'
+                     'BH: MHDCRspec1, fireCR1_Oct252021_crdiffc1_sdp1e-4,'
+                     ' fcr1e-3_vw3000'
+                     )
+            titles = [ttemp.format(set_=mapset, snap=snap, ic=ic, qt=qt)\
+                      for ic in ics for snap in snaps for qt in qts]
+            lls_bh = [['BH']] * len(filesets_bh)
+            lls_nobh = [['no BH']] * len(filesets_bh)
+            rbinss = [np.linspace(0., 300., 50) if 'm12' in ic else \
+                      np.linspace(0., 700., 50) if 'm13' in ic else \
+                      None \
+                      for ic in ics for snap in snaps for qt in qts]
+            mlabel = ('$\\log_{10} \\, \\Sigma_{\\mathrm{gas}}'
+                      ' \\, [\\mathrm{g} \\, \\mathrm{cm}^2]$')
+            ilabel = ('$\\log_{{10}} \\, \\mathrm{{N}}(\\mathrm{{{ion}}})'
+                      ' \\, [\\mathrm{{cm}}^2]$')
+            ylabels = [mlabel if 'mass' in qt else\
+                       ilabel.format(ion=qt) \
+                       for ic in ics for snap in snaps for qt in qts]
+            outtemp = 'rprofcomp_set4_{ic}_{qt}_snap{snap}_BHnoBH.pdf'
+            outnames = [outdir + outtemp.format(ic=ic, qt=qt, snap=snap) \
+                        for ic in ics for snap in snaps for qt in qts]
+
+    for fs_bh, fs_nobh, ll_bh, ll_nobh, \
+            rbins_pkpc, title, ylabel, outname in \
+            zip(filesets_bh, filesets_nobh, lls_bh, lls_nobh,
+                rbinss, titles, ylabels, outnames):
+        compare_profiles_BHnoBH(fs_bh, fs_nobh, ll_bh, ll_nobh,
+                                rbins_pkpc, title=title, 
+                                ylabel=ylabel, ax=None,
+                                outname=outname)
 
 
 
