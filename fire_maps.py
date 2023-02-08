@@ -2916,7 +2916,7 @@ def fromcommandline(index):
     elif index == 394:
         # NaN values in maps debug: single map example
         tryout_ionmap(opt=357)
-    elif index >= 395 and index < 430:
+    elif index >= 395 and index < 431:
         tryout_ionmap(opt=index - 395 + 358)
         # clean sample set 1: 
         # the parts that weren't already in sets 4-6
