@@ -2446,7 +2446,7 @@ def tryout_ionmap(opt=1):
         maptype_argss = [_maptype_args.copy()]
     elif opt >= 358 and opt < 366:
         # split into m12 and m13 as two sets: different snapshot ranges
-        ind = opt - 356
+        ind = opt - 358
         outdir = '/scratch1/08466/tg877653/output/maps/clean_set1/'
         checkfileflag = True
         # CUBS https://arxiv.org/pdf/2209.01228.pdf: 
@@ -2490,7 +2490,7 @@ def tryout_ionmap(opt=1):
             maptype_argss = [_maptype_args.copy()]
     elif opt >= 366 and opt < 378:
         # split into m12 and m13 as two sets: different snapshot ranges
-        ind = opt - 364
+        ind = opt - 366
         outdir = '/scratch1/08466/tg877653/output/maps/clean_set1/'
         checkfileflag = True
         # CUBS https://arxiv.org/pdf/2209.01228.pdf: 
@@ -2534,7 +2534,7 @@ def tryout_ionmap(opt=1):
             maptype_argss = [_maptype_args.copy()]    
     elif opt >= 378 and opt < 394:
         # split into m12 and m13 as two sets: different snapshot ranges
-        ind = opt - 376
+        ind = opt - 378
         outdir = '/scratch1/08466/tg877653/output/maps/clean_set1/'
         checkfileflag = True
         # CUBS https://arxiv.org/pdf/2209.01228.pdf: 
