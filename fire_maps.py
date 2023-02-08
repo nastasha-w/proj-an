@@ -2475,7 +2475,7 @@ def tryout_ionmap(opt=1):
         ion = ions[ioni]
         # directory is halo name + resolution 
         dp2 = '_'.join(simname.split('_')[:2])
-        if dp2.startswith('m13h02'):
+        if dp2.startswith('m13h02_'):
             dp2 = dp2.replace('m13h02', 'm13h002')
         dirpath = '/'.join([_dirpath, dp2, simname])
         #print(dirpath)
@@ -2519,7 +2519,7 @@ def tryout_ionmap(opt=1):
         ion = ions[ioni]
         # directory is halo name + resolution 
         dp2 = '_'.join(simname.split('_')[:2])
-        if dp2.startswith('m13h02'):
+        if dp2.startswith('m13h02_'):
             dp2 = dp2.replace('m13h02', 'm13h002')
         dirpath = '/'.join([_dirpath, dp2, simname])
         #print(dirpath)
@@ -2565,7 +2565,7 @@ def tryout_ionmap(opt=1):
         ion = ions[ioni]
         # directory is halo name + resolution 
         dp2 = '_'.join(simname.split('_')[:2])
-        if dp2.startswith('m13h02'):
+        if dp2.startswith('m13h02_'):
             dp2 = dp2.replace('m13h02', 'm13h002')
         dirpath = '/'.join([_dirpath, dp2, simname])
         #print(dirpath)
@@ -2918,6 +2918,8 @@ def fromcommandline(index):
         tryout_ionmap(opt=357)
     elif index >= 395 and index < 426:
         tryout_ionmap(opt=index - 395 + 356)
+        # clean sample set 1: 
+        # the parts that weren't already in sets 4-6
         # 395 - 402: m12 lower-res
         # 403 - 414: m13 higher-res
         # 415 - 430: m13 standard-res
