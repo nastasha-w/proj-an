@@ -2444,7 +2444,7 @@ def tryout_ionmap(opt=1):
         _maptype_args = {'ps20depletion': False}
         _maptype_args.update({'ion': ion})
         maptype_argss = [_maptype_args.copy()]
-    elif opt >= 356 and opt < 364:
+    elif opt >= 358 and opt < 366:
         # split into m12 and m13 as two sets: different snapshot ranges
         ind = opt - 356
         outdir = '/scratch1/08466/tg877653/output/maps/clean_set1/'
@@ -2488,7 +2488,7 @@ def tryout_ionmap(opt=1):
             _maptype_args = {'ps20depletion': False}
             _maptype_args.update({'ion': ion})
             maptype_argss = [_maptype_args.copy()]
-    elif opt >= 364 and opt < 376:
+    elif opt >= 366 and opt < 378:
         # split into m12 and m13 as two sets: different snapshot ranges
         ind = opt - 364
         outdir = '/scratch1/08466/tg877653/output/maps/clean_set1/'
@@ -2532,7 +2532,7 @@ def tryout_ionmap(opt=1):
             _maptype_args = {'ps20depletion': False}
             _maptype_args.update({'ion': ion})
             maptype_argss = [_maptype_args.copy()]    
-    elif opt >= 376 and opt < 392:
+    elif opt >= 378 and opt < 394:
         # split into m12 and m13 as two sets: different snapshot ranges
         ind = opt - 376
         outdir = '/scratch1/08466/tg877653/output/maps/clean_set1/'
@@ -2916,8 +2916,8 @@ def fromcommandline(index):
     elif index == 394:
         # NaN values in maps debug: single map example
         tryout_ionmap(opt=357)
-    elif index >= 395 and index < 426:
-        tryout_ionmap(opt=index - 395 + 356)
+    elif index >= 395 and index < 430:
+        tryout_ionmap(opt=index - 395 + 358)
         # clean sample set 1: 
         # the parts that weren't already in sets 4-6
         # 395 - 402: m12 lower-res
