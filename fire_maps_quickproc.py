@@ -3126,6 +3126,141 @@ def compare_profilesets(mapset, compmode):
                                 ylabel=ylabel, ax=None,
                                 outname=outname)
 
+def check_h1maps():
+    '''
+    specific sanity test comparing total H, H I from the PS20 tables,
+    and H I from the FIRE NeutralHydrogenAbundance field
+    '''
+
+    mapdir = ''
+    mapf_Htot = ''
+    mapf_H1sim = ''
+    mapf_H1PS20 = ''
+
+    maps = {}
+    extents = {}
+    rvirs = {}
+    vmin = np.inf
+    vmax = -np.inf
+    mapkeys = ['htot', 'h1sim', 'h1ps20']
+    maptitles = {'htot': '$\\mathrm{N}({\\mathrm{H})$',
+                 'h1sim': '$\\mathrm{N}({\\mathrm{H I})$, FIRE',
+                 'htot': '$\\mathrm{N}({\\mathrm{H I})$, PS20 table',
+                 }
+    fractitles = {'h1sim': ('$\\mathrm{N}({\\mathrm{H I}) \\,/\\,'
+                           ' \\mathrm{N}({\\mathrm{H})$, FIRE'), 
+                  'h1ps20': ('$\\mathrm{N}({\\mathrm{H I}) \\,/\\,'
+                             ' \\mathrm{N}({\\mathrm{H})$, PS20 tables'),
+                  }
+
+    for mapkey, mapf in zip(mapkeys, 
+                            [mapf_Htot, mapf_H1sim, mapf_H1PS20]):
+        with h5py.File(mapdir + mapf, 'r') as f:
+            _map = f['map'][:]
+            _vmin = f['map'].attrs['minfinite']
+            _vmax = f['map'].attrs['max']
+
+            box_cm = f['Header/inputpars'].attrs['diameter_used_cm']
+            cosmopars = {key: val for key, val in \
+                        f['Header/inputpars/cosmopars'].attrs.items()}
+            #print(cosmopars)
+            if 'Rvir_ckpcoverh' in f['Header/inputpars/halodata'].attrs:
+                rvir_ckpcoverh = f['Header/inputpars/halodata'].attrs['Rvir_ckpcoverh']
+                rvir_pkpc = rvir_ckpcoverh * cosmopars['a'] / cosmopars['h']
+            elif 'Rvir_cm' in f['Header/inputpars/halodata'].attrs:
+                rvir_cm = f['Header/inputpars/halodata'].attrs['Rvir_cm']
+                rvir_pkpc = rvir_cm / (c.cm_per_mpc * 1e-3)
+            xax = f['Header/inputpars'].attrs['Axis1']
+            yax = f['Header/inputpars'].attrs['Axis2']
+            box_pkpc = box_cm / (1e-3 * c.cm_per_mpc)
+            extent = (-0.5 * box_pkpc[xax], 0.5 * box_pkpc[xax],
+                      -0.5 * box_pkpc[yax], 0.5 * box_pkpc[yax])
+            
+            maps[mapkey] = _map
+            extents[mapkey] = extent
+            rvirs[mapkey] = rvir_pkpc
+            vmin = min(vmin, _vmin)
+            vmax = max(vmax, _vmax)
+    
+    mincol = 13.6
+    if mincol > vmin and mincol < vmax:
+        cmap = pu.paste_cmaps(['gist_yarg', 'viridis'], [vmin, mincol, vmax])
+    else:
+        cmap = 'virdis'
+    anyzero = np.min([np.min(maps[key]) for key in maps]) == vmin
+    extend = 'neither' if anyzero else 'min'
+
+    fig = plt.figure(figsize=(7.5, 5.))
+    grid = gsp.GridSpec(nrows=2, ncols=4, hspace=0.2, wspace=0.2, 
+                        width_ratios=[5., 5., 5., 1.])
+    mapaxes = [fig.add_subplot(grid[0, i]) for i in range(3)]
+    mapcax = fig.add_subplot(grid[0, 3])
+    fracaxes = [fig.add_subplot(grid[1, 1 + i]) for i in range(2)]
+    fraccax = fig.add_subplot(grid[1, 3])
+    fontsize = 12
+    
+    # should be same for all three maps
+    xlabel = ['X', 'Y', 'Z'][xax] + ' [pkpc]'
+    ylabel = ['X', 'Y', 'Z'][yax] + ' [pkpc]'
+
+    for mi, mapkey in enumerate(mapkeys):
+        ax = mapaxes[mi]
+        if mi == 0:
+            ax.set_xlabel(xlabel, fontsize=fontsize)
+        if mi == 0:
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+        ax.set_title(maptitles[mapkey], fontsize=fontsize)
+
+        img = ax.imshow(maps[mapkey].T, origin='lower', 
+                       interpolation='nearest', 
+                       vmin=vmin, vmax=vmax, cmap=cmap, 
+                       extent=extents[mapkey]
+                        )
+        ax.tick_params(axis='both', labelsize=fontsize-1)
+
+        patches = [mpatch.Circle((0., 0.), rvir_pkpc)]
+        collection = mcol.PatchCollection(patches)
+        collection.set(edgecolor=['red'], facecolor='none', linewidth=1.5)
+        ax.add_collection(collection)
+        if mi == 0:
+            ax.text(1.05 * 2**-0.5 * rvir_pkpc, 1.05 * 2**-0.5 * rvir_pkpc, 
+                   '$R_{\\mathrm{vir}}$',
+                    color='red', fontsize=fontsize)
+    plt.colorbar(img, cax=mapcax, extend=extend, orientation='vertical') 
+    
+    fmaps = {'h1sim': maps['h1sim'] - maps['htot'],
+             'h1ps20': maps['h1ps20'] - maps['htot']
+             }
+    fvmin = np.min([np.min(fmaps[fkey][np.isfinite[fmaps[fkey]]])\
+                    for fkey in fmaps])
+    fvmax = np.min([np.max(fmaps[fkey]) for fkey in fmaps])
+    anyzero = np.min([np.min(fmaps[fkey]) for fkey in fmaps]) == fvmin
+    extend = 'neither' if anyzero else 'min'
+    fcmap = 'afmhot'
+    
+    for mi, mapkey in enumerate(['h1sim', 'h1ps20']):
+        ax = mapaxes[mi]
+        ax.set_xlabel(xlabel, fontsize=fontsize)
+        if mi == 0:
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+        ax.set_title(fractitles[mapkey], fontsize=fontsize)
+
+        img = ax.imshow(fmaps[mapkey].T, origin='lower', 
+                        interpolation='nearest', 
+                        vmin=fvmin, vmax=fvmax, cmap=fcmap, 
+                        extent=extents[mapkey]
+                        )
+        ax.tick_params(axis='both', labelsize=fontsize-1)
+
+        patches = [mpatch.Circle((0., 0.), rvir_pkpc)]
+        collection = mcol.PatchCollection(patches)
+        collection.set(edgecolor=['red'], facecolor='none', linewidth=1.5)
+        ax.add_collection(collection)
+    plt.colorbar(img, cax=fraccax, extend=extend, orientation='vertical') 
+
+    savename = 'mapcomp_H_H1-sim_H1-PS20.pdf'
+    if savename is not None:
+        plt.savefig(savename, bbox_inches='tight')
 
 
 
