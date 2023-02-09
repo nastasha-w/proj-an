@@ -1218,6 +1218,11 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
                 hfpath = basepath + 'NeutralHydrogenAbundance'
                 qty *= snap.readarray_emulateEAGLE(hfpath)[filter]
                 toCGS = toCGS * snap.toCGS
+                # just for the element mass
+                dummytab = linetable_PS20(ion, snap.cosmopars.z, 
+                                          emission=False,
+                                          vol=True, lintable=True)
+                toCGS = toCGS / (dummytab.elementmass_u * c.u)
                 todoc['info'] = ('neutral H fraction from simulation'
                                  ' NeutralHydrogenAbundance')
                 todoc['units'] = '(# ions)'

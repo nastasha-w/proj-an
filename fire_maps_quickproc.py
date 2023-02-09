@@ -3126,16 +3126,188 @@ def compare_profilesets(mapset, compmode):
                                 ylabel=ylabel, ax=None,
                                 outname=outname)
 
+def compare_profiles_physmodels(modelfilelists,
+                                legendlablists,
+                                physmodel_labels,
+                                rbins_pkpc, title=None, 
+                                ylabel=None, ax=None,
+                                outname=None):
+    '''
+    modelfilelists, legendlablists: lists of lists, shapes should match
+    inner index: physics model differences
+    outer index: different versions with that physics model 
+                 (e.g., different ics, redshifts)
+    '''
+    fontsize = 12
+    if ax is None:
+        fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(5.5, 5.))
+        if title is not None:
+            fig.suptitle(title, fontsize=fontsize)
+        if ylabel is not None:
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+        ax.set_xlabel('$\\mathrm{r}_{\\perp}$ [pkpc]', fontsize=fontsize)
+
+    lss = ['solid', 'dashed', 'dashdot', 'longdash']
+    lw_med = 1.
+    lw_av = 2.5
+    alpha_range = 0.3
+    colors = tc.tol_cset('bright')
+
+    rcens = 0.5 * (rbins_pkpc[1:] + rbins_pkpc[:-1])
+    #print(modelfilelists)
+    for vi, (modelfiles, leglabels) in \
+             enumerate(zip(modelfilelists, legendlablists)):
+        #print(modelfiles)
+        for pi, (modelf, ls, leglab) in \
+                enumerate(zip(modelfiles, lss, leglabels)):
+            #print(modelf)
+            with h5py.File(modelf, 'r') as f:  
+                rvir_bh_pkpc = f['Header/inputpars/halodata'].attrs['Rvir_cm']
+                rvir_bh_pkpc /= (c.cm_per_mpc * 1e-3)
+        
+            av, med, p90, p10 = get_profile_massmap(
+                modelf, rbins_pkpc, rbin_units='pkpc', 
+                profiles=['av-lin', 'perc-0.5', 'perc-0.9', 'perc-0.1'])
+        
+            color = colors[len(modelf) * vi + pi]
+            ax.plot(rcens, av, color=color, linestyle=ls, 
+                    linewidth=lw_av, label=leglab)
+            ax.plot(rcens, med, color=color, linestyle=ls, 
+                    linewidth=lw_med)
+            ax.fill_between(rcens, p10, p90, color=color, 
+                            alpha=alpha_range, linestyle=ls,
+                            linewidth=0.5)
+            # indicate Rvir on the curves
+            yp_bh_av = pu.linterpsolve(rcens, av, rvir_bh_pkpc)
+            yp_bh_med = pu.linterpsolve(rcens, med, rvir_bh_pkpc)
+            ax.scatter([rvir_bh_pkpc] * 2, [yp_bh_av, yp_bh_med],
+                        marker='o', c=color, s=60)
+
+    handles3, labels = ax.get_legend_handles_labels()
+    handles1 = [mlines.Line2D((), (), linewidth=lw_med, linestyle='solid',
+                              label='med.', color='black'),
+                mlines.Line2D((), (), linewidth=lw_av, linestyle='solid',
+                              label='mean', color='black'),
+                mpatch.Patch(label='perc. 10-90', linewidth=0.5, 
+                             color='black', alpha=alpha_range),
+                mlines.Line2D((), (), linestyle=None, marker='o',
+                              label='$\\mathrm{R}_{\\mathrm{vir}}$', 
+                              color='black', markersize=5)
+                ]
+    handles2 = [mlines.Line2D((), (), linewidth=1.7, linestyle=ls,
+                              label=lab, color='black')\
+                for ls, lab in zip(lss, physmodel_labels)]
+    ax.legend(handles=handles1 + handles2 + handles3, fontsize=fontsize)
+    ax.set_xscale('log')
+
+    if outname is not None:
+        plt.savefig(outname, bbox_inches='tight')
+
+def compare_profilesets_physmodel(mapset='clean_set1'):
+
+    if mapset == 'clean_set1':
+        outdir = '/Users/nastasha/ciera/projects_lead/fire3_ionabs/profiles_clean_set1/'
+        
+        mdir = '/Users/nastasha/ciera/sim_maps/fire/clean_set1/'
+        tpl_m12_noBH = 'coldens_{qt}_{ic}_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e10_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir_v2.hdf5'
+        tpl_m12_AGN_CR = 'coldens_{qt}_{ic}_m6e4_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000_snap50_shrink-sph-cen_BN98_2rvir_v2.hdf5'
+        tpl_m12_AGN_noCR = 'coldens_{qt}_{ic}_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp2e-4_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir_v2.hdf5'
+        tpl_m13_noBH = 'coldens_{qt}_{ic}_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5_snap50_shrink-sph-cen_BN98_2rvir_v2.hdf5' 
+        tpl_m13_AGN_CR = 'coldens_{qt}_{ic}_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000_snap50_shrink-sph-cen_BN98_2rvir_v2.hdf5' 
+        tpl_m13_AGN_noCR_h113 = 'coldens_{qt}_{ic}_m3e4_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e-4_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir_v2.hdf5' 
+        tpl_m13_AGN_noCR_h206 = 'coldens_{qt}_{ic}_m3e4_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp3e-4_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir_v2.hdf5' 
+        model_labels = ['no BH', 'AGN, no CR', 'AGN + CR']
+        ics_m12 = ['m12f', 'm12m']
+        ics_m13 = ['m13h206', 'm13h113']
+        qts = ['gas-mass', 'O6', 'Ne8', 'Mg10']
+        
+        fnss_m12 = [[[mdir + tpl_m12_noBH.format(ic=ic, qt=ion),
+                      mdir + tpl_m12_AGN_noCR.format(ic=ic, qt=ion),
+                      mdir + tpl_m12_AGN_CR.format(ic=ic, qt=ion),
+                      ]] \
+                    for ic in ics_m12 for ion in qts]
+        fnss_m13 = [[[mdir + tpl_m13_noBH.format(ic=ic, qt=ion),
+                      mdir + tpl_m13_AGN_noCR_h206.format(ic=ic, 
+                                                          qt=ion)\
+                         if 'h206' in ic else
+                         mdir + tpl_m13_AGN_noCR_h113.format(ic=ic, 
+                                                             qt=ion),
+                      mdir + tpl_m13_AGN_CR.format(ic=ic, qt=ion),
+                     ]] \
+                     for ic in ics_m13 for ion in qts]
+        fnsss = fnss_m12 + fnss_m13
+        model_labelss = [[model_labels]] * len(fnsss)
+        physmodel_labelss = [model_labels] * len(fnsss)
+
+        rbinss = [np.linspace(0., 300., 50) if 'm12' in ic else \
+                  np.linspace(0., 700., 50) if 'm13' in ic else \
+                  None \
+                  for ic in ics_m12 + ics_m13 for qt in qts]
+        mlabel = ('$\\log_{10} \\, \\Sigma_{\\mathrm{gas}}'+\
+                  ' \\, [\\mathrm{g} \\, \\mathrm{cm}^2]$')
+        ilabel = ('$\\log_{{10}} \\, \\mathrm{{N}}(\\mathrm{{{ion}}})'+\
+                  ' \\, [\\mathrm{{cm}}^2]$')
+        ylabels = [mlabel if 'mass' in qt else\
+                   ilabel.format(ion=qt) \
+                   for ic in  ics_m12 + ics_m13 for qt in qts]
+        outtemp = 'rprofcomp_clean_set1_{ic}_{qt}_z0p5_noBH_AGNCR_AGNnoCR.pdf'
+        outnames = [outdir + outtemp.format(ic=ic, qt=qt) \
+                    for ic in ics_m12 + ics_m13 for qt in qts]
+
+        ttpl_m12 = ('noBH-noCR: m7e3, AGN-noCR: m7e3, sdp2e-4,'
+                    ' AGN-CR: m6e4, sdp1e-4, fcr1e-3_vw3000') 
+        ttpl_m13h113 = ('noBH-noCR: m3e5, AGN-noCR: m3e4, sdp1e-4,'
+                        ' AGN-CR: m3e5, sdp1e-4, fcr1e-3_vw3000') 
+        ttpl_m13h206 = ('noBH-noCR: m3e5, AGN-noCR: m3e4, sdp3e-4,'
+                        ' AGN-CR: m3e5, sdp1e-4, fcr1e-3_vw3000') 
+        title_tpl= '{ion} profiles, {ic} z=0.5, {ttpl}'
+        titles = [title_tpl.format(ic=ic, ion=ion, 
+                                   ttpl=ttpl_m12 if 'm12' in ic else 
+                                        ttpl_m13h206 if 'm13h206' in ic else\
+                                        ttpl_m13h113)\
+                  for ic in ics_m12 + ics_m13 for ion in qts]
+        
+        
+        _outname = 'rprof_noBH_AGN_AGNCR_set1_{ic}_z0p5_gas_{ion}.pdf'
+        outnames = [_outname.format(ic=ic, ion=ion) \
+                    for ic in ics_m12 + ics_m13 for ion in qts]
+
+    for fnss, model_labels, physmodel_labels, title, outname, \
+            ylabel, rbins_pkpc in \
+            zip(fnsss, model_labelss, physmodel_labelss, titles, outnames, 
+                ylabels, rbinss):    
+        outname = outdir + outname
+
+        if title is not None:
+            if len(title) > 70:
+                splitopts = np.where([char == ',' for char in title])[0]
+                optchoice = np.argmin(np.abs(splitopts - 0.5 * len(title)))
+                splitind = splitopts[optchoice]
+                title = (title[:splitind + 1]).strip() + '\n' +\
+                        (title[splitind + 1:]).strip()
+        compare_profiles_physmodels(fnss, model_labels,
+                                    physmodel_labels,
+                                    rbins_pkpc, title=title, 
+                                    ylabel=ylabel, ax=None,
+                                    outname=outname)
+
+
 def check_h1maps():
     '''
     specific sanity test comparing total H, H I from the PS20 tables,
     and H I from the FIRE NeutralHydrogenAbundance field
     '''
 
-    mapdir = ''
-    mapf_Htot = ''
-    mapf_H1sim = ''
-    mapf_H1PS20 = ''
+    mapdir = '/Users/nastasha/ciera/tests/fire_start/h1_sim_test/'
+    mapf_Htot = ('coldens_Hydrogen_m12m_m7e3_MHD_fire3_fireBH_Sep182021_hr'
+                 '_crdiffc690_sdp1e10_gacc31_fa0.5_snap500_shrink-sph-cen'
+                 '_BN98_2rvir_v2.hdf5')
+    mapf_H1sim = ('coldens_H1-sim_m12m_m7e3_MHD_fire3_fireBH_Sep182021_hr'
+                  '_crdiffc690_sdp1e10_gacc31_fa0.5_snap500_shrink-sph-cen'
+                  '_BN98_2rvir_v2.hdf5')
+    mapf_H1PS20 = ('coldens_H1-PS20_m12m_m7e3_MHD_fire3_fireBH_Sep182021_hr'
+                   '_crdiffc690_sdp1e10_gacc31_fa0.5_snap500_shrink-sph-cen'
+                   '_BN98_2rvir_v2.hdf5')
 
     maps = {}
     extents = {}
@@ -3145,7 +3317,7 @@ def check_h1maps():
     mapkeys = ['htot', 'h1sim', 'h1ps20']
     maptitles = {'htot': '$\\mathrm{N}({\\mathrm{H})$',
                  'h1sim': '$\\mathrm{N}({\\mathrm{H I})$, FIRE',
-                 'htot': '$\\mathrm{N}({\\mathrm{H I})$, PS20 table',
+                 'h1ps20': '$\\mathrm{N}({\\mathrm{H I})$, PS20 table',
                  }
     fractitles = {'h1sim': ('$\\mathrm{N}({\\mathrm{H I}) \\,/\\,'
                            ' \\mathrm{N}({\\mathrm{H})$, FIRE'), 
@@ -3159,6 +3331,7 @@ def check_h1maps():
             _map = f['map'][:]
             _vmin = f['map'].attrs['minfinite']
             _vmax = f['map'].attrs['max']
+            print(mapf, _vmin, _vmax)
 
             box_cm = f['Header/inputpars'].attrs['diameter_used_cm']
             cosmopars = {key: val for key, val in \
@@ -3231,15 +3404,16 @@ def check_h1maps():
     fmaps = {'h1sim': maps['h1sim'] - maps['htot'],
              'h1ps20': maps['h1ps20'] - maps['htot']
              }
-    fvmin = np.min([np.min(fmaps[fkey][np.isfinite[fmaps[fkey]]])\
+    fvmin = np.min([np.min(fmaps[fkey][np.isfinite(fmaps[fkey])])\
                     for fkey in fmaps])
-    fvmax = np.min([np.max(fmaps[fkey]) for fkey in fmaps])
+    fvmax = np.min([np.max(fmaps[fkey][np.isfinite(fmaps[fkey])])\
+                    for fkey in fmaps])
     anyzero = np.min([np.min(fmaps[fkey]) for fkey in fmaps]) == fvmin
     extend = 'neither' if anyzero else 'min'
     fcmap = 'afmhot'
     
     for mi, mapkey in enumerate(['h1sim', 'h1ps20']):
-        ax = mapaxes[mi]
+        ax = fracaxes[mi]
         ax.set_xlabel(xlabel, fontsize=fontsize)
         if mi == 0:
             ax.set_ylabel(ylabel, fontsize=fontsize)
@@ -3257,8 +3431,9 @@ def check_h1maps():
         collection.set(edgecolor=['red'], facecolor='none', linewidth=1.5)
         ax.add_collection(collection)
     plt.colorbar(img, cax=fraccax, extend=extend, orientation='vertical') 
-
-    savename = 'mapcomp_H_H1-sim_H1-PS20.pdf'
+    
+    outdir = '/Users/nastasha/ciera/tests/fire_start/h1_sim_test/'
+    savename = outdir + 'mapcomp_H_H1-sim_H1-PS20.pdf'
     if savename is not None:
         plt.savefig(savename, bbox_inches='tight')
 
