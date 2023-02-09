@@ -1204,7 +1204,7 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
             todoc['tableformat'] = ionfrac_method
             todoc['units'] = '(# ions)'
         if ionfrac_method == 'sim':
-            if simtype == 'fire' and ion == 'Hneutral':
+            if simtype == 'fire' and ion == 'H1':
                 eltpath = basepath + 'ElementAbundance/Hydrogen'
                 qty = snap.readarray_emulateEAGLE(eltpath)[filter]
                 toCGS = snap.toCGS
@@ -1220,7 +1220,7 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
                 toCGS = toCGS * snap.toCGS
                 todoc['info'] = ('neutral H fraction from simulation'
                                  ' NeutralHydrogenAbundance')
-                todoc['units'] = '(# H atoms ?)'
+                todoc['units'] = '(# ions)'
             else:    
                 msg = ('simulation read-in of ion fractions is not available'
                        'for simulation {} and ion {}')
@@ -2614,7 +2614,43 @@ def tryout_ionmap(opt=1):
             maptype = 'ion'
             _maptype_args = {'ps20depletion': False}
             _maptype_args.update({'ion': ion})
-            maptype_argss = [_maptype_args.copy()]    
+            maptype_argss = [_maptype_args.copy()]  
+    elif opt >= 395 and opt < 398:
+        # quest
+        outdir = '/projects/b1026/nastasha/tests/start_fire/h1sim_tests/'
+        checkfileflag = True
+        # standard res M12, M13 w and w/o BH
+        _dirpath = '/projects/b1026/snapshots/fire3/'
+        # from Lindsey's selection, sr.
+        # for comparison to the to z=0.0 noBH m13s: did run to z=0.5,
+        #     but second-fewest snapshots of the noBH m13s
+        simname = 'm12m_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e10_gacc31_fa0.5'
+        # m13h206: already have AGN-no CR and no BH at z=0.5 (set 5)
+        snapnum = 500
+        # directory is halo name + resolution 
+        dp2 = '_'.join(simname.split('_')[:2])
+        if dp2.startswith('m13h02_'):
+            dp2 = dp2.replace('m13h02', 'm13h002')
+        dirpath = '/'.join([_dirpath, dp2, simname])
+        #print(dirpath)
+        if opt == 395:
+            maptype = 'Metal'
+            _maptype_args = {'element': 'Hydrogen'}
+            _outfilen = 'coldens_{qt}_{sc}_snap{sn}_shrink-sph-cen_BN98' + \
+                '_2rvir{depl}_v2.hdf5'
+        elif opt == 396:
+            maptype = 'ion'
+            _maptype_args = {'ion': 'H1', 'ionfrac-method': 'PS20',
+                             'ps20depletion': False}
+            _outfilen = 'coldens_{qt}-PS20_{sc}_snap{sn}_shrink-sph-cen_BN98' + \
+                '_2rvir{depl}_v2.hdf5'
+        elif opt == 397:
+            maptype = 'ion'
+            _maptype_args = {'ion': 'H1', 'ionfrac-method': 'sim',
+                             'ps20depletion': False}
+            _outfilen = 'coldens_{qt}-sim_{sc}_snap{sn}_shrink-sph-cen_BN98' + \
+                '_2rvir{depl}_v2.hdf5'
+        maptype_argss = [_maptype_args.copy()]  
 
     for maptype_args in maptype_argss:
         depl = ''
@@ -2960,11 +2996,18 @@ def fromcommandline(index):
         # 395 - 402: m12 lower-res
         # 403 - 414: m13 higher-res
         # 415 - 430: m13 standard-res
+    elif index >= 431 and index < 434:
+        tryout_ionmap(opt=index - 431 + 395)
+        # two H I methods and H total: sanity check for H1-sim impl.
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
 def launchergen(*args, logfilebase='{ind}.out'):
     '''
+    not that useful; just use 
+    echo -e "commands ${index} >> logfile_${index}" >> launchfile_name 
+    in the batch script
+
     Parameters:
     -----------
     args: indexable of integers
