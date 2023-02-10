@@ -99,8 +99,9 @@ def fillset_firemaps_frontera_seqinds(**kwargs):
         ntaskss = [step] * numfiles
         starts = [start + step * i for i in range(numfiles)]
     else:
-        numadd = (last - start + 1) % step
-        ntaskss = [step if i < numadd else step - 1 for i in range(numfiles)]
+        ntaskss = [step if start + (i + 1) * step <= last \
+                   else last - (start + i * step) \
+                   for i in range(numfiles)]
         starts = [start + sum(ntaskss[:i]) for i in range(numfiles)]
     for ntasks, start in zip(ntaskss, starts):
         kwargs_next = _kwargs_next.copy()
