@@ -3131,7 +3131,7 @@ def compare_profiles_physmodels(modelfilelists,
                                 physmodel_labels,
                                 rbins_pkpc, title=None, 
                                 ylabel=None, ax=None,
-                                outname=None):
+                                outname=None, domean=True):
     '''
     modelfilelists, legendlablists: lists of lists, shapes should match
     inner index: physics model differences
@@ -3148,8 +3148,12 @@ def compare_profiles_physmodels(modelfilelists,
         ax.set_xlabel('$\\mathrm{r}_{\\perp}$ [pkpc]', fontsize=fontsize)
 
     lss = ['solid', 'dashed', 'dashdot', 'longdash']
-    lw_med = 1.
-    lw_av = 2.5
+    if domean:
+        lw_med = 1.
+        lw_av = 2.5
+    else:
+        lw_med = 2.
+        lw_av = 0.5
     alpha_range = 0.3
     colors = tc.tol_cset('bright')
 
@@ -3170,10 +3174,12 @@ def compare_profiles_physmodels(modelfilelists,
                 profiles=['av-lin', 'perc-0.5', 'perc-0.9', 'perc-0.1'])
         
             color = colors[len(modelf) * vi + pi]
-            ax.plot(rcens, av, color=color, linestyle=ls, 
-                    linewidth=lw_av, label=leglab)
+            if domean:
+                ax.plot(rcens, av, color=color, linestyle=ls, 
+                        linewidth=lw_av, label=leglab)
             ax.plot(rcens, med, color=color, linestyle=ls, 
-                    linewidth=lw_med)
+                    linewidth=lw_med, 
+                    label=None if domean else leglab)
             ax.fill_between(rcens, p10, p90, color=color, 
                             alpha=alpha_range, linestyle=ls,
                             linewidth=0.5)
@@ -3185,18 +3191,22 @@ def compare_profiles_physmodels(modelfilelists,
 
     handles3, labels = ax.get_legend_handles_labels()
     handles1 = [mlines.Line2D((), (), linewidth=lw_med, linestyle='solid',
-                              label='med.', color='black'),
-                mlines.Line2D((), (), linewidth=lw_av, linestyle='solid',
-                              label='mean', color='black'),
+                            label='med.', color='black'),
                 mpatch.Patch(label='perc. 10-90', linewidth=0.5, 
-                             color='black', alpha=alpha_range),
+                            color='black', alpha=alpha_range),
                 mlines.Line2D((), (), linestyle=None, marker='o',
-                              label='$\\mathrm{R}_{\\mathrm{vir}}$', 
-                              color='black', markersize=5)
+                            label='$\\mathrm{R}_{\\mathrm{vir}}$', 
+                            color='black', markersize=5)
                 ]
-    handles2 = [mlines.Line2D((), (), linewidth=1.7, linestyle=ls,
-                              label=lab, color='black')\
-                for ls, lab in zip(lss, physmodel_labels)]
+    if domean:
+        handles1 = [mlines.Line2D((), (), linewidth=lw_av, linestyle='solid',
+                                  label='mean', color='black')] + handles1 
+    if len(modelfilelists) > 1: # more than one line per phys model
+        handles2 = [mlines.Line2D((), (), linewidth=1.7, linestyle=ls,
+                                  label=lab, color='black')\
+                    for ls, lab in zip(lss, physmodel_labels)]
+    else:
+        handles2 = []
     ax.legend(handles=handles1 + handles2 + handles3, fontsize=fontsize)
     ax.set_xscale('log')
 
@@ -3268,10 +3278,10 @@ def compare_profilesets_physmodel(mapset='clean_set1'):
                   for ic in ics_m12 + ics_m13 for ion in qts]
         
         
-        _outname = 'rprof_noBH_AGN_AGNCR_set1_{ic}_z0p5_gas_{ion}.pdf'
+        _outname = 'rprof_noBH_AGN_AGNCR_set1_{ic}_z0p5_gas_{ion}_nomean.pdf'
         outnames = [_outname.format(ic=ic, ion=ion) \
                     for ic in ics_m12 + ics_m13 for ion in qts]
-
+        domean = False
     for fnss, model_labels, physmodel_labels, title, outname, \
             ylabel, rbins_pkpc in \
             zip(fnsss, model_labelss, physmodel_labelss, titles, outnames, 
@@ -3289,7 +3299,7 @@ def compare_profilesets_physmodel(mapset='clean_set1'):
                                     physmodel_labels,
                                     rbins_pkpc, title=title, 
                                     ylabel=ylabel, ax=None,
-                                    outname=outname)
+                                    outname=outname, domean=domean)
 
 
 def check_h1maps():
