@@ -2656,6 +2656,7 @@ def tryout_ionmap(opt=1):
             _outfilen = 'coldens_{qt}-sim_{sc}_snap{sn}_shrink-sph-cen_BN98' + \
                 '_2rvir{depl}_v2.hdf5'
         maptype_argss = [_maptype_args.copy()]  
+        
     elif opt >= 398 and opt < 402:
         # add H 1 to clean sample (excluding m12m -- has a bug)
         ind = opt - 398
@@ -2719,7 +2720,7 @@ def tryout_ionmap(opt=1):
         # kinda random subset of those, H I not yet FIRE-consistent
         ions = ['H1']
         # z=0.0, 0.5, 1.0
-        snaps = [50] #z=0.50,
+        snaps = [258] #z=0.50,
         _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
         simnames = ['m13h113_m3e4_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e-4_gacc31_fa0.5',
                     'm13h206_m3e4_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp3e-4_gacc31_fa0.5',
@@ -2762,7 +2763,7 @@ def tryout_ionmap(opt=1):
         # kinda random subset of those, H I not yet FIRE-consistent
         ions = ['H1']
         # z=0.0, 0.5, 1.0
-        snaps = [50] #z=0.50,
+        snaps = [258] #z=0.50,
         # standard res M12, M13 w and w/o BH
         _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
         # from Lindsey's selection, sr.
@@ -2854,12 +2855,12 @@ def tryout_ionmap(opt=1):
                     depl = '_ionfrac-fromsim'
                 else:
                     _depl = maptype_args['ps20depletion']
-                if _depl:
-                    depl = '_ps20-depl'
+                    if _depl:
+                        depl = '_ps20-depl'
             else:
                 _depl = maptype_args['ps20depletion']
-            if _depl:
-                depl = '_ps20-depl'
+                if _depl:
+                    depl = '_ps20-depl'
         elif maptype == 'Metal':
             qt = maptype_args['element']
         elif maptype == 'Mass':
