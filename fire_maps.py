@@ -2656,14 +2656,210 @@ def tryout_ionmap(opt=1):
             _outfilen = 'coldens_{qt}-sim_{sc}_snap{sn}_shrink-sph-cen_BN98' + \
                 '_2rvir{depl}_v2.hdf5'
         maptype_argss = [_maptype_args.copy()]  
+    elif opt >= 398 and opt < 402:
+        # add H 1 to clean sample (excluding m12m -- has a bug)
+        ind = opt - 398
+        outdir = '/scratch1/08466/tg877653/output/maps/clean_set1/'
+        checkfileflag = True
+        # CUBS https://arxiv.org/pdf/2209.01228.pdf: 
+        # At 𝑧≈1, HST/COS FUV spectra cover a wide
+        # range of ions, including 
+        # H i, He i, Cii, N ii to N iv, O i to O v, S ii to
+        # S v, Ne iv to Ne vi, Ne viii, and Mg x
+        # kinda random subset of those, H I not yet FIRE-consistent
+        ions = ['H1']
+        # z=0.0, 0.5, 1.0
+        snaps = [50] #z=0.50,
+        # standard res M12, M13 w and w/o BH
+        _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
+        # from Lindsey's selection, sr.
+        # for comparison to the to z=0.0 noBH m13s: did run to z=0.5,
+        #     but second-fewest snapshots of the noBH m13s
+        simnames = ['m13h206_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    'm13h113_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
+                    'm13h113_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
+                   ]
+        # m13h206: already have AGN-no CR and no BH at z=0.5 (set 5)
+        simi = ind // (len(snaps) * len(ions))
+        snpi = (ind % (len(snaps) * len(ions))) // len(ions)
+        ioni = ind % len(ions)
+        simname = simnames[simi]
+        snapnum = snaps[snpi]
+        ion = ions[ioni]
+        # directory is halo name + resolution 
+        dp2 = '_'.join(simname.split('_')[:2])
+        if dp2.startswith('m13h02_'):
+            dp2 = dp2.replace('m13h02', 'm13h002')
+        dirpath = '/'.join([_dirpath, dp2, simname])
+        #print(dirpath)
+
+        if ion == 'Mass':
+            maptype = 'Mass'
+            maptype_argss = [{}]
+        else:
+            maptype = 'ion'
+            if ion == 'H1':
+                _maptype_args = {'ps20depletion': False, 
+                                 'ionfrac-method': 'sim'}
+            else:
+                _maptype_args = {'ps20depletion': False}
+            _maptype_args.update({'ion': ion})
+            maptype_argss = [_maptype_args.copy()] 
+    elif opt >= 402 and opt < 404:
+        # add H 1 to clean sample (excluding m12m -- has a bug)
+        ind = opt - 402
+        outdir = '/scratch1/08466/tg877653/output/maps/clean_set1/'
+        checkfileflag = True
+        # CUBS https://arxiv.org/pdf/2209.01228.pdf: 
+        # At 𝑧≈1, HST/COS FUV spectra cover a wide
+        # range of ions, including 
+        # H i, He i, Cii, N ii to N iv, O i to O v, S ii to
+        # S v, Ne iv to Ne vi, Ne viii, and Mg x
+        # kinda random subset of those, H I not yet FIRE-consistent
+        ions = ['H1']
+        # z=0.0, 0.5, 1.0
+        snaps = [50] #z=0.50,
+        _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
+        simnames = ['m13h113_m3e4_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e-4_gacc31_fa0.5',
+                    'm13h206_m3e4_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp3e-4_gacc31_fa0.5',
+                   ]
+        simi = ind // (len(snaps) * len(ions))
+        snpi = (ind % (len(snaps) * len(ions))) // len(ions)
+        ioni = ind % len(ions)
+        simname = simnames[simi]
+        snapnum = snaps[snpi]
+        ion = ions[ioni]
+        # directory is halo name + resolution 
+        dp2 = '_'.join(simname.split('_')[:2])
+        if dp2.startswith('m13h02_'):
+            dp2 = dp2.replace('m13h02', 'm13h002')
+        dirpath = '/'.join([_dirpath, dp2, simname])
+        #print(dirpath)
+
+        if ion == 'Mass':
+            maptype = 'Mass'
+            maptype_argss = [{}]
+        else:
+            maptype = 'ion'
+            if ion == 'H1':
+                _maptype_args = {'ps20depletion': False, 
+                                 'ionfrac-method': 'sim'}
+            else:
+                _maptype_args = {'ps20depletion': False}
+            _maptype_args.update({'ion': ion})
+            maptype_argss = [_maptype_args.copy()] 
+    elif opt >= 404 and opt < 406:
+        # add H 1 to clean sample (excluding m12m -- has a bug)
+        ind = opt - 404
+        outdir = '/scratch1/08466/tg877653/output/maps/clean_set1/'
+        checkfileflag = True
+        # CUBS https://arxiv.org/pdf/2209.01228.pdf: 
+        # At 𝑧≈1, HST/COS FUV spectra cover a wide
+        # range of ions, including 
+        # H i, He i, Cii, N ii to N iv, O i to O v, S ii to
+        # S v, Ne iv to Ne vi, Ne viii, and Mg x
+        # kinda random subset of those, H I not yet FIRE-consistent
+        ions = ['H1']
+        # z=0.0, 0.5, 1.0
+        snaps = [50] #z=0.50,
+        # standard res M12, M13 w and w/o BH
+        _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
+        # from Lindsey's selection, sr.
+        # for comparison to the to z=0.0 noBH m13s: did run to z=0.5,
+        #     but second-fewest snapshots of the noBH m13s
+        simnames = ['m12f_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    'm12f_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp2e-4_gacc31_fa0.5',
+                    ]
+        # m13h206: already have AGN-no CR and no BH at z=0.5 (set 5)
+        simi = ind // (len(snaps) * len(ions))
+        snpi = (ind % (len(snaps) * len(ions))) // len(ions)
+        ioni = ind % len(ions)
+        simname = simnames[simi]
+        snapnum = snaps[snpi]
+        ion = ions[ioni]
+        # directory is halo name + resolution 
+        dp2 = '_'.join(simname.split('_')[:2])
+        if dp2.startswith('m13h02_'):
+            dp2 = dp2.replace('m13h02', 'm13h002')
+        dirpath = '/'.join([_dirpath, dp2, simname])
+        #print(dirpath)
+
+        if ion == 'Mass':
+            maptype = 'Mass'
+            maptype_argss = [{}]
+        else:
+            maptype = 'ion'
+            if ion == 'H1':
+                _maptype_args = {'ps20depletion': False, 
+                                 'ionfrac-method': 'sim'}
+            else:
+                _maptype_args = {'ps20depletion': False}
+            _maptype_args.update({'ion': ion})
+            maptype_argss = [_maptype_args.copy()] 
+    elif opt >= 406 and opt < 407:
+        # add H 1 to clean sample (excluding m12m -- has a bug)
+        ind = opt - 406
+        outdir = '/scratch1/08466/tg877653/output/maps/clean_set1/'
+        checkfileflag = True
+        # CUBS https://arxiv.org/pdf/2209.01228.pdf: 
+        # At 𝑧≈1, HST/COS FUV spectra cover a wide
+        # range of ions, including 
+        # H i, He i, Cii, N ii to N iv, O i to O v, S ii to
+        # S v, Ne iv to Ne vi, Ne viii, and Mg x
+        # kinda random subset of those, H I not yet FIRE-consistent
+        ions = ['H1']
+        # z=0.0, 0.5, 1.0
+        snaps = [50] #z=0.50,
+        # standard res M12, M13 w and w/o BH
+        _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
+        # from Lindsey's selection, sr.
+        # for comparison to the to z=0.0 noBH m13s: did run to z=0.5,
+        #     but second-fewest snapshots of the noBH m13s
+        simnames = ['m12f_m6e4_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
+                    ]
+        # m13h206: already have AGN-no CR and no BH at z=0.5 (set 5)
+        simi = ind // (len(snaps) * len(ions))
+        snpi = (ind % (len(snaps) * len(ions))) // len(ions)
+        ioni = ind % len(ions)
+        simname = simnames[simi]
+        snapnum = snaps[snpi]
+        ion = ions[ioni]
+        # directory is halo name + resolution 
+        dp2 = '_'.join(simname.split('_')[:2])
+        if dp2.startswith('m13h02_'):
+            dp2 = dp2.replace('m13h02', 'm13h002')
+        dirpath = '/'.join([_dirpath, dp2, simname])
+        #print(dirpath)
+
+        if ion == 'Mass':
+            maptype = 'Mass'
+            maptype_argss = [{}]
+        else:
+            maptype = 'ion'
+            if ion == 'H1':
+                _maptype_args = {'ps20depletion': False, 
+                                 'ionfrac-method': 'sim'}
+            else:
+                _maptype_args = {'ps20depletion': False}
+            _maptype_args.update({'ion': ion})
+            maptype_argss = [_maptype_args.copy()] 
 
     for maptype_args in maptype_argss:
         depl = ''
         if maptype == 'ion':
             qt = maptype_args['ion']
-            _depl = maptype_args['ps20depletion']
+            if 'ionfrac-method' in maptype_args:
+                if maptype_args['ionfrac-method'] == 'sim':
+                    depl = '_ionfrac-fromsim'
+                else:
+                    _depl = maptype_args['ps20depletion']
+                if _depl:
+                    depl = '_ps20-depl'
+            else:
+                _depl = maptype_args['ps20depletion']
             if _depl:
-               depl = '_ps20-depl'
+                depl = '_ps20-depl'
         elif maptype == 'Metal':
             qt = maptype_args['element']
         elif maptype == 'Mass':
@@ -3004,6 +3200,13 @@ def fromcommandline(index):
     elif index >= 431 and index < 434:
         tryout_ionmap(opt=index - 431 + 395)
         # two H I methods and H total: sanity check for H1-sim impl.
+    elif index >= 434 and index < 443:
+        tryout_ionmap(opt=index - 434 + 398)
+        # H I maps for clean sample z=0.5
+        # 434 - 437: m13 standard-res
+        # 438 - 439: m13 hi-res
+        # 440 - 441: m12 hi-res
+        # 442:       m12 standard-res
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
