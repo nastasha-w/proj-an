@@ -3315,14 +3315,14 @@ def check_h1maps():
     vmin = np.inf
     vmax = -np.inf
     mapkeys = ['htot', 'h1sim', 'h1ps20']
-    maptitles = {'htot': '$\\mathrm{N}({\\mathrm{H})$',
-                 'h1sim': '$\\mathrm{N}({\\mathrm{H I})$, FIRE',
-                 'h1ps20': '$\\mathrm{N}({\\mathrm{H I})$, PS20 table',
+    maptitles = {'htot': '$\\mathrm{N}(\\mathrm{H})$',
+                 'h1sim': '$\\mathrm{N}(\\mathrm{H I})$, FIRE',
+                 'h1ps20': '$\\mathrm{N}(\\mathrm{H I})$, PS20 table',
                  }
-    fractitles = {'h1sim': ('$\\mathrm{N}({\\mathrm{H I}) \\,/\\,'
-                           ' \\mathrm{N}({\\mathrm{H})$, FIRE'), 
-                  'h1ps20': ('$\\mathrm{N}({\\mathrm{H I}) \\,/\\,'
-                             ' \\mathrm{N}({\\mathrm{H})$, PS20 tables'),
+    fractitles = {'h1sim': ('$\\mathrm{N}(\\mathrm{H I}) \\,/\\,'
+                           ' \\mathrm{N}(\\mathrm{H})$, FIRE'), 
+                  'h1ps20': ('$\\mathrm{N}(\\mathrm{H I}) \\,/\\,'
+                             ' \\mathrm{N}(\\mathrm{H})$, PS20 tables'),
                   }
 
     for mapkey, mapf in zip(mapkeys, 
@@ -3363,13 +3363,15 @@ def check_h1maps():
     anyzero = np.min([np.min(maps[key]) for key in maps]) == vmin
     extend = 'neither' if anyzero else 'min'
 
-    fig = plt.figure(figsize=(7.5, 5.))
-    grid = gsp.GridSpec(nrows=2, ncols=4, hspace=0.2, wspace=0.2, 
-                        width_ratios=[5., 5., 5., 1.])
-    mapaxes = [fig.add_subplot(grid[0, i]) for i in range(3)]
-    mapcax = fig.add_subplot(grid[0, 3])
-    fracaxes = [fig.add_subplot(grid[1, 1 + i]) for i in range(2)]
-    fraccax = fig.add_subplot(grid[1, 3])
+    fig = plt.figure(figsize=(8.5, 5.))
+    grid = gsp.GridSpec(nrows=2, ncols=5, hspace=0.2, wspace=0.2, 
+                        width_ratios=[1., 5., 5., 5., 1.])
+    mapaxes = [fig.add_subplot(grid[0, 1+ i]) for i in range(3)]
+    mapcax = fig.add_subplot(grid[0, 4])
+    fracaxes = [fig.add_subplot(grid[1, 2 + i]) for i in range(2)]
+    fraccax = fig.add_subplot(grid[1, 4])
+    diffax = fig.add_subplot(grid[1, 1])
+    diffcax = fig.add_subplot(grid[1, 0])
     fontsize = 12
     
     # should be same for all three maps
@@ -3379,8 +3381,6 @@ def check_h1maps():
     for mi, mapkey in enumerate(mapkeys):
         ax = mapaxes[mi]
         if mi == 0:
-            ax.set_xlabel(xlabel, fontsize=fontsize)
-        if mi == 0:
             ax.set_ylabel(ylabel, fontsize=fontsize)
         ax.set_title(maptitles[mapkey], fontsize=fontsize)
 
@@ -3389,7 +3389,8 @@ def check_h1maps():
                        vmin=vmin, vmax=vmax, cmap=cmap, 
                        extent=extents[mapkey]
                         )
-        ax.tick_params(axis='both', labelsize=fontsize-1)
+        ax.tick_params(axis='both', labelsize=fontsize-1,
+                       labelleft=mi == 0, labelbottom=False)
 
         patches = [mpatch.Circle((0., 0.), rvir_pkpc)]
         collection = mcol.PatchCollection(patches)
@@ -3400,7 +3401,9 @@ def check_h1maps():
                    '$R_{\\mathrm{vir}}$',
                     color='red', fontsize=fontsize)
     plt.colorbar(img, cax=mapcax, extend=extend, orientation='vertical') 
-    
+    mapcax.set_ylabel('$\\log_{10} \\, \\mathrm{N} \\; [\\mathrm{cm}^{-2}]$',
+                      fontsize=fontsize) 
+
     fmaps = {'h1sim': maps['h1sim'] - maps['htot'],
              'h1ps20': maps['h1ps20'] - maps['htot']
              }
@@ -3415,8 +3418,8 @@ def check_h1maps():
     for mi, mapkey in enumerate(['h1sim', 'h1ps20']):
         ax = fracaxes[mi]
         ax.set_xlabel(xlabel, fontsize=fontsize)
-        if mi == 0:
-            ax.set_ylabel(ylabel, fontsize=fontsize)
+        #if mi == 0:
+        #    ax.set_ylabel(ylabel, fontsize=fontsize)
         ax.set_title(fractitles[mapkey], fontsize=fontsize)
 
         img = ax.imshow(fmaps[mapkey].T, origin='lower', 
@@ -3424,14 +3427,40 @@ def check_h1maps():
                         vmin=fvmin, vmax=fvmax, cmap=fcmap, 
                         extent=extents[mapkey]
                         )
-        ax.tick_params(axis='both', labelsize=fontsize-1)
+        ax.tick_params(axis='both', labelsize=fontsize-1, 
+                       labelleft=False, labelbottom=True)
 
         patches = [mpatch.Circle((0., 0.), rvir_pkpc)]
         collection = mcol.PatchCollection(patches)
         collection.set(edgecolor=['red'], facecolor='none', linewidth=1.5)
         ax.add_collection(collection)
-    plt.colorbar(img, cax=fraccax, extend=extend, orientation='vertical') 
+    plt.colorbar(img, cax=fraccax, extend=extend, orientation='vertical')
+    fraccax.set_ylabel('$\\log_{10} \\, \\mathrm{N}(\\mathrm{H I}) \\,/\\,'
+                       ' \\mathrm{N}(\\mathrm{H})$', fontsize=fontsize) 
     
+    ax = diffax
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.set_title('FIRE / PS20', fontsize=fontsize)
+    diffmap = fmaps['h1sim'] - fmaps['h1ps20']
+    vmax = np.max(np.abs(diffmap[np.isfinite(diffmap)]))
+    vmin = -1. * vmax
+    img = ax.imshow(diffmap.T, origin='lower', 
+                    interpolation='nearest', 
+                    vmin=vmin, vmax=vmax, cmap='RdBu', 
+                    extent=extents['h1sim']
+                    )
+    ax.tick_params(axis='both', labelsize=fontsize-1,
+                   labelleft=False)
+    patches = [mpatch.Circle((0., 0.), rvir_pkpc)]
+    collection = mcol.PatchCollection(patches)
+    collection.set(edgecolor=['red'], facecolor='none', linewidth=1.5)
+    ax.add_collection(collection)
+    plt.colorbar(img, cax=diffcax, extend='neither', orientation='vertical')
+    diffcax.set_ylabel('$\\Delta \\, \\log_{10} \\,'
+                       ' \\mathrm{N}(\\mathrm{H I})$', fontsize=fontsize) 
+    diffcax.yaxis.set_label_position('left')
+    diffcax.yaxis.tick_left()
+
     outdir = '/Users/nastasha/ciera/tests/fire_start/h1_sim_test/'
     savename = outdir + 'mapcomp_H_H1-sim_H1-PS20.pdf'
     if savename is not None:
