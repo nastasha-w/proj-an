@@ -2850,46 +2850,57 @@ def plotcomps_mass_ion_physmodel(mapset='clean_set1'):
     outdir = '/Users/nastasha/ciera/projects_lead/fire3_ionabs/maps_clean_set1/'
     if mapset == 'clean_set1':
         mdir = '/Users/nastasha/ciera/sim_maps/fire/clean_set1/'
-        tpl_m12_noBH = 'coldens_{qt}_{ic}_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e10_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir_v2.hdf5'
-        tpl_m12_AGN_CR = 'coldens_{qt}_{ic}_m6e4_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000_snap50_shrink-sph-cen_BN98_2rvir_v2.hdf5'
-        tpl_m12_AGN_noCR = 'coldens_{qt}_{ic}_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp2e-4_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir_v2.hdf5'
-        tpl_m13_noBH = 'coldens_{qt}_{ic}_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5_snap50_shrink-sph-cen_BN98_2rvir_v2.hdf5' 
-        tpl_m13_AGN_CR = 'coldens_{qt}_{ic}_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000_snap50_shrink-sph-cen_BN98_2rvir_v2.hdf5' 
-        tpl_m13_AGN_noCR_h113 = 'coldens_{qt}_{ic}_m3e4_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e-4_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir_v2.hdf5' 
-        tpl_m13_AGN_noCR_h206 = 'coldens_{qt}_{ic}_m3e4_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp3e-4_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir_v2.hdf5' 
+        tpl_m12_noBH = 'coldens_{qt}_{ic}_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e10_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir{im}_v2.hdf5'
+        tpl_m12_AGN_CR = 'coldens_{qt}_{ic}_m6e4_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000_snap50_shrink-sph-cen_BN98_2rvir{im}_v2.hdf5'
+        tpl_m12_AGN_noCR = 'coldens_{qt}_{ic}_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp2e-4_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir{im}_v2.hdf5'
+        tpl_m13_noBH = 'coldens_{qt}_{ic}_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5_snap50_shrink-sph-cen_BN98_2rvir{im}_v2.hdf5' 
+        tpl_m13_AGN_CR = 'coldens_{qt}_{ic}_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000_snap50_shrink-sph-cen_BN98_2rvir{im}_v2.hdf5' 
+        tpl_m13_AGN_noCR_h113 = 'coldens_{qt}_{ic}_m3e4_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e-4_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir{im}_v2.hdf5' 
+        tpl_m13_AGN_noCR_h206 = 'coldens_{qt}_{ic}_m3e4_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp3e-4_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir{im}_v2.hdf5' 
         model_labels = ['no BH', 'AGN, no CR', 'AGN + CR']
-        ics_m12 = ['m12f', 'm12m']
+        ics_m12 = ['m12f'] # bug: 'm12m'
         ics_m13 = ['m13h206', 'm13h113']
         qt_mass = 'gas-mass'
-        qts_ion = ['O6', 'Ne8', 'Mg10']
+        qts_ion = ['O6', 'Ne8', 'Mg10', 'H1']
+        h1_imstr = '_ionfrac-fromsim'
         
-        fnss_mass_m12 = [[mdir + tpl_m12_noBH.format(ic=ic, qt=qt_mass),
-                          mdir + tpl_m12_AGN_noCR.format(ic=ic, qt=qt_mass),
-                          mdir + tpl_m12_AGN_CR.format(ic=ic, qt=qt_mass),
+        fnss_mass_m12 = [[mdir + tpl_m12_noBH.format(ic=ic, qt=qt_mass, 
+                                                     im=''),
+                          mdir + tpl_m12_AGN_noCR.format(ic=ic, qt=qt_mass, 
+                                                         im=''),
+                          mdir + tpl_m12_AGN_CR.format(ic=ic, qt=qt_mass, 
+                                                       im=''),
                           ] \
                          for ic in ics_m12 for ion in qts_ion]
-        fnss_mass_m13 = [[mdir + tpl_m13_noBH.format(ic=ic, qt=qt_mass),
+        fnss_mass_m13 = [[mdir + tpl_m13_noBH.format(ic=ic, qt=qt_mass, 
+                                                     im=''),
                           mdir + tpl_m13_AGN_noCR_h206.format(ic=ic, 
-                                                              qt=qt_mass)\
+                                qt=qt_mass, im='')\
                             if 'h206' in ic else
                             mdir + tpl_m13_AGN_noCR_h113.format(ic=ic, 
-                                                                qt=qt_mass),
-                          mdir + tpl_m13_AGN_CR.format(ic=ic, qt=qt_mass),
+                                qt=qt_mass, im=''),
+                          mdir + tpl_m13_AGN_CR.format(ic=ic, qt=qt_mass, 
+                                                       im=''),
                           ] \
                          for ic in ics_m13 for ion in qts_ion]
-        fnss_ion_m12 = [[mdir + tpl_m12_noBH.format(ic=ic, qt=ion),
-                         mdir + tpl_m12_AGN_noCR.format(ic=ic, qt=ion),
-                         mdir + tpl_m12_AGN_CR.format(ic=ic, qt=ion),
-                          ] \
+        fnss_ion_m12 = [[mdir + tpl_m12_noBH.format(ic=ic, qt=ion, 
+                              im=h1_imstr if ion == 'H1' else ''),
+                         mdir + tpl_m12_AGN_noCR.format(ic=ic, qt=ion, 
+                              im=h1_imstr if ion == 'H1' else ''),
+                         mdir + tpl_m12_AGN_CR.format(ic=ic, qt=ion, 
+                              im=h1_imstr if ion == 'H1' else ''),
+                         ]
                          for ic in ics_m12 for ion in qts_ion]
-        fnss_ion_m13 = [[mdir + tpl_m13_noBH.format(ic=ic, qt=ion),
+        fnss_ion_m13 = [[mdir + tpl_m13_noBH.format(ic=ic, qt=ion, 
+                             im=h1_imstr if ion == 'H1' else ''),
                          mdir + tpl_m13_AGN_noCR_h206.format(ic=ic, 
-                                                              qt=ion)\
+                              qt=ion, im=h1_imstr if ion == 'H1' else '')\
                             if 'h206' in ic else
                             mdir + tpl_m13_AGN_noCR_h113.format(ic=ic, 
-                                                                qt=ion),
-                         mdir + tpl_m13_AGN_CR.format(ic=ic, qt=ion),
-                          ] \
+                                qt=ion, im=h1_imstr if ion == 'H1' else ''),
+                         mdir + tpl_m13_AGN_CR.format(ic=ic, qt=ion, 
+                             im=h1_imstr if ion == 'H1' else ''),
+                         ] \
                          for ic in ics_m13 for ion in qts_ion]
         fnss_mass = fnss_mass_m12 + fnss_mass_m13
         fnss_ion = fnss_ion_m12 + fnss_ion_m13
@@ -3184,10 +3195,14 @@ def compare_profiles_physmodels(modelfilelists,
                             alpha=alpha_range, linestyle=ls,
                             linewidth=0.5)
             # indicate Rvir on the curves
-            yp_bh_av = pu.linterpsolve(rcens, av, rvir_bh_pkpc)
             yp_bh_med = pu.linterpsolve(rcens, med, rvir_bh_pkpc)
-            ax.scatter([rvir_bh_pkpc] * 2, [yp_bh_av, yp_bh_med],
-                        marker='o', c=color, s=60)
+            if domean:
+                yp_bh_av = pu.linterpsolve(rcens, av, rvir_bh_pkpc)
+                ax.scatter([rvir_bh_pkpc] * 2, [yp_bh_av, yp_bh_med],
+                            marker='o', c=color, s=60)
+            else:
+                ax.scatter([rvir_bh_pkpc], [yp_bh_med],
+                            marker='o', c=color, s=60)
 
     handles3, labels = ax.get_legend_handles_labels()
     handles1 = [mlines.Line2D((), (), linewidth=lw_med, linestyle='solid',
@@ -3219,30 +3234,36 @@ def compare_profilesets_physmodel(mapset='clean_set1'):
         outdir = '/Users/nastasha/ciera/projects_lead/fire3_ionabs/profiles_clean_set1/'
         
         mdir = '/Users/nastasha/ciera/sim_maps/fire/clean_set1/'
-        tpl_m12_noBH = 'coldens_{qt}_{ic}_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e10_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir_v2.hdf5'
-        tpl_m12_AGN_CR = 'coldens_{qt}_{ic}_m6e4_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000_snap50_shrink-sph-cen_BN98_2rvir_v2.hdf5'
-        tpl_m12_AGN_noCR = 'coldens_{qt}_{ic}_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp2e-4_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir_v2.hdf5'
-        tpl_m13_noBH = 'coldens_{qt}_{ic}_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5_snap50_shrink-sph-cen_BN98_2rvir_v2.hdf5' 
-        tpl_m13_AGN_CR = 'coldens_{qt}_{ic}_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000_snap50_shrink-sph-cen_BN98_2rvir_v2.hdf5' 
-        tpl_m13_AGN_noCR_h113 = 'coldens_{qt}_{ic}_m3e4_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e-4_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir_v2.hdf5' 
-        tpl_m13_AGN_noCR_h206 = 'coldens_{qt}_{ic}_m3e4_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp3e-4_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir_v2.hdf5' 
+        tpl_m12_noBH = 'coldens_{qt}_{ic}_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e10_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir{im}_v2.hdf5'
+        tpl_m12_AGN_CR = 'coldens_{qt}_{ic}_m6e4_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000_snap50_shrink-sph-cen_BN98_2rvir{im}_v2.hdf5'
+        tpl_m12_AGN_noCR = 'coldens_{qt}_{ic}_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp2e-4_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir{im}_v2.hdf5'
+        tpl_m13_noBH = 'coldens_{qt}_{ic}_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5_snap50_shrink-sph-cen_BN98_2rvir{im}_v2.hdf5' 
+        tpl_m13_AGN_CR = 'coldens_{qt}_{ic}_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000_snap50_shrink-sph-cen_BN98_2rvir{im}_v2.hdf5' 
+        tpl_m13_AGN_noCR_h113 = 'coldens_{qt}_{ic}_m3e4_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e-4_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir{im}_v2.hdf5' 
+        tpl_m13_AGN_noCR_h206 = 'coldens_{qt}_{ic}_m3e4_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp3e-4_gacc31_fa0.5_snap258_shrink-sph-cen_BN98_2rvir{im}_v2.hdf5' 
         model_labels = ['no BH', 'AGN, no CR', 'AGN + CR']
-        ics_m12 = ['m12f', 'm12m']
+        ics_m12 = ['m12f'] # bug: 'm12m'
         ics_m13 = ['m13h206', 'm13h113']
-        qts = ['gas-mass', 'O6', 'Ne8', 'Mg10']
+        qts = ['gas-mass', 'O6', 'Ne8', 'Mg10', 'H1']
+        h1_imstr = '_ionfrac-fromsim'
         
-        fnss_m12 = [[[mdir + tpl_m12_noBH.format(ic=ic, qt=ion),
-                      mdir + tpl_m12_AGN_noCR.format(ic=ic, qt=ion),
-                      mdir + tpl_m12_AGN_CR.format(ic=ic, qt=ion),
+        fnss_m12 = [[[mdir + tpl_m12_noBH.format(ic=ic, qt=ion, 
+                          im=h1_imstr if ion == 'H1' else ''),
+                      mdir + tpl_m12_AGN_noCR.format(ic=ic, qt=ion,
+                          im=h1_imstr if ion == 'H1' else ''),
+                      mdir + tpl_m12_AGN_CR.format(ic=ic, qt=ion, 
+                          im=h1_imstr if ion == 'H1' else ''),
                       ]] \
                     for ic in ics_m12 for ion in qts]
-        fnss_m13 = [[[mdir + tpl_m13_noBH.format(ic=ic, qt=ion),
+        fnss_m13 = [[[mdir + tpl_m13_noBH.format(ic=ic, qt=ion, 
+                          im=h1_imstr if ion == 'H1' else ''),
                       mdir + tpl_m13_AGN_noCR_h206.format(ic=ic, 
-                                                          qt=ion)\
+                          qt=ion, im=h1_imstr if ion == 'H1' else '')\
                          if 'h206' in ic else
                          mdir + tpl_m13_AGN_noCR_h113.format(ic=ic, 
-                                                             qt=ion),
-                      mdir + tpl_m13_AGN_CR.format(ic=ic, qt=ion),
+                             qt=ion, im=h1_imstr if ion == 'H1' else ''),
+                      mdir + tpl_m13_AGN_CR.format(ic=ic, qt=ion, 
+                          im=h1_imstr if ion == 'H1' else ''),
                      ]] \
                      for ic in ics_m13 for ion in qts]
         fnsss = fnss_m12 + fnss_m13
