@@ -85,10 +85,14 @@ def get_rval_massmap(filen, units='pkpc'):
 def get_profile_massmap(filen, rbins, rbin_units='pkpc',
                         profiles=[]):
     '''
+    get values with impact parameter from maps. If multiple files
+    are given, averages, percentiles, etc. are taken over the full
+    sample, weighted by map pixel 
+
     Parameters:
     -----------
-    filen: str
-        name of the file containing the map (with full path)
+    filen: str or iterable of strings
+        name(s) of the file(s) containing the map (with full path)
     rbins: array-like of floats
         impact parameter bin edges
     rbin_units: {'pkpc', 'Rvir', 'cm'}
@@ -101,18 +105,40 @@ def get_profile_massmap(filen, rbins, rbin_units='pkpc',
             'perc-<float>' (percentile, values 0 -- 1)
             'min' (minimum)
             'max' (maximum)
+            'fcov-<float>' (fraction of values >= given value)
     Returns:
     --------
     profiles: each an array of floats
         the profile values in each radial bin
     '''
     
-    rvals, mvs = get_rval_massmap(filen, units=rbin_units)
-    with h5py.File(filen, 'r') as f:
-        islog = bool(f['map'].attrs['log'])
-    rinds = np.searchsorted(rbins, rvals) - 1
-    mvs_by_bin = [mvs[rinds == i] for i in range(len(rbins))]
-    mvs_by_bin = mvs_by_bin[:-1]
+    # single filename (string) or iterable of file names
+    if isinstance(filen, type(''))
+        filens = [filen]
+    else:
+        filens = filen
+    
+    first = True
+    for _filen in filens:
+        with h5py.File(filen, 'r') as f:
+            _islog = bool(f['map'].attrs['log'])
+        rvals, mvs = get_rval_massmap(filen, units=rbin_units)
+        
+        # searchsorted index 0 means value < rbins[0], 
+        # index len(rbins) means values > rbins[-1] 
+        rinds = np.searchsorted(rbins, rvals) - 1 
+        _mvs_by_bin = [mvs[rinds == i] for i in range(len(rbins))]
+        _mvs_by_bin = _mvs_by_bin[:-1]
+        if first:
+            mvs_by_bin = _mvs_by_bin
+            islog = _islog
+            first = False
+        else:
+            mvs_by_bin += _mvs_by_bin
+            # not handling this for now since all maps should be log
+            if _islog != islog:
+                msg = 'Different files have log vs. non-log map values'
+                raise RuntimeError(msg)
 
     out = []
     for prof in profiles:
@@ -137,6 +163,10 @@ def get_profile_massmap(filen, rbins, rbin_units='pkpc',
         elif prof.startswith('perc-'):
             pv = float(prof.split('-')[-1])
             _pr = np.array([np.quantile(_mvs, pv) for _mvs in mvs_by_bin])
+        elif prof.startswith('fcov-'):
+            pv = float(prof.split('-')[-1])
+            _pr = np.array([np.sum(_mvs >= pv) / float(len(_mvs)) \
+                            for _mvs in mvs_by_bin])
         out.append(_pr)
     return out
          
