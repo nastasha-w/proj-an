@@ -3158,6 +3158,145 @@ def tryout_hist(index):
                       logweights=True, logaxes=True, axbins=0.05,
                       outfilen=outdir + outfilen)
 
+def run_hist(opt):
+    if opt >= 0 and opt < 60:
+        ind = opt
+        outdir = '/scratch1/08466/tg877653/output/hists/clean_set1_set2/'
+        outname = 'hist_{axqt}_r3D_by_{wt}_bins1_v1.hdf5'
+        particle_type = 0
+        wts = ['Mass', 'Volume', 'H1']
+        snaps = [50] # z=0.5
+        _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
+        simnames = ['m13h206_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    'm13h113_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
+                    'm13h113_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
+                   ]
+        axtypes_opts = ['sim-direct'] * 5
+        axtypes_args_opts = [{'field': 'Temperature'},
+                             {'field': 'Density'},
+                             {'field': 'ElementAbundance/Oxygen'},
+                             {'field': 'ElementAbundance/Neon'}
+                             {'field': 'ElementAbundance/Magnesium'}
+                            ]
+        axqts = ['Temperature', 'Density', 'Oxygen', 'Neon', 'Magnesium']
+        axbins = [0.05, 0.05] + [0.1] * 3
+
+        simi = ind // (len(snaps) * len(wts) * len(axqts))
+        snpi = (ind % (len(snaps) * len(wts) * len(axqts))) \
+               // (len(wts) * len(axqts))
+        wti = (ind % (len(wts) * len(axqts))) // len(axqts)
+        axi = ind % len(axqts)
+        simname = simnames[simi]
+        snapnum = snaps[snpi]
+        wt = wts[wti]
+        axtypes = axtypes_opts[axi]
+        axtypes_args_opts = axtypes_args_opts[axi]
+        axqt = axqts[axi]
+        
+        runit = 'pkpc'
+        rbins = np.arange(40., 501., 20.) if simname.startswith('m12') else\
+                np.arange(40., 1001., 20.)
+        rbins = np.append(np.arange(0., 40., 5.), rbins)
+
+        # directory is halo name + resolution 
+        dp2 = '_'.join(simname.split('_')[:2])
+        if dp2.startswith('m13h02_'):
+            dp2 = dp2.replace('m13h02', 'm13h002')
+        dirpath = '/'.join([_dirpath, dp2, simname])
+
+        eltbase = 'ElementAbundance/{elt}'
+        if wt in ['Mass', 'Volume']:
+            weighttype = wt
+            weighttype_argss = [{}]
+        else:
+            weighttype = 'ion'
+            _weighttype_args = {'ps20depletion': False, 'ion': wt,
+                                'density': False}
+            if ion == 'H1':
+                _weighttype_args.update({'ionfrac-method': 'sim'})
+            else:
+                dummytab = linetable_PS20(ion, 0.0, emission=False,
+                                          vol=True, lintable=True)
+                parentelt = dummytab.element
+                axtypes_args_opts = \
+                    {key: (axtypes_args_opts[key]).format(elt=parentelt)\
+                     for key in axtypes_args_opts}
+                axqts = [axqt.format(elt=parentelt) for axqt in axqts]
+
+        outfilen = outdir + outname.format(axqt=axqt, wt=wt)
+    elif opt >= 60 and opt < 96:
+        ind = opt - 60
+        outdir = '/scratch1/08466/tg877653/output/hists/clean_set1_set2/'
+        outname = 'hist_{axqt}_r3D_by_{wt}_bins1_v1.hdf5'
+        particle_type = 0
+        wts = ['O6', 'Ne8', 'Mg10']
+        snaps = [50] # z=0.5
+        _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
+        simnames = ['m13h206_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    'm13h113_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
+                    'm13h113_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
+                   ]
+        axtypes_opts = ['sim-direct'] * 5
+        axtypes_args_opts = [{'field': 'Temperature'},
+                             {'field': 'Density'},
+                             {'field': 'ElementAbundance/{elt}'},
+                            ]
+        axqts = ['Temperature', 'Density', '{elt}']
+        axbins = [0.05, 0.05, 0.1]
+
+        simi = ind // (len(snaps) * len(wts) * len(axqts))
+        snpi = (ind % (len(snaps) * len(wts) * len(axqts))) \
+               // (len(wts) * len(axqts))
+        wti = (ind % (len(wts) * len(axqts))) // len(axqts)
+        axi = ind % len(axqts)
+        simname = simnames[simi]
+        snapnum = snaps[snpi]
+        wt = wts[wti]
+        axtypes = axtypes_opts[axi]
+        axtypes_args_opts = axtypes_args_opts[axi]
+        axqt = axqts[axi]
+        
+        runit = 'pkpc'
+        rbins = np.arange(40., 501., 20.) if simname.startswith('m12') else\
+                np.arange(40., 1001., 20.)
+        rbins = np.append(np.arange(0., 40., 5.), rbins)
+
+        # directory is halo name + resolution 
+        dp2 = '_'.join(simname.split('_')[:2])
+        if dp2.startswith('m13h02_'):
+            dp2 = dp2.replace('m13h02', 'm13h002')
+        dirpath = '/'.join([_dirpath, dp2, simname])
+
+        eltbase = 'ElementAbundance/{elt}'
+        if wt in ['Mass', 'Volume']:
+            weighttype = wt
+            weighttype_argss = [{}]
+        else:
+            weighttype = 'ion'
+            _weighttype_args = {'ps20depletion': False, 'ion': wt,
+                                'density': False}
+            if ion == 'H1':
+                _weighttype_args.update({'ionfrac-method': 'sim'})
+            else:
+                dummytab = linetable_PS20(ion, 0.0, emission=False,
+                                          vol=True, lintable=True)
+                parentelt = dummytab.element
+                axtypes_args_opts = \
+                    {key: (axtypes_args_opts[key]).format(elt=parentelt)\
+                     for key in axtypes_args_opts}
+                axqts = [axqt.format(elt=parentelt) for axqt in axqts]
+
+        outfilen = outdir + outname.format(axqt=axqt, wt=wt)
+
+    histogram_radprof(dirpath, snapnum,
+                      weighttype, weighttype_args, axtypes, axtypes_args,
+                      particle_type=particle_type, 
+                      center='shrinksph', rbins=rbins, runit=runit,
+                      logweights=True, logaxes=True, axbins=axbins,
+                      outfilen=outfilen, overwrite=False)
+
 def run_checkfields_units(index):
     dirpath1 = '/projects/b1026/snapshots/fire3/m13h206_m3e5/' + \
                'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1' + \
