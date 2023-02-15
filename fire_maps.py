@@ -1072,19 +1072,21 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
         used to read in what is needed
     parttype: {0, 1, 4, 5}
         particle type
-    maptype: {'Mass', 'Metal', 'ion', 'sim-direct'}
+    maptype: {'Mass', 'Volume', 'Metal', 'ion', 'sim-direct'}
         what sort of thing are we looking for
     maptype_args: dict or None
         additional arguments for each maptype
         for maptype value:
         'Mass': None (ignored)
         'Metal': str
+            number of nuclei or nucleus density (all ions together)
             'element': str
                 element name, e.g. 'oxygen'
             'density': bool
                 get the metal number density instead of number of nuclei.
                 The default is False.
         'ion': str
+            number of ions or ion density
             'ion': str
                 ion name. format e.g. 'o6', 'fe17'
             'ionfrac-method': {'PS20', 'sim'}. The default is 'PS20'.
@@ -1106,10 +1108,11 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
                 get the ion density instead of number of nuclei.
                 The default is False.
         'sim-direct': str
+            a quantity stored directly in the simulation, or calculated
+            by the simulation snapshot class (e.g., Temperature)
             'field': str
                 the name of the field (after 'PartType<#>') to read 
                 in from the simulation.
-                
 
     Returns:
     --------
@@ -1133,6 +1136,13 @@ def get_qty(snap, parttype, maptype, maptype_args, filterdct=None):
         qty = snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
         toCGS = snap.toCGS
         todoc['units'] = 'g'
+    elif maptype == 'Volume':
+        qty = snap.readarray_emulateEAGLE(basepath + 'Masses')[filter]
+        toCGS = snap.toCGS
+        qty /= snap.readarray_emulateEAGLE(basepath + 'Density')[filter]
+        toCGS = toCGS / snap.toCGS
+        todoc['units'] = 'cm**3'
+        todoc['method'] = 'Masses / Density'
     elif maptype == 'Metal':
         element = maptype_args['element']
         if element == 'total':
@@ -1830,7 +1840,7 @@ def histogram_radprof(dirpath, snapnum,
         int: use that many bins between whatever min and maxfinite values are
              present in the data
         float: use bins of that size, in (log) cgs units. The edges are chosen
-             so zero wis an edge if the value range includes zero.
+             so zero is an edge if the value range includes zero.
              A useful option to allow stacking/comparison without using too 
              much storage.
         array: just the bin edges directly. Monotonically increasing, (log) 
