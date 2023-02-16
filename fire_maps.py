@@ -1915,8 +1915,8 @@ def histogram_radprof(dirpath, snapnum,
             halodat = calchalodata_shrinkingsphere(dirpath, snapnum, 
                                                 meandef='BN98')
             cen_cm = np.array([halodat['Xc_cm'], 
-                            halodat['Yc_cm'], 
-                            halodat['Zc_cm']])
+                               halodat['Yc_cm'], 
+                               halodat['Zc_cm']])
             rvir_cm = halodat['Rvir_cm']
             todoc_cen['Rvir_def'] = 'BN98'
         else:
@@ -1981,7 +1981,7 @@ def histogram_radprof(dirpath, snapnum,
         _axdoc.append(todoc)
         _logaxes.append(logax)
         _axtypes.append(axt)
-        _axtypes_args.append({})
+        _axtypes_args.append(axarg)
         if logax:
             _bins_doc = usebins_simu + np.log10(toCGS)
         else:
@@ -2085,7 +2085,8 @@ def histogram_radprof(dirpath, snapnum,
             
             # direct input parameters
             igrp = hed.create_group('inputpars')
-            igrp.attrs.create('snapfiles', np.array([np.string_(fn) for fn in snap.filens]))
+            _snf =  np.array([np.string_(fn) for fn in snap.filens])
+            igrp.attrs.create('snapfiles', _snf)
             igrp.attrs.create('dirpath', np.string_(dirpath))
             igrp.attrs.create('particle_type', particle_type)
             igrp.attrs.create('outfilen', np.string_(outfilen))
@@ -3191,7 +3192,7 @@ def run_hist(opt):
         snapnum = snaps[snpi]
         wt = wts[wti]
         axtypes = axtypes_opts[axi]
-        axtypes_args_opts = axtypes_args_opts[axi]
+        axtypes_args = axtypes_args_opts[axi]
         axqt = axqts[axi]
         
         runit = 'pkpc'
@@ -3208,7 +3209,7 @@ def run_hist(opt):
         eltbase = 'ElementAbundance/{elt}'
         if wt in ['Mass', 'Volume']:
             weighttype = wt
-            weighttype_argss = [{}]
+            weighttype_args = [{}]
         else:
             weighttype = 'ion'
             _weighttype_args = {'ps20depletion': False, 'ion': wt,
@@ -3219,10 +3220,10 @@ def run_hist(opt):
                 dummytab = linetable_PS20(ion, 0.0, emission=False,
                                           vol=True, lintable=True)
                 parentelt = dummytab.element
-                axtypes_args_opts = \
-                    {key: (axtypes_args_opts[key]).format(elt=parentelt)\
-                     for key in axtypes_args_opts}
-                axqts = [axqt.format(elt=parentelt) for axqt in axqts]
+                axtypes_args = \
+                    {key: (axtypes_args[key]).format(elt=parentelt)\
+                     for key in axtypes_args}
+                axqt = axqt.format(elt=parentelt)
 
         outfilen = outdir + outname.format(axqt=axqt, wt=wt)
     elif opt >= 60 and opt < 96:
