@@ -3238,7 +3238,7 @@ def run_hist(opt):
                     'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
                     'm13h113_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
                    ]
-        axtypes_opts = ['sim-direct'] * 5
+        axtypes_opts = ['sim-direct'] * 3
         axtypes_args_opts = [{'field': 'Temperature'},
                              {'field': 'Density'},
                              {'field': 'ElementAbundance/{elt}'},
@@ -3551,7 +3551,7 @@ def fromcommandline(index):
         # 643 - 667: m12-SR (1 IC/phys)
         # opts [407, 632) (9 x 25 indices)
     elif index >= 668 and index < 764:
-        run_hist(opt - 668 + 0)
+        run_hist(index - 668 + 0)
         # z=0.5 only
         # Mass, Volume, H I: (T, rho, O, Ne, Mg) profiles
         # O6, Ne8, Mg10: (T, rho, parent element) profiles
