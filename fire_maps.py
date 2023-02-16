@@ -3209,13 +3209,13 @@ def run_hist(opt):
         eltbase = 'ElementAbundance/{elt}'
         if wt in ['Mass', 'Volume']:
             weighttype = wt
-            weighttype_args = [{}]
+            weighttype_args = dict()
         else:
             weighttype = 'ion'
-            _weighttype_args = {'ps20depletion': False, 'ion': wt,
-                                'density': False}
+            weighttype_args = {'ps20depletion': False, 'ion': wt,
+                               'density': False}
             if ion == 'H1':
-                _weighttype_args.update({'ionfrac-method': 'sim'})
+                weighttype_args.update({'ionfrac-method': 'sim'})
             else:
                 dummytab = linetable_PS20(ion, 0.0, emission=False,
                                           vol=True, lintable=True)
@@ -3273,13 +3273,13 @@ def run_hist(opt):
         eltbase = 'ElementAbundance/{elt}'
         if wt in ['Mass', 'Volume']:
             weighttype = wt
-            weighttype_argss = [{}]
+            weighttype_args = dict()
         else:
             weighttype = 'ion'
-            _weighttype_args = {'ps20depletion': False, 'ion': wt,
-                                'density': False}
+            weighttype_args = {'ps20depletion': False, 'ion': wt,
+                               'density': False}
             if ion == 'H1':
-                _weighttype_args.update({'ionfrac-method': 'sim'})
+                weighttype_args.update({'ionfrac-method': 'sim'})
             else:
                 dummytab = linetable_PS20(ion, 0.0, emission=False,
                                           vol=True, lintable=True)
