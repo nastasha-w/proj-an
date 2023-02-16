@@ -3163,7 +3163,7 @@ def run_hist(opt):
     if opt >= 0 and opt < 60:
         ind = opt
         outdir = '/scratch1/08466/tg877653/output/hists/clean_set1_set2/'
-        outname = 'hist_{axqt}_r3D_by_{wt}_bins1_v1.hdf5'
+        outname = 'hist_{axqt}_r3D_by_{wt}_{simname}_snap{snap}_bins1_v1.hdf5'
         particle_type = 0
         wts = ['Mass', 'Volume', 'H1']
         snaps = [50] # z=0.5
@@ -3173,12 +3173,12 @@ def run_hist(opt):
                     'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
                     'm13h113_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
                    ]
-        axtypes_opts = ['sim-direct'] * 5
-        axtypes_args_opts = [{'field': 'Temperature'},
-                             {'field': 'Density'},
-                             {'field': 'ElementAbundance/Oxygen'},
-                             {'field': 'ElementAbundance/Neon'},
-                             {'field': 'ElementAbundance/Magnesium'},
+        axtypes_opts = [['sim-direct']] * 5
+        axtypes_args_opts = [[{'field': 'Temperature'}],
+                             [{'field': 'Density'}],
+                             [{'field': 'ElementAbundance/Oxygen'}],
+                             [{'field': 'ElementAbundance/Neon'}],
+                             [{'field': 'ElementAbundance/Magnesium'}],
                             ]
         axqts = ['Temperature', 'Density', 'Oxygen', 'Neon', 'Magnesium']
         axbins = [0.05, 0.05] + [0.1] * 3
@@ -3224,12 +3224,12 @@ def run_hist(opt):
                     {key: (axtypes_args[key]).format(elt=parentelt)\
                      for key in axtypes_args}
                 axqt = axqt.format(elt=parentelt)
-
-        outfilen = outdir + outname.format(axqt=axqt, wt=wt)
+        outfilen = outdir + outname.format(axqt=axqt, wt=wt, simname=simname, 
+                                           snap=snapnum)
     elif opt >= 60 and opt < 96:
         ind = opt - 60
         outdir = '/scratch1/08466/tg877653/output/hists/clean_set1_set2/'
-        outname = 'hist_{axqt}_r3D_by_{wt}_bins1_v1.hdf5'
+        outname = 'hist_{axqt}_r3D_by_{wt}_{simname}_snap{snap}_bins1_v1.hdf5'
         particle_type = 0
         wts = ['O6', 'Ne8', 'Mg10']
         snaps = [50] # z=0.5
@@ -3239,10 +3239,10 @@ def run_hist(opt):
                     'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
                     'm13h113_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
                    ]
-        axtypes_opts = ['sim-direct'] * 3
-        axtypes_args_opts = [{'field': 'Temperature'},
-                             {'field': 'Density'},
-                             {'field': 'ElementAbundance/{elt}'},
+        axtypes_opts = [['sim-direct']] * 3
+        axtypes_args_opts = [[{'field': 'Temperature'}],
+                             [{'field': 'Density'}],
+                             [{'field': 'ElementAbundance/{elt}'}],
                             ]
         axqts = ['Temperature', 'Density', '{elt}']
         axbins = [0.05, 0.05, 0.1]
@@ -3289,7 +3289,8 @@ def run_hist(opt):
                      for key in axtypes_args_opts}
                 axqts = [axqt.format(elt=parentelt) for axqt in axqts]
 
-        outfilen = outdir + outname.format(axqt=axqt, wt=wt)
+        outfilen = outdir + outname.format(axqt=axqt, wt=wt, simname=simname, 
+                                           snap=snapnum)
 
     histogram_radprof(dirpath, snapnum,
                       weighttype, weighttype_args, axtypes, axtypes_args,
