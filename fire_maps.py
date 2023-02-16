@@ -3176,8 +3176,8 @@ def run_hist(opt):
         axtypes_args_opts = [{'field': 'Temperature'},
                              {'field': 'Density'},
                              {'field': 'ElementAbundance/Oxygen'},
-                             {'field': 'ElementAbundance/Neon'}
-                             {'field': 'ElementAbundance/Magnesium'}
+                             {'field': 'ElementAbundance/Neon'},
+                             {'field': 'ElementAbundance/Magnesium'},
                             ]
         axqts = ['Temperature', 'Density', 'Oxygen', 'Neon', 'Magnesium']
         axbins = [0.05, 0.05] + [0.1] * 3
