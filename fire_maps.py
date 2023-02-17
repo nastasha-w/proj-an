@@ -3214,10 +3214,10 @@ def run_hist(opt):
             weighttype = 'ion'
             weighttype_args = {'ps20depletion': False, 'ion': wt,
                                'density': False}
-            if ion == 'H1':
+            if wt == 'H1':
                 weighttype_args.update({'ionfrac-method': 'sim'})
             else:
-                dummytab = linetable_PS20(ion, 0.0, emission=False,
+                dummytab = linetable_PS20(wt, 0.0, emission=False,
                                           vol=True, lintable=True)
                 parentelt = dummytab.element
                 axtypes_args = \
@@ -3278,10 +3278,10 @@ def run_hist(opt):
             weighttype = 'ion'
             weighttype_args = {'ps20depletion': False, 'ion': wt,
                                'density': False}
-            if ion == 'H1':
+            if wt == 'H1':
                 weighttype_args.update({'ionfrac-method': 'sim'})
             else:
-                dummytab = linetable_PS20(ion, 0.0, emission=False,
+                dummytab = linetable_PS20(wt, 0.0, emission=False,
                                           vol=True, lintable=True)
                 parentelt = dummytab.element
                 axtypes_args_opts = \
