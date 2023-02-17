@@ -4304,13 +4304,13 @@ def plotset3dprof_weightvalgrid(fileset):
                      ('m13h206_m3e5_MHD_fire3_fireBH'
                       '_Sep182021_crdiffc690_sdp1e10'
                       '_gacc31_fa0.5'),
-                      (''),
-                      ('m12f_m7e3_MHD_fire3_fireBH'
-                       '_Sep182021_hr_crdiffc690_sdp2e-4'
-                       '_gacc31_fa0.5'),
-                      ('m12f_m7e3_MHD_fire3_fireBH'
-                       '_Sep182021_hr_crdiffc690_sdp1e10'
-                       '_gacc31_fa0.5'),
+                     (''),
+                     ('m12f_m7e3_MHD_fire3_fireBH'
+                      '_Sep182021_hr_crdiffc690_sdp2e-4'
+                      '_gacc31_fa0.5'),
+                     ('m12f_m7e3_MHD_fire3_fireBH'
+                      '_Sep182021_hr_crdiffc690_sdp1e10'
+                      '_gacc31_fa0.5'),
                      ]
         simlabs = ['m13h113 AGN-CR', 
                    '',
@@ -4322,30 +4322,68 @@ def plotset3dprof_weightvalgrid(fileset):
                    'm12f AGN-noCR',
                    'm12f noBH',
                    ]
-        snaps = [50]
+        srst = ['m13h113_m3e5', 'm13h206_m3e5', 'm12f_']
+        hrst = ['m13h113_', 'm13h206_', 'm12f_m7e3']
+        snaps_sr = [50]
+        snaps_hr = [258]
         redshifts = [0.5]
-        filen_templates = [filedir + filen_template.format(simname=simname,
-                                                           snap=snap)\
-                           for simname in simnames for snap in snaps]
-        simsnaplen = len(snaps) * len(simnames)
+        simsnaplen = len(snaps_hr + snaps_hr) * len(simnames)
         fillkw_valss = [[{'yq': 'Density'},
                          {'yq': 'Temperature'},
                          {'yq': 'Neon'},
                          {'yq': 'Oxygen'},
                          {'yq': 'Magnesium'},
-                         ]] * simsnaplen
+                        ],
+                        [{'yq': 'Density'},
+                         {'yq': 'Temperature'},
+                         {'yq': 'Neon'},
+                        ],
+                        [{'yq': 'Density'},
+                         {'yq': 'Temperature'},
+                         {'yq': 'Oxygen'},
+                        ],
+                        [{'yq': 'Density'},
+                         {'yq': 'Temperature'},
+                         {'yq': 'Magnesium'},
+                        ]
+                       ] * simsnaplen
         fillkw_weightss = [[{'wq': 'Mass'},
                             {'wq': 'Volume'},
-                            {'wq': 'H1'}]] * simsnaplen
-
+                            {'wq': 'H1'},
+                           ],
+                           [{'wq': 'Mass'},
+                            {'wq': 'Volume'},
+                            {'wq': 'Ne8'},
+                           ],
+                           [{'wq': 'Mass'},
+                            {'wq': 'Volume'},
+                            {'wq': 'O6'},
+                           ],
+                           [{'wq': 'Mass'},
+                            {'wq': 'Volume'},
+                            {'wq': 'Mg10'},
+                           ],
+                          ] * simsnaplen
+        weightsvals = ['M_V_H1', 'M_V_Ne8', 'M_V_O6', 'M_V_Mg10']
+        filen_templates = \
+            [filedir + filen_template.format(
+                simname=sim,
+                snap=snhr if np.any([sim.startswith(st) for st in hrst])\
+                     else snsr if np.any([sim.startswith(st) for st in srst])\
+                     else None)\
+             for sim in simnames for snhr, snsr in zip(snaps_hr, snaps_sr)\
+             for i in range(len(weightsvals))]
         outdir = '/Users/nastasha/ciera/projects_lead/fire3_ionabs/3dprof/'
-        outtemplate = 'prof3D_indivdist_M_V_H1_{simlab}_z{z}.pdf'
+        outtemplate = 'prof3D_indivdist_{wv}_{simlab}_z{z}.pdf'
         outnames = [outdir + outtemplate.format(
                         simlab=simlab.replace(' ', '_'),
-                        z=f'{z:.1f}'.replace('.', 'p'))\
-                    for simlab in simlabs for z in redshifts]
+                        z=f'{z:.1f}'.replace('.', 'p'),
+                        wv=wv)\
+                    for simlab in simlabs for z in redshifts \
+                    for wv in weightsvals]
         figtitles = [f'{simlab}, z={z:.1f}'\
-                     for simlab in simlabs for z in redshifts]
+                     for simlab in simlabs for z in redshifts\
+                     for i in range(len(weightsvals))]
     
     for filen_template, fillkw_weights, fillkw_vals, figtitle, outname \
             in zip(filen_templates, fillkw_weightss, fillkw_valss,
