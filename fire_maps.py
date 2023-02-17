@@ -3220,8 +3220,8 @@ def run_hist(opt):
                                           vol=True, lintable=True)
                 parentelt = dummytab.element
                 axtypes_args = \
-                    {key: (axtypes_args[key]).format(elt=parentelt)\
-                     for key in axtypes_args}
+                    [{key: (dct[key]).format(elt=parentelt) for key in dct}\
+                     for dct in axtypes_args]
                 axqt = axqt.format(elt=parentelt)
         outfilen = outdir + outname.format(axqt=axqt, wt=wt, simname=simname, 
                                            snap=snapnum)
@@ -3285,7 +3285,7 @@ def run_hist(opt):
                 axtypes_args = \
                     [{key: (dct[key]).format(elt=parentelt) for key in dct}\
                      for dct in axtypes_args]
-                axqts = [axqt.format(elt=parentelt) for axqt in axqts]
+                axqt = axqt.format(elt=parentelt)
 
         outfilen = outdir + outname.format(axqt=axqt, wt=wt, simname=simname, 
                                            snap=snapnum)
@@ -3410,7 +3410,7 @@ def run_hist(opt):
                 axtypes_args = \
                     [{key: (dct[key]).format(elt=parentelt) for key in dct}\
                      for dct in axtypes_args]
-                axqts = [axqt.format(elt=parentelt) for axqt in axqts]
+                axqt = axqt.format(elt=parentelt)
 
         outfilen = outdir + outname.format(axqt=axqt, wt=wt, simname=simname, 
                                            snap=snapnum)
