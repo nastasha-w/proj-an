@@ -3255,7 +3255,7 @@ def run_hist(opt):
         snapnum = snaps[snpi]
         wt = wts[wti]
         axtypes = axtypes_opts[axi]
-        axtypes_args_opts = axtypes_args_opts[axi]
+        axtypes_args = axtypes_args_opts[axi]
         axqt = axqts[axi]
         
         runit = 'pkpc'
@@ -3289,7 +3289,7 @@ def run_hist(opt):
 
         outfilen = outdir + outname.format(axqt=axqt, wt=wt, simname=simname, 
                                            snap=snapnum)
-    if opt >= 96 and opt < 156:
+    if opt >= 96 and opt < 126:
         ind = opt - 96
         outdir = '/scratch1/08466/tg877653/output/hists/clean_set1_set2/'
         outname = 'hist_{axqt}_r3D_by_{wt}_{simname}_snap{snap}_bins1_v1.hdf5'
@@ -3299,9 +3299,7 @@ def run_hist(opt):
         _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
         simnames = ['m12f_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp2e-4_gacc31_fa0.5',
                     'm12f_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e10_gacc31_fa0.5',
-                    'm12m_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp2e-4_gacc31_fa0.5',
-                    'm12m_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e10_gacc31_fa0.5',
-                   ]
+                    ]
         axtypes_opts = [['sim-direct']] * 5
         axtypes_args_opts = [[{'field': 'Temperature'}],
                              [{'field': 'Density'}],
@@ -3354,19 +3352,17 @@ def run_hist(opt):
                 axqt = axqt.format(elt=parentelt)
         outfilen = outdir + outname.format(axqt=axqt, wt=wt, simname=simname, 
                                            snap=snapnum)
-    elif opt >= 156 and opt < 182:
-        ind = opt - 156
+    elif opt >= 126 and opt < 144:
+        ind = opt - 126
         outdir = '/scratch1/08466/tg877653/output/hists/clean_set1_set2/'
         outname = 'hist_{axqt}_r3D_by_{wt}_{simname}_snap{snap}_bins1_v1.hdf5'
         particle_type = 0
         wts = ['O6', 'Ne8', 'Mg10']
         snaps = [50] # z=0.5
         _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
-        simnames = ['m13h206_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
-                    'm13h113_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
-                    'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
-                    'm13h113_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
-                   ]
+        simnames = ['m12f_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp2e-4_gacc31_fa0.5',
+                    'm12f_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    ]
         axtypes_opts = [['sim-direct']] * 3
         axtypes_args_opts = [[{'field': 'Temperature'}],
                              [{'field': 'Density'}],
@@ -3384,7 +3380,7 @@ def run_hist(opt):
         snapnum = snaps[snpi]
         wt = wts[wti]
         axtypes = axtypes_opts[axi]
-        axtypes_args_opts = axtypes_args_opts[axi]
+        axtypes_args = axtypes_args_opts[axi]
         axqt = axqts[axi]
         
         runit = 'pkpc'

@@ -4293,20 +4293,35 @@ def plotset3dprof_weightvalgrid(fileset):
         simnames = [('m13h113_m3e5_MHDCRspec1_fire3_fireBH'
                      '_fireCR1_Oct252021_crdiffc1_sdp1e-4'
                      '_gacc31_fa0.5_fcr1e-3_vw3000'),
+                     (''),
                      ('m13h113_m3e5_MHD_fire3_fireBH'
                       '_Sep182021_crdiffc690_sdp1e10'
                       '_gacc31_fa0.5'),
                      ('m13h206_m3e5_MHDCRspec1_fire3_fireBH'
                       '_fireCR1_Oct252021_crdiffc1_sdp1e-4'
                       '_gacc31_fa0.5_fcr1e-3_vw3000'),
+                     (''),
                      ('m13h206_m3e5_MHD_fire3_fireBH'
                       '_Sep182021_crdiffc690_sdp1e10'
                       '_gacc31_fa0.5'),
+                      (''),
+                      ('m12f_m7e3_MHD_fire3_fireBH'
+                       '_Sep182021_hr_crdiffc690_sdp2e-4'
+                       '_gacc31_fa0.5'),
+                      ('m12f_m7e3_MHD_fire3_fireBH'
+                       '_Sep182021_hr_crdiffc690_sdp1e10'
+                       '_gacc31_fa0.5'),
                      ]
         simlabs = ['m13h113 AGN-CR', 
+                   '',
                    'm13h113 noBH',
                    'm13h206 AGN-CR',
-                   'm13h206 noBH']
+                   '',
+                   'm13h206 noBH',
+                   '',
+                   'm12f AGN-noCR',
+                   'm12f noBH',
+                   ]
         snaps = [50]
         redshifts = [0.5]
         filen_templates = [filedir + filen_template.format(simname=simname,
