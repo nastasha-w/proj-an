@@ -4123,11 +4123,11 @@ def plot3dprof_weightvalgrid(filen_template, fillkw_weights, fillkw_vals,
                 if wkey == 'ion':
                     _path = 'histogram/weight_type_args'
                     _key = 'ion'
-                    wkey = (ykey, f[_path].attrs[_key].decode())
+                    wkey = (wkey, f[_path].attrs[_key].decode())
                 elif wkey == 'Metal':
                     _path = 'histogram/weight_type_args'
                     _key = 'element'
-                    wkey = (ykey, f[_path].attrs[_key].decode())
+                    wkey = (wkey, f[_path].attrs[_key].decode())
                
                 deltax = np.diff(rv)
                 if yv[0] == -np.inf:
@@ -4161,6 +4161,8 @@ def plot3dprof_weightvalgrid(filen_template, fillkw_weights, fillkw_vals,
         ykeys.append(_ykeys)
         wkeys.append(_wkeys)
         rvirs.append(_rvirs)
+    print(ykeys)
+    print(wkeys)
 
     if runits == 'Rvir':
         xlabel = '$\\mathrm{r} \\; [\\mathrm{R}_{\\mathrm{vir}}]$'
@@ -4246,6 +4248,10 @@ def plot3dprof_weightvalgrid(filen_template, fillkw_weights, fillkw_vals,
             ax.plot(rc, pmed, color='red', linestyle='dotted', linewidth=1.)
             ax.plot(rc, plo, color='red', linestyle='dashed', linewidth=1.)
             ax.plot(rc, phi, color='red', linestyle='dashed', linewidth=1.)
+
+            if markrvir:
+                yp_med = pu.linterpsolve(rc, pmed, rvir)
+                ax.scatter([rvir], [yp_med], marker='o', c='red', s=10)
         
         ylims = [axes[ri][i].get_ylim() for i in range(ncols)]
         ymin = min([ylim[0] for ylim in ylims])
@@ -4279,11 +4285,58 @@ def plotset3dprof_weightvalgrid(fileset):
         fillkw_weightss = [[{'wq': 'Mass'}]]
         outdir = '/Users/nastasha/ciera/projects_lead/fire3_ionabs/3dprof/'
         outnames = [outdir + 'test1_plot_3dprof.pdf']
-        figtitles = ['m13h206 noBH, z=1.0']
+        figtitles = ['m13h206 noBH, z=0.5']
+    if fileset == 'clean_set1':
+        filedir = '/Users/nastasha/ciera/profiles/fire/clean_set1_set2/'
+        filen_template = ('hist_{{yq}}_r3D_by_{{wq}}_{simname}'
+                          '_snap{snap}_bins1_v1.hdf5')
+        simnames = [('m13h113_m3e5_MHDCRspec1_fire3_fireBH'
+                     '_fireCR1_Oct252021_crdiffc1_sdp1e-4'
+                     '_gacc31_fa0.5_fcr1e-3_vw3000'),
+                     ('m13h113_m3e5_MHD_fire3_fireBH'
+                      '_Sep182021_crdiffc690_sdp1e10'
+                      '_gacc31_fa0.5'),
+                     ('m13h206_m3e5_MHDCRspec1_fire3_fireBH'
+                      '_fireCR1_Oct252021_crdiffc1_sdp1e-4'
+                      '_gacc31_fa0.5_fcr1e-3_vw3000'),
+                     ('m13h206_m3e5_MHD_fire3_fireBH'
+                      '_Sep182021_crdiffc690_sdp1e10'
+                      '_gacc31_fa0.5'),
+                     ]
+        simlabs = ['m13h113 AGN-CR', 
+                   'm13h113 noBH',
+                   'm13h206 AGN-CR',
+                   'm13h206 noBH']
+        snaps = [50]
+        redshifts = [0.5]
+        filen_templates = [filedir + filen_template.format(simname=simname,
+                                                           snap=snap)\
+                           for simname in simnames for snap in snaps]
+        simsnaplen = len(snaps) * len(simnames)
+        fillkw_valss = [[{'yq': 'Density'},
+                         {'yq': 'Temperature'},
+                         {'yq': 'Neon'},
+                         {'yq': 'Oxygen'},
+                         {'yq': 'Magnesium'},
+                         ]] * simsnaplen
+        fillkw_weightss = [[{'wq': 'Mass'},
+                            {'wq': 'Volume'},
+                            {'wq': 'H1'}]] * simsnaplen
+
+        outdir = '/Users/nastasha/ciera/projects_lead/fire3_ionabs/3dprof/'
+        outtemplate = 'prof3D_indivdist_M_V_H1_{simlab}_z{z}.pdf'
+        outnames = [outdir + outtemplate.format(
+                        simlab=simlab.replace(' ', '_'),
+                        z=f'{z:.1f}'.replace('.', 'p'))\
+                    for simlab in simlabs for z in redshifts]
+        figtitles = [f'{simlab}, z={z:.1f}'\
+                     for simlab in simlabs for z in redshifts]
     
     for filen_template, fillkw_weights, fillkw_vals, figtitle, outname \
             in zip(filen_templates, fillkw_weightss, fillkw_valss,
                    figtitles, outnames):
+        print(fillkw_weights)
+        print(fillkw_vals)
         plot3dprof_weightvalgrid(filen_template, fillkw_weights, fillkw_vals,
                                  figtitle=figtitle, outname=outname)
 

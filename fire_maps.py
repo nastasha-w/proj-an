@@ -3206,7 +3206,6 @@ def run_hist(opt):
             dp2 = dp2.replace('m13h02', 'm13h002')
         dirpath = '/'.join([_dirpath, dp2, simname])
 
-        eltbase = 'ElementAbundance/{elt}'
         if wt in ['Mass', 'Volume']:
             weighttype = wt
             weighttype_args = dict()
@@ -3270,7 +3269,6 @@ def run_hist(opt):
             dp2 = dp2.replace('m13h02', 'm13h002')
         dirpath = '/'.join([_dirpath, dp2, simname])
 
-        eltbase = 'ElementAbundance/{elt}'
         if wt in ['Mass', 'Volume']:
             weighttype = wt
             weighttype_args = dict()
