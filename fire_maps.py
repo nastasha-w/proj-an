@@ -3675,13 +3675,15 @@ def fromcommandline(index):
         # 593 - 642: m12-HR (2 phys)
         # 643 - 667: m12-SR (1 IC/phys)
         # opts [407, 632) (9 x 25 indices)
-    elif index >= 668 and index < 764:
+    elif index >= 668 and index < 812:
         run_hist(index - 668 + 0)
         # z=0.5 only
         # Mass, Volume, H I: (T, rho, O, Ne, Mg) profiles
         # O6, Ne8, Mg10: (T, rho, parent element) profiles
         # 668 - 727: m13-SR (4 IC/phys), Mass, Volume, HI
         # 728 - 763: m13-SR (4 IC/phys), O6, Ne8, Mg10
+        # 764 - 793: m12-HR (2 IC/phys), Mass, Volume, HI
+        # 794 - 812: m12-HR (2 IC/phys), O6, Ne8, Mg10
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
