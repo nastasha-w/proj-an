@@ -3922,7 +3922,7 @@ def fromcommandline(index):
         # 593 - 642: m12-HR (2 phys)
         # 643 - 667: m12-SR (1 IC/phys)
         # opts [407, 632) (9 x 25 indices)
-    elif index >= 668 and index < 812:
+    elif index >= 668 and index < 886:
         run_hist(index - 668 + 0)
         # z=0.5 only
         # Mass, Volume, H I: (T, rho, O, Ne, Mg) profiles
