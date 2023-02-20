@@ -3922,7 +3922,7 @@ def fromcommandline(index):
         # 593 - 642: m12-HR (2 phys)
         # 643 - 667: m12-SR (1 IC/phys)
         # opts [407, 632) (9 x 25 indices)
-    elif index >= 668 and index < 886:
+    elif index >= 668 and index < 884:
         run_hist(index - 668 + 0)
         # z=0.5 only
         # Mass, Volume, H I: (T, rho, O, Ne, Mg) profiles
@@ -3931,10 +3931,10 @@ def fromcommandline(index):
         # 728 - 763: m13-SR (4 IC/phys), O6, Ne8, Mg10
         # 764 - 793: m12-HR (2 IC/phys), Mass, Volume, HI
         # 794 - 811: m12-HR (2 IC/phys), O6, Ne8, Mg10
-        # 812 - 843: m13-HR (2 IC/phys), Mass, Volume, HI
-        # 844 - 861: m13-HR (2 IC/phys), O6, Ne8, Mg10
-        # 862 - 876: m12-SR (1 IC/phys), Mass, Volume, HI
-        # 877 - 885: m12-SR (1 IC/phys), O6, Ne8, Mg10
+        # 812 - 841: m13-HR (2 IC/phys), Mass, Volume, HI
+        # 842 - 859: m13-HR (2 IC/phys), O6, Ne8, Mg10
+        # 860 - 874: m12-SR (1 IC/phys), Mass, Volume, HI
+        # 875 - 883: m12-SR (1 IC/phys), O6, Ne8, Mg10
 
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
