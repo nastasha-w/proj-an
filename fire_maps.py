@@ -3539,7 +3539,7 @@ def run_hist(opt):
         outfilen = outdir + outname.format(axqt=axqt, wt=wt, simname=simname, 
                                            snap=snapnum)
     
-    elif opt >= 192 and opt < 206:
+    elif opt >= 192 and opt < 207:
         ind = opt - 192
         outdir = '/scratch1/08466/tg877653/output/hists/clean_set1_set2/'
         outname = 'hist_{axqt}_r3D_by_{wt}_{simname}_snap{snap}_bins1_v1.hdf5'
@@ -3601,7 +3601,7 @@ def run_hist(opt):
                 axqt = axqt.format(elt=parentelt)
         outfilen = outdir + outname.format(axqt=axqt, wt=wt, simname=simname, 
                                            snap=snapnum)
-    elif opt >= 206 and opt < 214:
+    elif opt >= 207 and opt < 216:
         ind = opt - 206
         outdir = '/scratch1/08466/tg877653/output/hists/clean_set1_set2/'
         outname = 'hist_{axqt}_r3D_by_{wt}_{simname}_snap{snap}_bins1_v1.hdf5'
