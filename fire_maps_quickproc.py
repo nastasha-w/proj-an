@@ -4293,18 +4293,24 @@ def plotset3dprof_weightvalgrid(fileset):
         simnames = [('m13h113_m3e5_MHDCRspec1_fire3_fireBH'
                      '_fireCR1_Oct252021_crdiffc1_sdp1e-4'
                      '_gacc31_fa0.5_fcr1e-3_vw3000'),
-                     (''),
+                     ('m13h113_m3e4_MHD_fire3_fireBH'
+                      '_Sep182021_hr_crdiffc690_sdp1e-4'
+                      '_gacc31_fa0.5'),
                      ('m13h113_m3e5_MHD_fire3_fireBH'
                       '_Sep182021_crdiffc690_sdp1e10'
                       '_gacc31_fa0.5'),
                      ('m13h206_m3e5_MHDCRspec1_fire3_fireBH'
                       '_fireCR1_Oct252021_crdiffc1_sdp1e-4'
                       '_gacc31_fa0.5_fcr1e-3_vw3000'),
-                     (''),
+                     ('m13h206_m3e4_MHD_fire3_fireBH'
+                      '_Sep182021_hr_crdiffc690_sdp3e-4'
+                      '_gacc31_fa0.5'),
                      ('m13h206_m3e5_MHD_fire3_fireBH'
                       '_Sep182021_crdiffc690_sdp1e10'
                       '_gacc31_fa0.5'),
-                     (''),
+                     ('m12f_m6e4_MHDCRspec1_fire3_fireBH'
+                      '_fireCR1_Oct252021_crdiffc1_sdp1e-4'
+                      '_gacc31_fa0.5_fcr1e-3_vw3000'),
                      ('m12f_m7e3_MHD_fire3_fireBH'
                       '_Sep182021_hr_crdiffc690_sdp2e-4'
                       '_gacc31_fa0.5'),
@@ -4313,17 +4319,17 @@ def plotset3dprof_weightvalgrid(fileset):
                       '_gacc31_fa0.5'),
                      ]
         simlabs = ['m13h113 AGN-CR', 
-                   '',
+                   'm13h113 AGN-noCR',
                    'm13h113 noBH',
                    'm13h206 AGN-CR',
-                   '',
+                   'm13h206 AGN-noCR',
                    'm13h206 noBH',
-                   '',
+                   'm12f AGN-CR',
                    'm12f AGN-noCR',
                    'm12f noBH',
                    ]
-        srst = ['m13h113_m3e5', 'm13h206_m3e5', 'm12f_']
-        hrst = ['m13h113_', 'm13h206_', 'm12f_m7e3']
+        srst = ['m13h113_m3e5', 'm13h206_m3e5', 'm12f_m6e4']
+        hrst = ['m13h113_m3e4', 'm13h206_m3e4', 'm12f_m7e3']
         snaps_sr = [50]
         snaps_hr = [258]
         redshifts = [0.5]
