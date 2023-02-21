@@ -3664,7 +3664,7 @@ def run_hist(opt):
     
     # add more redshifts (set 2) to previous sample
     #----------------------------------------------
-    elif opt >= 216 and opt < 316:
+    elif opt >= 216 and opt < 516:
         ind = opt - 216
         outdir = '/scratch1/08466/tg877653/output/hists/clean_set1_set2/'
         outname = 'hist_{axqt}_r3D_by_{wt}_{simname}_snap{snap}_bins1_v1.hdf5'
@@ -3729,8 +3729,8 @@ def run_hist(opt):
                 axqt = axqt.format(elt=parentelt)
         outfilen = outdir + outname.format(axqt=axqt, wt=wt, simname=simname, 
                                            snap=snapnum)
-    elif opt >= 316 and opt < 496:
-        ind = opt - 316
+    elif opt >= 516 and opt < 696:
+        ind = opt - 516
         outdir = '/scratch1/08466/tg877653/output/hists/clean_set1_set2/'
         outname = 'hist_{axqt}_r3D_by_{wt}_{simname}_snap{snap}_bins1_v1.hdf5'
         particle_type = 0
@@ -3793,8 +3793,8 @@ def run_hist(opt):
 
         outfilen = outdir + outname.format(axqt=axqt, wt=wt, simname=simname, 
                                            snap=snapnum)
-    elif opt >= 496 and opt < 546:
-        ind = opt - 496
+    elif opt >= 696 and opt < 846:
+        ind = opt - 696
         outdir = '/scratch1/08466/tg877653/output/hists/clean_set1_set2/'
         outname = 'hist_{axqt}_r3D_by_{wt}_{simname}_snap{snap}_bins1_v1.hdf5'
         particle_type = 0
@@ -3856,8 +3856,8 @@ def run_hist(opt):
                 axqt = axqt.format(elt=parentelt)
         outfilen = outdir + outname.format(axqt=axqt, wt=wt, simname=simname, 
                                            snap=snapnum)
-    elif opt >= 546 and opt < 636:
-        ind = opt - 546
+    elif opt >= 846 and opt < 936:
+        ind = opt - 846
         outdir = '/scratch1/08466/tg877653/output/hists/clean_set1_set2/'
         outname = 'hist_{axqt}_r3D_by_{wt}_{simname}_snap{snap}_bins1_v1.hdf5'
         particle_type = 0
@@ -3918,8 +3918,8 @@ def run_hist(opt):
 
         outfilen = outdir + outname.format(axqt=axqt, wt=wt, simname=simname, 
                                            snap=snapnum)
-    elif opt >= 636 and opt < 786:
-        ind = opt - 636
+    elif opt >= 936 and opt < 1086:
+        ind = opt - 936
         outdir = '/scratch1/08466/tg877653/output/hists/clean_set1_set2/'
         outname = 'hist_{axqt}_r3D_by_{wt}_{simname}_snap{snap}_bins1_v1.hdf5'
         particle_type = 0
@@ -3981,8 +3981,8 @@ def run_hist(opt):
                 axqt = axqt.format(elt=parentelt)
         outfilen = outdir + outname.format(axqt=axqt, wt=wt, simname=simname, 
                                            snap=snapnum)
-    elif opt >= 786 and opt < 876:
-        ind = opt - 786
+    elif opt >= 1086 and opt < 1176:
+        ind = opt - 1086
         outdir = '/scratch1/08466/tg877653/output/hists/clean_set1_set2/'
         outname = 'hist_{axqt}_r3D_by_{wt}_{simname}_snap{snap}_bins1_v1.hdf5'
         particle_type = 0
@@ -4043,8 +4043,8 @@ def run_hist(opt):
         outfilen = outdir + outname.format(axqt=axqt, wt=wt, simname=simname, 
                                            snap=snapnum)
     
-    elif opt >= 876 and opt < 951:
-        ind = opt - 876
+    elif opt >= 1176 and opt < 1251:
+        ind = opt - 1176
         outdir = '/scratch1/08466/tg877653/output/hists/clean_set1_set2/'
         outname = 'hist_{axqt}_r3D_by_{wt}_{simname}_snap{snap}_bins1_v1.hdf5'
         particle_type = 0
@@ -4105,8 +4105,8 @@ def run_hist(opt):
                 axqt = axqt.format(elt=parentelt)
         outfilen = outdir + outname.format(axqt=axqt, wt=wt, simname=simname, 
                                            snap=snapnum)
-    elif opt >= 951 and opt < 996:
-        ind = opt - 951
+    elif opt >= 1251 and opt < 1296:
+        ind = opt - 1251
         outdir = '/scratch1/08466/tg877653/output/hists/clean_set1_set2/'
         outname = 'hist_{axqt}_r3D_by_{wt}_{simname}_snap{snap}_bins1_v1.hdf5'
         particle_type = 0
@@ -4439,12 +4439,23 @@ def fromcommandline(index):
         # 842 - 859: m13-HR (2 IC/phys), O6, Ne8, Mg10
         # 860 - 874: m12-SR (1 IC/phys), Mass, Volume, HI
         # 875 - 883: m12-SR (1 IC/phys), O6, Ne8, Mg10
-    elif index >= 884 and index < ...:
+    elif index >= 884 and index < 1964:
         run_hist(index - 884 + 216)
         # z=0.6, 0.7, 0.8, 0.9, 1.0
         # Mass, Volume, H I: (T, rho, O, Ne, Mg) profiles
         # O6, Ne8, Mg10: (T, rho, parent element) profiles
-        
+        #  884 - 1183: m13-SR (4 IC/phys), Mass, Volume, HI
+        # 1184 - 1363: m13-SR (4 IC/phys), O6, Ne8, Mg10
+        # (480 inds)
+        # 1364 - 1513: m12-HR (2 IC/phys), Mass, Volume, HI
+        # 1514 - 1603: m12-HR (2 IC/phys), O6, Ne8, Mg10
+        # (240 inds)
+        # 1604 - 1753: m13-HR (2 IC/phys), Mass, Volume, HI
+        # 1754 - 1843: m13-HR (2 IC/phys), O6, Ne8, Mg10
+        # (240 inds)
+        # 1844 - 1918: m12-SR (1 IC/phys), Mass, Volume, HI
+        # 1919 - 1963: m12-SR (1 IC/phys), O6, Ne8, Mg10
+        # (120 inds)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
