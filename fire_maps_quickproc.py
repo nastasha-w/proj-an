@@ -4330,9 +4330,9 @@ def plotset3dprof_weightvalgrid(fileset):
                    ]
         srst = ['m13h113_m3e5', 'm13h206_m3e5', 'm12f_m6e4']
         hrst = ['m13h113_m3e4', 'm13h206_m3e4', 'm12f_m7e3']
-        snaps_sr = [50]
-        snaps_hr = [258]
-        redshifts = [0.5]
+        snaps_sr = [45, 46, 47, 48, 49, 50]
+        snaps_hr = [186, 197, 210, 224, 240, 258]
+        redshifts = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5]
         simsnaplen = len(snaps_hr + snaps_hr) * len(simnames)
         fillkw_valss = [[{'yq': 'Density'},
                          {'yq': 'Temperature'},
