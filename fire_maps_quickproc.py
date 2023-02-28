@@ -6987,4 +6987,26 @@ def plotset3dprof_eltZcomp_weightzgrid(fileset):
         plot3dprof_eltZcomp_weightzgrid(filen_template, fillkw_weights, 
                                         fillkw_vals, fillkw_z,
                                         figtitle=figtitle, outname=outname)
-        
+
+def plotdata_burchett_etal_2019():
+    datadir = '/Users/nastasha/ciera/projects_lead/fire3_ionabs/'
+    dfilen = datadir + 'data_burchett_etal_2019_table1.txt'
+    #TODO CHECK: R200c or R200m!
+    # assuming impact parameters are physical/proper kpc
+    #TODO ask: table footnote f says 2 systems for one Ne VIII absorber
+    #          but only one line with that footnote and N(Ne VIII) value
+    data = pd.read_csv(dfilen, comment='#', sep='\t')
+    ## calculate halo masses
+    # from Burchett et al. (2019):
+    cosmopars = {'h': 0.677, 'omegam': 0.31, 'omegalambda': 0.69}
+    def hmfunc(x):
+        csm = cosmopars.copy()
+        csm.update({'z': x.zgal, 'a': 1. / (1. + x.zgal)})
+        mv = cu.mvir_from_rvir(x.rvir_kpc * 1e-3 * c.cm_per_mpc, 
+                               csm, meandef='200m')
+        return mv / c.solar_mass
+    data = data.assign(Mvir_Msun=lambda x: hmfunc(x))
+
+
+    outdir = '/Users/nastasha/ciera/projects_lead/fire3_ionabs/datacomp/'
+    outfilen = outdir + 'data_plot.pdf'

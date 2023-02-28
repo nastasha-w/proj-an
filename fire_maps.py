@@ -131,29 +131,7 @@ def elt_atomw_cgs(element):
     element = string.capwords(element)
     return atomw_u_dct[element] * c.u
 
-# 200c, 200m tested against cosmology calculator at z=0, 2.8
-# BN98 values lay between the two at those redshifts
-def getmeandensity(meandef, cosmopars):
-    if meandef == 'BN98':
-        # Bryan & Norman (1998)
-        # for Omega_r = 0: Delta_c = 18*np.pi**2 + 82 x - 39x^2
-        # x = 1 - Omega(z) = 1 - Omega_0 * (1 + z)^3 / E(z)^2
-        # E(z) = H(z) / H(z=0)
-        # 
-        _Ez = cu.Hubble(cosmopars['z'], cosmopars=cosmopars) \
-            / (cosmopars['h'] * c.hubble)
-        _x = cosmopars['omegam'] * (1. + cosmopars['z'])**3 / _Ez**2 - 1.
-        _Deltac = 18. * np.pi**2 + 82. * _x - 39. * _x**2
-        meandens = _Deltac * cu.rhocrit(cosmopars['z'], cosmopars=cosmopars)
-    elif meandef.endswith('c'):
-        overdens = float(meandef[:-1])
-        meandens = overdens * cu.rhocrit(cosmopars['z'], cosmopars=cosmopars)
-    elif meandef.endswith('m'):
-        overdens = float(meandef[:-1])
-        cosmo_meandens = cu.rhocrit(0., cosmopars=cosmopars) \
-                         * cosmopars['omegam'] * (1. + cosmopars['z'])**3
-        meandens = cosmo_meandens * overdens
-    return meandens
+
 
 # seems to work for at least one halo 
 # (m13 guinea pig at snapshot 27, comparing image to found center)
@@ -295,10 +273,10 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     cosmopars = snap.cosmopars.getdct()
     if isinstance(meandef, type('')):
         outputsingle = True
-        dens_targets_cgs = [getmeandensity(meandef, cosmopars)]
+        dens_targets_cgs = [cu.getmeandensity(meandef, cosmopars)]
     else:
         outputsingle = False
-        dens_targets_cgs = [getmeandensity(md, cosmopars) for md in meandef]
+        dens_targets_cgs = [cu.getmeandensity(md, cosmopars) for md in meandef]
         
     r2 = np.sum((coords - com_simunits[np.newaxis, :])**2, axis=1)
     del coords
@@ -447,14 +425,11 @@ def halodata_rockstar(path, snapnum, select='maxmass',
         cosmopars['a'] = hal.snapshot['scalefactor']
         cosmopars['z'] = hal.snapshot['redshift']
     
-    meandens = getmeandensity(meandensdef, cosmopars)
+    meandens = cu.getmeandensity(meandensdef, cosmopars)
     #M = r_mean * 4/3 np.pi R63
     out['Rvir_cm'] = (3. / (4. * np.pi) * out['Mvir_Msun'] \
                       * c.solar_mass / meandens)**(1./3.)
     return out, cosmopars
-
-
-
 
 def test_mainhalodata_units_ahf(opt=1, dirpath=None, snapnum=None,
                             printfile=None):

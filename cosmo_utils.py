@@ -497,6 +497,46 @@ def Tvir_hot(Mh, delta=200, ref='rhocrit', z=0., cosmopars=None):
     Rh = Rhalo(Mh, delta=delta, ref=ref, z=z, cosmopars=cosmopars)
     return (mu * c.protonmass) / (3. * c.boltzmann) * c.gravity * Mh / Rh
 
+# 200c, 200m tested against cosmology calculator at z=0, 2.8
+# BN98 values lay between the two at those redshifts
+def getmeandensity(meandef, cosmopars):
+    if meandef == 'BN98':
+        # Bryan & Norman (1998)
+        # for Omega_r = 0: Delta_c = 18*np.pi**2 + 82 x - 39x^2
+        # x = 1 - Omega(z) = 1 - Omega_0 * (1 + z)^3 / E(z)^2
+        # E(z) = H(z) / H(z=0)
+        # 
+        _Ez = Hubble(cosmopars['z'], cosmopars=cosmopars) \
+            / (cosmopars['h'] * c.hubble)
+        _x = cosmopars['omegam'] * (1. + cosmopars['z'])**3 / _Ez**2 - 1.
+        _Deltac = 18. * np.pi**2 + 82. * _x - 39. * _x**2
+        meandens = _Deltac * rhocrit(cosmopars['z'], cosmopars=cosmopars)
+    elif meandef.endswith('c'):
+        overdens = float(meandef[:-1])
+        meandens = overdens * rhocrit(cosmopars['z'], cosmopars=cosmopars)
+    elif meandef.endswith('m'):
+        overdens = float(meandef[:-1])
+        cosmo_meandens = rhocrit(0., cosmopars=cosmopars) \
+                         * cosmopars['omegam'] * (1. + cosmopars['z'])**3
+        meandens = cosmo_meandens * overdens
+    return meandens
+
+def Tvir_hot_meandef(mh, cosmopars, meandef='BN98'):
+    '''
+    mh in g, Tvir in K
+    '''
+    meandens = getmeandensity(meandef, cosmopars)
+    rh = (mh * 3. / (4. * np.pi * meandens)) ** (1. / 3.)
+    mu = 0.59 # about right for ionised (hot) gas, primordial
+    return (mu * c.protonmass) / (3. * c.boltzmann) * c.gravity * mh / rh
+
+def mvir_from_rvir(rh, cosmopars, meandef='BN98'):
+    '''
+    rh in cm, mvir in g
+    '''
+    meandens = getmeandensity(meandef, cosmopars)
+    return (4. * np.pi / 3.) * meandens * rh**3
+
 def solidangle(alpha,beta): # alpha = 0.5 * pix_length_1/D_A, beta = 0.5 * pix_length_2/D_A
     #from www.mpia.de/~mathar/public/mathar20051002.pdf
     # citing  A. Khadjavi, J. Opt. Soc. Am. 58, 1417 (1968).
