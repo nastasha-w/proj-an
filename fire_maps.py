@@ -7,6 +7,8 @@ import pandas as pd
 import string
 import sys
 import os
+import uuid # generate unique file names
+import glob 
 
 # Andrew Wetzel's Rockstar halo catalogue wrangler
 try:
@@ -24,6 +26,19 @@ import eagle_constants_and_units as c
 import make_maps_opts_locs as ol
 from make_maps_v3_master import project
 from ion_utils import linetable_PS20
+
+# setup from the internets
+class NoStoredMatchError(Exception):
+    def __init__(self, *args):
+        if len(args) > 0:
+            self.message = args[0]
+        else:
+            self.message = None
+    def __str__(self):
+        if self.message is not None:
+            return 'NoStoredMatchErrorr: {0} '.format(self.message)
+        else:
+            return 'NoStoredMatchErrorr'
 
 
 def linterpsolve(xvals, yvals, xpoint):
@@ -173,7 +188,6 @@ def calchalocen(coordsmassesdict, shrinkfrac=0.025, minparticles=1000,
 
 # centering seems to work for at least one halo 
 # (m13 guinea pig at snapshot 27, comparing image to found center)
-# virial radius gives an error though.
 def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     '''
     Using Imran Sultan's shrinking spheres method, calculate the halo 
@@ -210,12 +224,14 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
             the virial mass (masses) according to the halo overdensity
             criterion. float or list matches string or iterable choice
             for the overdensity definition
-        
+     todoc: dict
+        contains information on parameter values and particle types used   
     
     '''
     minparticles = 1000
     minpart_halo = 1000
     snap = rf.get_Firesnap(path, snapshot)
+    todoc = {}
 
     # get mass and coordinate data
     # use all zoom region particle types
@@ -254,6 +270,7 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     masses = np.empty((totlen,), dtype=dct_m[pt_used[0]].dtype)
     coords = np.empty((totlen, dct_c[pt_used[0]].shape[1]), 
                       dtype=dct_c[pt_used[0]].dtype)
+    todoc['parttypes_used'] = tuple(pt_used)
     start = 0
     for pt in pt_used:
         partlen = len(dct_m[pt])
@@ -268,9 +285,13 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
         calchalocen(coordsmassdict, shrinkfrac=0.025, 
                     minparticles=minparticles, initialradiusfactor=1.)
     print('Found center of mass [sim units]: {}'.format(com_simunits))
-
+    todoc.update({'shrinkfrac': 0.025, 
+                  'minparticles': minparticles, 
+                  'initialradiusfactor': 1.,
+                  'minpart_halo': minpart_halo})
     # find Rvir/Mvir
     cosmopars = snap.cosmopars.getdct()
+    todoc['cosmopars'] = cosmopars
     if isinstance(meandef, type('')):
         outputsingle = True
         dens_targets_cgs = [cu.getmeandensity(meandef, cosmopars)]
@@ -322,9 +343,216 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
         msols_cgs = msols_cgs[0]
     outdct = {'Xc_cm': com_cgs[0], 'Yc_cm': com_cgs[1], 'Zc_cm': com_cgs[2],
               'Rvir_cm': rsols_cgs, 'Mvir_g': msols_cgs}
-    return  outdct
-    
+    return  outdct, todoc
 
+def gethalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
+    '''
+    same in/output as calchalodata_shrinkingsphere,
+    but reads data from file if stored, and stores data to a temporary
+    file if not.
+    Run adddata_cenrvir() to add the temporary file data to the main 
+    file. (Doing this during the main run could cause issues if multiple
+    processes try to write to the same file at the same time.)
+    '''
+    # this must contain *all* todoc entries from the previous function
+    # except 'parttypes_used', which is assumed to be everything but
+    # PartType2 (lo-res DM)
+    usedvals_calchalo = {'shrinkfrac': 0.025, 
+                         'minparticles': 1000., 
+                         'initialradiusfactor': 1.,
+                         'minpart_halo': 1000.}
+    usedvals_calchalo['parttypes_used'] = 'TODO: get from hashtable'
+
+    fdir = ol.dir_halodata = '/Users/Nastasha/ciera/halodata_fire/'
+    filen_main = fdir + ol.filen_halocenrvir
+    
+    newcalc = False
+    pparts = path.split('/')
+    while '' in pparts:
+        pparts.remove('')
+    if pparts[-1] == 'output':
+        pparts = pparts[:-1]
+    simid = pparts[-1]
+    
+    try:
+        with h5py.File(filen_main, 'r') as f:
+            todoc = {}
+            halodat = {}
+            # check simulation run, snapshot
+            if simid in f:
+                smgrp = f[simid]
+            else:
+                raise NoStoredMatchError(f'Simulation {simid}')
+            snn = f'snap_{snapshot}'
+            if snn in smgrp:
+                sngrp = smgrp[snn]
+            else:
+                raise NoStoredMatchError(f'Simulation {simid}, {snn}')
+            cosmopars = {}
+            for key, val in sngrp['cosmopars'].attrs.items():
+                cosmopars[key] = val
+            todoc['cosmopars'] = cosmopars
+            # check center finding
+            cengrpns = [grp for grp in sngrp.keys() if grp.startswith('cen')]
+            for cengrpn in cengrpns:
+                cgrp = sngrp[cengrpn]
+                tomatch = usedvals_calchalo.keys()
+                # using: 'parttypes_used' is a tuple, comparison to 
+                # array gives boolean array, or False if different lengths
+                if np.all([np.all(usedvals_calchalo[key] == cgrp.attrs[key])\
+                           for key in tomatch]):
+                    halodat['Xc_cm'] = cgrp.attrs['Xc_cm']
+                    halodat['Yc_cm'] = cgrp.attrs['Yc_cm']
+                    halodat['Zc_cm'] = cgrp.attrs['Zc_cm']
+                    todoc.update(usedvals_calchalo)
+                    break
+            if 'Xc_cm' not in halodat:
+                msg = (f'Simulation {simid}, {snn}, '
+                       f'center finding parameters {usedvals_calchalo}')
+                raise NoStoredMatchError(msg)
+            # check Mvir/Rvir def.
+            outputsingle = False
+            if isinstance(meandef, type('')):
+                meandef = [meandef]
+                outputsingle = True
+            halodat['Rvir_cm'] = [] 
+            halodat['Mvir_g'] = [] 
+            for md in meandef:
+                subgrpn = f'Rvir_{md}'
+                if subgrpn in cgrp:
+                    sgrp = cgrp[subgrpn]
+                    halodat['Rvir_cm'].append(sgrp.attrs['Rvir_cm'])
+                    halodat['Mvir_g'].append(sgrp.attrs['Mvir_g'])
+                else:
+                    msg = (f'Simulation {simid}, {snn}, '
+                           f'center finding parameters {usedvals_calchalo}, '
+                           f'overdensity definition {md}')
+                    raise NoStoredMatchError(msg)
+            if outputsingle:
+                halodat['Rvir_cm'] = halodat['Rvir_cm'][0]
+                halodat['Mvir_g'] = halodat['Mvir_g'][0]
+        return halodat, todoc    
+    except NoStoredMatchError as err:
+        print(err)
+        print('Center, Rvir were not stored')
+        newcalc = True
+    
+    if newcalc:
+        halodat, todoc = calchalodata_shrinkingsphere(path, snapshot, 
+                                                      meandef=meandef)
+        filen = fdir + f'temp_cen_rvir_{uuid.uuid1()}.hdf5'
+        if os.path.isfile(filen):
+            msg = f'Temporary center/Rvir file {filen} already exists'
+            raise RuntimeError(msg)
+        with h5py.File(filen, 'w') as f:
+            # sim, snap groups
+            smgrp = f.create_group(simid)
+            sngrp = f.create_group(f'snap_{snapshot}')
+            cmgrp = sngrp.create_group('cosmopars')
+            for key in todoc['cosmopars']:
+                cmgrp.attrs.create(key, todoc['cosmopars'][key])
+            del todoc['cosmopars']
+            # sim/snap subgroup for center pars.
+            cengrp = sngrp.create_group(['cen0'])
+            for cv in ['Xc_cm', 'Yc_cm', 'Zc_cm']:
+                cengrp.attrs.create(cv, halodat[cv])
+            for key in todoc:
+                val = todoc[key]
+                if isinstance(val, type('')):
+                    val = np.string_(val)
+                cengrp.attrs.create(key, val)
+            # center pars. subgroups for mvir/rvir def.
+            if isinstance(meandef, type('')):
+                meandef = [meandef]
+                halodat['Rvir_cm'] = [halodat['Rvir_cm']] 
+                halodat['Mvir_g'] = [halodat['Mvir_g']] 
+            for md, rv, mv in zip(meandef, halodat['Rvir_cm'], 
+                                  halodat['Mvir_g']):
+                gn = f'Rvir_{md}'
+                vgrp = cengrp.create_group(gn)
+                vgrp.attrs.create('Rvir_cm', rv)
+                vgrp.attrs.create('Mvir_g', mv)
+        return halodat, todoc
+
+def adddata_cenrvir():
+    '''
+    put data in temporary cenrvir files into the main file
+    '''
+    mainfilen =  ol.filen_halocenrvir 
+    searchcrit = ol.dir_halodata + 'temp_cen_rvir_*.hdf5'
+    tempfilens = glob.glob(searchcrit)
+    if len(tempfilens) == 0:
+        print('No new data to add')
+        return None
+    with h5py.File(mainfilen, 'a') as fo:
+        for tfn in tempfilens:
+            with h5py.File(tfn, 'r') as fi:
+                # should have one sim, snap, cen group
+                # possibly multiple rvir definitions
+                simid = next(iter(fi.keys()))
+                if simid not in fo: #easy, copy whole thing
+                    fi.copy(fi[simid], fo, name=simid)
+                    continue
+                fo_smgrp = fo[simid]
+                fi_smgrp = fi[simid]
+                sngrpn = next(iter(fi_smgrp.keys()))
+                if sngrpn not in fo_smgrp: #easy, copy whole thing
+                    fi.copy(fi_smgrp[sngrpn], fo_smgrp, name=sngrpn)
+                    continue
+                # center matching/copy
+                fo_sngrp = fo[sngrpn]
+                fi_sngrp = fi[sngrpn]
+                if 'cen0' not in fo_sngrp:
+                    fi.copy(fi_sngrp['cen0'], fo_sngrp, name='cen0')
+                    continue
+                cens_fo = [grp for grp in fo_sngrp.keys() \
+                           if grp.startswith('cen')]
+                fi_cgrp = fi_sngrp['cen0']
+                tocheck = ['Xc_cm', 'Yc_cm', 'Zc_cm']
+                anymatch = False
+                for cengrpn in cens_fo:
+                    _fo_cgrp = fo_sngrp[cengrpn]
+                    tomatch = set(fi_cgrp.attrs.keys()) - set(tocheck)
+                    # using: 'parttypes_used' is a tuple, comparison to 
+                    # array gives boolean array, or False if different lengths
+                    if np.all([np.all(_fo_cgrp.attrs[key] \
+                                      == fi_cgrp.attrs[key])\
+                               for key in tomatch]):
+                        fo_cgrp = _fo_cgrp
+                        anymatch = True
+                        if not np.all([np.all(_fo_cgrp.attrs[key] \
+                                       == fi_cgrp.attrs[key])\
+                                       for key in tocheck]):
+                            msg = (f'{mainfilen} and {tfn} have matching'
+                                   f'simulation {simid}, {sngrpn}, '
+                                   f'center finding, but different centers:\n'
+                                   f'{fo_cgrp.attrs.items()},\n'
+                                   f'{fi_cgrp.attrs.items()}')
+                            raise RuntimeError(msg)
+                if not anymatch:
+                    fo_cgrpn = f'cen{len(cens_fo)}'
+                    fi.copy(fi_cgrp, fo_sngrp, name=fo_cgrpn)
+                    continue
+                # mvir/rvir matching/copy
+                fi_mrdefs = [grp for grp in fi_cgrp.keys() \
+                             if grp.startswith('Rvir_')]
+                for mdn in fi_mrdefs:
+                    if mdn in fo_cgrp:
+                        fi_dct = dict(fi_cgrp[mdn].attrs.items())
+                        fo_dct = dict(fo_cgrp[mdn].attrs.items())
+                        if fi_dct == fo_dct:
+                            continue
+                        else:
+                            msg = (f'{mainfilen} and {tfn} have matching'
+                                   f'simulation {simid}, {sngrpn}, '
+                                   f'centers, but different Mvir or Rvir:\n'
+                                   f'{fi_dct},\n'
+                                   f'{fo_dct}')
+                            raise RuntimeError(msg)
+                    else:
+                        fi.copy(fi_cgrp[mdn], fo_cgrp, name=mdn)
+
+    
 def mainhalodata_AHFsmooth(path, snapnum):
     '''
     get properties of the main halo in the snapshot from halo_00000_smooth.dat
@@ -1335,8 +1563,8 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
         cen_cm = cen * snap.cosmopars.a * 1e-3 * c.cm_per_mpc 
         rvir_cm = halodat['Rvir_cm'] 
     elif center ==  'shrinksph':
-        halodat = calchalodata_shrinkingsphere(dirpath, snapnum, 
-                                               meandef='BN98')
+        halodat, _ = calchalodata_shrinkingsphere(dirpath, snapnum, 
+                                                  meandef='BN98')
         cen_cm = np.array([halodat['Xc_cm'], 
                            halodat['Yc_cm'], 
                            halodat['Zc_cm']])
@@ -1887,8 +2115,8 @@ def histogram_radprof(dirpath, snapnum,
             cen_cm = cen * snap.cosmopars.a * 1e-3 * c.cm_per_mpc 
             rvir_cm = halodat['Rvir_cm'] 
         elif center ==  'shrinksph':
-            halodat = calchalodata_shrinkingsphere(dirpath, snapnum, 
-                                                meandef='BN98')
+            halodat, _ = calchalodata_shrinkingsphere(dirpath, snapnum, 
+                                                      meandef='BN98')
             cen_cm = np.array([halodat['Xc_cm'], 
                                halodat['Yc_cm'], 
                                halodat['Zc_cm']])
