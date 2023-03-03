@@ -497,6 +497,8 @@ def adddata_cenrvir():
                 # should have one sim, snap, cen group
                 # possibly multiple rvir definitions
                 simid = next(iter(fi.keys()))
+                print('simid: ', simid)
+                print('main file keys: ', list(fo.keys()))
                 if simid not in fo: #easy, copy whole thing
                     fi.copy(fi[simid], fo, name=simid)
                     print(f'Added file {tfn}:')
@@ -505,6 +507,8 @@ def adddata_cenrvir():
                 fo_smgrp = fo[simid]
                 fi_smgrp = fi[simid]
                 sngrpn = next(iter(fi_smgrp.keys()))
+                print('snap: ', sngrpn)
+                print('main file fo_smgrp keys: ', list(fo_smgrp.keys()))
                 if sngrpn not in fo_smgrp: #easy, copy whole thing
                     fi.copy(fi_smgrp[sngrpn], fo_smgrp, name=sngrpn)
                     print(f'Added file {tfn}:')
@@ -513,6 +517,7 @@ def adddata_cenrvir():
                 # center matching/copy
                 fo_sngrp = fo_smgrp[sngrpn]
                 fi_sngrp = fi_smgrp[sngrpn]
+                print('main file cens: ', list(fo_sngrp.keys()))
                 if 'cen0' not in fo_sngrp:
                     fi.copy(fi_sngrp['cen0'], fo_sngrp, name='cen0')
                     print(f'Added file {tfn}:')
@@ -548,9 +553,12 @@ def adddata_cenrvir():
                     print(f'Added file {tfn}:')
                     print(f'{simid}, {sngrpn}, new center')
                     continue
+                print('new densities: ')
+                print('main file densities: ', list(fo_cgrp.keys()))
                 # mvir/rvir matching/copy
                 fi_mrdefs = [grp for grp in fi_cgrp.keys() \
                              if grp.startswith('Rvir_')]
+                print('new densities: ', fi_mrdefs)
                 for mdn in fi_mrdefs:
                     if mdn in fo_cgrp:
                         fi_dct = dict(fi_cgrp[mdn].attrs.items())
