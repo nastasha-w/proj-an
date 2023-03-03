@@ -454,7 +454,7 @@ def gethalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
         with h5py.File(filen, 'w') as f:
             # sim, snap groups
             smgrp = f.create_group(simid)
-            sngrp = f.create_group(f'snap_{snapshot}')
+            sngrp = smgrp.create_group(f'snap_{snapshot}')
             cmgrp = sngrp.create_group('cosmopars')
             for key in todoc['cosmopars']:
                 cmgrp.attrs.create(key, todoc['cosmopars'][key])
