@@ -587,6 +587,7 @@ def adddata_cenrvir(rmtemp=False):
                         continue
             print(f'skipped {tfn}; duplicate data')
             if rmtemp:
+                print(f'deleting {tfn}')
                 os.remove(tfn)
 def mainhalodata_AHFsmooth(path, snapnum):
     '''
