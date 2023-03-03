@@ -499,18 +499,24 @@ def adddata_cenrvir():
                 simid = next(iter(fi.keys()))
                 if simid not in fo: #easy, copy whole thing
                     fi.copy(fi[simid], fo, name=simid)
+                    print(f'Added file {tfn}:')
+                    print(f'{simid}')
                     continue
                 fo_smgrp = fo[simid]
                 fi_smgrp = fi[simid]
                 sngrpn = next(iter(fi_smgrp.keys()))
                 if sngrpn not in fo_smgrp: #easy, copy whole thing
                     fi.copy(fi_smgrp[sngrpn], fo_smgrp, name=sngrpn)
+                    print(f'Added file {tfn}:')
+                    print(f'{simid}, {sngrpn}')
                     continue
                 # center matching/copy
                 fo_sngrp = fo_smgrp[sngrpn]
                 fi_sngrp = fi_smgrp[sngrpn]
                 if 'cen0' not in fo_sngrp:
                     fi.copy(fi_sngrp['cen0'], fo_sngrp, name='cen0')
+                    print(f'Added file {tfn}:')
+                    print(f'{simid}, {sngrpn}, first center')
                     continue
                 cens_fo = [grp for grp in fo_sngrp.keys() \
                            if grp.startswith('cen')]
@@ -539,6 +545,8 @@ def adddata_cenrvir():
                 if not anymatch:
                     fo_cgrpn = f'cen{len(cens_fo)}'
                     fi.copy(fi_cgrp, fo_sngrp, name=fo_cgrpn)
+                    print(f'Added file {tfn}:')
+                    print(f'{simid}, {sngrpn}, new center')
                     continue
                 # mvir/rvir matching/copy
                 fi_mrdefs = [grp for grp in fi_cgrp.keys() \
@@ -558,9 +566,10 @@ def adddata_cenrvir():
                             raise RuntimeError(msg)
                     else:
                         fi.copy(fi_cgrp[mdn], fo_cgrp, name=mdn)
-            print(f'Added file {tfn}:')
-            print(f'{simid}, {sngrpn}, {fi_mrdefs}')
-    
+                        print(f'Added file {tfn}:')
+                        print(f'{simid}, {sngrpn}, {fi_mrdefs}')
+                        continue
+            print(f'skipped {tfn}; duplicate data')
 def mainhalodata_AHFsmooth(path, snapnum):
     '''
     get properties of the main halo in the snapshot from halo_00000_smooth.dat
