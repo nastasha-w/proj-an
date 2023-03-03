@@ -508,7 +508,7 @@ def adddata_cenrvir():
                     continue
                 # center matching/copy
                 fo_sngrp = fo_smgrp[sngrpn]
-                fi_sngrp = fi_sngrp[sngrpn]
+                fi_sngrp = fi_smgrp[sngrpn]
                 if 'cen0' not in fo_sngrp:
                     fi.copy(fi_sngrp['cen0'], fo_sngrp, name='cen0')
                     continue
