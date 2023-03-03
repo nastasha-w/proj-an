@@ -437,6 +437,7 @@ def gethalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
             if outputsingle:
                 halodat['Rvir_cm'] = halodat['Rvir_cm'][0]
                 halodat['Mvir_g'] = halodat['Mvir_g'][0]
+        print(f'Retrieved stored halo data from {filen_main}')
         return halodat, todoc    
     except NoStoredMatchError as err:
         print(err)
@@ -459,7 +460,7 @@ def gethalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
                 cmgrp.attrs.create(key, todoc['cosmopars'][key])
             del todoc['cosmopars']
             # sim/snap subgroup for center pars.
-            cengrp = sngrp.create_group(['cen0'])
+            cengrp = sngrp.create_group('cen0')
             for cv in ['Xc_cm', 'Yc_cm', 'Zc_cm']:
                 cengrp.attrs.create(cv, halodat[cv])
             for key in todoc:
