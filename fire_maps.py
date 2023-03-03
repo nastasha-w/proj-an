@@ -526,7 +526,7 @@ def adddata_cenrvir(rmtemp=False):
                 # center matching/copy
                 fo_sngrp = fo_smgrp[sngrpn]
                 fi_sngrp = fi_smgrp[sngrpn]
-                print('main file cens: ', list(fo_sngrp.keys()))
+                #print('main file cens: ', list(fo_sngrp.keys()))
                 if 'cen0' not in fo_sngrp:
                     fi.copy(fi_sngrp['cen0'], fo_sngrp, name='cen0')
                     print(f'Added file {tfn}:')
