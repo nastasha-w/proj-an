@@ -492,6 +492,7 @@ def adddata_cenrvir():
         print('No new data to add')
         return None
     with h5py.File(mainfilen, 'a') as fo:
+        print(mainfilen)
         for tfn in tempfilens:
             with h5py.File(tfn, 'r') as fi:
                 # should have one sim, snap, cen group
@@ -553,7 +554,6 @@ def adddata_cenrvir():
                     print(f'Added file {tfn}:')
                     print(f'{simid}, {sngrpn}, new center')
                     continue
-                print('new densities: ')
                 print('main file densities: ', list(fo_cgrp.keys()))
                 # mvir/rvir matching/copy
                 fi_mrdefs = [grp for grp in fi_cgrp.keys() \
