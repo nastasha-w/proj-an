@@ -356,14 +356,20 @@ def gethalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     '''
     # this must contain *all* todoc entries from the previous function
     # except 'parttypes_used', which is assumed to be everything but
-    # PartType2 (lo-res DM)
+    # PartType2 (lo-res DM) present in the NumPart_Total table
     usedvals_calchalo = {'shrinkfrac': 0.025, 
                          'minparticles': 1000., 
                          'initialradiusfactor': 1.,
                          'minpart_halo': 1000.}
-    usedvals_calchalo['parttypes_used'] = 'TODO: get from hashtable'
-
-    fdir = ol.dir_halodata = '/Users/Nastasha/ciera/halodata_fire/'
+    snap = rf.get_Firesnap(path, snapshot, filetype='snap')
+    with h5py.File(snap.firstfilen) as f:
+        pts = list(f['Header'].attrs['NumPart_Total'])
+    pts = [ind for ind in range(len(pts)) if pts[ind] > 0]
+    pts.remove(2)
+    pts.sort()
+    usedvals_calchalo['parttypes_used'] = tuple(pts)
+                                                
+    fdir = ol.dir_halodata
     filen_main = fdir + ol.filen_halocenrvir
     
     newcalc = False
