@@ -370,7 +370,7 @@ def gethalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     usedvals_calchalo['parttypes_used'] = tuple(pts)
                                                 
     fdir = ol.dir_halodata
-    filen_main = fdir + ol.filen_halocenrvir
+    filen_main = ol.filen_halocenrvir
     
     newcalc = False
     pparts = path.split('/')
