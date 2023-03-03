@@ -558,7 +558,8 @@ def adddata_cenrvir():
                             raise RuntimeError(msg)
                     else:
                         fi.copy(fi_cgrp[mdn], fo_cgrp, name=mdn)
-
+            print(f'Added file {tfn}:')
+            print(f'{simid}, {sngrpn}, {fo_cgrpn}, {fi_mrdefs}')
     
 def mainhalodata_AHFsmooth(path, snapnum):
     '''
