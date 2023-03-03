@@ -481,9 +481,17 @@ def gethalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
                 vgrp.attrs.create('Mvir_g', mv)
         return halodat, todoc
 
-def adddata_cenrvir():
+def adddata_cenrvir(rmtemp=False):
     '''
     put data in temporary cenrvir files into the main file
+
+    Parameters:
+    -----------
+    rmtemp: bool
+        remove temporary storage files after marking it as duplicate
+        (This would be the second run of this function if a file was
+        new -- this is done to ensure a file is not deleted if 
+        something went wrong unexpectedly.)
     '''
     mainfilen =  ol.filen_halocenrvir 
     searchcrit = ol.dir_halodata + 'temp_cen_rvir_*.hdf5'
@@ -578,6 +586,8 @@ def adddata_cenrvir():
                         print(f'{simid}, {sngrpn}, {fi_mrdefs}')
                         continue
             print(f'skipped {tfn}; duplicate data')
+            if rmtemp:
+                os.remove(tfn)
 def mainhalodata_AHFsmooth(path, snapnum):
     '''
     get properties of the main halo in the snapshot from halo_00000_smooth.dat
