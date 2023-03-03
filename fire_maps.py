@@ -4690,6 +4690,9 @@ def fromcommandline(index):
         # 1844 - 1918: m12-SR (1 IC/phys), Mass, Volume, HI
         # 1919 - 1963: m12-SR (1 IC/phys), O6, Ne8, Mg10
         # (120 inds)
+    elif index >= 1964 and index < 1970:
+        # test halo centering script
+        run_halodata(index - 1964)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
