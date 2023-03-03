@@ -1599,8 +1599,8 @@ def massmap(dirpath, snapnum, radius_rvir=2., particle_type=0,
         cen_cm = cen * snap.cosmopars.a * 1e-3 * c.cm_per_mpc 
         rvir_cm = halodat['Rvir_cm'] 
     elif center ==  'shrinksph':
-        halodat, _ = calchalodata_shrinkingsphere(dirpath, snapnum, 
-                                                  meandef='BN98')
+        halodat, _ = gethalodata_shrinkingsphere(dirpath, snapnum, 
+                                                 meandef='BN98')
         cen_cm = np.array([halodat['Xc_cm'], 
                            halodat['Yc_cm'], 
                            halodat['Zc_cm']])
@@ -2151,8 +2151,8 @@ def histogram_radprof(dirpath, snapnum,
             cen_cm = cen * snap.cosmopars.a * 1e-3 * c.cm_per_mpc 
             rvir_cm = halodat['Rvir_cm'] 
         elif center ==  'shrinksph':
-            halodat, _ = calchalodata_shrinkingsphere(dirpath, snapnum, 
-                                                      meandef='BN98')
+            halodat, _ = gethalodata_shrinkingsphere(dirpath, snapnum, 
+                                                     meandef='BN98')
             cen_cm = np.array([halodat['Xc_cm'], 
                                halodat['Yc_cm'], 
                                halodat['Zc_cm']])
@@ -4592,15 +4592,57 @@ def run_halodata(opt):
                     ]
         snaps = [45, 50]
         meandef = ('BN98', '200c', '200m', '500c')
-        simi = ind // len(snaps)
-        snapi = ind % len(snaps)
-        simname = simnames[simi]
-        snapshot = snaps[snapi]
+    # clean samples 1 and 2
+    elif opt >= 6 and opt < 30:
+        ind = opt - 6
+        _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
+        simnames = ['m13h206_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    'm13h113_m3e5_MHD_fire3_fireBH_Sep182021_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    'm13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
+                    'm13h113_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
+                   ]
+        snaps = [45, 46, 47, 48, 49, 50]
+        # might as well; extra overdensities are cheap
+        meandef = ('BN98', '200c', '200m', '500c', '500m', 
+                   '2500c', '2500m', '178c', '178m', '100c', '100m')
+    elif opt >= 30 and opt < 42:
+        ind = opt - 30
+        _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
+        simnames = ['m13h113_m3e4_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e-4_gacc31_fa0.5',
+                    'm13h206_m3e4_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp3e-4_gacc31_fa0.5',
+                   ]
+        snaps = [186, 197, 210, 224, 240, 258]
+        # might as well; extra overdensities are cheap
+        meandef = ('BN98', '200c', '200m', '500c', '500m', 
+                   '2500c', '2500m', '178c', '178m', '100c', '100m')
+    elif opt >= 42 and opt < 54:
+        ind = opt - 42
+        _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
+        simnames = ['m12f_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp1e10_gacc31_fa0.5',
+                    'm12f_m7e3_MHD_fire3_fireBH_Sep182021_hr_crdiffc690_sdp2e-4_gacc31_fa0.5',
+                    ]
+        snaps = [186, 197, 210, 224, 240, 258]
+        # might as well; extra overdensities are cheap
+        meandef = ('BN98', '200c', '200m', '500c', '500m', 
+                   '2500c', '2500m', '178c', '178m', '100c', '100m')
+    elif opt >= 54 and opt < 60:
+        ind = opt - 54
+        _dirpath = '/scratch3/01799/phopkins/fire3_suite_done/'
+        simnames = ['m12f_m6e4_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000',
+                    ]
+        snaps = [45, 46, 47, 48, 49, 50]
+        # might as well; extra overdensities are cheap
+        meandef = ('BN98', '200c', '200m', '500c', '500m', 
+                   '2500c', '2500m', '178c', '178m', '100c', '100m')
+    simi = ind // len(snaps)
+    snapi = ind % len(snaps)
+    simname = simnames[simi]
+    snapshot = snaps[snapi]
 
-        dp2 = '_'.join(simname.split('_')[:2])
-        if dp2.startswith('m13h02_'):
-            dp2 = dp2.replace('m13h02', 'm13h002')
-        dirpath = '/'.join([_dirpath, dp2, simname]) 
+    dp2 = '_'.join(simname.split('_')[:2])
+    if dp2.startswith('m13h02_'):
+        dp2 = dp2.replace('m13h02', 'm13h002')
+    dirpath = '/'.join([_dirpath, dp2, simname]) 
     
     gethalodata_shrinkingsphere(dirpath, snapshot, meandef=meandef)
 
@@ -4723,6 +4765,13 @@ def fromcommandline(index):
     elif index >= 1964 and index < 1970:
         # test halo centering script
         run_halodata(index - 1964)
+    elif index >= 1970 and index < 2024:
+        # clean samples 1/2 
+        # 1970 - 1993: m13-SR (24 inds)
+        # 1994 - 2005: m13-HR (12 inds)
+        # 2006 - 2017: m12-HR (12 inds)
+        # 2018 - 2023: m12-SR (6 inds)
+        run_halodata(index - 1970 + 6)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
