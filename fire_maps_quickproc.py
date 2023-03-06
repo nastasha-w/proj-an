@@ -6988,25 +6988,159 @@ def plotset3dprof_eltZcomp_weightzgrid(fileset):
                                         fillkw_vals, fillkw_z,
                                         figtitle=figtitle, outname=outname)
 
-def plotdata_burchett_etal_2019():
+def plotMz_burchett_etal_2019():
     datadir = '/Users/nastasha/ciera/projects_lead/fire3_ionabs/'
     dfilen = datadir + 'data_burchett_etal_2019_table1.txt'
     #TODO CHECK: R200c or R200m!
     # assuming impact parameters are physical/proper kpc
     #TODO ask: table footnote f says 2 systems for one Ne VIII absorber
     #          but only one line with that footnote and N(Ne VIII) value
-    data = pd.read_csv(dfilen, comment='#', sep='\t')
+    data_bur = pd.read_csv(dfilen, comment='#', sep='\t')
     ## calculate halo masses
     # from Burchett et al. (2019):
-    cosmopars = {'h': 0.677, 'omegam': 0.31, 'omegalambda': 0.69}
+    cosmopars_bur = {'h': 0.677, 'omegam': 0.31, 'omegalambda': 0.69}
     def hmfunc(x):
-        csm = cosmopars.copy()
+        csm = cosmopars_bur.copy()
         csm.update({'z': x.zgal, 'a': 1. / (1. + x.zgal)})
         mv = cu.mvir_from_rvir(x.rvir_kpc * 1e-3 * c.cm_per_mpc, 
                                csm, meandef='200m')
         return mv / c.solar_mass
-    data = data.assign(Mvir_Msun=lambda x: hmfunc(x))
+    data_bur = data_bur.assign(Mvir_Msun=lambda x: hmfunc(x))
+    
+    ## FIRE data
+    snapfiles = [('m13h113_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021'
+                  '_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000'),
+                 ('m13h113_m3e4_MHD_fire3_fireBH_Sep182021_hr'
+                  '_crdiffc690_sdp1e-4_gacc31_fa0.5'),
+                 ('m13h113_m3e5_MHD_fire3_fireBH_Sep182021'
+                  '_crdiffc690_sdp1e10_gacc31_fa0.5'),
+                 ('m13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021'
+                  '_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000'),
+                 ('m13h206_m3e4_MHD_fire3_fireBH_Sep182021_hr'
+                  '_crdiffc690_sdp3e-4_gacc31_fa0.5'),
+                 ('m13h206_m3e5_MHD_fire3_fireBH_Sep182021'
+                  '_crdiffc690_sdp1e10_gacc31_fa0.5'),
+                 ('m12f_m6e4_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021'
+                  '_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000'),
+                 ('m12f_m7e3_MHD_fire3_fireBH_Sep182021_hr'
+                  '_crdiffc690_sdp2e-4_gacc31_fa0.5'),
+                 ('m12f_m7e3_MHD_fire3_fireBH_Sep182021_hr'
+                  '_crdiffc690_sdp1e10_gacc31_fa0.5'),
+                 ]
+    snaplabels = ['m13h113 AGN-CR', 'm13h113 AGN-noCR', 'm13h113 noBH',
+                  'm13h206 AGN-CR', 'm13h206 AGN-noCR', 'm13h206 noBH',
+                  'm12f AGN-CR', 'm12f AGN-noCR', 'm12f noBH',
+                  ]
+    firedataf = ol.filen_halocenrvir
+    firemasses = []
+    fireredshifts = []
+    fireradii = []
+    with h5py.File(firedataf, 'r') as f:
+        meandef = '200m'
+        for sfn in snapfiles:
+            _lsm = []
+            _lsz = []
+            _lsr = []
+            smgrp = f[sfn]
+            sngrpns = [key for key in smgrp.keys() if key.startswith('snap_')]
+            for sngrpn in sngrpns:
+                sngrp = smgrp[sngrpn]
+                _lsz.append(sngrp['cosmopars'].attrs['z'])
+                _lsm.append(sngrp[f'cen0/Rvir_{meandef}'].attrs['Mvir_g'])
+                _lsr.append(sngrp[f'cen0/Rvir_{meandef}'].attrs['Rvir_cm'])
+            zo = np.argsort(_lsz)
+            _lsz = np.array(_lsz)[zo]
+            _lsm = np.array(_lsm)[zo]
+            _lsr = np.array(_lsr)[zo]
+            _lsm /= c.solar_mass
+            _lsr /= (c.cm_per_mpc * 1e-3)
+            firemasses.append(_lsm)
+            fireredshifts.append(_lsz)
+            fireradii.append(_lsr)
+    
+    cset = tc.tol_cset('bright')
+    pcolors = {'AGN-CR': cset.green,
+               'AGN-noCR': cset.red,
+               'noBH': cset.blue,
+               }
+    hstyles = {'m13h113': 'solid',
+               'm13h206': 'dashdot',
+               'm12f': 'dashed',
+               }
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(5.5, 5.))
+    fontsize = 12
+    # Burchett et al. data
+    z_bur = data_bur['zgal']
+    m_bur = data_bur['Mvir_Msun']
+    isul = data_bur['log_N_Ne8_isUL']
+    ax.scatter(z_bur[isul], m_bur[isul], marker='o', linestyle='None',
+               edgecolor='black', facecolor='none', label='Bur.+19 (UL)',
+               s=40)
+    ax.scatter(z_bur[np.logical_not(isul)], m_bur[np.logical_not(isul)], 
+               marker='o', linestyle='None', edgecolor='black', 
+               facecolor='black', label='Bur.+19', s=40)
+    print(firemasses)
+    print(fireradii)
+    # FIRE data
+    mass_minmax = {'m13': (np.inf, -np.inf),
+                   'm12': (np.inf, -np.inf)}
+    z_minmax = {'m13': (np.inf, -np.inf),
+                'm12': (np.inf, -np.inf)}
+    zmar = 0.05
+    mmar = 0.2
+    for snaplabel, firemass, fireredshift \
+            in zip(snaplabels, firemasses, fireredshifts):
+        hlabel, plabel = snaplabel.split(' ')
+        ax.plot(fireredshift, firemass, color=pcolors[plabel],
+                linestyle=hstyles[hlabel], linewidth=1.5,
+                marker='o', markersize=4)
+        for key in mass_minmax:
+            if snaplabel.startswith(key):
+                _prev = mass_minmax[key]
+                mmin = min(_prev[0], np.min(firemass))
+                mmax = max(_prev[1], np.max(firemass))
+                mass_minmax[key] = (mmin, mmax)
+                _prev = z_minmax[key]
+                zmin = min(_prev[0], np.min(fireredshift))
+                zmax = max(_prev[1], np.max(fireredshift))
+                z_minmax[key] = (zmin, zmax)
+    mass_minmax = {key: (10**(np.log10(mass_minmax[key][0]) - mmar),
+                         10**(np.log10(mass_minmax[key][1]) + mmar))
+                   for key in mass_minmax}
+    z_minmax = {key: (z_minmax[key][0] - zmar, z_minmax[key][1] + zmar)
+                for key in z_minmax}
+    print(mass_minmax)
+    print(z_minmax)
+    for key in mass_minmax:
+        line1 = [mass_minmax[key][0], mass_minmax[key][1], 
+                 mass_minmax[key][1], mass_minmax[key][0], 
+                 mass_minmax[key][0]]
+        line0 = [z_minmax[key][0], z_minmax[key][0], 
+                 z_minmax[key][1], z_minmax[key][1], 
+                 z_minmax[key][0]]
+        ax.plot(line0, line1, linestyle='solid', color=cset.grey,
+                linewidth=2)
+        ax.text(z_minmax[key][1] - 0.02, mass_minmax[key][1] * 0.95,
+                key, fontsize=fontsize, color='gray',
+                horizontalalignment='right', verticalalignment='top')
 
+    ax.set_yscale('log')
+    ax.set_ylabel(f'$\\mathrm{{M}}_{{\\mathrm{{{meandef}}}}} \\;'
+                   ' [\\mathrm{M}_{\\odot}]$', fontsize=fontsize)
+    ax.set_xlabel('redshift', fontsize=fontsize)
+    ax.tick_params(labelsize=fontsize - 1., direction='in', which='both')
+    
+    _handles, _ = ax.get_legend_handles_labels()
+    handles1 = [mlines.Line2D((), (), linewidth=1.5, linestyle=hstyles[key],
+                              label=key, color='black') \
+                for key in hstyles]
+    handles2 = [mlines.Line2D((), (), linewidth=1.5, color=pcolors[key],
+                              label=key, linestyle='solid', marker='o',
+                              markersize=4)\
+                for key in pcolors]
+    handles = _handles + handles1 + handles2
+    ax.legend(handles=handles, fontsize=fontsize - 1, handlelength=2.0)
 
     outdir = '/Users/nastasha/ciera/projects_lead/fire3_ionabs/datacomp/'
-    outfilen = outdir + 'data_plot.pdf'
+    outfilen = outdir + 'mass_z_selection.pdf'
+    plt.savefig(outfilen, bbox_inches='tight')
