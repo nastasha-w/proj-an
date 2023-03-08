@@ -146,7 +146,162 @@ def elt_atomw_cgs(element):
     element = string.capwords(element)
     return atomw_u_dct[element] * c.u
 
+class CoordinateWranger:
+    def __init__(self, snapobj, center_cm, rotmatrix=None,
+                 parttype=0, periodic=True, vcen_cmps=None):
+        '''
+        class to get position and velocity info in different coordinate
+        bases
 
+        Parameters:
+        -----------
+        snapobj: Firesnap or similar
+            object that allows access to cosmological parameters and 
+            has a method to read in simulation arrays
+        center_cm: float array, shape (3,)
+            center coordinates in cm (physical, not comoving)
+        rotmatrix: float array, shape (3, 3) or None
+            matrix by which to multiply coordinates to get the 
+            coordinates in the desired basis
+            None means no rotation
+        parttype: int
+            which particles to get coordinates for. Matches the 
+            PartType<number> groups in the simulation outputs.
+        periodic: bool
+            Do we need to care about coordinates wrapping around the 
+            simulation volume?
+        vcen_cmps: float array, shape (3,)
+            bulk velocity (subtracted from simulation velocities before
+            any rotations, etc.), in cm/s
+        '''
+        self.snapobj = snapobj
+        self.cen_cm = center_cm
+        self.rotmatrix = rotmatrix
+        self.pt = parttype
+        self.periodic = periodic
+        self.coordaxis = 1 
+        self.pcalcstarted = False
+    
+    def __startcalc_pos(self, subindex=None):
+        h5path = f'PartType{self.pt}/Coordinates'
+        self.coords_simxyz = self.snapobj.readarray(h5path, subindex=subindex)
+        self.toCGS_coords_simxyz = self.snapobj.toCGS
+        self.__center_pos()
+        self.__rotate_pos()
+        self.pcalcstarted = True
+
+    def __startcalc_vel(self, subindex=None):
+        h5path = f'PartType{self.pt}/Velocity'
+        self.vel_simxyz = self.snapobj.readarray(h5path, subindex=subindex)
+        self.toCGS_vel_simxyz = self.snapobj.toCGS
+        self.__center_vel()
+        self.__rotate_vel()
+        self.vcalcstarted = True
+
+    def __rotate_pos(self):
+        self.rotmatrix = np.asarray(self.rotmatrix, 
+                                    dtype=self.coords_simxyz.dtype)
+        self.coords_rotxyz = np.tensordot(self.rotmatrix, self.coords_simxyz,
+                                          axes=([1], [self.coordaxis]))
+        self.toCGS_coords_rotxyz = self.toCGS_coords_simxyz
+    
+    def __rotate_vel(self):
+        self.rotmatrix = np.asarray(self.rotmatrix, 
+                                    dtype=self.vel_simxyz.dtype)
+        self.vel_rotxyz = np.tensordot(self.rotmatrix, self.vel_simxyz,
+                                          axes=([1], [self.coordaxis]))
+        self.toCGS_vel_rotxyz = self.toCGS_vel_simxyz
+    
+    def __center_pos(self):
+        self.center_simu = np.astype(self.cen_cm / self.toCGS_coords_simxyz,
+                                     dtype=self.coords_simxyz.dtype)
+        self.coords_simxyz -= self.center_simu
+        if self.periodic:
+            self.boxsize_simu = self.snapobj.cosmopars.boxsize \
+                                * self.snapobj.cosmopars.a \
+                                / self.snapobj.cosmopars.h \
+                                * c.cm_per_mpc / self.toCGS_coords_simxyz
+            self.coords_simxyx += 0.5 * self.boxsize_simu
+            self.coords_simxyz %= self.boxsize_simu
+            self.coords_simxyx -= 0.5 * self.boxsize_simu
+    
+    def __center_vel(self):
+        self.vcen_simu = np.astype(self.vcen_cmps / self.toCGS_vel_simxyz,
+                                   dtype=self.vel_simxyz.dtype)
+        self.vel_simxyz -= self.vcen_simu
+        if self.periodic:
+            self.cosmopars = self.snapobj.cosmopars.getdct()
+            self.vboxsize_simu = self.snapobj.cosmopars.boxsize \
+                                 * self.snapobj.cosmopars.a \
+                                 / self.snapobj.cosmopars.h \
+                                 * c.cm_per_mpc / self.toCGS_coords_simxyz \
+                                 * cu.Hubble(self.cosmopars['z'], 
+                                             cosmopars=self.cosmopars)
+            self.vel_simxyx += 0.5 * self.vboxsize_simu
+            self.vel_simxyz %= self.vboxsize_simu
+            self.vel_simxyx -= 0.5 * self.vboxsize_simu
+        
+    def calccoords(self, coordspecs):
+        '''
+        calculate various coordinate values
+
+        Parameters:
+        -----------
+        coordspecs: dict or list-like of dicts
+            list: different coordinates to calculate
+            dict or dicts in list: specify what to calculate
+            dict keys and possible values:
+                'pos': [0, 1, 2, 'allcart', 'rcen']
+                    0, 1, 2: position along the axis with this index
+                    'allcart': for all three of these cartesian axes
+                    'rcen': distance to the center
+                'vel': [0, 1, 2, 'allcart', 'vrad']
+                     0, 1, 2: velocity along the axis with this index
+                    'allcart': for all three of these cartesian axes
+                    'vrad': radial velocity (relative to coordinate
+                            center)
+                    'vtot': total velocity (rms coordinate velocties)
+                    note: you must specifiy vcen_cmps when initializing
+                    this object to calculate this. 
+                indices etc. are all for the rotated coordinates, after
+                centering 
+        
+        Returns:
+        --------
+        The desired coordinates in the listed order. Always returns a 
+        list of 3-tuples: (coordinate [array], CGS conversion [float], 
+                           doc_dictionary [e.g., used center]) 
+        '''
+        self.coordspecs_in = [(key, coordspecs[key]) for key in coordspecs]
+        # which (groups of) properties to calculate, and in what order
+        # a group is calculated in a single function
+        calcorder = {'poscart': [('pos', 'allcart'), ('pos', 0), ('pos', 1),
+                                 ('pos', 2)],
+                     'poscen': [('pos', 'rcen')],
+                     'velcart': [('vel', 'allcart'), ('vel', 0), ('vel', 1),
+                                 ('vel', 2)],
+                     'veltot': [('vel', 'vtot')], 
+                     'velcen': [('vel', 'vrad')],
+                     }
+        # what to get just because it's needed later
+        dependencies = {('pos', 'rcen'): [('pos', 'allcart')],
+                        ('vel', 'vtot'): [('vel', 'allcart')],
+                        ('vel', 'vrad'): [('vel', 'allcart'), 
+                                          ('pos', 'allcart')]
+                        }
+        # set up to-do list of everything that's needed (no duplicates)
+        self._coords_todo = set(self.coordspecs_in.copy())
+        for _coordspec in self.coordspecs_in:
+            if _coordspec in dependencies:
+                self._coords_todo |= set(dependencies[_coordspec])
+        self.coords_todo = [[spec for spec in group 
+                             if spec in self._coords_todo] 
+                            for group in calcorder]
+
+        return None
+    
+        
+        
 
 # seems to work for at least one halo 
 # (m13 guinea pig at snapshot 27, comparing image to found center)
@@ -589,6 +744,7 @@ def adddata_cenrvir(rmtemp=False):
             if rmtemp:
                 print(f'deleting {tfn}')
                 os.remove(tfn)
+
 def mainhalodata_AHFsmooth(path, snapnum):
     '''
     get properties of the main halo in the snapshot from halo_00000_smooth.dat
