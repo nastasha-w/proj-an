@@ -680,23 +680,24 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(5.5, 5.))
     outfn1 = ('/scratch1/08466/tg877653/output/'
               f'debug_rvir_{path.split("/")[-1]}_snapshot{snapshot}.pdf')
-    ax.plot(r2_order[::1000], dens2_order[::1000])
-    ax.set_xlabel('radius**2 [sim units]', fontsize=12)
-    ax.set_ylabel('density**2 [sim units]', fontsize=12)
+    ax.plot(np.sqrt(r2_order[::1000]), np.sqrt(dens2_order[::1000]))
+    ax.set_xlabel('radius [sim units]', fontsize=12)
+    ax.set_ylabel('density [sim units]', fontsize=12)
     ax.set_yscale('log')
+    ax.set_xscale('log')
     for t in dens_targets:
         ax.axhline(t**2)
-    plt.savefig(outfn1,bbox_inches='tight')
+    plt.savefig(outfn1, bbox_inches='tight')
 
     fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(5.5, 5.))
-    outfn1 = ('/scratch1/08466/tg877653/output/'
+    outfn2 = ('/scratch1/08466/tg877653/output/'
               f'debug2_rvir_{path.split("/")[-1]}_snapshot{snapshot}.pdf')
-    ax.plot(r2_order[::1000], cmass2[::1000])
-    ax.set_xlabel('radius**2 [sim units]', fontsize=12)
-    ax.set_ylabel('(cumul. mass)**2 [sim units]', fontsize=12)
+    ax.plot(np.sqrt(r2_order[::1000]), np.sqrt(cmass2[::1000]))
+    ax.set_xlabel('radius [sim units]', fontsize=12)
+    ax.set_ylabel('cumul. mass [sim units]', fontsize=12)
     ax.set_yscale('log')
-    np.cumsum(masses_order)**2
-    
+    ax.set_xscale('log')
+    plt.savefig(outfn2, bbox_inches='tight')
 
     rsols_cgs = []
     msols_cgs = []
