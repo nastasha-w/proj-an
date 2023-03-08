@@ -683,6 +683,7 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     ax.plot(r2_order[::1000], dens2_order[::1000])
     ax.set_xlabel('radius**2 [sim units]', fontsize=12)
     ax.set_ylabel('density**2 [sim units]', fontsize=12)
+    ax.set_yscale('log')
     for t in dens_targets:
         ax.axhline(t**2)
     plt.savefig(outfn1,bbox_inches='tight')
@@ -693,6 +694,7 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     ax.plot(r2_order[::1000], cmass2[::1000])
     ax.set_xlabel('radius**2 [sim units]', fontsize=12)
     ax.set_ylabel('(cumul. mass)**2 [sim units]', fontsize=12)
+    ax.set_yscale('log')
     np.cumsum(masses_order)**2
     
 
