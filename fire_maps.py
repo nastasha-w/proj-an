@@ -187,7 +187,23 @@ class CoordinateWranger:
         self.periodic = periodic
         self.coordaxis = 1 
         self.pcalcstarted = False
+        self.__check_rotmatrix()
     
+    def __check_rotmatrix(self):
+        if self.rotmatrix is not None:
+            if self.rotmatrix.shape != (3, 3):
+                msg = ('Rotation matrix should have shape (3, 3) not input'
+                       f'{self.rotmatrix.shape} for matrix\n{self.rotmatrix}')
+                raise ValueError(msg)
+            if not (np.allclose(self.rotmatrix.T, self.rotmatrix) 
+                    and np.isclose(np.linalg.det(self.rotmatrix), 1.)):
+                msg = ('input was not a valid rotation matrix.\n'
+                       'transpose (should be same):\n'
+                       f'{self.rotmatrix.T}, {self.rotmatrix}\n'
+                       'determinant (should be 1.): '
+                       f'{np.linalg.det(self.rotmatrix)}')
+                raise ValueError(msg)
+        
     def __startcalc_pos(self, subindex=None):
         h5path = f'PartType{self.pt}/Coordinates'
         if self.rotmatrix is None:
