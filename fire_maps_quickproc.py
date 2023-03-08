@@ -7035,12 +7035,14 @@ def plotMz_burchett_etal_2019():
     firemasses = []
     fireredshifts = []
     fireradii = []
+    firecens = []
     with h5py.File(firedataf, 'r') as f:
-        meandef = '200m'
+        meandef = 'BN98'
         for sfn in snapfiles:
             _lsm = []
             _lsz = []
             _lsr = []
+            _lfc = []
             smgrp = f[sfn]
             sngrpns = [key for key in smgrp.keys() if key.startswith('snap_')]
             for sngrpn in sngrpns:
@@ -7048,16 +7050,20 @@ def plotMz_burchett_etal_2019():
                 _lsz.append(sngrp['cosmopars'].attrs['z'])
                 _lsm.append(sngrp[f'cen0/Rvir_{meandef}'].attrs['Mvir_g'])
                 _lsr.append(sngrp[f'cen0/Rvir_{meandef}'].attrs['Rvir_cm'])
+                _lfc.append(np.array([sngrp[f'cen0'].attrs[f'{_ax}c_cm']
+                                      for _ax in ['X', 'Y', 'Z']]))
             zo = np.argsort(_lsz)
             _lsz = np.array(_lsz)[zo]
             _lsm = np.array(_lsm)[zo]
             _lsr = np.array(_lsr)[zo]
+            _lfc = np.array(_lfc)[zo]
             _lsm /= c.solar_mass
             _lsr /= (c.cm_per_mpc * 1e-3)
+            _lfc /= (c.cm_per_mpc * 1e-3)
             firemasses.append(_lsm)
             fireredshifts.append(_lsz)
             fireradii.append(_lsr)
-    
+            firecens.append(_lfc)
     cset = tc.tol_cset('bright')
     pcolors = {'AGN-CR': cset.green,
                'AGN-noCR': cset.red,
@@ -7079,8 +7085,15 @@ def plotMz_burchett_etal_2019():
     ax.scatter(z_bur[np.logical_not(isul)], m_bur[np.logical_not(isul)], 
                marker='o', linestyle='None', edgecolor='black', 
                facecolor='black', label='Bur.+19', s=40)
-    print(firemasses)
-    print(fireradii)
+    #for snapn, zs, ms, rs, cs in zip(snapfiles, fireredshifts, firemasses,
+    #                                 fireradii, firecens):
+    #    print()
+    #    print(f'{snapn}:')
+    #    print(f'z:\t ', '\t'.join([f'{x:.2f}' for x in zs]))
+    #    print(f'M:\t ', '\t'.join([f'{x:.4e}' for x in ms]))
+    #    print(f'R:\t ', '\t'.join([f'{x:.2f}' for x in rs]))
+    #    print(f'C:\t ', '\t'.join([', '.join([f'{x:.2f}' for x in y]) 
+    #                               for y in cs]))
     # FIRE data
     mass_minmax = {'m13': (np.inf, -np.inf),
                    'm12': (np.inf, -np.inf)}

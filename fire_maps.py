@@ -9,6 +9,7 @@ import sys
 import os
 import uuid # generate unique file names
 import glob 
+import matplotlib.pyplot as plt
 
 # Andrew Wetzel's Rockstar halo catalogue wrangler
 try:
@@ -106,7 +107,8 @@ def find_intercepts(yvals, xvals, ypoint, xydct=None):
             edges = [[leqzero[0], leqzero[-1]]]
         else:
             parts = [leqzero[: segmentedges[0]] if si == 0 else \
-                     leqzero[segmentedges[si - 1] : segmentedges[si]] if si < len(segmentedges) else\
+                     leqzero[segmentedges[si - 1] : segmentedges[si]] 
+                     if si < len(segmentedges) else\
                      leqzero[segmentedges[si - 1] :] \
                      for si in range(len(segmentedges) + 1)]
             edges = [[part[0], part[-1]] for part in parts]
@@ -226,7 +228,7 @@ class CoordinateWranger:
         self.pcalcstarted = True
 
     def __startcalc_vel(self, subindex=None):
-        h5path = f'PartType{self.pt}/Velocity'
+        h5path = f'PartType{self.pt}/Velocities'
         if self.rotmatrix is None:
             self._subindex = subindex
         else:
@@ -667,12 +669,32 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     rorder = np.argsort(r2)
     r2_order = r2[rorder]
     masses_order = masses[rorder]
+    del masses, r2, rorder
     dens_targets = [target / toCGS_m * toCGS_c**3 for target in \
                      dens_targets_cgs]
-    dens2_order = np.cumsum(masses_order)**2 / ((4. * np.pi / 3)**2 * r2_order**3)
+    dens2_order = (cmass2 := np.cumsum(masses_order)**2) / ((4. * np.pi / 3)**2 * r2_order**3)
     # plotting sqrt dens2_order vs. sqrt r2_order, dens_targets -> 
     # intersect at ~200 ckpc/h at z=2.8 for the m13 guinea pig
     # seems reasonable...
+    # tests on buggy constant halo mass issue
+    fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(5.5, 5.))
+    outfn1 = ('/scratch1/08466/tg877653/output/'
+              f'debug_rvir_{path.split("/")[-1]}_snapshot{snapshot}.pdf')
+    ax.plot(r2_order[::1000], dens2_order[::1000])
+    ax.set_xlabel('radius**2 [sim units]', fontsize=12)
+    ax.set_ylabel('density**2 [sim units]', fontsize=12)
+    for t in dens_targets:
+        ax.axhline(t**2)
+    plt.savefig(outfn1,bbox_inches='tight')
+
+    fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(5.5, 5.))
+    outfn1 = ('/scratch1/08466/tg877653/output/'
+              f'debug2_rvir_{path.split("/")[-1]}_snapshot{snapshot}.pdf')
+    ax.plot(r2_order[::1000], cmass2[::1000])
+    ax.set_xlabel('radius**2 [sim units]', fontsize=12)
+    ax.set_ylabel('(cumul. mass)**2 [sim units]', fontsize=12)
+    np.cumsum(masses_order)**2
+    
 
     rsols_cgs = []
     msols_cgs = []
@@ -5136,6 +5158,14 @@ def fromcommandline(index):
         # 2006 - 2017: m12-HR (12 inds)
         # 2018 - 2023: m12-SR (6 inds)
         run_halodata(index - 1970 + 6)
+    elif index >= 2024 and index < 2030:
+        # debugging Mvir/Rvir finder: fp same Mvir values
+        snaps = [186, 197, 210, 224, 240, 258]
+        snapshot = snaps[index - 2024]
+        path = ('/scratch3/01799/phopkins/fire3_suite_done/m12f_m7e3/'
+                'm12f_m7e3_MHD_fire3_fireBH_Sep182021_hr'
+                '_crdiffc690_sdp1e10_gacc31_fa0.5')
+        calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98'))
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
