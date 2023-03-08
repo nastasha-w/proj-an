@@ -668,11 +668,14 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     del coords
     rorder = np.argsort(r2)
     r2_order = r2[rorder]
-    masses_order = masses[rorder]
+    # apparent truncation error issues in cumsum for some 
+    # simulations/snapshots using float32. (enclosed mass plateaus)
+    masses_order = np.asarray(masses[rorder], dtype=np.float64)
     del masses, r2, rorder
     dens_targets = [target / toCGS_m * toCGS_c**3 for target in \
-                     dens_targets_cgs]
-    dens2_order = (cmass2 := np.cumsum(masses_order)**2) / ((4. * np.pi / 3)**2 * r2_order**3)
+                    dens_targets_cgs]
+    dens2_order = (cmass2 := np.cumsum(masses_order)**2) \
+                  / ((4. * np.pi / 3)**2 * r2_order**3)
     # plotting sqrt dens2_order vs. sqrt r2_order, dens_targets -> 
     # intersect at ~200 ckpc/h at z=2.8 for the m13 guinea pig
     # seems reasonable...
@@ -686,7 +689,7 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     ax.set_yscale('log')
     ax.set_xscale('log')
     for t in dens_targets:
-        ax.axhline(t**2)
+        ax.axhline(t)
     plt.savefig(outfn1, bbox_inches='tight')
 
     fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(5.5, 5.))
@@ -5168,7 +5171,11 @@ def fromcommandline(index):
         path = ('/scratch3/01799/phopkins/fire3_suite_done/m12f_m7e3/'
                 'm12f_m7e3_MHD_fire3_fireBH_Sep182021_hr'
                 '_crdiffc690_sdp1e10_gacc31_fa0.5')
-        calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98'))
+        res = calchalodata_shrinkingsphere(path, snapshot, 
+                                           meandef=('200c', 'BN98'))
+        print(path)
+        print(snapshot)
+        print(res)
     else:
         raise ValueError('Nothing specified for index {}'.format(index))
 
