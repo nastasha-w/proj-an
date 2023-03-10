@@ -7037,7 +7037,7 @@ def plotMz_burchett_etal_2019():
     fireradii = []
     firecens = []
     with h5py.File(firedataf, 'r') as f:
-        meandef = 'BN98'
+        meandef = '200m'
         for sfn in snapfiles:
             _lsm = []
             _lsz = []
@@ -7157,3 +7157,203 @@ def plotMz_burchett_etal_2019():
     outdir = '/Users/nastasha/ciera/projects_lead/fire3_ionabs/datacomp/'
     outfilen = outdir + 'mass_z_selection.pdf'
     plt.savefig(outfilen, bbox_inches='tight')
+
+
+def datacomp_ne8_burchett19(dset='m12'):
+    '''
+    dset: ['m12', 'm13']
+        which halo/data selection to use
+    '''
+    fontsize = 12
+    xlabel = '$\\mathrm{r}_{\\perp}$ [pkpc]'
+    ylabel = ('$\\log_{10} \\, \\mathrm{N}(\\mathrm{Ne\\, VIII}) \\;'
+              '[\\mathrm{cm}^{-2}]$')
+    axtitles = ['noBH', 'AGN-noCR', 'AGN-CR']
+    phystab = {'noBH': lambda x: '_sdp1e10_' in x,
+               'AGN-CR': lambda x: '_MHDCRspec1_' in x,
+               'AGN-noCR': lambda x: ('_sdp1e10_' not in x 
+                                      and '_MHDCRspec1_' not in x),
+              }
+    ffilentemp = ('{dir}/coldens_Ne8_{simn}_snap{snap}'
+                 '_shrink-sph-cen_BN98_2rvir_v2.hdf5')
+    fdir_opts = ['/Users/nastasha/ciera/sim_maps/fire/clean_set1/',
+                 '/Users/nastasha/ciera/sim_maps/fire/clean_set2/']
+    oddir = '/Users/nastasha/ciera/projects_lead/fire3_ionabs/'
+    ofilen = oddir + 'data_burchett_etal_2019_table1.txt'
+    datacomprange_m200m_msun = {'m13': (2437844520477.7627, 
+                                        13425998015000.441),
+                                'm12': (403416630932.0638, 
+                                        1709940889606.5674)}
+    datacomprange_z = {'m13': (0.4488065752755633, 1.0500000000106098), 
+                       'm12': (0.44880657526818074, 1.0500000000006244)}
+    if dset == 'm12':
+        rbins_pkpc = np.linspace(0., 300., 50)
+        simnames = [('m12f_m6e4_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021'
+                     '_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000'),
+                    ('m12f_m7e3_MHD_fire3_fireBH_Sep182021_hr'
+                     '_crdiffc690_sdp2e-4_gacc31_fa0.5'),
+                    ('m12f_m7e3_MHD_fire3_fireBH_Sep182021_hr'
+                     '_crdiffc690_sdp1e10_gacc31_fa0.5'),
+                   ]
+        simnames_sup = []
+        snaps_sr = [45, 46, 47, 48, 49, 50]
+        snaps_hr = [186, 197, 210, 224, 240, 258]
+        sims_sr = ['m12f_m6e4']
+        sims_hr = ['m12f_m7e3']
+    elif dset == 'm13':
+        rbins_pkpc = np.linspace(0., 600., 50)
+        simnames = [('m13h113_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021'
+                    '_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000'),
+                    ('m13h113_m3e4_MHD_fire3_fireBH_Sep182021_hr'
+                     '_crdiffc690_sdp1e-4_gacc31_fa0.5'),
+                    ('m13h113_m3e5_MHD_fire3_fireBH_Sep182021'
+                     '_crdiffc690_sdp1e10_gacc31_fa0.5'),
+                    ('m13h206_m3e5_MHDCRspec1_fire3_fireBH_fireCR1_Oct252021'
+                     '_crdiffc1_sdp1e-4_gacc31_fa0.5_fcr1e-3_vw3000'),
+                    ('m13h206_m3e4_MHD_fire3_fireBH_Sep182021_hr'
+                     '_crdiffc690_sdp3e-4_gacc31_fa0.5'),
+                    ('m13h206_m3e5_MHD_fire3_fireBH_Sep182021'
+                     '_crdiffc690_sdp1e10_gacc31_fa0.5'),
+                    ]
+        simnames_sup = []
+        snaps_sr = [45, 46, 47, 48, 49, 50]
+        snaps_hr = [186, 197, 210, 224, 240, 258]
+        sims_sr = ['m13h113_m3e5', 'm13h206_m3e5']
+        sims_hr = ['m13h113_m3e4', 'm13h206_m3e4']
+    lw_main = 2.
+    lw_sup = 1.
+    alpha_range = 0.3
+    colors = tc.tol_cset('muted')
+    linestyles = ['solid', 'dashed', 'dashdot', 'dotted']
+    icusedlist = []
+    rcens = 0.5 * (rbins_pkpc[1:] + rbins_pkpc[:-1])
+
+    panelsize = 3.
+    numcols = len(axtitles)
+    numrows = 1
+    legheight = 0.5
+    wspace = 0.
+    width_ratios = [panelsize] * numcols
+    hspace = 0.25
+    height_ratios = [panelsize] * numrows + [legheight]
+    width = sum(width_ratios) * (1. + 1. / (len(width_ratios) - 1.) * wspace)
+    height = sum(height_ratios) \
+             * (1. + 1. / (len(height_ratios) - 1.) * hspace)
+    fig = plt.figure(figsize=(width, height))
+    grid = gsp.GridSpec(nrows=numrows + 1, ncols=numcols, hspace=hspace, 
+                        wspace=wspace, width_ratios=width_ratios,
+                        height_ratios=height_ratios)
+    axes = [fig.add_subplot(grid[0, i]) for i in range(numcols)]
+    lax = fig.add_subplot(grid[1, :])
+
+    title = 'Burchett et al. (2019) data vs. FIRE-3 z=0.5-1.0'
+    fig.suptitle(title, fontsize=fontsize)
+
+    #print(modelfilelists)
+    for simi, simn in enumerate(simnames + simnames_sup):
+        if np.any([simn.startswith(st) for st in sims_sr]):
+            snapnums = snaps_sr
+        elif np.any([simn.startswith(st) for st in sims_hr]):
+            snapnums = snaps_hr
+        else:
+            msg = (f'No snap list for simname {simn}; options:'
+                   f'{sims_hr},\n{sims_sr}')
+            raise RuntimeError(msg)
+        simlabel = simn.split('_')[0]
+        filens = [[ffilentemp.format(dir=fdir, simn=simn, snap=snap)
+                   for fdir in fdir_opts 
+                   if os.path.isfile(ffilentemp.format(dir=fdir, 
+                                                       simn=simn, 
+                                                       snap=snap))
+                   ][0]
+                  for snap in snapnums]
+        rcens = 0.5 * (rbins_pkpc[:-1] + rbins_pkpc[1:])
+        plo, pmed, phi = get_profile_massmap(filens, rbins_pkpc, 
+                                             rbin_units='pkpc',
+                                             profiles=['perc-0.1', 
+                                                       'perc-0.5', 
+                                                       'perc-0.9'])
+        if simlabel in icusedlist:
+            _label = None
+            ici = np.where([simlabel == _ic for _ic in icusedlist])[0][0]
+        else:
+            _label = simlabel
+            icusedlist.append(simlabel)
+            ici = len(icusedlist) - 1 
+        for _plab in axtitles:
+            if phystab[_plab](simn):
+                plab = _plab
+                break
+        ismain = simn in simnames
+        lw = lw_main if ismain else lw_sup
+        ax = axes[np.where([plab == axt for axt in axtitles])[0][0]] 
+        color = colors[ici % len(colors)]
+        ls = linestyles[ici // len(colors)]
+        ax.plot(rcens, pmed, color=color, linestyle=ls, linewidth=lw, 
+                label=_label)
+        if ismain:
+            ax.fill_between(rcens, plo, phi, color=color, 
+                            alpha=alpha_range, linestyle=ls,
+                            linewidth=0.5)
+            
+    data_bur = pd.read_csv(ofilen, comment='#', sep='\t')
+    cosmopars_bur = {'h': 0.677, 'omegam': 0.31, 'omegalambda': 0.69}
+    def hmfunc(x):
+        csm = cosmopars_bur.copy()
+        csm.update({'z': x.zgal, 'a': 1. / (1. + x.zgal)})
+        mv = cu.mvir_from_rvir(x.rvir_kpc * 1e-3 * c.cm_per_mpc, 
+                               csm, meandef='200m')
+        return mv / c.solar_mass
+    data_bur = data_bur.assign(Mvir_Msun=lambda x: hmfunc(x))
+    minmax_m200m_msun = datacomprange_m200m_msun[dset]
+    minmax_z = datacomprange_z[dset]
+    data_bur = data_bur[data_bur['Mvir_Msun'] >= minmax_m200m_msun[0]]
+    data_bur = data_bur[data_bur['Mvir_Msun'] <= minmax_m200m_msun[1]]
+    data_bur = data_bur[data_bur['zgal'] >= minmax_z[0]]
+    data_bur = data_bur[data_bur['zgal'] <= minmax_z[1]]
+
+    for axi, (ax, axtitle) in enumerate(zip(axes, axtitles)):
+        ax.set_title(axtitle, fontsize=fontsize)
+        ax.set_xlabel(xlabel, fontsize=fontsize)
+        if axi == 0:
+            ax.set_ylabel(ylabel, fontsize=fontsize)
+            _label = 'Burchett+19'
+            _ullabel = 'Burchett+19 (UL)'
+        else:
+            _label = None
+            _ullabel = None
+        ax.tick_params(labelsize=fontsize - 1., direction='in', which='both',
+                       top=True, right=True, labelleft=axi == 0)
+        isul = data_bur['log_N_Ne8_isUL'].copy()
+        notul = np.logical_not(isul)
+        ax.errorbar(data_bur['impact_parameter_kpc'][notul], 
+                    data_bur['log_N_Ne8_pcm2'][notul],
+                    yerr=data_bur['log_N_Ne8_pcm2_err'][notul], 
+                    linestyle='None', elinewidth=1.5, marker='o', 
+                    markersize=3, color='black', capsize=3,
+                    label=_label)
+        ax.scatter(data_bur['impact_parameter_kpc'][isul], 
+                   data_bur['log_N_Ne8_pcm2'][isul],
+                   linestyle='None', marker='v', 
+                   s=10, facecolors='none', edgecolors='black', 
+                   label=_ullabel)
+    ylims = [ax.get_ylim() for ax in axes]
+    ymin = min([yl[0] for yl in ylims])
+    ymax = min([yl[1] for yl in ylims])
+    [ax.set_ylim((ymin, ymax)) for ax in axes]
+
+    hlist = []
+    for ax in axes:
+        _h, _ = ax.get_legend_handles_labels()
+        hlist = hlist + _h
+    handles1 = [mlines.Line2D((), (), linewidth=lw_main, linestyle='solid',
+                            label='FIRE median', color='black'),
+                mpatch.Patch(label='FIRE perc. 10-90', linewidth=0.5, 
+                             color='black', alpha=alpha_range)
+                ]
+    lax.axis('off')
+    lax.legend(handles=handles1 + hlist, fontsize=fontsize, ncols=numcols,
+               loc='upper center')
+    outdir = '/Users/nastasha/ciera/projects_lead/fire3_ionabs/datacomp/'
+    outname = outdir + f'N_Ne8comp_cleanset1-2_{dset}.pdf'
+    plt.savefig(outname, bbox_inches='tight')
