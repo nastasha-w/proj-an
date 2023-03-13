@@ -701,6 +701,9 @@ def calchalodata_shrinkingsphere(path, snapshot, meandef=('200c', 'BN98')):
     ax.set_yscale('log')
     ax.set_xscale('log')
     plt.savefig(outfn2, bbox_inches='tight')
+    print('Last 100 values in cmass2 array (cumul. mass [sim units])**2:')
+    print(cmass2[:100])
+
 
     rsols_cgs = []
     msols_cgs = []
