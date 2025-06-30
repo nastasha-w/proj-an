@@ -1,6 +1,10 @@
 # proj-an
 code and scripts for making 2D projected maps from SPH simulations (Eagle and some similar ones), analyzing those maps, and analyzing specwizard outputs
 
+This is basically a bucket of (almost) all the python code I wrote during my PhD. It's on GitHub
+for reproducibility of the analyses and as a back-up, but documentation is limited and I am not
+actively developing this code anymore.
+
 ---------------------------------------------------------------------------------------------------
 main files for making projections:
 ---------------------------------------------------------------------------------------------------
